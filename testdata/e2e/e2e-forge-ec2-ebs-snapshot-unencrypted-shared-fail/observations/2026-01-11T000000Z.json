@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "snap-shared-plaintext", "properties": {"compute": {"kind": "ebs_snapshot", "ebs": {"snapshot_id": "snap-0plain00001", "snapshot_shared": true, "snapshot_encrypted": false, "snapshot_shared_unencrypted": true}}}, "type": "aws_ebs_snapshot", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

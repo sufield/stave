@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.LT.GHOST.PROFILE.001
+name: Launch Template References Deleted Instance Profile
+description: >
+  Launch template references an IAM instance profile that has
+  been deleted. Instances either fail to launch (if the profile
+  is required) or launch without AWS credentials at all. The
+  application running on the instance starts up successfully —
+  the EC2 launch and OS boot succeed — but the application's
+  first AWS API call fails with `Unable to locate credentials`.
+  The failure surfaces at runtime, not at launch, which is
+  harder to detect: the instance appears healthy in EC2's view
+  while the application is broken at the IAM layer.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  ccm_v4: ["CCC-03", "IAM-12"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - compute.kind
+  - compute.lt.id
+  - compute.lt.instance_profile_arn
+  - compute.lt.instance_profile_exists
+  - compute.lt.has_ghost_profile
+remediation:
+  description: >
+    Launch template references an instance profile that no
+    longer exists. New instances launch without IAM credentials.
+  action: >
+    Either recreate the instance profile (with the same role
+    attached) or update the launch template to reference an
+    existing profile. Audit the profile-deletion path that
+    left this reference behind — the deletion runbook should
+    enumerate dependents (launch templates, ASGs) and update
+    them before removing the profile.
+  example: |
+    {
+      "compute": {
+        "kind": "launch_template",
+        "lt": {
+          "has_ghost_profile": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: launch_template
+    - field: properties.compute.lt.has_ghost_profile
+      op: eq
+      value: true

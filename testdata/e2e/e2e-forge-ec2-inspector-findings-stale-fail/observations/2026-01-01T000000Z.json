@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "i-findings-rotting", "properties": {"compute": {"kind": "instance", "ec2": {"inspector_findings_count": 8, "inspector_findings_stale_count": 5, "inspector_oldest_finding_days": 45, "inspector_critical_findings": 2}}}, "type": "aws_ec2_instance", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

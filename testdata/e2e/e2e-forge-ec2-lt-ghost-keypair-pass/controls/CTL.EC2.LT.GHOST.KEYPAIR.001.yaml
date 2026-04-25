@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.LT.GHOST.KEYPAIR.001
+name: Launch Template References Deleted Key Pair
+description: >
+  Launch template references an EC2 key pair that has been
+  deleted. Behavior on launch depends on AWS handling: the
+  launch may fail (the named key pair is required), or the
+  instance launches with no SSH key. An instance with no SSH
+  key is reachable only through alternative access paths (SSM
+  Session Manager, EC2 Instance Connect) — if the workload
+  was designed around SSH key access, the instance may be
+  effectively unmanageable.
+domain: hygiene
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - compute.kind
+  - compute.lt.id
+  - compute.lt.key_name
+  - compute.lt.key_exists
+  - compute.lt.has_ghost_keypair
+remediation:
+  description: >
+    Launch template references a key pair that no longer exists.
+    New instances either fail to launch or launch without SSH
+    key access.
+  action: >
+    Either reissue the key pair under the same name, update the
+    launch template to reference an existing key pair, or
+    explicitly remove the KeyName field if the workload is
+    intended to use SSM Session Manager / EC2 Instance Connect
+    for access. Document which access path applies so future
+    operators don't re-add a stale key reference.
+  example: |
+    {
+      "compute": {
+        "kind": "launch_template",
+        "lt": {
+          "has_ghost_keypair": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: launch_template
+    - field: properties.compute.lt.has_ghost_keypair
+      op: eq
+      value: true

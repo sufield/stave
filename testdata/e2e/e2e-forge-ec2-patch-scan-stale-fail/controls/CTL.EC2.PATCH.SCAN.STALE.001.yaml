@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.PATCH.SCAN.STALE.001
+name: Patch Compliance Scan Not Run Recently
+description: >
+  SSM Patch Manager has not scanned this instance for
+  patch compliance in more than 7 days. The patch
+  compliance status is stale: vendors release new
+  patches continuously, and a scan that ran a week ago
+  cannot tell us whether yesterday's CVE patch is
+  installed. The instance may have been compliant when
+  the last scan ran and non-compliant since, with no
+  evidence of either state. Patch scans are cheap and
+  should run on a daily cadence; a 7-day gap suggests
+  the maintenance schedule is broken or the SSM agent
+  is silently failing scan operations.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.5"
+  nist_800_53_r5: "RA-5"
+  fedramp_moderate: "RA-5"
+  pci_dss_v4.0: "11.3.1"
+  soc2: "CC7.1"
+  hipaa: "164.308(a)(8)"
+  ccm_v4: ["TVM-02"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - compute.kind
+  - compute.ec2.patch_last_scan_days
+  - compute.ec2.patch_scan_stale
+remediation:
+  description: >
+    SSM Patch Manager has not scanned this instance in
+    more than 7 days. Compliance status is stale.
+  action: >
+    Trigger an immediate `AWS-RunPatchBaseline` scan via
+    SSM Run Command:
+    `aws ssm send-command --document-name
+    AWS-RunPatchBaseline --instance-ids <id>
+    --parameters '{"Operation": ["Scan"]}'`. Investigate
+    why the scheduled scan did not run — check the
+    SSM maintenance window's `Schedule` and execution
+    history, the IAM role's permissions for
+    `ssm:UpdateInstanceAssociationStatus`, and the
+    SSM agent's last ping (which may overlap with
+    `CTL.EC2.SSM.AGENT.STALE.001`).
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "ec2": {
+          "patch_scan_stale": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.ec2.patch_scan_stale
+      op: eq
+      value: true

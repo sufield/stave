@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "att-dot-on", "properties": {"compute": {"kind": "ebs_attachment", "ebs": {"volume_id": "vol-0doton00001", "delete_on_termination": true, "device_name": "/dev/sda1", "instance_id": "i-0app0000001"}}}, "type": "aws_ebs_attachment", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

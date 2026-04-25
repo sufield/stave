@@ -8,13 +8,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/adapters/observations"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -91,15 +92,21 @@ func ParseProfiles(s string) ([]Profile, error) {
 
 // Config holds the parameters for a profile-based apply operation.
 type Config struct {
-	InputFile       string
-	Profile         Profile
-	BucketAllowlist []string
-	IncludeAll      bool
-	OutputFormat    appcontracts.OutputFormat
-	Quiet           bool
-	Stdout          io.Writer
-	Stderr          io.Writer
-	Sanitizer       kernel.Sanitizer
+	InputFile string
+	// Profile is the primary profile (kept for output labeling and
+	// the AWS-S3 default-scope check). Profiles is the full list
+	// when --profile is comma-separated; loadControlsMulti uses it
+	// so all profiles' controls are evaluated, not just the first.
+	Profile           Profile
+	Profiles          []Profile
+	BucketAllowlist   []string
+	IncludeAll        bool
+	MaxUnsafeDuration time.Duration
+	OutputFormat      appcontracts.OutputFormat
+	Quiet             bool
+	Stdout            io.Writer
+	Stderr            io.Writer
+	Sanitizer         kernel.Sanitizer
 }
 
 // Runner handles the execution of the profile apply logic.
@@ -155,7 +162,15 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return nil
 	}
 
-	ctlDir, controls, err := r.loadControls(ctx, cfg.Profile)
+	// Use Profiles when populated (multi-profile path); fall back
+	// to single-profile loadControls only if Profiles is empty
+	// (callers that constructed Config by hand without going
+	// through resolveProfileMode).
+	profiles := cfg.Profiles
+	if len(profiles) == 0 {
+		profiles = []Profile{cfg.Profile}
+	}
+	ctlDir, controls, err := r.loadControlsMulti(ctx, profiles)
 	if err != nil {
 		return fmt.Errorf("load controls: %w", err)
 	}
@@ -178,7 +193,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	result, err := appeval.EvaluateLoaded(appeval.EvaluationRequest{
 		Controls:          controls,
 		Snapshots:         filtered,
-		MaxUnsafeDuration: 0,
+		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
 		Clock:             r.Clock,
 		Hasher:            r.Hasher,
 		StaveVersion:      version.String,
@@ -214,10 +229,6 @@ func validateInput(path string) error {
 		return &ui.UserError{Err: fmt.Errorf("--input must be a file, got directory: %q", path)}
 	}
 	return nil
-}
-
-func (r *Runner) loadControls(ctx context.Context, prof Profile) (string, []policy.ControlDefinition, error) {
-	return r.loadControlsMulti(ctx, []Profile{prof})
 }
 
 func (r *Runner) loadControlsMulti(ctx context.Context, profiles []Profile) (string, []policy.ControlDefinition, error) {

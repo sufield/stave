@@ -5,7 +5,7 @@
     "tool_version": "edge",
     "offline": true,
     "now": "2026-01-15T00:00:00Z",
-    "sla_threshold": "0h",
+    "sla_threshold": "7d",
     "snapshots": 2,
     "policy_fingerprint": "28f2656fa849e2239ca29371915f5e8bf5d30cc018c7edb516431eecb53fa820",
     "evaluated_state": "deployed"
@@ -21,11 +21,11 @@
       "control_id": "CTL.S3.OWNERSHIP.001",
       "asset_id": "private-test-bucket",
       "asset_type": "aws_s3_bucket",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     }
   ],
   "findings": [

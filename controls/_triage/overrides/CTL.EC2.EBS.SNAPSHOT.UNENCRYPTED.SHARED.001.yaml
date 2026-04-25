@@ -1,0 +1,25 @@
+control: CTL.EC2.EBS.SNAPSHOT.UNENCRYPTED.SHARED.001
+defect: >
+  EBS snapshot is shared with another account and is not
+  encrypted.
+infection: >
+  Sharing a snapshot is one IAM action; restoring it on
+  the receiving side is another. Once an unencrypted
+  snapshot is shared, the receiving account's data team
+  can `aws ec2 create-volume --snapshot-id <id>` and read
+  every block of the source volume in plaintext. There
+  is no key gate, no per-account access control on the
+  data, no way to revoke the access without revoking the
+  share itself (and even then, the receiving side may
+  have already created derivative artifacts —
+  volumes, copies, snapshots-of-snapshots — that survive
+  the revocation). Encrypted snapshots avoid this trap:
+  the share extends to the snapshot AND requires a
+  separate KMS grant to access the contents; revoking the
+  KMS grant immediately invalidates the receiving side's
+  ability to decrypt anything new even if the snapshot
+  share is still in place.
+failure: >
+  Permanent plaintext data publication to the receiving
+  account. Data is restorable indefinitely without any
+  key-based revocation path.

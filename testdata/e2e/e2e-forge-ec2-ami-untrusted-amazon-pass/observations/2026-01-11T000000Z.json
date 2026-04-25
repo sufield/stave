@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "i-amazon-linux-ami", "properties": {"compute": {"kind": "instance", "ami": {"id": "ami-0amzn0000001", "owner_id": "amazon", "owner_in_org": false, "owner_is_amazon": true, "owner_is_marketplace": false, "is_trusted": true}}}, "type": "aws_ec2_instance", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

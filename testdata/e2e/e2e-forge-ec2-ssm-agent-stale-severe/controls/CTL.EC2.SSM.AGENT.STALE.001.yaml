@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SSM.AGENT.STALE.001
+name: SSM Agent Connection Lost
+description: >
+  EC2 instance is registered with Systems Manager but its agent
+  ping status is `ConnectionLost` — the agent has stopped
+  communicating since the last successful heartbeat. The
+  instance still appears in the SSM inventory and shows up in
+  the SSM console as managed. But Patch Manager cannot deliver
+  patches, Session Manager cannot establish sessions, and Run
+  Command cannot execute commands. The dashboard says
+  "managed"; the operations layer says "unreachable." This is
+  worse than an instance that was never registered with SSM
+  because the unregistered case is visibly unmanaged — this
+  one is invisibly unmanaged.
+domain: hygiene
+severity: high
+compliance:
+  cis_aws_v3.0: "2.5"
+  nist_800_53_r5: "CM-6"
+  fedramp_moderate: "CM-6"
+  pci_dss_v4.0: "11.5.1"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-02", "CCC-04"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - compute.kind
+  - compute.ec2.ssm_managed
+  - compute.ec2.ssm_ping_status
+  - compute.ec2.ssm_last_ping_time
+  - compute.ec2.ssm_agent_stale
+remediation:
+  description: >
+    SSM agent on the instance is registered but no longer
+    communicating. The instance appears managed but
+    management operations do not reach it.
+  action: >
+    Inspect the instance directly: confirm the SSM agent
+    process is running, check VPC endpoints / NAT
+    connectivity to ssm/ssmmessages/ec2messages endpoints,
+    and verify the instance role still has
+    `AmazonSSMManagedInstanceCore`. Restart the agent if
+    the process died, fix network reachability if the
+    endpoints are blocked, or re-attach the IAM role if the
+    permissions were revoked. After the fix, confirm the
+    next ping returns `Online`.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "ec2": {
+          "ssm_agent_stale": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.ec2.ssm_managed
+      op: eq
+      value: true
+    - field: properties.compute.ec2.ssm_agent_stale
+      op: eq
+      value: true

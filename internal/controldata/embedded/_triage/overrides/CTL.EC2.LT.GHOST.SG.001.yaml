@@ -1,0 +1,21 @@
+control: CTL.EC2.LT.GHOST.SG.001
+defect: >
+  Launch template references one or more deleted security groups.
+infection: >
+  When AWS launches an instance from a template whose SG
+  reference no longer exists, one of two outcomes happens.
+  Either the launch fails — the instance simply doesn't come
+  up — or the instance is created using the VPC's default
+  security group as the fallback. The default SG permits
+  unrestricted intra-default-SG traffic and unrestricted
+  egress; replacing a deliberately-restrictive SG with the
+  default downgrades the instance's network posture in the
+  worst possible way: silently. Operators see "instance
+  launched successfully" in the ASG activity log; what they
+  do not see is "instance launched with the wrong firewall."
+  The launch template that documented the intended firewall
+  policy still exists; the policy itself is gone.
+failure: >
+  Silent SG downgrade on every new launch. The instance lands
+  with the permissive default SG instead of the SG the
+  application was designed to run behind.

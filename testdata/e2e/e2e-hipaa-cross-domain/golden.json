@@ -5,9 +5,9 @@
     "tool_version": "edge",
     "offline": true,
     "now": "2026-01-15T00:00:00Z",
-    "sla_threshold": "0h",
+    "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "debeb9d4e3ad9f6ed13124cd7d714efdeadf8e3cad2da4e23bdba17fa756be94",
+    "policy_fingerprint": "47cf36b32afec8bbbcd64eb7425ad1fa6e5ecc1766d748b8d7b16eb2339bb3e5",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -21,351 +21,351 @@
       "control_id": "CTL.APIGATEWAY.TLS.001",
       "asset_id": "phi-api",
       "asset_type": "aws_apigateway_stage",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.BACKUP.EXISTS.001",
       "asset_id": "backup-phi-database",
       "asset_type": "aws_backup_resource",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.BACKUP.MULTIAZ.001",
       "asset_id": "backup-phi-database",
       "asset_type": "aws_backup_resource",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.BACKUP.REPLICATION.001",
       "asset_id": "backup-phi-database",
       "asset_type": "aws_backup_resource",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
       "asset_id": "main-trail",
       "asset_type": "aws_cloudtrail_trail",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.CLOUDTRAIL.ENCRYPT.001",
       "asset_id": "main-trail",
       "asset_type": "aws_cloudtrail_trail",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.CLOUDTRAIL.VALIDATION.001",
       "asset_id": "main-trail",
       "asset_type": "aws_cloudtrail_trail",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.CLOUDWATCH.RETENTION.001",
       "asset_id": "app-logs",
       "asset_type": "aws_cloudwatch_log_group",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.COGNITO.MFA.001",
       "asset_id": "patient-portal",
       "asset_type": "aws_cognito_user_pool",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.CONFIG.ENABLED.001",
       "asset_id": "config-recorder",
       "asset_type": "aws_config_recorder",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.CONFIG.RULES.001",
       "asset_id": "config-recorder",
       "asset_type": "aws_config_recorder",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.DYNAMODB.ENCRYPT.001",
       "asset_id": "phi-events-table",
       "asset_type": "aws_dynamodb_table",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.EC2.EBS.ENCRYPT.001",
       "asset_id": "i-0abc123def",
       "asset_type": "aws_instance",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.EC2.PUBLIC.001",
       "asset_id": "i-0abc123def",
       "asset_type": "aws_instance",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.ELASTICACHE.TRANSIT.001",
       "asset_id": "session-cache",
       "asset_type": "aws_elasticache_cluster",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.ELB.CROSSZONE.001",
       "asset_id": "alb-phi-api",
       "asset_type": "aws_load_balancer",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.ELB.HTTPS.001",
       "asset_id": "alb-phi-api",
       "asset_type": "aws_load_balancer",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.ELB.LOG.001",
       "asset_id": "alb-phi-api",
       "asset_type": "aws_load_balancer",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.ELB.TLS.001",
       "asset_id": "alb-phi-api",
       "asset_type": "aws_load_balancer",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.IAM.ROOT.ACCESSKEY.001",
       "asset_id": "aws-account-root",
       "asset_type": "aws_iam_account",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.IAM.ROOT.MFA.001",
       "asset_id": "aws-account-root",
       "asset_type": "aws_iam_account",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.K8S.AUDIT.001",
       "asset_id": "eks-prod-cluster",
       "asset_type": "k8s_cluster",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.K8S.NETPOL.001",
       "asset_id": "ns-phi-workloads",
       "asset_type": "k8s_namespace",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.K8S.SECRETS.ENCRYPT.001",
       "asset_id": "eks-prod-cluster",
       "asset_type": "k8s_cluster",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.KMS.POLICY.001",
       "asset_id": "phi-cmk",
       "asset_type": "aws_kms_key",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.RDS.BACKUP.001",
       "asset_id": "phi-database",
       "asset_type": "aws_rds_instance",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.RDS.ENCRYPT.001",
       "asset_id": "phi-database",
       "asset_type": "aws_rds_instance",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.RDS.LOG.001",
       "asset_id": "phi-database",
       "asset_type": "aws_rds_instance",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.RDS.MULTIAZ.001",
       "asset_id": "phi-database",
       "asset_type": "aws_rds_instance",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.RDS.PUBLIC.001",
       "asset_id": "phi-database",
       "asset_type": "aws_rds_instance",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.SECRETSMANAGER.ACCESS.001",
       "asset_id": "db-credentials",
       "asset_type": "aws_secretsmanager_secret",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.SECRETSMANAGER.ENCRYPT.001",
       "asset_id": "db-credentials",
       "asset_type": "aws_secretsmanager_secret",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.SNS.ENCRYPT.001",
       "asset_id": "phi-alerts",
       "asset_type": "aws_sns_topic",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.SQS.ENCRYPT.001",
       "asset_id": "phi-notifications",
       "asset_type": "aws_sqs_queue",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     },
     {
       "control_id": "CTL.VPC.FLOWLOG.001",
       "asset_id": "vpc-prod-001",
       "asset_type": "aws_vpc",
-      "status": "OVERDUE",
-      "due_at": "2026-01-10T00:00:00Z",
-      "remaining_hours": -120,
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 0
+      "threshold_hours": 168
     }
   ],
   "findings": [

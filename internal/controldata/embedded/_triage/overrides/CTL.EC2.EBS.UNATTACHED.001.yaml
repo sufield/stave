@@ -1,0 +1,24 @@
+control: CTL.EC2.EBS.UNATTACHED.001
+defect: >
+  EBS volume is in `available` state and persists with data
+  from a previously-attached instance.
+infection: >
+  Unattached volumes are data remnants. Whatever the
+  application wrote during its lifetime — the database
+  contents at the moment of detach, the log files, the
+  configuration with embedded credentials, the
+  intermediate working data, the user-uploaded artifacts —
+  is still on the volume. Instance-level security tools
+  do not see it (no instance to scan). Backup policies
+  attached to instances do not cover it (no instance to
+  back up). Most monitoring is workload-scoped and treats
+  the volume as out-of-scope. The volume sits in the
+  account, indefinitely, accessible to anyone with
+  `ec2:AttachVolume` permission — they attach it to a
+  scratch instance and read every block. Accumulation is
+  the real risk: dozens of unattached volumes from years
+  of terminated workloads, each with unknown contents.
+failure: >
+  Orphaned data exposure. Data from terminated workloads
+  persists on volumes outside the security perimeter that
+  workload-scoped controls assume.

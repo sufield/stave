@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "lt-key-ghost", "properties": {"compute": {"kind": "launch_template", "lt": {"id": "lt-0keyghost001", "key_name": "deleted-key-2024", "key_exists": false, "has_ghost_keypair": true}}}, "type": "aws_launch_template", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

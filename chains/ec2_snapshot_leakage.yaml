@@ -1,0 +1,21 @@
+id: ec2_snapshot_leakage
+description: >
+  Any single EBS snapshot sharing failure is a leak — cross-
+  environment share, unencrypted share, or public share. Each
+  independently exposes production data outside its intended
+  boundary. The chain fires on any one finding because the
+  failure modes are not additive: a publicly-shared snapshot
+  is a complete leak by itself, an unencrypted share to
+  another account is a complete leak by itself, and a cross-
+  environment share to a non-production account is a complete
+  leak by itself.
+controls:
+  - CTL.EC2.EBS.CROSSENV.SNAPSHOT.001
+  - CTL.EC2.EBS.SNAPSHOT.UNENCRYPTED.SHARED.001
+  - CTL.EC2.SNAPSHOT.PUBLIC.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access

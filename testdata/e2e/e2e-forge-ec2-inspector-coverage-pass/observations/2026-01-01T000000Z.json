@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "i-inspector-covered", "properties": {"compute": {"kind": "instance", "ec2": {"inspector_covered": true, "inspector_account_enabled": true, "inspector_exclusion_reason": ""}}}, "type": "aws_ec2_instance", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

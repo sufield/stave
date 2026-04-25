@@ -1,0 +1,25 @@
+control: CTL.EC2.PATCH.WINDOW.INACTIVE.001
+defect: >
+  SSM Patch Manager maintenance window has not executed
+  in more than 30 days. The patch-install pipeline is
+  not running.
+infection: >
+  Patch Manager separates detection from remediation:
+  the compliance scan identifies missing patches, and the
+  maintenance window installs them. Both pieces have to
+  work for the system to be effective. When the
+  maintenance window is silently broken — bad cron
+  schedule, removed target registration, missing IAM
+  permissions on the service role, repeated task
+  failures that disabled the window — patches are
+  forever pending. The compliance scan keeps producing
+  the same "patches missing" report, and the apply step
+  that would resolve it never runs. Operators see the
+  scan output and assume the install pipeline behind it
+  is functioning; nothing surfaces the maintenance
+  window's silence until someone goes looking.
+failure: >
+  Remediation pipeline broken. The detection layer
+  identifies vulnerabilities; the remediation layer is
+  not installing fixes. The instance accumulates
+  pending patches indefinitely.

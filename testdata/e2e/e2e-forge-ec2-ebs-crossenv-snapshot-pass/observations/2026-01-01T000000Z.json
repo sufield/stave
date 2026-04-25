@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "snap-prod-prod-share", "properties": {"compute": {"kind": "ebs_snapshot", "ebs": {"snapshot_id": "snap-0prod000001", "snapshot_source_env": "production", "snapshot_shared_accounts": ["111122223333"], "snapshot_shared_with_nonprod": false}}}, "type": "aws_ebs_snapshot", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

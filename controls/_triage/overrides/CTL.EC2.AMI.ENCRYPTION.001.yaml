@@ -1,0 +1,21 @@
+control: CTL.EC2.AMI.ENCRYPTION.001
+defect: >
+  AMI's EBS snapshots are not encrypted. Instances launched
+  from this AMI inherit unencrypted root volumes.
+infection: >
+  AMIs are stored as EBS snapshots. When an AMI's snapshots
+  are unencrypted, every instance launched from the AMI gets
+  an unencrypted root volume — even when account-level EBS
+  default encryption is on, certain launch configurations
+  propagate the AMI's snapshot encryption state rather than
+  overriding to the default. AMIs are commonly shared across
+  accounts and regions; an unencrypted AMI snapshot exposed
+  through cross-account share, cross-region copy, or
+  accidental publication carries data that should have been
+  protected at rest. Encrypting an AMI is a one-time
+  operation per AMI that propagates to every future
+  instance.
+failure: >
+  Data-at-rest exposure on every instance launched from this
+  AMI. Snapshots that travel beyond the account's perimeter
+  carry unencrypted data.

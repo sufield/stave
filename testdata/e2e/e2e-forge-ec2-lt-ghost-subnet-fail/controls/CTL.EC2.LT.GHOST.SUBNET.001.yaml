@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.LT.GHOST.SUBNET.001
+name: Launch Template References Deleted Subnet
+description: >
+  Launch template references a subnet that has been deleted.
+  Instance launches fail because the network location does not
+  exist. If the launch template is the source of truth for an
+  Auto Scaling Group's subnet selection, scale-out events fail
+  for any AZ whose subnet was the deleted one. Mixed-subnet ASG
+  configurations still operate in remaining AZs but lose the
+  redundancy they were configured for.
+domain: hygiene
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "A1.2"
+  ccm_v4: ["CCC-03", "IVS-04"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - compute.kind
+  - compute.lt.id
+  - compute.lt.subnet_id
+  - compute.lt.subnet_exists
+  - compute.lt.has_ghost_subnet
+remediation:
+  description: >
+    Launch template references a subnet that has been deleted.
+    Launches into that subnet fail.
+  action: >
+    Update the launch template's subnet reference to a live
+    subnet. If the deleted subnet was retired intentionally,
+    confirm the AZ coverage of the remaining subnets matches
+    the workload's availability requirements (e.g., still
+    multi-AZ). Add the missing subnet back if AZ redundancy
+    was lost.
+  example: |
+    {
+      "compute": {
+        "kind": "launch_template",
+        "lt": {
+          "has_ghost_subnet": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: launch_template
+    - field: properties.compute.lt.has_ghost_subnet
+      op: eq
+      value: true

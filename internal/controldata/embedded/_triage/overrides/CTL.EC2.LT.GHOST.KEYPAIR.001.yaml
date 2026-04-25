@@ -1,0 +1,20 @@
+control: CTL.EC2.LT.GHOST.KEYPAIR.001
+defect: >
+  Launch template references an EC2 key pair that has been
+  deleted.
+infection: >
+  The launch template's `KeyName` field is the named SSH key
+  that AWS injects into the instance's authorized keys file.
+  When the named key pair no longer exists, the launch either
+  fails outright (depending on AWS handling at the time) or
+  the instance launches with no SSH key and is unreachable via
+  SSH. If the workload was designed around SSH access, the
+  instance is unmanageable until access is re-established
+  through SSM Session Manager or EC2 Instance Connect. If the
+  workload was migrated to SSM and the key reference is
+  vestigial, the finding signals stale launch-template
+  metadata that should be removed for clarity.
+failure: >
+  New instances are unreachable via the documented access
+  path; either launches fail or the operator inherits an
+  unmanaged instance.

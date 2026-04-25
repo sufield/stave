@@ -1,0 +1,23 @@
+control: CTL.EC2.PATCH.SCAN.STALE.001
+defect: >
+  SSM Patch Manager has not run a compliance scan on
+  this instance in more than 7 days.
+infection: >
+  Patch compliance status reflects reality only as
+  recently as the last scan. With a 7-day-plus gap, the
+  reported status describes the instance as it was a
+  week ago. Vendors release security patches
+  continuously; a CVE patched yesterday still shows as
+  "missing" in stale scan output, and a CVE introduced
+  by yesterday's patch list never shows up at all.
+  Compliance dashboards built off this data tell
+  leadership the wrong thing: either they overstate
+  exposure (patches that have been applied since the
+  last scan still report as missing) or they
+  understate it (patches that should be applied are
+  invisible because they postdate the scan).
+failure: >
+  Stale compliance posture. The org's view of patching
+  is offset from reality by however long the gap is —
+  often the difference between "compliant" and
+  "actively-exploited CVE present."

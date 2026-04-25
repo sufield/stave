@@ -1,0 +1,24 @@
+control: CTL.EC2.INSPECTOR.FINDINGS.STALE.001
+defect: >
+  Active Inspector findings on this instance have been
+  open for more than 30 days without remediation or
+  documented suppression.
+infection: >
+  Stale findings are a signal that the vulnerability-
+  management lifecycle is not closing the loop. The scan
+  ran, the issue was identified, the finding was
+  filed — and then nothing happened. Either the
+  remediation pipeline never picked the finding up
+  (the SLA process is broken) or someone decided not
+  to fix it but did not record that decision through
+  Inspector's suppression mechanism (the acceptance
+  process is broken). Either way, real vulnerabilities
+  sit on production instances with no scheduled action.
+  When organizations look back at incidents involving
+  CVE exploitation, the affected CVE was very often
+  visible in their scanner output for months before the
+  exploit landed.
+failure: >
+  Vulnerability-management lifecycle gap. Known issues
+  remain open beyond their SLA; the next exploited CVE
+  is likely already in the report.

@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "i-online", "properties": {"compute": {"kind": "instance", "ec2": {"ssm_managed": true, "ssm_ping_status": "Online", "ssm_last_ping_time": "2026-01-11T00:00:00Z", "ssm_agent_stale": false}}}, "type": "aws_ec2_instance", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

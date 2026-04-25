@@ -1,0 +1,26 @@
+control: CTL.EC2.EBS.DELETEONTERMINATION.001
+defect: >
+  EBS volume is attached to an instance with
+  `DeleteOnTermination` set to false. Terminating the
+  instance leaves the volume behind.
+infection: >
+  This is the precondition for the orphan-volume
+  accumulation problem. With DeleteOnTermination disabled,
+  every instance termination produces a residual volume in
+  `available` state — a data remnant outside the
+  security envelope of any running workload. For ephemeral
+  or replaceable workloads (web servers, batch jobs,
+  short-lived processing), the default of `true` is the
+  correct behavior; the volume should die with the
+  instance because no operational use case extends past
+  the instance's lifetime. Disabling DOT is legitimate for
+  stateful workloads that explicitly manage volume
+  lifecycle (databases with manual backup/restore, manual
+  promotion to a new instance) — but those cases should be
+  documented, not implicit. An undocumented disabled DOT
+  is almost always a misconfiguration that produces orphan
+  volumes the team did not intend to keep.
+failure: >
+  Continuous orphan creation. Every instance termination
+  produces an unattached volume that nothing in the
+  workload's lifecycle accounts for.

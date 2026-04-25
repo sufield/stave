@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.SNAPSHOT.STALE.001
+name: EBS Snapshot Older Than 365 Days
+description: >
+  EBS snapshot is older than 365 days. Stale snapshots
+  accumulate cost (S3 storage charges for every snapshot
+  block) and exposure surface. They may contain historical
+  credentials that have since been rotated, old application
+  versions with patched-but-not-removed vulnerabilities,
+  and data that should have been deleted under retention
+  policies. The finding is a lifecycle/governance signal:
+  stale snapshots warrant a review pass — archive to
+  cheaper storage, fold into a compliance retention
+  pipeline, or delete.
+domain: hygiene
+severity: low
+compliance:
+  cis_aws_v3.0: "2.2.1"
+  nist_800_53_r5: "SI-12"
+  fedramp_moderate: "SI-12"
+  soc2: "CC7.1"
+  hipaa: "164.310(d)(2)(i)"
+  ccm_v4: ["DSP-12", "CCC-03"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: none
+observation_fields:
+  - compute.kind
+  - compute.ebs.snapshot_id
+  - compute.ebs.snapshot_age_days
+  - compute.ebs.snapshot_is_stale
+  - compute.ebs.snapshot_create_time
+remediation:
+  description: >
+    EBS snapshot is older than the staleness threshold (365
+    days by default).
+  action: >
+    Review the snapshot against retention policy. For
+    snapshots covered by a documented retention rule, move
+    them under an automated lifecycle policy (Data Lifecycle
+    Manager) so future expirations happen automatically.
+    For snapshots that no longer have a retention purpose,
+    delete them. For snapshots whose contents are uncertain,
+    document the asset they came from and the data
+    classification before making a delete decision.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_snapshot",
+        "ebs": {
+          "snapshot_is_stale": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_snapshot
+    - field: properties.compute.ebs.snapshot_is_stale
+      op: eq
+      value: true

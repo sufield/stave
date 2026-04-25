@@ -48,7 +48,6 @@
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
         "unsafe_duration_hours": 240,
-        "threshold_hours": 168,
         "misconfigurations": [
           {
             "property": "binds_to_cluster_admin",
@@ -60,7 +59,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "critical",
       "posture_drift": {
@@ -275,11 +274,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8fddb4857c80faf46de90a635f56d2e0659353e8",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-24-messy-sparse/controls/CTL.ID.KUBE.001.yaml"
-      ]
+      "head_commit": "814903d5b8f84c94ee884d0b2d1b1fc733a40579",
+      "dirty": false
     }
   }
 }

@@ -151,8 +151,15 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 	hf := scopedHasField(field, scopeVar)
 
 	// resolveValueExpr resolves values that reference params (e.g., "params.min_retention_days")
-	// as CEL field accesses instead of string literals.
+	// as CEL field accesses instead of string literals. The documented
+	// `value_from_param` field takes precedence: if set, the rule
+	// references a param by name and we emit `params.<name>` directly.
+	// Otherwise we fall back to the legacy string-literal workaround
+	// (`value: "params.foo"`) for backward compatibility.
 	resolveValueExpr := func(v any) string {
+		if r.ValueFromParam != "" {
+			return "params." + string(r.ValueFromParam)
+		}
 		if s, ok := v.(string); ok && strings.HasPrefix(s, "params.") {
 			return s // emit as-is — CEL resolves params.X from the activation map
 		}

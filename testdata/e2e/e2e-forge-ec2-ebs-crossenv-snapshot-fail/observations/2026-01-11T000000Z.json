@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "snap-prod-dev-leak", "properties": {"compute": {"kind": "ebs_snapshot", "ebs": {"snapshot_id": "snap-0prodleak0001", "snapshot_source_env": "production", "snapshot_shared_accounts": ["999988887777"], "snapshot_shared_with_nonprod": true}}}, "type": "aws_ebs_snapshot", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

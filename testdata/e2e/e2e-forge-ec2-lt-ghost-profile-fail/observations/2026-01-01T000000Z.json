@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "lt-profile-ghost", "properties": {"compute": {"kind": "launch_template", "lt": {"id": "lt-0profghost01", "instance_profile_arn": "arn:aws:iam::111122223333:instance-profile/decom-2024-q3", "instance_profile_exists": false, "has_ghost_profile": true}}}, "type": "aws_launch_template", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1,0 +1,24 @@
+control: CTL.EC2.AMI.UNTRUSTED.001
+defect: >
+  Instance is running an AMI from an account that is not in
+  the organization's trusted publisher set (org accounts,
+  Amazon, verified marketplace).
+infection: >
+  The AMI is the base image — it carries the operating
+  system, every pre-installed package, every embedded
+  configuration, and any code the AMI publisher chose to
+  bake in. A malicious or compromised publisher can ship an
+  AMI with: backdoors (reverse shells, persistent C2
+  agents), embedded credentials (the publisher's own keys
+  with cross-account access), known-vulnerable software
+  versions (unpatched, unmaintained), and configuration that
+  exposes management interfaces. Once the instance launches,
+  whatever was in the AMI runs as root with full instance
+  privileges. The trust model for AMIs is the publisher
+  account: the organization decides which publishers it
+  accepts software from. AMIs from outside that set are
+  third-party software running on production infrastructure
+  with no installation review.
+failure: >
+  Supply-chain compromise via the base image. Anything the
+  publisher chose to ship runs as root on the instance.

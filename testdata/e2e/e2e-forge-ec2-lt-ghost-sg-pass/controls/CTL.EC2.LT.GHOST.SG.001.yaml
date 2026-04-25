@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.LT.GHOST.SG.001
+name: Launch Template References Deleted Security Group
+description: >
+  Launch template references one or more security groups that have
+  been deleted. AWS handles the deleted reference in one of two
+  ways: launches fail outright (instance cannot be created
+  without a valid SG), or instances launch with the VPC's default
+  security group as the fallback. Either outcome is bad. The
+  default SG permits all intra-default-SG traffic and all egress
+  — replacing a deliberately-restrictive SG with the permissive
+  default downgrades the security posture of every new instance.
+  The launch template appears valid in the console; the
+  degradation surfaces only when an instance launches.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03", "IVS-04"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - compute.kind
+  - compute.lt.id
+  - compute.lt.sg_ids
+  - compute.lt.has_ghost_sg
+  - compute.lt.ghost_sg_ids
+remediation:
+  description: >
+    Launch template references security groups that no longer
+    exist. New instances launch with the wrong SG (or fail to
+    launch).
+  action: >
+    Update the launch template to reference live security groups.
+    If the deleted SG was intentional, document the replacement
+    and verify the new SG enforces the same restrictions. Audit
+    the SG decommissioning runbook — a proper deletion path
+    should update all dependents (launch templates, ENIs, RDS
+    instances) before deleting the SG.
+  example: |
+    {
+      "compute": {
+        "kind": "launch_template",
+        "lt": {
+          "has_ghost_sg": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: launch_template
+    - field: properties.compute.lt.has_ghost_sg
+      op: eq
+      value: true

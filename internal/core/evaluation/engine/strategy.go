@@ -71,7 +71,19 @@ type unsafeStateStrategy struct {
 
 func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	observation := newControlRow(s.ctl, t)
-	maxUnsafe := s.deps.slaThresholdFor(s.ctl)
+	// unsafe_state is "this state must not be true" — not "this state
+	// must not last longer than X." If the control author did NOT set
+	// per-control max_unsafe_duration, fire immediately rather than
+	// borrowing the global CLI fallback (default 168h). The fallback
+	// is appropriate for unsafe_duration controls; applying it to
+	// unsafe_state silently gave critical states (public buckets,
+	// unrestricted ingress) up to a 7-day grace window where the
+	// control author intended immediate detection. Per-control
+	// max_unsafe_duration is still honored when explicitly declared.
+	var maxUnsafe time.Duration
+	if s.ctl.Prepared.HasMaxUnsafeDuration {
+		maxUnsafe = s.deps.slaThresholdFor(s.ctl)
+	}
 	span := s.deps.currentSpan()
 
 	span.RecordStep("predicate_evaluation", map[string]any{

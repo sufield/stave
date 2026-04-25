@@ -66,14 +66,22 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	// Reachability annotation — annotate findings with IAM blast radius.
 	annotateReachability(&result, ec.Opts.ObservationsDir)
 
-	pipeline := &appeval.OutputPipeline{
-		Marshaler:       deps.Runner.ReportPublisher,
-		Enricher:        deps.Runner.ContextEnricher,
-		CoveragePosture: buildCoveragePosture(activeControls(deps), ec.Logger),
-		Logger:          ec.Logger,
-	}
-	if err := pipeline.Run(ctx, deps.Config.Output, &result); err != nil {
-		return EvaluateResult{}, fmt.Errorf("run output pipeline: %w", err)
+	// Skip the full output pipeline when --new-only or --new-since is
+	// set. run_standard.go calls runNewOnlyOutput after this returns,
+	// which writes a filtered output document. Running the full
+	// pipeline here would produce a double-output stream — two JSON
+	// documents on stdout — which breaks any consumer that expects
+	// one document per invocation.
+	if !(ec.Opts.NewOnly || ec.Opts.NewSince != "") {
+		pipeline := &appeval.OutputPipeline{
+			Marshaler:       deps.Runner.ReportPublisher,
+			Enricher:        deps.Runner.ContextEnricher,
+			CoveragePosture: buildCoveragePosture(activeControls(deps), ec.Logger),
+			Logger:          ec.Logger,
+		}
+		if err := pipeline.Run(ctx, deps.Config.Output, &result); err != nil {
+			return EvaluateResult{}, fmt.Errorf("run output pipeline: %w", err)
+		}
 	}
 
 	evalResult := BuildEvaluateResult(status, deps.Config.PolicySource, deps.Config.ObservationSource)

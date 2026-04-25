@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "vol-orphan-plain", "properties": {"compute": {"kind": "ebs_volume", "ebs": {"volume_id": "vol-0plainghost001", "attached": false, "state": "available", "size_gb": 500, "encrypted": false, "create_time": "2024-09-01T00:00:00Z", "age_days": 497}}}, "type": "aws_ebs_volume", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

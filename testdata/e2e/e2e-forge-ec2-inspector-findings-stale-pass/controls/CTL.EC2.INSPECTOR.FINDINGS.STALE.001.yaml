@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.INSPECTOR.FINDINGS.STALE.001
+name: Inspector Findings Older Than 30 Days Without Remediation
+description: >
+  Amazon Inspector has active findings for this instance
+  that are older than 30 days and have not been
+  remediated. The vulnerabilities were detected — the
+  scan ran, the issue was identified, the finding was
+  filed — but no follow-up has happened in a month. Stale
+  findings indicate either a broken remediation pipeline
+  (the SLA process never picked them up) or undocumented
+  acceptance (someone decided not to fix but did not
+  record the decision in Inspector). Either case is a
+  signal that the vulnerability-management lifecycle is
+  not closing the loop on detected issues.
+domain: hygiene
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.7"
+  nist_800_53_r5: "RA-5"
+  fedramp_moderate: "RA-5"
+  pci_dss_v4.0: "6.3.2"
+  soc2: "CC7.1"
+  hipaa: "164.308(a)(8)"
+  ccm_v4: ["TVM-01", "TVM-02"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - compute.kind
+  - compute.ec2.inspector_findings_count
+  - compute.ec2.inspector_findings_stale_count
+  - compute.ec2.inspector_oldest_finding_days
+  - compute.ec2.inspector_critical_findings
+remediation:
+  description: >
+    Inspector findings older than 30 days are open against
+    this instance. The vulnerabilities have been known and
+    not addressed for over a month.
+  action: >
+    Review the stale findings: remediate them via patches
+    or configuration changes, suppress them with a
+    documented business justification (Inspector
+    suppression rule with comment), or accept them via
+    the organization's vulnerability acceptance process.
+    Add the per-instance vulnerability burndown to the
+    standard incident review cadence so findings do not
+    sit beyond their SLA undetected.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "ec2": {
+          "inspector_findings_stale_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.ec2.inspector_findings_stale_count
+      op: gt
+      value: 0

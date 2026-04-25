@@ -1,0 +1,27 @@
+control: CTL.EC2.SSM.AGENT.STALE.001
+defect: >
+  Instance is registered with Systems Manager but the SSM
+  agent has stopped responding (`ConnectionLost` ping
+  status).
+infection: >
+  This is the "everything appears to work" pattern applied
+  to instance management. The SSM console shows the
+  instance in its inventory; cost dashboards count it as
+  managed; compliance reports treat it as in-scope. Behind
+  that view, every actual management operation fails
+  silently. Patches queued through Patch Manager never
+  reach the instance. Session Manager attempts hang and
+  time out. Run Command operations enqueue but never
+  execute. The most common causes are network changes
+  (the instance lost reachability to the SSM endpoints
+  via VPC endpoint deletion or NAT issue), IAM changes
+  (the instance role lost AmazonSSMManagedInstanceCore),
+  or agent crashes that the OS did not restart. None of
+  these surface as failures in the SSM dashboard — they
+  surface as the absence of activity, which dashboards do
+  not highlight.
+failure: >
+  False management posture. The instance is in inventory
+  and reported as managed while no management operations
+  reach it. Patches accumulate as pending; sessions
+  cannot be opened; no remediation is delivered.

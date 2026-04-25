@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.IMDS.UNNECESSARY.001
+name: IMDS Enabled on Instance Without IAM Role
+description: >
+  Instance has the metadata service enabled
+  (`HttpEndpoint: enabled`) but no IAM instance profile
+  attached. The metadata service responds to requests but
+  serves no IAM credentials — there is no role to deliver.
+  IMDS still exposes instance identity information that
+  aids reconnaissance: account ID, instance ID, region,
+  availability zone, instance type, public/private IPs,
+  security group IDs, network interfaces. An attacker who
+  has reached the metadata endpoint can build a profile
+  of the instance's environment without obtaining
+  credentials. If IMDS is not actually needed (no role
+  attached, no application code that calls
+  `GetInstanceIdentityDocument`), it should be disabled
+  entirely with `HttpEndpoint: disabled`. The finding is
+  a hardening recommendation, not a vulnerability — IMDS
+  without a role does not directly leak credentials.
+domain: hygiene
+severity: low
+compliance:
+  cis_aws_v3.0: "5.6"
+  nist_800_53_r5: "CM-7"
+  fedramp_moderate: "CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+observation_fields:
+  - compute.kind
+  - compute.ec2.imds_enabled
+  - compute.ec2.has_instance_profile
+  - compute.ec2.imds_unnecessary
+remediation:
+  description: >
+    IMDS is enabled on an instance with no IAM role
+    attached. The endpoint exposes instance identity
+    information that aids reconnaissance.
+  action: >
+    Disable the metadata endpoint:
+    `aws ec2 modify-instance-metadata-options
+    --instance-id <id> --http-endpoint disabled`. If a
+    role is genuinely required for the workload but has
+    been omitted by mistake, attach the appropriate
+    profile instead of disabling IMDS. Either action
+    resolves the finding — the goal is to align the IMDS
+    configuration with whether the instance actually uses
+    IAM credentials.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "ec2": {
+          "imds_unnecessary": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.ec2.imds_unnecessary
+      op: eq
+      value: true

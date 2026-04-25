@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.AMI.ENCRYPTION.001
+name: AMI EBS Snapshots Are Not Encrypted
+description: >
+  AMI's EBS snapshots are not encrypted. Instances launched from
+  this AMI inherit unencrypted root volumes — even when account-
+  level EBS default encryption is enabled, certain launch
+  configurations propagate the AMI's snapshot encryption state
+  rather than overriding to the default. AMIs are commonly
+  shared across accounts and regions; an unencrypted AMI's
+  snapshot can be copied (or accidentally exposed) without the
+  protection a workload's data classification would otherwise
+  require. Encrypting AMI snapshots is a one-time per-AMI
+  operation that propagates to every instance launched from it.
+domain: cryptography
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.2.1"
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+  pci_dss_v4.0: "3.5.1"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-08", "CEK-13"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: data_access
+observation_fields:
+  - compute.kind
+  - compute.ami.id
+  - compute.ami.encrypted
+  - compute.ami.snapshot_encrypted
+remediation:
+  description: >
+    AMI's underlying EBS snapshots are not encrypted.
+  action: >
+    Build a new encrypted AMI: copy the existing AMI to itself
+    with `--encrypted` set (this re-encrypts the snapshots
+    using the specified KMS key), then deregister the
+    unencrypted source. Update launch templates and ASGs to
+    reference the new encrypted AMI. Enable EBS encryption by
+    default at the account level so future AMIs and volumes
+    inherit encryption automatically.
+  example: |
+    {
+      "compute": {
+        "kind": "ami",
+        "ami": {
+          "encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ami
+    - field: properties.compute.ami.encrypted
+      op: eq
+      value: false

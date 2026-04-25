@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.PATCH.WINDOW.INACTIVE.001
+name: Patch Maintenance Window Not Executed Recently
+description: >
+  SSM Patch Manager maintenance window has not executed
+  in more than 30 days. The maintenance window is the
+  mechanism that actually applies patches — a compliance
+  scan identifies missing patches, but the window
+  installs them. When the window has not run, no
+  patches have been installed regardless of what the
+  compliance scan reports. Compliance scans may show
+  "patches pending" but the apply step that resolves
+  pending into installed has not happened. The
+  remediation pipeline is broken even when the
+  detection pipeline reports correctly.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.5"
+  nist_800_53_r5: "SI-2"
+  fedramp_moderate: "SI-2"
+  pci_dss_v4.0: "6.3.3"
+  soc2: "CC7.1"
+  hipaa: "164.308(a)(5)(ii)(B)"
+  ccm_v4: ["TVM-02"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - compute.kind
+  - compute.ec2.patch_window_name
+  - compute.ec2.patch_window_last_execution
+  - compute.ec2.patch_window_last_execution_days
+  - compute.ec2.patch_window_inactive
+remediation:
+  description: >
+    SSM Patch Manager maintenance window has not run
+    in more than 30 days. Patch installation is not
+    happening on this instance's schedule.
+  action: >
+    Investigate the maintenance window's execution
+    history: `aws ssm describe-maintenance-window-
+    executions --window-id <id>`. Common causes are a
+    misconfigured cron schedule, a removed target
+    registration, missing IAM permissions on the
+    maintenance window's service role, or task
+    definitions that have failed and disabled the
+    window. Fix the underlying issue and trigger an
+    immediate run with
+    `aws ssm start-automation-execution` or wait for
+    the next scheduled execution and confirm via the
+    SSM console.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "ec2": {
+          "patch_window_inactive": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.ec2.patch_window_inactive
+      op: eq
+      value: true

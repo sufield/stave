@@ -1,0 +1,25 @@
+control: CTL.EC2.EBS.CROSSENV.SNAPSHOT.001
+defect: >
+  Production EBS snapshot is shared with a non-production
+  account.
+infection: >
+  Production snapshots contain production data —
+  customer records, application state at the moment of
+  snapshot, embedded credentials, configuration files,
+  encryption material if not properly handled. Non-
+  production accounts are typically less defended than
+  production: more developers have IAM access, SCPs are
+  relaxed to allow experimentation, CloudTrail retention
+  is shorter, GuardDuty coverage may be partial,
+  monitoring assumes data sensitivity is lower. When a
+  production snapshot is shared with a development or
+  staging account, every production data-handling control
+  on the source side is bypassed for the data on the
+  destination side. The receiving account can restore
+  the snapshot at will; the data lives there until
+  someone notices and revokes the share.
+failure: >
+  Production data in non-production environment.
+  Customer data, application state, and credentials are
+  accessible in an account whose security posture was
+  not designed to hold them.

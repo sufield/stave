@@ -3,29 +3,29 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1386
-**Pack hash:** `1a961df5608596a61f52943f7ef91796d6e6882edf1da628f240c4123760b6ee`
+**Total controls:** 1392
+**Pack hash:** `f7c9ebc3b2568b7bf475f281452e80247dc3771f590dfbb914bbd9d5357866bd`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 171 |
-| high | 621 |
+| high | 625 |
 | info | 16 |
 | low | 97 |
-| medium | 481 |
+| medium | 483 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 29 |
 | availability | 2 |
-| cryptography | 2 |
+| cryptography | 3 |
 | detection | 32 |
 | encryption | 75 |
-| exposure | 842 |
+| exposure | 845 |
 | governance | 27 |
-| hygiene | 8 |
+| hygiene | 10 |
 | identity | 326 |
 | network | 21 |
 | resilience | 14 |
@@ -6240,6 +6240,21 @@ EC2 instances must not run on AMIs that are deprecated by AWS or the AMI owner, 
 
 ---
 
+### CTL.EC2.AMI.ENCRYPTION.001
+
+**AMI EBS Snapshots Are Not Encrypted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** cryptography
+- **Compliance:** cis_aws_v3.0: 2.2.1; fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.7;
+
+AMI's EBS snapshots are not encrypted. Instances launched from this AMI inherit unencrypted root volumes — even when account- level EBS default encryption is enabled, certain launch configurations propagate the AMI's snapshot encryption state rather than overriding to the default. AMIs are commonly shared across accounts and regions; an unencrypted AMI's snapshot can be copied (or accidentally exposed) without the protection a workload's data classification would otherwise require. Encrypting AMI snapshots is a one-time per-AMI operation that propagates to every instance launched from it.
+
+**Remediation:** Build a new encrypted AMI: copy the existing AMI to itself with `--encrypted` set (this re-encrypts the snapshots using the specified KMS key), then deregister the unencrypted source. Update launch templates and ASGs to reference the new encrypted AMI. Enable EBS encryption by default at the account level so future AMIs and volumes inherit encryption automatically.
+
+---
+
 ### CTL.EC2.AMI.GHOST.001
 
 **Launch Templates Must Not Reference Deregistered AMIs**
@@ -6267,6 +6282,21 @@ EC2 launch templates must not reference AMIs that have been deregistered. Instan
 A publicly shared AMI exposes the complete disk contents of the base image — including installed software, configuration files, hard-coded credentials, and application code. Custom AMIs frequently contain SSH authorized_keys, internal PKI certificates, application source code, and secrets. Unlike EBS snapshots, public AMIs appear in AWS Marketplace searches and are trivially discoverable.
 
 **Remediation:** Remove public sharing from the AMI: aws ec2 modify-image-attribute --image-id <ami-id> --launch-permission '{"Remove":[{"Group":"all"}]}'. Audit all custom AMIs: aws ec2 describe-images --owners self --filters Name=is-public,Values=true
+
+---
+
+### CTL.EC2.AMI.UNTRUSTED.001
+
+**Instance Launched From Untrusted AMI Source**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1.1; fedramp_moderate: SA-12; hipaa: 164.312(c)(2); nist_800_53_r5: SA-12; pci_dss_v4.0: 6.3.2; soc2: CC8.1;
+
+EC2 instance is running an AMI whose owner account is not in the organization, is not Amazon's published-image owner ID, and is not from the verified marketplace publisher list. The AMI's content (operating system, installed software, embedded credentials, possible backdoors) is outside organizational control. The trust boundary for AMIs is the owner account: AMIs from `amazon`, `aws-marketplace` (verified publishers), and accounts within the organization are trusted; everything else is treated as third-party software running with full instance privileges. The trusted-publisher list is configurable via deployment metadata.
+
+**Remediation:** Replace the instance with one launched from an internally- built AMI or a verified marketplace AMI. If the third-party AMI is genuinely needed, scan it (Amazon Inspector) before use, snapshot a known-good version into the organization's AMI account, and replace the launch template / ASG to reference the internal copy. Add the original publisher account to the trusted-publisher allowlist explicitly if its AMIs are part of approved supply.
 
 ---
 
@@ -6475,6 +6505,66 @@ EC2 instances that need AWS API access should use IAM instance profiles (role-ba
 Launch configurations are a legacy mechanism superseded by launch templates. Launch templates support IMDSv2 enforcement, instance metadata tags, Nitro Enclave support, EBS volume encryption by default, and multiple instance types per ASG. AWS has deprecated launch configurations. New ASG features and security improvements are only available via launch templates.
 
 **Remediation:** Create a launch template from the existing launch configuration, then update the ASG: aws autoscaling update-auto-scaling-group --auto-scaling-group-name <n> --launch-template LaunchTemplateId=<id>,Version='$Latest'
+
+---
+
+### CTL.EC2.LT.GHOST.KEYPAIR.001
+
+**Launch Template References Deleted Key Pair**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: CM-8; nist_800_53_r5: CM-8; soc2: CC7.1;
+
+Launch template references an EC2 key pair that has been deleted. Behavior on launch depends on AWS handling: the launch may fail (the named key pair is required), or the instance launches with no SSH key. An instance with no SSH key is reachable only through alternative access paths (SSM Session Manager, EC2 Instance Connect) — if the workload was designed around SSH key access, the instance may be effectively unmanageable.
+
+**Remediation:** Either reissue the key pair under the same name, update the launch template to reference an existing key pair, or explicitly remove the KeyName field if the workload is intended to use SSM Session Manager / EC2 Instance Connect for access. Document which access path applies so future operators don't re-add a stale key reference.
+
+---
+
+### CTL.EC2.LT.GHOST.PROFILE.001
+
+**Launch Template References Deleted Instance Profile**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: CM-8; nist_800_53_r5: CM-8; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Launch template references an IAM instance profile that has been deleted. Instances either fail to launch (if the profile is required) or launch without AWS credentials at all. The application running on the instance starts up successfully — the EC2 launch and OS boot succeed — but the application's first AWS API call fails with `Unable to locate credentials`. The failure surfaces at runtime, not at launch, which is harder to detect: the instance appears healthy in EC2's view while the application is broken at the IAM layer.
+
+**Remediation:** Either recreate the instance profile (with the same role attached) or update the launch template to reference an existing profile. Audit the profile-deletion path that left this reference behind — the deletion runbook should enumerate dependents (launch templates, ASGs) and update them before removing the profile.
+
+---
+
+### CTL.EC2.LT.GHOST.SG.001
+
+**Launch Template References Deleted Security Group**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: CM-8; nist_800_53_r5: CM-8; pci_dss_v4.0: 1.2.1; soc2: CC7.1;
+
+Launch template references one or more security groups that have been deleted. AWS handles the deleted reference in one of two ways: launches fail outright (instance cannot be created without a valid SG), or instances launch with the VPC's default security group as the fallback. Either outcome is bad. The default SG permits all intra-default-SG traffic and all egress — replacing a deliberately-restrictive SG with the permissive default downgrades the security posture of every new instance. The launch template appears valid in the console; the degradation surfaces only when an instance launches.
+
+**Remediation:** Update the launch template to reference live security groups. If the deleted SG was intentional, document the replacement and verify the new SG enforces the same restrictions. Audit the SG decommissioning runbook — a proper deletion path should update all dependents (launch templates, ENIs, RDS instances) before deleting the SG.
+
+---
+
+### CTL.EC2.LT.GHOST.SUBNET.001
+
+**Launch Template References Deleted Subnet**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: CM-8; nist_800_53_r5: CM-8; pci_dss_v4.0: 1.2.1; soc2: A1.2;
+
+Launch template references a subnet that has been deleted. Instance launches fail because the network location does not exist. If the launch template is the source of truth for an Auto Scaling Group's subnet selection, scale-out events fail for any AZ whose subnet was the deleted one. Mixed-subnet ASG configurations still operate in remaining AZs but lose the redundancy they were configured for.
+
+**Remediation:** Update the launch template's subnet reference to a live subnet. If the deleted subnet was retired intentionally, confirm the AZ coverage of the remaining subnets matches the workload's availability requirements (e.g., still multi-AZ). Add the missing subnet back if AZ redundancy was lost.
 
 ---
 

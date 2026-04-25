@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.UNATTACHED.001
+name: Unattached EBS Volume Persists With Data
+description: >
+  EBS volume is in `available` state — not attached to any
+  instance — and continues to persist with whatever data it
+  contained when last detached. Unattached volumes are data
+  remnants from terminated workloads: application databases,
+  log files, configuration files with credentials, temporary
+  data, user uploads. The volume is invisible to instance-
+  level security tools (no instance to scan), invisible to
+  most monitoring (no associated workload), and accessible to
+  anyone in the account with `ec2:AttachVolume` permission.
+  Accumulation is the real risk — dozens of orphan volumes
+  from years of terminated instances, each with unknown data.
+domain: hygiene
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.2.1"
+  nist_800_53_r5: "MP-6"
+  fedramp_moderate: "MP-6"
+  pci_dss_v4.0: "9.4.5"
+  soc2: "CC6.1"
+  hipaa: "164.310(d)(2)(i)"
+  ccm_v4: ["DSP-12", "CCC-03"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: data_access
+observation_fields:
+  - compute.kind
+  - compute.ebs.volume_id
+  - compute.ebs.attached
+  - compute.ebs.state
+  - compute.ebs.size_gb
+  - compute.ebs.encrypted
+  - compute.ebs.create_time
+  - compute.ebs.age_days
+remediation:
+  description: >
+    EBS volume is unattached and persists with data from a
+    previously-attached instance.
+  action: >
+    Verify the volume's contents are not needed: snapshot it
+    if there is uncertainty, then delete the volume. If the
+    volume is intentionally retained for restore purposes,
+    snapshot it and delete the volume — the snapshot is
+    cheaper and clearer about the lifecycle. Add an automated
+    sweep that flags volumes in `available` state older than
+    a defined threshold (typically 30 days) and either
+    snapshots-then-deletes or escalates to the asset owner.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_volume",
+        "ebs": {
+          "attached": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_volume
+    - field: properties.compute.ebs.attached
+      op: eq
+      value: false

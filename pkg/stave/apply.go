@@ -8,11 +8,11 @@ import (
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	"github.com/sufield/stave/internal/builtin/capabilities"
 	covadapter "github.com/sufield/stave/internal/adapters/coverage"
 	"github.com/sufield/stave/internal/adapters/observations"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	builtinpredicate "github.com/sufield/stave/internal/builtin/predicate"
 	stavecel "github.com/sufield/stave/internal/cel"
 	policy "github.com/sufield/stave/internal/core/controldef"

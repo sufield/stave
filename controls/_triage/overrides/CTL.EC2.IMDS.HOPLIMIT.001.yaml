@@ -1,0 +1,25 @@
+control: CTL.EC2.IMDS.HOPLIMIT.001
+defect: >
+  Instance metadata service hop limit is greater than 1.
+infection: >
+  The hop limit is a TTL on HTTP responses from the
+  metadata service at 169.254.169.254. With a hop limit
+  of 1, the response can travel exactly one network hop
+  — only the instance itself can complete the round
+  trip. Bridge-networked containers, sidecar proxies,
+  and forwarded SSRF chains add hops; with the limit at
+  1, those callers cannot reach IMDS. Raising the hop
+  limit to 2 or more permits these multi-hop callers to
+  reach the metadata endpoint and retrieve the host's
+  IAM role credentials. The classic exploitation path is
+  SSRF through a vulnerable application — the
+  application proxies an attacker-controlled URL, the
+  URL resolves to 169.254.169.254, and the response
+  travels back through the application to the attacker.
+  A hop limit of 1 closes that path even when the
+  application is vulnerable.
+failure: >
+  Multi-hop SSRF reaches credentials. A vulnerable
+  application or compromised container retrieves the
+  host's IAM role credentials via a metadata request
+  that traverses the proxy or container boundary.

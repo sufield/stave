@@ -1,0 +1,18 @@
+control: CTL.EC2.LT.GHOST.SUBNET.001
+defect: >
+  Launch template references a subnet that has been deleted.
+infection: >
+  Subnets are AZ-bound — a deleted subnet means the AZ
+  associated with that subnet is no longer reachable through
+  this launch template. ASGs that derive subnet selection
+  from the launch template lose the AZ when the subnet is
+  removed. Single-subnet launch templates fail to launch
+  entirely. Multi-subnet templates lose redundancy: the ASG
+  still operates in remaining AZs but no longer has the
+  AZ-coverage the deployment was designed for. AZ failures
+  that were supposed to be handled by spreading across
+  subnets become outages instead.
+failure: >
+  Loss of AZ redundancy or full launch failure. The
+  workload's resilience design is silently degraded by a
+  ghost subnet reference.

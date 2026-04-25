@@ -9,12 +9,12 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/adapters/sla"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"

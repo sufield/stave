@@ -15,11 +15,11 @@ import (
 
 	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/adapters/observations"
 	appcollect "github.com/sufield/stave/internal/app/collect"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	appscore "github.com/sufield/stave/internal/app/score"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/controldata"
 	policy "github.com/sufield/stave/internal/core/controldef"

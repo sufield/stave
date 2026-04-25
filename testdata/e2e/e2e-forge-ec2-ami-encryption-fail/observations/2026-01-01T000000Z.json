@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "ami-plaintext", "properties": {"compute": {"kind": "ami", "ami": {"id": "ami-0plain000001", "encrypted": false, "snapshot_encrypted": false}}}, "type": "aws_ami", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

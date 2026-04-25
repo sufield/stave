@@ -1,0 +1,22 @@
+control: CTL.EC2.INSPECTOR.COVERAGE.001
+defect: >
+  Inspector is enabled at the account level but this
+  instance is not in scanning scope.
+infection: >
+  Account-level Inspector enablement is the prerequisite,
+  not the deliverable. The deliverable is per-instance
+  vulnerability findings. When an individual instance is
+  excluded — usually because it is not SSM-managed
+  (Inspector requires the SSM agent for OS-level
+  scanning) or because of an explicit exclusion tag —
+  the account dashboard still says "Inspector: enabled"
+  but the instance ships without vulnerability evidence.
+  Reviews that read the account-level status see green;
+  the instance-level coverage gap is invisible. Over
+  time, a meaningful fraction of the fleet can be
+  uncovered while the org-wide Inspector status reads
+  "enabled — 100% account coverage."
+failure: >
+  Vulnerability blind spot. The instance runs without
+  any scanning evidence; CVEs accumulate without being
+  detected.

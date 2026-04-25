@@ -8,6 +8,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **EC2-1 — launch template ghost references and AMI security
+  (6 new controls, 3 chains).** First EC2 gap-closure
+  iteration. Extends the ghost-reference pattern to launch
+  templates — Stave's architectural moat now covers the
+  compute supply chain in addition to S3, IAM, KMS, VPC,
+  EventBridge, CloudWatch, Route53, GitHub CODEOWNERS, and
+  ELB. Prompt spec asked for ~10 controls; three turned out
+  to duplicate existing ones (`CTL.EC2.AMI.GHOST.001` covered
+  LT.GHOST.AMI; `CTL.EC2.AMI.CURRENCY.001` covered both
+  AMI.STALE and AMI.DEPRECATED), so shipped 6 distinct
+  additions. Launch-template ghosts (4): `LT.GHOST.SG`
+  (deleted SG → silent posture downgrade to default SG when
+  instances launch, high), `LT.GHOST.KEYPAIR` (deleted key
+  pair → unmanageable instance, medium), `LT.GHOST.SUBNET`
+  (deleted subnet → AZ redundancy loss or launch failure,
+  high), `LT.GHOST.PROFILE` (deleted instance profile →
+  runtime IAM credential failure invisible to EC2 health
+  checks, high). AMI security (2): `AMI.UNTRUSTED` (AMI from
+  account outside the trusted publisher set — supply-chain
+  compromise via base image, high), `AMI.ENCRYPTION` (AMI
+  EBS snapshots not encrypted — data-at-rest exposure on
+  every instance launched from it, medium). Chains:
+  `ec2_lt_ghost_cascade` (multiple LT ghost references
+  indicate systematic decommissioning failure),
+  `ec2_ami_supply_chain` (untrusted AMI + stale or
+  unencrypted), `ec2_scale_out_failure` (deregistered AMI OR
+  stale AMI — both compromise auto-scaling safety). 13 e2e
+  fixtures (12 base + amazon-pass variant for AMI.UNTRUSTED
+  asserting Amazon-published AMIs are trusted). 6 triage
+  overrides. Ghost reference total across catalog: 37 → 41.
+  Docs and README regenerated (1392 controls).
 - **VPC-8 — lateral movement, network segmentation, and IPv6
   controls (8 controls, 3 chains). Final VPC iteration.** Closes
   the category-14 (lateral movement) and category-12 (IPv6)

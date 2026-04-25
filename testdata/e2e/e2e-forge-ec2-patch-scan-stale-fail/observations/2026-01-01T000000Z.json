@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "i-patch-scan-14d", "properties": {"compute": {"kind": "instance", "ec2": {"patch_last_scan_days": 14, "patch_scan_stale": true}}}, "type": "aws_ec2_instance", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.INSPECTOR.COVERAGE.001
+name: EC2 Instance Not in Inspector Scanning Scope
+description: >
+  EC2 instance is not covered by Amazon Inspector. The
+  account has Inspector enabled (verified by
+  CTL.INSPECTOR.ENABLED.001) but this individual instance
+  is excluded from scanning — typically because it is not
+  SSM-managed (Inspector requires the SSM agent for OS
+  scanning) or because it is explicitly excluded by tag.
+  Account-level Inspector enablement is necessary but not
+  sufficient: per-instance coverage is what produces
+  vulnerability findings for that instance. An uncovered
+  instance ships without vulnerability evidence into the
+  organization's security posture.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.7"
+  nist_800_53_r5: "RA-5"
+  fedramp_moderate: "RA-5"
+  pci_dss_v4.0: "11.3.1"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-01", "TVM-02"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - compute.kind
+  - compute.ec2.inspector_covered
+  - compute.ec2.inspector_account_enabled
+  - compute.ec2.inspector_exclusion_reason
+remediation:
+  description: >
+    Inspector is enabled at the account level but this
+    instance is not covered. No vulnerability scanning
+    occurs for this instance.
+  action: >
+    Add the instance to Inspector's scanning scope. The
+    fastest path is usually to make the instance SSM-
+    managed (if not already) — Inspector picks up SSM-
+    managed instances automatically. Remove any explicit
+    exclusion tags or filter rules that drop this
+    instance from scope. Confirm coverage with
+    `aws inspector2 list-coverage` after the change.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "ec2": {
+          "inspector_covered": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.ec2.inspector_account_enabled
+      op: eq
+      value: true
+    - field: properties.compute.ec2.inspector_covered
+      op: eq
+      value: false

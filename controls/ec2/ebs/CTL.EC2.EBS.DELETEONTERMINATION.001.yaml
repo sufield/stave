@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.DELETEONTERMINATION.001
+name: EBS Volume Has DeleteOnTermination Disabled
+description: >
+  EBS volume attached to a running instance has
+  `DeleteOnTermination` set to false. When the instance is
+  terminated, the volume persists and transitions to
+  `available` state — becoming an unattached volume with all
+  the data the application wrote during the instance's
+  lifetime. This is the precondition for the orphan-volume
+  accumulation problem. Disabling DeleteOnTermination is a
+  legitimate choice for stateful workloads that handle
+  volume lifecycle out-of-band (databases with explicit
+  backup/restore procedures); for ephemeral or replaceable
+  workloads, the default of `true` is the correct behavior
+  and the finding signals an unintentional drift.
+domain: hygiene
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.2.1"
+  nist_800_53_r5: "MP-6"
+  fedramp_moderate: "MP-6"
+  soc2: "CC6.1"
+  hipaa: "164.310(d)(2)(i)"
+  ccm_v4: ["DSP-12", "CCC-03"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - compute.kind
+  - compute.ebs.volume_id
+  - compute.ebs.delete_on_termination
+  - compute.ebs.device_name
+  - compute.ebs.instance_id
+remediation:
+  description: >
+    EBS volume's DeleteOnTermination is disabled. Terminating
+    the instance leaves the volume behind as an orphan.
+  action: >
+    For ephemeral / replaceable workloads, set
+    `DeleteOnTermination` to true so volumes are cleaned up
+    on termination. For stateful workloads where the volume
+    must outlive the instance (databases, persistent caches),
+    keep `DeleteOnTermination` false but document the
+    lifecycle expectation: who owns the volume after instance
+    termination, what backups exist, what the deletion
+    criteria are. Pair the disabled flag with an explicit
+    snapshot/backup policy.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_attachment",
+        "ebs": {
+          "delete_on_termination": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_attachment
+    - field: properties.compute.ebs.delete_on_termination
+      op: eq
+      value: false

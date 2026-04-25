@@ -102,7 +102,13 @@ func TestUnsafeStateStrategy_UnsafeExceedsThreshold(t *testing.T) {
 	}
 }
 
-func TestUnsafeStateStrategy_UnsafeBelowThreshold(t *testing.T) {
+func TestUnsafeStateStrategy_FiresImmediatelyWithoutPerControlSLA(t *testing.T) {
+	// unsafe_state controls without an explicit per-control
+	// max_unsafe_duration must fire immediately on the first
+	// observation. The global CLI fallback is reserved for
+	// unsafe_duration controls; applying it to unsafe_state
+	// silently gives critical states (public buckets,
+	// unrestricted ingress) up to a 7-day grace window.
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	now := base.Add(2 * time.Hour)
 
@@ -120,11 +126,11 @@ func TestUnsafeStateStrategy_UnsafeBelowThreshold(t *testing.T) {
 	}
 
 	row, findings := s.Evaluate(tl, now, IdentityIndex{})
-	if row.Verdict != evaluation.VerdictPass {
-		t.Fatalf("expected Pass (below threshold), got %v", row.Verdict)
+	if row.Verdict != evaluation.VerdictViolation {
+		t.Fatalf("expected VIOLATION (unsafe_state without per-control SLA fires immediately), got %v", row.Verdict)
 	}
-	if len(findings) != 0 {
-		t.Fatalf("expected 0 findings, got %d", len(findings))
+	if len(findings) != 1 {
+		t.Fatalf("expected 1 finding, got %d", len(findings))
 	}
 }
 

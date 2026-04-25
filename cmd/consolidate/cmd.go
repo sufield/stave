@@ -17,10 +17,10 @@ import (
 
 	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/adapters/sla"
 	appconsolidate "github.com/sufield/stave/internal/app/consolidate"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/asset"

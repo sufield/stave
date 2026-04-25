@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.IMDS.HOPLIMIT.001
+name: IMDS Hop Limit Greater Than 1
+description: >
+  Instance metadata service hop limit
+  (`HttpPutResponseHopLimit`) is greater than 1. The hop
+  limit is the TTL applied to HTTP responses from the
+  metadata endpoint at 169.254.169.254. With a hop limit
+  of 1, only the instance itself can reach the metadata
+  service — single-hop, direct access. With a hop limit
+  of 2 or more, the metadata response can traverse
+  additional network hops: containers attached via Docker
+  bridge networking, in-process proxies, sidecar
+  containers, NAT-style routing inside the host. Each
+  added hop is a new SSRF surface — a vulnerable
+  application that proxies a metadata request from a
+  containerized client reaches the host's IAM role
+  credentials. AWS sets the default to 1 for new
+  instances; the broader value is a deliberate operator
+  choice that warrants a corresponding awareness of the
+  attack surface it opens. The higher-confidence
+  container-aware check (`CTL.EC2.IMDSV2.002`) fires when
+  containers are detected; this control is the
+  fallback signal when container detection is not
+  available from the observation source.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.6"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "2.2.1"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+observation_fields:
+  - compute.kind
+  - compute.ec2.imds_hop_limit
+  - compute.ec2.imds_hop_limit_excessive
+remediation:
+  description: >
+    Instance has IMDS hop limit set above 1. Multi-hop
+    metadata access is permitted, expanding the SSRF
+    attack surface.
+  action: >
+    Set `HttpPutResponseHopLimit` to 1:
+    `aws ec2 modify-instance-metadata-options
+    --instance-id <id> --http-put-response-hop-limit 1
+    --http-tokens required --http-endpoint enabled`. If
+    the workload requires hop limit 2 (specific bridge-
+    networked containers that need IMDS), document the
+    requirement and pair it with strict per-container
+    network segmentation (e.g., use the EKS pod identity
+    agent so containers do not reach IMDS at all).
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "ec2": {
+          "imds_hop_limit_excessive": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.ec2.imds_hop_limit_excessive
+      op: eq
+      value: true

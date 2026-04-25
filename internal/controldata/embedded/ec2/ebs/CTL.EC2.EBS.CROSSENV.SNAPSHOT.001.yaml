@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.CROSSENV.SNAPSHOT.001
+name: Production EBS Snapshot Shared With Non-Production Account
+description: >
+  EBS snapshot whose source instance is tagged or accounted
+  as production is shared with an account whose environment
+  is development, staging, or testing. Production snapshots
+  contain production data — customer records, application
+  state, embedded credentials, configuration. Non-production
+  accounts typically have broader access (more developers,
+  more roles, less strict SCPs) and weaker controls (relaxed
+  CloudTrail retention, limited GuardDuty coverage,
+  permissive SGs). Production data restored from a snapshot
+  in a non-production account escapes every production-
+  scoped control. Environment classification uses account
+  tags or OU membership; the same heuristic as
+  `CTL.VPC.SEGMENT.ENVMIX.001`.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "2.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "1.3.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["DSP-13", "IVS-09"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: data_access
+observation_fields:
+  - compute.kind
+  - compute.ebs.snapshot_id
+  - compute.ebs.snapshot_source_env
+  - compute.ebs.snapshot_shared_accounts
+  - compute.ebs.snapshot_shared_with_nonprod
+remediation:
+  description: >
+    Production EBS snapshot is shared with a non-production
+    account. Production data is restorable in an
+    environment with weaker controls.
+  action: >
+    Revoke the cross-environment share immediately. If
+    non-production accounts need a production data sample
+    for testing, scrub the snapshot (anonymize PII, remove
+    secrets, redact identifiers) into a sanitized snapshot
+    and share that instead. Apply an SCP at the
+    organization level that prevents
+    `ec2:ModifySnapshotAttribute --add` between accounts in
+    different environment OUs.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_snapshot",
+        "ebs": {
+          "snapshot_shared_with_nonprod": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_snapshot
+    - field: properties.compute.ebs.snapshot_shared_with_nonprod
+      op: eq
+      value: true

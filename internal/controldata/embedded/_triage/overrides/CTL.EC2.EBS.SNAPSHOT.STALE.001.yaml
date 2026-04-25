@@ -1,0 +1,22 @@
+control: CTL.EC2.EBS.SNAPSHOT.STALE.001
+defect: >
+  EBS snapshot is older than 365 days.
+infection: >
+  Stale snapshots are a slow-moving signal rather than
+  an active vulnerability. The risks are cumulative:
+  ongoing storage cost (every snapshot block billed
+  monthly), historical data exposure (the snapshot may
+  contain credentials that have since been rotated, but
+  the rotation does not retroactively scrub the
+  snapshot's contents), and policy drift (the data the
+  snapshot contains may have crossed a retention deadline
+  that the snapshot itself never enforces). The finding
+  is a prompt to apply lifecycle discipline — either
+  bring the snapshot under an automated retention rule
+  via Data Lifecycle Manager, or delete it explicitly. A
+  stale snapshot lying outside any retention pipeline is
+  data the organization is keeping by accident.
+failure: >
+  Accidental long-term data retention. Snapshots
+  accumulate cost and policy debt without ever being
+  examined for whether they should still exist.

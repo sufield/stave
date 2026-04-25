@@ -1,0 +1,22 @@
+control: CTL.EC2.LT.GHOST.PROFILE.001
+defect: >
+  Launch template references an IAM instance profile that has
+  been deleted.
+infection: >
+  The instance profile is the bridge that gives the EC2
+  instance an IAM identity for AWS API calls. With the
+  profile deleted, the instance launches without the role
+  attached — every subsequent AWS API call from the
+  application returns `Unable to locate credentials`. The
+  application's S3 reads, DynamoDB writes, KMS decrypt
+  operations, SQS messaging — all fail at runtime, not at
+  launch. EC2 reports the instance as healthy. The ASG
+  reports successful launches. The application logs fill
+  with credential errors. Diagnosis is slow because the
+  surface symptom (credential failure) is several layers
+  away from the root cause (deleted profile referenced by
+  launch template).
+failure: >
+  Runtime IAM failure that EC2-level health checks cannot
+  see. The application is "running" by every infrastructure
+  metric while every workload-level operation fails.

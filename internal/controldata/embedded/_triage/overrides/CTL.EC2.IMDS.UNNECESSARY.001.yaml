@@ -1,0 +1,25 @@
+control: CTL.EC2.IMDS.UNNECESSARY.001
+defect: >
+  IMDS is enabled on an instance that has no IAM role
+  attached. The metadata service exposes identity
+  information without serving any credentials.
+infection: >
+  IMDS without a role does not directly leak
+  credentials; there is no role to deliver. The leak is
+  reconnaissance metadata: account ID, instance ID,
+  region, AZ, instance type, network interface details,
+  attached security group IDs. An attacker who reaches
+  the metadata endpoint can build a model of the
+  instance's environment — what account it lives in,
+  what region, what other infrastructure to target via
+  region-aware scans, what SGs to enumerate. Hardening
+  IMDS to disabled when no role is needed removes that
+  reconnaissance surface entirely. The finding is a
+  hardening recommendation, not a vulnerability — IMDS
+  with no role attached is not actively dangerous, but
+  it serves no purpose either, and disabling it costs
+  nothing.
+failure: >
+  Reconnaissance metadata leak. Attackers gain account-
+  and instance-identity information from a service the
+  instance does not actually use.

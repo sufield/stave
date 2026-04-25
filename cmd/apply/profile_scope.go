@@ -14,10 +14,17 @@ func resolveScopeFilter(cfg Config) *asset.AuditScope {
 	if len(cfg.BucketAllowlist) > 0 {
 		return asset.NewAuditScopeFromAllowlist(cfg.BucketAllowlist)
 	}
-	// Domain-scoped profiles (non-S3) already scope by control directory;
-	// applying the PHI tag filter would exclude all assets that lack
-	// DataDomain=health tags. Use GlobalScope for these profiles.
-	if profileControlDomain(cfg.Profile) != "" && cfg.Profile != ProfileAWSS3 {
+	// Only the AWS-S3 profile keeps the PHI default scope. Every other
+	// profile — domain-scoped (IAM/EFS/GCS) AND cross-domain
+	// (HIPAA/SOC2/CIS/PCI/NIST/FedRAMP/GDPR/FFIEC/ISO/NISTCSF) —
+	// gets GlobalScope, because PHIBoundary filters out IAM, VPC,
+	// KMS, compute, and other non-storage assets those profiles
+	// must evaluate. Cross-domain profiles previously fell through
+	// to PHIBoundary because profileControlDomain returns "" for
+	// them; the result was a silent zero-findings outcome that
+	// looked like compliance evidence. Match the original intent
+	// (only the S3 default-scope use case keeps PHI filtering).
+	if cfg.Profile != ProfileAWSS3 {
 		return asset.GlobalScope
 	}
 	return asset.PHIBoundary()

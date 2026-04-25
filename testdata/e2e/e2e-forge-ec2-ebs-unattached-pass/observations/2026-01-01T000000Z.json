@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "vol-attached", "properties": {"compute": {"kind": "ebs_volume", "ebs": {"volume_id": "vol-0live000001", "attached": true, "state": "in-use", "size_gb": 100, "encrypted": true, "create_time": "2025-09-01T00:00:00Z", "age_days": 132}}}, "type": "aws_ebs_volume", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

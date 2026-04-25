@@ -13,8 +13,8 @@ import (
 
 	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/app/narrative"
+	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/controldata"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
