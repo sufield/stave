@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.TASKDEF.LOG.GHOST.001
+name: ECS Container Log Configuration References Deleted Log Group
+description: >
+  Container definition uses the awslogs log driver with a
+  specific CloudWatch log group name (awslogs-group), but the
+  named log group does not exist. The container starts
+  successfully — ECS does not validate the log group at task
+  start — and the container writes its stdout/stderr to a
+  destination that silently discards every record. The task
+  definition shows logging configured. The CloudWatch console
+  shows no log streams for the container. Operators looking
+  for "is logging on?" see "yes." Operators looking for actual
+  logs find nothing. Same ghost-reference pattern as the
+  other ghost-reference controls — the configuration is
+  intact, the referenced resource has been deleted, the
+  failure mode is silence rather than an error.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AU-12"
+  fedramp_moderate: "AU-12"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.1"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-01", "LOG-12"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Container's awslogs-group references a CloudWatch log
+    group that has been deleted. Container logs are dropped
+    silently.
+  action: >
+    Re-create the missing log group with appropriate retention
+    and KMS encryption settings, or update the task definition
+    to point at a log group that exists. Add a deletion guard
+    on log groups that cross-references active task definitions
+    so the next accidental delete is caught at change time
+    rather than discovered when an investigation needs the
+    logs that no longer exist.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "logging": {
+          "driver": "awslogs",
+          "log_group": "/ecs/orders-service",
+          "log_group_exists": true,
+          "has_ghost_log_group": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.logging.has_ghost_log_group
+      op: eq
+      value: true

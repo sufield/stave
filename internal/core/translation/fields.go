@@ -127,6 +127,11 @@ var DefaultFieldRegistry = FieldRegistry{
 	"compute.execution_role.is_overprivileged": "the compute execution role is over-privileged",
 	"compute.encryption.ebs_encrypted":         "EBS volumes are encrypted",
 	"compute.network.has_public_ip":            "the compute resource has a public IP",
+	"container.filesystem.readonly_root":       "the container's root filesystem is read-only",
+	"container.mount.has_dangerous_mount":      "the container mounts a sensitive host path",
+	"container.resources.has_memory_limit":     "the container has a memory limit configured",
+	"container.logging.has_ghost_log_group":    "the awslogs log group does not exist",
+	"container.health.has_health_check":        "the container has a healthCheck configured",
 
 	// --- network ---
 	"network.flow_log.enabled": "VPC Flow Logs are enabled",

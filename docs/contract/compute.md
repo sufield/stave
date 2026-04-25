@@ -31,3 +31,34 @@ Part of the [observation contract](README.md).
 
 ---
 
+## ECS Container Workload Domain (container.*)
+
+Per-container task-definition fields, sourced from the
+`DescribeTaskDefinition` API. Each container in a task definition is
+represented as one asset of type `aws_ecs_task_definition_container`
+(legacy: `task_definition`); the discriminator field
+`container.kind` is `"task_definition"`.
+
+### ECS Task Definition Container (`aws_ecs_task_definition_container`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `container.kind` | string | `"task_definition"` — discriminator |
+| `container.privileged.enabled` | bool | Container has `privileged: true` |
+| `container.user.is_root` | bool | Container runs as root (UID 0, user "root", or unspecified) |
+| `container.network.host_mode` | bool | Task uses `networkMode: host` |
+| `container.security.has_dangerous_capabilities` | bool | Adds SYS_ADMIN/NET_ADMIN/SYS_PTRACE/SYS_RAWIO/DAC_OVERRIDE/NET_RAW or fails to drop unnecessary capabilities |
+| `container.logging.driver_configured` | bool | A `logConfiguration` log driver is set |
+| `container.logging.has_ghost_log_group` | bool | The awslogs log group does not exist |
+| `container.logging.log_group` | string | The CloudWatch log group name (when driver is awslogs) |
+| `container.filesystem.readonly_root` | bool | `readonlyRootFilesystem: true` |
+| `container.mount.has_dangerous_mount` | bool | Mounts a sensitive host path (Docker socket / /proc / /sys / /dev / /) |
+| `container.mount.dangerous_paths` | []string | Specific dangerous host paths mounted |
+| `container.resources.has_memory_limit` | bool | Either `memory` or `memoryReservation` is set |
+| `container.resources.memory_limit_mib` | int | Hard memory limit in MiB (0 if not set) |
+| `container.resources.memory_reservation_mib` | int | Soft memory reservation in MiB (0 if not set) |
+| `container.health.has_health_check` | bool | A `healthCheck` block is configured |
+| `container.health.health_check_type` | string | Health check command form (typically `CMD-SHELL` or `CMD`) |
+
+---
+

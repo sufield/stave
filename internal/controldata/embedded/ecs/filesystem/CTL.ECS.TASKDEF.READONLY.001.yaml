@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.TASKDEF.READONLY.001
+name: ECS Container Root Filesystem Is Writable
+description: >
+  Container definition has readonlyRootFilesystem set to false or
+  not specified (the AWS default is false). A writable root
+  filesystem lets a compromised container drop new binaries,
+  modify shipped application files, and persist changes — if the
+  filesystem is backed by a volume, the persistence survives
+  container restarts. Read-only root forces the container to use
+  explicitly mounted tmpfs or volumes for everything that must be
+  writable, which both narrows the attack surface for malware
+  drop and makes attacker-introduced state easy to spot. Severity
+  is medium because many applications legitimately need scratch
+  write space (caches, temp files, logs); the operational
+  remediation is readonlyRootFilesystem: true with explicit
+  tmpfs mounts for those needs, not a blanket "never write to
+  disk."
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-7"
+  fedramp_moderate: "CM-7"
+  pci_dss_v4.0: "2.2.5"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-04", "IVS-06"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Container definition allows writes to the root filesystem.
+    Compromised containers can persist malware on disk.
+  action: >
+    Set readonlyRootFilesystem: true on the container definition.
+    Identify the directories the application legitimately needs
+    to write to (typically /tmp, /var/log, the app's cache
+    directory) and add explicit tmpfs mounts for each. Re-test
+    the container's startup and main paths to confirm nothing
+    breaks; some images write to /tmp during process startup
+    and need the tmpfs mount before the read-only flag is safe
+    to enable.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "filesystem": {
+          "readonly_root": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.filesystem.readonly_root
+      op: eq
+      value: false

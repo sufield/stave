@@ -1,0 +1,37 @@
+control: CTL.ECS.TASKDEF.READONLY.001
+defect: >
+  Container definition has readonlyRootFilesystem
+  set to false (or omitted, which defaults to
+  false). The container's root filesystem is
+  writable.
+infection: >
+  A writable root filesystem is the easiest
+  surface for a compromised container to persist
+  on. An attacker who achieves code execution
+  inside the container — RCE through the
+  application, command injection, deserialization
+  bug — can drop new binaries anywhere on the
+  container's filesystem, modify the shipped
+  application files, or stage tools for the next
+  step of the attack. If the root filesystem is
+  backed by a volume (rare for ECS but possible
+  for sidecars writing to bind mounts), the
+  persisted changes survive container restarts.
+  Read-only root flips the cost asymmetry: the
+  attacker can no longer write to the application
+  filesystem at all, and any write that succeeds
+  must come from a tmpfs or volume mount the
+  operator explicitly added — making
+  attacker-introduced state easy to spot during
+  forensics. The remediation has a real
+  operational cost: many images write to /tmp,
+  /var/log, or app-specific cache directories
+  during normal operation and will fail to start
+  with read-only root unless the operator adds
+  tmpfs mounts for each. The finding is medium
+  severity because the remediation requires per-
+  image tuning rather than a blanket flag flip.
+failure: >
+  Compromised container can write malware to
+  disk. Persistence is trivial; forensics are
+  noisy.

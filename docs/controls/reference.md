@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1529
-**Pack hash:** `e5f8ebb1614ff2ee000ac16f7cad0e836047dd114d10dde72a2f99757d45a95a`
+**Total controls:** 1534
+**Pack hash:** `c885658e7dd4fd3255bd0718affdedf267d64e86fe24170b4329b83c03ddb9cf`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 176 |
-| high | 676 |
+| critical | 177 |
+| high | 677 |
 | info | 16 |
 | low | 113 |
-| medium | 548 |
+| medium | 551 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 87 |
-| exposure | 877 |
-| governance | 65 |
+| exposure | 879 |
+| governance | 68 |
 | hygiene | 16 |
 | identity | 331 |
 | network | 28 |
@@ -8184,6 +8184,81 @@ ECS task definitions must not add dangerous Linux capabilities (SYS_ADMIN, NET_A
 ECS task definitions with both privileged mode and host networking allow container escape to the host instance with full network access. A compromised container with these settings can access the instance metadata service, other containers' network traffic, and the host filesystem — providing arbitrary code execution on the host. This combination is equivalent to running untrusted code directly on the EC2 instance.
 
 **Remediation:** Remove privileged mode from the container definition. Use awsvpc network mode instead of host mode. If root capabilities are required, use specific Linux capabilities instead of full privileged mode.
+
+---
+
+### CTL.ECS.TASKDEF.HEALTHCHECK.MISSING.001
+
+**ECS Container Has No Health Check**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: A1.1;
+
+Container definition has no healthCheck configured. ECS has no in-container signal for whether the container is healthy. A process that is running but unresponsive — deadlocked, stuck in a GC pause, blocked on a downed dependency, leaking connections — keeps the container in RUNNING state and continues to receive traffic; ECS only replaces the container when the process exits. Load-balancer health checks (ALB/NLB) provide partial coverage: they probe the container's listening port from outside and replace the task if the port stops responding. They do not catch in-process problems that don't manifest as port-level failures (slow but successful responses, internal queue backup, lost background workers). The task-level healthCheck runs inside the container and can test deeper invariants. Severity is medium because LB health checks usually catch the worst cases; the in-container check is defense-in-depth.
+
+**Remediation:** Add a healthCheck command to the container definition that tests the application's actual readiness — a curl against an in-process /health endpoint, a CLI subcommand that probes background workers, or a deeper smoke test depending on the workload. Set interval, timeout, retries, and startPeriod appropriately. If a load balancer already health-checks this container at the port level and the team has decided that's sufficient, document that decision in a triage override on this control rather than leaving the finding unacknowledged.
+
+---
+
+### CTL.ECS.TASKDEF.HOSTMOUNT.001
+
+**ECS Container Mounts Sensitive Host Path**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 2.2.5; soc2: CC6.6;
+
+Container definition mounts a host path that exposes the host control plane or kernel interfaces — the Docker socket (/var/run/docker.sock), the process filesystem (/proc), the kernel sysfs (/sys), the device tree (/dev), or the host root (/). The Docker socket case is the worst: a container with /var/run/docker.sock can call the Docker API and create new privileged containers, exfiltrate files from any other container, or stop critical workloads. The proc/sys/dev mounts give direct kernel access from inside the container, and the host-root mount makes the entire host filesystem reachable. The control's heuristic flags any of those specific paths; legitimate hostPath mounts (a known data directory, for example) do not match and do not fire. Fargate does not support hostPath volumes at all, so the predicate cannot match Fargate task definitions.
+
+**Remediation:** Remove the dangerous hostPath mount from the task definition. If the workload genuinely needs Docker API access (a CI runner, a build agent), move that workload to a dedicated host or use a Docker-in-Docker pattern that does not expose the host's control socket. For monitoring agents that need /proc or /sys, use the AWS-supplied container insights agent rather than a hostPath mount, or constrain access via read-only mounts plus a strict capabilities drop.
+
+---
+
+### CTL.ECS.TASKDEF.LOG.GHOST.001
+
+**ECS Container Log Configuration References Deleted Log Group**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-12; hipaa: 164.312(b); nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2.1; soc2: CC7.1;
+
+Container definition uses the awslogs log driver with a specific CloudWatch log group name (awslogs-group), but the named log group does not exist. The container starts successfully — ECS does not validate the log group at task start — and the container writes its stdout/stderr to a destination that silently discards every record. The task definition shows logging configured. The CloudWatch console shows no log streams for the container. Operators looking for "is logging on?" see "yes." Operators looking for actual logs find nothing. Same ghost-reference pattern as the other ghost-reference controls — the configuration is intact, the referenced resource has been deleted, the failure mode is silence rather than an error.
+
+**Remediation:** Re-create the missing log group with appropriate retention and KMS encryption settings, or update the task definition to point at a log group that exists. Add a deletion guard on log groups that cross-references active task definitions so the next accidental delete is caught at change time rather than discovered when an investigation needs the logs that no longer exist.
+
+---
+
+### CTL.ECS.TASKDEF.NOMEMLIMIT.001
+
+**ECS Container Has No Memory Limit**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-5; nist_800_53_r5: SC-5; pci_dss_v4.0: 6.4.1; soc2: A1.1;
+
+Container definition specifies neither memory (hard limit) nor memoryReservation (soft limit). Without a limit, the container is allowed to consume all memory available to the task, and on EC2 launch types, all memory available to the host. A memory leak, a deliberate resource-exhaustion attack, or unexpected load can drive the container's RSS up until the kernel OOM killer activates. Without per-container limits the OOM killer has no way to single out the misbehaving container; it picks a victim by score and frequently kills neighboring containers whose memory was unrelated to the original problem. Setting at least memoryReservation creates a soft floor; setting memory caps the container's hard ceiling. Production task definitions should set both. Severity is medium because the failure mode is operational (one container's bad day kills others) rather than directly enabling exploitation.
+
+**Remediation:** Set memoryReservation (soft limit) and memory (hard limit) on each container in the task definition. Choose values based on observed steady-state memory usage plus headroom — typical pattern is memoryReservation at the p95 RSS and memory at 1.5x to 2x of that. For Fargate, the task-level memory size effectively caps the container as well, but setting per-container memoryReservation still gives the scheduler a hint and improves bin-packing predictability.
+
+---
+
+### CTL.ECS.TASKDEF.READONLY.001
+
+**ECS Container Root Filesystem Is Writable**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-7; nist_800_53_r5: CM-7; pci_dss_v4.0: 2.2.5; soc2: CC6.6;
+
+Container definition has readonlyRootFilesystem set to false or not specified (the AWS default is false). A writable root filesystem lets a compromised container drop new binaries, modify shipped application files, and persist changes — if the filesystem is backed by a volume, the persistence survives container restarts. Read-only root forces the container to use explicitly mounted tmpfs or volumes for everything that must be writable, which both narrows the attack surface for malware drop and makes attacker-introduced state easy to spot. Severity is medium because many applications legitimately need scratch write space (caches, temp files, logs); the operational remediation is readonlyRootFilesystem: true with explicit tmpfs mounts for those needs, not a blanket "never write to disk."
+
+**Remediation:** Set readonlyRootFilesystem: true on the container definition. Identify the directories the application legitimately needs to write to (typically /tmp, /var/log, the app's cache directory) and add explicit tmpfs mounts for each. Re-test the container's startup and main paths to confirm nothing breaks; some images write to /tmp during process startup and need the tmpfs mount before the read-only flag is safe to enable.
 
 ---
 

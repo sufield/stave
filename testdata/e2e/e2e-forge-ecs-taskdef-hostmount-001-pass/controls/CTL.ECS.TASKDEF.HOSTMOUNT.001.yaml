@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.TASKDEF.HOSTMOUNT.001
+name: ECS Container Mounts Sensitive Host Path
+description: >
+  Container definition mounts a host path that exposes the host
+  control plane or kernel interfaces — the Docker socket
+  (/var/run/docker.sock), the process filesystem (/proc), the
+  kernel sysfs (/sys), the device tree (/dev), or the host root
+  (/). The Docker socket case is the worst: a container with
+  /var/run/docker.sock can call the Docker API and create new
+  privileged containers, exfiltrate files from any other
+  container, or stop critical workloads. The proc/sys/dev
+  mounts give direct kernel access from inside the container,
+  and the host-root mount makes the entire host filesystem
+  reachable. The control's heuristic flags any of those specific
+  paths; legitimate hostPath mounts (a known data directory,
+  for example) do not match and do not fire. Fargate does not
+  support hostPath volumes at all, so the predicate cannot
+  match Fargate task definitions.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "2.2.5"
+  soc2: "CC6.6"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IVS-04", "IVS-06"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Container mounts a host path that exposes the Docker socket,
+    kernel interfaces, or the host filesystem. Container-to-host
+    escape is direct.
+  action: >
+    Remove the dangerous hostPath mount from the task definition.
+    If the workload genuinely needs Docker API access (a CI
+    runner, a build agent), move that workload to a dedicated
+    host or use a Docker-in-Docker pattern that does not
+    expose the host's control socket. For monitoring agents
+    that need /proc or /sys, use the AWS-supplied container
+    insights agent rather than a hostPath mount, or constrain
+    access via read-only mounts plus a strict capabilities
+    drop.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "mount": {
+          "has_dangerous_mount": false,
+          "dangerous_paths": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.mount.has_dangerous_mount
+      op: eq
+      value: true

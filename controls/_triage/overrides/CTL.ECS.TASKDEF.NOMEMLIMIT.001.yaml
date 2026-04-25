@@ -1,0 +1,38 @@
+control: CTL.ECS.TASKDEF.NOMEMLIMIT.001
+defect: >
+  Container definition has no memory limit —
+  neither memory (hard) nor memoryReservation
+  (soft) is set.
+infection: >
+  Without a per-container memory limit the
+  kernel doesn't know when this container has
+  exceeded its share. On EC2 launch types,
+  every container on the host competes for the
+  same memory pool until pressure builds; once
+  the kernel decides it has to kill something
+  to recover, the OOM killer picks a target
+  using a heuristic score that does not
+  necessarily land on the container that caused
+  the problem. A memory leak in container A
+  often kills container B because B happened to
+  be larger and older when the OOM event fired.
+  Even when the OOM killer picks the right
+  target, the kill is unannounced — the
+  container disappears, ECS schedules a
+  replacement, and operators see "the service
+  restarted" with no signal pointing at the
+  underlying memory cause. Setting
+  memoryReservation gives the scheduler a soft
+  floor; setting memory caps the hard ceiling.
+  Together they make memory pressure visible at
+  the right granularity and prevent one
+  container's bad day from killing others on
+  the same host. Severity is medium because
+  the failure is operational rather than
+  directly exploitable, but the blast radius
+  (other tenants on the host) makes it worth
+  flagging.
+failure: >
+  One container's memory leak or load spike
+  kills neighbors. OOM events are mis-attributed
+  and operationally invisible.

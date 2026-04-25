@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.TASKDEF.NOMEMLIMIT.001
+name: ECS Container Has No Memory Limit
+description: >
+  Container definition specifies neither memory (hard limit) nor
+  memoryReservation (soft limit). Without a limit, the container
+  is allowed to consume all memory available to the task, and on
+  EC2 launch types, all memory available to the host. A memory
+  leak, a deliberate resource-exhaustion attack, or unexpected
+  load can drive the container's RSS up until the kernel OOM
+  killer activates. Without per-container limits the OOM killer
+  has no way to single out the misbehaving container; it picks a
+  victim by score and frequently kills neighboring containers
+  whose memory was unrelated to the original problem. Setting at
+  least memoryReservation creates a soft floor; setting memory
+  caps the container's hard ceiling. Production task definitions
+  should set both. Severity is medium because the failure mode
+  is operational (one container's bad day kills others) rather
+  than directly enabling exploitation.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "A1.1"
+  ccm_v4: ["AIS-01", "IVS-09"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Container has no memory limit. A memory leak or attack on
+    one container can OOM-kill neighboring containers on the
+    same host.
+  action: >
+    Set memoryReservation (soft limit) and memory (hard limit)
+    on each container in the task definition. Choose values
+    based on observed steady-state memory usage plus headroom
+    — typical pattern is memoryReservation at the p95 RSS and
+    memory at 1.5x to 2x of that. For Fargate, the task-level
+    memory size effectively caps the container as well, but
+    setting per-container memoryReservation still gives the
+    scheduler a hint and improves bin-packing predictability.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "resources": {
+          "has_memory_limit": true,
+          "memory_limit_mib": 512,
+          "memory_reservation_mib": 256
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.resources.has_memory_limit
+      op: eq
+      value: false

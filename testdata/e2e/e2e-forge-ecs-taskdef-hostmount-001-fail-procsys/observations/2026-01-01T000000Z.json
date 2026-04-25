@@ -1,0 +1,21 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:task-definition/host-monitor:2/container/agent",
+      "type": "aws_ecs_task_definition_container",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "mount": {
+            "has_dangerous_mount": true,
+            "dangerous_paths": ["/proc", "/sys"]
+          }
+        }
+      }
+    }
+  ]
+}

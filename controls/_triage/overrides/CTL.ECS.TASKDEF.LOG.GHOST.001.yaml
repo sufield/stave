@@ -1,0 +1,29 @@
+control: CTL.ECS.TASKDEF.LOG.GHOST.001
+defect: >
+  Container's awslogs log driver names a
+  CloudWatch log group that does not exist.
+infection: >
+  ECS does not validate the awslogs-group at
+  task-start time. The container starts
+  successfully, the awslogs driver attempts to
+  forward stdout/stderr to the named log group,
+  and the forwarding silently fails because the
+  destination is gone. Every line the container
+  writes — application logs, error messages,
+  stack traces, security events, the output of
+  any command an attacker runs through ECS Exec
+  — is dropped. The task definition still shows
+  logging configured: the driver is set, the
+  group name is set, the operator sees "logging
+  is on" in the console. The CloudWatch side
+  shows no log streams because the group is
+  gone. The forensic value of the container is
+  zero: a compromise leaves no trace, a crash
+  produces no diagnostic output, and a security
+  event has no record to alert on. Same pattern
+  as every other ghost reference — config
+  intact, target deleted, failure silent.
+failure: >
+  Forensically invisible container. Log records
+  are silently discarded; compromises and
+  crashes leave no trace.

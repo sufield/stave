@@ -1,0 +1,40 @@
+control: CTL.ECS.TASKDEF.HOSTMOUNT.001
+defect: >
+  Container definition mounts a host path that
+  exposes the host's control plane or kernel
+  interfaces — the Docker socket, /proc, /sys,
+  /dev, or the host root.
+infection: >
+  Each path the heuristic flags is its own
+  escape vector. /var/run/docker.sock is the
+  worst: a container with the Docker socket can
+  invoke the Docker API directly. From there,
+  the attacker can create new containers — any
+  containers, including privileged ones with
+  pid=host and the host filesystem mounted —
+  read the filesystem and environment of every
+  other container on the host, and stop or
+  delete critical workloads. The container is
+  effectively root on the host through one
+  socket. /proc exposes every host process's
+  memory and credentials, /sys exposes kernel
+  tunables (modify cgroups, change scheduling
+  parameters, write to security knobs), /dev
+  exposes raw block devices the container can
+  read or modify, and a hostPath mount of /
+  gives the container the entire host
+  filesystem to read and (depending on the
+  mount mode) modify. Each of these is a
+  direct path from inside the container to
+  full host compromise, and the cost of
+  remediation — remove the hostPath mount,
+  redesign the workload to use a sanctioned
+  pattern — is real but bounded. Fargate
+  rejects hostPath volumes entirely, so this
+  finding is structurally impossible on
+  Fargate launch types.
+failure: >
+  Container-to-host escape is direct. The
+  container has full access to the host's
+  control plane, kernel interfaces, or
+  filesystem.

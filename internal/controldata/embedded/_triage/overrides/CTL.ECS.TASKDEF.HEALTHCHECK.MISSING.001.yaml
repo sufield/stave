@@ -1,0 +1,39 @@
+control: CTL.ECS.TASKDEF.HEALTHCHECK.MISSING.001
+defect: >
+  Container definition has no healthCheck
+  configured. ECS has no in-container signal
+  for container health.
+infection: >
+  Without a healthCheck, ECS treats "process is
+  still alive" as "container is healthy." That
+  equivalence breaks for any failure mode that
+  doesn't kill the process: a deadlock, a long
+  GC pause, a thread pool starved by a downed
+  dependency, a slow leak that hasn't yet hit
+  the OOM killer, a background worker that
+  silently stopped processing while the
+  foreground process keeps serving requests.
+  The container stays in RUNNING state, ECS
+  keeps sending it traffic, and operators see
+  no signal that anything is wrong until users
+  notice or a deeper alarm fires. Load-balancer
+  health checks (ALB target group, NLB) cover
+  the port-level case — if the listener stops
+  accepting connections, the LB replaces the
+  task — but they don't see in-process state.
+  An in-container healthCheck can test deeper
+  invariants: probe an internal /health
+  endpoint that walks the dependency graph, run
+  a CLI subcommand that checks a queue worker
+  is alive, exit non-zero when an internal
+  watchdog has tripped. Severity is medium
+  because LB health checks usually catch the
+  worst-case "container is dead but the process
+  hasn't exited" scenarios; the in-container
+  check is defense-in-depth and matters more
+  for workloads without an LB in front
+  (worker tasks, scheduled tasks, sidecars).
+failure: >
+  Hung or unresponsive containers keep receiving
+  traffic. ECS does not replace them because
+  the process hasn't exited.

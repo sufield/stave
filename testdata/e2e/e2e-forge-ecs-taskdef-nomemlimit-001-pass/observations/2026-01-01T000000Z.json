@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:task-definition/api:5/container/web-mempass",
+      "type": "aws_ecs_task_definition_container",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "resources": {
+            "has_memory_limit": true,
+            "memory_limit_mib": 512,
+            "memory_reservation_mib": 256
+          }
+        }
+      }
+    }
+  ]
+}
