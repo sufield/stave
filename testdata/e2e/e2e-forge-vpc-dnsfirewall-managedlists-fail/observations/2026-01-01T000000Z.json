@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "vpc-dnsfw-custom-only", "properties": {"network": {"kind": "vpc", "dns": {"firewall_has_managed_lists": false, "firewall_managed_list_names": [], "firewall_rule_groups": ["custom-denylist-only"]}}}, "type": "aws_vpc", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

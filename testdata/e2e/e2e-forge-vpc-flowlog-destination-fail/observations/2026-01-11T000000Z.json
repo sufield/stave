@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "fl-dest-weak", "properties": {"network": {"kind": "flow_log", "flowlog": {"destination_type": "s3", "destination_arn": "arn:aws:s3:::flowlogs-public-bucket", "destination_public": true, "destination_encrypted": false, "destination_allows_deletion": true, "retention_days": 30, "retention_adequate": false}}}, "type": "aws_flow_log", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1,0 +1,21 @@
+control: CTL.VPC.DNSFIREWALL.ENABLED.001
+defect: >
+  VPC has no Route53 Resolver DNS Firewall rule group associated.
+  DNS queries from instances are resolved without filtering.
+infection: >
+  DNS is the first step in most outbound-initiated attacks. A
+  compromised instance resolves the attacker's C2 domain before
+  connecting; a malware dropper resolves the payload host before
+  downloading; data exfiltration via DNS tunneling encodes
+  stolen data directly in query names and relies on recursive
+  resolution to exfiltrate. Security groups operate on IPs,
+  not domains — restricting egress to "port 443" still allows
+  connections to any IP the DNS query returned. DNS Firewall
+  blocks resolution itself, which either stops the attack
+  before it begins or provides the earliest possible signal
+  of intent. Even if egress is locked down, unfiltered DNS
+  confirms reachability to the attacker's infrastructure.
+failure: >
+  DNS is an uncontrolled egress channel. Malicious domain
+  resolution succeeds; downstream egress controls operate on
+  whatever IP the resolution returned.

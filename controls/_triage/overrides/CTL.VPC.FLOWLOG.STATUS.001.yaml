@@ -1,0 +1,21 @@
+control: CTL.VPC.FLOWLOG.STATUS.001
+defect: >
+  Flow log is configured but its status is not ACTIVE — records
+  are not being delivered.
+infection: >
+  This is the "everything appears to work" pattern applied to
+  network logging. The console shows the flow log as configured,
+  the VPC dashboard reports it as enabled, automation that checks
+  for "flow log exists" returns success. Meanwhile, the delivery
+  pipeline has stopped: the IAM role used for log delivery was
+  modified or deleted, the destination S3 bucket was deleted or
+  had its policy changed, or the CloudWatch log group was
+  removed. New records stop arriving. Investigations that rely
+  on "we have flow logs" discover the gap only when they search
+  for a specific incident and find the relevant time window
+  empty. The misconfiguration is silent by design — the
+  configuration record is intact; only the data flow is broken.
+failure: >
+  Silent logging outage. The configuration is reassuring;
+  delivery is stopped. Incident timelines have gaps that match
+  the period of the outage.

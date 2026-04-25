@@ -1,0 +1,20 @@
+control: CTL.VPC.FLOWLOG.BIDIRECTIONAL.001
+defect: >
+  Flow log captures only one direction of traffic. Either
+  accepted or rejected flows are missing from the record.
+infection: >
+  Each `TrafficType` answers a different question. ACCEPT
+  records what got through — the evidence for lateral movement,
+  successful data transfers, and the happy path. REJECT records
+  what was blocked — the evidence for reconnaissance, blocked
+  attacks, and the security-control effectiveness measurement.
+  Limiting to one removes the answer to the other. An attacker
+  doing port scans leaves no record in an ACCEPT-only log. An
+  attacker exfiltrating through an established connection
+  leaves no record in a REJECT-only log. The extra storage cost
+  of ALL is significant only at very high packet rates; the
+  information loss of narrowing capture is significant at every
+  rate.
+failure: >
+  Half the record is missing. Investigators can answer one of
+  "what got through" or "what was blocked" but not both.

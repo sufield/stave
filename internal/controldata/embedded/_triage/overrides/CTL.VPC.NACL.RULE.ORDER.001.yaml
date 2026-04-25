@@ -1,0 +1,21 @@
+control: CTL.VPC.NACL.RULE.ORDER.001
+defect: >
+  NACL has deny rules ordered after allow rules that match the
+  same traffic. The deny rules are never evaluated.
+infection: >
+  NACL rules are evaluated strictly by rule number, lowest to
+  highest, and evaluation stops at the first match. A deny
+  rule at rule 200 for TCP/22 is never reached if rule 100
+  allows all TCP. To an auditor reviewing the rule list, both
+  rules are visible and the NACL appears to block SSH; in
+  reality, SSH traffic passes because rule 100 matched first.
+  The failure mode is false confidence — the control appears
+  in place, the rule is named as expected, someone signed off
+  on the review — and the specific traffic the deny was
+  written for is still allowed. This is the NACL-layer
+  instance of the "everything looks correct" pattern.
+failure: >
+  Ineffective deny rules. Traffic the deny was written to block
+  passes through because an earlier allow rule matched it
+  first. The NACL's rule list describes intent; the effective
+  behavior does not match.

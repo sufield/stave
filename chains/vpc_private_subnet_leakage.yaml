@@ -1,0 +1,21 @@
+id: vpc_private_subnet_leakage
+description: >
+  VPC is missing the S3 gateway endpoint or one or more critical
+  interface endpoints (KMS, Secrets Manager, STS, SSM, CloudWatch
+  Logs, ECR) AND a security group permits unrestricted egress.
+  Private-subnet traffic to AWS services leaves the VPC through
+  NAT to public endpoints — every KMS call, secret fetch, and
+  role assumption crosses the public internet — AND there is no
+  egress constraint that would limit destinations. Sensitive
+  traffic is both routed publicly and unrestricted in where it
+  can go.
+controls:
+  - CTL.VPC.ENDPOINT.S3.001
+  - CTL.VPC.ENDPOINT.MISSING.CRITICAL.001
+  - CTL.VPC.SG.EGRESS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_in_transit_exposure

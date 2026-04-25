@@ -1,0 +1,19 @@
+control: CTL.ELB.SG.GHOST.001
+defect: >
+  Load balancer references one or more deleted security groups.
+infection: >
+  Security groups are the firewall policy attached to the load
+  balancer's ENIs. A ghost SG reference leaves the LB in an
+  inconsistent state relative to the policy it was configured
+  with — depending on AWS's handling of deleted SG references,
+  the LB may become unreachable, may revert to a fallback, or
+  may continue operating without the intended restrictions.
+  More important than the runtime behavior is the signal: the
+  SG deletion path did not update its dependents. If the LB
+  was missed, other dependents (interface endpoints, RDS
+  instances, EC2 instances, NAT gateways) were likely missed
+  too. The SG deletion runbook is broken.
+failure: >
+  Inconsistent firewall state on a public-facing load balancer,
+  and a decommissioning pipeline that silently left orphan
+  references.

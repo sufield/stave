@@ -1,0 +1,17 @@
+control: CTL.ELB.TARGET.GHOST.001
+defect: >
+  Target group contains registered targets that are deregistered
+  or reference terminated instances.
+infection: >
+  Ghost targets represent incomplete decommissioning — the
+  instances were terminated but deregistration never happened.
+  The load balancer continues firing health checks at endpoints
+  that do not exist, wasting health-check capacity and creating
+  persistent unhealthy-target alerts that operators learn to
+  tune out. Alert fatigue is the quiet cost; the loud cost
+  arrives when every target in a group is a ghost, because
+  every listener rule that forwards to that group returns
+  502/503 for every request it matches.
+failure: >
+  Degraded traffic distribution and alert noise that hides real
+  problems. Total-ghost target groups fail requests outright.

@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "rule-live", "properties": {"network": {"kind": "listener_rule", "elb": {"listener_rule_arn": "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/app/abc/1", "listener_rule_target_group": "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/live/0000", "listener_rule_target_exists": true, "has_ghost_listener_rule": false}}}, "type": "aws_elb_listener_rule", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

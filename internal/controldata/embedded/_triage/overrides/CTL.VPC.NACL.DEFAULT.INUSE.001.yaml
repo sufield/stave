@@ -1,0 +1,20 @@
+control: CTL.VPC.NACL.DEFAULT.INUSE.001
+defect: >
+  Subnet is associated with the default Network ACL, which
+  allows all inbound and outbound traffic.
+infection: >
+  The default NACL provides no filtering. Security groups
+  become the sole network-control layer for the subnet, so a
+  misconfigured SG has no second line of defense. NACLs are
+  stateless subnet-level filters evaluated before security
+  groups; they are well-suited to coarse denies that should
+  hold regardless of SG intent (admin ports from 0.0.0.0/0,
+  known-bad CIDR blocks, specific protocols). Skipping the
+  NACL layer does not make the VPC insecure by itself — but
+  it concentrates all decisions in the SG layer and removes
+  the safety net that catches SG mistakes before they become
+  incidents.
+failure: >
+  No defense-in-depth at the subnet boundary. SG misconfigurations
+  produce direct exposure rather than being caught by a
+  subnet-level policy.

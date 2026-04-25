@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.DNSFIREWALL.MANAGEDLISTS.001
+name: DNS Firewall Not Using AWS Managed Domain Lists
+description: >
+  DNS Firewall is associated with the VPC but the rule group does
+  not include AWS managed domain lists
+  (`AWSManagedDomainsMalwareDomainList`,
+  `AWSManagedDomainsBotnetCommandAndControlDomainList`, and the
+  aggregate list). The managed lists are maintained by AWS threat
+  intelligence teams and updated as new malicious domains are
+  observed. A DNS Firewall with only custom rules misses
+  industry-wide threat intelligence. Custom rules are
+  appropriate for organization-specific blocklists (ex-vendor
+  domains, phishing lures targeting the company) and belong
+  alongside the managed feeds, not instead of them.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-3"
+  fedramp_moderate: "SI-3"
+  pci_dss_v4.0: "5.1.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "TVM-07"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.dns.firewall_has_managed_lists
+  - network.dns.firewall_managed_list_names
+  - network.dns.firewall_rule_groups
+remediation:
+  description: >
+    DNS Firewall is enabled but does not include AWS managed
+    threat-intelligence domain lists.
+  action: >
+    Add the AWS managed lists to the DNS Firewall rule group:
+    `AWSManagedDomainsMalwareDomainList`,
+    `AWSManagedDomainsBotnetCommandAndControlDomainList`, and
+    `AWSManagedDomainsAggregateThreatList`. Set priorities so
+    the managed lists evaluate before custom rules (or after,
+    if organization-specific blocks should take precedence).
+    Managed lists update automatically; no operational overhead.
+  example: |
+    {
+      "network": {
+        "kind": "vpc",
+        "dns": {
+          "firewall_has_managed_lists": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.dns.firewall_has_managed_lists
+      op: eq
+      value: false

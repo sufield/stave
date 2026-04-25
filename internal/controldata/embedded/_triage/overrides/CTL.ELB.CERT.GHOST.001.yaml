@@ -1,0 +1,20 @@
+control: CTL.ELB.CERT.GHOST.001
+defect: >
+  Load balancer HTTPS listener references an ACM certificate that
+  has been deleted or has expired.
+infection: >
+  TLS termination on the listener relies on a live ACM
+  certificate. When the referenced certificate is deleted or
+  expires, the load balancer serves the missing or expired
+  certificate to every client. Browsers show large red warning
+  pages. Strict API clients refuse the handshake and fail at
+  connection time with no body to parse. Automated integrations
+  — webhooks from partners, service meshes, CI systems — fail
+  without retry in many client libraries. Renewal failures
+  often stem from missing DNS validation records or revoked IAM
+  permissions for the renewal role; both are silent until the
+  certificate's expiration date arrives.
+failure: >
+  Public-facing TLS failure. Clients see certificate errors or
+  connection refusals until the listener is updated with a live
+  certificate.

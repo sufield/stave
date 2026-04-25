@@ -1,0 +1,19 @@
+control: CTL.VPC.NACL.UNRESTRICTED.001
+defect: >
+  Custom Network ACL permits all inbound and outbound traffic —
+  same effect as the default NACL it replaced.
+infection: >
+  Creating a custom NACL is an explicit operational choice that
+  implies filtering intent. A custom NACL that allows all
+  traffic is either a misconfiguration (the rules were
+  broader than intended) or a placeholder from a deployment
+  that was never finished ("I'll come back and restrict this
+  later"). In both cases, the custom NACL's existence misleads
+  reviewers — dashboards, architecture diagrams, and
+  compliance artifacts show "custom NACL associated" and
+  suggest defense-in-depth that does not exist in the rule
+  set.
+failure: >
+  Defense-in-depth theater. Custom NACL is present but
+  filterless; the reviewer and the deployer both record
+  protection that the rules do not provide.

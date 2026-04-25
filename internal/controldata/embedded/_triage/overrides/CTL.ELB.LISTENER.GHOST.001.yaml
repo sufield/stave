@@ -1,0 +1,20 @@
+control: CTL.ELB.LISTENER.GHOST.001
+defect: >
+  Listener rule forwards to a target group that has been deleted.
+  Matching requests return 502/503.
+infection: >
+  The listener rule matches incoming requests by path, host,
+  header, or query pattern, then forwards to the configured
+  target group. When the target group no longer exists, every
+  matched request fails. The failure is visible only when
+  traffic hits the rule — a rule matching a high-traffic path
+  (`/api/*`, `/health`) produces a visible outage; a rule
+  matching a rarely-used path may lurk for weeks. The listener
+  rule looks correctly configured in the console; the target
+  group's absence is reflected only when load-balancer metrics
+  are read alongside the rule list, which rarely happens during
+  reviews.
+failure: >
+  Silent service-path outage. Requests matching the rule fail
+  with 502/503 until someone reports the error from the client
+  side.

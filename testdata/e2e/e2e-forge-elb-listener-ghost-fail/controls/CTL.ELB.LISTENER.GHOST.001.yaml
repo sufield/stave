@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.LISTENER.GHOST.001
+name: Load Balancer Listener Rule Forwards to Deleted Target Group
+description: >
+  ALB or NLB listener rule has a forward action targeting a
+  target group that has been deleted. The listener rule matches
+  incoming requests — based on path, host, header, or other
+  conditions — and attempts to forward them. The target group
+  no longer exists, so every matched request returns 502/503.
+  The listener rule appears correctly configured in the console;
+  the failure surfaces only when production traffic hits the
+  rule.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "11.5.1"
+  ccm_v4: ["CCC-03", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - network.kind
+  - network.elb.listener_rule_arn
+  - network.elb.listener_rule_target_group
+  - network.elb.listener_rule_target_exists
+  - network.elb.has_ghost_listener_rule
+remediation:
+  description: >
+    Listener rule forwards to a target group that does not exist.
+    Matching requests fail with 502/503.
+  action: >
+    Either delete the listener rule if it is no longer needed, or
+    update its forward action to reference an existing target
+    group (recreating the deleted one if the routing was
+    intentional). Confirm no automation continues to generate
+    these rules against deleted target groups.
+  example: |
+    {
+      "network": {
+        "kind": "listener_rule",
+        "elb": {
+          "has_ghost_listener_rule": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: listener_rule
+    - field: properties.network.elb.has_ghost_listener_rule
+      op: eq
+      value: true

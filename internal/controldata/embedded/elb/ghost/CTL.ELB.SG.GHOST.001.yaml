@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.SG.GHOST.001
+name: Load Balancer References Deleted Security Group
+description: >
+  Load balancer is associated with one or more security groups
+  that have been deleted. The SG reference remains on the load
+  balancer but evaluates against a non-existent resource. The
+  effective access-control state is undefined — depending on
+  how AWS resolves the deleted reference, the load balancer
+  may become unreachable or behave as if no rule applies at
+  the SG layer. Either way, the load balancer is in an
+  inconsistent state relative to the firewall policy it was
+  deployed with.
+domain: hygiene
+severity: high
+compliance:
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "1.2.1"
+  ccm_v4: ["CCC-03", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - network.kind
+  - network.elb.sg_ids
+  - network.elb.has_ghost_sg
+  - network.elb.ghost_sg_ids
+remediation:
+  description: >
+    Load balancer references one or more deleted security groups.
+  action: >
+    Replace the deleted SG references with intended live SGs.
+    If the deletion was deliberate, update the load balancer's
+    SG association explicitly rather than leaving the stale
+    reference. Investigate the deletion path that did not
+    update the LB — a proper SG decommissioning runbook should
+    update all dependents before deleting.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "has_ghost_sg": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.has_ghost_sg
+      op: eq
+      value: true

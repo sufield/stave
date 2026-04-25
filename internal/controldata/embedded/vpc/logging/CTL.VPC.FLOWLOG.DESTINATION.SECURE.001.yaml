@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.FLOWLOG.DESTINATION.SECURE.001
+name: Flow Log Destination Not Adequately Secured
+description: >
+  The S3 bucket or CloudWatch log group receiving flow log records
+  has at least one security weakness: public access allowed,
+  encryption not enabled, deletion allowed without MFA, or
+  retention below 365 days. Flow logs contain network metadata
+  (source, destination, ports, protocols, byte and packet counts)
+  that is valuable both for defenders (forensics, anomaly
+  detection) and for attackers (network mapping, service
+  discovery). If the destination is publicly accessible, the
+  attacker reads the network topology. If the destination allows
+  deletion, the attacker removes evidence of their network
+  activity. If retention is too short, historical data needed
+  for investigation expires before it can be consulted.
+domain: audit
+severity: high
+compliance:
+  cis_aws_v3.0: "3.9"
+  nist_800_53_r5: "AU-9"
+  fedramp_moderate: "AU-9"
+  pci_dss_v4.0: "10.3.1"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-03", "LOG-13"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.flowlog.destination_type
+  - network.flowlog.destination_arn
+  - network.flowlog.destination_public
+  - network.flowlog.destination_encrypted
+  - network.flowlog.destination_allows_deletion
+  - network.flowlog.retention_days
+  - network.flowlog.retention_adequate
+remediation:
+  description: >
+    Flow log destination has one or more security weaknesses —
+    public access, missing encryption, deletable without MFA, or
+    inadequate retention.
+  action: >
+    For an S3 destination: enable Block Public Access at the
+    bucket level, enable default encryption with KMS, enable
+    object lock or MFA-delete for deletion protection, and
+    confirm the bucket policy denies principals outside the
+    organization. For a CloudWatch Logs destination: set retention
+    to at least 365 days, apply a resource policy that prevents
+    deletion by non-privileged principals, and enable KMS
+    encryption on the log group.
+  example: |
+    {
+      "network": {
+        "kind": "flow_log",
+        "flowlog": {
+          "destination_public": false,
+          "destination_encrypted": true,
+          "destination_allows_deletion": false,
+          "retention_adequate": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: flow_log
+    - any:
+        - field: properties.network.flowlog.destination_public
+          op: eq
+          value: true
+        - field: properties.network.flowlog.destination_encrypted
+          op: eq
+          value: false
+        - field: properties.network.flowlog.destination_allows_deletion
+          op: eq
+          value: true
+        - field: properties.network.flowlog.retention_adequate
+          op: eq
+          value: false

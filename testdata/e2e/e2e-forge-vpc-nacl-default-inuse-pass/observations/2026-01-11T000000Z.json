@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "nacl-custom", "properties": {"network": {"kind": "network_acl", "nacl": {"is_default": false, "id": "acl-0custom00001", "subnet_id": "subnet-0private00001", "allows_all_inbound": false, "allows_all_outbound": false}}}, "type": "aws_network_acl", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

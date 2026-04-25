@@ -1,0 +1,21 @@
+control: CTL.VPC.ENDPOINT.SG.BROAD.001
+defect: >
+  Interface endpoint security group permits inbound from the full
+  VPC CIDR rather than from specific workload security groups.
+infection: >
+  The endpoint's security group is the first access-control
+  decision for endpoint traffic; the endpoint policy is the
+  second. A full-VPC-CIDR source means every instance and
+  container in the VPC can reach the endpoint regardless of
+  whether its workload needs the service. When a workload is
+  compromised, the attacker can reach any endpoint the VPC
+  hosts — KMS to decrypt, Secrets Manager to exfiltrate
+  credentials, STS to assume roles, ECR to pull backdoored
+  images. Scoping the endpoint SG to the specific workload SGs
+  that need the service converts "everyone can call KMS" into
+  "only the application tier can call KMS," which is what
+  private endpoints are supposed to enable.
+failure: >
+  Any workload in the VPC can reach any endpoint. A compromised
+  low-trust workload calls KMS, Secrets Manager, or STS without
+  needing to add firewall exemptions.

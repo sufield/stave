@@ -3,29 +3,29 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1361
-**Pack hash:** `071d4d488b19378019e9a9e6efa82c629c9c64aa05446a332518d1f2a9800ef8`
+**Total controls:** 1378
+**Pack hash:** `014dbf08446d167fc707ec041ea901ccaa2dd594f0b6e63758455403b587bd71`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 171 |
-| high | 612 |
+| high | 617 |
 | info | 16 |
-| low | 96 |
-| medium | 466 |
+| low | 97 |
+| medium | 477 |
 
 | Domain | Count |
 |--------|-------|
-| audit | 24 |
+| audit | 29 |
 | availability | 2 |
 | cryptography | 2 |
 | detection | 32 |
 | encryption | 75 |
-| exposure | 824 |
+| exposure | 834 |
 | governance | 27 |
-| hygiene | 6 |
+| hygiene | 8 |
 | identity | 326 |
 | network | 21 |
 | resilience | 14 |
@@ -7720,6 +7720,21 @@ ElastiCache clusters must have in-transit encryption enabled. Without TLS, cache
 
 ---
 
+### CTL.ELB.CERT.GHOST.001
+
+**Load Balancer References Deleted or Expired SSL Certificate**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-17; hipaa: 164.312(e)(1); nist_800_53_r5: SC-17; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+Load balancer HTTPS listener references an ACM certificate that has been deleted, has expired, or failed renewal. The load balancer continues to serve the missing or expired certificate — browsers display certificate warnings, API clients reject the TLS handshake, and automated integrations (webhooks, partner APIs, service meshes) fail at connection time. The listener configuration appears intact; the failure is external and immediate.
+
+**Remediation:** Replace the certificate on the listener. If the original ACM certificate was deleted, request a new one with the same subject alternative names and associate it. If renewal failed, investigate the ACM renewal path (DNS validation records, IAM permissions for renewal). Enable automated ACM renewal where possible and add a 30-day-before-expiry alarm so the finding does not recur.
+
+---
+
 ### CTL.ELB.CROSSZONE.001
 
 **Load Balancer Must Have Cross-Zone Load Balancing Enabled**
@@ -7779,6 +7794,21 @@ Load balancer safety cannot be assessed when TLS configuration is missing from t
 
 ---
 
+### CTL.ELB.LISTENER.GHOST.001
+
+**Load Balancer Listener Rule Forwards to Deleted Target Group**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-8; nist_800_53_r5: CM-8; pci_dss_v4.0: 11.5.1; soc2: CC7.1;
+
+ALB or NLB listener rule has a forward action targeting a target group that has been deleted. The listener rule matches incoming requests — based on path, host, header, or other conditions — and attempts to forward them. The target group no longer exists, so every matched request returns 502/503. The listener rule appears correctly configured in the console; the failure surfaces only when production traffic hits the rule.
+
+**Remediation:** Either delete the listener rule if it is no longer needed, or update its forward action to reference an existing target group (recreating the deleted one if the routing was intentional). Confirm no automation continues to generate these rules against deleted target groups.
+
+---
+
 ### CTL.ELB.LOG.001
 
 **Load Balancer Access Logging Must Be Enabled**
@@ -7791,6 +7821,36 @@ Load balancer safety cannot be assessed when TLS configuration is missing from t
 Load balancer access logging must be enabled for audit and forensic analysis. Without access logs, request patterns and potential unauthorized access cannot be investigated after an incident.
 
 **Remediation:** Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs
+
+---
+
+### CTL.ELB.SG.GHOST.001
+
+**Load Balancer References Deleted Security Group**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** fedramp_moderate: CM-8; nist_800_53_r5: CM-8; pci_dss_v4.0: 1.2.1; soc2: CC7.1;
+
+Load balancer is associated with one or more security groups that have been deleted. The SG reference remains on the load balancer but evaluates against a non-existent resource. The effective access-control state is undefined — depending on how AWS resolves the deleted reference, the load balancer may become unreachable or behave as if no rule applies at the SG layer. Either way, the load balancer is in an inconsistent state relative to the firewall policy it was deployed with.
+
+**Remediation:** Replace the deleted SG references with intended live SGs. If the deletion was deliberate, update the load balancer's SG association explicitly rather than leaving the stale reference. Investigate the deletion path that did not update the LB — a proper SG decommissioning runbook should update all dependents before deleting.
+
+---
+
+### CTL.ELB.TARGET.GHOST.001
+
+**Target Group References Deregistered or Terminated Instances**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** fedramp_moderate: CM-8; nist_800_53_r5: CM-8; pci_dss_v4.0: 11.5.1; soc2: CC7.1;
+
+ALB or NLB target group contains registered targets that are deregistered or reference terminated EC2 instances. Health checks continue to fire against non-existent targets, wasting health-check capacity and producing persistent unhealthy- target alerts that operators learn to ignore. If every target in the group is a ghost, listener rules that forward to it return 502/503 for every matching request.
+
+**Remediation:** Deregister the ghost targets from the target group. If the target group has only ghost targets, delete the target group (and any listener rules that forward to it) or register fresh targets. Add target-group cleanup to the instance-termination runbook so deregistration happens alongside termination.
 
 ---
 
@@ -19061,6 +19121,36 @@ Active resources (EC2 instances, RDS instances, VPC-configured Lambda functions,
 
 ---
 
+### CTL.VPC.DNSFIREWALL.ENABLED.001
+
+**VPC Does Not Have DNS Firewall**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-20; nist_800_53_r5: SC-20; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+VPC has no Route53 Resolver DNS Firewall rule group associated. DNS queries from instances in the VPC are resolved without filtering. Instances can resolve domains used for command-and- control (C2), malware download, cryptomining pool coordination, DNS-tunneled exfiltration, and phishing infrastructure. DNS is an often-overlooked egress channel — even when TCP/UDP egress is restricted by security groups, DNS resolution proceeds through the VPC resolver and can leak data in query names or confirm target reachability to attacker infrastructure.
+
+**Remediation:** Associate a DNS Firewall rule group with the VPC. Start with the two AWS managed lists: `AWSManagedDomainsMalwareDomainList` and `AWSManagedDomainsBotnetCommandAndControlDomainList`. Add custom rules for organization-specific blocklists (known phishing lures, ex-vendor domains). Set the rule action to BLOCK for malicious categories and optionally ALERT for newer or lower-confidence feeds during tuning.
+
+---
+
+### CTL.VPC.DNSFIREWALL.MANAGEDLISTS.001
+
+**DNS Firewall Not Using AWS Managed Domain Lists**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-3; nist_800_53_r5: SI-3; pci_dss_v4.0: 5.1.1; soc2: CC6.6;
+
+DNS Firewall is associated with the VPC but the rule group does not include AWS managed domain lists (`AWSManagedDomainsMalwareDomainList`, `AWSManagedDomainsBotnetCommandAndControlDomainList`, and the aggregate list). The managed lists are maintained by AWS threat intelligence teams and updated as new malicious domains are observed. A DNS Firewall with only custom rules misses industry-wide threat intelligence. Custom rules are appropriate for organization-specific blocklists (ex-vendor domains, phishing lures targeting the company) and belong alongside the managed feeds, not instead of them.
+
+**Remediation:** Add the AWS managed lists to the DNS Firewall rule group: `AWSManagedDomainsMalwareDomainList`, `AWSManagedDomainsBotnetCommandAndControlDomainList`, and `AWSManagedDomainsAggregateThreatList`. Set priorities so the managed lists evaluate before custom rules (or after, if organization-specific blocks should take precedence). Managed lists update automatically; no operational overhead.
+
+---
+
 ### CTL.VPC.DX.ENCRYPTION.001
 
 **Direct Connect Without Encryption**
@@ -19136,6 +19226,21 @@ VPC endpoint policies for S3 must restrict which buckets can be accessed. Withou
 
 ---
 
+### CTL.VPC.ENDPOINT.DNS.001
+
+**Interface VPC Endpoint Private DNS Not Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.4; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Interface VPC endpoint does not have Private DNS enabled. Without Private DNS, the standard service DNS name (for example `kms.us-east-1.amazonaws.com`) resolves to the service's public IP — not to the VPC endpoint. Applications using the standard SDK configuration bypass the endpoint entirely: traffic routes through the NAT gateway to the public endpoint. The VPC endpoint exists but is unused because DNS does not point at it. Private DNS makes the standard service name resolve to the endpoint's private IP, so every SDK call routes through the endpoint without code changes. Low severity because the finding rarely causes outages — but the behavior surprises most teams because the endpoint appears to be in use when it is not.
+
+**Remediation:** Enable Private DNS on the interface endpoint. This changes the VPC's DNS resolution so the standard service DNS name resolves to the endpoint's private IP, routing all SDK traffic through the endpoint without code changes. If Private DNS cannot be enabled (conflicts with an overlapping resolver configuration), configure application SDKs to use the endpoint's VPCE-specific DNS name explicitly — but the simpler fix is Private DNS.
+
+---
+
 ### CTL.VPC.ENDPOINT.GHOST.001
 
 **VPC Endpoint Policy Must Not Reference Deleted Resources**
@@ -19166,6 +19271,21 @@ VPC endpoint policies must include IAM conditions (aws:PrincipalArn, aws:Princip
 
 ---
 
+### CTL.VPC.ENDPOINT.MISSING.CRITICAL.001
+
+**VPC Missing Interface Endpoints for Critical AWS Services**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.4; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+VPC with private subnets does not have interface endpoints for one or more critical security services: KMS, Secrets Manager, STS, SSM, CloudWatch Logs, ECR. Traffic to these services either fails (no NAT) or exits through the NAT gateway to the public endpoint over the internet. Each of these services carries sensitive data or credentials — KMS operations on encryption keys, Secrets Manager secret retrieval, STS AssumeRole calls, SSM session and parameter data, CloudWatch Logs ingestion, ECR image pulls. Keeping this traffic on AWS's internal network via interface endpoints eliminates the public-internet leg and enables endpoint-policy scoping. The critical-services list is configurable via the `critical_services_missing` observation field — the finding enumerates exactly which services lack coverage so remediation is specific.
+
+**Remediation:** Create interface VPC endpoints for the missing services (KMS, Secrets Manager, STS, SSM, CloudWatch Logs, ECR). Enable Private DNS on each so existing SDK calls route automatically through the endpoint. Scope each endpoint's security group to the subnets or SGs that actually use the service, not the whole VPC. Consider an endpoint policy that restricts which principals (by OrgID or AccountID) can use the endpoint.
+
+---
+
 ### CTL.VPC.ENDPOINT.S3.001
 
 **VPCs Must Have an S3 Gateway Endpoint**
@@ -19178,6 +19298,21 @@ VPC endpoint policies must include IAM conditions (aws:PrincipalArn, aws:Princip
 VPCs must have an S3 VPC gateway endpoint to route S3 traffic privately through the AWS network. Without it, S3 access traverses the public internet, enabling monitoring and interception of data transfers.
 
 **Remediation:** aws ec2 create-vpc-endpoint --vpc-id <vpc-id> --service-name com.amazonaws.<region>.s3 --route-table-ids <route-table-id>
+
+---
+
+### CTL.VPC.ENDPOINT.SG.BROAD.001
+
+**Interface Endpoint Security Group Matches Full VPC CIDR**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.4; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Interface VPC endpoint's security group permits inbound traffic from the entire VPC CIDR rather than from specific subnets or other security groups. Every resource in the VPC — including resources that have no business using the service — can reach the endpoint. A compromised instance can call KMS, fetch secrets, assume roles, or pull ECR images via the endpoint without any additional firewall exemption. The endpoint security group should be scoped to the subnets or SGs whose workloads actually use the service.
+
+**Remediation:** Tighten the endpoint security group so inbound is permitted only from the security groups (or subnet CIDRs) of workloads that legitimately need the service. For example, only application-tier SGs should reach the KMS or Secrets Manager endpoint; logging-tier SGs should reach the CloudWatch Logs endpoint. Broad inbound here negates the principle of least privilege the endpoint was created to support.
 
 ---
 
@@ -19211,6 +19346,36 @@ VPC flow logs capture information about IP traffic going to and from network int
 
 ---
 
+### CTL.VPC.FLOWLOG.BIDIRECTIONAL.001
+
+**Flow Log Captures Only One Traffic Direction**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-2; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+Flow log's `TrafficType` is set to ACCEPT or REJECT rather than ALL. Capturing only ACCEPT hides blocked traffic — there is no record of what the security groups and NACLs stopped, so reconnaissance and blocked-attack patterns are invisible. Capturing only REJECT hides successful connections — no record of what traffic got through, so lateral movement and data exfiltration via permitted flows cannot be reconstructed. ALL records both so each question (what was blocked, what got through) has a log entry.
+
+**Remediation:** Change the flow log's `TrafficType` to ALL. Storage overhead of ALL vs ACCEPT or REJECT is significant only at very high packet rates; for most workloads the additional volume is worth the complete visibility. If cost is a concern at scale, compress retention periods or sample at the destination rather than narrowing capture at the source.
+
+---
+
+### CTL.VPC.FLOWLOG.DESTINATION.SECURE.001
+
+**Flow Log Destination Not Adequately Secured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-9; hipaa: 164.312(b); nist_800_53_r5: AU-9; pci_dss_v4.0: 10.3.1; soc2: CC7.2;
+
+The S3 bucket or CloudWatch log group receiving flow log records has at least one security weakness: public access allowed, encryption not enabled, deletion allowed without MFA, or retention below 365 days. Flow logs contain network metadata (source, destination, ports, protocols, byte and packet counts) that is valuable both for defenders (forensics, anomaly detection) and for attackers (network mapping, service discovery). If the destination is publicly accessible, the attacker reads the network topology. If the destination allows deletion, the attacker removes evidence of their network activity. If retention is too short, historical data needed for investigation expires before it can be consulted.
+
+**Remediation:** For an S3 destination: enable Block Public Access at the bucket level, enable default encryption with KMS, enable object lock or MFA-delete for deletion protection, and confirm the bucket policy denies principals outside the organization. For a CloudWatch Logs destination: set retention to at least 365 days, apply a resource policy that prevents deletion by non-privileged principals, and enable KMS encryption on the log group.
+
+---
+
 ### CTL.VPC.FLOWLOG.ENCRYPT.001
 
 **VPC Flow Logs Must Be Encrypted**
@@ -19223,6 +19388,51 @@ VPC flow logs capture information about IP traffic going to and from network int
 VPC flow logs contain network metadata (source/destination IPs, ports, protocols). When stored in S3, flow logs must be encrypted with a customer-managed KMS key to protect network topology information.
 
 **Remediation:** Configure flow log destination with SSE-KMS encryption. For S3 destinations, enable default bucket encryption with a CMK.
+
+---
+
+### CTL.VPC.FLOWLOG.FORMAT.001
+
+**Flow Log Missing Critical Fields**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-3; hipaa: 164.312(b); nist_800_53_r5: AU-3; pci_dss_v4.0: 10.2.2; soc2: CC7.2;
+
+Flow log uses the default log format, which omits several fields useful for security analysis: vpc-id, subnet-id, tcp-flags, pkt-srcaddr, pkt-dstaddr, flow-direction. A custom log format that includes these fields substantially improves forensics capability — pkt-srcaddr/pkt-dstaddr show the pre-NAT addresses that map flows back to private-subnet origins, and tcp-flags distinguish established connections from SYN scans. The default format was designed for network-operations use cases and leaves security investigators reconstructing the missing context from other sources.
+
+**Remediation:** Change the flow log's format to a custom format that includes vpc-id, subnet-id, tcp-flags, pkt-srcaddr, pkt-dstaddr, and flow-direction (in addition to the default fields). AWS provides a recommended security-oriented format in the documentation; copy it and extend with any workload-specific fields. New logs are delivered in the new format once the change is saved.
+
+---
+
+### CTL.VPC.FLOWLOG.STATUS.001
+
+**Flow Log Configured but Not Active**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-12; hipaa: 164.312(b); nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+Flow log record exists but its status is not ACTIVE (or the deliver-status indicates failure). The configuration is present, the console shows "Flow logs: enabled", dashboards report the log as configured — but no records are actually being delivered. Common causes: the IAM role used for delivery lost permissions (modified or deleted), the destination S3 bucket was deleted or had its policy changed, or the CloudWatch log group was deleted. This is the "everything appears to work" pattern for network visibility: every outward indicator says logging is on, and the observability pipeline has actually stopped.
+
+**Remediation:** Inspect the flow log's deliver-status and error messages. Typical fixes: recreate or repair the IAM role the log uses for delivery, restore the destination S3 bucket or CloudWatch log group, or update the bucket policy / retention configuration that is blocking writes. After the fix, confirm the status returns to ACTIVE and that records start arriving in the destination.
+
+---
+
+### CTL.VPC.FLOWLOG.SUBNET.001
+
+**Sensitive Subnet Does Not Have Flow Logs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-12; hipaa: 164.312(b); nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+Subnet flagged as containing sensitive resources (databases, management instances, tagged as critical) has no subnet-level flow logs AND the parent VPC does not have VPC-level flow logs enabled either. At that point, the subnet has no flow-log coverage at any scope. VPC-level logs satisfy the coverage requirement for non-sensitive subnets; sensitive subnets benefit from the extra granularity of subnet-level logs but the control fires only when neither layer is active, to avoid noise on well-covered deployments.
+
+**Remediation:** Enable flow logs at the subnet level for this subnet and route them to the same destination used by the rest of the account (CloudWatch Logs or S3 in a logging-dedicated account). Alternatively, enable VPC-level flow logs if VPC-wide coverage is preferred. Sensitive subnets (databases, management) are usually worth the extra granularity of subnet-level logs on top of VPC-level.
 
 ---
 
@@ -19267,6 +19477,51 @@ VPC safety cannot be assessed when flow logging status is missing from the snaps
 Network ACLs must not allow inbound traffic from 0.0.0.0/0 or ::/0 to SSH (22) or RDP (3389) ports. NACLs apply to entire subnets — open admin ports expose all instances.
 
 **Remediation:** Replace the allow rule with a specific CIDR for authorized admin IP ranges using aws ec2 replace-network-acl-entry.
+
+---
+
+### CTL.VPC.NACL.DEFAULT.INUSE.001
+
+**Subnet Uses Default Network ACL**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Subnet is associated with the VPC's default Network ACL, which ships with allow-all rules for both inbound and outbound traffic. Network ACLs are stateless subnet-level filters evaluated before security groups. The default NACL provides no filtering, so security groups become the only network control layer — a misconfigured or overly permissive SG has no NACL safety net. Custom NACLs add defense-in-depth: even if an SG allows SSH from 0.0.0.0/0, a NACL rule denying 0.0.0.0/0:22 at the subnet boundary blocks the traffic.
+
+**Remediation:** Associate the subnet with a custom NACL that mirrors the security-group policy at the subnet boundary: deny known- bad CIDRs, deny admin ports from non-management sources, and allow only the egress destinations required by the subnet's workload. NACLs are stateless, so allow rules must cover both request and response directions explicitly (use AWS documentation's ephemeral-port tables).
+
+---
+
+### CTL.VPC.NACL.RULE.ORDER.001
+
+**NACL Deny Rules Ordered After Allow Rules That Match Same Traffic**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+NACL has deny rules with higher rule numbers than allow rules that match the same traffic. NACL rules evaluate in order from lowest rule number to highest; when a rule matches, its action is applied and evaluation stops. A deny rule at rule number 200 for TCP/22 from 0.0.0.0/0 is never reached if rule 100 allows all TCP from 0.0.0.0/0. The deny rule appears to block SSH but has no effect on traffic. This is the NACL-specific "everything appears to work" pattern — an auditor reviewing the rule list sees both an allow-all and a specific deny and may reasonably conclude the deny is effective. It is not.
+
+**Remediation:** Renumber so the deny rule has a lower rule number than the allow rule it is meant to override, or narrow the allow rule so it no longer matches the traffic the deny is targeting. Typical pattern: deny-admin-ports at rule 100, allow-all at rule 200. Do not rely on rule-number spacing habits; always verify order by traffic-flow simulation, not by visual inspection of the rule list.
+
+---
+
+### CTL.VPC.NACL.UNRESTRICTED.001
+
+**Custom NACL Allows All Traffic**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+A custom (non-default) Network ACL is associated with subnets but allows all inbound and outbound traffic — the same effect as using the default NACL. Creating a custom NACL implies intent to filter; an allow-all custom NACL is either a misconfiguration or a placeholder from an incomplete deployment. The custom NACL's existence creates the appearance of defense-in-depth — dashboards show "custom NACL: attached" — while providing none of the filtering that justifies the extra moving part.
+
+**Remediation:** Replace the allow-all rules with a minimal deny-and-allow policy for the subnet's workload. At minimum: deny admin ports (22, 3389) from 0.0.0.0/0, deny known-bad CIDR blocks, allow only the egress destinations the workload requires. If the custom NACL is a placeholder for work that never completed, either finish the rule set or delete the NACL and re-associate subnets with the default.
 
 ---
 

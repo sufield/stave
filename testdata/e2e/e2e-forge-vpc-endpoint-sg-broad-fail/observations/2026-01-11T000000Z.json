@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "vpce-broad-sg", "properties": {"network": {"kind": "vpc_endpoint", "endpoint": {"sg_source_cidr": "10.0.0.0/16", "sg_matches_vpc_cidr": true, "sg_id": "sg-0broad00001"}}}, "type": "aws_vpc_endpoint", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

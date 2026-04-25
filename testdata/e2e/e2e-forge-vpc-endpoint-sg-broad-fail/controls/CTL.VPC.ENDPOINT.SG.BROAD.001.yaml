@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.SG.BROAD.001
+name: Interface Endpoint Security Group Matches Full VPC CIDR
+description: >
+  Interface VPC endpoint's security group permits inbound traffic
+  from the entire VPC CIDR rather than from specific subnets or
+  other security groups. Every resource in the VPC — including
+  resources that have no business using the service — can reach
+  the endpoint. A compromised instance can call KMS, fetch
+  secrets, assume roles, or pull ECR images via the endpoint
+  without any additional firewall exemption. The endpoint
+  security group should be scoped to the subnets or SGs whose
+  workloads actually use the service.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.4"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.endpoint.sg_source_cidr
+  - network.endpoint.sg_matches_vpc_cidr
+  - network.endpoint.sg_id
+remediation:
+  description: >
+    Interface endpoint security group uses the full VPC CIDR as
+    its inbound source.
+  action: >
+    Tighten the endpoint security group so inbound is permitted
+    only from the security groups (or subnet CIDRs) of
+    workloads that legitimately need the service. For example,
+    only application-tier SGs should reach the KMS or Secrets
+    Manager endpoint; logging-tier SGs should reach the
+    CloudWatch Logs endpoint. Broad inbound here negates the
+    principle of least privilege the endpoint was created to
+    support.
+  example: |
+    {
+      "network": {
+        "kind": "vpc_endpoint",
+        "endpoint": {
+          "sg_matches_vpc_cidr": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.endpoint.sg_matches_vpc_cidr
+      op: eq
+      value: true

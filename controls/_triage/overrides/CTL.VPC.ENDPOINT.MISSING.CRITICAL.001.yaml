@@ -1,0 +1,24 @@
+control: CTL.VPC.ENDPOINT.MISSING.CRITICAL.001
+defect: >
+  VPC with private subnets is missing interface endpoints for one
+  or more critical AWS services (KMS, Secrets Manager, STS, SSM,
+  CloudWatch Logs, ECR).
+infection: >
+  Each missing endpoint corresponds to a category of sensitive
+  traffic. Without a KMS endpoint, encryption and decryption
+  calls leave the VPC through NAT to the public KMS endpoint —
+  every envelope-encrypted read and write carries a log line
+  across the internet. Without a Secrets Manager endpoint,
+  secret retrieval does the same. Without STS, every
+  AssumeRole call. Without SSM, every session and parameter
+  fetch. Without CloudWatch Logs, every log line. Without ECR,
+  every container image pull. The traffic still works — AWS's
+  public endpoints accept the calls — but the organization
+  loses both the privacy benefit (traffic stays on AWS's
+  internal network) and the governance benefit (endpoint
+  policies that restrict which principals can use the endpoint,
+  per-VPC).
+failure: >
+  Sensitive AWS traffic over public internet. Credentials,
+  secrets, encryption keys, and container images move across
+  public paths from subnets intended to be private.

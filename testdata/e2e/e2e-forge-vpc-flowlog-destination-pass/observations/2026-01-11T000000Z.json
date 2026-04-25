@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "fl-dest-safe", "properties": {"network": {"kind": "flow_log", "flowlog": {"destination_type": "s3", "destination_arn": "arn:aws:s3:::flowlogs-dedicated-vault", "destination_public": false, "destination_encrypted": true, "destination_allows_deletion": false, "retention_days": 730, "retention_adequate": true}}}, "type": "aws_flow_log", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

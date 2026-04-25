@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "fl-custom-format", "properties": {"network": {"kind": "flow_log", "flowlog": {"format": "${vpc-id} ${subnet-id} ${tcp-flags} ${pkt-srcaddr} ${pkt-dstaddr} ${flow-direction}", "is_default_format": false, "has_critical_fields": true, "missing_fields": []}}}, "type": "aws_flow_log", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

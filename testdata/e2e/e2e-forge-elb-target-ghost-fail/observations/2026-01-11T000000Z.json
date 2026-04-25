@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "tg-partial-ghost", "properties": {"network": {"kind": "target_group", "elb": {"target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/partial/0001", "target_group_name": "partial", "has_ghost_targets": true, "ghost_target_count": 3, "ghost_target_ids": ["i-0term00001", "i-0term00002", "i-0term00003"], "healthy_target_count": 2}}}, "type": "aws_elb_target_group", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

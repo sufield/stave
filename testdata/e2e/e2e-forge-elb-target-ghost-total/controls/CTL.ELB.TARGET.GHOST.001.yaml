@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.TARGET.GHOST.001
+name: Target Group References Deregistered or Terminated Instances
+description: >
+  ALB or NLB target group contains registered targets that are
+  deregistered or reference terminated EC2 instances. Health
+  checks continue to fire against non-existent targets, wasting
+  health-check capacity and producing persistent unhealthy-
+  target alerts that operators learn to ignore. If every target
+  in the group is a ghost, listener rules that forward to it
+  return 502/503 for every matching request.
+domain: hygiene
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "11.5.1"
+  ccm_v4: ["CCC-03", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - network.kind
+  - network.elb.target_group_arn
+  - network.elb.target_group_name
+  - network.elb.has_ghost_targets
+  - network.elb.ghost_target_count
+  - network.elb.ghost_target_ids
+  - network.elb.healthy_target_count
+remediation:
+  description: >
+    Target group contains targets that are deregistered or
+    reference terminated instances.
+  action: >
+    Deregister the ghost targets from the target group. If the
+    target group has only ghost targets, delete the target group
+    (and any listener rules that forward to it) or register fresh
+    targets. Add target-group cleanup to the instance-termination
+    runbook so deregistration happens alongside termination.
+  example: |
+    {
+      "network": {
+        "kind": "target_group",
+        "elb": {
+          "has_ghost_targets": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: target_group
+    - field: properties.network.elb.has_ghost_targets
+      op: eq
+      value: true

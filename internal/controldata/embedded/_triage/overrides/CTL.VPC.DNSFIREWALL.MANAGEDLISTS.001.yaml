@@ -1,0 +1,19 @@
+control: CTL.VPC.DNSFIREWALL.MANAGEDLISTS.001
+defect: >
+  DNS Firewall is enabled but does not include AWS managed
+  threat-intelligence domain lists.
+infection: >
+  AWS's managed lists — malware domains, botnet C2 domains, the
+  aggregate threat list — are updated continuously as AWS
+  threat-intelligence teams identify new malicious
+  infrastructure. A DNS Firewall running only custom rules
+  misses this industry-wide feed entirely. Custom rules are
+  still valuable (organization-specific blocklists, ex-vendor
+  domains, phishing lures targeting the company) but they
+  cover different ground. The right pattern is managed lists
+  as a baseline plus custom rules on top; the finding flags
+  configurations that rely on custom rules alone.
+failure: >
+  Missing threat-intelligence coverage. Newly-identified
+  malicious domains resolve successfully because the DNS
+  Firewall has no mechanism to learn about them.

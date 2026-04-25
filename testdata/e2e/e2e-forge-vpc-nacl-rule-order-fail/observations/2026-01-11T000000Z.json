@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "nacl-order-broken", "properties": {"network": {"kind": "network_acl", "nacl": {"has_ineffective_deny": true, "ineffective_deny_rules": [{"rule_number": 200, "action": "deny", "protocol": "tcp", "port": 22, "cidr": "0.0.0.0/0", "shadowed_by_rule": 100}], "rule_order_correct": false}}}, "type": "aws_network_acl", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

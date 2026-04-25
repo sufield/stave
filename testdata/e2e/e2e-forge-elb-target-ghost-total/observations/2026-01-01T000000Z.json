@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "tg-total-ghost", "properties": {"network": {"kind": "target_group", "elb": {"target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/total/0002", "target_group_name": "totally-gone", "has_ghost_targets": true, "ghost_target_count": 4, "ghost_target_ids": ["i-0gone0001", "i-0gone0002", "i-0gone0003", "i-0gone0004"], "healthy_target_count": 0}}}, "type": "aws_elb_target_group", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

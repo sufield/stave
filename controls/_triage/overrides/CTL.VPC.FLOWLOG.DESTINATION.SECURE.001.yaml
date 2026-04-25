@@ -1,0 +1,25 @@
+control: CTL.VPC.FLOWLOG.DESTINATION.SECURE.001
+defect: >
+  Flow log destination (S3 bucket or CloudWatch log group) has a
+  security weakness: public access, missing encryption, deletion
+  allowed, or retention below 365 days.
+infection: >
+  Flow logs contain a detailed record of network activity — the
+  same record that is useful for incident response is useful for
+  reconnaissance. A publicly accessible S3 bucket of flow logs
+  hands attackers a map of the VPC's internal topology, the
+  services that are reachable, the ports in use, and which
+  source addresses connect to which destinations. A bucket that
+  allows deletion without MFA lets an attacker cover their
+  tracks by removing records of their own activity. A
+  CloudWatch log group with low retention expires historical
+  data before investigation reaches it — some breaches are
+  discovered months or years after the initial access. Each of
+  the four weaknesses addresses a different failure mode;
+  together they make flow logs into a different kind of risk
+  entirely.
+failure: >
+  Compromised evidence. Flow logs are either readable by
+  unauthorized parties, deletable by an intruder, or
+  insufficiently retained for the investigations that reach for
+  them.

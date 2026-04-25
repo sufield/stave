@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "listener-expired-cert", "properties": {"network": {"kind": "elb_listener", "elb": {"listener_cert_arn": "arn:aws:acm:us-east-1:111122223333:certificate/00000000-0000-0000-0000-000000000002", "listener_cert_exists": true, "listener_cert_expired": true, "listener_cert_expiry_date": "2025-12-01T00:00:00Z", "has_ghost_cert": true}}}, "type": "aws_elb_listener", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

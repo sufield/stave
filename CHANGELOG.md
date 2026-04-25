@@ -8,6 +8,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **VPC-7 — load balancer ghost references, DNS firewall, and
+  Network ACL controls (9 controls, 3 chains).** Combines three
+  smaller gap clusters from categories 2 (NACLs), 8 (DNS), and
+  9 (ELB). ELB ghost family: `TARGET.GHOST` (deregistered or
+  terminated targets remain registered, medium), `LISTENER.GHOST`
+  (listener rule forwards to a deleted target group — silent
+  502/503, high), `CERT.GHOST` (expired or deleted ACM cert on
+  HTTPS listener — public TLS failure, high), `SG.GHOST` (LB
+  references a deleted security group — inconsistent firewall
+  state, high). DNS firewall: `DNSFIREWALL.ENABLED` (no Route53
+  Resolver DNS Firewall rule group on VPC, medium),
+  `DNSFIREWALL.MANAGEDLISTS` (DNS Firewall present but no AWS
+  managed threat-intel lists, medium). NACL: `DEFAULT.INUSE`
+  (subnet uses default allow-all NACL — no subnet-level
+  defense-in-depth, medium), `RULE.ORDER` (deny rules ordered
+  after matching allow rules — never evaluate, medium),
+  `UNRESTRICTED` (custom NACL allows all traffic — defense-in-
+  depth theater, medium). Chains: `elb_ghost_cascade`
+  (multiple LB ghost references — systematic decommissioning
+  failure), `vpc_dns_exfiltration` (no DNS firewall + unrestricted
+  DNS egress or no flow logs), `vpc_nacl_false_confidence`
+  (ineffective deny rules OR allow-all custom NACL — appears
+  filtered, isn't). 20 e2e fixtures (18 base + 2 worst-case
+  variants: target-ghost-total with every target a ghost and
+  cert-ghost-deleted distinguished from merely expired).
+  9 triage overrides. Docs and README regenerated (1378 controls).
+- **VPC-6 — flow log deepening and VPC endpoint coverage (9 controls,
+  3 chains).** Closes the category-7 flow-log cluster and the
+  category-6 endpoint cluster. Prompt spec asked for 10 controls;
+  `MISSING.S3` was a duplicate of the existing
+  `CTL.VPC.ENDPOINT.S3.001`, so shipped 9. Flow-log additions:
+  `SUBNET` (sensitive subnet with no coverage at either subnet or
+  VPC scope, medium), `STATUS` (flow log configured but not ACTIVE —
+  the "everything appears to work" pattern, high), `FORMAT` (default
+  format omits pkt-srcaddr/tcp-flags/etc. needed for forensics,
+  medium), `DESTINATION.SECURE` (public/unencrypted/deletable/low-
+  retention destination, high, OR predicate across four dimensions),
+  `BIDIRECTIONAL` (TrafficType is ACCEPT or REJECT only — half the
+  record missing, medium). Endpoint additions:
+  `MISSING.CRITICAL` (missing interface endpoint for one or more of
+  KMS/Secrets Manager/STS/SSM/CloudWatch Logs/ECR, medium),
+  `SG.BROAD` (endpoint SG permits full VPC CIDR rather than specific
+  workload SGs, medium), `DNS` (Private DNS disabled — endpoint
+  bypassed because standard service DNS routes to public IP, low).
+  Chains: `vpc_flow_visibility_gap` (flow logs not active + partial
+  capture or insecure destination), `vpc_endpoint_bypass` (no
+  Private DNS + broad SG or anonymous policy), `vpc_private_subnet_leakage`
+  (missing S3 gateway or critical interface endpoints + unrestricted
+  egress). 18 e2e fixtures (16 base + 2 worst-case variants:
+  status-deliver-error with ACTIVE status but ERROR delivery, and
+  endpoint-many-missing with all six critical endpoints absent).
+  8 triage overrides. Docs and README regenerated (1369 controls).
 - **VPC-5 — AWS Network Firewall deepening (5 controls, 3 chains).**
   Closes the Network Firewall gap cluster in category 10. Prompt
   spec asked for 8 controls; three turned out to duplicate existing

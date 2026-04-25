@@ -1,0 +1,23 @@
+control: CTL.VPC.ENDPOINT.DNS.001
+defect: >
+  Interface endpoint has Private DNS disabled. Standard service
+  DNS names resolve to public IPs; SDK calls bypass the
+  endpoint.
+infection: >
+  Without Private DNS, the standard DNS names that SDKs use by
+  default — `kms.us-east-1.amazonaws.com`,
+  `secretsmanager.us-east-1.amazonaws.com`,
+  `sts.us-east-1.amazonaws.com` — resolve to the service's
+  public IP addresses. Applications using normal SDK
+  configuration talk to the public endpoint over NAT, which is
+  exactly what the VPC endpoint was supposed to prevent. The
+  endpoint exists, has a security group, has a policy, has a
+  per-hour cost — and provides no benefit because DNS does not
+  point to it. The misconfiguration surprises most teams
+  because the endpoint appears to be in use when one looks at
+  the console; cost dashboards also show endpoint utilization
+  as near-zero which tends to be attributed to low workload
+  rather than configuration error.
+failure: >
+  Endpoint bypass by default. SDK traffic routes to the public
+  endpoint via NAT. The VPC endpoint is paid for and unused.

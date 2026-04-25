@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "tg-healthy", "properties": {"network": {"kind": "target_group", "elb": {"target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/healthy/0000", "target_group_name": "healthy", "has_ghost_targets": false, "ghost_target_count": 0, "ghost_target_ids": [], "healthy_target_count": 4}}}, "type": "aws_elb_target_group", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1,0 +1,20 @@
+control: CTL.VPC.FLOWLOG.SUBNET.001
+defect: >
+  Subnet contains sensitive resources and has no flow-log coverage
+  at either subnet or VPC scope.
+infection: >
+  Sensitive subnets — those containing databases, management
+  instances, or tagged as critical — carry traffic that is
+  especially valuable in an investigation. Database connections,
+  administrative access, replication flows, backup egress all
+  pass through these subnets and all are worth recording. When
+  neither the subnet nor the parent VPC has flow logs enabled,
+  there is no record of any of that traffic. Incidents rooted in
+  these subnets have to be reconstructed from application and
+  OS-level logs alone, if those exist. The finding fires only
+  when both layers are absent so it does not generate noise
+  against well-covered deployments.
+failure: >
+  Blind spot over sensitive traffic. Database and management
+  connections enter and leave the subnet without any
+  network-layer record.

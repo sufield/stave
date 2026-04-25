@@ -1,0 +1,21 @@
+control: CTL.VPC.FLOWLOG.FORMAT.001
+defect: >
+  Flow log uses the default format and omits fields useful for
+  security analysis.
+infection: >
+  The default flow log format was designed for network
+  operations — it captures enough to answer questions like "how
+  much traffic is moving, between what CIDRs, using what
+  protocols." Security analysts need more. `pkt-srcaddr` and
+  `pkt-dstaddr` reveal the pre-NAT addresses that pin an
+  outbound flow to a specific private-subnet workload;
+  `tcp-flags` distinguish established connections from SYN
+  scans and reset floods; `flow-direction` clarifies which side
+  initiated; `vpc-id` and `subnet-id` speed up cross-VPC
+  correlation. Without these, investigators reconstruct the
+  missing context from CloudTrail, DNS logs, and guesswork —
+  slow when time matters.
+failure: >
+  Impoverished evidence. Investigations take longer and reach
+  lower confidence because critical context is missing from the
+  primary network log.

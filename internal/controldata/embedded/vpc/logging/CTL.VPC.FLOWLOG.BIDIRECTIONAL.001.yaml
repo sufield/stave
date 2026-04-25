@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.FLOWLOG.BIDIRECTIONAL.001
+name: Flow Log Captures Only One Traffic Direction
+description: >
+  Flow log's `TrafficType` is set to ACCEPT or REJECT rather than
+  ALL. Capturing only ACCEPT hides blocked traffic — there is no
+  record of what the security groups and NACLs stopped, so
+  reconnaissance and blocked-attack patterns are invisible.
+  Capturing only REJECT hides successful connections — no record
+  of what traffic got through, so lateral movement and data
+  exfiltration via permitted flows cannot be reconstructed. ALL
+  records both so each question (what was blocked, what got
+  through) has a log entry.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "3.9"
+  nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-03", "LOG-08"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.flowlog.traffic_type
+  - network.flowlog.captures_all
+remediation:
+  description: >
+    Flow log captures only one direction of traffic. Either
+    accepted or rejected flows are missing from the record.
+  action: >
+    Change the flow log's `TrafficType` to ALL. Storage overhead
+    of ALL vs ACCEPT or REJECT is significant only at very high
+    packet rates; for most workloads the additional volume is
+    worth the complete visibility. If cost is a concern at scale,
+    compress retention periods or sample at the destination
+    rather than narrowing capture at the source.
+  example: |
+    {
+      "network": {
+        "kind": "flow_log",
+        "flowlog": {
+          "captures_all": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: flow_log
+    - field: properties.network.flowlog.captures_all
+      op: eq
+      value: false

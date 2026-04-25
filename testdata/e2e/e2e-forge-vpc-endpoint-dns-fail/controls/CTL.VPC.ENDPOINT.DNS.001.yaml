@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.DNS.001
+name: Interface VPC Endpoint Private DNS Not Enabled
+description: >
+  Interface VPC endpoint does not have Private DNS enabled.
+  Without Private DNS, the standard service DNS name (for
+  example `kms.us-east-1.amazonaws.com`) resolves to the
+  service's public IP — not to the VPC endpoint. Applications
+  using the standard SDK configuration bypass the endpoint
+  entirely: traffic routes through the NAT gateway to the
+  public endpoint. The VPC endpoint exists but is unused because
+  DNS does not point at it. Private DNS makes the standard
+  service name resolve to the endpoint's private IP, so every
+  SDK call routes through the endpoint without code changes.
+  Low severity because the finding rarely causes outages — but
+  the behavior surprises most teams because the endpoint
+  appears to be in use when it is not.
+domain: exposure
+severity: low
+compliance:
+  cis_aws_v3.0: "5.4"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: none
+observation_fields:
+  - network.kind
+  - network.endpoint.private_dns_enabled
+  - network.endpoint.service_name
+remediation:
+  description: >
+    Interface endpoint has Private DNS disabled. SDK calls to
+    the standard service DNS name bypass the endpoint and route
+    to the public endpoint via NAT.
+  action: >
+    Enable Private DNS on the interface endpoint. This changes
+    the VPC's DNS resolution so the standard service DNS name
+    resolves to the endpoint's private IP, routing all SDK
+    traffic through the endpoint without code changes. If
+    Private DNS cannot be enabled (conflicts with an
+    overlapping resolver configuration), configure application
+    SDKs to use the endpoint's VPCE-specific DNS name
+    explicitly — but the simpler fix is Private DNS.
+  example: |
+    {
+      "network": {
+        "kind": "vpc_endpoint",
+        "endpoint": {
+          "private_dns_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.endpoint.private_dns_enabled
+      op: eq
+      value: false

@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CERT.GHOST.001
+name: Load Balancer References Deleted or Expired SSL Certificate
+description: >
+  Load balancer HTTPS listener references an ACM certificate that
+  has been deleted, has expired, or failed renewal. The load
+  balancer continues to serve the missing or expired certificate
+  — browsers display certificate warnings, API clients reject
+  the TLS handshake, and automated integrations (webhooks,
+  partner APIs, service meshes) fail at connection time. The
+  listener configuration appears intact; the failure is external
+  and immediate.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-17"
+  fedramp_moderate: "SC-17"
+  pci_dss_v4.0: "4.2.1"
+  soc2: "CC6.7"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["CEK-08", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - network.kind
+  - network.elb.listener_cert_arn
+  - network.elb.listener_cert_exists
+  - network.elb.listener_cert_expired
+  - network.elb.listener_cert_expiry_date
+  - network.elb.has_ghost_cert
+remediation:
+  description: >
+    Load balancer listener references a certificate that has been
+    deleted or has expired.
+  action: >
+    Replace the certificate on the listener. If the original ACM
+    certificate was deleted, request a new one with the same
+    subject alternative names and associate it. If renewal
+    failed, investigate the ACM renewal path (DNS validation
+    records, IAM permissions for renewal). Enable automated ACM
+    renewal where possible and add a 30-day-before-expiry alarm
+    so the finding does not recur.
+  example: |
+    {
+      "network": {
+        "kind": "elb_listener",
+        "elb": {
+          "has_ghost_cert": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: elb_listener
+    - field: properties.network.elb.has_ghost_cert
+      op: eq
+      value: true

@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NACL.RULE.ORDER.001
+name: NACL Deny Rules Ordered After Allow Rules That Match Same Traffic
+description: >
+  NACL has deny rules with higher rule numbers than allow rules
+  that match the same traffic. NACL rules evaluate in order from
+  lowest rule number to highest; when a rule matches, its action
+  is applied and evaluation stops. A deny rule at rule number
+  200 for TCP/22 from 0.0.0.0/0 is never reached if rule 100
+  allows all TCP from 0.0.0.0/0. The deny rule appears to block
+  SSH but has no effect on traffic. This is the NACL-specific
+  "everything appears to work" pattern — an auditor reviewing
+  the rule list sees both an allow-all and a specific deny and
+  may reasonably conclude the deny is effective. It is not.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.nacl.has_ineffective_deny
+  - network.nacl.ineffective_deny_rules
+  - network.nacl.rule_order_correct
+remediation:
+  description: >
+    NACL has deny rules that are never evaluated because an
+    earlier allow rule already matches the same traffic.
+  action: >
+    Renumber so the deny rule has a lower rule number than the
+    allow rule it is meant to override, or narrow the allow
+    rule so it no longer matches the traffic the deny is
+    targeting. Typical pattern: deny-admin-ports at rule 100,
+    allow-all at rule 200. Do not rely on rule-number spacing
+    habits; always verify order by traffic-flow simulation,
+    not by visual inspection of the rule list.
+  example: |
+    {
+      "network": {
+        "kind": "network_acl",
+        "nacl": {
+          "rule_order_correct": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_acl
+    - field: properties.network.nacl.has_ineffective_deny
+      op: eq
+      value: true

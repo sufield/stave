@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "nacl-default-in-use", "properties": {"network": {"kind": "network_acl", "nacl": {"is_default": true, "id": "acl-0default0001", "subnet_id": "subnet-0prod000001", "allows_all_inbound": true, "allows_all_outbound": true}}}, "type": "aws_network_acl", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

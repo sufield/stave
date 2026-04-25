@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "vpc-missing-secrets-sts", "properties": {"network": {"kind": "vpc", "endpoint": {"critical_services_missing": ["secretsmanager", "sts"], "has_all_critical": false, "kms_endpoint": true, "secretsmanager_endpoint": false, "sts_endpoint": false, "ssm_endpoint": true, "logs_endpoint": true, "ecr_endpoint": true}}}, "type": "aws_vpc", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

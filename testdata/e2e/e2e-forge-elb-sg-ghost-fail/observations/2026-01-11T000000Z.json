@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "lb-ghost-sg", "properties": {"network": {"kind": "load_balancer", "elb": {"sg_ids": ["sg-0live000001", "sg-0deleted0001"], "has_ghost_sg": true, "ghost_sg_ids": ["sg-0deleted0001"]}}}, "type": "aws_elb", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

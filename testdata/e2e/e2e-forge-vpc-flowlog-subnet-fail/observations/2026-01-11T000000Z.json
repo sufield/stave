@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {"id": "subnet-db-unwatched", "properties": {"network": {"kind": "subnet", "subnet": {"id": "subnet-0db00001", "name": "db-tier-1a", "has_sensitive_resources": true, "flow_logs_enabled": false, "vpc_flow_logs_enabled": false}}}, "type": "aws_subnet", "vendor": "aws"}
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "generated_by": {"source_type": "aws.config_api", "tool": "stave-test", "tool_version": "1.0.0"},
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

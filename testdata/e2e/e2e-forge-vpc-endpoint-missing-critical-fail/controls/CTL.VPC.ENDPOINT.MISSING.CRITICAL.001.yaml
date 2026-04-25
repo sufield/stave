@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.MISSING.CRITICAL.001
+name: VPC Missing Interface Endpoints for Critical AWS Services
+description: >
+  VPC with private subnets does not have interface endpoints for
+  one or more critical security services: KMS, Secrets Manager,
+  STS, SSM, CloudWatch Logs, ECR. Traffic to these services
+  either fails (no NAT) or exits through the NAT gateway to the
+  public endpoint over the internet. Each of these services
+  carries sensitive data or credentials — KMS operations on
+  encryption keys, Secrets Manager secret retrieval, STS
+  AssumeRole calls, SSM session and parameter data, CloudWatch
+  Logs ingestion, ECR image pulls. Keeping this traffic on
+  AWS's internal network via interface endpoints eliminates the
+  public-internet leg and enables endpoint-policy scoping. The
+  critical-services list is configurable via the
+  `critical_services_missing` observation field — the finding
+  enumerates exactly which services lack coverage so remediation
+  is specific.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.4"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: data_access
+observation_fields:
+  - network.kind
+  - network.endpoint.critical_services_missing
+  - network.endpoint.has_all_critical
+  - network.endpoint.kms_endpoint
+  - network.endpoint.secretsmanager_endpoint
+  - network.endpoint.sts_endpoint
+  - network.endpoint.ssm_endpoint
+  - network.endpoint.logs_endpoint
+  - network.endpoint.ecr_endpoint
+remediation:
+  description: >
+    VPC is missing interface endpoints for one or more critical
+    AWS services. Traffic to those services leaves the VPC via
+    NAT/public internet.
+  action: >
+    Create interface VPC endpoints for the missing services
+    (KMS, Secrets Manager, STS, SSM, CloudWatch Logs, ECR).
+    Enable Private DNS on each so existing SDK calls route
+    automatically through the endpoint. Scope each endpoint's
+    security group to the subnets or SGs that actually use the
+    service, not the whole VPC. Consider an endpoint policy
+    that restricts which principals (by OrgID or AccountID) can
+    use the endpoint.
+  example: |
+    {
+      "network": {
+        "kind": "vpc",
+        "endpoint": {
+          "has_all_critical": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.endpoint.has_all_critical
+      op: eq
+      value: false
