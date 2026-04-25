@@ -1,0 +1,23 @@
+control: CTL.LAMBDA.CONFIG.MEMORY.EXCESSIVE.001
+defect: >
+  Lambda function memory_size is set to 10240MB — the
+  service maximum.
+infection: >
+  In Lambda, memory is also CPU and network allocation —
+  the per-millisecond billing rate scales with the memory
+  allocation. A function provisioned at 10240MB pays 64x
+  the rate of a function provisioned at 160MB for the same
+  duration. Maximum memory is the configured ceiling AWS
+  exposes, not a default. When the value is at the maximum,
+  one of three things happened: the workload genuinely
+  needs the ceiling (large in-memory data, ML inference),
+  the memory was raised during a slow-runtime incident and
+  never tuned back down, or the function was provisioned
+  by a template that defaults to the maximum without
+  considering actual workload requirements. The finding
+  is operational governance — review whether the value is
+  intentional — rather than a security vulnerability.
+failure: >
+  Cost over-provisioning. Every invocation pays the
+  maximum memory billing rate regardless of the workload's
+  actual memory requirement.

@@ -1,0 +1,26 @@
+control: CTL.LAMBDA.TRIGGER.CONFUSEDDEPUTY.001
+defect: >
+  Lambda resource policy allows a service principal to
+  invoke the function without aws:SourceArn or
+  aws:SourceAccount condition.
+infection: >
+  A resource-based policy that allows invocation from a
+  service principal without a source restriction means: any
+  S3 bucket in any account can trigger the function (if the
+  principal is s3.amazonaws.com), any SNS topic in any
+  account can invoke it (sns.amazonaws.com), any
+  EventBridge rule in any account can trigger it
+  (events.amazonaws.com), and any API Gateway in any account
+  can call it (apigateway.amazonaws.com). An attacker
+  creates an S3 bucket in their own account, configures a
+  notification to this function's ARN, uploads an object,
+  and the function is invoked with an attacker-controlled
+  payload — executing with the function's execution-role
+  permissions. aws:SourceArn restricts to a specific source
+  resource. aws:SourceAccount restricts to a specific
+  account. Either one closes the deputy.
+failure: >
+  Cross-account confused deputy. An attacker invokes the
+  function from their own account by creating a resource of
+  the trusted service type and pointing it at the function
+  ARN.

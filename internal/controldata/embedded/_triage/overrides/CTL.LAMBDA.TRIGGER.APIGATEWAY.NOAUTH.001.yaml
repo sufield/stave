@@ -1,0 +1,23 @@
+control: CTL.LAMBDA.TRIGGER.APIGATEWAY.NOAUTH.001
+defect: >
+  Lambda function is invoked via at least one API Gateway
+  route that has no authentication (no IAM auth, no Cognito
+  authorizer, no Lambda authorizer, no API key requirement).
+infection: >
+  An API Gateway route without authentication is a public
+  endpoint. Anyone who discovers the API URL can invoke the
+  function with any payload. The API Gateway provides
+  throttling (unlike Function URLs), but no identity
+  verification — so every unauthenticated invocation
+  exercises the function's execution-role permissions. If
+  the function reads from databases, writes to S3, sends
+  email, or processes payments, unauthenticated callers can
+  trigger those operations. Lambda invocation cost
+  accumulates per request with no upper bound until the API
+  Gateway throttle limit is hit, by which time downstream
+  side effects are already happening.
+failure: >
+  Publicly invocable via API Gateway. Unauthenticated
+  callers can invoke the function with arbitrary payloads,
+  exercising its execution-role permissions and downstream
+  side effects.

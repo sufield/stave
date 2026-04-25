@@ -1,0 +1,26 @@
+control: CTL.LAMBDA.LIFECYCLE.ORPHANLOG.001
+defect: >
+  CloudWatch log group with the /aws/lambda/<function-name>
+  naming pattern exists, but the corresponding Lambda
+  function does not exist in the inventory.
+infection: >
+  The log group was created by Lambda on first invocation
+  (or pre-created by a deployment script) and persisted
+  beyond the function's lifetime. The function was deleted
+  — its decommission step ran — but the log group cleanup
+  step did not. The log group accumulates no new logs but
+  retains every historical event: request/response payloads
+  (which may include PII or secrets that the function
+  logged), error stack traces (which expose code paths),
+  environment-variable values that the function
+  inadvertently echoed, and downstream call records. The
+  log group's retention policy continues to apply, so logs
+  may persist for years past the function's deletion. The
+  same ghost-reference pattern applies inverted: ordinarily
+  the function references infrastructure that no longer
+  exists; here the infrastructure references a function
+  that no longer exists.
+failure: >
+  Cleanup debris. Sensitive historical logs persist
+  indefinitely after the function they describe was
+  deleted, with cost and data-residency implications.

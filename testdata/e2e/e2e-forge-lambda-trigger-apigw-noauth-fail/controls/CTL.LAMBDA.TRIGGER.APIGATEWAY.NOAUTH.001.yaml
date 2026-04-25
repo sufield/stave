@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.TRIGGER.APIGATEWAY.NOAUTH.001
+name: Lambda Behind API Gateway Without Authentication
+description: >
+  Lambda functions invoked via API Gateway must not be
+  exposed through routes that have no authentication
+  configured. A route with no IAM auth, no Cognito
+  authorizer, no Lambda authorizer, and no API key
+  requirement is a public endpoint — anyone who discovers
+  the URL can invoke the function with any payload. The API
+  Gateway provides throttling (unlike Function URLs) but no
+  identity verification, so every unauthenticated invocation
+  exercises the function's full execution-role permissions
+  and accumulates Lambda invocation cost. Distinct from
+  CTL.LAMBDA.URL.AUTH.001 which guards Function URL AuthType
+  NONE; this control guards the API Gateway integration
+  layer, where the public-invocability gate is the route's
+  authorizer rather than the function URL config.
+domain: access
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-08", "IVS-03"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Lambda function is invoked via at least one API Gateway
+    route that has no authentication configured. The
+    function is publicly invocable through that endpoint.
+  action: >
+    Attach an authorizer to the route — IAM auth (AuthType
+    AWS_IAM), Cognito user pool authorizer, Lambda
+    authorizer, or API key requirement. For public APIs that
+    must remain unauthenticated, document the exposure and
+    reduce blast radius by tightening the function's
+    execution-role permissions.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "function": {
+          "api_gateway": {
+            "has_unauthenticated_route": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function.api_gateway.has_unauthenticated_route
+      op: eq
+      value: true

@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.TRIGGER.CONFUSEDDEPUTY.001
+name: Lambda Trigger Allows Invocation Without Source Restriction
+description: >
+  Lambda resource policy must not allow a service principal
+  (s3.amazonaws.com, sns.amazonaws.com, events.amazonaws.com,
+  apigateway.amazonaws.com, etc.) to invoke the function
+  without an aws:SourceArn or aws:SourceAccount condition.
+  Without one of these conditions, ANY resource of that
+  service type in ANY account can trigger the function — the
+  Lambda confused-deputy problem. An attacker creates an S3
+  bucket in their own account, configures a notification to
+  the function ARN, uploads a crafted object, and the
+  function is invoked with the attacker payload — executing
+  with the function's full execution-role permissions. This
+  is distinct from CTL.LAMBDA.POLICY.CROSSACCOUNT.001 which
+  guards account-principal grants; this control guards the
+  service-principal invocation surface, where the attacker
+  doesn't need an account principal at all — the service
+  itself is the principal and the missing source condition
+  removes the account boundary.
+domain: access
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-08", "DSP-17"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Lambda resource policy grants a service principal the
+    ability to invoke the function without aws:SourceArn or
+    aws:SourceAccount, allowing any resource of that service
+    type in any account to trigger the function.
+  action: >
+    Add an aws:SourceArn (preferred — restricts to a specific
+    source resource) or aws:SourceAccount (restricts to a
+    specific account) condition to each service-principal
+    invoke statement via aws lambda add-permission
+    --source-arn or --source-account.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "function": {
+          "resource_policy": {
+            "has_unsourced_service_principal": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function.resource_policy.has_unsourced_service_principal
+      op: eq
+      value: true

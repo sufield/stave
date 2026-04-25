@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.LIFECYCLE.ORPHANLOG.001
+name: CloudWatch Log Group Exists for Deleted Lambda Function
+description: >
+  A CloudWatch log group with the Lambda naming pattern
+  (/aws/lambda/<function-name>) must not persist after the
+  corresponding Lambda function is deleted. When the
+  function is removed but its log group is not, the log
+  group accumulates no new logs but retains historical logs
+  with potentially sensitive output (request/response
+  payloads, IDs, error stack traces, environment-variable
+  echoes). The orphaned log group is a low-severity finding
+  — there is no active invocation surface — but it
+  represents three governance signals: cost (logs retained
+  past their useful life), data exposure (historical logs
+  may contain sensitive content past the retention
+  intention of the deleted function), and serverless
+  cleanup failure (the decommission script removed the
+  function but not its dependent resources).
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SA-22"
+  fedramp_moderate: "SA-22"
+  soc2: "CC8.1"
+  hipaa: "164.308(a)(1)(ii)(B)"
+  ccm_v4: ["DSP-16"]
+scope_tags:
+  - aws
+  - lambda
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudWatch log group with the /aws/lambda/ prefix
+    persists after its Lambda function was deleted.
+    Historical logs remain accessible.
+  action: >
+    Delete the orphaned log group via aws logs
+    delete-log-group --log-group-name /aws/lambda/<name>,
+    or transfer historical logs to long-term storage
+    (S3 + Glacier) before deletion if the data is
+    retention-required.
+  example: |
+    {
+      "log_group": {
+        "kind": "log_group",
+        "is_orphaned_lambda": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.log_group.kind
+      op: eq
+      value: log_group
+    - field: properties.log_group.is_orphaned_lambda
+      op: eq
+      value: true

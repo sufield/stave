@@ -1,0 +1,29 @@
+control: CTL.LAMBDA.CONFIG.CONCURRENCY.NOLIMIT.001
+defect: >
+  Lambda function is publicly invocable (Function URL
+  AuthType NONE, or API Gateway with no authorizer) and
+  has no reserved concurrency configured.
+infection: >
+  Without reserved concurrency, the function competes with
+  every other function in the account for the account-level
+  concurrency limit (default: 1000). A single function can
+  consume all 1000 slots — preventing any other function in
+  the account from executing. For publicly invocable
+  functions, this is a denial-of-service vector: an
+  attacker sends thousands of concurrent requests to the
+  open endpoint, the function consumes all concurrency
+  slots, and every other function in the account is
+  throttled. Reserved concurrency caps the function's
+  maximum concurrent executions AND guarantees that
+  capacity for the function — preventing both starvation
+  of other functions and guaranteeing minimum capacity for
+  this function. The defense is layered with throttling
+  policies (API Gateway throttle, Function URL throttle on
+  the resource policy), but reserved concurrency is the
+  one that protects the rest of the account regardless of
+  what the public-facing layer permits.
+failure: >
+  Account-wide concurrency exhaustion. An attacker floods
+  the public endpoint, the function consumes all
+  concurrency slots, and every other function in the
+  account is throttled until the attack stops.

@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.CONFIG.CONCURRENCY.NOLIMIT.001
+name: Publicly Invocable Lambda Has No Concurrency Limit
+description: >
+  Lambda functions that are publicly invocable (Function
+  URL with AuthType NONE, or API Gateway route with no
+  authorizer) must have reserved concurrency configured.
+  Without reserved concurrency the function competes with
+  every other function in the account for the account-wide
+  concurrency limit (default: 1000). For a publicly
+  invocable function, an attacker can drive thousands of
+  concurrent invocations from the open endpoint and
+  exhaust the entire account's concurrency budget — every
+  other function in the account is throttled and effectively
+  denied service. Reserved concurrency caps the function's
+  maximum simultaneous executions (a ceiling that contains
+  the blast radius) and reserves capacity for the function
+  (a floor that guarantees minimum throughput). Distinct
+  from CTL.LAMBDA.CONCURRENCY.001 which fires for any
+  function without reserved concurrency at low severity;
+  this control gates on public invocability and treats the
+  combination as the high-severity DDoS surface.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "A1.1"
+  hipaa: "164.308(a)(7)"
+  ccm_v4: ["BCR-08", "IVS-03"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Lambda function is publicly invocable AND has no
+    reserved concurrency. An attacker can flood the public
+    endpoint to exhaust the account's concurrency budget.
+  action: >
+    Set reserved concurrency to a value that bounds the
+    function's maximum simultaneous executions and
+    preserves headroom for other functions in the account
+    via aws lambda put-function-concurrency
+    --reserved-concurrent-executions <value>. If public
+    invocability is not intended, remove the public surface
+    first (Function URL AuthType to AWS_IAM, or attach an
+    authorizer to the API Gateway route).
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "concurrency": {
+          "public_unlimited": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.concurrency.public_unlimited
+      op: eq
+      value: true

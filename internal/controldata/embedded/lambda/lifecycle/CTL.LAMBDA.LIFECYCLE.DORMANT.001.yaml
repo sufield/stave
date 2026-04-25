@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.LIFECYCLE.DORMANT.001
+name: Lambda Function Not Invoked in 90+ Days
+description: >
+  Lambda functions that have not been invoked in 90 or more
+  days are dormant. The function still exists with its
+  execution role, environment variables, VPC configuration,
+  and triggers — but serves no active purpose. Dormant
+  functions are a latent attack surface: the execution role
+  carries IAM permissions, the environment variables may
+  contain credentials, the VPC config grants a network
+  position, and the triggers (event sources) may still be
+  active and routable. Nobody monitors a dormant function
+  for anomalous invocations because it is assumed to be
+  unused, so any invocation that does occur — by the
+  attacker who finds it — goes unnoticed. The 90-day
+  threshold matches the dormancy threshold used for unused
+  IAM roles and aged stopped EC2 instances, so dormancy is
+  consistent across services.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  soc2: "CC6.1"
+  hipaa: "164.308(a)(1)(ii)(B)"
+  ccm_v4: ["IAM-15"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Lambda function has not been invoked in 90+ days. Its
+    execution role, environment variables, and triggers
+    remain active but unmonitored.
+  action: >
+    Decommission the function if it is no longer needed —
+    aws lambda delete-function — and remove its triggers,
+    DLQ, log group, and execution role to eliminate the
+    latent surface. If the function must be retained, tag
+    it stave/lambda-dormancy-justified with the reason and
+    add monitoring for any invocation.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "function": {
+          "lifecycle": {
+            "is_dormant": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function.lifecycle.is_dormant
+      op: eq
+      value: true

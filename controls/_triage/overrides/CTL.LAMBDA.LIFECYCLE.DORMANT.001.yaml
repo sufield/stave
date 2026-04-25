@@ -1,0 +1,21 @@
+control: CTL.LAMBDA.LIFECYCLE.DORMANT.001
+defect: >
+  Lambda function has not been invoked in 90 or more days,
+  yet retains its execution role, environment variables,
+  triggers, and VPC configuration.
+infection: >
+  A dormant function retains its full configuration:
+  execution role with IAM permissions, environment
+  variables (potentially containing credentials), VPC
+  access (network position), and triggers (event sources
+  that may still be active). Nobody monitors a dormant
+  function for anomalous invocations because it is assumed
+  to be unused. An attacker who discovers the function can
+  invoke it (if the resource policy allows) and use its
+  execution-role permissions. The dormancy means any
+  invocation is anomalous — but without monitoring, the
+  anomaly goes unnoticed.
+failure: >
+  Latent attack surface. A dormant function with active
+  permissions and credentials is invokable without any
+  detection signal because no one is watching it.

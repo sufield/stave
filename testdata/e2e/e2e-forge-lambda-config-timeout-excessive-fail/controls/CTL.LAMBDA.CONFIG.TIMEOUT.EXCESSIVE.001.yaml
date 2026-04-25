@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.CONFIG.TIMEOUT.EXCESSIVE.001
+name: Lambda Function Timeout Set to Maximum
+description: >
+  Lambda functions must not have their timeout set to the
+  900-second maximum without justification. For most
+  functions, normal execution completes in seconds; the
+  900-second ceiling is the configured guardrail value
+  AWS allows, not a default. A 15-minute timeout means: a
+  stuck function consumes compute for 15 minutes before
+  being killed (cost), a runaway function or injection
+  attack runs for 15 minutes before termination (blast
+  radius duration), and the function's concurrent
+  execution slot is held for up to 15 minutes per
+  invocation (capacity waste reducing available
+  concurrency for other invocations). Distinct from
+  CTL.LAMBDA.TIMEOUT.001 which fires when timeout exceeds
+  the configurable safe threshold (default 60s); this
+  control specifically catches the at-maximum value as a
+  governance signal — review whether 900s is actually
+  needed or whether the timeout was raised once and never
+  tightened.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "CM-6"
+  fedramp_moderate: "CM-6"
+  soc2: "CC6.1"
+  hipaa: "164.308(a)(7)"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Lambda function timeout is at the 900-second maximum.
+    Review whether this is the intended value.
+  action: >
+    Reduce the timeout to the lowest value that
+    accommodates the function's actual runtime — most
+    workloads complete in well under 60 seconds — via
+    aws lambda update-function-configuration --timeout
+    <seconds>. If 900s is required (long-running ETL,
+    batch processing), tag the function
+    stave/lambda-timeout-justified with the reason.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "timeout": {
+          "at_maximum": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.timeout.at_maximum
+      op: eq
+      value: true

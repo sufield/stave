@@ -1,0 +1,23 @@
+control: CTL.LAMBDA.LIFECYCLE.NOTRIGGER.001
+defect: >
+  Lambda function has zero event-source mappings, zero
+  resource-policy invoke statements, no Function URL, and
+  no scheduled rule. There is no automated invocation path.
+infection: >
+  A function without triggers is not part of any pipeline.
+  It still exists — with execution-role permissions,
+  environment variables, VPC configuration, and code — but
+  has no observable invocation channel. The cleanup path
+  for the system that created the function (CI/CD,
+  Terraform, partner integration) ran the function delete
+  step or never ran the trigger create step, and the
+  function was left behind. An attacker who discovers the
+  function can invoke it via direct
+  lambda:InvokeFunction calls if their identity has the
+  permission, and the triggerless state means there is no
+  legitimate baseline against which the invocation looks
+  anomalous.
+failure: >
+  Abandoned function. A configured Lambda with no automated
+  invocation path is invokable only by direct API calls
+  with no detection baseline.

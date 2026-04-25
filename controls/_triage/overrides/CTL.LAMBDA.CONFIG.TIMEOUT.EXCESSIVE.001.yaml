@@ -1,0 +1,25 @@
+control: CTL.LAMBDA.CONFIG.TIMEOUT.EXCESSIVE.001
+defect: >
+  Lambda function timeout is set to 900 seconds — the
+  service maximum.
+infection: >
+  900 seconds is the AWS-imposed ceiling, not a default.
+  Setting timeout at the maximum means: a hung function
+  burns compute for 15 minutes before being killed (every
+  invocation can cost the maximum-billing duration), a
+  runaway loop or injected long-running code runs for 15
+  minutes (extending blast radius window), and a slot in
+  the account's concurrent-execution pool is held per
+  invocation for the same window (reducing capacity for
+  every other function). For workloads that legitimately
+  need 15 minutes (ETL jobs, large data processing,
+  bulk-export functions), the timeout is appropriate; the
+  finding is the absence of justification, not the value
+  itself. Compare with the function's actual measured
+  runtime to determine whether the timeout was raised
+  during incident response and never tightened back down.
+failure: >
+  Cost amplification and capacity waste. Stuck or
+  compromised invocations consume the maximum billable
+  duration before termination, and held concurrency slots
+  reduce capacity available for other functions.

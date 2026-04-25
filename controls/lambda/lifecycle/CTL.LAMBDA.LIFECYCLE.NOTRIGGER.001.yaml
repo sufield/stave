@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.LIFECYCLE.NOTRIGGER.001
+name: Lambda Function Has No Event Source
+description: >
+  Lambda functions must have at least one configured trigger
+  — an event source mapping (SQS, Kinesis, DynamoDB
+  Streams), a resource-policy invoke statement (S3, SNS,
+  EventBridge, API Gateway), a Function URL, or a CloudWatch
+  schedule. A function with zero triggers can only be
+  invoked via direct lambda:InvokeFunction API calls,
+  meaning either the function was partially deployed
+  (triggers not yet configured), the triggers were removed
+  (cleanup left the function behind), or the function is
+  invoked manually with no automated path. In each case the
+  fully configured function — with execution role,
+  environment variables, and VPC access — is sitting idle
+  with no observable invocation channel and so no detection
+  for misuse.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  soc2: "CC8.1"
+  hipaa: "164.308(a)(1)(ii)(B)"
+  ccm_v4: ["IAM-15"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Lambda function has no event source mapping, no
+    resource-policy invoke statement, no Function URL, and
+    no scheduled invocation. The function exists with no
+    automated invocation path.
+  action: >
+    Remove the function if no invocation path is intended,
+    or attach the missing trigger (event source mapping,
+    resource policy statement, Function URL, or scheduled
+    rule) and document the invocation channel.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "function": {
+          "lifecycle": {
+            "has_no_triggers": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function.lifecycle.has_no_triggers
+      op: eq
+      value: true

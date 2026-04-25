@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.CONFIG.MEMORY.EXCESSIVE.001
+name: Lambda Function Memory Set to Maximum
+description: >
+  Lambda functions must not have memory_size set to the
+  10240MB maximum without justification. Memory in Lambda
+  is also CPU and network allocation — increasing memory
+  proportionally increases CPU share and network bandwidth
+  — and the per-millisecond billing rate scales with the
+  memory allocation. A function provisioned at 10240MB
+  pays 64x the rate of a function provisioned at 160MB.
+  Provisioning at the maximum is a governance signal in
+  most environments: memory was raised once during incident
+  response or capacity tuning and never reduced when the
+  workload changed, or the workload genuinely needs the
+  ceiling (large in-memory data processing, ML inference)
+  in which case the value should be tagged and tracked.
+  The finding is "review whether the maximum is intended"
+  rather than "this is unsafe."
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "CM-6"
+  fedramp_moderate: "CM-6"
+  soc2: "CC6.1"
+  hipaa: "164.308(a)(7)"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Lambda function memory is at the 10240MB maximum.
+    Verify that this is the intended provisioning level
+    and that the workload requires it.
+  action: >
+    Reduce memory_size to the lowest value at which the
+    function meets its latency SLO via aws lambda
+    update-function-configuration --memory-size <MB>. Use
+    Lambda Power Tuning or measured invocation duration
+    to find the cost-optimal allocation. If 10240MB is
+    required, tag the function stave/lambda-memory-justified
+    with the workload reason.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "memory": {
+          "at_maximum": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.memory.at_maximum
+      op: eq
+      value: true
