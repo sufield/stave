@@ -113,3 +113,10 @@ The only shared piece is the harness runner — a small library that takes `(sna
 The extractor-regression story moves to **Stave's CI** using the same fixture set the public image ships — it's a test, not a third image. Public image demonstrates evaluation; CI differential demonstrates reliability; no artifact tries to do both jobs.
 
 Pick names that can't be confused from day one.
+
+
+
+
+
+
+
