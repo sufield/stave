@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.LIFECYCLE.GENERATION.001
+name: RDS Instances Should Use Current-Generation Instance Classes
+description: >
+  RDS instances should run on a current-generation instance
+  class. Older RDS instance families — db.m4, db.r4, db.t2,
+  db.m3, and earlier — sit on Xen-based hypervisor hardware
+  and lose access to several Nitro-only protections that the
+  newer Graviton (db.m7g, db.r7g, db.t4g) and Nitro-x86
+  (db.m6i, db.r6i) families enable. Three properties matter:
+  the historical Xen XSA CVE class continues to apply to the
+  older families (the same hypervisor surface that
+  CTL.EC2.NITRO.001 catches on EC2 — RDS runs the same
+  underlying hosts), the newer families have meaningfully
+  better performance per dollar (commonly 20-40% on
+  Graviton), and AWS instance-family lifecycle eventually
+  retires the oldest classes from regions, leaving instances
+  on those families unable to scale, modify, or recover via
+  failover. Migration to a current generation is an
+  in-place modification — no data move, no application
+  reconfiguration — so the cost is small and the upside
+  spans security (Nitro), performance, and longevity.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  ccm_v4: ["CCC-04", "BCR-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: RDS instance class is from an outdated generation.
+  action: Modify the instance class to a current-generation family (db.m7g, db.r7g, db.t4g, or current-gen Nitro-x86).
+  example: |
+    {"database": {"kind": "rds_instance", "lifecycle": {"instance_class": "db.r7g.large", "instance_generation_outdated": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.lifecycle.instance_generation_outdated
+      op: eq
+      value: true

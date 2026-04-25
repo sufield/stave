@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.AURORA.SINGLEINSTANCE.001
+name: Aurora Clusters Must Have More Than One Instance
+description: >
+  Aurora DB clusters must run with at least one writer plus
+  one reader (or, more commonly, a writer plus two readers
+  spread across AZs). A single-instance Aurora cluster has
+  worse availability than a Multi-AZ standard RDS instance,
+  not better: Multi-AZ RDS keeps a pre-provisioned standby
+  ready to take over in seconds, while a single-instance
+  Aurora cluster has nothing for Aurora to promote when the
+  writer fails — it must provision a fresh instance on the
+  surviving storage volume, an operation that takes minutes
+  during which the cluster is unreachable. Aurora's
+  architecture (storage-compute separation, six-way replicated
+  storage, sub-second reader promotion) only delivers its
+  availability premium when there is at least one reader to
+  promote. The most common origin of this gap is a wizard-
+  driven cluster creation that provisioned only the writer
+  for cost reasons during initial bring-up, with a "we will
+  add readers later" intention that never gets revisited.
+domain: resilience
+severity: high
+compliance:
+  nist_800_53_r5: "CP-7"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Aurora cluster has only one DB instance — no failover target.
+  action: Add at least one reader instance, ideally in a different AZ from the writer.
+  example: |
+    {"database": {"kind": "rds_cluster", "engine": "aurora-mysql", "cluster": {"instance_count": 2, "has_reader": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_cluster
+    - field: properties.database.cluster.is_aurora
+      op: eq
+      value: true
+    - field: properties.database.cluster.has_reader
+      op: eq
+      value: false

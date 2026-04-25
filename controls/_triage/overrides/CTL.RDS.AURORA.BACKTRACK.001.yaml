@@ -1,0 +1,36 @@
+control: CTL.RDS.AURORA.BACKTRACK.001
+defect: >
+  Aurora MySQL cluster does not have backtrack
+  enabled.
+infection: >
+  Backtrack is Aurora MySQL's in-place point-in-
+  time rewind: the cluster can be reset to any
+  committed log point inside the configured
+  backtrack window without restoring from
+  snapshot, without provisioning a new cluster,
+  and without disrupting consumers other than
+  briefly pausing writes during the rewind.
+  Without it, recovery from destructive
+  incidents the team caused itself — bad
+  migration that updated the wrong column, an
+  unbounded DELETE that hit prod, a TRUNCATE
+  that found the wrong table, a schema change
+  that quietly corrupted application invariants
+  — requires a snapshot restore to a fresh
+  cluster (minutes-to-hours) plus a cutover
+  (additional minutes-to-hours of planning and
+  application reconfiguration) plus
+  reconciliation of any writes that occurred
+  during the bad-state window. During the
+  recovery, the original cluster either
+  continues serving traffic against the
+  corrupted state or stops serving altogether
+  — both are bad outcomes. Backtrack collapses
+  the recovery to seconds-to-minutes inside the
+  configured window. Aurora MySQL only —
+  Aurora PostgreSQL does not support backtrack
+  and the control is gated to skip it.
+failure: >
+  Multi-hour recovery from operator-caused
+  destructive incidents that backtrack would
+  have collapsed to a single in-place rewind.

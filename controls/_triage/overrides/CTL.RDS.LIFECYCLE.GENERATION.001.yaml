@@ -1,0 +1,43 @@
+control: CTL.RDS.LIFECYCLE.GENERATION.001
+defect: >
+  RDS instance class is from an outdated
+  generation (db.m4 / db.r4 / db.t2 / db.m3
+  or earlier).
+infection: >
+  Older RDS instance families sit on
+  Xen-based hypervisor hardware and lose
+  access to several Nitro-only protections
+  that the newer Graviton (db.m7g, db.r7g,
+  db.t4g) and Nitro-x86 (db.m6i, db.r6i)
+  families enable. Three properties matter.
+  (1) The historical Xen XSA CVE class
+  continues to apply to the older families:
+  the same hypervisor surface that
+  CTL.EC2.NITRO.001 catches on EC2 — RDS runs
+  the same underlying hosts, and an instance
+  on the older family is exposed to the same
+  cross-tenant CVE class (XSA-212, XSA-293,
+  XSA-320, and the steady stream of Xen
+  Security Advisories that follow). (2)
+  Performance per dollar is meaningfully
+  different — Graviton families typically
+  deliver 20-40% better price-performance
+  than the equivalent older x86 generation,
+  and the older generations are charged at
+  the older price ratios. (3) AWS instance-
+  family lifecycle eventually retires the
+  oldest classes from regions; instances on
+  retired families cannot scale, modify, or
+  recover via failover. Migration to a
+  current generation is an in-place
+  modification — no data move, no application
+  reconfiguration — so the cost of the fix is
+  small and the upside spans security,
+  performance, and longevity. Connects to
+  CTL.EC2.NITRO.001 in the EC2 domain: same
+  hypervisor-class concern, same
+  remediation pattern.
+failure: >
+  Hypervisor-era security cap, performance
+  cap, and an eventual instance-family
+  retirement deadline.

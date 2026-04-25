@@ -1,0 +1,43 @@
+control: CTL.RDS.HA.REPLICA.CONFIG.001
+defect: >
+  RDS read replica's security configuration
+  drifts from its source instance — different
+  security group(s), different parameter group,
+  different encryption-at-rest setting, or
+  different PubliclyAccessible flag.
+infection: >
+  The replica serves the same rows as the
+  primary; if its security configuration is
+  weaker, the replica becomes the path of
+  least resistance to the same data. Three
+  drift patterns are seen in real fleets and
+  the control catches all of them. (1)
+  Replica with broader security group than
+  the primary: someone permitted broader
+  CIDRs to the replica for reporting / BI /
+  developer access and never tightened the
+  rules. The primary still refuses
+  connections from those CIDRs; the replica
+  accepts them. (2) Replica with a different
+  parameter group whose values are weaker:
+  TLS enforcement off, audit logging off,
+  password hashing weak. The replica accepts
+  plaintext connections, password-spray, and
+  unaudited queries that the primary refuses.
+  (3) Replica with PubliclyAccessible=true
+  while the primary is private: an internet-
+  reachable copy of the production data
+  exists in addition to the controlled
+  primary. Each pattern produces the same
+  attacker outcome: the replica's data is
+  identical to the primary's, and the
+  replica's defenses are weaker, so the
+  cheapest path to the data is through the
+  replica. The control's finding lists the
+  specific differences (sg, paramgroup,
+  encryption, public) so the remediation
+  targets only what actually drifted.
+failure: >
+  Replica is the soft target. Same data, weaker
+  controls, lower cost-to-attack than the
+  primary.

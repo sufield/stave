@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "cluster-serverless-v2",
+      "type": "aws_rds_cluster",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_cluster","engine":"aurora-mysql","cluster":{"is_serverless_v1":false,"engine_mode":"provisioned","serverless_version":"v2"}}}
+    }
+  ]
+}

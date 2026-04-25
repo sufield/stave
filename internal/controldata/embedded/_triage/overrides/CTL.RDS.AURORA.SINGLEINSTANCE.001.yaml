@@ -1,0 +1,38 @@
+control: CTL.RDS.AURORA.SINGLEINSTANCE.001
+defect: >
+  Aurora DB cluster has only one instance — no
+  reader, no failover target.
+infection: >
+  Aurora's architecture (storage compute
+  separation, six-way replicated storage,
+  sub-second reader-to-writer promotion)
+  delivers its availability premium only when
+  there is at least one reader to promote. A
+  single-instance Aurora cluster has worse
+  availability than a Multi-AZ standard RDS
+  instance, not better. Multi-AZ standard RDS
+  keeps a pre-provisioned standby ready to take
+  over in seconds; single-instance Aurora has
+  nothing for Aurora to promote when the writer
+  fails — the cluster must provision a fresh
+  instance on the surviving storage volume,
+  an operation that takes minutes during which
+  the cluster is unreachable. The cluster's
+  Storage layer continues to exist (and would
+  survive even an EC2-side instance loss because
+  Aurora storage is decoupled), but the
+  compute layer has no warm capacity. The
+  most common origin is a wizard-driven cluster
+  creation that provisioned only the writer
+  for cost reasons during initial bring-up and
+  the "we will add readers later" intention
+  never got revisited; second most common is
+  an IaC module that defaulted to one instance
+  in the demo environment and the same module
+  was promoted to production unchanged.
+failure: >
+  Minutes-class downtime on writer failure
+  (Aurora must provision a fresh compute
+  instance) versus the seconds-class failover
+  Aurora's marketing promises and standard
+  Multi-AZ RDS actually delivers.

@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.HA.REPLICA.CONFIG.001
+name: RDS Read Replicas Must Match Their Primary's Security Configuration
+description: >
+  RDS read replicas must inherit (or precisely match) the
+  source instance's security configuration: security group
+  attachments, parameter group, encryption at rest setting,
+  and PubliclyAccessible flag. The replica serves the same
+  rows as the primary; if its security configuration is
+  weaker, the replica becomes the path of least resistance to
+  the same data. Three drift patterns are seen in the field.
+  (1) Replica with a broader security group than the primary
+  (someone allowed broader CIDRs to the replica for
+  reporting/BI access and never tightened them again). (2)
+  Replica with a different parameter group that has TLS
+  enforcement off, audit logging off, or password hashing
+  weak — the replica accepts plaintext connections and
+  password-spray that the primary refuses. (3) Replica with
+  PubliclyAccessible=true while the primary is private —
+  introducing an internet-reachable copy of the production
+  data. The control fires on any of these drift conditions
+  and the finding lists the specific differences so the
+  remediation can target only what actually drifted.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-6"
+  pci_dss_v4: "1.2"
+  ccm_v4: ["CCC-04", "IVS-04"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: RDS read replica has security configuration drift relative to its primary.
+  action: Reconcile the replica's SG, parameter group, encryption, and PubliclyAccessible settings to match the primary.
+  example: |
+    {"database": {"kind": "rds_instance", "replica": {"is_read_replica": true, "config_drift": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.replica.is_read_replica
+      op: eq
+      value: true
+    - field: properties.database.replica.config_drift
+      op: eq
+      value: true

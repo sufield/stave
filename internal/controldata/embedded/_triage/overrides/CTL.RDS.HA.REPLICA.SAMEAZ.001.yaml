@@ -1,0 +1,40 @@
+control: CTL.RDS.HA.REPLICA.SAMEAZ.001
+defect: >
+  RDS read replica is in the same availability
+  zone as its source instance.
+infection: >
+  Read replicas serve two purposes: read-traffic
+  scaling (offload reporting / search / read-
+  mostly traffic from the primary) and AZ-level
+  resilience (a replica in a different AZ
+  remains available when the primary's AZ has
+  an event). Same-AZ placement collapses the
+  second purpose. Single-AZ events are the
+  most common AWS outage class — a single AZ
+  losing power, network reachability, or
+  control-plane availability while neighboring
+  AZs continue operating. With both primary
+  and replica in the affected AZ, the workload
+  loses both database endpoints simultaneously
+  and the replica's failover-target value goes
+  to zero. The cost of avoiding this is small:
+  RDS supports placing the replica in any AZ
+  the subnet group covers; cross-AZ replication
+  bandwidth is internal to the region and is
+  not separately billed; the only operational
+  cost is a marginally higher commit-replication
+  latency. Multi-region read replicas where
+  available provide stronger isolation, but at
+  minimum the replica should sit in a different
+  AZ in the same region. The most common
+  origin of this gap is a wizard flow where
+  the replica defaulted to the primary's AZ
+  and the operator did not change it, or an
+  IaC apply where the subnet group only
+  covered one AZ.
+failure: >
+  AZ event takes both primary and replica
+  offline simultaneously. The replica's
+  resilience value is zero; the read-scaling
+  value still applies but with no failover
+  protection.

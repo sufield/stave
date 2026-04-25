@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.AURORA.BACKTRACK.001
+name: Aurora MySQL Clusters Should Enable Backtrack
+description: >
+  Aurora MySQL clusters should enable backtrack with a window
+  appropriate to the workload's acceptable rewind distance
+  (commonly 24–72 hours). Backtrack is Aurora MySQL's
+  in-place point-in-time rewind: the cluster can be reset to
+  any committed log point inside the backtrack window without
+  restoring from snapshot, without provisioning a new cluster,
+  and without disrupting consumers other than briefly pausing
+  writes during the rewind. Without backtrack, recovery from
+  destructive incidents the team caused itself — bad
+  migration, wrong DELETE, dropped table, schema change that
+  silently corrupted application invariants — requires
+  restoring a snapshot to a fresh cluster (minutes-to-hours)
+  and a cutover (minutes-to-hours of additional planning),
+  during which the original cluster either keeps serving
+  traffic against the corrupted state or stops serving
+  altogether. Aurora MySQL only — Aurora PostgreSQL does not
+  support backtrack and the control is gated to skip it.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-09"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Aurora MySQL cluster does not have backtrack enabled.
+  action: Enable backtrack with a window matching the workload's acceptable rewind horizon (24h is the published default ceiling unless explicitly raised).
+  example: |
+    {"database": {"kind": "rds_cluster", "engine": "aurora-mysql", "cluster": {"backtrack_enabled": true, "backtrack_window": 86400}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_cluster
+    - field: properties.database.engine
+      op: eq
+      value: aurora-mysql
+    - field: properties.database.cluster.backtrack_enabled
+      op: eq
+      value: false

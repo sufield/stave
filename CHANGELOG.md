@@ -8,6 +8,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **RDS-6 — Aurora-specific, HA, and lifecycle controls
+  (8 new controls, 3 chains).** Sixth and final RDS
+  gap-closure iteration. Closes the Aurora-specific
+  surface (cluster topology, MySQL backtrack, serverless
+  v1, Global Database secondary encryption), the HA
+  surface beyond Multi-AZ (read-replica AZ placement,
+  read-replica config drift), and the instance-lifecycle
+  surface (storage type, instance generation). All 8
+  controls net-new — no overlap with existing RDS
+  catalog. Aurora (4): `AURORA.SINGLEINSTANCE` (Aurora
+  cluster with no reader has worse availability than
+  Multi-AZ standard RDS — must provision a fresh
+  instance on writer failure where Multi-AZ RDS has a
+  pre-warmed standby, high), `AURORA.BACKTRACK` (Aurora
+  MySQL without backtrack — recovery from operator-
+  caused destructive incidents reverts to multi-hour
+  snapshot-restore-and-cutover; Aurora MySQL only,
+  PostgreSQL gated out, medium), `AURORA.SERVERLESS.V1`
+  (cluster on Aurora Serverless v1 with cold-start
+  cliff plus missing IAM auth / Performance Insights /
+  read replicas / Global DB; v1 EOL announced,
+  medium), `AURORA.GLOBAL.UNENCRYPTED` (Global Database
+  secondary cluster unencrypted — primary's
+  cross-region replication becomes the path that
+  takes data out of encrypted storage, high). HA (2):
+  `HA.REPLICA.SAMEAZ` (read replica in same AZ as
+  primary — AZ event takes both offline; the most
+  common AWS outage class is single-AZ, medium),
+  `HA.REPLICA.CONFIG` (replica security configuration
+  drifts from primary — broader SG, weaker parameter
+  group, public flag mismatch — replica becomes the
+  soft target for the same data, high). Lifecycle (2):
+  `LIFECYCLE.STORAGETYPE` (gp2 instead of gp3 —
+  burst-credit-exhaustion latency cliffs misattributed
+  to application bugs, low), `LIFECYCLE.GENERATION`
+  (db.m4 / db.r4 / db.t2 / db.m3 — Xen-era hypervisor
+  surface inherits the XSA CVE class same as
+  CTL.EC2.NITRO.001 catches on EC2, plus an
+  instance-family retirement deadline, medium).
+  Chains: `rds_aurora_single_point` (single-instance
+  Aurora + no cluster deletion protection — uses
+  existing CTL.RDS.CLUSTER.DELETION.PROTECT.001;
+  cluster is one API call from irrecoverable, threshold
+  2, compound critical), `rds_replica_exposure`
+  (REPLICA.CONFIG drift OR REPLICA.SAMEAZ; threshold 1
+  fast-firing on any replica defect),
+  `rds_aurora_dr_gap` (GLOBAL.UNENCRYPTED OR no
+  cross-region path — uses RDS-5's
+  CTL.RDS.BACKUP.CROSSREGION.001). 19 e2e fixtures
+  including 4 engine-gate variants
+  (singleinstance-postgres-fail asserts both Aurora
+  engines are caught, backtrack-pg-pass asserts the
+  PostgreSQL gate skips the control), and a 3-diff
+  REPLICA.CONFIG variant exercising compound drift.
+  8 triage overrides. Final RDS iteration; the 6
+  iterations together added 45 net-new RDS controls.
 - **RDS-5 — backup deepening, cross-region DR, and
   snapshot sharing security (7 new controls, 3 chains).**
   Fifth RDS gap-closure iteration. Closes the data-

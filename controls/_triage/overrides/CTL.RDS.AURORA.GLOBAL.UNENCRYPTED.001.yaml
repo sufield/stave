@@ -1,0 +1,42 @@
+control: CTL.RDS.AURORA.GLOBAL.UNENCRYPTED.001
+defect: >
+  Aurora Global Database secondary cluster is
+  not encrypted at rest.
+infection: >
+  Aurora Global Database replicates committed
+  changes from the primary cluster to one or
+  more secondary clusters in other regions
+  with sub-second replication lag. The
+  replication is the feature; the consequence
+  is that whatever data is encrypted at the
+  primary lands at the secondary in whatever
+  encryption state the secondary's storage was
+  configured with. When the secondary is
+  unencrypted, the cross-region replication
+  that motivated the Global Database
+  deployment becomes the path that takes data
+  out of encrypted storage. The primary's
+  audit reads "encrypted: yes"; the secondary
+  is plaintext and never appears in the same
+  audit query unless someone explicitly walks
+  the global cluster topology. The most
+  common origins of this gap: a CloudFormation
+  copy of the primary cluster module that did
+  not propagate the encryption configuration
+  to the secondary (the secondary's Storage
+  Encrypted property was not set explicitly
+  and defaulted to off in the destination
+  region's account/key context), a manual
+  secondary-cluster creation that took the
+  destination-region default and never
+  flipped StorageEncrypted=true, and a
+  secondary that was created before the
+  team's encryption-everywhere policy
+  existed and has never been recreated since.
+failure: >
+  Same data, different protection. The
+  secondary region holds plaintext copies of
+  records the primary region encrypted; any
+  region-local exposure path (snapshot
+  share, EBS-detach, hypervisor-class CVE)
+  reads them in clear.

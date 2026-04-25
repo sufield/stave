@@ -1,0 +1,41 @@
+control: CTL.RDS.LIFECYCLE.STORAGETYPE.001
+defect: >
+  RDS instance is using legacy gp2 storage
+  rather than the current gp3 type.
+infection: >
+  gp2 scales IOPS with volume size at 3 IOPS
+  per provisioned GB and operates against a
+  burst-credit balance: small volumes
+  effectively borrow IOPS from a finite
+  credit pool, and when the pool exhausts the
+  IOPS clip back to the baseline regardless
+  of demand. The application experiences this
+  as a latency cliff that arrives without a
+  clean signal — graphs show CPU normal,
+  connections normal, query mix normal, while
+  query latency stalls because the storage
+  layer is throttling. Incident response
+  often misattributes the symptom (the
+  application code, the connection pool, the
+  query plan, the recent deploy) before
+  noticing the gp2 burst exhaustion. gp3
+  closes this gap with a flat 3000 IOPS
+  baseline regardless of size and
+  independently provisionable IOPS and
+  throughput. Migration is online (RDS
+  modifies the storage type without
+  disconnecting clients), and the per-GB
+  storage cost is lower at equivalent
+  performance. The security relevance is
+  indirect but real: latency-driven
+  availability events frequently look like
+  attacks (sudden timeouts, connection
+  failures, error-rate spikes) and consume
+  on-call response cycles that should be
+  reserved for actual incidents.
+failure: >
+  Latency-cliff availability events from
+  burst-credit exhaustion. Cost is higher than
+  gp3 for equivalent performance. Incidents
+  consume response cycles before the storage-
+  layer cause is identified.

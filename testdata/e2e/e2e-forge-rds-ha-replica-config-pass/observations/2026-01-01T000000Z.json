@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "db-replica-aligned",
+      "type": "aws_rds_instance",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_instance","replica":{"is_read_replica":true,"config_drift":false,"sg_matches_primary":true,"paramgroup_matches":true,"encryption_matches":true,"public_matches":true}}}
+    }
+  ]
+}

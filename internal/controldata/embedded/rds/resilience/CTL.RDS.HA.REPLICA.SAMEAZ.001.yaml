@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.HA.REPLICA.SAMEAZ.001
+name: RDS Read Replicas Must Be in a Different AZ Than Their Primary
+description: >
+  RDS read replicas must be placed in a different
+  availability zone from their primary instance. A replica
+  in the same AZ provides read-traffic scaling but no
+  AZ-level redundancy: any AZ-level event (the most common
+  AWS outage class — a single AZ losing power, network, or
+  control-plane reachability) takes both the primary and
+  the replica down simultaneously. The replica's value
+  proposition is twofold: read scaling AND failover
+  resilience. Same-AZ placement collapses the second half.
+  Multi-region read replicas (where allowed by engine and
+  workload) provide stronger isolation, but at minimum the
+  replica should sit in a different AZ in the same region.
+  The most common origin of this gap is a hurried wizard
+  flow where the replica defaulted to the primary's AZ and
+  the operator did not change it, or an IaC apply that
+  placed both into the same subnet group AZ because the
+  group only had one AZ configured.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-7"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: RDS read replica is in the same AZ as its source instance.
+  action: Recreate the replica in a different AZ (or in a different region for stronger isolation).
+  example: |
+    {"database": {"kind": "rds_instance", "replica": {"is_read_replica": true, "same_az": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.replica.is_read_replica
+      op: eq
+      value: true
+    - field: properties.database.replica.same_az
+      op: eq
+      value: true

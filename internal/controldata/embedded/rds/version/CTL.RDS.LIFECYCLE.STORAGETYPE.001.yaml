@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.LIFECYCLE.STORAGETYPE.001
+name: RDS Instances Should Use gp3 Storage Instead of Legacy gp2
+description: >
+  RDS instances should use gp3 storage rather than the legacy
+  gp2 storage type. gp3 is the current general-purpose SSD
+  option and provides three properties gp2 does not: a
+  baseline 3000 IOPS regardless of volume size (gp2 IOPS
+  scales with size at 3 IOPS/GB and credits-balance under
+  burst, producing latency cliffs the application
+  experiences as request stalls), independently provisionable
+  IOPS and throughput (so the team can size for
+  application-actual numbers rather than buying capacity
+  to obtain IOPS), and lower per-GB storage cost at
+  equivalent performance. Migration is online — RDS
+  performs the storage-type modification without
+  downtime and without dropping connections. The security
+  relevance is indirect but real: gp2's burst-credit
+  exhaustion produces availability-affecting latency
+  spikes that incident response often misattributes to
+  application bugs, and the presence of legacy gp2
+  signals an instance that has not been touched by recent
+  hardening cycles.
+domain: governance
+severity: low
+compliance:
+  ccm_v4: ["BCR-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: RDS instance is using legacy gp2 storage.
+  action: Modify the instance to gp3 storage (online; no downtime); review IOPS/throughput against application-actual numbers.
+  example: |
+    {"database": {"kind": "rds_instance", "lifecycle": {"storage_type": "gp3", "storage_type_legacy": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.lifecycle.storage_type_legacy
+      op: eq
+      value: true

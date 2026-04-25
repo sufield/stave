@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.AURORA.GLOBAL.UNENCRYPTED.001
+name: Aurora Global Database Secondary Clusters Must Be Encrypted
+description: >
+  Aurora Global Database secondary clusters must be encrypted
+  at rest, and the destination-region KMS key must be authored
+  by the same team that authored the primary's key (so that
+  key-policy controls and rotation cadence apply uniformly to
+  both regions). Aurora Global Database replicates committed
+  changes from the primary cluster to one or more secondary
+  clusters in other regions, with sub-second replication lag.
+  When the secondary lands unencrypted, the same data that is
+  encrypted at the primary is plaintext at the secondary — and
+  the cross-region replication that motivated the Global
+  Database deployment becomes the path that takes data out of
+  encrypted storage. The most common origin of this gap is a
+  CloudFormation copy of the primary cluster module that did
+  not propagate the encryption configuration to the secondary,
+  or a manual secondary-cluster creation that took the
+  destination-region default and never set
+  StorageEncrypted=true. The audit on the primary reads
+  encrypted; the secondary is plaintext and never appears in
+  the same audit query.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4: "3.4"
+  ccm_v4: ["DSP-15", "CEK-03"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: Aurora Global Database secondary cluster is not encrypted at rest.
+  action: Recreate the secondary with StorageEncrypted=true and a destination-region CMK; switch the Global Database failover target after verification.
+  example: |
+    {"database": {"kind": "rds_cluster", "global": {"is_global_database": true, "secondary_encrypted": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_cluster
+    - field: properties.database.global.is_global_database
+      op: eq
+      value: true
+    - field: properties.database.global.secondary_encrypted
+      op: eq
+      value: false

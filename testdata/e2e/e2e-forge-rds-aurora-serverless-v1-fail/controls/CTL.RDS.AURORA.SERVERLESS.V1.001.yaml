@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.AURORA.SERVERLESS.V1.001
+name: Aurora Serverless v1 Clusters Must Migrate to v2
+description: >
+  Aurora clusters must not run Aurora Serverless v1; v2 (or
+  the provisioned engine mode) is required. Serverless v1
+  carries a lengthy list of operational and security
+  limitations that v2 closes: 30-second-class cold starts
+  when scaling from zero, restricted engine version support
+  (no current minor releases, no patches for some CVE
+  windows), no read replicas, no Global Database, no IAM
+  database authentication, no Performance Insights, and a
+  scaling model that only steps in fixed power-of-two
+  capacities. Each of those is a security-relevant gap as
+  well as a performance one — the absence of IAM auth
+  forces password-only authentication, the absence of
+  Performance Insights removes the primary signal for SQL
+  injection and cryptominer-via-query patterns, and the
+  cold-start cliff produces availability behavior that
+  alarms cannot smooth over. AWS has announced the v1
+  end-of-life schedule; clusters that have not migrated
+  are on a deadline as well as carrying the limitations.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  ccm_v4: ["CCC-04", "BCR-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Aurora cluster is using Serverless v1.
+  action: Migrate the cluster to Aurora Serverless v2 or to provisioned engine mode before the v1 end-of-life deadline.
+  example: |
+    {"database": {"kind": "rds_cluster", "engine": "aurora-mysql", "cluster": {"is_serverless_v1": false, "serverless_version": "v2"}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_cluster
+    - field: properties.database.cluster.is_serverless_v1
+      op: eq
+      value: true

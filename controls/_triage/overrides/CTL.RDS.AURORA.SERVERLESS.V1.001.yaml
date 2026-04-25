@@ -1,0 +1,38 @@
+control: CTL.RDS.AURORA.SERVERLESS.V1.001
+defect: >
+  Aurora cluster is using Serverless v1 (engine
+  mode = serverless, with v1 capacity unit
+  semantics).
+infection: >
+  Serverless v1 carries operational and
+  security limitations that v2 closes, and AWS
+  has announced its end-of-life schedule.
+  Operationally: 30-second-class cold starts
+  when scaling from zero produce a latency
+  cliff that no client-side retry tolerates
+  cleanly; restricted engine-version support
+  means the cluster sits on older minor
+  releases that miss patch windows for
+  recently-disclosed CVEs; capacity scaling
+  steps in fixed power-of-two units, so any
+  step from 8 to 16 ACU costs proportionally
+  more than v2's continuous scaling would.
+  Security: no IAM database authentication
+  (forces password-only auth and defeats the
+  Secrets-Manager + IAM-token chain RDS-4
+  builds), no read replicas (forces single-
+  instance topology with the failover
+  problems CTL.RDS.AURORA.SINGLEINSTANCE.001
+  catches), no Performance Insights (removes
+  the primary signal for SQL injection and
+  cryptominer-via-query patterns), no Global
+  Database (forces region-bound recovery
+  posture). Migration to v2 or to provisioned
+  is mechanical and supported by AWS, and the
+  v1 retirement deadline removes the option
+  of waiting indefinitely.
+failure: >
+  Cold-start latency cliff plus a stack of
+  missing security primitives (IAM auth,
+  Performance Insights, replicas) that newer
+  RDS controls assume are available.

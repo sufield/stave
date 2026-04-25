@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1460
-**Pack hash:** `8ad1bb6443284a425fdeafc92427ae4ea08a6c9cdae01f3815338ceace256aba`
+**Total controls:** 1468
+**Pack hash:** `e7c883727aeef79615fd59e31584f849bc8b652a81784374faf17d30b9ed750c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 172 |
-| high | 646 |
+| high | 649 |
 | info | 16 |
-| low | 106 |
-| medium | 520 |
+| low | 107 |
+| medium | 524 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,13 +23,13 @@
 | availability | 2 |
 | cryptography | 3 |
 | detection | 43 |
-| encryption | 84 |
+| encryption | 85 |
 | exposure | 848 |
-| governance | 51 |
+| governance | 55 |
 | hygiene | 16 |
 | identity | 326 |
 | network | 27 |
-| resilience | 15 |
+| resilience | 18 |
 | storage | 8 |
 
 ## Controls
@@ -16667,6 +16667,66 @@ RDS instances must have a CloudWatch alarm configured on the FreeStorageSpace me
 
 ---
 
+### CTL.RDS.AURORA.BACKTRACK.001
+
+**Aurora MySQL Clusters Should Enable Backtrack**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; soc2: A1.2;
+
+Aurora MySQL clusters should enable backtrack with a window appropriate to the workload's acceptable rewind distance (commonly 24–72 hours). Backtrack is Aurora MySQL's in-place point-in-time rewind: the cluster can be reset to any committed log point inside the backtrack window without restoring from snapshot, without provisioning a new cluster, and without disrupting consumers other than briefly pausing writes during the rewind. Without backtrack, recovery from destructive incidents the team caused itself — bad migration, wrong DELETE, dropped table, schema change that silently corrupted application invariants — requires restoring a snapshot to a fresh cluster (minutes-to-hours) and a cutover (minutes-to-hours of additional planning), during which the original cluster either keeps serving traffic against the corrupted state or stops serving altogether. Aurora MySQL only — Aurora PostgreSQL does not support backtrack and the control is gated to skip it.
+
+**Remediation:** Enable backtrack with a window matching the workload's acceptable rewind horizon (24h is the published default ceiling unless explicitly raised).
+
+---
+
+### CTL.RDS.AURORA.GLOBAL.UNENCRYPTED.001
+
+**Aurora Global Database Secondary Clusters Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4: 3.4;
+
+Aurora Global Database secondary clusters must be encrypted at rest, and the destination-region KMS key must be authored by the same team that authored the primary's key (so that key-policy controls and rotation cadence apply uniformly to both regions). Aurora Global Database replicates committed changes from the primary cluster to one or more secondary clusters in other regions, with sub-second replication lag. When the secondary lands unencrypted, the same data that is encrypted at the primary is plaintext at the secondary — and the cross-region replication that motivated the Global Database deployment becomes the path that takes data out of encrypted storage. The most common origin of this gap is a CloudFormation copy of the primary cluster module that did not propagate the encryption configuration to the secondary, or a manual secondary-cluster creation that took the destination-region default and never set StorageEncrypted=true. The audit on the primary reads encrypted; the secondary is plaintext and never appears in the same audit query.
+
+**Remediation:** Recreate the secondary with StorageEncrypted=true and a destination-region CMK; switch the Global Database failover target after verification.
+
+---
+
+### CTL.RDS.AURORA.SERVERLESS.V1.001
+
+**Aurora Serverless v1 Clusters Must Migrate to v2**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-2;
+
+Aurora clusters must not run Aurora Serverless v1; v2 (or the provisioned engine mode) is required. Serverless v1 carries a lengthy list of operational and security limitations that v2 closes: 30-second-class cold starts when scaling from zero, restricted engine version support (no current minor releases, no patches for some CVE windows), no read replicas, no Global Database, no IAM database authentication, no Performance Insights, and a scaling model that only steps in fixed power-of-two capacities. Each of those is a security-relevant gap as well as a performance one — the absence of IAM auth forces password-only authentication, the absence of Performance Insights removes the primary signal for SQL injection and cryptominer-via-query patterns, and the cold-start cliff produces availability behavior that alarms cannot smooth over. AWS has announced the v1 end-of-life schedule; clusters that have not migrated are on a deadline as well as carrying the limitations.
+
+**Remediation:** Migrate the cluster to Aurora Serverless v2 or to provisioned engine mode before the v1 end-of-life deadline.
+
+---
+
+### CTL.RDS.AURORA.SINGLEINSTANCE.001
+
+**Aurora Clusters Must Have More Than One Instance**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-7; soc2: A1.2;
+
+Aurora DB clusters must run with at least one writer plus one reader (or, more commonly, a writer plus two readers spread across AZs). A single-instance Aurora cluster has worse availability than a Multi-AZ standard RDS instance, not better: Multi-AZ RDS keeps a pre-provisioned standby ready to take over in seconds, while a single-instance Aurora cluster has nothing for Aurora to promote when the writer fails — it must provision a fresh instance on the surviving storage volume, an operation that takes minutes during which the cluster is unreachable. Aurora's architecture (storage-compute separation, six-way replicated storage, sub-second reader promotion) only delivers its availability premium when there is at least one reader to promote. The most common origin of this gap is a wizard- driven cluster creation that provisioned only the writer for cost reasons during initial bring-up, with a "we will add readers later" intention that never gets revisited.
+
+**Remediation:** Add at least one reader instance, ideally in a different AZ from the writer.
+
+---
+
 ### CTL.RDS.AUTH.MASTERPASSWORD.AGE.001
 
 **RDS Master Password Must Be Rotated Within Threshold**
@@ -17012,6 +17072,36 @@ RDS DB subnet groups must reference only subnets that currently exist in the VPC
 
 ---
 
+### CTL.RDS.HA.REPLICA.CONFIG.001
+
+**RDS Read Replicas Must Match Their Primary's Security Configuration**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-6; pci_dss_v4: 1.2;
+
+RDS read replicas must inherit (or precisely match) the source instance's security configuration: security group attachments, parameter group, encryption at rest setting, and PubliclyAccessible flag. The replica serves the same rows as the primary; if its security configuration is weaker, the replica becomes the path of least resistance to the same data. Three drift patterns are seen in the field. (1) Replica with a broader security group than the primary (someone allowed broader CIDRs to the replica for reporting/BI access and never tightened them again). (2) Replica with a different parameter group that has TLS enforcement off, audit logging off, or password hashing weak — the replica accepts plaintext connections and password-spray that the primary refuses. (3) Replica with PubliclyAccessible=true while the primary is private — introducing an internet-reachable copy of the production data. The control fires on any of these drift conditions and the finding lists the specific differences so the remediation can target only what actually drifted.
+
+**Remediation:** Reconcile the replica's SG, parameter group, encryption, and PubliclyAccessible settings to match the primary.
+
+---
+
+### CTL.RDS.HA.REPLICA.SAMEAZ.001
+
+**RDS Read Replicas Must Be in a Different AZ Than Their Primary**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-7; soc2: A1.2;
+
+RDS read replicas must be placed in a different availability zone from their primary instance. A replica in the same AZ provides read-traffic scaling but no AZ-level redundancy: any AZ-level event (the most common AWS outage class — a single AZ losing power, network, or control-plane reachability) takes both the primary and the replica down simultaneously. The replica's value proposition is twofold: read scaling AND failover resilience. Same-AZ placement collapses the second half. Multi-region read replicas (where allowed by engine and workload) provide stronger isolation, but at minimum the replica should sit in a different AZ in the same region. The most common origin of this gap is a hurried wizard flow where the replica defaulted to the primary's AZ and the operator did not change it, or an IaC apply that placed both into the same subnet group AZ because the group only had one AZ configured.
+
+**Remediation:** Recreate the replica in a different AZ (or in a different region for stronger isolation).
+
+---
+
 ### CTL.RDS.IAMAUTH.001
 
 **RDS Must Enable IAM Authentication**
@@ -17038,6 +17128,35 @@ RDS instances should enable IAM database authentication. IAM auth eliminates lon
 RDS instance safety cannot be assessed when encryption status is missing from the snapshot. The extractor must populate database.encryption.storage_encrypted.
 
 **Remediation:** Re-run the extractor with RDS permissions: rds:DescribeDBInstances, rds:DescribeDBClusters.
+
+---
+
+### CTL.RDS.LIFECYCLE.GENERATION.001
+
+**RDS Instances Should Use Current-Generation Instance Classes**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-2;
+
+RDS instances should run on a current-generation instance class. Older RDS instance families — db.m4, db.r4, db.t2, db.m3, and earlier — sit on Xen-based hypervisor hardware and lose access to several Nitro-only protections that the newer Graviton (db.m7g, db.r7g, db.t4g) and Nitro-x86 (db.m6i, db.r6i) families enable. Three properties matter: the historical Xen XSA CVE class continues to apply to the older families (the same hypervisor surface that CTL.EC2.NITRO.001 catches on EC2 — RDS runs the same underlying hosts), the newer families have meaningfully better performance per dollar (commonly 20-40% on Graviton), and AWS instance-family lifecycle eventually retires the oldest classes from regions, leaving instances on those families unable to scale, modify, or recover via failover. Migration to a current generation is an in-place modification — no data move, no application reconfiguration — so the cost is small and the upside spans security (Nitro), performance, and longevity.
+
+**Remediation:** Modify the instance class to a current-generation family (db.m7g, db.r7g, db.t4g, or current-gen Nitro-x86).
+
+---
+
+### CTL.RDS.LIFECYCLE.STORAGETYPE.001
+
+**RDS Instances Should Use gp3 Storage Instead of Legacy gp2**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+
+RDS instances should use gp3 storage rather than the legacy gp2 storage type. gp3 is the current general-purpose SSD option and provides three properties gp2 does not: a baseline 3000 IOPS regardless of volume size (gp2 IOPS scales with size at 3 IOPS/GB and credits-balance under burst, producing latency cliffs the application experiences as request stalls), independently provisionable IOPS and throughput (so the team can size for application-actual numbers rather than buying capacity to obtain IOPS), and lower per-GB storage cost at equivalent performance. Migration is online — RDS performs the storage-type modification without downtime and without dropping connections. The security relevance is indirect but real: gp2's burst-credit exhaustion produces availability-affecting latency spikes that incident response often misattributes to application bugs, and the presence of legacy gp2 signals an instance that has not been touched by recent hardening cycles.
+
+**Remediation:** Modify the instance to gp3 storage (online; no downtime); review IOPS/throughput against application-actual numbers.
 
 ---
 

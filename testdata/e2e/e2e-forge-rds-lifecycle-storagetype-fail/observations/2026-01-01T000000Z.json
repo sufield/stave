@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "db-gp2",
+      "type": "aws_rds_instance",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_instance","lifecycle":{"storage_type":"gp2","storage_type_legacy":true}}}
+    }
+  ]
+}
