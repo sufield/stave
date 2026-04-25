@@ -3,8 +3,6 @@ package reporter
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -12,9 +10,8 @@ import (
 	"github.com/sufield/stave/internal/core/compliance"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/profile"
+	"github.com/sufield/stave/internal/testutil"
 )
-
-var update = flag.Bool("update", false, "update golden files")
 
 func fixtureMeta() ReportMeta {
 	return ReportMeta{
@@ -97,26 +94,7 @@ func TestTextReporter_Golden(t *testing.T) {
 
 	got := buf.String()
 	golden := filepath.Join("testdata", "reports", "hipaa_golden.txt")
-
-	if *update {
-		if mkErr := os.MkdirAll(filepath.Dir(golden), 0o755); mkErr != nil {
-			t.Fatal(mkErr)
-		}
-		if wErr := os.WriteFile(golden, []byte(got), 0o644); wErr != nil {
-			t.Fatal(wErr)
-		}
-		t.Log("updated golden file")
-		return
-	}
-
-	want, err := os.ReadFile(golden)
-	if err != nil {
-		t.Fatalf("read golden file (run with -update to create): %v", err)
-	}
-
-	if got != string(want) {
-		t.Errorf("output differs from golden file.\n--- GOT ---\n%s\n--- WANT ---\n%s", got, string(want))
-	}
+	testutil.AssertGoldenString(t, golden, got)
 }
 
 func TestJSONReporter(t *testing.T) {

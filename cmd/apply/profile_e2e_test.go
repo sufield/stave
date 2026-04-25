@@ -25,14 +25,25 @@ func extractExitCode(t *testing.T, err error) int {
 	return -1
 }
 
-// compareGoldenJSON compares stdout bytes against a golden JSON file if it exists.
-// Fields that vary between dev builds and tagged releases (tool_version) are
-// stripped before comparison so golden files don't need updating on each release.
+// compareGoldenJSON compares stdout bytes against a golden JSON file.
+// The comparison strips run.tool_version and run.policy_fingerprint
+// before comparing so golden files do not need updating on each
+// release.
+//
+// These golden.json files are managed by the regengoldens tool, not
+// by the in-process UPDATE_GOLDEN env var. To regenerate, run
+// `make golden-fixture FILTER=aws-s3-obs` (or any matching regex).
+// In-process UPDATE_GOLDEN is reserved for goldens whose write path
+// is purely Go-marshalled output (see internal/testutil/golden.go);
+// these fixtures' goldens are produced by running the stave binary,
+// which the test builds with different ldflags than `make build`,
+// so a byte-identical write from inside the test is not feasible.
 func compareGoldenJSON(t *testing.T, goldenFile string, stdout []byte) {
 	t.Helper()
 	goldenData, err := os.ReadFile(goldenFile)
 	if err != nil {
-		t.Fatalf("golden file missing (must be committed): %s", goldenFile)
+		t.Fatalf("golden file missing (run `make golden-fixture FILTER=%s` to create): %s",
+			filepath.Base(filepath.Dir(goldenFile)), goldenFile)
 	}
 	var golden, actual any
 	if err := json.Unmarshal(goldenData, &golden); err != nil {
@@ -46,8 +57,8 @@ func compareGoldenJSON(t *testing.T, goldenFile string, stdout []byte) {
 	goldenNorm, _ := json.Marshal(golden)
 	actualNorm, _ := json.Marshal(actual)
 	if !bytes.Equal(goldenNorm, actualNorm) {
-		t.Errorf("output does not match golden file\ngot:\n%s\nwant:\n%s",
-			string(stdout), string(goldenData))
+		t.Errorf("output does not match golden file %s\nRun `make golden-fixture FILTER=%s` to update.\ngot:\n%s\nwant:\n%s",
+			goldenFile, filepath.Base(filepath.Dir(goldenFile)), string(stdout), string(goldenData))
 	}
 }
 
