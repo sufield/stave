@@ -1,0 +1,40 @@
+control: CTL.RDS.PARAM.LOGEXPORT.001
+defect: >
+  RDS instance's EnabledCloudWatchLogsExports list is
+  empty (or missing the engine-appropriate log types),
+  so database logs remain on the RDS instance and never
+  reach CloudWatch Logs.
+infection: >
+  Logs that stay on the RDS instance are accessible
+  only through the RDS console and the
+  DescribeDBLogFiles API. Four properties of that
+  arrangement matter for incident response and
+  SIEM workflows. (1) Searchability: cross-instance
+  queries ("show me every database that ran the
+  query pattern X in the last 14 days") cannot be
+  answered without iterating every instance one at
+  a time and pulling its log file list. (2)
+  Alertability: CloudWatch Alarms and metric filters
+  cannot be wired to instance-resident logs; the
+  signal is invisible to the alerting tier the rest
+  of the account depends on. (3) SIEM integration:
+  every SIEM the team runs subscribes via CloudWatch
+  Logs subscription filters or via Kinesis from
+  log groups; instance-resident logs are out of
+  band and require a custom poller per engine to
+  ingest. (4) Retention independence: instance log
+  files are subject to RDS log rotation (the
+  rotation schedule depends on engine and file size)
+  and disappear when the instance is deleted, so the
+  forensic record is bounded by the instance
+  lifecycle rather than by the team's retention
+  policy. Distinct from CTL.RDS.CLUSTER.LOGGING.001,
+  which covers the same gap on Aurora clusters; this
+  control fires on the instance-level configuration.
+failure: >
+  Database audit data exists but is invisible to the
+  organization's centralized logging, alerting, and
+  SIEM tier. Investigations cannot answer
+  cross-instance questions, alarms do not fire on
+  log events, and the record vanishes when the
+  instance is deleted.

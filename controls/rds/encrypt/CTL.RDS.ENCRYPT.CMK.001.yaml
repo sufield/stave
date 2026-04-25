@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.ENCRYPT.CMK.001
+name: RDS Instances Should Be Encrypted with a Customer-Managed KMS Key
+description: >
+  RDS instances should be encrypted with a customer-managed KMS
+  key (CMK), not the AWS-managed key (aws/rds). The aws/rds key
+  is shared across every RDS instance in the account that did not
+  specify a CMK; its key policy is AWS-controlled and cannot be
+  modified, the key cannot be disabled in an emergency to revoke
+  decrypt access, and snapshots encrypted with it cannot be shared
+  cross-account (cross-account snapshot sharing requires a CMK).
+  A customer-managed key delivers the four properties operators
+  expect from "encryption with key control": the key policy is
+  authored by the team (so decrypt access is bounded to specific
+  principals), the key can be disabled to revoke access during
+  incident response, the rotation schedule is configurable, and
+  the key is portable for cross-account snapshot sharing. The
+  data is encrypted under either key — the difference is whether
+  the team controls the key.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03", "CEK-07"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: data_access
+remediation:
+  description: RDS instance is encrypted with the aws/rds AWS-managed key instead of a customer-managed KMS key.
+  action: Re-encrypt the instance via snapshot/copy/restore using a CMK that the team controls.
+  example: |
+    {"database": {"kind": "rds_instance", "encryption": {"uses_cmk": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.encryption.encrypted
+      op: eq
+      value: true
+    - field: properties.database.encryption.uses_cmk
+      op: eq
+      value: false

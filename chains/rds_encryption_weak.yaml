@@ -1,0 +1,24 @@
+id: rds_encryption_weak
+description: >
+  Instance is encrypted with the AWS-managed key (no key control)
+  AND either deprecated TLS versions are accepted OR PostgreSQL
+  password hashing is set to md5. Encryption is technically
+  applied but at primitives that the rest of the security review
+  does not assume: the encryption key is not under the team's
+  control (no disable, no key-policy audit, no cross-account
+  share), AND either the transport floor is below TLS 1.2 (so
+  in-transit confidentiality is below current standards) or the
+  password hashing is unsalted MD5 (so any pg_authid leak yields
+  plaintext credentials via public rainbow tables). Each
+  weakness alone is medium; in combination the database has
+  encryption that does not survive a serious adversary review.
+controls:
+  - CTL.RDS.ENCRYPT.CMK.001
+  - CTL.RDS.TLS.VERSION.001
+  - CTL.RDS.PARAM.PASSWORDHASH.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_rds
+postconditions:
+  - db_credential_theft

@@ -1,0 +1,39 @@
+control: CTL.RDS.TLS.CACERT.001
+defect: >
+  RDS instance is using an outdated AWS-issued CA
+  certificate (rds-ca-2019 or older) rather than the
+  current bundle (rds-ca-rsa2048-g1 / rds-ca-rsa4096-g1
+  family).
+infection: >
+  AWS rotates the RDS server CA on a published
+  schedule; each rotation publishes a multi-month
+  notice window before the old CA stops being valid.
+  Three failure modes follow on the published expiry
+  if the instance has not been migrated. (1) Client
+  failure cliff: production clients that verify the
+  server certificate (the recommended posture for any
+  database client; libpq's verify-full,
+  java.sql.SSLMode.VERIFY_FULL, sslmode=verify-ca for
+  Go drivers) begin failing connection with an
+  "untrusted issuer" error all at once when the CA
+  the instance presents is no longer in their trust
+  bundle. The application's incident does not look
+  like a database problem until somebody traces the
+  TLS handshake. (2) Forgotten-instance unavailability:
+  some fraction of fleet instances were never tagged
+  in the migration sprint and are unreachable until
+  somebody finds them and rotates them under outage
+  pressure. (3) Emergency-mode security regression:
+  rotating under pressure tends to be done with
+  certificate verification disabled ("just get it
+  back up"), and that disable rarely gets re-enabled
+  after the incident — a permanent silent downgrade
+  of every connection to that instance going forward.
+  The control fires preemptively so the rotation is
+  paid in change-window time, not incident time.
+failure: >
+  Pending TLS connection failure. When the AWS-issued
+  CA rotates out, applications that verify the
+  server certificate stop being able to connect, and
+  the recovery path tends to leave the verification
+  disabled.

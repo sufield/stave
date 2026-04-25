@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "db-pgmd5",
+      "type": "aws_rds_instance",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_instance","engine":"postgres","parameters":{"password_encryption":"md5","password_encryption_weak":true}}}
+    }
+  ]
+}

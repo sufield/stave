@@ -1,0 +1,33 @@
+control: CTL.RDS.ENCRYPT.BACKUP.001
+defect: >
+  RDS automated backups are stored unencrypted, even if
+  the live instance is now encrypted.
+infection: >
+  RDS automated backup encryption is bound to the source
+  instance's encryption state at the moment of creation,
+  not to the live state. An instance launched without
+  encryption stores its automated backups unencrypted,
+  and the well-known fix — modify the instance to enable
+  storage encryption — does NOT retroactively re-encrypt
+  the backup chain that already exists. (The actual
+  re-encryption flow is: take a snapshot, copy it with
+  the destination KMS key set, restore a new instance
+  from the encrypted copy, point the application at the
+  new endpoint, decommission the old instance.) In
+  practice teams skip the rebuild because the live
+  instance now displays "encrypted: yes" in the console
+  and the team takes that as the resolution. The result
+  is the surprise state where the live database is
+  encrypted and the audit posture says encrypted, while
+  a recoverable full copy of every committed transaction
+  sits in the backup service unencrypted, restorable to
+  a fresh volume by anyone holding
+  rds:RestoreDBInstanceFromDBSnapshot. The unencrypted
+  backup is identical in content to the encrypted live
+  database; the security floor is whichever copy is
+  easier to read.
+failure: >
+  Plaintext recoverable copy of the database. Any
+  principal with snapshot-restore rights can mount the
+  database content without going through the encryption
+  the live instance displays.

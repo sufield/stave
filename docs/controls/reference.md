@@ -3,26 +3,26 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1423
-**Pack hash:** `a9c2c0ced0b4a5e199ceed670a88766fe44cb1b2f40c4e64dd80aebb7ceb5ce4`
+**Total controls:** 1429
+**Pack hash:** `d3d2c41a18c6798a3f81470e87b713cce7635decf478fe1fb244c48745be7870`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 171 |
-| high | 631 |
+| high | 633 |
 | info | 16 |
 | low | 103 |
-| medium | 502 |
+| medium | 506 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 32 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 32 |
-| encryption | 75 |
+| detection | 33 |
+| encryption | 80 |
 | exposure | 848 |
 | governance | 42 |
 | hygiene | 16 |
@@ -16696,6 +16696,36 @@ RDS instances must have storage encryption enabled. Unencrypted database storage
 
 ---
 
+### CTL.RDS.ENCRYPT.BACKUP.001
+
+**RDS Automated Backups Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4: 3.4;
+
+RDS automated backups must be encrypted at rest. RDS automated backup encryption is bound to the source instance's encryption state at creation: an instance created without encryption stores its automated backups unencrypted, and re-enabling encryption on the live instance does not retroactively re-encrypt existing backups. This produces the surprising state where the live database appears encrypted in the console but a recoverable full copy of every committed transaction sits in the backup service unencrypted, accessible to anyone with rds:RestoreDBInstanceFromDBSnapshot rights. The unencrypted backup is identical in content to the encrypted live database; the security posture is whichever copy is easier to read. The control fires when the backup service reports backups are unencrypted regardless of the live instance's encryption flag, so the discrepancy surfaces explicitly instead of being hidden by the confidence the live-instance status creates.
+
+**Remediation:** Recreate the instance from an encrypted snapshot copy and rotate the backup chain.
+
+---
+
+### CTL.RDS.ENCRYPT.CMK.001
+
+**RDS Instances Should Be Encrypted with a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-12;
+
+RDS instances should be encrypted with a customer-managed KMS key (CMK), not the AWS-managed key (aws/rds). The aws/rds key is shared across every RDS instance in the account that did not specify a CMK; its key policy is AWS-controlled and cannot be modified, the key cannot be disabled in an emergency to revoke decrypt access, and snapshots encrypted with it cannot be shared cross-account (cross-account snapshot sharing requires a CMK). A customer-managed key delivers the four properties operators expect from "encryption with key control": the key policy is authored by the team (so decrypt access is bounded to specific principals), the key can be disabled to revoke access during incident response, the rotation schedule is configurable, and the key is portable for cross-account snapshot sharing. The data is encrypted under either key — the difference is whether the team controls the key.
+
+**Remediation:** Re-encrypt the instance via snapshot/copy/restore using a CMK that the team controls.
+
+---
+
 ### CTL.RDS.ENGINE.EOL.001
 
 **RDS Instances Must Not Run End-of-Life Database Engine Versions**
@@ -16830,6 +16860,36 @@ The default RDS parameter group uses AWS-managed settings that cannot be audited
 
 ---
 
+### CTL.RDS.PARAM.LOGEXPORT.001
+
+**RDS Instances Must Export Logs to CloudWatch Logs**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-12; pci_dss_v4: 10.2;
+
+RDS instances must populate EnabledCloudWatchLogsExports with the engine-appropriate log types (postgresql + upgrade for PostgreSQL; audit + error + general + slowquery for MySQL; audit + error + agent + trace for SQL Server; alert + audit + listener + trace for Oracle). Logs that remain on the RDS instance are accessible only via the RDS console and the DescribeDBLogFiles API; they are not searchable across the fleet, not subscribable to CloudWatch Alarms, not exportable to a SIEM via subscription filter, and they disappear when the instance is deleted or when the RDS log rotation cycles them out. Exporting logs to CloudWatch Logs makes them addressable by the same observability and incident-response tooling the rest of the account uses: log group permissions are managed by IAM, retention is independent of the instance lifecycle, metric filters and alarms work, and the existing SIEM subscription pipelines pick them up. This control checks the instance's top-level log-exports list (a property of the instance, not the parameter group), distinct from CTL.RDS.CLUSTER.LOGGING.001 which covers the same gap on Aurora clusters.
+
+**Remediation:** Set EnabledCloudWatchLogsExports to the engine-appropriate log types.
+
+---
+
+### CTL.RDS.PARAM.PASSWORDHASH.001
+
+**PostgreSQL RDS Instances Must Use scram-sha-256 Password Hashing**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: IA-5; pci_dss_v4: 8.3;
+
+PostgreSQL RDS instances must set the password_encryption parameter to scram-sha-256, not md5. MD5 password hashing on PostgreSQL is unsalted (a static deterministic hash of the password and the username), which makes large-scale rainbow table lookups effective against any database whose pg_authid contents leak — a scenario that includes routine pg_dump artifacts, replication snapshots, and cross-account snapshot sharing. scram-sha-256 (RFC 5802 / RFC 7677, supported since PostgreSQL 10) introduces per-user salts, iterative hashing, and a challenge-response authentication exchange that does not expose the password hash to the network. The parameter governs every new password set after the change; existing MD5 hashes are converted on the next password rotation. The control fires only on PostgreSQL engines (a no-op for MySQL / SQL Server / Oracle).
+
+**Remediation:** Set password_encryption to scram-sha-256 in the parameter group and rotate user passwords.
+
+---
+
 ### CTL.RDS.PERFORMANCE.INSIGHTS.001
 
 **RDS Instances Must Have Performance Insights Enabled with KMS Encryption**
@@ -16947,6 +17007,36 @@ RDS instances must enforce SSL/TLS for all client connections. Without require_s
 RDS connections without SSL/TLS transmit database credentials and query results in plaintext over the network. In a VPC, any compromised instance with network access can capture database passwords and sensitive data via passive network monitoring. SSL enforcement is configured via parameter group (require_secure_transport for MySQL, rds.force_ssl for PostgreSQL/SQL Server).
 
 **Remediation:** Set the appropriate SSL parameter in the parameter group: MySQL: require_secure_transport=ON. PostgreSQL: rds.force_ssl=1. SQL Server: rds.force_ssl=1.
+
+---
+
+### CTL.RDS.TLS.CACERT.001
+
+**RDS Instances Must Use a Current CA Certificate**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4: 4.1;
+
+RDS instances must use the current AWS-issued CA certificate bundle (rds-ca-rsa2048-g1 or rds-ca-rsa4096-g1 family) and not the deprecated rds-ca-2019 bundle. AWS rotates the RDS server certificate authority on a published schedule; applications that verify the server certificate (the recommended posture for any production database client) must trust the CA the instance presents. When the instance is still pinned to an older CA, three failure modes follow on the published expiry: production clients that verify the certificate begin failing connection with an "untrusted issuer" error all at once, instances that the team forgot to migrate become unreachable until they are rotated, and emergency rotation under outage pressure tends to be done with verify_ca disabled, which silently downgrades the security posture for every connection thereafter. The control fires preemptively so the rotation is paid in change-window time, not in incident time.
+
+**Remediation:** Modify the instance to use the current CA bundle and verify clients trust it.
+
+---
+
+### CTL.RDS.TLS.VERSION.001
+
+**RDS Instances Must Not Accept Deprecated TLS Versions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-13; pci_dss_v4: 4.1;
+
+RDS instances must reject TLS 1.0 and TLS 1.1 connections and require TLS 1.2 or higher. TLS 1.0 carries the BEAST and POODLE weaknesses (publicly exploited as long ago as 2011 and 2014 respectively); TLS 1.1 lacks the modern cipher suites and AEAD modes that downstream cryptographic guidance now assumes. Both are deprecated by RFC 8996 and removed from PCI-DSS-acceptable configurations as of v3.2.1. When the parameter group permits these versions, a client that downgrades — by attacker manipulation or by being a legacy library that never advanced past TLS 1.0 — connects successfully and the encryption applied is below the level the rest of the security review assumed.
+
+**Remediation:** Update the parameter group to require TLS 1.2 minimum.
 
 ---
 

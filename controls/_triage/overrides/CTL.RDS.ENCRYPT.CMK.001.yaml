@@ -1,0 +1,34 @@
+control: CTL.RDS.ENCRYPT.CMK.001
+defect: >
+  RDS instance is encrypted at rest, but the encryption
+  key is the AWS-managed key (aws/rds) instead of a
+  customer-managed KMS key (CMK).
+infection: >
+  The aws/rds key is shared across every RDS instance
+  in the account that did not specify a CMK at
+  creation. Three properties of that key are different
+  from a CMK in ways that matter for incident response
+  and cross-account workflows. (1) Key policy is
+  AWS-managed and cannot be modified — the decrypt
+  permission is granted to "any principal in the account
+  that calls RDS APIs," which is a much broader set
+  than a CMK's typical key policy that names specific
+  service roles. (2) The key cannot be disabled; if a
+  compromise is detected and the team needs to revoke
+  decrypt access immediately while the live instance
+  is investigated, the aws/rds key cannot be turned
+  off. (3) Snapshots encrypted with aws/rds cannot be
+  shared cross-account — the cross-account snapshot
+  flow specifically requires a CMK whose key policy
+  grants the recipient account decrypt access — so
+  any future cross-account restore (DR account, audit
+  account, customer copy) will require re-encrypting
+  the snapshot first under a CMK, in the middle of
+  whatever pressure motivated the cross-account
+  request. The data is encrypted under either key;
+  the difference is whose key it is.
+failure: >
+  No control-plane handle on the encryption key.
+  Disablement, key-policy auditing, and cross-account
+  snapshot sharing are not available; the team owns
+  the data but not the key under which it is sealed.

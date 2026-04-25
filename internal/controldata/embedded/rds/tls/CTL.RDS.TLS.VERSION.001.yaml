@@ -1,0 +1,39 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.TLS.VERSION.001
+name: RDS Instances Must Not Accept Deprecated TLS Versions
+description: >
+  RDS instances must reject TLS 1.0 and TLS 1.1 connections and
+  require TLS 1.2 or higher. TLS 1.0 carries the BEAST and POODLE
+  weaknesses (publicly exploited as long ago as 2011 and 2014
+  respectively); TLS 1.1 lacks the modern cipher suites and AEAD
+  modes that downstream cryptographic guidance now assumes. Both
+  are deprecated by RFC 8996 and removed from PCI-DSS-acceptable
+  configurations as of v3.2.1. When the parameter group permits
+  these versions, a client that downgrades — by attacker
+  manipulation or by being a legacy library that never advanced
+  past TLS 1.0 — connects successfully and the encryption applied
+  is below the level the rest of the security review assumed.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-13"
+  pci_dss_v4: "4.1"
+  ccm_v4: ["CEK-09", "DSP-10"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: data_in_transit_exposure
+remediation:
+  description: RDS instance accepts deprecated TLS 1.0 or 1.1 connections.
+  action: Update the parameter group to require TLS 1.2 minimum.
+  example: |
+    {"database": {"kind": "rds_instance", "tls": {"accepts_deprecated_versions": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.tls.accepts_deprecated_versions
+      op: eq
+      value: true

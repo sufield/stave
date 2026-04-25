@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "db-cmkkey",
+      "type": "aws_rds_instance",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_instance","encryption":{"encrypted":true,"uses_cmk":true,"kms_key_id":"arn:aws:kms:us-east-1:111111111111:key/abcd1234-cmk"}}}
+    }
+  ]
+}

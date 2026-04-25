@@ -8,6 +8,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **RDS-1 — TLS, encryption, and parameter-group security
+  (6 new controls, 3 chains).** First RDS gap-closure
+  iteration. Closes the database-engine-configuration
+  surface that VPC, IAM, and generic-encryption controls
+  do not reach. Prompt spec asked for ~10 controls; four
+  turned out to duplicate existing ones (`CTL.RDS.SSL.001`
+  and `CTL.RDS.SSL.ENFORCE.001` covered TLS.ENFORCE;
+  `CTL.RDS.PARAM.GROUP.001` covered PARAM.DEFAULT;
+  `CTL.RDS.LOG.001` covered PARAM.LOGGING;
+  `CTL.RDS.PERFORMANCE.INSIGHTS.001` covered
+  ENCRYPT.PI), so shipped 6 distinct additions.
+  TLS (2): `TLS.VERSION` (instance accepts TLS 1.0/1.1
+  → sub-modern transport encryption + downgrade path
+  attacks, medium), `TLS.CACERT` (outdated AWS-issued CA
+  certificate → pending TLS connection failure cliff at
+  CA rotation, with emergency-mode disabled-verification
+  regression risk, medium). Encryption (2):
+  `ENCRYPT.CMK` (instance encrypted with aws/rds shared
+  key instead of CMK → no disable, no key-policy audit,
+  no cross-account snapshot share, medium),
+  `ENCRYPT.BACKUP` (automated backups stored
+  unencrypted while live instance reports encrypted →
+  recoverable plaintext copy of the database
+  unnoticeable in console, high). Parameter group (2):
+  `PARAM.PASSWORDHASH` (PostgreSQL password_encryption
+  set to md5 instead of scram-sha-256 → unsalted
+  catalog-level password compromise via public rainbow
+  tables, medium), `PARAM.LOGEXPORT` (instance does
+  not export logs to CloudWatch → audit data invisible
+  to centralized logging, alerting, and SIEM, distinct
+  from existing CTL.RDS.CLUSTER.LOGGING.001 which
+  covers Aurora clusters, high). Chains:
+  `rds_plaintext_database` (TLS not enforced + at-rest
+  not encrypted OR backup not encrypted = plaintext
+  reachable through more than one channel),
+  `rds_audit_blind` (audit logging off + log export
+  off OR default parameter group = compromise leaves
+  no record of data accessed), `rds_encryption_weak`
+  (aws/rds key + deprecated TLS OR md5 password hash
+  = encryption that does not survive serious adversary
+  review). 13 e2e fixtures (12 base pass/fail +
+  passwordhash-mysql-pass variant asserting the control
+  is a no-op on non-PostgreSQL engines). 6 triage
+  overrides. RDS parameter-level security: 0 → 4
+  controls (combined with existing PARAM.GROUP / LOG).
 - **EC2-6 — key pair lifecycle and remaining EC2 gaps
   (6 new controls, 2 chains).** Final EC2 gap-closure
   iteration. Closes the API-observable key-pair surface

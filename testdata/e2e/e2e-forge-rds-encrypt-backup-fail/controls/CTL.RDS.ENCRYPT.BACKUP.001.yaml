@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.ENCRYPT.BACKUP.001
+name: RDS Automated Backups Must Be Encrypted
+description: >
+  RDS automated backups must be encrypted at rest. RDS automated
+  backup encryption is bound to the source instance's encryption
+  state at creation: an instance created without encryption stores
+  its automated backups unencrypted, and re-enabling encryption on
+  the live instance does not retroactively re-encrypt existing
+  backups. This produces the surprising state where the live
+  database appears encrypted in the console but a recoverable
+  full copy of every committed transaction sits in the backup
+  service unencrypted, accessible to anyone with
+  rds:RestoreDBInstanceFromDBSnapshot rights. The unencrypted
+  backup is identical in content to the encrypted live database;
+  the security posture is whichever copy is easier to read. The
+  control fires when the backup service reports backups are
+  unencrypted regardless of the live instance's encryption flag,
+  so the discrepancy surfaces explicitly instead of being hidden
+  by the confidence the live-instance status creates.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4: "3.4"
+  ccm_v4: ["DSP-15", "BCR-09"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: RDS automated backups are stored unencrypted.
+  action: Recreate the instance from an encrypted snapshot copy and rotate the backup chain.
+  example: |
+    {"database": {"kind": "rds_instance", "backup": {"encrypted": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.backup.encrypted
+      op: eq
+      value: false

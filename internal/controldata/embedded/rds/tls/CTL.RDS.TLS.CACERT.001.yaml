@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.TLS.CACERT.001
+name: RDS Instances Must Use a Current CA Certificate
+description: >
+  RDS instances must use the current AWS-issued CA certificate
+  bundle (rds-ca-rsa2048-g1 or rds-ca-rsa4096-g1 family) and not
+  the deprecated rds-ca-2019 bundle. AWS rotates the RDS server
+  certificate authority on a published schedule; applications
+  that verify the server certificate (the recommended posture for
+  any production database client) must trust the CA the instance
+  presents. When the instance is still pinned to an older CA,
+  three failure modes follow on the published expiry: production
+  clients that verify the certificate begin failing connection
+  with an "untrusted issuer" error all at once, instances that
+  the team forgot to migrate become unreachable until they are
+  rotated, and emergency rotation under outage pressure tends to
+  be done with verify_ca disabled, which silently downgrades the
+  security posture for every connection thereafter. The control
+  fires preemptively so the rotation is paid in change-window
+  time, not in incident time.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12"
+  pci_dss_v4: "4.1"
+  ccm_v4: ["CEK-15", "BCR-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: RDS instance uses an outdated CA certificate scheduled for rotation.
+  action: Modify the instance to use the current CA bundle and verify clients trust it.
+  example: |
+    {"database": {"kind": "rds_instance", "tls": {"ca_cert_current": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.tls.ca_cert_current
+      op: eq
+      value: false

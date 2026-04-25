@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "db-exporting",
+      "type": "aws_rds_instance",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_instance","engine":"postgres","logging":{"log_exports_configured":true,"enabled_cloudwatch_logs_exports":["postgresql","upgrade"]}}}
+    }
+  ]
+}

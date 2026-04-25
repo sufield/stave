@@ -1,0 +1,32 @@
+control: CTL.RDS.TLS.VERSION.001
+defect: >
+  RDS instance accepts TLS 1.0 or TLS 1.1 connections in
+  addition to (or instead of) TLS 1.2+.
+infection: >
+  Two failure modes follow from leaving deprecated TLS
+  on. The first is the cryptographic floor: TLS 1.0 was
+  the publicly-exploited target of BEAST (2011) and
+  POODLE (2014), and TLS 1.1 lacks the AEAD ciphers
+  that downstream guidance assumes; both were
+  formally deprecated by RFC 8996 in March 2021 and
+  removed from PCI-DSS-acceptable configurations as of
+  v3.2.1. A TLS 1.0 connection between an application
+  and the database is encrypted only by the standards
+  of 2010, and is treated as plaintext by current
+  threat models. The second mode is the downgrade
+  path: a client that supports TLS 1.2 but is presented
+  with a forged "TLS 1.0 only" handshake (an active
+  network attacker doing a downgrade dance, or a
+  legacy connection pooler whose configuration capped
+  the version) negotiates the worst of the available
+  options. As long as the database accepts TLS 1.0,
+  every well-configured client carries the risk of
+  being downgraded into the ones that don't. The
+  parameter group is where the floor is set; the
+  instance must not advertise the deprecated versions
+  for the floor to actually hold.
+failure: >
+  Sub-modern transport encryption. Connections may
+  succeed under cipher suites whose security profile is
+  below what the rest of the data-protection review
+  assumed.

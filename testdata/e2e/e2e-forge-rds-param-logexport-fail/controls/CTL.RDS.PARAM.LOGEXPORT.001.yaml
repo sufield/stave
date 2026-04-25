@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.PARAM.LOGEXPORT.001
+name: RDS Instances Must Export Logs to CloudWatch Logs
+description: >
+  RDS instances must populate EnabledCloudWatchLogsExports with
+  the engine-appropriate log types (postgresql + upgrade for
+  PostgreSQL; audit + error + general + slowquery for MySQL;
+  audit + error + agent + trace for SQL Server; alert + audit +
+  listener + trace for Oracle). Logs that remain on the RDS
+  instance are accessible only via the RDS console and the
+  DescribeDBLogFiles API; they are not searchable across the
+  fleet, not subscribable to CloudWatch Alarms, not exportable
+  to a SIEM via subscription filter, and they disappear when the
+  instance is deleted or when the RDS log rotation cycles them
+  out. Exporting logs to CloudWatch Logs makes them addressable
+  by the same observability and incident-response tooling the
+  rest of the account uses: log group permissions are managed
+  by IAM, retention is independent of the instance lifecycle,
+  metric filters and alarms work, and the existing SIEM
+  subscription pipelines pick them up. This control checks the
+  instance's top-level log-exports list (a property of the
+  instance, not the parameter group), distinct from
+  CTL.RDS.CLUSTER.LOGGING.001 which covers the same gap on
+  Aurora clusters.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "AU-12"
+  pci_dss_v4: "10.2"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-03", "LOG-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: RDS instance is not exporting any logs to CloudWatch Logs.
+  action: Set EnabledCloudWatchLogsExports to the engine-appropriate log types.
+  example: |
+    {"database": {"kind": "rds_instance", "logging": {"log_exports_configured": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.logging.log_exports_configured
+      op: eq
+      value: false
