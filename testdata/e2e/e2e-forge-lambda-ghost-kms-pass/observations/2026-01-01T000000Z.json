@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "fn-current-kms",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {"compute":{"kind":"function","function":{"kms_key_arn":"arn:aws:kms:us-east-1:111111111111:key/active-cmk","kms_key_exists":true,"has_ghost_kms":false}}}
+    }
+  ]
+}

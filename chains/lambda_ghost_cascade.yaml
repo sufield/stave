@@ -1,0 +1,28 @@
+id: lambda_ghost_cascade
+description: >
+  Two or more of the function's infrastructure dependencies
+  have been deleted without updating the function: execution
+  role, VPC subnet/SG, KMS key, DLQ target, or layer
+  (uses existing CTL.LAMBDA.LAYER.GHOST.001). Any single
+  ghost is high-to-critical severity on its own; the
+  combination is a systematic decommissioning failure in
+  the function's supporting infrastructure. Each ghost
+  fails differently — role ghost is total failure, VPC
+  ghost is intermittent (cold-start only), KMS ghost is
+  cold-start initialization failure, DLQ ghost is silent
+  event loss, layer ghost is degraded behavior — and the
+  combination produces a function whose actual invocation
+  semantics no longer match its console-displayed
+  configuration along multiple dimensions at once.
+controls:
+  - CTL.LAMBDA.GHOST.ROLE.001
+  - CTL.LAMBDA.GHOST.VPC.001
+  - CTL.LAMBDA.GHOST.KMS.001
+  - CTL.LAMBDA.GHOST.DLQ.001
+  - CTL.LAMBDA.LAYER.GHOST.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_lambda
+postconditions:
+  - audit_trail_destroyed

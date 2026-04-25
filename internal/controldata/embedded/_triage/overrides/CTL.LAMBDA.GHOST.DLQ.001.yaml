@@ -1,0 +1,37 @@
+control: CTL.LAMBDA.GHOST.DLQ.001
+defect: >
+  Lambda function's dead-letter queue ARN points
+  to an SQS queue or SNS topic that has been
+  deleted.
+infection: >
+  The DLQ is the safety net for failed asynchronous
+  invocations: after a function exhausts its
+  retry policy (default 2 retries on async
+  invocation), the failed event is published to
+  the DLQ for investigation and reprocessing.
+  When the DLQ target has been deleted, the
+  publish call from Lambda fails and the failure
+  is silent — Lambda does not propagate the
+  publish error to the original invoker (which
+  has already acknowledged the async invocation),
+  does not retry the publish, and does not flag
+  the function as misconfigured. The failed
+  event is discarded with no record. The console
+  shows the DLQ ARN configured on the function;
+  CloudWatch shows the function's invocation
+  failures as expected; the "events I can
+  reprocess" channel that the team built around
+  the DLQ is empty for reasons that have nothing
+  to do with the live function's health.
+  Distinct from CTL.LAMBDA.DLQ.001, which catches
+  the "no DLQ at all" case; this control catches
+  the "DLQ pointing at a deleted target" case.
+  Same architectural pattern as
+  CTL.CLOUDWATCH.ALARM.GHOST.001 (alarm action
+  targeting a deleted SNS topic) on the Lambda
+  DLQ channel.
+failure: >
+  Silent event loss. Failed asynchronous events
+  go nowhere; the team's reprocessing-from-DLQ
+  workflow has no input even when the function
+  is failing exactly as expected.

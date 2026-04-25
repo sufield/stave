@@ -3,33 +3,34 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1468
-**Pack hash:** `e7c883727aeef79615fd59e31584f849bc8b652a81784374faf17d30b9ed750c`
+**Total controls:** 1480
+**Pack hash:** `7d7cda074dbeb150e4aeb1cff484dca0af83dbe1ea06e3b84cc6bd4e8583dfda`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 172 |
-| high | 649 |
+| critical | 173 |
+| high | 656 |
 | info | 16 |
-| low | 107 |
-| medium | 524 |
+| low | 108 |
+| medium | 527 |
 
 | Domain | Count |
 |--------|-------|
-| access | 5 |
+| access | 7 |
 | audit | 32 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 43 |
-| encryption | 85 |
+| detection | 44 |
+| encryption | 87 |
 | exposure | 848 |
-| governance | 55 |
+| governance | 56 |
 | hygiene | 16 |
-| identity | 326 |
-| network | 27 |
+| identity | 327 |
+| network | 28 |
 | resilience | 18 |
+| secrets | 4 |
 | storage | 8 |
 
 ## Controls
@@ -14463,6 +14464,35 @@ Lambda functions with environment variables must encrypt them using a customer-m
 
 ---
 
+### CTL.LAMBDA.ENV.EXCESSIVE.001
+
+**Lambda Functions Should Not Have Excessive Environment Variables**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+
+Lambda functions should carry no more than the configured environment-variable threshold (default 20). Functions whose env-var count exceeds the threshold are almost always misconfigured: they hold a mix of credentials, endpoint URLs, feature flags, retry parameters, and per-deploy configuration that should live in a configuration service (AWS AppConfig, SSM Parameter Store with hierarchies, or a layer-resident config file) rather than in the function's environment block. Three problems compound at scale. (1) Audit cost: a 30-variable env block is past the size a human reviewer can hold in working memory; identifying which entries are credentials versus URLs versus flags becomes a per-variable pattern-matching exercise. (2) Rotation cost: every change to any one variable requires a function configuration update and (for raw credentials) a published-version churn that retains the historical value. (3) Disclosure surface: every additional variable is one more value exposed by lambda:GetFunctionConfiguration. The threshold is a heuristic; some functions legitimately carry many flags, and the threshold is configurable.
+
+**Remediation:** Move configuration values to AppConfig / SSM Parameter Store; keep only runtime-essential variables in the function's env block.
+
+---
+
+### CTL.LAMBDA.ENV.KMS.EXTERNAL.001
+
+**Lambda Functions Must Not Use KMS Keys Owned by External Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4: 3.6;
+
+Lambda functions must not encrypt their environment variables with a KMS key owned by an AWS account other than the function's own (or an account explicitly within the same AWS Organization that the team controls). The external account holds key-policy authority — they can disable the key (every cold-start KMS:Decrypt fails and the function stops initializing), schedule the key for deletion (the failure becomes permanent at the deletion date), or modify the key policy to revoke this account's decrypt rights at any time. The function's continued operation therefore depends on a relationship the team does not control. Same architectural pattern that CTL.S3.ENCRYPT.KMS.OWNERSHIP.001 catches on S3 buckets and the RDS external-key concept catches on databases: encryption is in place, but the key-control plane is outside the team's organizational boundary. Most common origins are partner-account integrations where the partner's CMK was reused for convenience, account migrations where the function moved without re-pointing at a same-account key, and IaC modules copied across accounts that did not refresh the KMS reference.
+
+**Remediation:** Re-encrypt the environment under a same-account (or same-org) CMK and update the function's KMSKeyArn.
+
+---
+
 ### CTL.LAMBDA.ENV.SECRETS.001
 
 **Lambda Functions Must Not Store Secrets in Environment Variables**
@@ -14475,6 +14505,81 @@ Lambda functions with environment variables must encrypt them using a customer-m
 Lambda function environment variables must not contain plaintext secrets such as database credentials, API keys, or tokens. Environment variables are visible in plaintext to anyone with lambda:GetFunction permission, are included in CloudTrail logs for UpdateFunctionConfiguration events, and are stored in the Lambda service's configuration store without application-level encryption. AWS Secrets Manager and SSM Parameter Store SecureString provide encrypted storage with rotation, audit logging, and fine-grained access control. Moving secrets out of environment variables is the single most impactful Lambda security improvement for most functions.
 
 **Remediation:** Move secrets to AWS Secrets Manager or SSM Parameter Store SecureString. Update the function code to retrieve secrets at runtime via the AWS SDK. Remove the plaintext values from the environment variable configuration. Use the Lambda Secrets Manager extension for cached retrieval with minimal latency impact.
+
+---
+
+### CTL.LAMBDA.ENV.VISIBLE.VERSIONS.001
+
+**Lambda Published Versions Must Not Retain Stale Environment Variables**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** secrets
+- **Compliance:** nist_800_53_r5: MP-6; pci_dss_v4: 3.5;
+
+Lambda functions with multiple published versions whose older versions hold environment variables that differ from the current ($LATEST) version are surfaced for cleanup. Published Lambda versions are immutable snapshots of the function configuration — including the full environment-variable map at the moment the version was published — and the snapshot persists even after the live function rotates the credential, removes the variable, or migrates to a Secrets Manager reference. Anyone with `lambda:GetFunction` against the version- qualified ARN can read the historical environment block. A database password that was a raw value in version 3 is still readable from version 3 a year later, even if version 14 is the live one and the password has been rotated three times in the meantime. The pattern is benign for non-credential env vars (feature flags, service URLs); it is a leak when the env var ever held a credential. Published-version cleanup (DeleteFunction with version qualifier) is the remediation; the control is medium because the leak requires both `GetFunction` rights AND awareness that versions retain history.
+
+**Remediation:** Delete unused published versions; for versions still in use, audit the environment for stale credentials and delete after migration.
+
+---
+
+### CTL.LAMBDA.GHOST.DLQ.001
+
+**Lambda Function DLQ Must Not Reference Deleted Targets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.2;
+
+Lambda function dead-letter queue configurations must reference SQS queues or SNS topics that currently exist. The DLQ is the safety net for failed asynchronous invocations: after a function exhausts its retry policy (default 2 retries on async invocation), the failed event is published to the DLQ for investigation and reprocessing. When the DLQ target has been deleted, the publish call fails silently — Lambda does not propagate the publish error to the invoker (the original async invocation has already been acknowledged), does not retry the publish, and does not flag the function as misconfigured. The event is discarded. The console shows the DLQ ARN configured; CloudWatch metrics show the function failing as expected; nobody notices that the failed events are not making it to the DLQ for review. Distinct from CTL.LAMBDA.DLQ.001 which catches the "no DLQ configured at all" case; this control catches the "DLQ configured but pointing at a deleted target." Same pattern as CTL.CLOUDWATCH.ALARM.GHOST.001 (alarm action targeting a deleted SNS topic) on the Lambda DLQ channel.
+
+**Remediation:** Re-point the DLQ at a current target, or recreate the deleted queue/topic if it should still exist.
+
+---
+
+### CTL.LAMBDA.GHOST.KMS.001
+
+**Lambda Functions Must Not Reference Deleted KMS Keys**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-12;
+
+Lambda functions that use a KMS key for environment-variable encryption must reference a key that currently exists and is not pending deletion. On every cold start, Lambda calls KMS:Decrypt against the configured key to produce the plaintext environment for the execution environment; if the key has been deleted (or has entered the 7-30 day pending-deletion window with the function unable to re-encrypt the variables under a different key), the decrypt call fails and the function fails at initialization. Functions whose environment variables contain runtime configuration (database endpoints, service URLs, feature flags, secret-fetch ARNs) have no fallback path — the configuration is unreachable and the handler does not start. The console reports the function configured; the function fails on every cold start. The most common origins are a KMS-cleanup workflow that scheduled deletion of keys believed unused, and a key- rotation procedure that destroyed the prior key version before all consumers were re-pointed at the new one.
+
+**Remediation:** Cancel the key deletion (within the 7-30 day window) or re-encrypt environment variables under a current key.
+
+---
+
+### CTL.LAMBDA.GHOST.ROLE.001
+
+**Lambda Functions Must Not Reference Deleted Execution Roles**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC8.1;
+
+Lambda functions must reference an IAM execution role that currently exists. The execution role is the function's identity — every AWS API call the function makes uses credentials issued for that role. When the role is deleted, Lambda cannot assume it on the next invocation; the function fails before its code starts with "The role defined for the function cannot be assumed by Lambda." Critically, the function continues to exist in the inventory: triggers remain configured, EventSourceMappings remain attached, the console shows the function as "Active." Events keep arriving — SQS messages, S3 notifications, EventBridge rules, API Gateway requests — and every invocation fails. SQS retries to the DLQ and then to disposal. S3 events drop. API Gateway returns 500 to callers. The most common origins are an IAM cleanup that removed roles believed unused, an infrastructure-as-code apply that deleted the role resource while keeping the function resource, and a cross-team change where the role-owning team did not know the function-owning team still depended on it. This is the most severe ghost reference in the Lambda set: the function does not degrade, it stops working entirely.
+
+**Remediation:** Recreate the role with equivalent trust and permissions, or repoint the function at a current role.
+
+---
+
+### CTL.LAMBDA.GHOST.VPC.001
+
+**VPC-Configured Lambda Functions Must Not Reference Deleted Subnets or SGs**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: CM-2; soc2: A1.2;
+
+Lambda functions configured for VPC access must reference subnets and security groups that currently exist. When the function provisions a new execution environment (cold start, scale-out, post-deployment), Lambda creates a Hyperplane ENI in one of the configured subnets with the configured security groups. If any referenced subnet or SG is deleted, the ENI creation fails and the cold start fails — the function returns an EC2AccessDeniedException-class error to the invoker. Warm invocations (reusing a previously-created ENI) continue serving requests, so the failure is intermittent and frustrating to diagnose: the function "sometimes works," depending entirely on whether a warm execution environment exists. Cold-start failures arrive at every scale event, every deployment, every idle-timeout recovery. The most common origins are a network refactor that recycled subnet IDs, a security-group consolidation that did not coordinate with the function's owners, and IaC drift that removed VPC resources without removing the function's reference to them.
+
+**Remediation:** Update the function's VPC configuration to current subnets and SGs, or remove VPC configuration if no longer needed.
 
 ---
 
@@ -14583,6 +14688,36 @@ Lambda execution roles must not have iam:PassRole with Resource: *. Unconstraine
 
 ---
 
+### CTL.LAMBDA.POLICY.ACCUMULATED.001
+
+**Lambda Resource Policies Should Not Accumulate Excessive Permission Statements**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** access
+- **Compliance:** nist_800_53_r5: AC-3;
+
+Lambda function resource policies should carry no more than the configured threshold of permission statements (default 10). Each `lambda:AddPermission` call appends a statement; statements are rarely removed. Over time, the policy accumulates invocation grants from sources that may no longer be relevant — the S3 trigger from a bucket decommissioned last year, the EventBridge rule from a one-time migration, the SNS subscription from a decommissioned notification pipeline, the cross-account grant from a partner integration that has long since ended. Past the threshold, the policy is no longer a thing a human reviewer can hold in working memory — the effective invocation surface of the function spans many more sources than the team intends, and the auditing cost rises with every accretion. The threshold of 10 is a heuristic; some functions legitimately handle many triggers (S3 notifications from several buckets, multiple EventBridge rules), and the threshold is configurable for those.
+
+**Remediation:** Audit the statements; remove ones whose principals or source resources no longer exist; consolidate equivalent grants.
+
+---
+
+### CTL.LAMBDA.POLICY.CROSSACCOUNT.001
+
+**Lambda Resource Policies Must Constrain Cross-Account Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** access
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4: 7.2;
+
+Lambda resource policies that grant invocation rights to principals outside the function's own account must include an aws:PrincipalOrgID condition (or an equivalently scoping condition) that restricts the grant to specific AWS organizations or accounts. Without such a condition, any principal in the named external account can invoke the function — which means a compromise of any IAM identity in that account becomes a path to invoking the function and exercising the function's execution-role permissions. The pattern most often seen in the field is a one-shot AddPermission call that named an external account during a partner integration and never tightened the principal scope or added a condition; the policy remains in force long after the integration is decommissioned, the partner team has rotated, or the external account itself has changed ownership. Adding an aws:PrincipalOrgID, aws:SourceAccount, or aws:SourceArn condition limits the grant to the organization or specific source the integration actually required.
+
+**Remediation:** Add aws:PrincipalOrgID, aws:SourceAccount, or aws:SourceArn condition to each cross-account statement.
+
+---
+
 ### CTL.LAMBDA.ROLE.LEASTPRIV.001
 
 **Lambda Execution Role Must Follow Least Privilege**
@@ -14640,6 +14775,51 @@ Lambda functions must not run on runtimes that AWS has deprecated. Deprecated ru
 Lambda functions using end-of-life runtimes do not receive security patches from AWS. Known vulnerabilities in the runtime environment can be exploited to achieve code execution, escape the function sandbox, or access credentials. AWS deprecates runtimes on a published schedule — functions on deprecated runtimes cannot be updated but continue to run, creating a growing attack surface.
 
 **Remediation:** Migrate the function to a supported runtime version. Check the AWS Lambda runtimes page for current supported versions. Test the function with the new runtime in a non-production environment before updating production.
+
+---
+
+### CTL.LAMBDA.SECRETS.BROKEN.REF.001
+
+**Lambda Secret References Must Match Execution Role Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** secrets
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4: 7.2;
+
+Lambda functions whose environment variables reference Secrets Manager ARNs or SSM Parameter Store names must have execution roles whose IAM policy grants the appropriate fetch action (`secretsmanager:GetSecretValue` for SM, `ssm:GetParameter` / `ssm:GetParameters` for SSM) on the referenced resource. The deployment is set up with the right reference but the wrong (or missing) permission: the env var carries the ARN, the application code calls GetSecretValue with that ARN, and the call fails with AccessDeniedException. The function then either crashes (when it does not handle the error path) or operates in a degraded mode (when it falls back to a default or skips the credential-using operation), and the failure is consistent across every cold start. The pattern is almost always a deployment misconfiguration: the secret was created and the env var was wired, but the IAM policy update that grants the fetch was either never authored (the IaC is split across teams) or was scoped to the wrong ARN (a previous version of the secret, a sibling secret, or a wildcard that intentionally excluded this one). Cross-resource reasoning: env var references are joined against role policy grants to detect the mismatch.
+
+**Remediation:** Add the GetSecretValue / GetParameter grant to the role's policy, scoped to the referenced ARN.
+
+---
+
+### CTL.LAMBDA.SECRETS.NOTMANAGED.001
+
+**Lambda Functions Must Manage Credentials via Secrets Manager or SSM SecureString**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** secrets
+- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-5; pci_dss_v4: 8.2;
+
+Lambda functions that hold credential-shaped environment variables (DB_PASSWORD, API_KEY, SECRET_TOKEN, OAUTH_*, AUTH_TOKEN, and similar) must reference those values through Secrets Manager ARNs or SSM Parameter Store SecureString parameters at runtime, not store them as raw values in the function's environment block. Raw credentials in env vars are visible to any principal with `lambda:GetFunctionConfiguration` (a much broader set than the secrets-fetch IAM permission would be), persist immutably in every published function version (rotating the live credential leaves the old value in every historical version snapshot — see CTL.LAMBDA.ENV.VISIBLE.VERSIONS.001), are not CloudTrail-audited at the read level (only function- configuration reads are logged, not env var reads), and do not rotate without a function configuration update (which means rotation in practice happens rarely or never). Secrets Manager (and SSM SecureString) centralizes the credential, supports automatic rotation, logs every retrieval via CloudTrail with the IAM identity that fetched it, and keeps the credential value out of the function configuration entirely. Distinct from CTL.LAMBDA.ENV.SECRETS.001, which detects the pattern; this control checks for the management alternative.
+
+**Remediation:** Move the credentials to Secrets Manager or SSM SecureString; reference the ARN from the env var; remove the raw values.
+
+---
+
+### CTL.LAMBDA.SECRETS.SSM.INSECURE.001
+
+**Lambda SSM Parameter References Must Use SecureString**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** secrets
+- **Compliance:** nist_800_53_r5: SC-28; pci_dss_v4: 3.4;
+
+Lambda functions whose environment variables reference SSM Parameter Store parameters that hold credentials must reference SecureString-typed parameters, not String-typed ones. SSM Parameter Store String type stores values in plaintext: the parameter is readable by any principal holding `ssm:GetParameter` (a much broader IAM action than the kms:Decrypt that SecureString reads require), is visible in the SSM console without an additional decrypt step, is unencrypted at rest, and provides no CloudTrail signal for its read operations distinct from generic parameter reads. SecureString-typed parameters encrypt the value with KMS, gate reads on `kms:Decrypt` against the key policy, log every decrypt in CloudTrail under the calling identity, and store ciphertext at rest. The pattern that produces this finding is a one-shot parameter creation that took the SSM default (String) for what was clearly a credential, or a refactor where the parameter was migrated to a new name without re-typing as SecureString. Same architectural pattern as the S3 / RDS / Secrets-Manager equivalence: managed storage is necessary but not sufficient — the storage type matters.
+
+**Remediation:** Recreate the parameter as SecureString (or migrate the credential to Secrets Manager) and update the env var reference.
 
 ---
 

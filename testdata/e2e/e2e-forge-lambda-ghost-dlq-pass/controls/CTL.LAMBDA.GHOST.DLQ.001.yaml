@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.GHOST.DLQ.001
+name: Lambda Function DLQ Must Not Reference Deleted Targets
+description: >
+  Lambda function dead-letter queue configurations must
+  reference SQS queues or SNS topics that currently exist.
+  The DLQ is the safety net for failed asynchronous
+  invocations: after a function exhausts its retry policy
+  (default 2 retries on async invocation), the failed event
+  is published to the DLQ for investigation and
+  reprocessing. When the DLQ target has been deleted, the
+  publish call fails silently — Lambda does not propagate
+  the publish error to the invoker (the original async
+  invocation has already been acknowledged), does not retry
+  the publish, and does not flag the function as
+  misconfigured. The event is discarded. The console shows
+  the DLQ ARN configured; CloudWatch metrics show the
+  function failing as expected; nobody notices that the
+  failed events are not making it to the DLQ for review.
+  Distinct from CTL.LAMBDA.DLQ.001 which catches the
+  "no DLQ configured at all" case; this control catches
+  the "DLQ configured but pointing at a deleted target."
+  Same pattern as CTL.CLOUDWATCH.ALARM.GHOST.001 (alarm
+  action targeting a deleted SNS topic) on the Lambda DLQ
+  channel.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags: [aws, lambda]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Lambda function DLQ references a deleted SQS queue or SNS topic.
+  action: Re-point the DLQ at a current target, or recreate the deleted queue/topic if it should still exist.
+  example: |
+    {"compute": {"kind": "function", "function": {"has_ghost_dlq": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function.has_ghost_dlq
+      op: eq
+      value: true

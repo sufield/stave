@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.GHOST.VPC.001
+name: VPC-Configured Lambda Functions Must Not Reference Deleted Subnets or SGs
+description: >
+  Lambda functions configured for VPC access must reference
+  subnets and security groups that currently exist. When the
+  function provisions a new execution environment (cold
+  start, scale-out, post-deployment), Lambda creates a
+  Hyperplane ENI in one of the configured subnets with the
+  configured security groups. If any referenced subnet or SG
+  is deleted, the ENI creation fails and the cold start
+  fails — the function returns an
+  EC2AccessDeniedException-class error to the invoker.
+  Warm invocations (reusing a previously-created ENI)
+  continue serving requests, so the failure is intermittent
+  and frustrating to diagnose: the function "sometimes
+  works," depending entirely on whether a warm execution
+  environment exists. Cold-start failures arrive at every
+  scale event, every deployment, every idle-timeout
+  recovery. The most common origins are a network refactor
+  that recycled subnet IDs, a security-group consolidation
+  that did not coordinate with the function's owners, and
+  IaC drift that removed VPC resources without removing
+  the function's reference to them.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-08", "IVS-04"]
+scope_tags: [aws, lambda]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: VPC-configured Lambda function references a deleted subnet or security group.
+  action: Update the function's VPC configuration to current subnets and SGs, or remove VPC configuration if no longer needed.
+  example: |
+    {"compute": {"kind": "function", "function": {"has_ghost_vpc": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function.vpc_configured
+      op: eq
+      value: true
+    - field: properties.compute.function.has_ghost_vpc
+      op: eq
+      value: true

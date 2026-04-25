@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.GHOST.ROLE.001
+name: Lambda Functions Must Not Reference Deleted Execution Roles
+description: >
+  Lambda functions must reference an IAM execution role that
+  currently exists. The execution role is the function's
+  identity — every AWS API call the function makes uses
+  credentials issued for that role. When the role is deleted,
+  Lambda cannot assume it on the next invocation; the function
+  fails before its code starts with "The role defined for the
+  function cannot be assumed by Lambda." Critically, the
+  function continues to exist in the inventory: triggers
+  remain configured, EventSourceMappings remain attached, the
+  console shows the function as "Active." Events keep arriving
+  — SQS messages, S3 notifications, EventBridge rules, API
+  Gateway requests — and every invocation fails. SQS retries
+  to the DLQ and then to disposal. S3 events drop. API Gateway
+  returns 500 to callers. The most common origins are an IAM
+  cleanup that removed roles believed unused, an
+  infrastructure-as-code apply that deleted the role resource
+  while keeping the function resource, and a cross-team change
+  where the role-owning team did not know the function-owning
+  team still depended on it. This is the most severe ghost
+  reference in the Lambda set: the function does not degrade,
+  it stops working entirely.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC8.1"
+  ccm_v4: ["IAM-08", "BCR-08"]
+scope_tags: [aws, lambda]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Lambda function references a deleted execution role.
+  action: Recreate the role with equivalent trust and permissions, or repoint the function at a current role.
+  example: |
+    {"compute": {"kind": "function", "function": {"has_ghost_role": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function.has_ghost_role
+      op: eq
+      value: true

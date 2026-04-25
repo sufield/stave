@@ -1,0 +1,43 @@
+control: CTL.LAMBDA.GHOST.VPC.001
+defect: >
+  VPC-configured Lambda function references a
+  subnet or security group that no longer exists
+  in the VPC inventory.
+infection: >
+  VPC-configured Lambda functions provision a
+  Hyperplane Elastic Network Interface in one of
+  the configured subnets with the configured
+  security groups every time a new execution
+  environment is created — cold starts, scale-out
+  from concurrency growth, post-deployment
+  re-bring-up after a code or configuration
+  change, and recovery from idle-timeout
+  decommission. When any referenced subnet or SG
+  is deleted from the VPC inventory, the ENI
+  creation fails and the cold start fails with
+  an EC2AccessDeniedException-class error to the
+  invoker. Warm invocations (reusing a previously
+  -created ENI) continue to serve requests
+  successfully, so the failure presents
+  intermittently — the function "sometimes
+  works" and the failure pattern depends entirely
+  on whether a warm execution environment is
+  available at the moment the invocation
+  arrives. This is the hardest Lambda ghost to
+  diagnose because the symptom is a partial
+  outage; logs show some invocations succeeding
+  alongside others failing with VPC-attachment
+  errors, and the on-call engineer reasonably
+  starts looking at application logic before
+  network configuration. The most common origins
+  are a VPC refactor that recycled subnet IDs
+  without coordinating with function owners, a
+  security-group consolidation that retired an
+  SG the function still references, and IaC
+  drift that deleted the VPC resource without
+  removing the function's reference to it.
+failure: >
+  Intermittent function failure. Warm invocations
+  succeed; cold starts fail with VPC-attachment
+  errors. The mixed-success pattern delays root
+  cause identification.

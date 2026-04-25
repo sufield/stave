@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "fn-vpc-clean",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {"compute":{"kind":"function","function":{"vpc_configured":true,"subnet_ids":["subnet-aaa111","subnet-bbb222"],"sg_ids":["sg-app1"],"has_ghost_vpc":false}}}
+    }
+  ]
+}

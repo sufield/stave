@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.POLICY.CROSSACCOUNT.001
+name: Lambda Resource Policies Must Constrain Cross-Account Access
+description: >
+  Lambda resource policies that grant invocation rights to
+  principals outside the function's own account must include
+  an aws:PrincipalOrgID condition (or an equivalently
+  scoping condition) that restricts the grant to specific
+  AWS organizations or accounts. Without such a condition,
+  any principal in the named external account can invoke
+  the function — which means a compromise of any IAM
+  identity in that account becomes a path to invoking the
+  function and exercising the function's execution-role
+  permissions. The pattern most often seen in the field
+  is a one-shot AddPermission call that named an external
+  account during a partner integration and never tightened
+  the principal scope or added a condition; the policy
+  remains in force long after the integration is
+  decommissioned, the partner team has rotated, or the
+  external account itself has changed ownership. Adding an
+  aws:PrincipalOrgID, aws:SourceAccount, or
+  aws:SourceArn condition limits the grant to the
+  organization or specific source the integration actually
+  required.
+domain: access
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4: "7.2"
+  ccm_v4: ["IAM-08", "DSP-17"]
+scope_tags: [aws, lambda]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: Lambda resource policy permits cross-account invocation without an organization or source-scoping condition.
+  action: Add aws:PrincipalOrgID, aws:SourceAccount, or aws:SourceArn condition to each cross-account statement.
+  example: |
+    {"compute": {"kind": "function", "function": {"resource_policy": {"cross_account_unscoped": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function.resource_policy.cross_account
+      op: eq
+      value: true
+    - field: properties.compute.function.resource_policy.has_org_condition
+      op: eq
+      value: false

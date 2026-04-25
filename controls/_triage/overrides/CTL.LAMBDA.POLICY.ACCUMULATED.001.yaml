@@ -1,0 +1,42 @@
+control: CTL.LAMBDA.POLICY.ACCUMULATED.001
+defect: >
+  Lambda function resource policy carries more
+  permission statements than the audit threshold
+  permits (default 10).
+infection: >
+  Each lambda:AddPermission call appends a
+  statement to the resource policy; statements
+  are rarely removed because the AddPermission
+  caller (an event-source service, an
+  EventBridge rule, an S3 notification
+  configuration, a partner integration) does not
+  necessarily own the function's policy
+  housekeeping. Over time the policy accumulates
+  invocation grants from sources that may no
+  longer exist or no longer need to invoke the
+  function: an S3 trigger from a bucket
+  decommissioned last quarter, an EventBridge
+  rule from a one-time migration, an SNS
+  subscription from a notification pipeline that
+  was retired, a cross-account grant from a
+  partner integration that has long since
+  ended. Past the threshold, the policy is no
+  longer something a human reviewer can hold in
+  working memory — the effective invocation
+  surface of the function spans many more
+  sources than the team intends, the auditing
+  cost rises with every accretion, and the
+  cleanup cost (working out which statements
+  reference live resources and which reference
+  ghosts) is high enough that the cleanup
+  rarely happens. The 10-statement threshold is
+  a heuristic; some functions legitimately
+  receive triggers from many sources (S3
+  notifications across multiple buckets,
+  multiple EventBridge rules), and the
+  threshold is configurable for those cases.
+failure: >
+  Unauditable invocation surface. The function
+  is invocable from many sources with no
+  practical way to enumerate "which of these
+  are still legitimate?"

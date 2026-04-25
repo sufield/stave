@@ -1,0 +1,42 @@
+control: CTL.LAMBDA.POLICY.CROSSACCOUNT.001
+defect: >
+  Lambda resource policy grants invocation rights
+  to one or more external AWS accounts without an
+  aws:PrincipalOrgID, aws:SourceAccount, or
+  aws:SourceArn condition that constrains the
+  grant.
+infection: >
+  Resource-policy statements that name an external
+  account (`Principal: { "AWS": "arn:aws:iam::123456789012:root" }`)
+  permit any IAM identity in that account to
+  invoke the function — the principal-set is the
+  whole account, not a specific role or user. A
+  compromise of any IAM principal in the named
+  account therefore becomes a path to invoking
+  the function and exercising the function's
+  execution-role permissions. The most common
+  origin of this gap is a one-shot AddPermission
+  call that named a partner account during an
+  integration ("our partner needs to invoke this
+  function") and never tightened the principal
+  scope or added a condition. The integration
+  changes shape over time: the partner team
+  rotates, the partner's account ownership
+  changes (acquisition, merger, divestiture),
+  the original use case is decommissioned but
+  nobody removes the policy statement. The
+  permanent grant remains in force long after
+  its motivating relationship ended. Three
+  conditions tighten the grant correctly:
+  aws:PrincipalOrgID restricts to a specific
+  AWS Organization, aws:SourceAccount restricts
+  to a specific calling account (useful when the
+  invoking principal is an AWS service from a
+  specific account), aws:SourceArn restricts to
+  a specific calling resource.
+failure: >
+  Compromise blast radius equals the entire
+  named external account. Any IAM principal
+  there becomes an invocation path on the
+  function with no additional conditions to
+  pass.

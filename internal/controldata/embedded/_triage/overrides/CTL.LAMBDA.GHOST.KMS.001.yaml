@@ -1,0 +1,39 @@
+control: CTL.LAMBDA.GHOST.KMS.001
+defect: >
+  Lambda function references a KMS key (for
+  environment-variable encryption) that has been
+  deleted or is in the pending-deletion window.
+infection: >
+  Lambda environment variables are stored encrypted
+  with the configured KMS key. On every cold
+  start, Lambda calls KMS:Decrypt against the key
+  to produce the plaintext environment for the
+  execution environment that is about to start.
+  When the key has been deleted or is in the
+  7-30 day pending-deletion window with the
+  function unable to re-encrypt under a different
+  key, the decrypt call fails and the function's
+  initialization phase aborts before the handler
+  runs. Functions whose environment variables
+  carry runtime configuration — database
+  endpoints, service URLs, feature flags, secret-
+  fetch ARNs — have no fallback path: the
+  configuration is unreachable and the handler
+  cannot reasonably proceed. The console shows
+  the function configured; CloudWatch metrics
+  show invocation failures; the diagnostic chain
+  back to "the KMS key is gone" requires
+  enumerating the key's status separately from
+  the function's configuration. The most common
+  origins of this gap are a KMS-cleanup workflow
+  that scheduled deletion of keys believed
+  unused, a key-rotation procedure that
+  destroyed the prior version before all
+  consumers were re-pointed at the successor,
+  and IaC drift that removed the key resource
+  while keeping the function resource.
+failure: >
+  Function fails at initialization on every cold
+  start. Warm invocations may continue serving
+  briefly but every new execution environment
+  fails to start.

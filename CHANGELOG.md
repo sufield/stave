@@ -8,6 +8,116 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Lambda-2 — environment-variable security, KMS deepening,
+  and Secrets Manager integration (6 new controls, 3 chains).**
+  Second Lambda gap-closure iteration. Closes the
+  credential-handling surface around Lambda environment
+  variables. Spec asked for ~8 controls; one duplicated
+  `CTL.LAMBDA.ENV.ENCRYPT.001` (which already covers
+  AWS-managed-key vs CMK encryption), so 6 distinct
+  additions shipped. KMS (1):
+  `ENV.KMS.EXTERNAL` (function uses a KMS key owned by an
+  external AWS account; the external owner can disable
+  the key, schedule deletion, or revoke decrypt rights and
+  break the function with no recourse on this side; same
+  pattern as CTL.S3.ENCRYPT.KMS.OWNERSHIP.001 and the RDS
+  external-key concept, high). Secrets management (3):
+  `SECRETS.NOTMANAGED` (raw credentials in env vars rather
+  than Secrets Manager / SSM SecureString references; four
+  exposure problems compound — disclosure surface, version
+  persistence, audit invisibility, rotation friction;
+  distinct from CTL.LAMBDA.ENV.SECRETS.001 which detects
+  the pattern, this control checks for the management
+  alternative, high), `SECRETS.BROKEN.REF` (env var
+  references a Secrets Manager ARN or SSM parameter the
+  execution role cannot fetch; runtime AccessDeniedException
+  on every cold start; cross-resource reasoning joins env
+  references against role policy grants, high),
+  `SECRETS.SSM.INSECURE` (env var references an SSM
+  String-typed parameter holding a credential; plaintext
+  at rest, single-action gating, no kms:Decrypt, no
+  per-fetch audit, medium). Env var deepening (2):
+  `ENV.VISIBLE.VERSIONS` (older published versions retain
+  immutable env-block snapshots that diverge from the
+  current version; credentials in past env blocks remain
+  readable forever via lambda:GetFunction on the
+  version-qualified ARN, medium), `ENV.EXCESSIVE` (env-var
+  count exceeds the audit threshold; configuration
+  sprawl drives audit, rotation, and disclosure costs
+  linearly, low). Chains: `lambda_credential_exposure`
+  (existing CTL.LAMBDA.ENV.SECRETS.001 + SECRETS.NOTMANAGED
+  + existing CTL.LAMBDA.ENV.ENCRYPT.001 — credentials in
+  env vars on multiple defense dimensions failing at
+  once), `lambda_secrets_broken` (BROKEN.REF OR
+  SSM.INSECURE OR Lambda-1's GHOST.KMS — any single
+  break in the secrets-fetch chain at runtime),
+  `lambda_credential_history` (VISIBLE.VERSIONS + existing
+  CTL.LAMBDA.ENV.SECRETS.001 — credential patterns now
+  AND immutable version snapshots that retain past ones).
+  18 e2e fixtures including `secrets-notmanaged-multi-fail`
+  (4 raw credential keys at once) and
+  `secrets-broken-ref-wrongscope-fail` (role grants
+  GetSecretValue on an old version of the secret while
+  the env var references the new one). 6 triage overrides.
+  Lambda secrets coverage: pattern detection only →
+  comprehensive (management method + key quality +
+  permission alignment + storage type + version
+  history + sprawl).
+- **Lambda-1 — ghost references, function URL security,
+  and resource policy deepening (6 new controls, 4 chains).**
+  First Lambda gap-closure iteration. Extends the
+  ghost-reference family to serverless compute.
+  Spec asked for ~10 controls; four duplicated existing
+  catalog entries (CTL.LAMBDA.URL.AUTH.001 covered
+  URL.NOAUTH; CTL.LAMBDA.URL.CORS.001 covered URL.CORS;
+  CTL.LAMBDA.LAYER.GHOST.001 covered GHOST.LAYER;
+  CTL.LAMBDA.TRIGGER.GHOST.001 covered GHOST.ESM), so 6
+  distinct additions shipped. Ghost references (4):
+  `GHOST.ROLE` (function references a deleted execution
+  role; cannot assume the role on invocation, every
+  trigger fires into total failure while the console
+  reads "Active," critical), `GHOST.VPC`
+  (VPC-configured function references a deleted subnet
+  or SG; ENI creation fails on cold start while warm
+  invocations continue, producing the hardest-to-
+  diagnose intermittent-failure pattern, high),
+  `GHOST.KMS` (deleted or pending-deletion KMS key for
+  environment-variable encryption; KMS:Decrypt fails on
+  every cold start before the handler runs, high),
+  `GHOST.DLQ` (DLQ ARN points at a deleted queue or
+  topic; failed asynchronous events vanish silently —
+  no error propagation, no notification, the
+  reprocessing-from-DLQ workflow has no input, high;
+  distinct from CTL.LAMBDA.DLQ.001 which catches the
+  "no DLQ at all" case). Resource policy (2):
+  `POLICY.CROSSACCOUNT` (cross-account grant without
+  aws:PrincipalOrgID, aws:SourceAccount, or
+  aws:SourceArn condition; compromise blast radius
+  equals the entire named external account, high),
+  `POLICY.ACCUMULATED` (resource policy past the
+  audit threshold; lambda:AddPermission accretes
+  statements that are rarely removed and the function's
+  invocation surface becomes unauditable, medium).
+  Chains: `lambda_ghost_cascade` (≥2 of role / VPC /
+  KMS / DLQ ghosts plus the existing
+  CTL.LAMBDA.LAYER.GHOST.001 — systematic
+  decommissioning failure, threshold 2, compound
+  critical), `lambda_public_exposure` (any of existing
+  CTL.LAMBDA.URL.AUTH.001, CTL.LAMBDA.URL.CORS.001, or
+  CTL.LAMBDA.INVOKE.PUBLIC.001 — threshold 1, fast-
+  firing on any single public path), `lambda_invocation_sprawl`
+  (POLICY.ACCUMULATED + (POLICY.CROSSACCOUNT OR existing
+  CTL.IAM.ESCALATE.EDITLAMBDA.001) — unauditable plus
+  unscoped or further-expandable), `lambda_silent_failure`
+  (GHOST.DLQ OR existing CTL.LAMBDA.TRIGGER.GHOST.001 —
+  threshold 1, both cause silent data loss). 15 e2e
+  fixtures including 3 variants: ghost-role-active-fail
+  (function with active triggers receiving 50 events/min
+  while every invocation fails), ghost-vpc-sgonly-fail
+  (subnet-only-deleted vs SG-only-deleted distinction),
+  and ghost-dlq-sns-fail (DLQ pointing at deleted SNS
+  topic vs SQS). 6 triage overrides. Ghost reference
+  total in catalog: 48 → 54.
 - **RDS-6 — Aurora-specific, HA, and lifecycle controls
   (8 new controls, 3 chains).** Sixth and final RDS
   gap-closure iteration. Closes the Aurora-specific

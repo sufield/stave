@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.POLICY.ACCUMULATED.001
+name: Lambda Resource Policies Should Not Accumulate Excessive Permission Statements
+description: >
+  Lambda function resource policies should carry no more
+  than the configured threshold of permission statements
+  (default 10). Each `lambda:AddPermission` call appends a
+  statement; statements are rarely removed. Over time, the
+  policy accumulates invocation grants from sources that
+  may no longer be relevant — the S3 trigger from a bucket
+  decommissioned last year, the EventBridge rule from a
+  one-time migration, the SNS subscription from a
+  decommissioned notification pipeline, the cross-account
+  grant from a partner integration that has long since
+  ended. Past the threshold, the policy is no longer a
+  thing a human reviewer can hold in working memory — the
+  effective invocation surface of the function spans many
+  more sources than the team intends, and the auditing
+  cost rises with every accretion. The threshold of 10 is
+  a heuristic; some functions legitimately handle many
+  triggers (S3 notifications from several buckets,
+  multiple EventBridge rules), and the threshold is
+  configurable for those.
+domain: access
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  ccm_v4: ["IAM-08", "CCC-04"]
+scope_tags: [aws, lambda]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: Lambda resource policy has more permission statements than the audit threshold allows.
+  action: Audit the statements; remove ones whose principals or source resources no longer exist; consolidate equivalent grants.
+  example: |
+    {"compute": {"kind": "function", "function": {"resource_policy": {"excessive": false}}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function.resource_policy.excessive
+      op: eq
+      value: true

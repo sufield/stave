@@ -1,0 +1,25 @@
+id: lambda_invocation_sprawl
+description: >
+  Resource policy has accumulated past the audit threshold
+  AND either contains a cross-account grant without an
+  organization-scoping condition, or the function is
+  reachable through an IAM-side escalation path (uses
+  existing CTL.IAM.ESCALATE.EDITLAMBDA.001 — the
+  IAM-edit-Lambda escalation that lets a principal modify
+  the function and therefore the policy). The function's
+  invocation surface is unauditable in volume AND extends
+  beyond the org boundary or can be further expanded by an
+  attacker with code-edit rights. Each component alone is
+  medium-severity; together they describe a function whose
+  effective callers cannot be enumerated and whose policy
+  can be made looser still without anyone noticing.
+controls:
+  - CTL.LAMBDA.POLICY.ACCUMULATED.001
+  - CTL.LAMBDA.POLICY.CROSSACCOUNT.001
+  - CTL.IAM.ESCALATE.EDITLAMBDA.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_lambda
+postconditions:
+  - resource_policy_escalation

@@ -1,0 +1,38 @@
+control: CTL.LAMBDA.GHOST.ROLE.001
+defect: >
+  Lambda function references an IAM execution role
+  that has been deleted from the IAM inventory.
+infection: >
+  The execution role is the function's identity in
+  the AWS plane: every API call the function makes
+  uses temporary credentials issued for that role.
+  Lambda calls sts:AssumeRole on the configured
+  role at the start of each invocation that needs
+  fresh credentials; when the role does not exist,
+  the AssumeRole call fails and the invocation
+  fails before the function's code executes. The
+  console keeps showing the function "Active"
+  because the function configuration remains
+  valid in the Lambda inventory; triggers stay
+  attached, EventSourceMappings keep their
+  scheduling, the function URL (if any) keeps
+  serving HTTPS. Events keep arriving — SQS
+  messages, S3 PutObject notifications, EventBridge
+  rule fires, scheduled invocations, API Gateway
+  requests — and every one fails with "The role
+  defined for the function cannot be assumed by
+  Lambda." The downstream failure modes vary by
+  trigger: SQS retries to redrive policy and
+  eventually to disposal; S3 events drop after
+  the source bucket's notification retry policy
+  exhausts; API Gateway returns 5xx to callers;
+  EventBridge logs the failure but the rule keeps
+  firing the same broken invocation. The most
+  severe ghost reference in the Lambda set
+  because the function does not degrade — it
+  stops working entirely.
+failure: >
+  Complete function unavailability. Every
+  invocation fails before the handler runs;
+  events accumulate in upstream triggers and are
+  eventually lost.

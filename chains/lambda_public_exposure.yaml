@@ -1,0 +1,24 @@
+id: lambda_public_exposure
+description: >
+  Any single public-exposure path is sufficient: Function URL
+  with AuthType NONE (existing CTL.LAMBDA.URL.AUTH.001),
+  Function URL with unrestricted CORS combined with
+  credentials (existing CTL.LAMBDA.URL.CORS.001), or
+  resource policy with public-invoke permission (existing
+  CTL.LAMBDA.INVOKE.PUBLIC.001). Threshold of 1 makes
+  this a fast-firing chain — each member is independently
+  a complete public invocation surface, and combining them
+  does not change the analysis (the function is already
+  publicly invocable from any of these paths). The chain
+  exists to surface the highest-severity exposure label
+  whenever any public path is present.
+controls:
+  - CTL.LAMBDA.URL.AUTH.001
+  - CTL.LAMBDA.URL.CORS.001
+  - CTL.LAMBDA.INVOKE.PUBLIC.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

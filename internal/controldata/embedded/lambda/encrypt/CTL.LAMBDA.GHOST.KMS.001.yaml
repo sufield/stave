@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.GHOST.KMS.001
+name: Lambda Functions Must Not Reference Deleted KMS Keys
+description: >
+  Lambda functions that use a KMS key for environment-variable
+  encryption must reference a key that currently exists and
+  is not pending deletion. On every cold start, Lambda calls
+  KMS:Decrypt against the configured key to produce the
+  plaintext environment for the execution environment; if
+  the key has been deleted (or has entered the 7-30 day
+  pending-deletion window with the function unable to
+  re-encrypt the variables under a different key), the
+  decrypt call fails and the function fails at
+  initialization. Functions whose environment variables
+  contain runtime configuration (database endpoints,
+  service URLs, feature flags, secret-fetch ARNs) have no
+  fallback path — the configuration is unreachable and the
+  handler does not start. The console reports the function
+  configured; the function fails on every cold start. The
+  most common origins are a KMS-cleanup workflow that
+  scheduled deletion of keys believed unused, and a key-
+  rotation procedure that destroyed the prior key version
+  before all consumers were re-pointed at the new one.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-12"
+  ccm_v4: ["CEK-15", "BCR-08"]
+scope_tags: [aws, lambda]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Lambda function references a deleted or pending-deletion KMS key for environment encryption.
+  action: Cancel the key deletion (within the 7-30 day window) or re-encrypt environment variables under a current key.
+  example: |
+    {"compute": {"kind": "function", "function": {"has_ghost_kms": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.function.has_ghost_kms
+      op: eq
+      value: true

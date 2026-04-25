@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "fn-env-5",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {"compute":{"kind":"function","function":{"env_var_count":5,"env_var_count_excessive":false}}}
+    }
+  ]
+}
