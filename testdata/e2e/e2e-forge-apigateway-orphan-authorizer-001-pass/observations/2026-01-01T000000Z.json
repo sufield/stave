@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/apis/abc/authorizers/auth-active",
+      "type": "aws_apigateway_authorizer",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "apigateway_authorizer",
+          "authorizer": {
+            "id": "auth-active",
+            "type": "JWT",
+            "referenced_by_routes": 3,
+            "is_orphaned": false
+          }
+        }
+      }
+    }
+  ]
+}

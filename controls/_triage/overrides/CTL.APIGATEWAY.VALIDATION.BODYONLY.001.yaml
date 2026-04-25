@@ -1,0 +1,34 @@
+control: CTL.APIGATEWAY.VALIDATION.BODYONLY.001
+defect: >
+  REST API method has a request validator that
+  checks the body but not query string parameters
+  or headers.
+infection: >
+  Body-only validation is partial coverage. JSON
+  bodies are validated against the declared
+  model; malformed bodies are rejected at the
+  gateway. But query string parameters and
+  HTTP headers — both of which are common
+  injection surfaces — flow through the
+  validator unchecked. An attacker who finds a
+  parameter-driven injection (a SQL-shaped
+  string in ?orderId=, a path-traversal payload
+  in a header) bypasses the body validator
+  entirely; the validator's coverage report tells
+  the operator everything is "validated" while
+  half the input surface is not. Upgrading the
+  validator type from BODY to BODY_AND_PARAMS
+  is a one-line change in the method's
+  configuration. The finding is low severity
+  because partial validation is materially better
+  than none — a body validator still rejects
+  oversized JSON, wrong types in the body, and
+  missing required body fields. The remediation
+  is incremental: add parameter validation to
+  cover the rest.
+failure: >
+  Parameters and headers reach the backend
+  unvalidated. Injection payloads delivered
+  through query strings or headers are forwarded
+  while the body validator gives a false sense
+  of coverage.

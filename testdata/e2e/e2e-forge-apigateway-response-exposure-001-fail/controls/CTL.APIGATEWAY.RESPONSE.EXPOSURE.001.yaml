@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.RESPONSE.EXPOSURE.001
+name: API Gateway Default Gateway Responses Expose Internal Details
+description: >
+  API Gateway uses the default gateway-response templates rather
+  than customized responses. Default 4xx and 5xx responses include
+  details useful for reconnaissance: the specific failure type
+  (AUTHORIZER_FAILURE, INTEGRATION_FAILURE, INTEGRATION_TIMEOUT,
+  THROTTLED, MISSING_AUTHENTICATION_TOKEN), the request ID, and —
+  for INTEGRATION_FAILURE responses — backend error messages
+  passed through verbatim. An attacker probing the API distinguishes
+  "no auth" from "wrong auth" from "timeout" from "backend crash"
+  and tailors next steps accordingly. Custom gateway responses
+  collapse all of these into generic messages — "400 Bad Request",
+  "500 Internal Server Error" — without revealing which underlying
+  condition produced the response. The control fires when no
+  customizations are in place; it is medium severity because
+  information disclosure aids reconnaissance but doesn't itself
+  enable exploitation.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  pci_dss_v4.0: "6.5.5"
+  soc2: "CC6.6"
+  ccm_v4: ["AIS-04", "DSP-10"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    API Gateway uses default gateway responses. Error responses
+    leak failure type, request IDs, and backend error messages.
+  action: >
+    Customize gateway responses for the high-information types —
+    DEFAULT_4XX, DEFAULT_5XX, AUTHORIZER_FAILURE,
+    INTEGRATION_FAILURE, MISSING_AUTHENTICATION_TOKEN,
+    UNAUTHORIZED, ACCESS_DENIED — with response templates that
+    return only generic error text. Suppress the Server header in
+    the customized responses. Verify by triggering each failure
+    type and confirming the response body contains no
+    implementation specifics.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "response": {
+          "gateway_responses_customized": true,
+          "default_responses_active": false,
+          "exposes_server_header": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: rest_api
+    - field: properties.api.response.gateway_responses_customized
+      op: eq
+      value: false

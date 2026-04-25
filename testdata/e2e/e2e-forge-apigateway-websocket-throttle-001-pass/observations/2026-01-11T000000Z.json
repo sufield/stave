@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/apis/wsthrottle-pass",
+      "type": "aws_apigateway_websocket_api",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "websocket_api",
+          "websocket": {
+            "throttle_configured": true,
+            "connection_limit": 100,
+            "message_rate_limit": 50
+          }
+        }
+      }
+    }
+  ]
+}

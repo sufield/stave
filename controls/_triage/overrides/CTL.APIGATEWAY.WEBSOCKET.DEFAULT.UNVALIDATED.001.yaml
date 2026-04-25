@@ -1,0 +1,33 @@
+control: CTL.APIGATEWAY.WEBSOCKET.DEFAULT.UNVALIDATED.001
+defect: >
+  WebSocket API $default route exists with no
+  validation attached. Every unmatched message
+  reaches the route's backend unchecked.
+infection: >
+  WebSocket APIs route messages by selecting a
+  named route based on the message body's
+  selection expression. Messages whose selector
+  doesn't match any named route fall through to
+  $default, which is intended as a catch-all.
+  Without validation on $default, the catch-all
+  is also a pass-through: any payload — binary
+  frames, deliberately malformed JSON, messages
+  from a different protocol version, fuzzing
+  input, oversized payloads — flows through to
+  the route's Lambda or HTTP integration. The
+  backend must handle every shape of input that
+  any client (or attacker) chooses to send.
+  Some WebSocket APIs are intentionally
+  structured to route all messages through
+  $default and validate inside the backend
+  Lambda; that choice can be valid but should
+  be acknowledged in a triage override on this
+  control so that it isn't conflated with the
+  more common pattern where $default is a
+  safety net that should reject anything it
+  catches.
+failure: >
+  Catch-all route accepts any payload. Every
+  unmatched message reaches the backend
+  uninspected; backend code must defend against
+  every possible input shape.

@@ -1,0 +1,36 @@
+control: CTL.APIGATEWAY.RESPONSE.EXPOSURE.001
+defect: >
+  API Gateway uses default gateway-response
+  templates rather than custom ones. Error
+  responses include implementation details.
+infection: >
+  Default API Gateway error responses encode the
+  underlying failure type in the response body:
+  AUTHORIZER_FAILURE means the authorizer Lambda
+  threw an error or denied the request,
+  INTEGRATION_FAILURE means the backend itself
+  failed, INTEGRATION_TIMEOUT means the backend
+  exceeded the integration timeout, THROTTLED
+  means a usage plan or stage throttle fired,
+  MISSING_AUTHENTICATION_TOKEN means the request
+  lacked the required auth header. An attacker
+  probing the API uses these signals to map the
+  authorization model and the backend's failure
+  modes — "this endpoint times out at 5
+  seconds," "this one's protected by an
+  authorizer," "this throttles at the usage-plan
+  layer." INTEGRATION_FAILURE responses on REST
+  APIs include the backend's error message
+  verbatim by default; a Lambda that throws a
+  Python TypeError leaks the entire stack trace
+  through the gateway. Custom gateway responses
+  flatten all of these into generic messages
+  without disclosing the underlying failure type.
+  The cost of customization is one-time; the
+  reconnaissance value of default responses is
+  permanent.
+failure: >
+  Information disclosure via error responses.
+  Default responses reveal failure type, backend
+  error details, and the API's authorization
+  model to anyone probing it.

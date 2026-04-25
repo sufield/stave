@@ -1,0 +1,33 @@
+control: CTL.APIGATEWAY.VALIDATION.MISSING.001
+defect: >
+  REST API method has no request validator
+  attached. Every request on this method reaches
+  the backend without gateway-level validation.
+infection: >
+  Request validation at the API Gateway layer is
+  the cheapest filter in the request path. The
+  validator checks structural correctness:
+  required parameters present, types match the
+  declared schema, request body conforms to the
+  defined model. Requests that fail validation
+  are rejected at the gateway with a 400 — they
+  never consume backend capacity, never trigger
+  application-level error paths, never produce
+  log entries deeper in the stack. Without a
+  validator on this method, every malformed
+  payload — oversized JSON, wrong types, missing
+  required fields, injection-shaped strings —
+  is forwarded to the backend as if it were
+  valid. The backend has to handle it. The cost
+  of that handling, multiplied across every
+  unvalidated request, accrues to the backend's
+  attack surface and to the cost-per-request
+  budget. The existing CTL.APIGATEWAY.VALIDATION.001
+  control checks API-level validation; this
+  control checks per-method, and fires for
+  methods that lack a validator even when other
+  methods on the same API have one.
+failure: >
+  Unvalidated input on this method reaches the
+  backend. Malformed and malicious requests are
+  forwarded uninspected.

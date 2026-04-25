@@ -1,0 +1,39 @@
+control: CTL.APIGATEWAY.ORPHAN.AUTHORIZER.001
+defect: >
+  API Gateway authorizer exists but is referenced
+  by zero routes.
+infection: >
+  An authorizer's job is to authenticate requests
+  to the routes it is attached to. An authorizer
+  attached to no routes does that job for
+  nobody. Three histories produce this state and
+  each is worth distinguishing. (1) The
+  authorizer was attached to routes earlier and
+  was removed during a configuration change —
+  intentionally or not. The routes that
+  previously enforced authentication are now
+  unauthenticated; the orphaned authorizer is
+  the trace of what used to be there. (2) The
+  authorizer was created at API setup time but
+  the routes that were meant to use it were
+  never updated to reference it. The author
+  built the authorizer first, the routes second,
+  and forgot to wire them together. The routes
+  are unauthenticated and the authorizer's
+  existence masks that fact in audits. (3) The
+  routes that referenced the authorizer were
+  deleted and the authorizer wasn't. The
+  authorizer is benign vestigial config.
+  Distinguishing among the three usually
+  requires looking at the route history; the
+  control's value is surfacing the orphan so
+  that question gets asked. Severity is low
+  because the authorizer alone is harmless —
+  the operational concern is that case (1) and
+  case (2) hide unauthenticated routes.
+failure: >
+  Authorizer governs nothing. Either routes are
+  silently unauthenticated (auth downgrade or
+  never-attached) or the authorizer is leftover
+  config — the orphan signal is the same
+  either way.

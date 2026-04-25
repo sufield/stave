@@ -1,0 +1,36 @@
+control: CTL.APIGATEWAY.HTTPAPI.JWT.ISSUER.HTTP.001
+defect: >
+  HTTP API JWT authorizer has an issuer URL whose
+  scheme is HTTP rather than HTTPS.
+infection: >
+  The JWT authorizer's job is to validate token
+  signatures using the issuer's public keys. It
+  retrieves those keys from the issuer's JWKS
+  endpoint, derived from the issuer URL — for
+  example, https://auth.example.com →
+  https://auth.example.com/.well-known/jwks.json.
+  Once retrieved, the keys are cached and used
+  to verify every incoming token's signature.
+  When the issuer URL is HTTP, the JWKS
+  retrieval is unencrypted. Any attacker on the
+  network path between API Gateway and the
+  issuer can intercept the JWKS request,
+  substitute their own public keys in the
+  response, and the authorizer caches the
+  substitution. From that moment, any JWT signed
+  by the attacker's matching private key
+  validates successfully — the authorizer
+  cannot tell the difference between the real
+  issuer's keys and the attacker's. The result
+  is a complete authentication bypass: the
+  attacker forges JWTs that name any user, any
+  scope, any claim, and the API treats them as
+  valid. The fix is one configuration change —
+  upgrade the issuer URL to HTTPS — but the
+  failure mode is total: every route protected
+  by this authorizer becomes attacker-callable.
+failure: >
+  JWT key substitution. An attacker intercepts
+  the JWKS retrieval, substitutes their own
+  keys, and forges JWTs that the authorizer
+  accepts as valid for every protected route.

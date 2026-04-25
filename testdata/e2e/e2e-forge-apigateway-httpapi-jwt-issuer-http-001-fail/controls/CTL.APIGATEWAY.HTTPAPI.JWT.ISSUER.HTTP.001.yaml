@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.HTTPAPI.JWT.ISSUER.HTTP.001
+name: HTTP API JWT Authorizer Issuer URL Uses HTTP
+description: >
+  HTTP API JWT authorizer is configured with an issuer URL whose
+  scheme is HTTP rather than HTTPS. The JWT authorizer derives the
+  JWKS endpoint from the issuer URL — typically by appending
+  /.well-known/jwks.json — and retrieves the issuer's public keys
+  from that endpoint to validate token signatures. When the issuer
+  URL is HTTP, the JWKS retrieval traverses the network in
+  plaintext. An attacker on the network path between API Gateway
+  and the issuer (an upstream router, a malicious DNS server, a
+  compromised intermediate proxy) can intercept the JWKS request
+  and substitute their own public keys. The authorizer caches the
+  substituted keys and accepts any JWT signed by the attacker's
+  matching private key as valid — a complete authentication
+  bypass on every route protected by this authorizer. HTTPS
+  prevents key substitution by encrypting and authenticating the
+  JWKS retrieval.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-2"
+  fedramp_moderate: "IA-2"
+  pci_dss_v4.0: "8.3.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(d)"
+  ccm_v4: ["IAM-04", "CEK-03"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    HTTP API JWT authorizer issuer URL is HTTP. JWKS retrieval is
+    interceptable; an attacker can substitute keys and forge
+    valid JWTs.
+  action: >
+    Update the authorizer's issuer URL to HTTPS. Verify that the
+    issuer's JWKS endpoint serves over HTTPS with a certificate
+    whose subject matches the issuer hostname. If the issuer can
+    only serve HTTP, treat that as the underlying problem — fix
+    the issuer's TLS configuration before pointing the authorizer
+    at it. Rotate any JWTs issued under the previous configuration;
+    treat them as potentially exposed.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_authorizer",
+        "authorizer": {
+          "type": "JWT",
+          "jwt": {
+            "issuer": "https://auth.example.com",
+            "issuer_uses_http": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_authorizer
+    - field: properties.api.authorizer.type
+      op: eq
+      value: JWT
+    - field: properties.api.authorizer.jwt.issuer_uses_http
+      op: eq
+      value: true

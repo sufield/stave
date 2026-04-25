@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.VALIDATION.BODYONLY.001
+name: API Gateway Validator Checks Body But Not Parameters
+description: >
+  REST API method has a request validator, but the validator type
+  is BODY only — query string parameters and headers are not
+  validated. Body validation catches malformed JSON and schema
+  violations in the request body, but injection-shaped payloads
+  delivered through query parameters or HTTP headers reach the
+  backend without checks. The finding is "validation is partial"
+  rather than "validation is broken." Severity is low — partial
+  validation is materially better than none. The remediation is
+  upgrading the validator from BODY to BODY_AND_PARAMS.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SI-10"
+  fedramp_moderate: "SI-10"
+  soc2: "CC6.6"
+  ccm_v4: ["AIS-01"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    REST API method validator checks the body but not query string
+    parameters or headers. Parameter-based injections bypass the
+    body-only validator.
+  action: >
+    Change the method's request validator type from BODY to
+    BODY_AND_PARAMS. Define a parameter schema (queryStringParameters,
+    headers) alongside the body model so the validator has
+    something to check parameters against. The runtime cost of
+    parameter validation is negligible relative to the input
+    surface it covers.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_method",
+        "method": {
+          "has_validator": true,
+          "validator_type": "BODY_AND_PARAMS",
+          "validates_body": true,
+          "validates_params": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_method
+    - field: properties.api.method.has_validator
+      op: eq
+      value: true
+    - field: properties.api.method.validates_body
+      op: eq
+      value: true
+    - field: properties.api.method.validates_params
+      op: eq
+      value: false

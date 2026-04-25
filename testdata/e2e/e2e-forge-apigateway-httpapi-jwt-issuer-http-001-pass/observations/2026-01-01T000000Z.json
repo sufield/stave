@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/apis/httpapi-1/authorizers/jwt-pass",
+      "type": "aws_apigateway_authorizer",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "apigateway_authorizer",
+          "authorizer": {
+            "id": "jwt-pass",
+            "type": "JWT",
+            "jwt": {
+              "issuer": "https://auth.example.com",
+              "audience": ["api-prod"],
+              "audience_configured": true,
+              "issuer_uses_http": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

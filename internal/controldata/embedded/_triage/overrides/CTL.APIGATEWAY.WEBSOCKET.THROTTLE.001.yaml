@@ -1,0 +1,32 @@
+control: CTL.APIGATEWAY.WEBSOCKET.THROTTLE.001
+defect: >
+  WebSocket API has no connection-rate or
+  message-rate throttling configured.
+infection: >
+  WebSocket APIs have a different abuse profile
+  than REST APIs. Each connection establishment
+  invokes the $connect route's Lambda; each
+  message delivers to a route Lambda; each open
+  connection holds a slot in the per-account
+  WebSocket connection budget until it is
+  closed. Without connection-rate throttling, a
+  single client can open thousands of
+  simultaneous connections — exhausting the
+  account-level connection budget for every
+  WebSocket API in the account, not just this
+  one. Without message-rate throttling, each
+  open connection can send unlimited messages
+  per second, consuming Lambda concurrency or
+  HTTP integration capacity at the message-rate
+  ceiling. REST API throttling controls
+  (CTL.APIGATEWAY.THROTTLE.001,
+  CTL.APIGATEWAY.THROTTLE.NOPLAN.001) do not
+  apply — WebSocket throttling is a separate
+  configuration surface that operators
+  frequently leave unconfigured because the
+  WebSocket configuration UI is less prominent.
+failure: >
+  WebSocket API floods. Connection-rate or
+  message-rate abuse exhausts capacity for this
+  API and for every other WebSocket API in the
+  account.

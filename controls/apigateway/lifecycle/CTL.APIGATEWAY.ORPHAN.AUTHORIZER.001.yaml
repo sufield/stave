@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ORPHAN.AUTHORIZER.001
+name: API Gateway Authorizer Not Referenced by Any Route
+description: >
+  API Gateway has an authorizer configured but no route or method
+  references it. The authorizer exists in the API's configuration
+  but is enforcing authentication on nothing. Three causes
+  produce this state. First, an authorizer that was attached to
+  routes earlier was detached during a configuration change —
+  the routes are now unauthenticated and the authorizer is a
+  vestigial artifact. Second, an authorizer was created during
+  initial setup and the routes that were supposed to use it were
+  never updated to reference it — the authorizer's existence
+  masks the fact that nothing is authenticated. Third, the
+  routes that referenced the authorizer were deleted but the
+  authorizer wasn't cleaned up. The control is low severity —
+  the authorizer's existence is not itself a vulnerability — but
+  the orphan signal indicates one of the three causes above
+  warrants investigation.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "GRC-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Authorizer exists but is referenced by zero routes. Either
+    routes were detached (auth downgrade), routes were never
+    attached, or routes were deleted.
+  action: >
+    Determine which of the three causes applies. If routes were
+    detached, re-attach the authorizer (or confirm the detachment
+    was intentional and the routes are deliberately
+    unauthenticated). If routes were never attached, attach the
+    authorizer to the intended routes. If the authorizer is
+    truly unused, delete it so the API's configuration accurately
+    reflects what it enforces.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_authorizer",
+        "authorizer": {
+          "id": "auth-123",
+          "type": "JWT",
+          "referenced_by_routes": 3,
+          "is_orphaned": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_authorizer
+    - field: properties.api.authorizer.is_orphaned
+      op: eq
+      value: true

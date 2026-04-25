@@ -1,0 +1,38 @@
+control: CTL.APIGATEWAY.ORPHAN.API.001
+defect: >
+  API Gateway has no custom domain associated and
+  has not been deployed in the last 90 days.
+infection: >
+  Either signal alone — no custom domain, no
+  recent deployments — is consistent with
+  active use. Internal APIs often run without
+  custom domains; stable APIs may not need
+  deployments for long stretches. The
+  combination is the signal. An API with no
+  custom domain and no recent deployments is
+  probably not being actively maintained, and
+  the configuration on it is whatever someone
+  left there: authorizers whose JWKS keys may
+  have rotated, integrations pointing at
+  backends that have moved or been deleted,
+  security settings (TLS policy, throttling,
+  WAF) that haven't been reviewed against
+  current standards. The API is still
+  invocable. If the default execute-api endpoint
+  is enabled — typical for APIs that never had
+  a custom domain — it's reachable from the
+  internet by anyone who knows or guesses the
+  API ID. The combination of "still invocable"
+  and "configuration is stale" is latent attack
+  surface: a vulnerable authorizer, a backend
+  that no longer responds, or a permissive
+  resource policy that nobody noticed because
+  nobody is watching the API. Deletion is the
+  cleanest remediation; if deletion isn't
+  possible, a deliberate deployment cycle that
+  re-validates the configuration is the
+  alternative.
+failure: >
+  Latent attack surface. An unmaintained API
+  remains invocable with stale configuration
+  that nobody is reviewing.

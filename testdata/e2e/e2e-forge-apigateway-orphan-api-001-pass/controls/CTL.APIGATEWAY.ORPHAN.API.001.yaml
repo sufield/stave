@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ORPHAN.API.001
+name: API Gateway Has No Custom Domain and No Recent Deployments
+description: >
+  API Gateway has no custom domain associated and has not been
+  deployed in the last 90 days. The combination of "no custom
+  domain" and "no recent deployments" indicates the API is no
+  longer actively maintained — it isn't fronted by a customer-
+  facing hostname, and nobody has updated its definition in three
+  months. Either indicator alone is consistent with active use
+  (an internal API may not need a custom domain; a stable API may
+  not need recent deployments), so the control requires both. An
+  abandoned API still retains its full configuration: routes,
+  integrations, authorizers, the default execute-api endpoint.
+  If the default endpoint is enabled (see
+  CTL.APIGATEWAY.ENDPOINT.DEFAULT.001), the API remains invocable
+  from the internet despite being unmaintained. Stale APIs
+  accumulate configuration drift — security settings not updated,
+  integrations pointing at moved or deleted backends, authorizers
+  whose JWKS keys have rotated.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "GRC-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    API Gateway is unmaintained — no custom domain, no
+    deployments in 90+ days. The API is latent attack surface.
+  action: >
+    Confirm whether the API is still in use by any consumer
+    (check CloudWatch invocation metrics for the stage). If
+    unused, delete the API. If still used but stale, plan a
+    deployment cycle that re-validates the routes, integrations,
+    authorizers, and security settings against current standards
+    and disables the default endpoint if a custom domain isn't
+    needed.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "lifecycle": {
+          "has_custom_domain": false,
+          "last_deployment_days": 30,
+          "appears_unused": false,
+          "deployment_count": 5
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.lifecycle.has_custom_domain
+      op: eq
+      value: false
+    - field: properties.api.lifecycle.appears_unused
+      op: eq
+      value: true

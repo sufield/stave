@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.WEBSOCKET.THROTTLE.001
+name: WebSocket API Has No Connection or Message Rate Limiting
+description: >
+  WebSocket API has no throttling configured for connection
+  establishment or message delivery. A single client can: open
+  thousands of simultaneous connections (each one consuming a
+  $connect Lambda invocation and a connection slot), send
+  unlimited messages per second on each connection (each one
+  consuming a route Lambda invocation and bandwidth), and hold
+  connections indefinitely with no idle timeout enforcement.
+  Without rate limits, a WebSocket API is vulnerable to
+  connection flooding (exhausting the per-account connection
+  budget) and message flooding (exhausting Lambda concurrency or
+  HTTP integration capacity). REST API throttling controls do not
+  apply to WebSocket APIs — WebSocket throttling is a separate
+  configuration surface.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "A1.1"
+  ccm_v4: ["AIS-01", "IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    WebSocket API has no throttling. A single client can flood
+    connections or messages without backpressure.
+  action: >
+    Configure stage-level throttling on the WebSocket API to set
+    a connection rate and a message rate appropriate for the
+    expected client population. For APIs whose clients are
+    authenticated and per-user limits matter more than per-API
+    limits, also configure an idle connection timeout so that
+    abandoned connections are reclaimed.
+  example: |
+    {
+      "api": {
+        "kind": "websocket_api",
+        "websocket": {
+          "throttle_configured": true,
+          "connection_limit": 100,
+          "message_rate_limit": 50
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: websocket_api
+    - field: properties.api.websocket.throttle_configured
+      op: eq
+      value: false

@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/apis/httpapi-1/routes/POST-search",
+      "type": "aws_apigateway_method",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "http_api",
+          "method": {
+            "route_key": "POST /search",
+            "has_validator": false,
+            "validator_type": "NONE"
+          }
+        }
+      }
+    }
+  ]
+}

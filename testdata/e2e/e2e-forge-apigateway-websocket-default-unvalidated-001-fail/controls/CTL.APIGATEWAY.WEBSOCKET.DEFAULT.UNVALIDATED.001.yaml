@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.WEBSOCKET.DEFAULT.UNVALIDATED.001
+name: WebSocket API $default Route Accepts Any Message Without Validation
+description: >
+  WebSocket API has a $default route configured but the route's
+  request validator is not enabled. The $default route is the
+  catch-all: every message that does not match a named route
+  selector flows through it. Without validation, any payload —
+  oversized binary frames, malformed JSON, application-protocol
+  messages from a different version, deliberate fuzzing input —
+  reaches the route's backend (Lambda function or HTTP integration)
+  unchecked. Some WebSocket APIs are designed to route everything
+  through $default and validate at the application layer; the
+  triage override should record that decision when it applies. For
+  WebSocket APIs that route by named selector and use $default
+  only as a safety net, the safety net should reject anything it
+  catches.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-10"
+  fedramp_moderate: "SI-10"
+  soc2: "CC6.6"
+  ccm_v4: ["AIS-01", "AIS-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    WebSocket API $default route exists but has no validation.
+    Any message format reaches the route's backend.
+  action: >
+    Attach a route response selection expression and a model to
+    the $default route, or remove the $default route entirely
+    and let unmatched messages return a Bad Request to the client.
+    For APIs that intentionally route everything through $default
+    with application-layer validation, document that decision in
+    a triage override on this control rather than leaving it as
+    an unacknowledged finding.
+  example: |
+    {
+      "api": {
+        "kind": "websocket_api",
+        "websocket": {
+          "default_route_exists": true,
+          "default_route_validates": true,
+          "route_count": 5
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: websocket_api
+    - field: properties.api.websocket.default_route_exists
+      op: eq
+      value: true
+    - field: properties.api.websocket.default_route_validates
+      op: eq
+      value: false

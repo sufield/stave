@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1521
-**Pack hash:** `a86e3f2996b7f10d1ddf7a41788472f793134e81f1ca915e934ba0b068d40037`
+**Total controls:** 1529
+**Pack hash:** `e5f8ebb1614ff2ee000ac16f7cad0e836047dd114d10dde72a2f99757d45a95a`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 176 |
-| high | 675 |
+| high | 676 |
 | info | 16 |
-| low | 111 |
-| medium | 543 |
+| low | 113 |
+| medium | 548 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,10 +24,10 @@
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 87 |
-| exposure | 872 |
-| governance | 63 |
+| exposure | 877 |
+| governance | 65 |
 | hygiene | 16 |
-| identity | 330 |
+| identity | 331 |
 | network | 28 |
 | resilience | 18 |
 | secrets | 4 |
@@ -905,6 +905,21 @@ API Gateway VPC Link references an NLB or ALB that has been deleted from the loa
 
 ---
 
+### CTL.APIGATEWAY.HTTPAPI.JWT.ISSUER.HTTP.001
+
+**HTTP API JWT Authorizer Issuer URL Uses HTTP**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-2; hipaa: 164.312(d); nist_800_53_r5: IA-2; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
+
+HTTP API JWT authorizer is configured with an issuer URL whose scheme is HTTP rather than HTTPS. The JWT authorizer derives the JWKS endpoint from the issuer URL — typically by appending /.well-known/jwks.json — and retrieves the issuer's public keys from that endpoint to validate token signatures. When the issuer URL is HTTP, the JWKS retrieval traverses the network in plaintext. An attacker on the network path between API Gateway and the issuer (an upstream router, a malicious DNS server, a compromised intermediate proxy) can intercept the JWKS request and substitute their own public keys. The authorizer caches the substituted keys and accepts any JWT signed by the attacker's matching private key as valid — a complete authentication bypass on every route protected by this authorizer. HTTPS prevents key substitution by encrypting and authenticating the JWKS retrieval.
+
+**Remediation:** Update the authorizer's issuer URL to HTTPS. Verify that the issuer's JWKS endpoint serves over HTTPS with a certificate whose subject matches the issuer hostname. If the issuer can only serve HTTP, treat that as the underlying problem — fix the issuer's TLS configuration before pointing the authorizer at it. Rotate any JWTs issued under the previous configuration; treat them as potentially exposed.
+
+---
+
 ### CTL.APIGATEWAY.INCOMPLETE.001
 
 **Complete Data Required for API Gateway Assessment**
@@ -1039,6 +1054,36 @@ REST API uses the PRIVATE endpoint type but has a resource policy that does not 
 
 ---
 
+### CTL.APIGATEWAY.ORPHAN.API.001
+
+**API Gateway Has No Custom Domain and No Recent Deployments**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; nist_800_53_r5: CM-2; soc2: CC8.1;
+
+API Gateway has no custom domain associated and has not been deployed in the last 90 days. The combination of "no custom domain" and "no recent deployments" indicates the API is no longer actively maintained — it isn't fronted by a customer- facing hostname, and nobody has updated its definition in three months. Either indicator alone is consistent with active use (an internal API may not need a custom domain; a stable API may not need recent deployments), so the control requires both. An abandoned API still retains its full configuration: routes, integrations, authorizers, the default execute-api endpoint. If the default endpoint is enabled (see CTL.APIGATEWAY.ENDPOINT.DEFAULT.001), the API remains invocable from the internet despite being unmaintained. Stale APIs accumulate configuration drift — security settings not updated, integrations pointing at moved or deleted backends, authorizers whose JWKS keys have rotated.
+
+**Remediation:** Confirm whether the API is still in use by any consumer (check CloudWatch invocation metrics for the stage). If unused, delete the API. If still used but stale, plan a deployment cycle that re-validates the routes, integrations, authorizers, and security settings against current standards and disables the default endpoint if a custom domain isn't needed.
+
+---
+
+### CTL.APIGATEWAY.ORPHAN.AUTHORIZER.001
+
+**API Gateway Authorizer Not Referenced by Any Route**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+API Gateway has an authorizer configured but no route or method references it. The authorizer exists in the API's configuration but is enforcing authentication on nothing. Three causes produce this state. First, an authorizer that was attached to routes earlier was detached during a configuration change — the routes are now unauthenticated and the authorizer is a vestigial artifact. Second, an authorizer was created during initial setup and the routes that were supposed to use it were never updated to reference it — the authorizer's existence masks the fact that nothing is authenticated. Third, the routes that referenced the authorizer were deleted but the authorizer wasn't cleaned up. The control is low severity — the authorizer's existence is not itself a vulnerability — but the orphan signal indicates one of the three causes above warrants investigation.
+
+**Remediation:** Determine which of the three causes applies. If routes were detached, re-attach the authorizer (or confirm the detachment was intentional and the routes are deliberately unauthenticated). If routes were never attached, attach the authorizer to the intended routes. If the authorizer is truly unused, delete it so the API's configuration accurately reflects what it enforces.
+
+---
+
 ### CTL.APIGATEWAY.PUBLIC.001
 
 **REST APIs Should Use Private Endpoints When Possible**
@@ -1051,6 +1096,21 @@ REST API uses the PRIVATE endpoint type but has a resource policy that does not 
 REST APIs using EDGE or REGIONAL endpoint types are internet-accessible. APIs that serve only internal consumers should use PRIVATE endpoint type (VPC-only via PrivateLink) to reduce attack surface.
 
 **Remediation:** Convert to PRIVATE endpoint type if the API serves only VPC consumers. If public access is required, ensure WAF and authorizers are configured.
+
+---
+
+### CTL.APIGATEWAY.RESPONSE.EXPOSURE.001
+
+**API Gateway Default Gateway Responses Expose Internal Details**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-11; nist_800_53_r5: SI-11; pci_dss_v4.0: 6.5.5; soc2: CC6.6;
+
+API Gateway uses the default gateway-response templates rather than customized responses. Default 4xx and 5xx responses include details useful for reconnaissance: the specific failure type (AUTHORIZER_FAILURE, INTEGRATION_FAILURE, INTEGRATION_TIMEOUT, THROTTLED, MISSING_AUTHENTICATION_TOKEN), the request ID, and — for INTEGRATION_FAILURE responses — backend error messages passed through verbatim. An attacker probing the API distinguishes "no auth" from "wrong auth" from "timeout" from "backend crash" and tailors next steps accordingly. Custom gateway responses collapse all of these into generic messages — "400 Bad Request", "500 Internal Server Error" — without revealing which underlying condition produced the response. The control fires when no customizations are in place; it is medium severity because information disclosure aids reconnaissance but doesn't itself enable exploitation.
+
+**Remediation:** Customize gateway responses for the high-information types — DEFAULT_4XX, DEFAULT_5XX, AUTHORIZER_FAILURE, INTEGRATION_FAILURE, MISSING_AUTHENTICATION_TOKEN, UNAUTHORIZED, ACCESS_DENIED — with response templates that return only generic error text. Suppress the Server header in the customized responses. Verify by triggering each failure type and confirming the response body contains no implementation specifics.
 
 ---
 
@@ -1219,6 +1279,36 @@ API Gateway REST APIs must have request validation configured. API Gateway can v
 
 ---
 
+### CTL.APIGATEWAY.VALIDATION.BODYONLY.001
+
+**API Gateway Validator Checks Body But Not Parameters**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-10; nist_800_53_r5: SI-10; soc2: CC6.6;
+
+REST API method has a request validator, but the validator type is BODY only — query string parameters and headers are not validated. Body validation catches malformed JSON and schema violations in the request body, but injection-shaped payloads delivered through query parameters or HTTP headers reach the backend without checks. The finding is "validation is partial" rather than "validation is broken." Severity is low — partial validation is materially better than none. The remediation is upgrading the validator from BODY to BODY_AND_PARAMS.
+
+**Remediation:** Change the method's request validator type from BODY to BODY_AND_PARAMS. Define a parameter schema (queryStringParameters, headers) alongside the body model so the validator has something to check parameters against. The runtime cost of parameter validation is negligible relative to the input surface it covers.
+
+---
+
+### CTL.APIGATEWAY.VALIDATION.MISSING.001
+
+**API Gateway Method Has No Request Validator**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-10; hipaa: 164.312(c)(1); nist_800_53_r5: SI-10; pci_dss_v4.0: 6.2.4; soc2: CC6.6;
+
+REST API method has no request validator configured at the method level. Distinct from CTL.APIGATEWAY.VALIDATION.001, which checks that the API has *any* validation enabled — this control checks per-method and fires for individual methods whose validator type is NONE even when other methods on the same API have validators. Without a method-level validator, every request reaching that method — body, query string, headers — is forwarded to the backend uninspected. Validation at the gateway is the cheapest layer of input filtering, applied before WAF rule evaluation and before the backend has to spend cycles parsing malformed input. When validation is absent on a method, malformed JSON, oversized values, missing required parameters, and injection-shaped payloads all reach the backend as if they were valid.
+
+**Remediation:** Define a request model (JSON schema) for the method's body and a parameter schema for query strings and headers, then attach a validator of type BODY_AND_PARAMS to the method. Reject obviously malformed requests at the gateway. For HTTP APIs, the equivalent is OpenAPI request validation — not yet covered by this control's predicate; HTTP API methods will not fire this control.
+
+---
+
 ### CTL.APIGATEWAY.WAF.001
 
 **REST API Stages Must Have WAF ACL Attached**
@@ -1231,6 +1321,36 @@ API Gateway REST APIs must have request validation configured. API Gateway can v
 API Gateway REST API stages must have an AWS WAF web ACL associated for application-layer filtering. Without WAF, APIs are exposed to injection attacks, parameter tampering, L7 floods, and bot abuse.
 
 **Remediation:** Associate a WAFv2 web ACL with the API stage.
+
+---
+
+### CTL.APIGATEWAY.WEBSOCKET.DEFAULT.UNVALIDATED.001
+
+**WebSocket API $default Route Accepts Any Message Without Validation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-10; nist_800_53_r5: SI-10; soc2: CC6.6;
+
+WebSocket API has a $default route configured but the route's request validator is not enabled. The $default route is the catch-all: every message that does not match a named route selector flows through it. Without validation, any payload — oversized binary frames, malformed JSON, application-protocol messages from a different version, deliberate fuzzing input — reaches the route's backend (Lambda function or HTTP integration) unchecked. Some WebSocket APIs are designed to route everything through $default and validate at the application layer; the triage override should record that decision when it applies. For WebSocket APIs that route by named selector and use $default only as a safety net, the safety net should reject anything it catches.
+
+**Remediation:** Attach a route response selection expression and a model to the $default route, or remove the $default route entirely and let unmatched messages return a Bad Request to the client. For APIs that intentionally route everything through $default with application-layer validation, document that decision in a triage override on this control rather than leaving it as an unacknowledged finding.
+
+---
+
+### CTL.APIGATEWAY.WEBSOCKET.THROTTLE.001
+
+**WebSocket API Has No Connection or Message Rate Limiting**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5; nist_800_53_r5: SC-5; pci_dss_v4.0: 6.4.1; soc2: A1.1;
+
+WebSocket API has no throttling configured for connection establishment or message delivery. A single client can: open thousands of simultaneous connections (each one consuming a $connect Lambda invocation and a connection slot), send unlimited messages per second on each connection (each one consuming a route Lambda invocation and bandwidth), and hold connections indefinitely with no idle timeout enforcement. Without rate limits, a WebSocket API is vulnerable to connection flooding (exhausting the per-account connection budget) and message flooding (exhausting Lambda concurrency or HTTP integration capacity). REST API throttling controls do not apply to WebSocket APIs — WebSocket throttling is a separate configuration surface.
+
+**Remediation:** Configure stage-level throttling on the WebSocket API to set a connection rate and a message rate appropriate for the expected client population. For APIs whose clients are authenticated and per-user limits matter more than per-API limits, also configure an idle connection timeout so that abandoned connections are reclaimed.
 
 ---
 

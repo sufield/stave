@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.VALIDATION.MISSING.001
+name: API Gateway Method Has No Request Validator
+description: >
+  REST API method has no request validator configured at the method
+  level. Distinct from CTL.APIGATEWAY.VALIDATION.001, which checks
+  that the API has *any* validation enabled — this control checks
+  per-method and fires for individual methods whose validator type
+  is NONE even when other methods on the same API have validators.
+  Without a method-level validator, every request reaching that
+  method — body, query string, headers — is forwarded to the
+  backend uninspected. Validation at the gateway is the cheapest
+  layer of input filtering, applied before WAF rule evaluation and
+  before the backend has to spend cycles parsing malformed input.
+  When validation is absent on a method, malformed JSON, oversized
+  values, missing required parameters, and injection-shaped
+  payloads all reach the backend as if they were valid.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-10"
+  fedramp_moderate: "SI-10"
+  pci_dss_v4.0: "6.2.4"
+  soc2: "CC6.6"
+  hipaa: "164.312(c)(1)"
+  ccm_v4: ["AIS-01", "AIS-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    REST API method has no request validator configured. All
+    requests on this method are forwarded to the backend without
+    gateway-level validation.
+  action: >
+    Define a request model (JSON schema) for the method's body and
+    a parameter schema for query strings and headers, then attach
+    a validator of type BODY_AND_PARAMS to the method. Reject
+    obviously malformed requests at the gateway. For HTTP APIs,
+    the equivalent is OpenAPI request validation — not yet covered
+    by this control's predicate; HTTP API methods will not fire
+    this control.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_method",
+        "method": {
+          "has_validator": true,
+          "validator_type": "BODY_AND_PARAMS"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_method
+    - field: properties.api.method.has_validator
+      op: eq
+      value: false
