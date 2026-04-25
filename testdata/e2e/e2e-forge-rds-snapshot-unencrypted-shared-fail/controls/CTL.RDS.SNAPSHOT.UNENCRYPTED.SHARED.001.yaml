@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SNAPSHOT.UNENCRYPTED.SHARED.001
+name: Shared RDS Snapshots Must Be Encrypted
+description: >
+  RDS snapshots that have been shared with another AWS account
+  must be encrypted with a customer-managed KMS key whose key
+  policy grants the receiving account decrypt access. An
+  unencrypted shared snapshot gives the receiving account full
+  plaintext access to the database: the receiving account
+  restores the snapshot to a new RDS instance in their
+  account, sets up their own master credentials, and reads
+  every table, every row, every stored credential the source
+  database held. There is no access control on the data itself
+  — the source database's per-user grants do not carry across
+  the restore. Encryption with a CMK provides the missing
+  control plane: the receiving account can read only as long
+  as the source account leaves the CMK enabled and the key
+  policy in place, revocation is immediate via key disable or
+  policy change, and every cross-account decrypt is logged in
+  CloudTrail. Distinct from CTL.RDS.SNAPSHOT.PUBLIC.001 (which
+  catches snapshots shared with `all`) — this control catches
+  the "shared with named accounts but unencrypted" case.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  pci_dss_v4: "3.4"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["DSP-15", "CEK-03"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: RDS snapshot is shared with another account without encryption.
+  action: Re-share an encrypted (CMK) copy of the snapshot and revoke the unencrypted share.
+  example: |
+    {"database": {"kind": "rds_snapshot", "snapshot": {"shared_unencrypted": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_snapshot
+    - field: properties.database.snapshot.shared
+      op: eq
+      value: true
+    - field: properties.database.snapshot.shared_unencrypted
+      op: eq
+      value: true

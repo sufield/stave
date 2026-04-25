@@ -1,0 +1,41 @@
+control: CTL.RDS.SNAPSHOT.STALE.001
+defect: >
+  Manual RDS snapshot is older than the
+  retention-floor threshold (default 365 days).
+infection: >
+  Two distinct concerns converge on long-lived
+  manual snapshots, and neither is addressed by
+  the team's automated-backup retention policy.
+  The first is cost: snapshot storage is per-GB-
+  per-month and accrues indefinitely; in
+  practice teams accumulate snapshots through
+  ad-hoc "let me grab one before this risky
+  change" workflows, never delete them, and
+  pay storage on them forever. The second is
+  governance — a 400-day-old snapshot may
+  contain credentials that have since been
+  rotated everywhere else, customer records
+  marked for GDPR right-to-erasure deletion in
+  the live database (and never propagated to
+  the historical snapshot, because deletion was
+  done at the table level), audit rows from
+  compliance windows that have since closed,
+  and rows from accounts that have been
+  closed at the request of the account owner.
+  Some retention policies require deletion
+  after a period (not retention up to a
+  period — explicit deletion at GDPR-, HIPAA-,
+  or contract-defined endpoints), and
+  long-lived snapshots violate the deletion
+  side of the policy quietly, because the
+  data lives outside the live-database
+  governance pipeline. The control is
+  low-severity governance, but the triage
+  surfaces both retention and deletion
+  obligations as separate considerations.
+failure: >
+  Cost accumulation, plus governance violation
+  for retention frameworks that mandate
+  deletion. Historical data persists in a form
+  the live-database governance does not
+  reach.

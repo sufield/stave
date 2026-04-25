@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1453
-**Pack hash:** `b1c4a334dd41078b34ea943df12a95628206af09b81f9264f67bdba8f2a75f91`
+**Total controls:** 1460
+**Pack hash:** `8ad1bb6443284a425fdeafc92427ae4ea08a6c9cdae01f3815338ceace256aba`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 172 |
-| high | 642 |
+| high | 646 |
 | info | 16 |
-| low | 105 |
-| medium | 518 |
+| low | 106 |
+| medium | 520 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,13 +23,13 @@
 | availability | 2 |
 | cryptography | 3 |
 | detection | 43 |
-| encryption | 81 |
+| encryption | 84 |
 | exposure | 848 |
-| governance | 48 |
+| governance | 51 |
 | hygiene | 16 |
 | identity | 326 |
 | network | 27 |
-| resilience | 14 |
+| resilience | 15 |
 | storage | 8 |
 
 ## Controls
@@ -16727,6 +16727,51 @@ RDS instances must have automated backups enabled with a retention period of at 
 
 ---
 
+### CTL.RDS.BACKUP.CROSSREGION.001
+
+**RDS Instances Must Have a Cross-Region Recovery Path**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-6;
+
+RDS instances must either replicate automated backups to a second region (AWS Backup cross-region copy or RDS automated backup replication) or carry a cross-region read replica that can be promoted on regional failover. RDS automated backups and manual snapshots are stored in the same region as the instance; without an explicit cross-region path, every recovery option is co-located with the resource it would recover. Regional outages are rare but documented (us-east-1 in 2017, 2020, 2021, and 2023; multiple-AZ outages have hit several regions in recent years), and when they occur they take the database AND its backups offline simultaneously. Multi-AZ alone does not address this — Multi-AZ failover occurs within the region. Cross-region DR is a risk-tolerance decision, not a technical impossibility: AWS Backup cross-region copy and RDS automated-backup replication are both first-class features. The control surfaces the absence so the decision is explicit (the team chose not to do it) rather than implicit (the team did not realize backups stay in-region).
+
+**Remediation:** Configure cross-region automated backup replication or create a cross-region read replica.
+
+---
+
+### CTL.RDS.BACKUP.CROSSREGION.ENCRYPT.001
+
+**RDS Cross-Region Backup Copies Must Be Encrypted at Destination**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4: 3.4;
+
+RDS cross-region backup or snapshot copies must be encrypted at the destination region with a KMS key that exists in that region. Snapshot copy operations do not inherit the source region's KMS key — the destination must specify its own. If the copy is performed without `--kms-key-id`, the destination copy lands unencrypted (or, in rare permissions edge cases, the copy fails and falls back to retrying without the key). The result is a backup pair where the source-region copy is encrypted and the destination-region copy is not, and the next AWS Config audit reads "encrypted: yes" because it inspects the source instance, not the cross-region copy. Cross-region backups exist precisely because the team wants the data recoverable when the source region is unreachable; arriving at that recovery moment to find the destination copy unencrypted is the kind of "the alarm was disconnected from the bell" failure that compromises the recovery decision under outage pressure.
+
+**Remediation:** Re-copy with an explicit destination-region KMS key (`--kms-key-id` on `copy-db-snapshot`).
+
+---
+
+### CTL.RDS.BACKUP.RETENTION.COMPLIANCE.001
+
+**RDS Backup Retention Must Meet the Active Compliance Floor**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.316(b)(2)(i); nist_800_53_r5: CP-9; pci_dss_v4: 10.7;
+
+RDS automated backup retention must meet the framework floor applicable to the data the instance handles: PCI-DSS 10.7 (1 year online, 1 year accessible offline; the operationally relevant floor is 365 days), HIPAA's 6-year audit retention under 164.316 (≈2190 days for the technical safeguards an RDS backup is taken to satisfy), SOX's 7-year retention for financial records (≈2555 days). The control is compliance- conditional: it fires when the instance carries a compliance tag (HIPAA, PCI, PII, FedRAMP, SOX, etc.) AND the retention is below the framework's floor. Operational-only retention (the basic "automated backups enabled" check) is covered by CTL.RDS.BACKUP.001; this control catches the gap between "backups exist" and "backups satisfy regulatory recovery windows." The remediation is either extending the automated- backup retention (capped at 35 days by RDS) or, more commonly, an AWS Backup vault with a lifecycle policy that matches the framework floor.
+
+**Remediation:** Extend automated-backup retention or attach an AWS Backup vault with a framework-aligned lifecycle policy.
+
+---
+
 ### CTL.RDS.CLUSTER.DELETION.PROTECT.001
 
 **RDS Aurora Clusters Must Have Deletion Protection Enabled**
@@ -17295,6 +17340,36 @@ The RDS instance's associated security group must not allow 0.0.0.0/0 ingress on
 
 ---
 
+### CTL.RDS.SNAPSHOT.AWSKEY.SHARED.001
+
+**Shared RDS Snapshots Must Be Encrypted with a Customer-Managed Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-12;
+
+RDS snapshots shared cross-account must be encrypted with a customer-managed KMS key (CMK) whose key policy grants the receiving account decrypt access — not the AWS-managed aws/rds key. The aws/rds key is account-specific: the receiving account cannot KMS:Decrypt against the source account's aws/rds key because the AWS-managed key policy does not permit cross-account use. The result is the particular failure mode where the snapshot share appears to succeed (the snapshot ARN shows up in the receiving account's `describe-db-snapshots --include-shared` results) but the actual restore fails the moment the receiving account calls `restore-db-instance-from-db-snapshot`, surfacing a KMS access-denied error that is hard to map back to "the source account encrypted with the wrong key." This is operational failure disguised as successful sharing, common in DR-rehearsal exercises and cross-account audit copy workflows. The fix is symmetric: snapshots intended to be shared cross-account are encrypted with a CMK whose key policy explicitly grants the receiving account decrypt rights.
+
+**Remediation:** Copy the snapshot under a CMK with a cross-account-grant key policy and re-share the new snapshot.
+
+---
+
+### CTL.RDS.SNAPSHOT.CROSSENV.001
+
+**Production RDS Snapshots Must Not Be Shared with Non-Production**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-4; pci_dss_v4: 9.4;
+
+RDS snapshots whose source instance is tagged production (env=prod, tier=production, environment=prod, etc.) must not be shared with accounts tagged or known to be development, staging, or testing. Production database snapshots contain production data: customer records, transaction history, user authentication tables, API keys stored in config tables, PHI, PII, financial detail — every row the live database serves. Sharing the snapshot with a non-production account makes that data accessible to every developer who has database-restore rights in the receiving account, which is invariably a broader set of principals than the source account permits, operating under weaker network controls, less monitoring, and more permissive SCPs. Production data in a non-production environment escapes every production security control by construction. Same architectural pattern as CTL.EC2.EBS.CROSSENV.SNAPSHOT.001 applied to the database domain. The recommended path is synthetic or anonymized data for non-production workloads; sharing real snapshots is rarely required and almost always indicative of a shortcut taken under pressure.
+
+**Remediation:** Revoke the share; supply synthetic or anonymized data to non-production environments instead.
+
+---
+
 ### CTL.RDS.SNAPSHOT.ENCRYPT.001
 
 **RDS Automated Snapshots Must Be Encrypted**
@@ -17337,6 +17412,36 @@ RDS snapshot export converts a database snapshot to Apache Parquet format and st
 RDS snapshots must not be publicly accessible. A public snapshot can be copied to any AWS account and restored as a full database, granting complete read access to all data.
 
 **Remediation:** aws rds modify-db-snapshot-attribute --db-snapshot-identifier <id> --attribute-name restore --values-to-remove all
+
+---
+
+### CTL.RDS.SNAPSHOT.STALE.001
+
+**Manual RDS Snapshots Must Not Persist Beyond the Retention Floor**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.310(d)(2)(i);
+
+Manual RDS snapshots older than 365 days should be reviewed for deletion. Long-lived manual snapshots accumulate cost (snapshot storage is per-GB-per-month, charged indefinitely), and — more importantly — they accumulate data that becomes harder to govern over time. A 400-day-old snapshot may contain credentials that have since rotated, customer records that were marked for GDPR right-to-erasure deletion in the live database but never propagated to the historical snapshot, and audit rows from compliance windows that have since closed. Some retention policies require deletion after a period (not just retention up to a period — explicit deletion at GDPR-, HIPAA-, or contract-defined endpoints); long-lived snapshots violate the deletion side of that policy quietly. The control is low-severity because it is governance-focused, but the triage notes that retention and deletion are different obligations and a snapshot may satisfy retention while violating deletion.
+
+**Remediation:** Delete the snapshot or document the retention requirement that mandates keeping it.
+
+---
+
+### CTL.RDS.SNAPSHOT.UNENCRYPTED.SHARED.001
+
+**Shared RDS Snapshots Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4: 3.4;
+
+RDS snapshots that have been shared with another AWS account must be encrypted with a customer-managed KMS key whose key policy grants the receiving account decrypt access. An unencrypted shared snapshot gives the receiving account full plaintext access to the database: the receiving account restores the snapshot to a new RDS instance in their account, sets up their own master credentials, and reads every table, every row, every stored credential the source database held. There is no access control on the data itself — the source database's per-user grants do not carry across the restore. Encryption with a CMK provides the missing control plane: the receiving account can read only as long as the source account leaves the CMK enabled and the key policy in place, revocation is immediate via key disable or policy change, and every cross-account decrypt is logged in CloudTrail. Distinct from CTL.RDS.SNAPSHOT.PUBLIC.001 (which catches snapshots shared with `all`) — this control catches the "shared with named accounts but unencrypted" case.
+
+**Remediation:** Re-share an encrypted (CMK) copy of the snapshot and revoke the unencrypted share.
 
 ---
 

@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.BACKUP.CROSSREGION.001
+name: RDS Instances Must Have a Cross-Region Recovery Path
+description: >
+  RDS instances must either replicate automated backups to a
+  second region (AWS Backup cross-region copy or RDS automated
+  backup replication) or carry a cross-region read replica that
+  can be promoted on regional failover. RDS automated backups
+  and manual snapshots are stored in the same region as the
+  instance; without an explicit cross-region path, every
+  recovery option is co-located with the resource it would
+  recover. Regional outages are rare but documented (us-east-1
+  in 2017, 2020, 2021, and 2023; multiple-AZ outages have hit
+  several regions in recent years), and when they occur they
+  take the database AND its backups offline simultaneously.
+  Multi-AZ alone does not address this — Multi-AZ failover
+  occurs within the region. Cross-region DR is a risk-tolerance
+  decision, not a technical impossibility: AWS Backup
+  cross-region copy and RDS automated-backup replication are
+  both first-class features. The control surfaces the absence
+  so the decision is explicit (the team chose not to do it)
+  rather than implicit (the team did not realize backups stay
+  in-region).
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-6"
+  ccm_v4: ["BCR-08", "BCR-09"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: RDS instance has no cross-region backup, snapshot copy, or read replica.
+  action: Configure cross-region automated backup replication or create a cross-region read replica.
+  example: |
+    {"database": {"kind": "rds_instance", "backup": {"cross_region_dr_configured": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.backup.cross_region_dr_configured
+      op: eq
+      value: false

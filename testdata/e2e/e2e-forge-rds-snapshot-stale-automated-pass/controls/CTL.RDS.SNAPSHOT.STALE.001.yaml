@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SNAPSHOT.STALE.001
+name: Manual RDS Snapshots Must Not Persist Beyond the Retention Floor
+description: >
+  Manual RDS snapshots older than 365 days should be reviewed
+  for deletion. Long-lived manual snapshots accumulate cost
+  (snapshot storage is per-GB-per-month, charged
+  indefinitely), and — more importantly — they accumulate
+  data that becomes harder to govern over time. A 400-day-old
+  snapshot may contain credentials that have since rotated,
+  customer records that were marked for GDPR right-to-erasure
+  deletion in the live database but never propagated to the
+  historical snapshot, and audit rows from compliance
+  windows that have since closed. Some retention policies
+  require deletion after a period (not just retention up to
+  a period — explicit deletion at GDPR-, HIPAA-, or
+  contract-defined endpoints); long-lived snapshots violate
+  the deletion side of that policy quietly. The control is
+  low-severity because it is governance-focused, but the
+  triage notes that retention and deletion are different
+  obligations and a snapshot may satisfy retention while
+  violating deletion.
+domain: governance
+severity: low
+compliance:
+  ccm_v4: ["DSP-15", "DCS-06"]
+  hipaa: "164.310(d)(2)(i)"
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: RDS manual snapshot is older than the retention-floor threshold.
+  action: Delete the snapshot or document the retention requirement that mandates keeping it.
+  example: |
+    {"database": {"kind": "rds_snapshot", "snapshot": {"is_stale": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_snapshot
+    - field: properties.database.snapshot.snapshot_type
+      op: eq
+      value: manual
+    - field: properties.database.snapshot.is_stale
+      op: eq
+      value: true

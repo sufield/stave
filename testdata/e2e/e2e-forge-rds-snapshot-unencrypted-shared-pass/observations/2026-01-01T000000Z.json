@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "snap-encrypted-share",
+      "type": "aws_rds_snapshot",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_snapshot","snapshot":{"id":"snap-shared-cmk","shared":true,"encrypted":true,"shared_unencrypted":false,"shared_accounts":["222222222222"]}}}
+    }
+  ]
+}

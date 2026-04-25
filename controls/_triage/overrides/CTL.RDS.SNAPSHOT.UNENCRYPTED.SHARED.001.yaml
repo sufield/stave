@@ -1,0 +1,40 @@
+control: CTL.RDS.SNAPSHOT.UNENCRYPTED.SHARED.001
+defect: >
+  RDS snapshot is shared with one or more named
+  AWS accounts and the snapshot itself is not
+  encrypted.
+infection: >
+  An unencrypted shared snapshot gives the
+  receiving account full plaintext access to
+  the database. The mechanics: receiving account
+  calls `restore-db-instance-from-db-snapshot`
+  with the shared snapshot's ARN, RDS provisions
+  a fresh instance from the snapshot in the
+  receiving account, the receiving account sets
+  up its own master credentials on the new
+  instance, and reads every table, every row,
+  every stored credential the source database
+  held. There is no access control on the data
+  itself once the snapshot is restored — the
+  source database's per-user grants do not
+  carry across the restore boundary, because the
+  restored instance is a fresh database in a
+  different account. Encryption with a CMK
+  changes the model: the receiving account can
+  read only as long as the source account
+  leaves the CMK enabled and the key policy
+  grants decrypt to the receiving account;
+  revocation is immediate via key-disable or
+  policy modification; every cross-account
+  decrypt is logged in CloudTrail under the
+  receiving account's identity. Distinct from
+  CTL.RDS.SNAPSHOT.PUBLIC.001 (snapshots shared
+  with `all`) — this catches the named-account
+  share that the security review classifies as
+  "controlled" because the recipients are
+  enumerated.
+failure: >
+  Uncontrolled cross-account data sharing. Full
+  database content available in plaintext to
+  the receiving account with no encryption-key
+  control plane to revoke access.

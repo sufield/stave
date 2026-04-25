@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SNAPSHOT.CROSSENV.001
+name: Production RDS Snapshots Must Not Be Shared with Non-Production
+description: >
+  RDS snapshots whose source instance is tagged production
+  (env=prod, tier=production, environment=prod, etc.) must
+  not be shared with accounts tagged or known to be
+  development, staging, or testing. Production database
+  snapshots contain production data: customer records,
+  transaction history, user authentication tables, API keys
+  stored in config tables, PHI, PII, financial detail —
+  every row the live database serves. Sharing the snapshot
+  with a non-production account makes that data accessible to
+  every developer who has database-restore rights in the
+  receiving account, which is invariably a broader set of
+  principals than the source account permits, operating
+  under weaker network controls, less monitoring, and more
+  permissive SCPs. Production data in a non-production
+  environment escapes every production security control by
+  construction. Same architectural pattern as
+  CTL.EC2.EBS.CROSSENV.SNAPSHOT.001 applied to the database
+  domain. The recommended path is synthetic or anonymized
+  data for non-production workloads; sharing real snapshots
+  is rarely required and almost always indicative of a
+  shortcut taken under pressure.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  pci_dss_v4: "9.4"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["DSP-17", "DSP-18"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: data_access
+remediation:
+  description: Production-tagged RDS snapshot is shared with a non-production account.
+  action: Revoke the share; supply synthetic or anonymized data to non-production environments instead.
+  example: |
+    {"database": {"kind": "rds_snapshot", "snapshot": {"shared_with_nonprod": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_snapshot
+    - field: properties.database.snapshot.contains_prod_data
+      op: eq
+      value: true
+    - field: properties.database.snapshot.shared_with_nonprod
+      op: eq
+      value: true

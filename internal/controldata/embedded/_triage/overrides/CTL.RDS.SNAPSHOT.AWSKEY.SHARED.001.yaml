@@ -1,0 +1,43 @@
+control: CTL.RDS.SNAPSHOT.AWSKEY.SHARED.001
+defect: >
+  RDS snapshot encrypted with the AWS-managed
+  aws/rds key is shared cross-account; the
+  receiving account cannot restore it.
+infection: >
+  This is operational failure disguised as
+  successful sharing. The mechanics:
+  `modify-db-snapshot-attribute --attribute-name
+  restore --values-to-add <account>` succeeds
+  on the source side and the snapshot ARN
+  appears in the receiving account's
+  `describe-db-snapshots --include-shared`
+  output. Anyone reviewing the share looks at
+  the source-side console and reads "shared with
+  account X." But aws/rds is account-specific:
+  it is an AWS-managed key in the source
+  account, with an AWS-managed key policy that
+  does not grant kms:Decrypt to other accounts.
+  The receiving account cannot decrypt the
+  snapshot's data even though the snapshot
+  metadata is visible. The first signal that
+  something is wrong is when the receiving
+  account calls
+  `restore-db-instance-from-db-snapshot` and
+  gets a KMS access-denied error, with no
+  obvious mapping back to "the source account
+  encrypted with the wrong key." The pattern is
+  most common in DR-rehearsal exercises (DR
+  account tries to restore and discovers the
+  rehearsal does not work) and in cross-account
+  audit-copy workflows where the audit account
+  expected restore capability that the share
+  did not actually grant. The fix is to copy
+  the snapshot under a customer-managed CMK
+  with a cross-account-grant key policy, then
+  re-share the new snapshot.
+failure: >
+  Unrestorable shared snapshot. The DR
+  rehearsal, the audit-copy workflow, or the
+  cross-account restore that motivated the
+  share does not actually work; the failure
+  surfaces only when restore is attempted.

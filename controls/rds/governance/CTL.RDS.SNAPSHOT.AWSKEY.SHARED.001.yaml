@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SNAPSHOT.AWSKEY.SHARED.001
+name: Shared RDS Snapshots Must Be Encrypted with a Customer-Managed Key
+description: >
+  RDS snapshots shared cross-account must be encrypted with a
+  customer-managed KMS key (CMK) whose key policy grants the
+  receiving account decrypt access — not the AWS-managed
+  aws/rds key. The aws/rds key is account-specific: the
+  receiving account cannot KMS:Decrypt against the source
+  account's aws/rds key because the AWS-managed key policy
+  does not permit cross-account use. The result is the
+  particular failure mode where the snapshot share appears to
+  succeed (the snapshot ARN shows up in the receiving
+  account's `describe-db-snapshots --include-shared` results)
+  but the actual restore fails the moment the receiving
+  account calls `restore-db-instance-from-db-snapshot`,
+  surfacing a KMS access-denied error that is hard to map
+  back to "the source account encrypted with the wrong key."
+  This is operational failure disguised as successful
+  sharing, common in DR-rehearsal exercises and cross-account
+  audit copy workflows. The fix is symmetric: snapshots
+  intended to be shared cross-account are encrypted with a
+  CMK whose key policy explicitly grants the receiving
+  account decrypt rights.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12"
+  ccm_v4: ["CEK-03", "BCR-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: RDS snapshot encrypted with aws/rds is shared cross-account; receiving account cannot restore it.
+  action: Copy the snapshot under a CMK with a cross-account-grant key policy and re-share the new snapshot.
+  example: |
+    {"database": {"kind": "rds_snapshot", "snapshot": {"cross_account_restorable": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_snapshot
+    - field: properties.database.snapshot.shared
+      op: eq
+      value: true
+    - field: properties.database.snapshot.uses_aws_managed_key
+      op: eq
+      value: true

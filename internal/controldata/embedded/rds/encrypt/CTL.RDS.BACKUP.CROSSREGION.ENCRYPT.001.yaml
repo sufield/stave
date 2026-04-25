@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.BACKUP.CROSSREGION.ENCRYPT.001
+name: RDS Cross-Region Backup Copies Must Be Encrypted at Destination
+description: >
+  RDS cross-region backup or snapshot copies must be encrypted
+  at the destination region with a KMS key that exists in that
+  region. Snapshot copy operations do not inherit the source
+  region's KMS key — the destination must specify its own. If
+  the copy is performed without `--kms-key-id`, the destination
+  copy lands unencrypted (or, in rare permissions edge cases,
+  the copy fails and falls back to retrying without the key).
+  The result is a backup pair where the source-region copy is
+  encrypted and the destination-region copy is not, and the
+  next AWS Config audit reads "encrypted: yes" because it
+  inspects the source instance, not the cross-region copy.
+  Cross-region backups exist precisely because the team wants
+  the data recoverable when the source region is unreachable;
+  arriving at that recovery moment to find the destination
+  copy unencrypted is the kind of "the alarm was disconnected
+  from the bell" failure that compromises the recovery
+  decision under outage pressure.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4: "3.4"
+  ccm_v4: ["DSP-15", "CEK-03"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: RDS cross-region backup / snapshot copy is unencrypted at the destination region.
+  action: Re-copy with an explicit destination-region KMS key (`--kms-key-id` on `copy-db-snapshot`).
+  example: |
+    {"database": {"kind": "rds_instance", "backup": {"cross_region_copy_encrypted": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.backup.has_cross_region_copy
+      op: eq
+      value: true
+    - field: properties.database.backup.cross_region_copy_encrypted
+      op: eq
+      value: false

@@ -1,0 +1,39 @@
+control: CTL.RDS.SNAPSHOT.CROSSENV.001
+defect: >
+  Production-tagged RDS snapshot is shared with
+  an account that the environment-tag heuristic
+  identifies as development, staging, testing,
+  or sandbox.
+infection: >
+  Production database snapshots contain
+  production data — customer records, transaction
+  history, user authentication tables, API keys
+  stored in config tables, PHI, PII, financial
+  detail. When the snapshot is shared with a
+  non-production account, that data becomes
+  readable to every developer, operator, and
+  contractor who has database-restore rights in
+  the receiving account. Non-production
+  accounts in practice have: more users with
+  broad access (developers need to debug),
+  weaker network controls (no production-tier
+  WAF, more permissive SGs), less monitoring
+  (CloudTrail at lower granularity, fewer GuardDuty
+  detectors), more permissive SCPs (the
+  organization's tolerance for trial-and-error
+  in non-prod is intentional). Production data
+  in non-production therefore escapes every
+  production security control by construction
+  — the data does not change, but its
+  environment does. Same architectural pattern
+  as CTL.EC2.EBS.CROSSENV.SNAPSHOT.001 in the
+  block-storage domain. The recommended
+  alternative for non-production debugging is
+  synthetic data, anonymized exports, or
+  developer-focused subsets that omit PII.
+failure: >
+  Production data in non-production. Customer
+  records, credentials, and application state
+  available in an environment whose security
+  control posture was designed for less
+  sensitive workloads.

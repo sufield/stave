@@ -1,0 +1,39 @@
+control: CTL.RDS.BACKUP.CROSSREGION.ENCRYPT.001
+defect: >
+  RDS cross-region backup or snapshot copy is
+  unencrypted at the destination region.
+infection: >
+  Snapshot copy operations across regions do not
+  inherit the source region's KMS key — KMS
+  keys are region-bound, so the copy must
+  specify a destination-region key explicitly
+  via `--kms-key-id`. When the copy operation
+  omits the destination key, the resulting
+  copy lands either unencrypted (the API
+  permits this when source was unencrypted, or
+  in some edge cases when copy-permission
+  resolution falls back) or encrypted with a
+  key the team did not author. The audit
+  failure is consistent: AWS Config or AWS
+  Security Hub reads the source instance and
+  reports `encrypted: yes`, the source-region
+  copy is encrypted with the source CMK, but
+  the destination-region copy is unencrypted
+  and indistinguishable in the source-region
+  audit. Cross-region backups exist precisely
+  because the team wants the data recoverable
+  when the source region is unreachable;
+  arriving at the recovery moment to find the
+  destination copy unencrypted is the kind of
+  silent-default-mismatch failure that
+  compromises the recovery decision under
+  outage pressure (the team must decide
+  whether to restore unencrypted data into a
+  fresh instance in seconds with imperfect
+  information).
+failure: >
+  Cross-region recovery copy is plaintext.
+  Restore-from-disaster reads encrypted source
+  but unencrypted destination; the encryption
+  audit on the source instance does not catch
+  the gap.

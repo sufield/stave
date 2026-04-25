@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "snap-cmk-share",
+      "type": "aws_rds_snapshot",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_snapshot","snapshot":{"id":"snap-cmk-shared","shared":true,"encrypted":true,"uses_aws_managed_key":false,"kms_key_id":"arn:aws:kms:us-east-1:111111111111:key/cross-account-cmk","shared_accounts":["444444444444"],"cross_account_restorable":true}}}
+    }
+  ]
+}

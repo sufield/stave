@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "db-with-replica",
+      "type": "aws_rds_instance",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_instance","backup":{"cross_region_dr_configured":true,"has_cross_region_backup":false,"has_cross_region_replica":true,"backup_regions":["us-east-1","us-west-2"]}}}
+    }
+  ]
+}

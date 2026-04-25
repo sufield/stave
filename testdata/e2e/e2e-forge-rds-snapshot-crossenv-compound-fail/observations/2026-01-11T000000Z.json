@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "snap-prod-dev-plain",
+      "type": "aws_rds_snapshot",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_snapshot","snapshot":{"id":"snap-prod-old","source_env":"prod","contains_prod_data":true,"shared_with_nonprod":true,"shared_accounts":["333333333333-dev"],"encrypted":false,"shared_unencrypted":true}}}
+    }
+  ]
+}

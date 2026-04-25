@@ -1,0 +1,39 @@
+control: CTL.RDS.BACKUP.CROSSREGION.001
+defect: >
+  RDS instance has no cross-region automated
+  backup replication, no cross-region snapshot
+  copy schedule, and no cross-region read replica.
+infection: >
+  RDS automated backups and manual snapshots are
+  stored in the same region as the source
+  instance; without an explicit cross-region
+  recovery path, every recovery option is
+  co-located with the resource it would recover.
+  Regional outages are rare but documented —
+  us-east-1 has had multi-hour service-impacting
+  outages in 2017, 2020, 2021, and 2023; other
+  regions have had multi-AZ failures with cascade
+  effects on RDS — and when they occur the
+  database AND its backups are unavailable
+  simultaneously. Multi-AZ does not address this
+  because Multi-AZ failover happens within the
+  region. AWS Backup cross-region copy and RDS
+  automated-backup replication are both
+  first-class features; the control fires on
+  their absence so the team's tolerance for
+  regional risk is an explicit decision rather
+  than an oversight. The most common origins of
+  this gap: instance brought up before
+  cross-region backup features existed and never
+  retroactively configured, IaC modules that
+  were authored in a region the team did not
+  initially worry about and never updated when
+  the workload became business-critical, and
+  cost reviews that disabled cross-region
+  replication without revisiting the recovery
+  posture.
+failure: >
+  Regional outage = total data unavailability.
+  The database and every recovery option are
+  in the same region; recovery in a second
+  region requires data the team does not have.

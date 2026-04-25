@@ -1,0 +1,39 @@
+control: CTL.RDS.BACKUP.RETENTION.COMPLIANCE.001
+defect: >
+  RDS instance carries a compliance tag (HIPAA,
+  PCI, PII, FedRAMP, SOX, etc.) and its automated
+  backup retention is below the framework's
+  recovery-window floor.
+infection: >
+  Frameworks specify the retention an organization
+  must be able to recover from, not just the
+  retention an organization must keep. PCI-DSS
+  10.7 specifies 1 year online plus 1 year
+  accessible offline; the operationally relevant
+  online-recovery floor is 365 days. HIPAA's
+  technical safeguards under 164.312(b) are read
+  in conjunction with the documentation-retention
+  rule under 164.316, which produces a 6-year
+  retention horizon for audit-relevant data
+  (≈2190 days). SOX retention for financial
+  records lands at 7 years (≈2555 days). RDS
+  automated backups cap at 35 days; covering a
+  multi-year framework floor requires AWS Backup
+  vault with a lifecycle policy or scheduled
+  manual snapshots routed through cross-region
+  copy. The failure mode is not that backups
+  disappear immediately at 36 days — it is that
+  the framework's recovery window is unmet and
+  the organization discovers this when an audit
+  asks for data older than 35 days. The control
+  fires only when both the compliance obligation
+  is present (tag-driven) AND the retention falls
+  short, so non-regulated workloads are not
+  alerted about retention they intentionally
+  keep short.
+failure: >
+  Compliance gap in the backup recovery window.
+  The framework requires recoverability across
+  the audit window; RDS automated backup
+  recoverability ends well before that window
+  does.

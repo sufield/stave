@@ -8,6 +8,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **RDS-5 — backup deepening, cross-region DR, and
+  snapshot sharing security (7 new controls, 3 chains).**
+  Fifth RDS gap-closure iteration. Closes the data-
+  resilience and snapshot-boundary surface that the
+  earlier RDS iterations did not reach. Spec asked for
+  ~8 controls; one duplicated `CTL.RDS.ENCRYPT.BACKUP.001`
+  (RDS-1's automated-backup encryption check), so 7
+  distinct additions shipped. Backup (3):
+  `BACKUP.RETENTION.COMPLIANCE` (compliance-tagged
+  instance with retention below the framework floor —
+  PCI 1y, HIPAA 6y, SOX 7y; fires only when the
+  obligation is present, high), `BACKUP.CROSSREGION`
+  (no cross-region recovery path of any kind — no
+  AWS Backup cross-region copy, no automated-backup
+  replication, no cross-region read replica; regional
+  outage = total data unavailability, medium),
+  `BACKUP.CROSSREGION.ENCRYPT` (cross-region copy
+  unencrypted at destination because copy operation
+  omitted `--kms-key-id`; source-region audit reads
+  encrypted but the off-region copy is plaintext,
+  high). Snapshot sharing (4):
+  `SNAPSHOT.UNENCRYPTED.SHARED` (snapshot shared with
+  named accounts in plaintext; receiving account
+  restores and reads everything, distinct from
+  CTL.RDS.SNAPSHOT.PUBLIC.001 which catches `all`,
+  high), `SNAPSHOT.CROSSENV` (production-tagged
+  snapshot shared with non-production account; same
+  pattern as CTL.EC2.EBS.CROSSENV.SNAPSHOT.001 in
+  the database domain, high), `SNAPSHOT.AWSKEY.SHARED`
+  (snapshot encrypted with aws/rds is shared
+  cross-account; the share appears successful but
+  restore fails with KMS access-denied — operational
+  failure disguised as successful sharing, surfacing
+  during DR rehearsals and audit-copy workflows,
+  medium), `SNAPSHOT.STALE` (manual snapshot > 365
+  days old; cost accumulation plus retention vs
+  deletion-policy gap for GDPR / HIPAA endpoints,
+  low). Chains: `rds_backup_failure` (existing
+  ENCRYPT.BACKUP + (no cross-region OR retention
+  below compliance) = backup posture broken on
+  multiple dimensions), `rds_snapshot_leakage`
+  (UNENCRYPTED.SHARED OR CROSSENV OR existing
+  SNAPSHOT.PUBLIC; threshold 1, fast-firing for
+  any sharing-boundary breach), `rds_snapshot_unusable`
+  (AWSKEY.SHARED OR CROSSREGION.ENCRYPT off; backup
+  exists but is either inaccessible or insecure).
+  17 e2e fixtures including a no-obligation gate
+  variant (RETENTION.COMPLIANCE asserts non-regulated
+  workloads are not flagged), an automated-snapshot
+  gate variant (STALE asserts the type-gate skips
+  RDS-managed automated snapshots), and a compound
+  CROSSENV-plus-unencrypted variant. 7 triage
+  overrides. RDS backup / snapshot coverage:
+  partial → comprehensive.
 - **RDS-4 — authentication, Secrets Manager integration,
   and RDS Proxy security (6 new controls, 3 chains).**
   Fourth RDS gap-closure iteration. Closes the credential-
