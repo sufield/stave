@@ -24,10 +24,15 @@ jobs:
           check-latest: true
           cache: true
 
-      - name: Generate unit test coverage
+      - name: Generate unit test coverage (exclude e2e)
         run: |
+          set -euo pipefail
           make sync-schemas sync-controls
-          go test ./... -covermode=atomic -coverprofile=unit.out
+          # Exclude ./e2e from unit coverage: that suite invokes the built
+          # stave binary per fixture and can exceed the default 10m global
+          # timeout even with a per-case bound. E2E runs in its own CI job.
+          pkgs="$(go list ./... | grep -vE '^github\.com/sufield/stave/e2e$')"
+          go test $pkgs -covermode=atomic -coverprofile=unit.out
 
       - name: Generate testscript integration coverage
         run: |
