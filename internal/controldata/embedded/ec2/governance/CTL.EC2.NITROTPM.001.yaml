@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.NITROTPM.001
+name: NitroTPM-Capable Instances Should Enable NitroTPM
+description: >
+  EC2 instances on Nitro families that support NitroTPM should
+  enable it. NitroTPM provides a virtual Trusted Platform Module
+  rooted in Nitro hardware: it produces hardware-backed
+  attestation that the instance booted with the expected
+  configuration (PCR-measured boot chain), it provides
+  cryptographically protected storage for keys (a TPM 2.0
+  interface that the OS, BitLocker, dm-crypt, and platform
+  attestation services consume directly), and it gives the
+  workload an enrolment identity that survives instance reboot
+  but cannot be cloned to a different instance. NitroTPM is
+  defense-in-depth — most workloads function without it — but
+  for FedRAMP-, FIPS-, and high-attestation deployments it is
+  a baseline expectation. Without NitroTPM, there is no
+  hardware-rooted way to prove the instance was not silently
+  rebooted into a tampered state.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "SI-7"
+  soc2: "CC6.8"
+  ccm_v4: ["IVS-09"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: Instance supports NitroTPM but it is not enabled.
+  action: Re-launch the instance with NitroTPM enabled in the launch template.
+  example: |
+    {"compute": {"kind": "instance", "instance": {"supports_nitro_tpm": true, "nitro_tpm_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance.supports_nitro_tpm
+      op: eq
+      value: true
+    - field: properties.compute.instance.nitro_tpm_enabled
+      op: eq
+      value: false

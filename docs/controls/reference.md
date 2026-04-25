@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1410
-**Pack hash:** `eade496ed2e1050458dcffce3787fcea57e67219cdfb1f4b7cebaa693c181e20`
+**Total controls:** 1423
+**Pack hash:** `a9c2c0ced0b4a5e199ceed670a88766fe44cb1b2f40c4e64dd80aebb7ceb5ce4`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 171 |
-| high | 628 |
+| high | 631 |
 | info | 16 |
-| low | 101 |
-| medium | 494 |
+| low | 103 |
+| medium | 502 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,10 +24,10 @@
 | detection | 32 |
 | encryption | 75 |
 | exposure | 848 |
-| governance | 33 |
+| governance | 42 |
 | hygiene | 16 |
 | identity | 326 |
-| network | 21 |
+| network | 25 |
 | resilience | 14 |
 | storage | 8 |
 
@@ -6315,6 +6315,21 @@ Auto Scaling Groups with EC2 health checks only replace instances when the under
 
 ---
 
+### CTL.EC2.ASG.LAUNCHCONFIG.001
+
+**Auto Scaling Groups Must Use Launch Templates Not Launch Configurations**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: A1.2;
+
+Auto Scaling Groups must reference a launch template, not a legacy launch configuration. Launch configurations are immutable one-shot definitions that AWS marks legacy: they do not support multiple versions (no rollback, no version pin), do not support mixed instance types (no Spot/On-Demand allocation strategies), do not support modern Nitro-only instance features, and cannot enforce IMDSv2 at the template level. AWS publishes a migration path because launch configurations will eventually be removed. Until they are, every ASG still on a launch configuration is on an unsupported substrate: any new EC2 capability (newer instance types, finer-grained metadata controls, encrypted-by- default volumes) is unavailable to it, and rollback after a bad launch is impossible because there is no version history.
+
+**Remediation:** Migrate the ASG to a launch template and delete the launch configuration.
+
+---
+
 ### CTL.EC2.DEFAULT.VPC.001
 
 **EC2 Instances Must Not Run in the Default VPC**
@@ -6672,6 +6687,21 @@ EC2 instances stopped for longer than the decommission threshold (default 90 day
 
 ---
 
+### CTL.EC2.KEYPAIR.NOKEY.SSHOPEN.001
+
+**EC2 Instances With SSH Open Must Have a Key Pair**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-17; soc2: CC6.1;
+
+EC2 instances whose security groups allow inbound SSH (port 22) must have an EC2 key pair associated. An instance launched without a key pair has no SSH public key injected by EC2 — yet if the security group permits SSH, the port is network-reachable. This combination is ambiguous and never the intended end state: either password authentication is enabled (the instance is brute-forceable from anywhere the SG permits), or SSH keys were added post-launch via user data, configuration management, or SSM (so a real access path exists but is invisible to AWS API audits), or SSH is open with no usable access method at all (gratuitous exposure). All three outcomes are problematic and none of them are visible by inspecting either the instance or the security group in isolation — the control surfaces them by joining the two.
+
+**Remediation:** Either close port 22 in the SG, or attach an explicit key pair to the instance.
+
+---
+
 ### CTL.EC2.KEYPAIR.ORPHAN.001
 
 **EC2 Key Pairs Must Be Used by at Least One Resource**
@@ -6684,6 +6714,36 @@ EC2 instances stopped for longer than the decommission threshold (default 90 day
 EC2 key pairs that no current instance and no current launch template references must be deleted from the account. An orphan key pair is the public half of an SSH key whose private half almost always still lives on a developer's laptop, in a CI secret store, or in an S3 bucket from a long-finished migration. As long as the key pair exists in EC2, anyone with the private half can ec2:ImportKeyPair-collide or simply launch a new instance with that key (with EC2 launch permissions) and gain SSH access to a freshly minted box bearing the orphan key. Worse, the orphan key may have been authorized on instances that were recently terminated whose AMIs still embed it — re-launching any such AMI re-grants the original key holder access. Key pairs leak quietly: the EC2 console shows them in the inventory with no usage indicator, so accumulation is the default state.
 
 **Remediation:** Delete the orphan key pair or document its intended use.
+
+---
+
+### CTL.EC2.KEYPAIR.SHARED.001
+
+**EC2 Key Pairs Should Not Be Shared Across Many Instances**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-17; soc2: CC6.1;
+
+EC2 key pairs should not be associated with more than the configured threshold of instances (default 5). The blast radius of a compromised private key is the count of instances that key authorizes; one leaked private key (in a developer's git history, in CI secrets, in a Slack message, in a misplaced password manager export) provides immediate SSH access to every instance that shares the public half. Wide sharing also makes rotation difficult: revoking a public key from many production instances requires coordination across every team that holds the private half. The control is a heuristic — some organizations intentionally use one key per environment — but past the threshold the blast radius is meaningfully wider than the team can usually manage in a coordinated rotation.
+
+**Remediation:** Split the key pair across smaller scoped keys (per-app, per-team, per-environment).
+
+---
+
+### CTL.EC2.KEYPAIR.SSM.PREFERRED.001
+
+**SSM-Managed Instances Should Prefer Session Manager Over SSH Key Pairs**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-17; soc2: CC6.1;
+
+EC2 instances that are SSM-managed (agent connected, instance profile carries SSM permissions) should not also maintain an SSH key pair plus an open port 22. SSM Session Manager provides shell access without opening a network port (the connection is initiated from the instance to the SSM control plane, not inbound), without distributing or rotating SSH keys (sessions are authenticated via IAM identities), and with full session logging in CloudTrail and S3 (every command and every byte of output is recorded). When SSM is available, an SSH key pair plus open port 22 is redundant access that adds attack surface (port reachability, key distribution) for capability that SSM already provides more safely. The control is advisory (low severity): some workloads have legitimate SSH-only flows (file transfer via SCP, debug tooling that requires raw SSH), but for most fleets the SSH path is vestigial.
+
+**Remediation:** Remove the key pair and close port 22; use SSM Session Manager for shell access.
 
 ---
 
@@ -6762,6 +6822,36 @@ Launch template references a subnet that has been deleted. Instance launches fai
 
 ---
 
+### CTL.EC2.LT.PUBLICIP.001
+
+**Launch Templates Must Not Force Public IP Auto-Assign**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4: 1.2;
+
+EC2 launch templates must not set AssociatePublicIpAddress to true on their network interface configuration. The launch template's network interface block overrides the subnet's MapPublicIpOnLaunch setting: an instance launched from this template into a private subnet (MapPublicIpOnLaunch: false) still receives a public IP because the template forces it. The subnet architecture and the template architecture disagree, and the template wins. Every scale-out event, every replacement launch, every manual launch from this template produces an internet-facing instance even when the subnet was designed to preclude that. The override is invisible to subnet-level controls: AUTOPUBLIC controls report the subnet correctly configured, no NACL or route-table change is required, and the exposure surfaces only after the next launch. The control catches the override at the template level — the only level at which it is actually configured.
+
+**Remediation:** Remove AssociatePublicIpAddress from the launch template's network interfaces.
+
+---
+
+### CTL.EC2.LT.VERSION.STALE.001
+
+**Launch Template Default Version Must Match the Latest Version**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC8.1;
+
+EC2 launch template default version (the version used by ASGs and manual launches that do not pin a specific number) must match the template's latest version. Launch templates are versioned: every edit produces a new version, and the default version pointer is updated separately. When the default lags behind latest, security improvements that were authored into the newer versions are not applied to scale-out events, replacement launches, or any workflow that takes the default. Common drift: version 7 enforces IMDSv2 and is the latest, but the default is pinned at version 5 → every new instance launches with IMDSv1 enabled. Or version 8 updates the AMI for a published CVE fix, but version 6 is default → new instances launch with the vulnerable AMI. The version delta is a measurable governance gap: the work was done but never made authoritative.
+
+**Remediation:** Update the default version to latest after reviewing the version diff.
+
+---
+
 ### CTL.EC2.NETWORK.DIRECT.001
 
 **Public Instances Must Be Behind a Load Balancer**
@@ -6777,6 +6867,66 @@ EC2 instances with public IPs receiving internet traffic must be behind an ALB o
 
 ---
 
+### CTL.EC2.NETWORK.DUALHOMED.001
+
+**EC2 Instances Must Not Span Multiple Security Zones via ENIs**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4: 1.4;
+
+EC2 instances must not have network interfaces in subnets that belong to different security zones (public + private; production + development; data + application). When an instance carries ENIs in two zones, the instance IS the bridge between those zones — the network segmentation that exists between the subnets is defeated by the instance's presence in both. A compromise via the internet-facing ENI provides immediate, in-process access to the internal ENI's subnet, with no firewall rule change required and no traffic crossing a peering or transit gateway that the security team can audit. Dual-homed instances are typically introduced as shortcuts (a one-off jump host, a "temporary" management ENI, an ill-advised database access workaround) and are rarely decommissioned because the service that depends on them looks healthy; meanwhile they constitute a network-segmentation exception that the architecture diagram does not show.
+
+**Remediation:** Remove the cross-zone ENI; route via a properly-policed gateway or peering instead.
+
+---
+
+### CTL.EC2.NETWORK.MULTIPLE.SG.001
+
+**EC2 Instances Should Not Have Excessive Security Groups**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4;
+
+EC2 instances should attach no more than the configured threshold of security groups (default 5). Security group rules are additive: the effective inbound and outbound access of an instance is the UNION of every rule across every attached SG. A restrictive SG that only permits 443 from a specific CIDR is silently negated when a permissive SG attached to the same instance permits 22 from 0.0.0.0/0 — the instance is then reachable on both ports, and no individual SG inspection surfaces the problem. As the number of attached SGs grows, the effective rule set becomes the cross-product of dozens or hundreds of rules; auditing whether a specific port is exposed requires evaluating every rule of every SG together. Five is a configurable threshold — many architectures legitimately stack base + app + environment + management SGs — but past it, the effective access surface is unauditable in practice.
+
+**Remediation:** Consolidate the rules into fewer SGs or split the workload across instances.
+
+---
+
+### CTL.EC2.NETWORK.SRCDSTCHECK.001
+
+**Source/Destination Check Must Be Enabled on Non-Appliance Instances**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4: 1.4;
+
+EC2 instances that are not NAT gateways, VPN endpoints, or other network appliances must keep source/destination check enabled (the default). When source/destination check is enabled, the instance only processes traffic addressed to its own IP — it cannot act as a router, proxy, or man-in-the-middle. Disabling source/destination check is the single configuration step that turns a normal application instance into a router; it allows the instance to receive and forward traffic addressed to other IPs. On a NAT/VPN/appliance role this is intended. On a standard application instance, it allows the instance to intercept inter-instance traffic, route between subnets bypassing subnet-level controls, and operate as a covert proxy. The control whitelists instances that announce themselves as NAT, VPN, or network appliances; everything else with the check disabled is a finding.
+
+**Remediation:** Re-enable source/destination check, or tag/document the appliance role.
+
+---
+
+### CTL.EC2.NITRO.001
+
+**EC2 Instances Should Use Nitro-Based Instance Types**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SC-39; soc2: CC6.6;
+
+EC2 instances should run on Nitro-based instance families (C5, M5, R5, T3 and all newer C6/M6/R6/C7/M7/etc. families). Nitro instances provide hardware-enforced isolation between the instance and the hypervisor: the hypervisor is offloaded to dedicated Nitro cards (a smaller software attack surface than the Xen-based families), EBS and networking are handled by separate Nitro hardware (not shared with the hypervisor), and the instance has no path to the underlying host OS. Xen-based families (C4, M4, R4, T2, I3, D2, H1) use a software hypervisor that has been the target of multiple cross-tenant CVEs (XSA-212, XSA-293, XSA-320). Workloads that require the strongest hypervisor isolation guarantees should migrate to a Nitro family.
+
+**Remediation:** Migrate the instance to a Nitro-based instance family (C5/M5/R5/T3 or newer).
+
+---
+
 ### CTL.EC2.NITRO.ENCLAVE.001
 
 **Sensitive Workloads Must Use Nitro Enclaves for Cryptographic Isolation**
@@ -6789,6 +6939,21 @@ EC2 instances with public IPs receiving internet traffic must be behind an ALB o
 Nitro Enclaves provide an isolated execution environment with no persistent storage, no interactive access, and no external networking. Cryptographic operations performed inside an enclave are protected even if the parent instance is compromised. Applies only to instances tagged requires-enclave=true.
 
 **Remediation:** aws ec2 modify-instance-attribute --instance-id <id> --enclave-options Enabled=true. Requires an enclave-capable instance type (m5, c5, r5 or newer).
+
+---
+
+### CTL.EC2.NITROTPM.001
+
+**NitroTPM-Capable Instances Should Enable NitroTPM**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-7; soc2: CC6.8;
+
+EC2 instances on Nitro families that support NitroTPM should enable it. NitroTPM provides a virtual Trusted Platform Module rooted in Nitro hardware: it produces hardware-backed attestation that the instance booted with the expected configuration (PCR-measured boot chain), it provides cryptographically protected storage for keys (a TPM 2.0 interface that the OS, BitLocker, dm-crypt, and platform attestation services consume directly), and it gives the workload an enrolment identity that survives instance reboot but cannot be cloned to a different instance. NitroTPM is defense-in-depth — most workloads function without it — but for FedRAMP-, FIPS-, and high-attestation deployments it is a baseline expectation. Without NitroTPM, there is no hardware-rooted way to prove the instance was not silently rebooted into a tampered state.
+
+**Remediation:** Re-launch the instance with NitroTPM enabled in the launch template.
 
 ---
 
@@ -6864,6 +7029,21 @@ Each EC2 instance should use a dedicated instance profile not shared with other 
 EC2 instances should not have public IP addresses unless explicitly required. Public IP assignment exposes the instance to direct internet access, bypassing network perimeter controls.
 
 **Remediation:** Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access.
+
+---
+
+### CTL.EC2.SECUREBOOT.001
+
+**UEFI-Capable EC2 Instances Must Enable Secure Boot**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-7; soc2: CC6.8;
+
+EC2 instances booted in UEFI mode must enable Secure Boot. Secure Boot creates a chain of trust from hardware to OS: the UEFI firmware cryptographically validates the bootloader, the bootloader validates the kernel, and the kernel validates kernel modules and drivers. If any link is modified by a bootkit, a rootkit, or a supply-chain compromise, the verification fails and the boot halts. Without Secure Boot, a compromised bootloader or kernel executes before the OS-level security tools (EDR, file integrity monitoring, antimalware) load — making the compromise invisible to every detection layer the organization has invested in. The control fires only on instances that support UEFI: legacy BIOS instances cannot enable Secure Boot, so the finding would not be actionable for them.
+
+**Remediation:** Enable UEFI Secure Boot on the instance and re-launch.
 
 ---
 
@@ -7059,6 +7239,21 @@ SSM Session Manager provides interactive shell access to EC2 instances without S
 Subnets configured to automatically assign public IP addresses make every instance launched into them directly internet-reachable. An operator who launches an instance without specifying a private IP gets an unexpected public IP — creating unintended internet exposure. Private subnets require explicit intent to assign a public IP.
 
 **Remediation:** aws ec2 modify-subnet-attribute --subnet-id <id> --no-map-public-ip-on-launch
+
+---
+
+### CTL.EC2.TENANCY.SENSITIVE.001
+
+**Sensitive Workloads Must Not Run on Default (Shared) Tenancy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: SC-39;
+
+EC2 instances tagged as processing sensitive data (HIPAA, PCI, CONFIDENTIAL, FedRAMP, or other compliance indicators) must run on dedicated tenancy or on a dedicated host. Default tenancy shares the underlying physical hardware with instances from other AWS customers. The Nitro hypervisor provides strong isolation, and most compliance frameworks accept default tenancy in practice; but several frameworks and many organizational policies (PCI-DSS internal interpretations, HIPAA Business Associate Agreements, FedRAMP High, and tier-1 financial customer contracts) require hardware that is not shared with other tenants. This control fires only on instances flagged as sensitive — non-sensitive workloads on shared tenancy are not unsafe by themselves. The intent is to catch the mismatch where a workload's compliance classification has tightened (a new HIPAA tag was applied to an existing fleet) without the corresponding tenancy migration.
+
+**Remediation:** Migrate the instance to dedicated tenancy or a dedicated host.
 
 ---
 

@@ -1,0 +1,33 @@
+control: CTL.EC2.TENANCY.SENSITIVE.001
+defect: >
+  EC2 instance is tagged as processing sensitive data
+  (HIPAA, PCI, CONFIDENTIAL, FedRAMP, etc.) but is
+  running on default (shared) tenancy.
+infection: >
+  Default tenancy means the underlying physical hardware
+  is shared with EC2 instances belonging to other AWS
+  customers. The Nitro hypervisor isolates instances
+  cryptographically at the hardware level — for the vast
+  majority of regulated workloads, default tenancy meets
+  the technical requirement of every major framework.
+  But several frameworks and many organizational
+  interpretations require something stronger:
+  PCI-DSS-internal interpretations that bar shared
+  hardware for cardholder data; HIPAA Business Associate
+  Agreements that contractually demand dedicated tenancy
+  for PHI; FedRAMP High where dedicated infrastructure is
+  the documented baseline; and tier-1 financial-customer
+  contracts that explicitly forbid co-tenancy. A
+  sensitive-tagged instance on default tenancy is rarely
+  deliberate — it is usually a workload whose
+  classification tightened (a new regulatory regime, a
+  new customer's contract, a HIPAA tag applied to a
+  fleet) without the corresponding tenancy migration.
+  The control fires only on instances that announce
+  themselves as sensitive; the failure mode is not
+  technical isolation but compliance-contractual.
+failure: >
+  Compliance gap. The instance technically operates
+  correctly on shared tenancy, but its compliance posture
+  contradicts the framework or contract under which the
+  data was tagged.

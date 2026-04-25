@@ -1,0 +1,32 @@
+control: CTL.EC2.NETWORK.MULTIPLE.SG.001
+defect: >
+  EC2 instance has more security groups attached than
+  the configured audit threshold (default 5).
+infection: >
+  Security group rules combine by union: the effective
+  inbound and outbound access of an instance is the
+  superset of every rule in every attached SG, evaluated
+  simultaneously. A restrictive SG that explicitly limits
+  inbound to port 443 from a specific CIDR is silently
+  negated when a second SG attached to the same instance
+  permits inbound port 22 from 0.0.0.0/0; the instance
+  becomes reachable on both. This is not a bug in the
+  SG implementation — it is the documented union
+  semantic — but it makes per-SG inspection misleading.
+  An auditor reviewing SG-A and finding it correctly
+  restricted has not learned anything about the
+  instance's actual exposure. As the count rises, the
+  cross-product of rules becomes hundreds; the
+  effective access surface is no longer something a
+  human can hold in working memory. Five SGs is a
+  configurable line: many architectures legitimately
+  stack base + app-tier + environment + management +
+  vendor SGs and stay auditable. Past the threshold,
+  the SG configuration is operating in a regime where
+  unintended exposure is the typical outcome of any
+  rule addition.
+failure: >
+  Unauditable network access surface. The effective
+  rule set is the union of N SGs and exceeds the
+  practical reviewability threshold; new exposures
+  appear without detection.

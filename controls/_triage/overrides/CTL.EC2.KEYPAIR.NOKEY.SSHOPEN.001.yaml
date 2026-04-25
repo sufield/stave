@@ -1,0 +1,31 @@
+control: CTL.EC2.KEYPAIR.NOKEY.SSHOPEN.001
+defect: >
+  EC2 instance was launched without a key pair, but its
+  security group allows inbound SSH (port 22).
+infection: >
+  The combination is ambiguous in a way that single-
+  resource audits do not surface. Three possible
+  realities sit behind the same observation: (1) password
+  authentication is enabled in sshd_config — the
+  instance is brute-forceable from anywhere the SG
+  permits, and the relevant detection signal is on the
+  instance OS, not in any AWS API; (2) SSH keys were
+  added to ~/.ssh/authorized_keys post-launch, via user
+  data, configuration management, SSM run command, or
+  manual interactive session — a real access path
+  exists, the audit cannot see it, and rotation /
+  revocation are completely outside the EC2 key-pair
+  lifecycle the org's processes assume; (3) port 22 is
+  open with no usable access method at all — gratuitous
+  exposure left from a launch script that opened the
+  port in case it was needed and never closed it. None
+  of the three is the intended end state, and none of
+  them shows up in either an instance inspection or an
+  SG inspection in isolation; the joint check is the
+  only signal.
+failure: >
+  Ambiguous SSH access surface. Either brute-forceable,
+  invisibly authorized, or gratuitously exposed — the
+  organization does not know which, and cannot decide
+  rotation, revocation, or closure correctly without
+  finding out.

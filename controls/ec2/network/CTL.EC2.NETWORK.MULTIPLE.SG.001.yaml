@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.NETWORK.MULTIPLE.SG.001
+name: EC2 Instances Should Not Have Excessive Security Groups
+description: >
+  EC2 instances should attach no more than the configured threshold
+  of security groups (default 5). Security group rules are
+  additive: the effective inbound and outbound access of an
+  instance is the UNION of every rule across every attached SG. A
+  restrictive SG that only permits 443 from a specific CIDR is
+  silently negated when a permissive SG attached to the same
+  instance permits 22 from 0.0.0.0/0 — the instance is then
+  reachable on both ports, and no individual SG inspection
+  surfaces the problem. As the number of attached SGs grows, the
+  effective rule set becomes the cross-product of dozens or
+  hundreds of rules; auditing whether a specific port is exposed
+  requires evaluating every rule of every SG together. Five is a
+  configurable threshold — many architectures legitimately stack
+  base + app + environment + management SGs — but past it, the
+  effective access surface is unauditable in practice.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  ccm_v4: ["IVS-04"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: Instance has more security groups attached than the audit threshold allows.
+  action: Consolidate the rules into fewer SGs or split the workload across instances.
+  example: |
+    {"compute": {"kind": "instance", "instance": {"sg_count_excessive": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance.sg_count_excessive
+      op: eq
+      value: true

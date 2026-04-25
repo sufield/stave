@@ -1,0 +1,31 @@
+control: CTL.EC2.LT.VERSION.STALE.001
+defect: >
+  EC2 launch template's default version (used by ASGs
+  and unpinned manual launches) is not the template's
+  latest version.
+infection: >
+  Launch templates are versioned: every edit produces a
+  new immutable version, and a separate pointer
+  ("default version") chooses which version unpinned
+  consumers use. The default-vs-latest gap is the
+  measurable difference between "we authored the
+  hardening" and "the hardening is taking effect." A
+  version-7 edit that enforces IMDSv2 sits unused while
+  ASGs default to version 5 and continue launching
+  IMDSv1 instances. A version-8 update that swaps in a
+  patched AMI sits unused while version 6 is the
+  default and replacement launches still pull the
+  vulnerable image. The work is committed; the work is
+  not authoritative; nobody updated the default
+  pointer. Some organizations pin versions
+  intentionally for stability — the triage acknowledges
+  that and asks the operator to review the version diff
+  for security-relevant changes before promoting. The
+  failure mode is governance, not malice: the team
+  authored the right change and never finished the
+  rollout step.
+failure: >
+  Authored security improvements not in effect. New
+  instance launches use the older configuration; the
+  improvements live only in unused versions of the
+  template.

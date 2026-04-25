@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.KEYPAIR.SSM.PREFERRED.001
+name: SSM-Managed Instances Should Prefer Session Manager Over SSH Key Pairs
+description: >
+  EC2 instances that are SSM-managed (agent connected, instance
+  profile carries SSM permissions) should not also maintain an
+  SSH key pair plus an open port 22. SSM Session Manager provides
+  shell access without opening a network port (the connection is
+  initiated from the instance to the SSM control plane, not
+  inbound), without distributing or rotating SSH keys (sessions
+  are authenticated via IAM identities), and with full session
+  logging in CloudTrail and S3 (every command and every byte of
+  output is recorded). When SSM is available, an SSH key pair plus
+  open port 22 is redundant access that adds attack surface
+  (port reachability, key distribution) for capability that SSM
+  already provides more safely. The control is advisory (low
+  severity): some workloads have legitimate SSH-only flows
+  (file transfer via SCP, debug tooling that requires raw SSH),
+  but for most fleets the SSH path is vestigial.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "AC-17"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-08"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SSM-managed instance also maintains a key pair and an open SSH port.
+  action: Remove the key pair and close port 22; use SSM Session Manager for shell access.
+  example: |
+    {"compute": {"kind": "instance", "instance": {"ssm_managed": true, "has_key_pair": false, "sg_allows_ssh": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance.ssm_managed
+      op: eq
+      value: true
+    - field: properties.compute.instance.has_key_pair
+      op: eq
+      value: true
+    - field: properties.compute.instance.sg_allows_ssh
+      op: eq
+      value: true

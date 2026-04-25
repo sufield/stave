@@ -1,0 +1,31 @@
+control: CTL.EC2.ASG.LAUNCHCONFIG.001
+defect: >
+  Auto Scaling Group references a legacy launch
+  configuration instead of a launch template.
+infection: >
+  Launch configurations are immutable one-shot
+  definitions that AWS marks legacy and has begun
+  deprecating. The structural limitations they impose
+  on the ASG cumulatively matter: no version history,
+  so any bad rollout is irreversible without
+  recreating the LC and the ASG; no mixed-instance-
+  types support, so Spot/On-Demand allocation
+  strategies and instance-type diversification (for
+  resilience to single-family capacity events) are
+  unavailable; no template-level IMDSv2 enforcement,
+  leaving instance-by-instance configuration for
+  metadata hardening; and no support for the newer
+  Nitro-only instance features (network-scope ENIs,
+  encrypted-by-default volumes at the template level,
+  newer placement options). Until AWS removes launch
+  configurations, an ASG on one is on an unsupported
+  substrate that diverges further from current EC2
+  capabilities with every release. Migration to a
+  launch template is the only forward path; the work
+  is mechanical but is rarely prioritized until a
+  capability gap becomes blocking.
+failure: >
+  ASG cannot adopt newer EC2 capabilities. Resilience
+  features (mixed instance types, Spot allocation
+  strategies) and security features (template-level
+  IMDSv2 enforcement) are unavailable until migration.

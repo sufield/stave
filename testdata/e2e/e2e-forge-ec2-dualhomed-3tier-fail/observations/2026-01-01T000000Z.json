@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "i-0bridge3tier",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {"compute":{"kind":"instance","instance":{"spans_security_zones":true,"eni_count":3,"eni_subnet_tiers":["public","private","data"]}}}
+    }
+  ]
+}

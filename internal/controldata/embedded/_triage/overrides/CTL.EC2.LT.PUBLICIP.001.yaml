@@ -1,0 +1,32 @@
+control: CTL.EC2.LT.PUBLICIP.001
+defect: >
+  EC2 launch template's network interface configuration
+  sets AssociatePublicIpAddress to true.
+infection: >
+  The launch template's network-interface block
+  overrides the subnet's MapPublicIpOnLaunch setting
+  for any instance launched from the template. An
+  instance launched from this template into a subnet
+  that the architecture marked private
+  (MapPublicIpOnLaunch: false) still receives a public
+  IP, because the template forces the assignment. The
+  override is invisible to subnet-level controls:
+  AUTOPUBLIC-style checks report the subnet correctly
+  configured, no NACL or route-table change is
+  required, and the exposure surfaces only at the next
+  scale-out, replacement launch, or manual launch.
+  Operators reasoning from the subnet name ("the
+  private subnet") expect a private instance; the
+  template silently disagrees. Common origins are
+  CloudFormation modules copied from a public-instance
+  example, Terraform modules that defaulted the
+  attribute on for legacy reasons, and "we needed
+  internet for one launch" workarounds that were
+  never reverted. The architectural assumption that
+  subnet placement determines public reachability is
+  defeated at the template level.
+failure: >
+  Subnet architecture override. Instances designed for
+  private subnet placement are launched internet-facing,
+  defeating the segmentation the subnet design
+  encoded.

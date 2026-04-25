@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SECUREBOOT.001
+name: UEFI-Capable EC2 Instances Must Enable Secure Boot
+description: >
+  EC2 instances booted in UEFI mode must enable Secure Boot. Secure
+  Boot creates a chain of trust from hardware to OS: the UEFI
+  firmware cryptographically validates the bootloader, the
+  bootloader validates the kernel, and the kernel validates kernel
+  modules and drivers. If any link is modified by a bootkit, a
+  rootkit, or a supply-chain compromise, the verification fails and
+  the boot halts. Without Secure Boot, a compromised bootloader or
+  kernel executes before the OS-level security tools (EDR, file
+  integrity monitoring, antimalware) load — making the compromise
+  invisible to every detection layer the organization has invested
+  in. The control fires only on instances that support UEFI: legacy
+  BIOS instances cannot enable Secure Boot, so the finding would
+  not be actionable for them.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7"
+  soc2: "CC6.8"
+  ccm_v4: ["IVS-09"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: UEFI-capable EC2 instance does not have Secure Boot enabled.
+  action: Enable UEFI Secure Boot on the instance and re-launch.
+  example: |
+    {"compute": {"kind": "instance", "instance": {"boot_mode": "uefi", "uefi_secure_boot_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance.supports_uefi
+      op: eq
+      value: true
+    - field: properties.compute.instance.uefi_secure_boot_enabled
+      op: eq
+      value: false

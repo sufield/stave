@@ -1,0 +1,32 @@
+control: CTL.EC2.KEYPAIR.SSM.PREFERRED.001
+defect: >
+  SSM-managed instance also has an SSH key pair attached
+  AND its security group permits inbound SSH (port 22).
+infection: >
+  SSM Session Manager and SSH-via-key-pair are two
+  different access paths to the same shell. SSM does
+  every step the organization wants for an audited
+  access plane: the connection is initiated outbound
+  from the agent (no inbound port required), the
+  identity is an IAM principal (not a private-key
+  bearer), the session is logged in CloudTrail and
+  optionally streamed to S3 / CloudWatch (every keystroke
+  and every byte of output is recorded), and the access
+  grant is revoked by removing the IAM permission (no
+  per-instance config change needed). SSH-via-key-pair
+  does none of those: the port must be open
+  (network-reachable surface), the identity is whoever
+  holds the private half (no IAM trail), the session is
+  not logged by AWS at all (every byte is on the
+  instance OS), and revocation requires touching every
+  instance to remove the public key. When SSM is
+  available, the SSH path is redundant capability that
+  exists only as additional attack surface. Some
+  workloads have legitimate SSH-only flows (SCP/SFTP
+  file transfer, raw-socket debug tooling), so the
+  control is advisory rather than blocking.
+failure: >
+  Unnecessary attack surface. Port 22 reachability and
+  key-pair distribution are maintained alongside SSM,
+  which already provides the same capability with
+  better auth, audit, and revocation properties.

@@ -1,0 +1,29 @@
+control: CTL.EC2.NITRO.001
+defect: >
+  EC2 instance is running on a Xen-based instance type
+  (C4, M4, R4, T2, I3, D2, H1) instead of a Nitro family.
+infection: >
+  The Nitro architecture moves the hypervisor's networking
+  and EBS responsibilities onto dedicated Nitro hardware
+  cards. The Nitro hypervisor itself is a minimized
+  implementation that runs alongside (not on top of) the
+  guest, with no shared memory and no path from the guest
+  to the underlying host OS. Xen-based families use the
+  classical software hypervisor model — the same hypervisor
+  binary that has been the published target of repeated
+  cross-tenant CVEs (XSA-212, XSA-293, XSA-320 are the
+  best-known; the Xen security advisory feed has dozens
+  more). For most workloads the Xen-Nitro distinction is
+  invisible at runtime, but for any instance that processes
+  data the operator would not want a hypothetical
+  same-host attacker to read, the larger Xen attack
+  surface is a meaningful difference. Nitro is also a
+  prerequisite for several newer hardening features
+  (NitroTPM, improved IMDS rate limiting, better SR-IOV
+  isolation, more aggressive side-channel mitigations) —
+  the instance staying on Xen permanently caps which
+  protections it can adopt.
+failure: >
+  Larger hypervisor attack surface. The instance is
+  exposed to the historical and ongoing Xen CVE class,
+  and is gated out of the Nitro-only hardening features.

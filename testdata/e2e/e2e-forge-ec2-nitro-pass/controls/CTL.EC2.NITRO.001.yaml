@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.NITRO.001
+name: EC2 Instances Should Use Nitro-Based Instance Types
+description: >
+  EC2 instances should run on Nitro-based instance families
+  (C5, M5, R5, T3 and all newer C6/M6/R6/C7/M7/etc. families).
+  Nitro instances provide hardware-enforced isolation between the
+  instance and the hypervisor: the hypervisor is offloaded to
+  dedicated Nitro cards (a smaller software attack surface than the
+  Xen-based families), EBS and networking are handled by separate
+  Nitro hardware (not shared with the hypervisor), and the instance
+  has no path to the underlying host OS. Xen-based families
+  (C4, M4, R4, T2, I3, D2, H1) use a software hypervisor that has
+  been the target of multiple cross-tenant CVEs (XSA-212, XSA-293,
+  XSA-320). Workloads that require the strongest hypervisor
+  isolation guarantees should migrate to a Nitro family.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-39"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: EC2 instance runs on a Xen-based (non-Nitro) instance family.
+  action: Migrate the instance to a Nitro-based instance family (C5/M5/R5/T3 or newer).
+  example: |
+    {"compute": {"kind": "instance", "instance": {"is_nitro": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance.is_nitro
+      op: eq
+      value: false

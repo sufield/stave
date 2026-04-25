@@ -8,6 +8,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **EC2-6 — key pair lifecycle and remaining EC2 gaps
+  (6 new controls, 2 chains).** Final EC2 gap-closure
+  iteration. Closes the API-observable key-pair surface
+  (most key-pair gaps — password auth, root login,
+  authorized_keys, host key verification — are OS-level
+  and not visible from the EC2 / SSM API; this iteration
+  covers what is visible) plus addressable LT/ASG drift.
+  Key pair lifecycle (3): `KEYPAIR.SHARED` (key pair
+  shared across > 5 instances → blast radius of one
+  leaked private half is N instances and rotation is
+  rarely paid in practice, medium), `KEYPAIR.NOKEY.SSHOPEN`
+  (no key pair attached but SG allows port 22 →
+  ambiguous SSH plane, either brute-forceable, invisibly
+  authorized post-launch, or gratuitously exposed,
+  medium), `KEYPAIR.SSM.PREFERRED` (SSM-managed instance
+  also has key pair + SG SSH → redundant attack surface
+  when SSM provides better auth, audit, and revocation,
+  low). Launch template / ASG drift (3):
+  `LT.VERSION.STALE` (LT default version != latest →
+  authored hardening not in effect; new launches use
+  older config, medium), `ASG.LAUNCHCONFIG` (ASG on
+  legacy launch configuration → no IMDSv2 enforcement,
+  no version history, no mixed-instance support, medium),
+  `LT.PUBLICIP` (LT forces AssociatePublicIpAddress=true
+  → overrides subnet architecture, instances designed for
+  private subnets launch internet-facing, high). Chains:
+  `ec2_ssh_attack_surface` (SHARED + NOKEY-SSHOPEN +
+  broad SG CIDR = high blast radius AND easy to reach),
+  `ec2_lt_security_drift` (LT stale + forces public IP
+  + ghost AMI = template is the source of truth and
+  multiple drift signals reproduce on every launch).
+  13 e2e fixtures (12 base pass/fail + extreme-50-instance
+  variant for KEYPAIR.SHARED). 6 triage overrides.
+  EC2 gap closure complete: 6 iterations, 47 net-new
+  controls (≈8 per iteration; spec asked for ~58 but
+  duplicates against existing catalog dropped each
+  iteration).
+- **EC2-5 — trusted platform and network exposure deepening
+  (7 new controls, 3 chains).** Fifth EC2 gap-closure
+  iteration. Opens the trusted-platform domain (was 0
+  controls) and deepens network exposure beyond the
+  security-group surface that VPC-1 / VPC-7 covered.
+  Prompt spec asked for ~8 controls; one turned out to
+  duplicate an existing one (`CTL.EC2.NETWORK.DIRECT.001`
+  covered DIRECTEXPOSE), so shipped 7 distinct additions.
+  Trusted platform (4): `NITRO` (Xen-based instance type
+  inherits the historical Xen XSA CVE class and is gated
+  out of Nitro-only hardening features, medium),
+  `SECUREBOOT` (UEFI-capable instance without Secure Boot
+  → bootkit / rootkit persistence below the OS-level
+  detection threshold, medium), `NITROTPM` (NitroTPM-
+  capable instance without it → no hardware-rooted
+  attestation, EBS-detach-and-read attacks remain viable,
+  low), `TENANCY.SENSITIVE` (compliance-tagged workload
+  on shared tenancy → contractual / framework gap even
+  when technical isolation is sufficient, medium).
+  Network exposure deepening (3): `NETWORK.DUALHOMED`
+  (instance with ENIs in two security zones IS the bridge
+  between them — architectural segmentation bypass with
+  no audit trail, high), `NETWORK.SRCDSTCHECK` (source/
+  destination check disabled on a non-NAT/VPN/appliance
+  → instance can route, proxy, and address-spoof at
+  kernel level, high), `NETWORK.MULTIPLE.SG` (instance
+  with > 5 SGs has effective rule set as union of
+  hundreds of rules, exceeding practical reviewability,
+  medium). Chains: `ec2_hardware_security_gap` (non-Nitro
+  + Secure Boot off OR sensitive-on-shared-tenancy =
+  layered hardware defenses removed),
+  `ec2_network_pivot` (DUALHOMED OR SRCDSTCHECK = each
+  alone makes the instance a kernel-level pivot point),
+  `ec2_direct_exposure` (DIRECT + MULTIPLE.SG +
+  HIGHPORTS = no upstream LB protection AND unauditable
+  local rules AND known-risky services exposed). 18 e2e
+  fixtures (12 base pass/fail + 6 variants:
+  nitro-t2-fail, dualhomed-3tier-fail, srcdstcheck-nat-pass,
+  tenancy-nonsensitive-pass + 2 redundant pass cases).
+  7 triage overrides. Trusted platform: 0 → 4 controls.
 - **EC2-4 — instance lifecycle and orphaned resources
   (6 new controls, 3 chains).** Fourth EC2 gap-closure
   iteration. Closes the post-termination decommission-leak

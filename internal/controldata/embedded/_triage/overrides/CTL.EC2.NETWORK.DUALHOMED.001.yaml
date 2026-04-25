@@ -1,0 +1,30 @@
+control: CTL.EC2.NETWORK.DUALHOMED.001
+defect: >
+  EC2 instance has Elastic Network Interfaces in subnets
+  that belong to different security zones.
+infection: >
+  An instance with ENIs in two security zones is itself
+  the bridge between those zones. The two subnets may be
+  separated by NACLs, route tables, peering connections,
+  transit gateways, and security groups — every one of
+  those segmentation layers is bypassed by the fact that
+  a single process address space exists in both zones at
+  once. A successful exploit of any service exposed on
+  the public ENI inherits, in-process, network access to
+  the private ENI's subnet: no firewall traversal, no
+  authentication challenge, no audit log of cross-zone
+  traffic. Common origins of dual-homed instances are
+  one-off jump hosts that were never replaced, "temporary"
+  management ENIs added to debug a connectivity issue,
+  database access workarounds where an ENI was pulled
+  into the data subnet to avoid building a proper proxy,
+  and CloudFormation stacks that grew an extra ENI
+  attribute over revisions. The failure is architectural
+  rather than configuration-level — there is no firewall
+  rule to fix; the instance must be re-architected to
+  route between zones via a properly-policed gateway.
+failure: >
+  Network-segmentation bypass at the architectural level.
+  A compromised instance becomes the on-ramp from one
+  security zone to another, with no audit trail of the
+  crossing.

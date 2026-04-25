@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.ASG.LAUNCHCONFIG.001
+name: Auto Scaling Groups Must Use Launch Templates Not Launch Configurations
+description: >
+  Auto Scaling Groups must reference a launch template, not a
+  legacy launch configuration. Launch configurations are immutable
+  one-shot definitions that AWS marks legacy: they do not support
+  multiple versions (no rollback, no version pin), do not support
+  mixed instance types (no Spot/On-Demand allocation strategies),
+  do not support modern Nitro-only instance features, and cannot
+  enforce IMDSv2 at the template level. AWS publishes a migration
+  path because launch configurations will eventually be removed.
+  Until they are, every ASG still on a launch configuration is
+  on an unsupported substrate: any new EC2 capability (newer
+  instance types, finer-grained metadata controls, encrypted-by-
+  default volumes) is unavailable to it, and rollback after a bad
+  launch is impossible because there is no version history.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-08"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: Auto Scaling Group uses a legacy launch configuration.
+  action: Migrate the ASG to a launch template and delete the launch configuration.
+  example: |
+    {"compute": {"kind": "asg", "asg": {"uses_launch_template": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: asg
+    - field: properties.compute.asg.uses_launch_config
+      op: eq
+      value: true

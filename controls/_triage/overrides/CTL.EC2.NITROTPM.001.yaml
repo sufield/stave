@@ -1,0 +1,31 @@
+control: CTL.EC2.NITROTPM.001
+defect: >
+  EC2 instance is on a NitroTPM-capable family but
+  NitroTPM is not enabled in the launch configuration.
+infection: >
+  NitroTPM provides a virtual TPM 2.0 device rooted in
+  the Nitro hardware, with three properties standard
+  software cannot provide on its own: hardware-backed
+  remote attestation (the boot chain is measured into
+  PCRs that a remote service can verify), a sealed
+  storage interface for keys (BitLocker, dm-crypt, and
+  application-level secret stores can bind a key to "this
+  instance, this boot configuration" so the key is not
+  extractable by booting the disk elsewhere), and a
+  durable identity that survives reboots but cannot be
+  cloned to a different instance (defeating "lift the
+  EBS volume to a new instance and read it" attacks).
+  For most workloads, NitroTPM is a defense-in-depth
+  feature — the workload functions correctly without it
+  — and the absence is rated low. For FedRAMP-, FIPS-,
+  and high-assurance deployments, NitroTPM is part of
+  the baseline; its absence indicates the instance was
+  launched from a template or AMI that pre-dates the
+  hardening update, or that the sensitive-workload
+  classification was applied to an instance that was
+  never re-launched into the hardened posture.
+failure: >
+  No hardware-rooted attestation pathway. Disk-level
+  secrets remain extractable by EBS-volume-attach
+  attacks; remote attestation cannot be offered to
+  consumers that require it.

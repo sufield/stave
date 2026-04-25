@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.TENANCY.SENSITIVE.001
+name: Sensitive Workloads Must Not Run on Default (Shared) Tenancy
+description: >
+  EC2 instances tagged as processing sensitive data (HIPAA, PCI,
+  CONFIDENTIAL, FedRAMP, or other compliance indicators) must run
+  on dedicated tenancy or on a dedicated host. Default tenancy
+  shares the underlying physical hardware with instances from other
+  AWS customers. The Nitro hypervisor provides strong isolation,
+  and most compliance frameworks accept default tenancy in practice;
+  but several frameworks and many organizational policies (PCI-DSS
+  internal interpretations, HIPAA Business Associate Agreements,
+  FedRAMP High, and tier-1 financial customer contracts) require
+  hardware that is not shared with other tenants. This control
+  fires only on instances flagged as sensitive — non-sensitive
+  workloads on shared tenancy are not unsafe by themselves. The
+  intent is to catch the mismatch where a workload's compliance
+  classification has tightened (a new HIPAA tag was applied to an
+  existing fleet) without the corresponding tenancy migration.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-39"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IVS-09", "DSP-17"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: Compliance-tagged instance is running on shared (default) tenancy.
+  action: Migrate the instance to dedicated tenancy or a dedicated host.
+  example: |
+    {"compute": {"kind": "instance", "instance": {"sensitive_workload": true, "tenancy": "dedicated"}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance.sensitive_workload
+      op: eq
+      value: true
+    - field: properties.compute.instance.tenancy
+      op: eq
+      value: default

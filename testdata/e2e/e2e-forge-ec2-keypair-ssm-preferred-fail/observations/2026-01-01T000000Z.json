@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "i-0ssmplussshey",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {"compute":{"kind":"instance","instance":{"ssm_managed":true,"has_key_pair":true,"sg_allows_ssh":true}}}
+    }
+  ]
+}

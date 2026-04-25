@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.NETWORK.DUALHOMED.001
+name: EC2 Instances Must Not Span Multiple Security Zones via ENIs
+description: >
+  EC2 instances must not have network interfaces in subnets that
+  belong to different security zones (public + private; production +
+  development; data + application). When an instance carries ENIs
+  in two zones, the instance IS the bridge between those zones —
+  the network segmentation that exists between the subnets is
+  defeated by the instance's presence in both. A compromise via the
+  internet-facing ENI provides immediate, in-process access to the
+  internal ENI's subnet, with no firewall rule change required and
+  no traffic crossing a peering or transit gateway that the security
+  team can audit. Dual-homed instances are typically introduced as
+  shortcuts (a one-off jump host, a "temporary" management ENI, an
+  ill-advised database access workaround) and are rarely
+  decommissioned because the service that depends on them looks
+  healthy; meanwhile they constitute a network-segmentation
+  exception that the architecture diagram does not show.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  pci_dss_v4: "1.4"
+  ccm_v4: ["IVS-04"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: Instance has ENIs in subnets that span different security zones.
+  action: Remove the cross-zone ENI; route via a properly-policed gateway or peering instead.
+  example: |
+    {"compute": {"kind": "instance", "instance": {"spans_security_zones": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance.spans_security_zones
+      op: eq
+      value: true

@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.LT.PUBLICIP.001
+name: Launch Templates Must Not Force Public IP Auto-Assign
+description: >
+  EC2 launch templates must not set AssociatePublicIpAddress to
+  true on their network interface configuration. The launch
+  template's network interface block overrides the subnet's
+  MapPublicIpOnLaunch setting: an instance launched from this
+  template into a private subnet (MapPublicIpOnLaunch: false)
+  still receives a public IP because the template forces it. The
+  subnet architecture and the template architecture disagree, and
+  the template wins. Every scale-out event, every replacement
+  launch, every manual launch from this template produces an
+  internet-facing instance even when the subnet was designed to
+  preclude that. The override is invisible to subnet-level
+  controls: AUTOPUBLIC controls report the subnet correctly
+  configured, no NACL or route-table change is required, and the
+  exposure surfaces only after the next launch. The control
+  catches the override at the template level — the only level
+  at which it is actually configured.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  pci_dss_v4: "1.2"
+  ccm_v4: ["IVS-03"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: Launch template forces public IP auto-assignment, overriding subnet defaults.
+  action: Remove AssociatePublicIpAddress from the launch template's network interfaces.
+  example: |
+    {"compute": {"kind": "launch_template", "launch_template": {"associate_public_ip": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: launch_template
+    - field: properties.compute.launch_template.associate_public_ip
+      op: eq
+      value: true

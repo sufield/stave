@@ -1,0 +1,41 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.KEYPAIR.SHARED.001
+name: EC2 Key Pairs Should Not Be Shared Across Many Instances
+description: >
+  EC2 key pairs should not be associated with more than the
+  configured threshold of instances (default 5). The blast radius
+  of a compromised private key is the count of instances that key
+  authorizes; one leaked private key (in a developer's git
+  history, in CI secrets, in a Slack message, in a misplaced
+  password manager export) provides immediate SSH access to every
+  instance that shares the public half. Wide sharing also makes
+  rotation difficult: revoking a public key from many production
+  instances requires coordination across every team that holds
+  the private half. The control is a heuristic — some
+  organizations intentionally use one key per environment — but
+  past the threshold the blast radius is meaningfully wider than
+  the team can usually manage in a coordinated rotation.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-17"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-08"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: Key pair is associated with more instances than the audit threshold.
+  action: Split the key pair across smaller scoped keys (per-app, per-team, per-environment).
+  example: |
+    {"compute": {"kind": "key_pair", "keypair": {"shared_excessively": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: key_pair
+    - field: properties.compute.keypair.shared_excessively
+      op: eq
+      value: true

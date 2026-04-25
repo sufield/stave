@@ -1,0 +1,35 @@
+control: CTL.EC2.NETWORK.SRCDSTCHECK.001
+defect: >
+  EC2 instance has source/destination check disabled and
+  is not identified as a NAT gateway, VPN endpoint, or
+  network appliance.
+infection: >
+  Source/destination check is enabled by default on every
+  ENI; it is the kernel-level guarantee that the instance
+  only processes traffic addressed to its own IP and only
+  emits traffic from its own IP. Disabling the check is
+  the one configuration step that turns a normal EC2
+  instance into a router: with it off, the instance
+  receives traffic destined for other IPs (forwarded by
+  whatever sent it there — typically a route table entry
+  pointing at the instance) and is allowed to forward
+  traffic claiming a source IP that isn't its own.
+  Legitimate disabled-check instances are NAT instances,
+  software VPN endpoints, and dedicated network
+  appliances; they are tagged or named accordingly. On a
+  general-purpose application instance, disabled
+  source/destination check enables three classes of
+  attack: man-in-the-middle on inter-instance traffic
+  routed via the instance, subnet-bypass routing where
+  the instance becomes a covert path between subnets the
+  team thought were isolated, and address-spoofing where
+  the instance emits traffic claiming to come from
+  another instance's IP (defeating IP-based access
+  controls anywhere in the VPC). The whitelist for NAT,
+  VPN, and appliance roles is critical — false positives
+  on those would erode trust in the control.
+failure: >
+  Routing, proxying, and address-spoofing capability on
+  an instance that the architecture does not treat as a
+  network device. Inter-instance traffic interception is
+  possible without any firewall rule change.

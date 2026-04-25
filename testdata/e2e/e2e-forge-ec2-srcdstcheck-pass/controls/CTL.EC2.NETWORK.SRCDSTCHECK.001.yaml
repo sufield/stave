@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.NETWORK.SRCDSTCHECK.001
+name: Source/Destination Check Must Be Enabled on Non-Appliance Instances
+description: >
+  EC2 instances that are not NAT gateways, VPN endpoints, or other
+  network appliances must keep source/destination check enabled
+  (the default). When source/destination check is enabled, the
+  instance only processes traffic addressed to its own IP — it
+  cannot act as a router, proxy, or man-in-the-middle. Disabling
+  source/destination check is the single configuration step that
+  turns a normal application instance into a router; it allows the
+  instance to receive and forward traffic addressed to other IPs.
+  On a NAT/VPN/appliance role this is intended. On a standard
+  application instance, it allows the instance to intercept
+  inter-instance traffic, route between subnets bypassing
+  subnet-level controls, and operate as a covert proxy. The control
+  whitelists instances that announce themselves as NAT, VPN, or
+  network appliances; everything else with the check disabled is a
+  finding.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  pci_dss_v4: "1.4"
+  ccm_v4: ["IVS-04"]
+scope_tags: [aws, ec2]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: Instance has source/destination check disabled but is not a NAT, VPN, or network appliance.
+  action: Re-enable source/destination check, or tag/document the appliance role.
+  example: |
+    {"compute": {"kind": "instance", "instance": {"source_dest_check": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance.source_dest_check
+      op: eq
+      value: false
+    - field: properties.compute.instance.is_network_appliance
+      op: eq
+      value: false

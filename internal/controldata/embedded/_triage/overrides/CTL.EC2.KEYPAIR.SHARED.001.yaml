@@ -1,0 +1,30 @@
+control: CTL.EC2.KEYPAIR.SHARED.001
+defect: >
+  EC2 key pair is associated with more instances than
+  the configured audit threshold (default 5).
+infection: >
+  The blast radius of a compromised SSH private key is
+  the count of instances whose public-key half is the
+  paired one. A single key shared across N instances
+  means one leaked private half — turning up in a git
+  history, in a CI runner's environment, in a Slack
+  upload, in an old shared drive — provides immediate
+  SSH access to all N. Wide sharing also entrenches
+  itself: the more developers, runners, and historical
+  bastion hosts have been authorized with the key, the
+  more places the private half exists, and the harder
+  rotation becomes. Rotating a widely shared key
+  requires distributing a new key to every authorized
+  party AND updating the public key on every instance
+  AND retiring the old key — a coordination problem
+  that quietly never finishes, leaving the leaked
+  private half useful indefinitely. The control is
+  heuristic — some organizations intentionally use one
+  key per environment, accepting the per-environment
+  blast radius — and the triage flags the radius rather
+  than mandating per-instance keys universally.
+failure: >
+  Wide-blast-radius key compromise. A single leaked
+  private half opens SSH access to N instances; the
+  rotation cost grows with N and is rarely paid in
+  practice.

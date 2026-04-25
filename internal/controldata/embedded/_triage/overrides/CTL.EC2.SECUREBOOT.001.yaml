@@ -1,0 +1,30 @@
+control: CTL.EC2.SECUREBOOT.001
+defect: >
+  EC2 instance booted in UEFI mode but UEFI Secure Boot
+  is not enabled.
+infection: >
+  Secure Boot is the only general-purpose mechanism that
+  prevents a tampered boot chain from executing. When
+  enabled, each link in the chain — UEFI firmware, shim,
+  bootloader, kernel, kernel modules — is cryptographically
+  validated against a signature database (db) before it
+  is allowed to run; any modification (a bootkit injecting
+  itself into the bootloader, a rootkit modifying the
+  kernel image on disk, a supply-chain compromise of an
+  AMI's GRUB binaries) breaks the signature and the boot
+  halts. Without Secure Boot, the boot chain runs
+  unverified: a malicious modification at any pre-OS
+  layer executes before the operating system loads, and
+  therefore before any of the OS-level security tooling
+  the organization has invested in (EDR agents, file
+  integrity monitoring, anti-malware, audit subsystems)
+  starts. The compromise is invisible to every detection
+  layer above it; the only signal is anomaly in the
+  network or the application above the OS. UEFI-capable
+  instances that ship without Secure Boot are leaving
+  this hardware-rooted defense on the floor.
+failure: >
+  Boot-level persistence below the visibility threshold
+  of OS-level security tools. A bootkit or rootkit
+  remains across reboots, AMI re-launches, and full disk
+  scans, indistinguishable from a legitimate system.
