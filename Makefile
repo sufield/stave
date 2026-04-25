@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture
+.PHONY: all build build-dev test test-unit test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture
 # Binary name
 BINARY=stave
 
@@ -63,8 +63,31 @@ build-dev: sync-schemas sync-controls sync-alternatives
 	$(GOBUILD) $(LDFLAGS) -tags stavedev -o stave-dev ./cmd/stave-dev
 
 ## test: Run all tests with race detector (includes dev-only packages via build tag)
+##
+## Assumes goldens are current. Use `make test-ci` for CI runs that
+## regenerate goldens fresh, or `make test-unit` for the fast dev loop.
 test: sync-schemas sync-controls sync-alternatives
 	$(GOTEST) -tags stavedev -race -v ./...
+
+## test-unit: Fast dev loop — unit tests only, skips e2e / golden / profile suites
+##
+## Targets only ./internal/... and ./cmd/... and passes -short so any test
+## that gates on testing.Short() (e2e, profile, neo4j, fixture-binary
+## determinism) self-skips. The ./e2e/ tree is excluded outright. Designed
+## to finish under 30 seconds so adding a control does not pay a 2000+
+## golden-regeneration tax on the dev machine.
+test-unit: sync-schemas sync-controls sync-alternatives
+	$(GOTEST) -short ./internal/... ./cmd/...
+
+## test-ci: CI entry point — regenerate goldens fresh, then run the full suite
+##
+## Goldens are regenerated in the CI workspace and discarded when the job
+## ends; nothing is committed back. Catalog growth that only churns
+## fingerprints is therefore invisible to PR diffs and never blocks a dev
+## machine. Two regen passes cover both golden families: regenerate-goldens
+## handles the testdata/e2e fixture goldens, and golden-update-all handles
+## the in-process goldens driven by UPDATE_GOLDEN=1.
+test-ci: regenerate-goldens golden-update-all test
 
 ## test-coverage: Run tests with coverage
 test-coverage:

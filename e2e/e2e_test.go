@@ -26,8 +26,11 @@ const e2eCaseTimeout = 90 * time.Second
 //	go test ./e2e/ -run E2E            # all cases
 //	go test ./e2e/ -run E2E/e2e-s3     # S3 cases only
 //	go test ./e2e/ -run E2E/e2e-h1     # HackerOne cases only
-//	go test -short ./e2e/ -run E2E     # S3 cases only (short mode)
+//	go test -short ./e2e/              # skipped (e2e is CI-only)
 func TestE2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping e2e tests in short mode (CI-only — see Makefile test-ci target)")
+	}
 	bin := buildBinary(t)
 	root := findE2ERoot(t)
 
@@ -42,9 +45,6 @@ func TestE2E(t *testing.T) {
 		}
 		name := entry.Name()
 		t.Run(name, func(t *testing.T) {
-			if testing.Short() && !strings.HasPrefix(name, "e2e-s3-") {
-				t.Skip("skipping non-S3 case in short mode")
-			}
 			runE2ECase(t, bin, filepath.Join(root, name))
 		})
 	}

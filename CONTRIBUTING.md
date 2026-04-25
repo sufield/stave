@@ -33,8 +33,18 @@ make test
 ## Running Tests
 
 ```bash
-# Run all tests
+# Fast dev loop — unit tests only, skips e2e / golden / profile suites.
+# Designed to finish under 30 seconds.
+make test-unit
+
+# Full local suite — runs everything assuming goldens are current.
+# Use this before opening a PR if you want a final local check.
 make test
+
+# CI entry point — regenerates goldens fresh, then runs the full suite.
+# Goldens are regenerated in the CI workspace and discarded; nothing is
+# committed back. You should not need to run this locally.
+make test-ci
 
 # Run tests with verbose output
 go test -v ./...
@@ -50,6 +60,25 @@ go test -run '^$' -bench BenchmarkCLIStartupHelp -benchmem ./cmd/stave/cmd
 ```
 
 Startup target for lightweight commands is approximately `<500ms` (see `BenchmarkCLIStartupHelp` in `cmd/stave/cmd/startup_benchmark_test.go`).
+
+### Why three test targets
+
+Adding a control changes the policy fingerprint embedded in 2000+
+golden fixtures. Regenerating those goldens locally on every control
+addition is slow churn that adds no signal — the diffs are catalog
+growth, not behavior. So:
+
+- `make test-unit` is the dev feedback loop. It uses `go test -short`
+  and excludes `./e2e/`, so any test that gates on `testing.Short()`
+  (e2e, profile, neo4j, fixture-binary determinism) self-skips.
+- `make test-ci` is what CI runs. It regenerates goldens fresh and
+  then runs the full suite, so behavior regressions are still caught
+  but fingerprint churn never blocks a PR.
+- `make test` is unchanged — full suite, assumes goldens are current.
+
+If you write a new test that builds the CLI binary, executes it, or
+compares against a golden, gate it with `if testing.Short() { t.Skip(...) }`
+so it stays out of the dev fast path.
 
 ### Test Prerequisites
 
