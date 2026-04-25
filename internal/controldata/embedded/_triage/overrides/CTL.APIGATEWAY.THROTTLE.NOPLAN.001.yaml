@@ -1,0 +1,26 @@
+control: CTL.APIGATEWAY.THROTTLE.NOPLAN.001
+defect: >
+  REST API has no usage plan attached. There is
+  no per-consumer rate limiting.
+infection: >
+  Usage plans are API Gateway's only mechanism for
+  per-consumer throttling and quota enforcement.
+  Without one, every API key (or unauthenticated
+  client, depending on the auth model) shares the
+  account-level default throttle — typically
+  10,000 RPS aggregated across every API in the
+  account. A single misbehaving or compromised
+  client can exhaust that capacity for every API
+  in the account, not just this one. The
+  stage-level throttle (THROTTLE.001) limits
+  what one API can do as a whole; the usage plan
+  limits what one consumer can do within that API.
+  These are layered controls: stage throttling
+  prevents one API from starving the account;
+  usage plans prevent one consumer from starving
+  one API. Most production APIs need both.
+failure: >
+  No per-consumer rate limit. One client can
+  exhaust the API's capacity (and, by sharing the
+  account-level pool, the capacity of every other
+  API in the account).

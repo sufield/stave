@@ -1,0 +1,30 @@
+control: CTL.APIGATEWAY.NETWORK.CLIENTCERT.EXPIRY.001
+defect: >
+  REST API stage has a client certificate
+  configured for backend authentication, but the
+  certificate has expired.
+infection: >
+  Stage client certificates let the backend
+  distinguish requests that came through API
+  Gateway from requests that bypassed it via a
+  direct connection. The backend pins API
+  Gateway's certificate; only requests presenting
+  that certificate are accepted. When the
+  certificate expires, the backend's pinning logic
+  rejects every API Gateway request — whether the
+  backend treats expiry as a hard failure depends
+  on its TLS library, but a correctly configured
+  backend rejects expired certificates by default.
+  The stage configuration still shows mTLS as
+  enabled. The certificate is still attached. But
+  the certificate has expired, and backend
+  enforcement is binary: either the backend
+  validates expiry (and breaks legitimate traffic)
+  or it doesn't (and the certificate provides no
+  authentication value).
+failure: >
+  Backend rejects API Gateway traffic, OR backend
+  silently accepts expired certificates and the
+  pinning provides no real authentication. Either
+  way, the stage's mTLS-to-backend posture is
+  broken.

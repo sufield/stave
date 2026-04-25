@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1508
-**Pack hash:** `b773c4a0e16296298ca0a2b079cf87ad4af339dce4e7b71ade35f9b32b3cce5a`
+**Total controls:** 1513
+**Pack hash:** `f1716a0ec199b130c1be44dcf3a887684840ba3d21ee14691bcd25b23808e88c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 176 |
-| high | 669 |
+| high | 671 |
 | info | 16 |
 | low | 111 |
-| medium | 536 |
+| medium | 539 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 87 |
-| exposure | 866 |
-| governance | 58 |
+| exposure | 870 |
+| governance | 59 |
 | hygiene | 16 |
 | identity | 328 |
 | network | 28 |
@@ -755,6 +755,21 @@ API Gateway REST API stages with caching enabled must encrypt cached responses a
 
 ---
 
+### CTL.APIGATEWAY.CACHE.TTL.001
+
+**REST API Cache TTL At Default Maximum**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; soc2: CC6.3;
+
+REST API stage has caching enabled and the cache TTL is left at the AWS default (3600 seconds for REST APIs) or otherwise exceeds a policy-acceptable upper bound. Long TTLs serve stale responses for up to an hour after the underlying state changes. For security-sensitive responses — authorization decisions, account state, permission lookups — stale cached responses mean the system serves obsolete authority: a user whose access was revoked five minutes ago still receives a "permitted" response from cache. Configuration safety is not just about who can read the response; it is about how long stale responses persist after authority changes. APIs that cache authorization-sensitive state must use short TTLs (typically <= 300 seconds) so revocation propagates within a bounded window.
+
+**Remediation:** Reduce cache TTL on the stage or per-method to a value appropriate for the responses being cached. For authorization-sensitive responses, set TTL to 300 seconds or less. For responses that change rarely (static metadata, catalog endpoints), the default 3600 may be acceptable — document that decision in the triage override and acknowledge this control. Disable caching entirely for endpoints that return authorization decisions.
+
+---
+
 ### CTL.APIGATEWAY.CORS.001
 
 **HTTP APIs Must Not Combine Wildcard Origin With Credentials**
@@ -934,6 +949,36 @@ API Gateway REST API stages should configure a client certificate for mutual TLS
 
 ---
 
+### CTL.APIGATEWAY.NETWORK.CLIENTCERT.EXPIRY.001
+
+**API Gateway Stage Client Certificate Expired**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-5; hipaa: 164.312(d); nist_800_53_r5: IA-5; soc2: CC6.1;
+
+REST API stage has a client certificate configured for backend authentication, but the certificate has expired. Backends that validate the API Gateway client certificate to distinguish legitimate API Gateway traffic from direct connections will reject every request once the certificate expires. The stage configuration reports mTLS-to-backend as enabled, but the certificate it presents is no longer trustworthy. Distinct from CTL.APIGATEWAY.MTLS.001, which checks whether a client certificate is configured at all — this control fires when one IS configured but has expired (or is within the imminent-expiry window).
+
+**Remediation:** Generate a new client certificate via the API Gateway console or the GenerateClientCertificate API and re-attach it to the stage. Distribute the new certificate's public key to every backend that pins it. Add a 30-day-before-expiry alarm on the certificate's expiration date so the next renewal happens during a change window rather than during an outage.
+
+---
+
+### CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001
+
+**Private API Resource Policy Does Not Restrict VPC Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.4.2; soc2: CC6.6;
+
+REST API uses the PRIVATE endpoint type but has a resource policy that does not restrict access to specific VPC endpoints or source VPCs. A Private API is reachable only through VPC endpoints — not from the public internet — but the "only through VPC endpoints" guarantee says nothing about whose VPC. Any AWS account in any region that creates a VPC endpoint for the execute-api service can invoke this API. Without an aws:sourceVpce or aws:sourceVpc condition in the resource policy, the PRIVATE designation provides no meaningful access boundary. Operators frequently mistake PRIVATE for "internal to my organization" — it is not. Internal-only reachability requires the resource policy to enumerate the allowed VPC endpoint IDs or source VPC IDs.
+
+**Remediation:** Add a condition block to the resource policy restricting access to specific aws:sourceVpce values (the VPC endpoint IDs your consumers use) or specific aws:sourceVpc values (the source VPCs your consumers run in). For multi-account architectures, list every consumer endpoint explicitly — wildcards defeat the purpose. Verify by attempting to invoke the API from an unrelated AWS account's VPC endpoint and confirming the request is denied.
+
+---
+
 ### CTL.APIGATEWAY.PUBLIC.001
 
 **REST APIs Should Use Private Endpoints When Possible**
@@ -979,6 +1024,21 @@ API Gateway stages must have default throttling limits configured with non-zero 
 
 ---
 
+### CTL.APIGATEWAY.THROTTLE.NOPLAN.001
+
+**REST API Has No Usage Plan Attached**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5; nist_800_53_r5: SC-5; pci_dss_v4.0: 6.4.1; soc2: A1.1;
+
+REST API has no usage plan attached. Usage plans provide per-API-key throttling and quotas — the only way to enforce consumer-specific rate limits in API Gateway. Without a usage plan, every consumer shares the account-level default throttle (10,000 RPS for REST APIs in most regions). One badly behaved or compromised client can exhaust the entire account's API Gateway capacity, denying service to every other API in the account. Stage-level throttling (CTL.APIGATEWAY.THROTTLE.001) caps the API as a whole; usage plans cap individual consumers. Both are needed for APIs with multiple consumers, especially when authentication is API-key-based.
+
+**Remediation:** Create a usage plan with rate, burst, and quota limits appropriate for the API's consumer profile. Associate API keys with the plan and configure clients to send those keys. For APIs with IAM authentication where per-consumer throttling isn't required (the IAM principal already constrains the caller), this control can be acknowledged as not applicable in the triage overrides.
+
+---
+
 ### CTL.APIGATEWAY.TLS.001
 
 **API Gateway Must Enforce TLS 1.2**
@@ -991,6 +1051,21 @@ API Gateway stages must have default throttling limits configured with non-zero 
 API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions exposes API traffic to known cryptographic attacks (BEAST, POODLE, etc).
 
 **Remediation:** Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name.
+
+---
+
+### CTL.APIGATEWAY.TLS.MTLS.TRUSTSTORE.001
+
+**API Gateway mTLS Truststore Object Deleted or Empty**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 8.3.2; soc2: CC6.1;
+
+API Gateway custom domain has mutual TLS enabled and references a truststore S3 object that has been deleted or is zero bytes. The truststore contains the CA certificates used to validate client certificates. With the truststore object missing or empty, mTLS validation cannot match any client certificate against a trusted CA. REST APIs typically reject all client connections in this state (no valid CA to validate against); HTTP APIs may silently fall back to no-mTLS, validating no client certificates while the console still reports mTLS as enabled. The custom domain configuration appears intact in the console — the truststore URI is set, mTLS is flagged on, but the underlying object is gone or empty. This is the same ghost-reference pattern as the deleted certificate case (CTL.APIGATEWAY.GHOST.CERT.001) applied to the truststore content rather than to the certificate.
+
+**Remediation:** Re-upload the CA bundle to the configured truststore S3 location, or reconfigure the custom domain to point at a truststore object that exists and contains valid PEM-encoded CA certificates. Validate by issuing a client certificate signed by one of the CAs in the bundle and confirming a successful handshake. Add an S3 object-existence alarm against the truststore key so the next accidental delete pages someone before clients are affected.
 
 ---
 

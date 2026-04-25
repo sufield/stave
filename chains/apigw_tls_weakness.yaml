@@ -1,0 +1,27 @@
+id: apigw_tls_weakness
+description: >
+  Any single failure in the API Gateway TLS layer — custom domain
+  accepts TLS 1.0 or 1.1 (CTL.APIGATEWAY.DOMAIN.TLS.001), the custom
+  domain certificate has been deleted or is imminently expiring
+  (CTL.APIGATEWAY.GHOST.CERT.001), or the mTLS truststore S3 object
+  has been deleted or is empty
+  (CTL.APIGATEWAY.TLS.MTLS.TRUSTSTORE.001). Each independently
+  weakens or breaks transport security at the custom domain.
+  Deprecated TLS allows protocol downgrade attacks; a deleted
+  certificate breaks the handshake outright; a missing truststore
+  either rejects every legitimate client (REST APIs) or silently
+  disables client validation (HTTP APIs). Threshold of 1 reflects
+  that one TLS-layer failure is sufficient to compromise transport
+  security — the chain groups them so the reviewer reaches
+  "TLS posture broken on this API" whether the cause is deprecated
+  protocol, missing certificate, or broken mTLS validation.
+controls:
+  - CTL.APIGATEWAY.DOMAIN.TLS.001
+  - CTL.APIGATEWAY.GHOST.CERT.001
+  - CTL.APIGATEWAY.TLS.MTLS.TRUSTSTORE.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access

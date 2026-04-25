@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.NETWORK.CLIENTCERT.EXPIRY.001
+name: API Gateway Stage Client Certificate Expired
+description: >
+  REST API stage has a client certificate configured for backend
+  authentication, but the certificate has expired. Backends that
+  validate the API Gateway client certificate to distinguish
+  legitimate API Gateway traffic from direct connections will reject
+  every request once the certificate expires. The stage configuration
+  reports mTLS-to-backend as enabled, but the certificate it presents
+  is no longer trustworthy. Distinct from
+  CTL.APIGATEWAY.MTLS.001, which checks whether a client certificate
+  is configured at all — this control fires when one IS configured
+  but has expired (or is within the imminent-expiry window).
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5"
+  fedramp_moderate: "IA-5"
+  soc2: "CC6.1"
+  hipaa: "164.312(d)"
+  ccm_v4: ["IAM-04", "CEK-08"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    REST API stage's client certificate has expired. Backends that
+    validate this certificate will reject API Gateway traffic.
+  action: >
+    Generate a new client certificate via the API Gateway console or
+    the GenerateClientCertificate API and re-attach it to the stage.
+    Distribute the new certificate's public key to every backend that
+    pins it. Add a 30-day-before-expiry alarm on the certificate's
+    expiration date so the next renewal happens during a change
+    window rather than during an outage.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "security": {
+          "client_certificate_configured": true,
+          "client_certificate_expired": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: rest_api
+    - field: properties.api.security.client_certificate_configured
+      op: eq
+      value: true
+    - field: properties.api.security.client_certificate_expired
+      op: eq
+      value: true

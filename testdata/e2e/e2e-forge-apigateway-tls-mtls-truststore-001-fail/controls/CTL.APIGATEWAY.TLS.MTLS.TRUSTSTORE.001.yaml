@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.TLS.MTLS.TRUSTSTORE.001
+name: API Gateway mTLS Truststore Object Deleted or Empty
+description: >
+  API Gateway custom domain has mutual TLS enabled and references a
+  truststore S3 object that has been deleted or is zero bytes. The
+  truststore contains the CA certificates used to validate client
+  certificates. With the truststore object missing or empty, mTLS
+  validation cannot match any client certificate against a trusted
+  CA. REST APIs typically reject all client connections in this state
+  (no valid CA to validate against); HTTP APIs may silently fall back
+  to no-mTLS, validating no client certificates while the console
+  still reports mTLS as enabled. The custom domain configuration
+  appears intact in the console — the truststore URI is set, mTLS is
+  flagged on, but the underlying object is gone or empty. This is the
+  same ghost-reference pattern as the deleted certificate case
+  (CTL.APIGATEWAY.GHOST.CERT.001) applied to the truststore content
+  rather than to the certificate.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  fedramp_moderate: "SC-8"
+  pci_dss_v4.0: "8.3.2"
+  soc2: "CC6.1"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IAM-04", "CEK-03"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    API Gateway custom domain has mTLS enabled but the truststore S3
+    object has been deleted or is zero bytes. Client certificate
+    validation is broken.
+  action: >
+    Re-upload the CA bundle to the configured truststore S3 location,
+    or reconfigure the custom domain to point at a truststore object
+    that exists and contains valid PEM-encoded CA certificates.
+    Validate by issuing a client certificate signed by one of the
+    CAs in the bundle and confirming a successful handshake. Add an
+    S3 object-existence alarm against the truststore key so the next
+    accidental delete pages someone before clients are affected.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_custom_domain",
+        "custom_domain": {
+          "mtls_enabled": true,
+          "has_ghost_truststore": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_custom_domain
+    - field: properties.api.custom_domain.mtls_enabled
+      op: eq
+      value: true
+    - field: properties.api.custom_domain.has_ghost_truststore
+      op: eq
+      value: true

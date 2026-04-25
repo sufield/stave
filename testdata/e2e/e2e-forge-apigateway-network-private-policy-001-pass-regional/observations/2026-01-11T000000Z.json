@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/restapis/regional789",
+      "type": "aws_apigateway_rest_api",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "rest_api",
+          "network": {
+            "endpoint_type": "REGIONAL",
+            "is_private": false,
+            "resource_policy_restricts_vpc": false,
+            "allowed_vpce_ids": [],
+            "allowed_vpc_ids": []
+          }
+        }
+      }
+    }
+  ]
+}

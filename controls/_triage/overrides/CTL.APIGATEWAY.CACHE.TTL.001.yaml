@@ -1,0 +1,32 @@
+control: CTL.APIGATEWAY.CACHE.TTL.001
+defect: >
+  REST API stage has caching enabled and TTL is
+  left at the AWS default (3600 seconds).
+infection: >
+  Cache TTL determines how long a response is
+  served from cache after it was first stored.
+  The AWS default for REST API caching is 3600
+  seconds — one hour. For responses that change
+  rarely, an hour of staleness is fine. For
+  responses that encode authorization state,
+  account permissions, feature flags, or any
+  signal that authority has changed, an hour of
+  staleness means revocation does not take effect
+  for an hour. A user whose access was revoked
+  immediately still receives "permitted"
+  responses from the API for the rest of the TTL
+  window. The cache hides the authoritative state
+  from clients. This is a configuration safety
+  failure even though no individual response is
+  "wrong" in isolation — collectively, the cache
+  serves obsolete authority. The control fires
+  on the default TTL because operators rarely
+  reduce TTL on endpoints that need lower
+  staleness; the default sticks unless someone
+  explicitly weighs the staleness window against
+  the access-revocation requirement.
+failure: >
+  Stale authority served from cache. Access
+  revocations, permission changes, and feature
+  flag updates do not take effect for up to an
+  hour after the change.

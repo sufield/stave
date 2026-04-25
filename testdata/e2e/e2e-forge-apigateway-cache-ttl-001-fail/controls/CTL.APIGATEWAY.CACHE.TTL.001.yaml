@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.CACHE.TTL.001
+name: REST API Cache TTL At Default Maximum
+description: >
+  REST API stage has caching enabled and the cache TTL is left at the
+  AWS default (3600 seconds for REST APIs) or otherwise exceeds a
+  policy-acceptable upper bound. Long TTLs serve stale responses for
+  up to an hour after the underlying state changes. For
+  security-sensitive responses — authorization decisions, account
+  state, permission lookups — stale cached responses mean the system
+  serves obsolete authority: a user whose access was revoked five
+  minutes ago still receives a "permitted" response from cache.
+  Configuration safety is not just about who can read the response;
+  it is about how long stale responses persist after authority
+  changes. APIs that cache authorization-sensitive state must use
+  short TTLs (typically <= 300 seconds) so revocation propagates
+  within a bounded window.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  soc2: "CC6.3"
+  ccm_v4: ["IAM-12"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    REST API stage has caching enabled with TTL at the AWS default
+    (3600 seconds). Stale cached responses persist for up to an hour
+    after the underlying state changes.
+  action: >
+    Reduce cache TTL on the stage or per-method to a value
+    appropriate for the responses being cached. For
+    authorization-sensitive responses, set TTL to 300 seconds or
+    less. For responses that change rarely (static metadata,
+    catalog endpoints), the default 3600 may be acceptable —
+    document that decision in the triage override and acknowledge
+    this control. Disable caching entirely for endpoints that
+    return authorization decisions.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "cache": {
+          "enabled": true,
+          "ttl": 300,
+          "ttl_default": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: rest_api
+    - field: properties.api.cache.enabled
+      op: eq
+      value: true
+    - field: properties.api.cache.ttl_default
+      op: eq
+      value: true

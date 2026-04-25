@@ -1,0 +1,28 @@
+control: CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001
+defect: >
+  Private REST API has no aws:sourceVpce or
+  aws:sourceVpc condition in its resource policy.
+infection: >
+  PRIVATE endpoint type means the API is reachable
+  only through VPC endpoints — not from the public
+  internet. It does NOT mean "reachable only from
+  my VPCs." Any AWS customer who creates an
+  execute-api VPC endpoint can invoke any Private
+  API whose resource policy doesn't restrict by
+  endpoint ID or source VPC. The execute-api
+  service is global and unauthenticated at the
+  network layer; the resource policy is the only
+  thing standing between this API and every VPC
+  endpoint in every AWS account. Without
+  aws:sourceVpce or aws:sourceVpc in the policy
+  conditions, "private" only restricts the
+  transport (must arrive via VPC endpoint), not
+  the source. Operators commonly assume PRIVATE
+  enforces tenant isolation — it does not.
+failure: >
+  Private API reachable from any AWS account.
+  Any party with an execute-api VPC endpoint can
+  invoke the API regardless of which VPC or
+  account they originate from. The PRIVATE
+  designation provides no meaningful access
+  boundary.

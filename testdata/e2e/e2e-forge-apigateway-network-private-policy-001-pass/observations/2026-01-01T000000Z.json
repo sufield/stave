@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/restapis/private123",
+      "type": "aws_apigateway_rest_api",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "rest_api",
+          "network": {
+            "endpoint_type": "PRIVATE",
+            "is_private": true,
+            "resource_policy_restricts_vpc": true,
+            "allowed_vpce_ids": ["vpce-0a1b2c3d4e5f6789a"],
+            "allowed_vpc_ids": []
+          }
+        }
+      }
+    }
+  ]
+}

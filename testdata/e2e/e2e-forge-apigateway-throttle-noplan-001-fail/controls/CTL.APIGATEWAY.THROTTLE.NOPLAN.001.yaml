@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.THROTTLE.NOPLAN.001
+name: REST API Has No Usage Plan Attached
+description: >
+  REST API has no usage plan attached. Usage plans provide per-API-key
+  throttling and quotas — the only way to enforce consumer-specific
+  rate limits in API Gateway. Without a usage plan, every consumer
+  shares the account-level default throttle (10,000 RPS for REST APIs
+  in most regions). One badly behaved or compromised client can
+  exhaust the entire account's API Gateway capacity, denying service
+  to every other API in the account. Stage-level throttling
+  (CTL.APIGATEWAY.THROTTLE.001) caps the API as a whole; usage plans
+  cap individual consumers. Both are needed for APIs with multiple
+  consumers, especially when authentication is API-key-based.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "A1.1"
+  ccm_v4: ["AIS-01", "IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    REST API has no usage plan attached. There is no per-consumer
+    rate limiting; one consumer can exhaust the account's API
+    Gateway capacity.
+  action: >
+    Create a usage plan with rate, burst, and quota limits
+    appropriate for the API's consumer profile. Associate API keys
+    with the plan and configure clients to send those keys. For APIs
+    with IAM authentication where per-consumer throttling isn't
+    required (the IAM principal already constrains the caller), this
+    control can be acknowledged as not applicable in the triage
+    overrides.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "throttle": {
+          "has_usage_plan": true,
+          "usage_plan_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: rest_api
+    - field: properties.api.throttle.has_usage_plan
+      op: eq
+      value: false

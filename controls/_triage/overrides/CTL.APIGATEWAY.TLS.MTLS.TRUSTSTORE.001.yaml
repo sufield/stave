@@ -1,0 +1,30 @@
+control: CTL.APIGATEWAY.TLS.MTLS.TRUSTSTORE.001
+defect: >
+  API Gateway custom domain has mTLS enabled and
+  references a truststore S3 object that has been
+  deleted or is zero bytes.
+infection: >
+  Mutual TLS validates client certificates against
+  CA certificates stored in a truststore — an S3
+  object containing PEM-encoded CAs. When that
+  object is deleted or empty, the validator has
+  nothing to compare client certificates against.
+  REST APIs reject every client connection in this
+  state — no certificate matches "no CA" — and
+  legitimate clients receive handshake failures.
+  HTTP APIs may silently fall back to accepting
+  any client (or none), passing every connection
+  through unauthenticated while the console still
+  reports mTLS as enabled. The custom domain
+  configuration looks intact — mTLS flag is on,
+  truststore URI is set, certificate is valid —
+  but the truststore content is gone. The failure
+  mode depends on API type and is invisible from
+  the console.
+failure: >
+  Client certificate validation broken. REST APIs
+  reject all clients (legitimate clients locked
+  out); HTTP APIs may silently disable mTLS and
+  pass connections through unauthenticated. Either
+  way, the security posture the operator believes
+  is enforced is not enforced.

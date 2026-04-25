@@ -1,0 +1,27 @@
+id: apigw_private_api_exposed
+description: >
+  An API the operator believes is reachable only by internal
+  consumers is reachable from outside the intended boundary.
+  Either the Private API's resource policy lacks an
+  aws:sourceVpce or aws:sourceVpc condition
+  (CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001), in which case any
+  AWS account with an execute-api VPC endpoint can invoke the API,
+  or the default execute-api endpoint is enabled alongside a
+  custom domain (CTL.APIGATEWAY.ENDPOINT.DEFAULT.001), in which
+  case clients can bypass whatever access controls the operator
+  layered on the custom domain. Threshold of 1 reflects that
+  either condition independently defeats the API's intended access
+  boundary; the chain surfaces "API is broader than the operator
+  thinks" as a single posture finding rather than two unrelated
+  ones. The two conditions cover different boundary-violation
+  paths — VPC-endpoint scope leak versus custom-domain bypass —
+  but the operator's mental model breaks the same way in both.
+controls:
+  - CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001
+  - CTL.APIGATEWAY.ENDPOINT.DEFAULT.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access

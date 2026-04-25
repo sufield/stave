@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/domainnames/api.example.com",
+      "type": "aws_apigateway_custom_domain",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "apigateway_custom_domain",
+          "custom_domain": {
+            "mtls_enabled": true,
+            "mtls_truststore_uri": "s3://example-truststore/truststore.pem",
+            "mtls_truststore_exists": true,
+            "has_ghost_truststore": false
+          }
+        }
+      }
+    }
+  ]
+}
