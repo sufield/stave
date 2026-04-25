@@ -87,13 +87,14 @@
         },
         "action": "Review the misconfigured properties and revert to compliant values."
       },
-      "exposure_score": 10,
+      "exposure_score": 10.001141552511415,
       "score_breakdown": {
         "base_score": 10,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0001141552511414,
         "days_blind": 0.041666666666666664
       },
       "reasoning_trace": [
@@ -160,7 +161,7 @@
       "member_finding_ids": [
         "sha256:7be5cea97128ef73"
       ],
-      "consolidated_score": 10,
+      "consolidated_score": 10.001141552511415,
       "consolidated_blast_radius": 1
     }
   ],
@@ -187,13 +188,14 @@
       "finding_index": 0,
       "control_id": "CTL.TEST.OVERRIDE.001",
       "asset_id": "test-public-bucket",
-      "exposure_score": 10,
+      "exposure_score": 10.001141552511415,
       "breakdown": {
         "base_score": 10,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0001141552511414,
         "days_blind": 0.041666666666666664
       },
       "silent_killer": false
@@ -292,7 +294,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8ef91f6c62fe209cbb9f3919ce7310666be52141",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

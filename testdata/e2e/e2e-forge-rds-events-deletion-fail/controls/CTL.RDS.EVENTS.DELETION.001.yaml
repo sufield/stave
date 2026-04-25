@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.EVENTS.DELETION.001
+name: RDS Must Have Event Subscription for Deletion Events
+description: >
+  An RDS event subscription must be configured to notify on
+  instance deletion (event categories including "deletion" or
+  "configuration change" depending on engine). Deletion
+  protection (CTL.RDS.DELETEPROT.001) is the preventive control;
+  the event subscription is the detective control that catches
+  any case where deletion protection was disabled — by drift,
+  by a maintenance task that disabled it temporarily and forgot
+  to re-enable, or by an authorized but uncoordinated change.
+  Without an event subscription, a deletion that succeeds
+  produces no real-time signal; the database is gone, and the
+  team learns about it from the application's failure mode
+  rather than from the deletion event itself. RDS event
+  subscriptions integrate with SNS for fan-out to email, SMS,
+  Slack, PagerDuty, and SIEM ingestion. Distinct from
+  CTL.RDS.EVENTS.001 (the generic "any critical subscription"
+  check); this control specifically requires the deletion
+  category.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-08", "DSP-15"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: No RDS event subscription is configured for deletion events.
+  action: Create an RDS event subscription that includes the deletion category and routes to SNS.
+  example: |
+    {"database": {"kind": "rds_instance", "events": {"event_subscription_deletion": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.events.event_subscription_deletion
+      op: eq
+      value: false

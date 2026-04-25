@@ -108,13 +108,14 @@
         },
         "action": "Option 1: Enable the TTLAfterFinished feature gate at cluster level. Option 2: Set ttlSecondsAfterFinished on all Job specs. Option 3: Update VPC CNI to a version with pod completion handling. Verify VPC CNI version:\n  kubectl describe daemonset aws-node -n kube-system | grep Image"
       },
-      "exposure_score": 75,
+      "exposure_score": 75.2054794520548,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0027397260273974,
         "days_blind": 1
       },
       "reasoning_trace": [
@@ -236,7 +237,7 @@
       "member_finding_ids": [
         "sha256:57ffb8e773b33d9a"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 75.2054794520548,
       "consolidated_blast_radius": 1
     }
   ],
@@ -263,13 +264,14 @@
       "finding_index": 0,
       "control_id": "CTL.EKS.VPC.CNI.NETPOL.TTL.001",
       "asset_id": "arn:aws:eks:us-east-1:123:cluster/staging",
-      "exposure_score": 75,
+      "exposure_score": 75.2054794520548,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0027397260273974,
         "days_blind": 1
       },
       "silent_killer": false
@@ -368,7 +370,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

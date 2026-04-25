@@ -1,0 +1,36 @@
+control: CTL.RDS.LOG.RETENTION.001
+defect: >
+  CloudWatch log group receiving the instance's RDS
+  logs has a retention policy below the framework
+  floor (or no retention policy at all).
+infection: >
+  Two failure modes converge here. The first is
+  excess retention: a log group with no policy retains
+  forever, accumulating cost (CloudWatch storage is
+  not free) and, in privacy-regulated jurisdictions,
+  retaining PII or PHI past the workload's
+  documented data-minimization obligation. The
+  second is insufficient retention: a log group with
+  the wizard default of 1, 3, or 7 days discards
+  database audit data well before any framework
+  window completes. PCI-DSS 10.7 requires 1 year
+  online plus 1 year accessible offline. HIPAA
+  technical safeguards under 164.312(b) plus the
+  retention requirements of 164.316 commonly land at
+  6 years for audit-relevant records. SOX retention
+  is industry-typical 7 years. SOC 2 expects
+  retention long enough to support audit, generally
+  1 year minimum. The control fires on retention
+  shorter than the configured floor — the floor
+  defaults to 365 days, configurable per fleet. A
+  post-incident investigation that begins more than
+  the retention window after the relevant access
+  cannot recover the audit record at all; the
+  database executed the queries, the logs were
+  generated, and they were discarded by retention
+  policy before anyone needed to read them.
+failure: >
+  Audit data is unrecoverable. Compliance post-
+  incident reports cannot demonstrate the access
+  patterns; legal investigations cannot reconstruct
+  the database side of the incident timeline.

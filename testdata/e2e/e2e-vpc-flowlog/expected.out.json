@@ -97,13 +97,14 @@
         },
         "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
       },
-      "exposure_score": 150,
+      "exposure_score": 154.10958904109592,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -156,8 +157,9 @@
           {
             "path": "network.kind",
             "current_value": "vpc",
+            "required_value": "any value other than vpc",
             "has_safe_default": false,
-            "description": "Change network.kind from vpc"
+            "description": "Change network.kind away from vpc"
           }
         ],
         "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
@@ -190,7 +192,7 @@
       "member_finding_ids": [
         "sha256:f78119ae6823a874"
       ],
-      "consolidated_score": 150,
+      "consolidated_score": 154.10958904109592,
       "consolidated_blast_radius": 2
     }
   ],
@@ -217,13 +219,14 @@
       "finding_index": 0,
       "control_id": "CTL.VPC.FLOWLOG.001",
       "asset_id": "vpc-test-001",
-      "exposure_score": 150,
+      "exposure_score": 154.10958904109592,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -322,7 +325,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

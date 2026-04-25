@@ -132,13 +132,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 154.10958904109592,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -211,8 +212,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           },
           {
             "path": "storage.tags.public_list_intended",
@@ -275,7 +277,7 @@
       "member_finding_ids": [
         "sha256:7c8eec65335883d8"
       ],
-      "consolidated_score": 150,
+      "consolidated_score": 154.10958904109592,
       "consolidated_blast_radius": 1
     }
   ],
@@ -329,13 +331,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.PUBLIC.LIST.002",
       "asset_id": "shopify-public-assets",
-      "exposure_score": 150,
+      "exposure_score": 154.10958904109592,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -434,7 +437,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

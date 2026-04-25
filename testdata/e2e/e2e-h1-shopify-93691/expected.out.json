@@ -99,13 +99,14 @@
         },
         "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
       },
-      "exposure_score": 150,
+      "exposure_score": 154.10958904109592,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -163,20 +164,23 @@
           {
             "path": "s3_upload.allowed_key_mode",
             "current_value": "prefix",
+            "required_value": "any value other than prefix",
             "has_safe_default": false,
-            "description": "Change s3_upload.allowed_key_mode from prefix"
+            "description": "Change s3_upload.allowed_key_mode away from prefix"
           },
           {
             "path": "s3_upload.operation",
             "current_value": "write",
+            "required_value": "any value other than write",
             "has_safe_default": false,
-            "description": "Change s3_upload.operation from write"
+            "description": "Change s3_upload.operation away from write"
           },
           {
             "path": "type",
             "current_value": "s3_upload_policy",
+            "required_value": "any value other than s3_upload_policy",
             "has_safe_default": false,
-            "description": "Change type from s3_upload_policy"
+            "description": "Change type away from s3_upload_policy"
           }
         ],
         "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
@@ -218,7 +222,7 @@
       "member_finding_ids": [
         "sha256:210cb8b46711f55b"
       ],
-      "consolidated_score": 150,
+      "consolidated_score": 154.10958904109592,
       "consolidated_blast_radius": 1
     }
   ],
@@ -245,13 +249,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.WRITE.SCOPE.001",
       "asset_id": "upload-policy-files-prefix",
-      "exposure_score": 150,
+      "exposure_score": 154.10958904109592,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -350,7 +355,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

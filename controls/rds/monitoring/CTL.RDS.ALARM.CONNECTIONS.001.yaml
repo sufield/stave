@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.ALARM.CONNECTIONS.001
+name: RDS Instances Must Have a CloudWatch Alarm on DatabaseConnections
+description: >
+  RDS instances must have a CloudWatch alarm configured on the
+  DatabaseConnections metric. Connection exhaustion is the most
+  common availability failure mode for managed databases,
+  especially in workloads where Lambda functions connect
+  directly (each cold start opens a new connection, and a cold-
+  start storm can saturate max_connections in seconds). Once the
+  connection limit is reached, the database refuses new
+  connections with a "too many connections" error — the
+  application's user-facing behavior is "intermittent inability
+  to connect" rather than the kind of explicit database failure
+  that the on-call response is rehearsed for, so the connection-
+  exhaustion incident often runs longer than equivalent
+  CPU-based incidents would. An alarm with a threshold around
+  80–90% of max_connections gives the on-call enough time to
+  drain a misbehaving client before the saturation point.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: RDS instance has no CloudWatch alarm on DatabaseConnections.
+  action: Create a CloudWatch alarm at 80–90% of max_connections with an SNS notification action.
+  example: |
+    {"database": {"kind": "rds_instance", "monitoring": {"alarm_connections_configured": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.monitoring.alarm_connections_configured
+      op: eq
+      value: false

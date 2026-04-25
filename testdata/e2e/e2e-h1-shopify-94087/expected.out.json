@@ -131,13 +131,14 @@
         },
         "action": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
       },
-      "exposure_score": 375,
+      "exposure_score": 1875,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3741
       },
       "reasoning_trace": [
@@ -232,20 +233,23 @@
           {
             "path": "identities",
             "current_value": "",
+            "required_value": "(see control definition)",
             "has_safe_default": false,
             "description": "Change identities from "
           },
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           },
           {
             "path": "storage.tags.tenant_mode",
             "current_value": "shared",
+            "required_value": "any value other than shared",
             "has_safe_default": false,
-            "description": "Change storage.tags.tenant_mode from shared"
+            "description": "Change storage.tags.tenant_mode away from shared"
           },
           {
             "path": "storage.tags.tenant_prefix",
@@ -295,7 +299,7 @@
       "member_finding_ids": [
         "sha256:dadfd5157be0d0b8"
       ],
-      "consolidated_score": 375,
+      "consolidated_score": 1875,
       "consolidated_blast_radius": 1
     }
   ],
@@ -322,13 +326,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.TENANT.ISOLATION.001",
       "asset_id": "shopify-merchant-assets",
-      "exposure_score": 375,
+      "exposure_score": 1875,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3741
       },
       "silent_killer": true
@@ -427,7 +432,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

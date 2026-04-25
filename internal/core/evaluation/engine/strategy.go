@@ -152,12 +152,16 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 	maxUnsafe := s.deps.slaThresholdFor(s.ctl)
 	span := s.deps.currentSpan()
 
+	// For unsafe_duration controls the predicate is "duration of an
+	// unsafe window exceeded the threshold" — that result is the
+	// threshold_check step's `exceeds_threshold` output, not the
+	// instantaneous `IsExposed` reading. Record only the inputs here
+	// so the trace does not claim the control matched (or did not
+	// match) before the duration check has run.
 	span.RecordStep("predicate_evaluation", map[string]any{
 		"currently_unsafe": t.IsExposed(),
 		"exposure_count":   t.History().Count(),
-	}, map[string]any{
-		"matched": t.IsExposed(),
-	})
+	}, nil)
 
 	// 1. Violation Check (Always takes precedence)
 	exceeds, threshErr := t.ExceedsSLA(now, maxUnsafe)

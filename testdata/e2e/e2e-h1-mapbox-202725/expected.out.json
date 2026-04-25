@@ -126,13 +126,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3266
       },
       "reasoning_trace": [
@@ -203,7 +204,7 @@
       "member_finding_ids": [
         "sha256:1ddacc755000d758"
       ],
-      "consolidated_score": 1000,
+      "consolidated_score": 5000,
       "consolidated_blast_radius": 1
     }
   ],
@@ -257,13 +258,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "mapbox-private-objects",
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3266
       },
       "silent_killer": true
@@ -362,7 +364,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

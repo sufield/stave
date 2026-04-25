@@ -136,13 +136,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -266,13 +267,14 @@
         },
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -325,8 +327,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
@@ -361,7 +364,7 @@
       "member_finding_ids": [
         "sha256:c08ea6c508e37025"
       ],
-      "consolidated_score": 200,
+      "consolidated_score": 205.47945205479454,
       "consolidated_blast_radius": 1
     },
     {
@@ -375,7 +378,7 @@
       "member_finding_ids": [
         "sha256:d9330865200aa495"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
     }
   ],
@@ -445,13 +448,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "omise-cdn-2",
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -460,13 +464,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.CONTROLS.001",
       "asset_id": "omise-cdn-2",
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -565,7 +570,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

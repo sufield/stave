@@ -120,13 +120,14 @@
         },
         "action": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
       },
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -184,8 +185,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           },
           {
             "path": "storage.object_lock.enabled",
@@ -283,13 +285,14 @@
         },
         "action": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
       },
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -361,8 +364,9 @@
           {
             "path": "storage.tags.data-classification",
             "current_value": "phi",
+            "required_value": "any value other than phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from phi"
+            "description": "Change storage.tags.data-classification away from phi"
           }
         ],
         "action": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
@@ -452,13 +456,14 @@
         },
         "action": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
       },
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -523,14 +528,16 @@
           {
             "path": "storage.object_lock.retention_days",
             "current_value": "365",
+            "required_value": "(see control definition)",
             "has_safe_default": false,
             "description": "Change storage.object_lock.retention_days from 365"
           },
           {
             "path": "storage.tags.data-classification",
             "current_value": "phi",
+            "required_value": "any value other than phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from phi"
+            "description": "Change storage.tags.data-classification away from phi"
           }
         ],
         "action": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
@@ -576,7 +583,7 @@
       "member_finding_ids": [
         "sha256:b6d05ff1963bda95"
       ],
-      "consolidated_score": 50,
+      "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1
     },
     {
@@ -593,7 +600,7 @@
       "member_finding_ids": [
         "sha256:48c4da7865eb8989"
       ],
-      "consolidated_score": 50,
+      "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1
     },
     {
@@ -610,7 +617,7 @@
       "member_finding_ids": [
         "sha256:72a8a7272fee0dad"
       ],
-      "consolidated_score": 50,
+      "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1
     }
   ],
@@ -669,13 +676,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.LOCK.001",
       "asset_id": "compliance-no-lock",
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -684,13 +692,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.LOCK.002",
       "asset_id": "phi-governance-lock",
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -699,13 +708,14 @@
       "finding_index": 2,
       "control_id": "CTL.S3.LOCK.003",
       "asset_id": "phi-short-retention",
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -804,7 +814,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

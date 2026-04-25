@@ -103,13 +103,14 @@
         },
         "action": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
       },
-      "exposure_score": 100,
+      "exposure_score": 102.73972602739727,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -155,8 +156,9 @@
           {
             "path": "identity.kind",
             "current_value": "account",
+            "required_value": "any value other than account",
             "has_safe_default": false,
-            "description": "Change identity.kind from account"
+            "description": "Change identity.kind away from account"
           },
           {
             "path": "identity.root.mfa_enabled",
@@ -195,7 +197,7 @@
       "member_finding_ids": [
         "sha256:d1659912ae8d6344"
       ],
-      "consolidated_score": 100,
+      "consolidated_score": 102.73972602739727,
       "consolidated_blast_radius": 1
     }
   ],
@@ -222,13 +224,14 @@
       "finding_index": 0,
       "control_id": "CTL.IAM.ROOT.MFA.001",
       "asset_id": "aws-account-root",
-      "exposure_score": 100,
+      "exposure_score": 102.73972602739727,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -327,7 +330,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

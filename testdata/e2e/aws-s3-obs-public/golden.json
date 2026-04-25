@@ -199,13 +199,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 200,
+      "exposure_score": 202.73972602739727,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -353,6 +354,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "reasoning_trace": [
@@ -398,14 +400,16 @@
           {
             "path": "exposure_source",
             "current_value": "missing_evidence",
+            "required_value": "any value other than missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from missing_evidence"
+            "description": "Change exposure_source away from missing_evidence"
           },
           {
             "path": "protected_prefix",
             "current_value": "secrets/",
+            "required_value": "any value other than secrets/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from secrets/"
+            "description": "Change protected_prefix away from secrets/"
           }
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -501,6 +505,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "reasoning_trace": [
@@ -546,14 +551,16 @@
           {
             "path": "exposure_source",
             "current_value": "missing_evidence",
+            "required_value": "any value other than missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from missing_evidence"
+            "description": "Change exposure_source away from missing_evidence"
           },
           {
             "path": "protected_prefix",
             "current_value": "invoices/",
+            "required_value": "any value other than invoices/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from invoices/"
+            "description": "Change protected_prefix away from invoices/"
           }
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -649,6 +656,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "reasoning_trace": [
@@ -694,14 +702,16 @@
           {
             "path": "exposure_source",
             "current_value": "missing_evidence",
+            "required_value": "any value other than missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from missing_evidence"
+            "description": "Change exposure_source away from missing_evidence"
           },
           {
             "path": "protected_prefix",
             "current_value": "internal/",
+            "required_value": "any value other than internal/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from internal/"
+            "description": "Change protected_prefix away from internal/"
           }
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -797,6 +807,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "reasoning_trace": [
@@ -842,14 +853,16 @@
           {
             "path": "exposure_source",
             "current_value": "missing_evidence",
+            "required_value": "any value other than missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from missing_evidence"
+            "description": "Change exposure_source away from missing_evidence"
           },
           {
             "path": "protected_prefix",
             "current_value": "backups/",
+            "required_value": "any value other than backups/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from backups/"
+            "description": "Change protected_prefix away from backups/"
           }
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -921,13 +934,14 @@
         },
         "action": "Enable all four S3 Block Public Access settings at the account level using aws s3control put-public-access-block with the --account-id parameter. This blocks public access for all current and future buckets in the account. If specific buckets require public access, use CloudFront with Origin Access Control instead of making buckets directly public."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -980,8 +994,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Enable all four S3 Block Public Access settings at the account level using aws s3control put-public-access-block with the --account-id parameter. This blocks public access for all current and future buckets in the account. If specific buckets require public access, use CloudFront with Origin Access Control instead of making buckets directly public."
@@ -1071,13 +1086,14 @@
         },
         "action": "Enable MFA Delete (requires root credentials): aws s3api put-bucket-versioning --bucket public-test-bucket --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa \"arn:aws:iam::\u003caccount\u003e:mfa/root-account-mfa-device \u003ccode\u003e\""
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1135,8 +1151,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           },
           {
             "path": "storage.versioning.enabled",
@@ -1246,13 +1263,14 @@
         },
         "action": "Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1324,8 +1342,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges."
@@ -1416,13 +1435,14 @@
         },
         "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1476,8 +1496,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           },
           {
             "path": "storage.object_ownership.rule",
@@ -1590,13 +1611,14 @@
         },
         "action": "Enable the `BlockPublicAcls` flag on the bucket's Public Access Block configuration. From the CLI:\n\n    aws s3api put-public-access-block \\\n      --bucket public-test-bucket \\\n      --public-access-block-configuration \\\n      'BlockPublicAcls=true,IgnorePublicAcls=\u003ccurrent\u003e,BlockPublicPolicy=\u003ccurrent\u003e,RestrictPublicBuckets=\u003ccurrent\u003e'\n\nPreserve the other three flag values so enabling this one doesn't silently disable the others."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1649,8 +1671,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Enable the `BlockPublicAcls` flag on the bucket's Public Access Block configuration. From the CLI:\n\n    aws s3api put-public-access-block \\\n      --bucket public-test-bucket \\\n      --public-access-block-configuration \\\n      'BlockPublicAcls=true,IgnorePublicAcls=\u003ccurrent\u003e,BlockPublicPolicy=\u003ccurrent\u003e,RestrictPublicBuckets=\u003ccurrent\u003e'\n\nPreserve the other three flag values so enabling this one doesn't silently disable the others."
@@ -1743,13 +1766,14 @@
         },
         "action": "Enable the `BlockPublicPolicy` flag on the bucket's Public Access Block configuration. Preserve the other three flag values so enabling this one doesn't silently disable the others."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1802,8 +1826,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Enable the `BlockPublicPolicy` flag on the bucket's Public Access Block configuration. Preserve the other three flag values so enabling this one doesn't silently disable the others."
@@ -1896,13 +1921,14 @@
         },
         "action": "Enable the `IgnorePublicAcls` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicAcls` for full ACL-path coverage — the pair prevents new public ACL grants and neutralizes existing ones."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1955,8 +1981,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Enable the `IgnorePublicAcls` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicAcls` for full ACL-path coverage — the pair prevents new public ACL grants and neutralizes existing ones."
@@ -2049,13 +2076,14 @@
         },
         "action": "Enable the `RestrictPublicBuckets` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicPolicy` for full policy-path coverage — the pair prevents new public policy writes and limits the effect of any historical public grants to service principals."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -2108,8 +2136,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Enable the `RestrictPublicBuckets` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicPolicy` for full policy-path coverage — the pair prevents new public policy writes and limits the effect of any historical public grants to service principals."
@@ -2152,7 +2181,7 @@
         "sha256:4deaa2ba101afbc5",
         "sha256:a43a2ae5ed908e4d"
       ],
-      "consolidated_score": 200,
+      "consolidated_score": 202.73972602739727,
       "consolidated_blast_radius": 1
     },
     {
@@ -2189,7 +2218,7 @@
         "sha256:96f5d0e38950552e",
         "sha256:c54e72c5a695247a"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -2204,7 +2233,7 @@
       "member_finding_ids": [
         "sha256:8df0e432ac4c38e4"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -2218,7 +2247,7 @@
       "member_finding_ids": [
         "sha256:c600c7fe517e8f5d"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -2232,7 +2261,7 @@
       "member_finding_ids": [
         "sha256:377505bf614ff60b"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     }
   ],
@@ -2310,13 +2339,14 @@
       "finding_index": 8,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 200,
+      "exposure_score": 202.73972602739727,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2332,6 +2362,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "silent_killer": false
@@ -2347,6 +2378,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "silent_killer": false
@@ -2362,6 +2394,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "silent_killer": false
@@ -2377,6 +2410,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "silent_killer": false
@@ -2385,13 +2419,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.ACCOUNT.PAB.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2400,13 +2435,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.MFADELETE.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2415,13 +2451,14 @@
       "finding_index": 2,
       "control_id": "CTL.S3.NETWORK.VPC.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2430,13 +2467,14 @@
       "finding_index": 3,
       "control_id": "CTL.S3.OWNERSHIP.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2445,13 +2483,14 @@
       "finding_index": 4,
       "control_id": "CTL.S3.PAB.BLOCKPUBLICACLS.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2460,13 +2499,14 @@
       "finding_index": 5,
       "control_id": "CTL.S3.PAB.BLOCKPUBLICPOLICY.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2475,13 +2515,14 @@
       "finding_index": 6,
       "control_id": "CTL.S3.PAB.IGNOREPUBLICACLS.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -2490,13 +2531,14 @@
       "finding_index": 7,
       "control_id": "CTL.S3.PAB.RESTRICTPUBLICBUCKETS.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false

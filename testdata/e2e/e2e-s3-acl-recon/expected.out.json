@@ -87,13 +87,14 @@
         },
         "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true."
       },
-      "exposure_score": 150,
+      "exposure_score": 154.10958904109592,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -161,7 +162,7 @@
       "member_finding_ids": [
         "sha256:fe26f93edf61a8f9"
       ],
-      "consolidated_score": 150,
+      "consolidated_score": 154.10958904109592,
       "consolidated_blast_radius": 1
     }
   ],
@@ -188,13 +189,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.ACL.RECON.001",
       "asset_id": "acl-readable-bucket",
-      "exposure_score": 150,
+      "exposure_score": 154.10958904109592,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -293,7 +295,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

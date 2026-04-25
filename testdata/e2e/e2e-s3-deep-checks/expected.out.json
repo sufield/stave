@@ -174,13 +174,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
       },
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -298,13 +299,14 @@
         },
         "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
       },
-      "exposure_score": 150,
+      "exposure_score": 154.10958904109592,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -357,8 +359,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
@@ -453,13 +456,14 @@
           "narrative": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
         }
       ],
-      "exposure_score": 112.5,
+      "exposure_score": 115.58219178082193,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -512,8 +516,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
@@ -607,13 +612,14 @@
           "narrative": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
         }
       ],
-      "exposure_score": 112.5,
+      "exposure_score": 115.58219178082193,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1.5,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -659,8 +665,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           },
           {
             "path": "storage.logging.enabled",
@@ -751,13 +758,14 @@
         },
         "action": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
       },
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -807,14 +815,16 @@
           {
             "path": "storage.access.external_account_ids",
             "current_value": "[999888777666]",
+            "required_value": "(see control definition)",
             "has_safe_default": false,
             "description": "Change storage.access.external_account_ids from [999888777666]"
           },
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
@@ -899,13 +909,14 @@
         },
         "action": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
       },
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -958,8 +969,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
@@ -1036,13 +1048,14 @@
         },
         "action": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
       },
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -1088,8 +1101,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           },
           {
             "path": "storage.versioning.enabled",
@@ -1149,7 +1163,7 @@
       "member_finding_ids": [
         "sha256:67a0c2180e432109"
       ],
-      "consolidated_score": 200,
+      "consolidated_score": 205.47945205479454,
       "consolidated_blast_radius": 1
     },
     {
@@ -1163,7 +1177,7 @@
       "member_finding_ids": [
         "sha256:39aa8d4a21c81d37"
       ],
-      "consolidated_score": 150,
+      "consolidated_score": 154.10958904109592,
       "consolidated_blast_radius": 1
     },
     {
@@ -1177,7 +1191,7 @@
       "member_finding_ids": [
         "sha256:57cd3c51cb7f4bf1"
       ],
-      "consolidated_score": 112.5,
+      "consolidated_score": 115.58219178082193,
       "consolidated_blast_radius": 1
     },
     {
@@ -1191,7 +1205,7 @@
       "member_finding_ids": [
         "sha256:68d3599e7b239cd6"
       ],
-      "consolidated_score": 112.5,
+      "consolidated_score": 115.58219178082193,
       "consolidated_blast_radius": 1.5
     },
     {
@@ -1205,7 +1219,7 @@
       "member_finding_ids": [
         "sha256:447b517eb02e207e"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
     },
     {
@@ -1219,7 +1233,7 @@
       "member_finding_ids": [
         "sha256:18b53853355a91aa"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
     },
     {
@@ -1233,7 +1247,7 @@
       "member_finding_ids": [
         "sha256:56aadad096a67670"
       ],
-      "consolidated_score": 50,
+      "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1
     }
   ],
@@ -1383,13 +1397,14 @@
       "finding_index": 5,
       "control_id": "CTL.S3.PUBLIC.003",
       "asset_id": "vuln-public-write",
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -1398,13 +1413,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.ACCESS.002",
       "asset_id": "vuln-wildcard-policy",
-      "exposure_score": 150,
+      "exposure_score": 154.10958904109592,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -1413,13 +1429,14 @@
       "finding_index": 2,
       "control_id": "CTL.S3.ENCRYPT.001",
       "asset_id": "vuln-no-encryption",
-      "exposure_score": 112.5,
+      "exposure_score": 115.58219178082193,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -1428,13 +1445,14 @@
       "finding_index": 4,
       "control_id": "CTL.S3.LOG.001",
       "asset_id": "vuln-no-logging",
-      "exposure_score": 112.5,
+      "exposure_score": 115.58219178082193,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1.5,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -1443,13 +1461,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.ACCESS.001",
       "asset_id": "vuln-cross-account",
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -1458,13 +1477,14 @@
       "finding_index": 3,
       "control_id": "CTL.S3.ENCRYPT.002",
       "asset_id": "vuln-no-https",
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -1473,13 +1493,14 @@
       "finding_index": 6,
       "control_id": "CTL.S3.VERSION.001",
       "asset_id": "vuln-no-versioning",
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -1578,7 +1599,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

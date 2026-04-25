@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.LOG.RETENTION.001
+name: RDS CloudWatch Log Group Retention Must Meet Compliance Floor
+description: >
+  CloudWatch log groups receiving RDS database logs must have a
+  retention policy of at least 365 days (or whatever framework
+  ceiling the workload sits under: HIPAA frequently requires
+  6 years for audit-relevant logs; PCI-DSS 10.7 specifies 1 year
+  online and 1 year accessible; SOX commonly mandates 7 years).
+  Two failure modes converge on this control. First, a log group
+  with no retention policy at all retains logs indefinitely — a
+  cost issue and, in some jurisdictions, a privacy / data-
+  minimization issue (logs containing PII linger past the
+  workload's actual retention obligation). Second, and more
+  commonly, a log group with a default short retention (a few
+  weeks) discards database audit data well before the framework
+  retention window, so any post-incident investigation that
+  begins more than a month after the relevant access cannot
+  recover the audit record. The control fires when the retention
+  setting falls outside the configured acceptable range.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-11"
+  pci_dss_v4: "10.7"
+  hipaa: "164.316(b)(2)(i)"
+  ccm_v4: ["LOG-13"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: CloudWatch log group receiving RDS logs has retention shorter than the compliance floor.
+  action: Set the log group retention to at least 365 days (or your framework ceiling).
+  example: |
+    {"database": {"kind": "rds_instance", "logging": {"log_group_retention_adequate": true, "log_group_retention_days": 365}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.logging.log_exports_configured
+      op: eq
+      value: true
+    - field: properties.database.logging.log_group_retention_adequate
+      op: eq
+      value: false

@@ -106,13 +106,14 @@
         },
         "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
       },
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -252,13 +253,14 @@
         },
         "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
       },
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -352,7 +354,7 @@
       "member_finding_ids": [
         "sha256:2a489a7678baa433"
       ],
-      "consolidated_score": 200,
+      "consolidated_score": 205.47945205479454,
       "consolidated_blast_radius": 1
     },
     {
@@ -367,7 +369,7 @@
       "member_finding_ids": [
         "sha256:e1ee3d00f05f9f46"
       ],
-      "consolidated_score": 200,
+      "consolidated_score": 205.47945205479454,
       "consolidated_blast_radius": 1
     }
   ],
@@ -410,13 +412,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "asset_id": "fullcontrol-auth-bucket",
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -425,13 +428,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "asset_id": "fullcontrol-public-bucket",
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -530,7 +534,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

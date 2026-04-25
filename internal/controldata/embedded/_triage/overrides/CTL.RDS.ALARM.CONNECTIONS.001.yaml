@@ -1,0 +1,31 @@
+control: CTL.RDS.ALARM.CONNECTIONS.001
+defect: >
+  RDS instance has no CloudWatch alarm configured on
+  the DatabaseConnections metric.
+infection: >
+  Connection exhaustion is the most common
+  availability-class failure for managed databases,
+  and Lambda-fronted workloads are particularly
+  prone to it: each cold start opens a new
+  connection, the cold-start storm that follows a
+  scaling event saturates max_connections in
+  seconds, and the database refuses subsequent
+  connections with "too many connections." The
+  application's user-facing symptom is "intermittent
+  inability to connect" rather than the kind of
+  loud database failure the on-call response is
+  rehearsed for, so the connection-exhaustion
+  incident routinely runs longer than equivalent
+  CPU-bound incidents would. The connections
+  metric ramps gradually before saturation; an
+  alarm at 80–90% of max_connections gives the
+  on-call enough advance warning to identify the
+  misbehaving client and drain it before the limit
+  hits, instead of after the application has
+  already begun erroring at users.
+failure: >
+  Saturation is detected from user impact rather
+  than the metric. Mean-time-to-detect equals the
+  time it takes for application errors to surface,
+  during which the database refuses new
+  connections.

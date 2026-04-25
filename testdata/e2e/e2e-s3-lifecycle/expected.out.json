@@ -102,13 +102,14 @@
         },
         "action": "Add S3 lifecycle rules to manage object expiration and transitions. Configure rules matching the retention period specified in the data-retention tag. Use lifecycle transitions to move data to cheaper storage classes before expiration."
       },
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -249,13 +250,14 @@
         },
         "action": "Increase the lifecycle expiration period to at least the configured min_retention_days value. If the current rule is for storage class transition, ensure the expiration rule is separate and meets the minimum retention period."
       },
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -320,14 +322,16 @@
           {
             "path": "storage.lifecycle.min_expiration_days",
             "current_value": "90",
+            "required_value": "(see control definition)",
             "has_safe_default": false,
             "description": "Change storage.lifecycle.min_expiration_days from 90"
           },
           {
             "path": "storage.tags.data-classification",
             "current_value": "phi",
+            "required_value": "any value other than phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from phi"
+            "description": "Change storage.tags.data-classification away from phi"
           }
         ],
         "action": "Increase the lifecycle expiration period to at least the configured min_retention_days value. If the current rule is for storage class transition, ensure the expiration rule is separate and meets the minimum retention period."
@@ -374,7 +378,7 @@
       "member_finding_ids": [
         "sha256:b12eb488d6b1fc1f"
       ],
-      "consolidated_score": 50,
+      "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1
     },
     {
@@ -390,7 +394,7 @@
       "member_finding_ids": [
         "sha256:c05742c8ab061c1f"
       ],
-      "consolidated_score": 50,
+      "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1
     }
   ],
@@ -433,13 +437,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.LIFECYCLE.001",
       "asset_id": "retention-no-rules",
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -448,13 +453,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.LIFECYCLE.002",
       "asset_id": "phi-short-expiry",
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -553,7 +559,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

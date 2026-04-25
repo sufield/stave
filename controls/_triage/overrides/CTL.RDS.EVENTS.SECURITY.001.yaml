@@ -1,0 +1,42 @@
+control: CTL.RDS.EVENTS.SECURITY.001
+defect: >
+  No RDS event subscription is configured for
+  security-relevant event categories (security
+  group changes, parameter group changes,
+  configuration changes, certificate rotations).
+infection: >
+  Every category in the security-event set
+  modifies the instance's security posture: a
+  security-group association change shifts which
+  network paths can reach the database; a
+  parameter-group change can flip TLS enforcement,
+  password hashing, audit logging, or any of the
+  other engine knobs the security review depends
+  on; a configuration change covers the broad
+  category of instance-attribute modifications
+  including encryption, deletion protection, and
+  IAM authentication; certificate-rotation events
+  warn before TLS connectivity breaks. Each
+  deserves a real-time signal even when the change
+  is authorized — the audit trail is the cheapest
+  evidence the organization will get that the
+  change happened, and operating without it means
+  the security review depends on after-the-fact
+  CloudTrail mining. Without the subscription, the
+  posture changes are visible only in CloudTrail
+  (which is correct, but not real-time and not
+  routed to the on-call channel). The subscription
+  pushes the same events to SNS as soon as they
+  fire, so an unintended change — a security group
+  swapped during a rushed migration, a parameter
+  group reset to default by a wizard, a
+  certificate rotation that did not complete
+  correctly — is detected during the change rather
+  than during the next quarterly audit pass.
+  Distinct from CTL.RDS.EVENTS.001 (generic) and
+  CTL.RDS.EVENTS.DELETION.001 (deletion-specific).
+failure: >
+  Security-posture changes are recorded only by
+  CloudTrail, which is not on the on-call path.
+  Real-time detection of unintended posture shifts
+  is missing.

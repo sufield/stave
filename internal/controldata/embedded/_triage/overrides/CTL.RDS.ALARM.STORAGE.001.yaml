@@ -1,0 +1,34 @@
+control: CTL.RDS.ALARM.STORAGE.001
+defect: >
+  RDS instance has no CloudWatch alarm configured on
+  the FreeStorageSpace metric.
+infection: >
+  Storage exhaustion produces the worst class of
+  database failure: at 0% free, RDS transitions the
+  instance to read-only, every write fails, and
+  in-flight transactions abort. Workloads that use
+  the database as the source of truth for state
+  changes (orders, billing, audit rows) hit
+  unrecoverable failure modes — a charge succeeded
+  externally but the audit row could not be
+  written, an idempotency key was consumed but the
+  effect was not committed, a queue offset
+  advanced but the side effect was not persisted.
+  If storage autoscaling is not also enabled, the
+  only remediation is a manual storage modification
+  (which is online for most engines but takes
+  minutes to commit and may schedule a
+  maintenance-window-eligible reboot). Without an
+  alarm the exhaustion is detected by the
+  application's first write failure, which is the
+  wrong place to discover the problem. An alarm at
+  10–20% free space gives hours of advance warning
+  on most workloads — enough time to either let
+  autoscaling react or page the team.
+failure: >
+  Read-only transition arrives without warning. The
+  first signal is application write failures, by
+  which point unrecoverable side-effects (charges,
+  emitted events, consumed idempotency keys) may
+  already exist with no audit-row counterpart in
+  the database.

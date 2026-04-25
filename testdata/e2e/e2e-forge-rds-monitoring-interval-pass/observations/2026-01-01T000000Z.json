@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "db-em15s",
+      "type": "aws_rds_instance",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_instance","monitoring":{"enhanced_monitoring_enabled":true,"enhanced_monitoring_interval":15,"enhanced_monitoring_interval_too_long":false}}}
+    }
+  ]
+}

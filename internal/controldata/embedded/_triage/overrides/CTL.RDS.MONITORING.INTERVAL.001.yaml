@@ -1,0 +1,31 @@
+control: CTL.RDS.MONITORING.INTERVAL.001
+defect: >
+  Enhanced Monitoring is enabled but the collection
+  interval is longer than 15 seconds (often 60s — the
+  wizard default).
+infection: >
+  Enhanced Monitoring is the only source of OS-level
+  signal RDS exposes: CPU per core, memory utilization
+  by component, disk I/O per device, network bytes per
+  interface, and process / thread counts. Each of these
+  is published on the configured interval and not in
+  between, so the analytical value of the data is
+  literally bounded by the sample rate. At 60s intervals,
+  a 30-second connection storm (the most common Lambda-
+  scaling pathology) generates exactly zero or one
+  sample inside its window — almost nothing for the
+  on-call to triage from. A 20-second runaway query
+  that pegs a CPU and self-resolves leaves no signal
+  at all. The post-incident write-up reads "metrics
+  looked normal" while the workload saw the database
+  stutter. The default 60s interval is invisible to
+  operators because the metric console renders it as
+  the same time-series line shape — the data points are
+  just thinner. 15 seconds is the published
+  recommendation for production-traffic databases; 1s
+  is available where the cost makes sense.
+failure: >
+  Short-duration anomalies are below the sample rate.
+  The post-incident timeline cannot reconstruct what
+  actually happened on the box during the incident
+  window.

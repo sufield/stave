@@ -8,6 +8,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **RDS-2 — logging deepening, CloudWatch alarms, and event
+  subscriptions (10 new controls, 3 chains).** Second RDS
+  gap-closure iteration. Closes the operational-monitoring
+  surface that RDS-1 (TLS / encryption / parameter group)
+  did not reach. All 10 planned controls were net-new
+  after dedup against existing CTL.RDS.MONITORING.001
+  (Enhanced Monitoring boolean), CTL.RDS.PERFORMANCE.INSIGHTS.001
+  (PI + KMS boolean), CTL.RDS.EVENTS.001 (generic critical
+  subscription boolean), CTL.RDS.LOG.001 (audit boolean),
+  and CTL.RDS.CLUSTER.LOGGING.001 (Aurora cluster scope) —
+  the new controls deepen those areas with specific
+  configuration checks. Monitoring (4): `MONITORING.INTERVAL`
+  (Enhanced Monitoring interval > 15s collapses short-event
+  visibility, medium), `PERFINSIGHTS.RETENTION` (PI retention
+  below 7-day free-tier baseline collapses trend / regression
+  / forensics window, low), `ALARM.CPU` (no CPUUtilization
+  alarm; spike from runaway query, connection storm, SQL-
+  injected cryptominer, or DoS detected via app symptom
+  instead, medium), `ALARM.CONNECTIONS` (no
+  DatabaseConnections alarm; Lambda cold-start storm
+  saturates max_connections without warning, medium).
+  Alarms (2): `ALARM.STORAGE` (no FreeStorageSpace alarm;
+  read-only transition arrives without warning and writes
+  fail mid-transaction, high — only high-severity alarm
+  control), `ALARM.REPLICATION` (no ReplicaLag alarm on
+  instances with read replicas; stale-read incidents
+  present as application data-quality bugs). Logging (2):
+  `LOG.RETENTION` (CloudWatch log group retention below
+  framework floor; PCI 1y, HIPAA 6y, SOX 7y, audit data
+  unrecoverable, medium), `LOG.SLOWQUERY` (slow-query log
+  disabled; performance + SQL-injection + DoS signals
+  collapse to a single dull "slow database" symptom,
+  medium). Events (2): `EVENTS.DELETION` (no deletion
+  event subscription; pairs with deletion protection as
+  detective control when preventive control is bypassed
+  by drift, high), `EVENTS.SECURITY` (no security-event
+  subscription; SG / parameter / configuration / certificate
+  changes detected only via CloudTrail mining, medium).
+  Chains: `rds_monitoring_blind` (no CPU + (no storage OR
+  no connections) = three primary load signals
+  unmonitored), `rds_audit_incomplete` (slow-query off +
+  (short retention OR no export) = audit chain broken at
+  multiple points), `rds_event_gap` (no deletion-event +
+  (no security-event OR no deletion protection) = change
+  detection plus preventive control both gone). 22 e2e
+  fixtures including engine variants (slow-query MySQL +
+  PostgreSQL pass) and scope-gate variants (replication
+  alarm standalone pass for instances without replicas).
+  10 triage overrides. RDS monitoring coverage: partial →
+  comprehensive.
 - **RDS-1 — TLS, encryption, and parameter-group security
   (6 new controls, 3 chains).** First RDS gap-closure
   iteration. Closes the database-engine-configuration

@@ -96,13 +96,14 @@
         },
         "action": "Add network-scoping conditions to the bucket policy: aws:SourceIp for IP range restrictions, aws:SourceVpce for VPC endpoint restrictions, aws:SourceVpc for VPC restrictions, or aws:PrincipalOrgID for organization-only access."
       },
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -136,8 +137,9 @@
           {
             "path": "storage.access.effective_network_scope",
             "current_value": "public",
+            "required_value": "any value other than public",
             "has_safe_default": false,
-            "description": "Change storage.access.effective_network_scope from public"
+            "description": "Change storage.access.effective_network_scope away from public"
           }
         ],
         "action": "Add network-scoping conditions to the bucket policy: aws:SourceIp for IP range restrictions, aws:SourceVpce for VPC endpoint restrictions, aws:SourceVpc for VPC restrictions, or aws:PrincipalOrgID for organization-only access."
@@ -206,13 +208,14 @@
         },
         "action": "Add network-scoping conditions to the bucket policy: aws:SourceIp for IP range restrictions, aws:SourceVpce for VPC endpoint restrictions, aws:SourceVpc for VPC restrictions, or aws:PrincipalOrgID for organization-only access."
       },
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -246,8 +249,9 @@
           {
             "path": "storage.access.effective_network_scope",
             "current_value": "public",
+            "required_value": "any value other than public",
             "has_safe_default": false,
-            "description": "Change storage.access.effective_network_scope from public"
+            "description": "Change storage.access.effective_network_scope away from public"
           }
         ],
         "action": "Add network-scoping conditions to the bucket policy: aws:SourceIp for IP range restrictions, aws:SourceVpce for VPC endpoint restrictions, aws:SourceVpc for VPC restrictions, or aws:PrincipalOrgID for organization-only access."
@@ -279,7 +283,7 @@
       "member_finding_ids": [
         "sha256:3f681faeae812358"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
     },
     {
@@ -293,7 +297,7 @@
       "member_finding_ids": [
         "sha256:a23f10a9461112c1"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
     }
   ],
@@ -336,13 +340,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.NETWORK.001",
       "asset_id": "public-no-condition",
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -351,13 +356,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.NETWORK.001",
       "asset_id": "securetransport-only",
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -456,7 +462,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

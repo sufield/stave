@@ -39,7 +39,16 @@ func DeriveChanges(misconfigs []Misconfiguration) []PropertyChange {
 			pc.RequiredValue = formatValue(m.UnsafeValue)
 			pc.HasSafeDefault = false
 			pc.Description = fmt.Sprintf("Set %s to %s", m.DisplayProperty(), pc.RequiredValue)
+		case m.Operator == predicate.OpEq:
+			// Non-boolean OpEq: the predicate matched because the
+			// property equals UnsafeValue, so the safe state is
+			// "anything other than UnsafeValue." Surface that
+			// constraint instead of leaving RequiredValue blank.
+			pc.RequiredValue = "any value other than " + formatValue(m.UnsafeValue)
+			pc.HasSafeDefault = false
+			pc.Description = fmt.Sprintf("Change %s away from %s", m.DisplayProperty(), formatValue(m.UnsafeValue))
 		default:
+			pc.RequiredValue = "(see control definition)"
 			pc.HasSafeDefault = false
 			pc.Description = fmt.Sprintf("Change %s from %s", m.DisplayProperty(), pc.CurrentValue)
 		}

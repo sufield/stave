@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.ALARM.REPLICATION.001
+name: RDS Instances With Read Replicas Must Alarm on ReplicaLag
+description: >
+  RDS instances that have read replicas (or are themselves read
+  replicas) must have a CloudWatch alarm configured on the
+  ReplicaLag metric. A read replica with growing lag serves
+  stale data: every read directed to the replica returns rows as
+  they existed at some bounded delta in the past, and the delta
+  can drift from a few seconds to many minutes if the primary is
+  under heavy write load or the replica's network is congested.
+  Read-heavy applications routinely rely on read replicas without
+  modeling the lag explicitly; the consistency assumption that
+  feels free at low lag breaks at high lag in subtle, expensive
+  ways: a user updates their billing address on the primary,
+  refreshes the page, and the read against the replica returns
+  the old value, which the user re-edits, generating a write/
+  read conflict the application cannot resolve cleanly. An
+  alarm threshold tuned to the application's tolerance is the
+  only way the team learns about the drift before customers
+  do. The control fires only on instances that have or are
+  read replicas; standalone instances have no ReplicaLag
+  metric.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "A1.2"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: RDS instance with read replicas has no CloudWatch alarm on ReplicaLag.
+  action: Create a ReplicaLag alarm at the application's lag tolerance with an SNS notification action.
+  example: |
+    {"database": {"kind": "rds_instance", "monitoring": {"alarm_replication_configured": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - any:
+        - field: properties.database.monitoring.has_read_replicas
+          op: eq
+          value: true
+        - field: properties.database.monitoring.is_read_replica
+          op: eq
+          value: true
+    - field: properties.database.monitoring.alarm_replication_configured
+      op: eq
+      value: false

@@ -1,0 +1,22 @@
+id: rds_monitoring_blind
+description: >
+  Database has no CPU alarm AND either no storage alarm or no
+  connection alarm. Multiple critical operational metrics are
+  unmonitored at the same time: CPU spikes that signal runaway
+  queries or cryptominer payloads are detected only by user
+  impact, AND either storage exhaustion arrives without warning
+  (read-only transition, lost writes) or connection saturation
+  arrives without warning (the most common Lambda-fronted
+  availability failure). Each absent alarm is medium severity;
+  the combination is the database operating without any of the
+  three primary load signals reaching the on-call channel.
+controls:
+  - CTL.RDS.ALARM.CPU.001
+  - CTL.RDS.ALARM.STORAGE.001
+  - CTL.RDS.ALARM.CONNECTIONS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_rds
+postconditions:
+  - audit_trail_destroyed

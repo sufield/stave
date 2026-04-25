@@ -1,0 +1,41 @@
+control: CTL.RDS.ALARM.REPLICATION.001
+defect: >
+  RDS instance has read replicas (or is itself a
+  read replica) but no CloudWatch alarm is
+  configured on the ReplicaLag metric.
+infection: >
+  Read replicas serve data that lags the primary by
+  some bounded delta — under healthy conditions
+  fractions of a second, but under heavy primary
+  write load or replica-side network congestion
+  the delta can grow to many seconds or many
+  minutes. Read-heavy applications routinely point
+  reporting and read-mostly traffic at replicas
+  without modeling the lag explicitly; the
+  consistency assumption that feels free at low lag
+  breaks at high lag in subtle, expensive ways.
+  Examples seen in production: a user updates
+  their billing address on the primary, the page
+  refreshes against the replica, the read returns
+  the old value, the user re-edits, the second
+  write conflicts with the first; a queue worker
+  reads a record's status from the replica and
+  sees it pending, dispatches the work, then
+  tries to write the result and discovers the
+  record was already finalized on the primary;
+  a search index reads from the replica and
+  builds a stale view. None of these surface as
+  database errors — they surface as data-quality
+  bugs the team chases through the application
+  for hours before someone graphs ReplicaLag.
+  An alarm tuned to the application's lag tolerance
+  catches the drift during the drift instead of
+  during the next data-quality investigation. The
+  control fires only on instances that have or
+  are read replicas; standalone instances do not
+  publish ReplicaLag.
+failure: >
+  Stale-read incidents present as application data-
+  quality bugs. The team chases the symptom
+  through application code while the actual cause
+  (replica lag) is a single graph away.

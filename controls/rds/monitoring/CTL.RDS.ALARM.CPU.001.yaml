@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.ALARM.CPU.001
+name: RDS Instances Must Have a CloudWatch Alarm on CPUUtilization
+description: >
+  RDS instances must have a CloudWatch alarm configured on the
+  CPUUtilization metric. CPU is the primary load signal a
+  database publishes; sustained high CPU indicates one of a small
+  set of conditions that all matter: a runaway query (application
+  bug, missing index, unbounded recursion in a stored procedure),
+  a connection storm (a misbehaving Lambda, a retry loop, or a
+  DDoS), an SQL-injected cryptominer (documented multiple times
+  in production environments — payloads that mine hash via
+  expensive query operators), or a deliberate resource-exhaustion
+  attack. The CloudWatch metric is published every minute
+  whether or not anyone is watching; without an alarm the spike
+  is visible only to whoever happens to be looking at the
+  graph at the right time. The alarm is the only way the
+  on-call engineer learns about the condition before the
+  application's user-facing impact escalates the incident on
+  its own.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: RDS instance has no CloudWatch alarm on CPUUtilization.
+  action: Create a CloudWatch alarm on AWS/RDS CPUUtilization with an SNS notification action.
+  example: |
+    {"database": {"kind": "rds_instance", "monitoring": {"alarm_cpu_configured": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.monitoring.alarm_cpu_configured
+      op: eq
+      value: false

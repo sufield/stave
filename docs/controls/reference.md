@@ -3,28 +3,28 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1429
-**Pack hash:** `d3d2c41a18c6798a3f81470e87b713cce7635decf478fe1fb244c48745be7870`
+**Total controls:** 1439
+**Pack hash:** `3573d8828fa3ae5fd938288cb24cf2bfde9976de3e3130c96d6c2b3c379ce247`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 171 |
-| high | 633 |
+| high | 635 |
 | info | 16 |
-| low | 103 |
-| medium | 506 |
+| low | 104 |
+| medium | 513 |
 
 | Domain | Count |
 |--------|-------|
 | audit | 32 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 33 |
+| detection | 42 |
 | encryption | 80 |
 | exposure | 848 |
-| governance | 42 |
+| governance | 43 |
 | hygiene | 16 |
 | identity | 326 |
 | network | 25 |
@@ -16606,6 +16606,66 @@ AWS Resource Access Manager (RAM) shares resources (subnets, Transit Gateways, R
 
 ---
 
+### CTL.RDS.ALARM.CONNECTIONS.001
+
+**RDS Instances Must Have a CloudWatch Alarm on DatabaseConnections**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.2;
+
+RDS instances must have a CloudWatch alarm configured on the DatabaseConnections metric. Connection exhaustion is the most common availability failure mode for managed databases, especially in workloads where Lambda functions connect directly (each cold start opens a new connection, and a cold- start storm can saturate max_connections in seconds). Once the connection limit is reached, the database refuses new connections with a "too many connections" error — the application's user-facing behavior is "intermittent inability to connect" rather than the kind of explicit database failure that the on-call response is rehearsed for, so the connection- exhaustion incident often runs longer than equivalent CPU-based incidents would. An alarm with a threshold around 80–90% of max_connections gives the on-call enough time to drain a misbehaving client before the saturation point.
+
+**Remediation:** Create a CloudWatch alarm at 80–90% of max_connections with an SNS notification action.
+
+---
+
+### CTL.RDS.ALARM.CPU.001
+
+**RDS Instances Must Have a CloudWatch Alarm on CPUUtilization**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.2;
+
+RDS instances must have a CloudWatch alarm configured on the CPUUtilization metric. CPU is the primary load signal a database publishes; sustained high CPU indicates one of a small set of conditions that all matter: a runaway query (application bug, missing index, unbounded recursion in a stored procedure), a connection storm (a misbehaving Lambda, a retry loop, or a DDoS), an SQL-injected cryptominer (documented multiple times in production environments — payloads that mine hash via expensive query operators), or a deliberate resource-exhaustion attack. The CloudWatch metric is published every minute whether or not anyone is watching; without an alarm the spike is visible only to whoever happens to be looking at the graph at the right time. The alarm is the only way the on-call engineer learns about the condition before the application's user-facing impact escalates the incident on its own.
+
+**Remediation:** Create a CloudWatch alarm on AWS/RDS CPUUtilization with an SNS notification action.
+
+---
+
+### CTL.RDS.ALARM.REPLICATION.001
+
+**RDS Instances With Read Replicas Must Alarm on ReplicaLag**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: A1.2;
+
+RDS instances that have read replicas (or are themselves read replicas) must have a CloudWatch alarm configured on the ReplicaLag metric. A read replica with growing lag serves stale data: every read directed to the replica returns rows as they existed at some bounded delta in the past, and the delta can drift from a few seconds to many minutes if the primary is under heavy write load or the replica's network is congested. Read-heavy applications routinely rely on read replicas without modeling the lag explicitly; the consistency assumption that feels free at low lag breaks at high lag in subtle, expensive ways: a user updates their billing address on the primary, refreshes the page, and the read against the replica returns the old value, which the user re-edits, generating a write/ read conflict the application cannot resolve cleanly. An alarm threshold tuned to the application's tolerance is the only way the team learns about the drift before customers do. The control fires only on instances that have or are read replicas; standalone instances have no ReplicaLag metric.
+
+**Remediation:** Create a ReplicaLag alarm at the application's lag tolerance with an SNS notification action.
+
+---
+
+### CTL.RDS.ALARM.STORAGE.001
+
+**RDS Instances Must Have a CloudWatch Alarm on FreeStorageSpace**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: A1.2;
+
+RDS instances must have a CloudWatch alarm configured on the FreeStorageSpace metric. When an RDS instance exhausts its allocated storage, the database transitions to read-only: every write fails, in-flight transactions abort, and any application that depends on writing to the database errors out. If storage autoscaling is not also enabled, the only remediation is a manual storage modification, which can take minutes to commit and may require a maintenance-window-eligible reboot. Without an alarm the exhaustion is detected only by the application's first write failure, which is frequently the wrong place to discover the problem (a billing charge may have already failed, an idempotency key may have been consumed, an audit row may have been lost). An alarm at 10–20% free space gives the team hours of advance warning before exhaustion. This is the highest-severity alarm control because the failure mode is not "monitoring missed an attack" but "monitoring missed a self-inflicted outage."
+
+**Remediation:** Create a FreeStorageSpace alarm at 10–20% free with an SNS notification action.
+
+---
+
 ### CTL.RDS.AUTOUPGRADE.001
 
 **RDS Auto Minor Version Upgrade Must Be Enabled**
@@ -16756,6 +16816,36 @@ RDS instances must have event subscriptions configured for critical event catego
 
 ---
 
+### CTL.RDS.EVENTS.DELETION.001
+
+**RDS Must Have Event Subscription for Deletion Events**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.2;
+
+An RDS event subscription must be configured to notify on instance deletion (event categories including "deletion" or "configuration change" depending on engine). Deletion protection (CTL.RDS.DELETEPROT.001) is the preventive control; the event subscription is the detective control that catches any case where deletion protection was disabled — by drift, by a maintenance task that disabled it temporarily and forgot to re-enable, or by an authorized but uncoordinated change. Without an event subscription, a deletion that succeeds produces no real-time signal; the database is gone, and the team learns about it from the application's failure mode rather than from the deletion event itself. RDS event subscriptions integrate with SNS for fan-out to email, SMS, Slack, PagerDuty, and SIEM ingestion. Distinct from CTL.RDS.EVENTS.001 (the generic "any critical subscription" check); this control specifically requires the deletion category.
+
+**Remediation:** Create an RDS event subscription that includes the deletion category and routes to SNS.
+
+---
+
+### CTL.RDS.EVENTS.SECURITY.001
+
+**RDS Must Have Event Subscription for Security Events**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-12; pci_dss_v4: 10.2;
+
+An RDS event subscription must be configured to notify on security-relevant events: security group association changes, parameter group changes, configuration changes, and certificate changes. These categories cover every modification that shifts the instance's security posture — and every one of them deserves a real-time signal even when the change is authorized, because the audit trail is the cheapest evidence the organization will get that the change happened. Without the subscription, security-posture changes are visible only in CloudTrail (which is correct, but not real-time and not routed to the on-call channel). The subscription pushes the same events to SNS as soon as they fire, so an unintended change — a security group swapped to an open one during a rushed migration, a parameter group switched to default by a wizard, a certificate rotation that did not complete — is detected during the change rather than during the next audit pass. Distinct from CTL.RDS.EVENTS.001 (generic) and CTL.RDS.EVENTS.DELETION.001 (specifically deletion).
+
+**Remediation:** Add security-related categories (security, configuration change, parameter, certificate) to an RDS event subscription.
+
+---
+
 ### CTL.RDS.IAMAUTH.001
 
 **RDS Must Enable IAM Authentication**
@@ -16800,6 +16890,36 @@ RDS instances must export audit logs to CloudWatch. Without audit logging, datab
 
 ---
 
+### CTL.RDS.LOG.RETENTION.001
+
+**RDS CloudWatch Log Group Retention Must Meet Compliance Floor**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.316(b)(2)(i); nist_800_53_r5: AU-11; pci_dss_v4: 10.7;
+
+CloudWatch log groups receiving RDS database logs must have a retention policy of at least 365 days (or whatever framework ceiling the workload sits under: HIPAA frequently requires 6 years for audit-relevant logs; PCI-DSS 10.7 specifies 1 year online and 1 year accessible; SOX commonly mandates 7 years). Two failure modes converge on this control. First, a log group with no retention policy at all retains logs indefinitely — a cost issue and, in some jurisdictions, a privacy / data- minimization issue (logs containing PII linger past the workload's actual retention obligation). Second, and more commonly, a log group with a default short retention (a few weeks) discards database audit data well before the framework retention window, so any post-incident investigation that begins more than a month after the relevant access cannot recover the audit record. The control fires when the retention setting falls outside the configured acceptable range.
+
+**Remediation:** Set the log group retention to at least 365 days (or your framework ceiling).
+
+---
+
+### CTL.RDS.LOG.SLOWQUERY.001
+
+**RDS Slow Query Logging Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2; pci_dss_v4: 10.2;
+
+RDS instances must enable slow-query logging at the engine- appropriate parameter (`slow_query_log = 1` for MySQL/MariaDB; `log_min_duration_statement` set to a positive millisecond value, not -1, for PostgreSQL; equivalent for SQL Server / Oracle). Slow-query logs do triple duty for security and reliability: they are the primary signal for performance degradation that the application has not yet escalated, they are a strong indicator of SQL injection (injected payloads often produce execution plans that fall outside the normal query distribution and trip the slow threshold), and they surface deliberate denial-of-service patterns (intentionally expensive queries that hold connections and consume CPU). Without slow-query logging the database silently absorbs the cost of pathological queries and the only signal the organization gets is general latency — too dull to attribute back to a specific actor or query. The control fires when the engine-appropriate slow-query parameter is off.
+
+**Remediation:** Enable the engine-appropriate slow-query parameter (slow_query_log for MySQL, log_min_duration_statement for PostgreSQL).
+
+---
+
 ### CTL.RDS.MINOR.UPGRADE.001
 
 **RDS Instances Must Enable Automatic Minor Version Upgrades**
@@ -16827,6 +16947,21 @@ Minor version upgrades contain security patches for the database engine. Disabli
 RDS instances must have Enhanced Monitoring enabled. Enhanced Monitoring provides real-time OS-level metrics (CPU, memory, disk I/O, network) that standard CloudWatch metrics do not capture. Without it, performance degradation and resource exhaustion attacks are harder to detect and investigate.
 
 **Remediation:** Enable Enhanced Monitoring with a 60-second granularity. Run: aws rds modify-db-instance --db-instance-identifier xxx --monitoring-interval 60 --monitoring-role-arn arn:aws:iam::ACCOUNT:role/rds-monitoring-role --apply-immediately
+
+---
+
+### CTL.RDS.MONITORING.INTERVAL.001
+
+**RDS Enhanced Monitoring Interval Must Not Exceed 15 Seconds**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.2;
+
+RDS Enhanced Monitoring must collect at intervals of 15 seconds or shorter when enabled. Enhanced Monitoring delivers OS-level metrics (CPU, memory, disk I/O, process and thread counts, network bytes) that are unavailable from the standard CloudWatch metrics, and the value of those metrics for incident detection is bounded by the sampling rate. At 60-second intervals — the default option in many wizard-driven setups — short-duration events (a 30-second connection storm, a 20-second runaway query, a 45-second OOM-and-recover cycle) fall entirely between collection points and are invisible to subsequent investigation. The investigation reads "metrics looked normal" and concludes the database was healthy when the workload saw it stutter. 15-second granularity is the published recommendation for databases that take production traffic. Distinct from CTL.RDS.MONITORING.001 which checks that Enhanced Monitoring is enabled at all.
+
+**Remediation:** Modify the instance to set the Enhanced Monitoring interval to 15 seconds (or shorter).
 
 ---
 
@@ -16887,6 +17022,21 @@ RDS instances must populate EnabledCloudWatchLogsExports with the engine-appropr
 PostgreSQL RDS instances must set the password_encryption parameter to scram-sha-256, not md5. MD5 password hashing on PostgreSQL is unsalted (a static deterministic hash of the password and the username), which makes large-scale rainbow table lookups effective against any database whose pg_authid contents leak — a scenario that includes routine pg_dump artifacts, replication snapshots, and cross-account snapshot sharing. scram-sha-256 (RFC 5802 / RFC 7677, supported since PostgreSQL 10) introduces per-user salts, iterative hashing, and a challenge-response authentication exchange that does not expose the password hash to the network. The parameter governs every new password set after the change; existing MD5 hashes are converted on the next password rotation. The control fires only on PostgreSQL engines (a no-op for MySQL / SQL Server / Oracle).
 
 **Remediation:** Set password_encryption to scram-sha-256 in the parameter group and rotate user passwords.
+
+---
+
+### CTL.RDS.PERFINSIGHTS.RETENTION.001
+
+**Performance Insights Retention Must Be At Least 7 Days**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-11; soc2: CC7.2;
+
+Performance Insights retention on RDS instances must be set to at least 7 days (the free-tier ceiling). Retention shorter than 7 days collapses the historical query-performance window to a size that does not support routine workflows: trend analysis across a release cycle becomes impossible, regression detection after a deploy cannot reach back to the pre-deploy baseline, and post-incident investigations that begin more than a few hours after the fact find the relevant Top SQL data already aged out. The 7-day floor is free; longer retention (24 months) is paid but commonly worth it on production systems. Distinct from CTL.RDS.PERFORMANCE.INSIGHTS.001 which checks that PI is enabled and KMS-encrypted at all.
+
+**Remediation:** Modify the instance to set Performance Insights retention to at least 7 days.
 
 ---
 

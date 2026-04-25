@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.LOG.SLOWQUERY.001
+name: RDS Slow Query Logging Must Be Enabled
+description: >
+  RDS instances must enable slow-query logging at the engine-
+  appropriate parameter (`slow_query_log = 1` for MySQL/MariaDB;
+  `log_min_duration_statement` set to a positive millisecond
+  value, not -1, for PostgreSQL; equivalent for SQL Server /
+  Oracle). Slow-query logs do triple duty for security and
+  reliability: they are the primary signal for performance
+  degradation that the application has not yet escalated, they
+  are a strong indicator of SQL injection (injected payloads
+  often produce execution plans that fall outside the normal
+  query distribution and trip the slow threshold), and they
+  surface deliberate denial-of-service patterns (intentionally
+  expensive queries that hold connections and consume CPU).
+  Without slow-query logging the database silently absorbs the
+  cost of pathological queries and the only signal the
+  organization gets is general latency — too dull to attribute
+  back to a specific actor or query. The control fires when the
+  engine-appropriate slow-query parameter is off.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  pci_dss_v4: "10.2"
+  ccm_v4: ["LOG-03"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Slow-query logging is disabled in the instance's parameter group.
+  action: Enable the engine-appropriate slow-query parameter (slow_query_log for MySQL, log_min_duration_statement for PostgreSQL).
+  example: |
+    {"database": {"kind": "rds_instance", "engine": "mysql", "logging": {"slow_query_log_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.logging.slow_query_log_enabled
+      op: eq
+      value: false

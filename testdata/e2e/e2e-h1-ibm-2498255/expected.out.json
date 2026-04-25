@@ -119,13 +119,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket."
       },
-      "exposure_score": 600,
+      "exposure_score": 1606.0273972602738,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 3,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 2.676712328767123,
         "days_blind": 612
       },
       "reasoning_trace": [
@@ -221,7 +222,7 @@
       "member_finding_ids": [
         "sha256:fcb9a57f38726853"
       ],
-      "consolidated_score": 600,
+      "consolidated_score": 1606.0273972602738,
       "consolidated_blast_radius": 1
     }
   ],
@@ -275,13 +276,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
       "asset_id": "apptio-endpoint-ref-1",
-      "exposure_score": 600,
+      "exposure_score": 1606.0273972602738,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 3,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 2.676712328767123,
         "days_blind": 612
       },
       "silent_killer": true
@@ -380,7 +382,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

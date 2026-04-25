@@ -78,13 +78,14 @@
         },
         "action": "Review the misconfigured properties and revert to compliant values."
       },
-      "exposure_score": 100,
+      "exposure_score": 102.73972602739727,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -142,7 +143,7 @@
       "member_finding_ids": [
         "sha256:ef0bb60baf0caf2b"
       ],
-      "consolidated_score": 100,
+      "consolidated_score": 102.73972602739727,
       "consolidated_blast_radius": 1
     }
   ],
@@ -169,13 +170,14 @@
       "finding_index": 0,
       "control_id": "CTL.ID.KUBE.001",
       "asset_id": "k8s:ClusterRoleBinding/admin-binding",
-      "exposure_score": 100,
+      "exposure_score": 102.73972602739727,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -274,7 +276,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "814903d5b8f84c94ee884d0b2d1b1fc733a40579",
+      "head_commit": "80a7ef56bf70a504c39fd3e9f7ca40a53d1f3f16",
       "dirty": false
     }
   }

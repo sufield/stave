@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.ALARM.STORAGE.001
+name: RDS Instances Must Have a CloudWatch Alarm on FreeStorageSpace
+description: >
+  RDS instances must have a CloudWatch alarm configured on the
+  FreeStorageSpace metric. When an RDS instance exhausts its
+  allocated storage, the database transitions to read-only:
+  every write fails, in-flight transactions abort, and any
+  application that depends on writing to the database errors
+  out. If storage autoscaling is not also enabled, the only
+  remediation is a manual storage modification, which can take
+  minutes to commit and may require a maintenance-window-eligible
+  reboot. Without an alarm the exhaustion is detected only by
+  the application's first write failure, which is frequently
+  the wrong place to discover the problem (a billing charge
+  may have already failed, an idempotency key may have been
+  consumed, an audit row may have been lost). An alarm at
+  10–20% free space gives the team hours of advance warning
+  before exhaustion. This is the highest-severity alarm
+  control because the failure mode is not "monitoring missed an
+  attack" but "monitoring missed a self-inflicted outage."
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-09", "LOG-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: RDS instance has no CloudWatch alarm on FreeStorageSpace.
+  action: Create a FreeStorageSpace alarm at 10–20% free with an SNS notification action.
+  example: |
+    {"database": {"kind": "rds_instance", "monitoring": {"alarm_storage_configured": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.monitoring.alarm_storage_configured
+      op: eq
+      value: false

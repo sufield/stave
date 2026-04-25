@@ -1,0 +1,35 @@
+control: CTL.RDS.ALARM.CPU.001
+defect: >
+  RDS instance has no CloudWatch alarm configured on
+  the CPUUtilization metric.
+infection: >
+  Database CPU is a converging signal — almost every
+  load condition the team cares about presents as
+  sustained high CPU, and the small set of cases
+  that matter are: a runaway query (an application
+  bug, a missing index, an unbounded recursion in a
+  stored procedure, a join that lost its filter),
+  a connection storm (a misbehaving Lambda, a
+  retry loop in an upstream service, a misconfigured
+  connection pool, a low-volume DDoS), an SQL-
+  injected cryptominer (documented multiple times
+  in production environments — payloads that mine
+  via expensive query operators where the SQL
+  engine is the compute substrate), or a deliberate
+  resource-exhaustion attack. The CloudWatch metric
+  is published every minute with or without an
+  alarm; without the alarm the spike is visible to
+  whoever happens to be looking at the graph at the
+  right moment, which is usually nobody. The on-call
+  engineer learns about the condition from the
+  application's user-facing impact (latency,
+  timeouts, downstream failures) rather than from
+  the database itself, costing the incident the
+  early-detection minutes that distinguish a quick
+  fix from a customer-facing outage.
+failure: >
+  Database overload is detected through application
+  symptoms instead of a direct database alarm.
+  Mean-time-to-detect is the time it takes the
+  application to surface the impact, not the time
+  the metric crossed the threshold.

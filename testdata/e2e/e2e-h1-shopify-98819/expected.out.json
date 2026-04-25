@@ -124,13 +124,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting write actions to Principal \"*\" or AWS: \"*\". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write."
       },
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3710
       },
       "reasoning_trace": [
@@ -239,13 +240,14 @@
         },
         "action": "Remove the ACL grant to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with IgnorePublicAcls set to true."
       },
-      "exposure_score": 375,
+      "exposure_score": 1875,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3710
       },
       "reasoning_trace": [
@@ -318,7 +320,7 @@
         "sha256:a01a06a82cb5f0fe",
         "sha256:f9fdbdcd4b8389a7"
       ],
-      "consolidated_score": 1000,
+      "consolidated_score": 5000,
       "consolidated_blast_radius": 1
     }
   ],
@@ -388,13 +390,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.POLICY.WRITE.001",
       "asset_id": "shopify-internal-assets",
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3710
       },
       "silent_killer": true
@@ -403,13 +406,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.AUTH.READ.001",
       "asset_id": "shopify-internal-assets",
-      "exposure_score": 375,
+      "exposure_score": 1875,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3710
       },
       "silent_killer": true
@@ -508,7 +512,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

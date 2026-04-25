@@ -72,6 +72,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "reasoning_trace": [
@@ -116,14 +117,16 @@
           {
             "path": "exposure_source",
             "current_value": "missing_evidence",
+            "required_value": "any value other than missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from missing_evidence"
+            "description": "Change exposure_source away from missing_evidence"
           },
           {
             "path": "protected_prefix",
             "current_value": "invoices/",
+            "required_value": "any value other than invoices/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from invoices/"
+            "description": "Change protected_prefix away from invoices/"
           }
         ],
         "action": "Review the misconfigured properties and revert to compliant values."
@@ -181,6 +184,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "silent_killer": false
@@ -279,7 +283,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "80a7ef56bf70a504c39fd3e9f7ca40a53d1f3f16",
       "dirty": false
     }
   }

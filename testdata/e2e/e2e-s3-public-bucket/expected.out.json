@@ -146,13 +146,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -300,13 +301,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -466,13 +468,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window."
       },
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -568,20 +571,23 @@
           {
             "path": "storage.tags.data-classification",
             "current_value": "phi",
+            "required_value": "any value other than confidential",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from phi"
+            "description": "Change storage.tags.data-classification away from confidential"
           },
           {
             "path": "storage.tags.data-classification",
             "current_value": "phi",
+            "required_value": "any value other than phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from phi"
+            "description": "Change storage.tags.data-classification away from phi"
           },
           {
             "path": "storage.tags.data-classification",
             "current_value": "phi",
+            "required_value": "any value other than pii",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from phi"
+            "description": "Change storage.tags.data-classification away from pii"
           }
         ],
         "action": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window."
@@ -645,7 +651,7 @@
         "sha256:3c9f26547751f70d",
         "sha256:4c7e17b570d69026"
       ],
-      "consolidated_score": 200,
+      "consolidated_score": 205.47945205479454,
       "consolidated_blast_radius": 1
     },
     {
@@ -659,7 +665,7 @@
       "member_finding_ids": [
         "sha256:f6ac60f0d6c3d25c"
       ],
-      "consolidated_score": 200,
+      "consolidated_score": 205.47945205479454,
       "consolidated_blast_radius": 1
     }
   ],
@@ -757,13 +763,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "phi-data-bucket",
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -772,13 +779,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "public-assets-bucket",
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -787,13 +795,14 @@
       "finding_index": 2,
       "control_id": "CTL.S3.PUBLIC.002",
       "asset_id": "phi-data-bucket",
-      "exposure_score": 200,
+      "exposure_score": 205.47945205479454,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -892,7 +901,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

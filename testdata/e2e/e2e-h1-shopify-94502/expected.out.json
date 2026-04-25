@@ -216,13 +216,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "reasoning_trace": [
@@ -370,13 +371,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "reasoning_trace": [
@@ -524,13 +526,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "reasoning_trace": [
@@ -666,13 +669,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
       },
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "reasoning_trace": [
@@ -808,13 +812,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
-      "exposure_score": 500,
+      "exposure_score": 2500,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "reasoning_trace": [
@@ -950,13 +955,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
-      "exposure_score": 500,
+      "exposure_score": 2500,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "reasoning_trace": [
@@ -1092,13 +1098,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
-      "exposure_score": 500,
+      "exposure_score": 2500,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "reasoning_trace": [
@@ -1222,13 +1229,14 @@
         },
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
-      "exposure_score": 375,
+      "exposure_score": 1875,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "reasoning_trace": [
@@ -1281,8 +1289,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
@@ -1370,13 +1379,14 @@
         },
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
-      "exposure_score": 375,
+      "exposure_score": 1875,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "reasoning_trace": [
@@ -1429,8 +1439,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
@@ -1518,13 +1529,14 @@
         },
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
-      "exposure_score": 375,
+      "exposure_score": 1875,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "reasoning_trace": [
@@ -1577,8 +1589,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
@@ -1615,7 +1628,7 @@
         "sha256:5414a7d05efd5406",
         "sha256:9885b41f3e8e5b79"
       ],
-      "consolidated_score": 1000,
+      "consolidated_score": 5000,
       "consolidated_blast_radius": 1
     },
     {
@@ -1631,7 +1644,7 @@
         "sha256:482a1ac6937bd145",
         "sha256:e9b8512b9fed396b"
       ],
-      "consolidated_score": 1000,
+      "consolidated_score": 5000,
       "consolidated_blast_radius": 1
     },
     {
@@ -1649,7 +1662,7 @@
         "sha256:94fd30ba678b6000",
         "sha256:afd4d52b25be3baa"
       ],
-      "consolidated_score": 1000,
+      "consolidated_score": 5000,
       "consolidated_blast_radius": 1
     },
     {
@@ -1663,7 +1676,7 @@
       "member_finding_ids": [
         "sha256:d81c1dac4e7e312a"
       ],
-      "consolidated_score": 375,
+      "consolidated_score": 1875,
       "consolidated_blast_radius": 1
     },
     {
@@ -1677,7 +1690,7 @@
       "member_finding_ids": [
         "sha256:748776a78c800b08"
       ],
-      "consolidated_score": 375,
+      "consolidated_score": 1875,
       "consolidated_blast_radius": 1
     },
     {
@@ -1691,7 +1704,7 @@
       "member_finding_ids": [
         "sha256:d14260350514a42e"
       ],
-      "consolidated_score": 375,
+      "consolidated_score": 1875,
       "consolidated_blast_radius": 1
     }
   ],
@@ -1883,13 +1896,14 @@
       "finding_index": 3,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-owned-1",
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "silent_killer": true
@@ -1898,13 +1912,14 @@
       "finding_index": 4,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-owned-2",
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "silent_killer": true
@@ -1913,13 +1928,14 @@
       "finding_index": 5,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-writeable-1",
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "silent_killer": true
@@ -1928,13 +1944,14 @@
       "finding_index": 6,
       "control_id": "CTL.S3.PUBLIC.003",
       "asset_id": "shopify-writeable-1",
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "silent_killer": true
@@ -1943,13 +1960,14 @@
       "finding_index": 7,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-owned-1",
-      "exposure_score": 500,
+      "exposure_score": 2500,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "silent_killer": true
@@ -1958,13 +1976,14 @@
       "finding_index": 8,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-owned-2",
-      "exposure_score": 500,
+      "exposure_score": 2500,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "silent_killer": true
@@ -1973,13 +1992,14 @@
       "finding_index": 9,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-writeable-1",
-      "exposure_score": 500,
+      "exposure_score": 2500,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "silent_killer": true
@@ -1988,13 +2008,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.CONTROLS.001",
       "asset_id": "shopify-owned-1",
-      "exposure_score": 375,
+      "exposure_score": 1875,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "silent_killer": true
@@ -2003,13 +2024,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.CONTROLS.001",
       "asset_id": "shopify-owned-2",
-      "exposure_score": 375,
+      "exposure_score": 1875,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "silent_killer": true
@@ -2018,13 +2040,14 @@
       "finding_index": 2,
       "control_id": "CTL.S3.CONTROLS.001",
       "asset_id": "shopify-writeable-1",
-      "exposure_score": 375,
+      "exposure_score": 1875,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 3738
       },
       "silent_killer": true
@@ -2123,7 +2146,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

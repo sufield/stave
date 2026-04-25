@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.EVENTS.SECURITY.001
+name: RDS Must Have Event Subscription for Security Events
+description: >
+  An RDS event subscription must be configured to notify on
+  security-relevant events: security group association changes,
+  parameter group changes, configuration changes, and
+  certificate changes. These categories cover every modification
+  that shifts the instance's security posture — and every one
+  of them deserves a real-time signal even when the change is
+  authorized, because the audit trail is the cheapest evidence
+  the organization will get that the change happened. Without
+  the subscription, security-posture changes are visible only
+  in CloudTrail (which is correct, but not real-time and not
+  routed to the on-call channel). The subscription pushes the
+  same events to SNS as soon as they fire, so an unintended
+  change — a security group swapped to an open one during a
+  rushed migration, a parameter group switched to default by
+  a wizard, a certificate rotation that did not complete — is
+  detected during the change rather than during the next audit
+  pass. Distinct from CTL.RDS.EVENTS.001 (generic) and
+  CTL.RDS.EVENTS.DELETION.001 (specifically deletion).
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-12"
+  pci_dss_v4: "10.2"
+  ccm_v4: ["LOG-08", "CCC-04"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: No RDS event subscription is configured for security-relevant categories.
+  action: Add security-related categories (security, configuration change, parameter, certificate) to an RDS event subscription.
+  example: |
+    {"database": {"kind": "rds_instance", "events": {"event_subscription_security": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.events.event_subscription_security
+      op: eq
+      value: false

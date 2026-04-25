@@ -87,13 +87,14 @@
         },
         "action": "Remove the ACL grant or policy statement granting write access to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
       },
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -161,7 +162,7 @@
       "member_finding_ids": [
         "sha256:41db1ea55da728c1"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
     }
   ],
@@ -188,13 +189,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.AUTH.WRITE.001",
       "asset_id": "auth-write-bucket",
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -293,7 +295,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

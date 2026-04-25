@@ -1,0 +1,37 @@
+control: CTL.RDS.EVENTS.DELETION.001
+defect: >
+  No RDS event subscription is configured to fire on
+  instance deletion (or the configuration-change
+  category that includes deletion) for this account
+  / region.
+infection: >
+  Deletion protection (CTL.RDS.DELETEPROT.001) is
+  the preventive control: it refuses the
+  rds:DeleteDBInstance call when set. The event
+  subscription is the detective control: it
+  publishes a notification (typically to SNS) when
+  the call succeeds. Both are needed because
+  deletion protection drifts. Maintenance
+  procedures sometimes disable it temporarily and
+  forget to re-enable; configuration management
+  changes can flip the bit; an authorized but
+  uncoordinated change can bypass it. Without the
+  event subscription, a deletion that does occur
+  produces no real-time signal — the database is
+  gone, and the team learns about it from the
+  application's failure mode (suddenly cannot
+  connect; suddenly returning all-error responses)
+  rather than from the deletion event itself.
+  CloudTrail will record the API call eventually,
+  but CloudTrail is not real-time and is not
+  routed to the on-call channel. RDS event
+  subscriptions are real-time, fan out via SNS, and
+  reach pager systems and SIEM ingestion. Distinct
+  from CTL.RDS.EVENTS.001 (the generic "any
+  critical subscription exists" check); this
+  control specifically requires deletion category.
+failure: >
+  Database deletion goes undetected in real time.
+  Recovery starts when the application's failure
+  mode reaches operators, not when the deletion
+  event fired.

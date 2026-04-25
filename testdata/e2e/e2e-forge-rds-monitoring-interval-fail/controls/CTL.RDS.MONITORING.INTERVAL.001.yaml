@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.MONITORING.INTERVAL.001
+name: RDS Enhanced Monitoring Interval Must Not Exceed 15 Seconds
+description: >
+  RDS Enhanced Monitoring must collect at intervals of 15 seconds
+  or shorter when enabled. Enhanced Monitoring delivers OS-level
+  metrics (CPU, memory, disk I/O, process and thread counts,
+  network bytes) that are unavailable from the standard CloudWatch
+  metrics, and the value of those metrics for incident detection
+  is bounded by the sampling rate. At 60-second intervals — the
+  default option in many wizard-driven setups — short-duration
+  events (a 30-second connection storm, a 20-second runaway
+  query, a 45-second OOM-and-recover cycle) fall entirely between
+  collection points and are invisible to subsequent
+  investigation. The investigation reads "metrics looked normal"
+  and concludes the database was healthy when the workload
+  saw it stutter. 15-second granularity is the published
+  recommendation for databases that take production traffic.
+  Distinct from CTL.RDS.MONITORING.001 which checks that
+  Enhanced Monitoring is enabled at all.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: RDS Enhanced Monitoring is enabled but the collection interval is too long.
+  action: Modify the instance to set the Enhanced Monitoring interval to 15 seconds (or shorter).
+  example: |
+    {"database": {"kind": "rds_instance", "monitoring": {"enhanced_monitoring_enabled": true, "enhanced_monitoring_interval": 15}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.monitoring.enhanced_monitoring_enabled
+      op: eq
+      value: true
+    - field: properties.database.monitoring.enhanced_monitoring_interval_too_long
+      op: eq
+      value: true

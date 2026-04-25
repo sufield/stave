@@ -114,6 +114,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "reasoning_trace": [
@@ -159,14 +160,16 @@
           {
             "path": "exposure_source",
             "current_value": "missing_evidence",
+            "required_value": "any value other than missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from missing_evidence"
+            "description": "Change exposure_source away from missing_evidence"
           },
           {
             "path": "protected_prefix",
             "current_value": "backups/",
+            "required_value": "any value other than backups/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from backups/"
+            "description": "Change protected_prefix away from backups/"
           }
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -262,6 +265,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "reasoning_trace": [
@@ -307,14 +311,16 @@
           {
             "path": "exposure_source",
             "current_value": "missing_evidence",
+            "required_value": "any value other than missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from missing_evidence"
+            "description": "Change exposure_source away from missing_evidence"
           },
           {
             "path": "protected_prefix",
             "current_value": "internal/",
+            "required_value": "any value other than internal/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from internal/"
+            "description": "Change protected_prefix away from internal/"
           }
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -410,6 +416,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "reasoning_trace": [
@@ -455,14 +462,16 @@
           {
             "path": "exposure_source",
             "current_value": "missing_evidence",
+            "required_value": "any value other than missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from missing_evidence"
+            "description": "Change exposure_source away from missing_evidence"
           },
           {
             "path": "protected_prefix",
             "current_value": "invoices/",
+            "required_value": "any value other than invoices/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from invoices/"
+            "description": "Change protected_prefix away from invoices/"
           }
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -558,6 +567,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "reasoning_trace": [
@@ -603,14 +613,16 @@
           {
             "path": "exposure_source",
             "current_value": "missing_evidence",
+            "required_value": "any value other than missing_evidence",
             "has_safe_default": false,
-            "description": "Change exposure_source from missing_evidence"
+            "description": "Change exposure_source away from missing_evidence"
           },
           {
             "path": "protected_prefix",
             "current_value": "secrets/",
+            "required_value": "any value other than secrets/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from secrets/"
+            "description": "Change protected_prefix away from secrets/"
           }
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -687,13 +699,14 @@
         },
         "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -747,8 +760,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           },
           {
             "path": "storage.object_ownership.rule",
@@ -825,7 +839,7 @@
       "member_finding_ids": [
         "sha256:3db4f35a105643f4"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     }
   ],
@@ -902,6 +916,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "silent_killer": false
@@ -917,6 +932,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "silent_killer": false
@@ -932,6 +948,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "silent_killer": false
@@ -947,6 +964,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "silent_killer": false
@@ -955,13 +973,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.OWNERSHIP.001",
       "asset_id": "private-test-bucket",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false

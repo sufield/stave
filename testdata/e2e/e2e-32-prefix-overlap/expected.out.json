@@ -78,6 +78,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "reasoning_trace": [
@@ -134,20 +135,23 @@
           {
             "path": "exposure_source",
             "current_value": "config_overlap",
+            "required_value": "any value other than config_overlap",
             "has_safe_default": false,
-            "description": "Change exposure_source from config_overlap"
+            "description": "Change exposure_source away from config_overlap"
           },
           {
             "path": "overlap_with",
             "current_value": "data/",
+            "required_value": "any value other than data/",
             "has_safe_default": false,
-            "description": "Change overlap_with from data/"
+            "description": "Change overlap_with away from data/"
           },
           {
             "path": "protected_prefix",
             "current_value": "data/secrets/",
+            "required_value": "any value other than data/secrets/",
             "has_safe_default": false,
-            "description": "Change protected_prefix from data/secrets/"
+            "description": "Change protected_prefix away from data/secrets/"
           }
         ],
         "action": "Review the misconfigured properties and revert to compliant values."
@@ -206,6 +210,7 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1,
         "days_blind": 0
       },
       "silent_killer": false
@@ -304,7 +309,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab547939e47c809219c51ab1e17466440e85f3fa",
+      "head_commit": "80a7ef56bf70a504c39fd3e9f7ca40a53d1f3f16",
       "dirty": false
     }
   }

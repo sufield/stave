@@ -1,0 +1,34 @@
+control: CTL.RDS.PERFINSIGHTS.RETENTION.001
+defect: >
+  Performance Insights retention is below the 7-day
+  free-tier baseline.
+infection: >
+  Performance Insights produces three classes of
+  signal that depend on time-series retention: the
+  Top SQL ranking that shows which queries
+  dominate database load, the wait-event breakdown
+  that identifies which subsystem (CPU, I/O,
+  buffer cache, lock waits) is the bottleneck, and
+  the historical baseline against which a regression
+  shows up as a measurable shift. Sub-7-day
+  retention collapses every workflow that depends
+  on those signals: trend analysis cannot reach
+  back across a release cycle, regression detection
+  after a deploy cannot compare the post-deploy
+  curve to the pre-deploy baseline (the baseline is
+  already gone), and post-incident investigation
+  that begins more than a few hours after the fact
+  finds the relevant Top SQL data already aged out.
+  7 days is free under the AWS pricing tier, so
+  there is no cost reason to set retention below it;
+  the only reason it lands sub-7-day is wizard
+  default or a manual misconfiguration that nobody
+  reviewed. Longer retention (24 months) is paid
+  but is commonly worth it on production where the
+  team needs to compare quarter-over-quarter
+  performance.
+failure: >
+  Operational visibility window collapses to the
+  past few days. Trend analysis, regression
+  detection, and post-incident query forensics are
+  unavailable beyond that window.

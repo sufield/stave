@@ -104,12 +104,14 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			base := risk.SeverityToWeight(f.ControlSeverity)
 			daysBlind := f.Evidence.UnsafeDurationHours / 24.0
 			durFactor := risk.DurationFactor(f.Evidence.UnsafeDurationHours)
-			score = float64(base) * durFactor
+			blindMult := risk.BlindMultiplier(daysBlind)
+			score = float64(base) * durFactor * blindMult
 			breakdown = risk.ScoreBreakdown{
 				BaseScore:          base,
 				DurationFactor:     durFactor,
 				BlastMultiplier:    1.0,
 				ExposureMultiplier: 1.0,
+				BlindMultiplier:    blindMult,
 				DaysBlind:          daysBlind,
 			}
 			silentKiller = daysBlind > 300

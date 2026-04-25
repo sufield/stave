@@ -97,6 +97,11 @@ func BuildKeyUsageIndex(snapshots []asset.Snapshot) KeyUsageIndex {
 // EnrichKeyIsolation injects derived key isolation properties into each
 // asset's properties map. Each snapshot uses its OWN key sharing state
 // to avoid retroactively applying future key sharing to historical data.
+//
+// The returned snapshots own their Assets slice and every Asset's
+// Properties map: callers may mutate either without disturbing the
+// input snapshots. This invariant must hold on every code path,
+// including the fast paths where no enrichment fires.
 func EnrichKeyIsolation(snapshots []asset.Snapshot) []asset.Snapshot {
 	enriched := make([]asset.Snapshot, len(snapshots))
 	for i, snap := range snapshots {
@@ -104,7 +109,9 @@ func EnrichKeyIsolation(snapshots []asset.Snapshot) []asset.Snapshot {
 		enriched[i] = snap
 		assets := make([]asset.Asset, len(snap.Assets))
 		if len(idx) == 0 {
-			copy(assets, snap.Assets)
+			for j, a := range snap.Assets {
+				assets[j] = cloneAssetProperties(a)
+			}
 			enriched[i].Assets = assets
 			continue
 		}
@@ -116,14 +123,28 @@ func EnrichKeyIsolation(snapshots []asset.Snapshot) []asset.Snapshot {
 	return enriched
 }
 
+// cloneAssetProperties returns a copy of the asset whose Properties
+// map is independent of the input. Used to preserve the
+// EnrichKeyIsolation contract (returned assets are mutation-safe)
+// even on paths that do not otherwise need to clone.
+func cloneAssetProperties(a asset.Asset) asset.Asset {
+	if a.Properties == nil {
+		return a
+	}
+	props := make(map[string]any, len(a.Properties))
+	maps.Copy(props, a.Properties)
+	a.Properties = props
+	return a
+}
+
 func enrichAssetIsolation(a asset.Asset, idx KeyUsageIndex) asset.Asset {
 	keyID := extractKMSKeyID(a)
 	if keyID == "" {
-		return a
+		return cloneAssetProperties(a)
 	}
 	entry, exists := idx[keyID]
 	if !exists {
-		return a
+		return cloneAssetProperties(a)
 	}
 
 	// Clone properties to avoid mutating the original.

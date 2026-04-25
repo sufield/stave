@@ -36,10 +36,10 @@ func TestDeriveChanges_BooleanInversion(t *testing.T) {
 
 func TestDeriveChanges_ContextDependent(t *testing.T) {
 	misconfigs := []Misconfiguration{{
-		Property:    predicate.NewFieldPath("properties.storage.encryption.kms_key_id"),
-		ActualValue: "",
+		Property:    predicate.NewFieldPath("properties.tls.min_version"),
+		ActualValue: "TLSv1.0",
 		Operator:    predicate.OpEq,
-		UnsafeValue: "",
+		UnsafeValue: "TLSv1.0",
 	}}
 
 	changes := DeriveChanges(misconfigs)
@@ -49,10 +49,18 @@ func TestDeriveChanges_ContextDependent(t *testing.T) {
 	}
 	c := changes[0]
 	if c.HasSafeDefault {
-		t.Error("expected HasSafeDefault = false for non-boolean")
+		t.Error("expected HasSafeDefault = false for non-boolean OpEq")
 	}
-	if c.RequiredValue != "" {
-		t.Errorf("RequiredValue = %q, want empty", c.RequiredValue)
+	// Non-boolean OpEq does not have a unique safe value, but it does
+	// have a meaningful constraint: the property must not equal the
+	// unsafe value. Surface the constraint instead of leaving
+	// RequiredValue blank.
+	wantRequired := "any value other than TLSv1.0"
+	if c.RequiredValue != wantRequired {
+		t.Errorf("RequiredValue = %q, want %q", c.RequiredValue, wantRequired)
+	}
+	if c.Description == "" || c.Description == "Change properties.tls.min_version from TLSv1.0" {
+		t.Errorf("Description = %q, want it to mention moving away from TLSv1.0", c.Description)
 	}
 }
 

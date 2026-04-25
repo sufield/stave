@@ -112,13 +112,14 @@
         },
         "action": "Restrict grant scope to specific prefixes. Use READ not READWRITE."
       },
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -190,8 +191,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Restrict grant scope to specific prefixes. Use READ not READWRITE."
@@ -275,13 +277,14 @@
         },
         "action": "Associate IAM Identity Center with the Access Grants instance using aws s3control associate-access-grants-identity-center. This enables directory-based grantee resolution."
       },
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -353,8 +356,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           }
         ],
         "action": "Associate IAM Identity Center with the Access Grants instance using aws s3control associate-access-grants-identity-center. This enables directory-based grantee resolution."
@@ -395,7 +399,7 @@
         "sha256:06806d8c6fea7531",
         "sha256:548b689caded6b8d"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
     }
   ],
@@ -423,13 +427,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.ACCESS.GRANTS.001",
       "asset_id": "grants-bucket",
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -438,13 +443,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.ACCESS.GRANTS.002",
       "asset_id": "grants-bucket",
-      "exposure_score": 50,
+      "exposure_score": 51.369863013698634,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -543,7 +549,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

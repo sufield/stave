@@ -114,13 +114,14 @@
         },
         "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation."
       },
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -185,14 +186,16 @@
           {
             "path": "storage.encryption.kms_key_id",
             "current_value": "",
+            "required_value": "any value other than ",
             "has_safe_default": false,
-            "description": "Change storage.encryption.kms_key_id from "
+            "description": "Change storage.encryption.kms_key_id away from "
           },
           {
             "path": "storage.tags.data-classification",
             "current_value": "phi",
+            "required_value": "any value other than phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from phi"
+            "description": "Change storage.tags.data-classification away from phi"
           }
         ],
         "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation."
@@ -293,13 +296,14 @@
         },
         "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation."
       },
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -364,14 +368,16 @@
           {
             "path": "storage.encryption.kms_key_id",
             "current_value": "",
+            "required_value": "any value other than ",
             "has_safe_default": false,
-            "description": "Change storage.encryption.kms_key_id from "
+            "description": "Change storage.encryption.kms_key_id away from "
           },
           {
             "path": "storage.tags.data-classification",
             "current_value": "phi",
+            "required_value": "any value other than phi",
             "has_safe_default": false,
-            "description": "Change storage.tags.data-classification from phi"
+            "description": "Change storage.tags.data-classification away from phi"
           }
         ],
         "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation."
@@ -420,7 +426,7 @@
       "member_finding_ids": [
         "sha256:253091218eb6daa8"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
     },
     {
@@ -437,7 +443,7 @@
       "member_finding_ids": [
         "sha256:fcc6bceefefac3c7"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
     }
   ],
@@ -480,13 +486,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.ENCRYPT.003",
       "asset_id": "phi-bucket-aes256",
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -495,13 +502,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.ENCRYPT.003",
       "asset_id": "phi-bucket-no-config",
-      "exposure_score": 75,
+      "exposure_score": 77.05479452054796,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -600,7 +608,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

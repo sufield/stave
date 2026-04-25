@@ -1,12 +1,20 @@
 package risk
 
 import (
+	"math"
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
+
+func assertScoreClose(t *testing.T, got, want float64) {
+	t.Helper()
+	if math.Abs(got-want) > 1e-6 {
+		t.Errorf("score = %v, want %v (diff %v)", got, want, got-want)
+	}
+}
 
 func TestDurationFactor(t *testing.T) {
 	tests := []struct {
@@ -68,26 +76,27 @@ func TestRankExposures_SortOrder(t *testing.T) {
 		t.Fatalf("got %d ranks, want 3", len(ranks))
 	}
 
-	// Critical + 400 days (factor=3.0) = 100*3.0 = 300 — highest
+	// Critical + 400 days = 100 * 3.0 (DurationFactor) * 1.0 * 1.0 *
+	// 1.0 * (1 + 400/365) = 628.7671... — highest.
 	if ranks[0].ControlID != "CTL.CRIT.001" {
 		t.Errorf("rank 0 = %s, want CTL.CRIT.001", ranks[0].ControlID)
 	}
-	if ranks[0].ExposureScore != 300.0 {
-		t.Errorf("rank 0 score = %v, want 300.0", ranks[0].ExposureScore)
-	}
+	assertScoreClose(t, ranks[0].ExposureScore, 100.0*3.0*BlindMultiplier(400))
 	if !ranks[0].SilentKiller {
 		t.Error("rank 0 should be silent killer (400 days > 300)")
 	}
 
-	// Medium + 100 days (factor=2.0) = 50*2.0 = 100
+	// Medium + 100 days = 50 * 2.0 * (1 + 100/365) = 127.397...
 	if ranks[1].ControlID != "CTL.MED.001" {
 		t.Errorf("rank 1 = %s, want CTL.MED.001", ranks[1].ControlID)
 	}
+	assertScoreClose(t, ranks[1].ExposureScore, 50.0*2.0*BlindMultiplier(100))
 
-	// Low + 10 days (factor=1.0) = 25*1.0 = 25 — lowest
+	// Low + 10 days = 25 * 1.0 * (1 + 10/365) = 25.685...
 	if ranks[2].ControlID != "CTL.LOW.001" {
 		t.Errorf("rank 2 = %s, want CTL.LOW.001", ranks[2].ControlID)
 	}
+	assertScoreClose(t, ranks[2].ExposureScore, 25.0*1.0*BlindMultiplier(10))
 	if ranks[2].SilentKiller {
 		t.Error("rank 2 should not be silent killer (10 days < 300)")
 	}
@@ -141,10 +150,8 @@ func TestRankExposures_BlastMultiplier(t *testing.T) {
 	}
 
 	ranks := RankExposures(inputs, lookup, 0)
-	// 100 * 1.0 * 2.5 * 1.0 = 250
-	if ranks[0].ExposureScore != 250.0 {
-		t.Errorf("score = %v, want 250.0", ranks[0].ExposureScore)
-	}
+	// 100 * 1.0 * 2.5 * 1.0 * 1.0 * (1 + 1/365) = 250.685...
+	assertScoreClose(t, ranks[0].ExposureScore, 100.0*2.5*BlindMultiplier(1))
 }
 
 func TestRankExposures_PublicExposure(t *testing.T) {
@@ -154,10 +161,8 @@ func TestRankExposures_PublicExposure(t *testing.T) {
 	}
 
 	ranks := RankExposures(inputs, nil, 0)
-	// 75 * 1.0 * 1.0 * 2.0 = 150
-	if ranks[0].ExposureScore != 150.0 {
-		t.Errorf("score = %v, want 150.0", ranks[0].ExposureScore)
-	}
+	// 75 * 1.0 * 1.0 * 2.0 * 1.0 * (1 + 1/365) = 150.41...
+	assertScoreClose(t, ranks[0].ExposureScore, 75.0*2.0*BlindMultiplier(1))
 }
 
 func TestRankExposures_Empty(t *testing.T) {

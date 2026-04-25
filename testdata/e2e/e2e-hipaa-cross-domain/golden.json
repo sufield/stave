@@ -7,7 +7,7 @@
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "47cf36b32afec8bbbcd64eb7425ad1fa6e5ecc1766d748b8d7b16eb2339bb3e5",
+    "policy_fingerprint": "084f7377f55a25e07adce87e7dc6191969c81bf0f44159fce8b1fce5abfdbedc",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -445,13 +445,14 @@
           "narrative": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         }
       ],
-      "exposure_score": 375,
+      "exposure_score": 380.13698630136986,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -497,8 +498,9 @@
           {
             "path": "audit_trail.kind",
             "current_value": "trail",
+            "required_value": "any value other than trail",
             "has_safe_default": false,
-            "description": "Change audit_trail.kind from trail"
+            "description": "Change audit_trail.kind away from trail"
           },
           {
             "path": "audit_trail.multi_region_enabled",
@@ -604,13 +606,14 @@
           "narrative": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         }
       ],
-      "exposure_score": 281.25,
+      "exposure_score": 285.10273972602744,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -656,8 +659,9 @@
           {
             "path": "compliance.kind",
             "current_value": "recorder",
+            "required_value": "any value other than recorder",
             "has_safe_default": false,
-            "description": "Change compliance.kind from recorder"
+            "description": "Change compliance.kind away from recorder"
           },
           {
             "path": "compliance.recording_enabled",
@@ -757,13 +761,14 @@
           "narrative": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         }
       ],
-      "exposure_score": 225,
+      "exposure_score": 228.08219178082194,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -816,8 +821,9 @@
           {
             "path": "network.kind",
             "current_value": "vpc",
+            "required_value": "any value other than vpc",
             "has_safe_default": false,
-            "description": "Change network.kind from vpc"
+            "description": "Change network.kind away from vpc"
           }
         ],
         "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
@@ -950,13 +956,14 @@
           "narrative": "Either a subnet containing database resources has an Internet Gateway route or an RDS instance is configured as publicly accessible. The two controls check different layers — network routing vs the RDS `PubliclyAccessible` flag — but either condition alone creates a direct internet exposure path to the database. Firing on a single failure avoids the database-exposure false negative that would result from requiring both layers to fail simultaneously.\n"
         }
       ],
-      "exposure_score": 200,
+      "exposure_score": 202.73972602739727,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 2,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1009,8 +1016,9 @@
           {
             "path": "database.kind",
             "current_value": "instance",
+            "required_value": "any value other than instance",
             "has_safe_default": false,
-            "description": "Change database.kind from instance"
+            "description": "Change database.kind away from instance"
           }
         ],
         "action": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
@@ -1105,13 +1113,14 @@
           "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
         }
       ],
-      "exposure_score": 150,
+      "exposure_score": 152.05479452054794,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1157,8 +1166,9 @@
           {
             "path": "identity.kind",
             "current_value": "account",
+            "required_value": "any value other than account",
             "has_safe_default": false,
-            "description": "Change identity.kind from account"
+            "description": "Change identity.kind away from account"
           },
           {
             "path": "identity.root.has_access_keys",
@@ -1272,13 +1282,14 @@
           "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
         }
       ],
-      "exposure_score": 150,
+      "exposure_score": 152.05479452054794,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1324,8 +1335,9 @@
           {
             "path": "identity.kind",
             "current_value": "account",
+            "required_value": "any value other than account",
             "has_safe_default": false,
-            "description": "Change identity.kind from account"
+            "description": "Change identity.kind away from account"
           },
           {
             "path": "identity.root.mfa_enabled",
@@ -1438,13 +1450,14 @@
           "narrative": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n"
         }
       ],
-      "exposure_score": 112.5,
+      "exposure_score": 114.04109589041097,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1497,8 +1510,9 @@
           {
             "path": "database.kind",
             "current_value": "instance",
+            "required_value": "any value other than instance",
             "has_safe_default": false,
-            "description": "Change database.kind from instance"
+            "description": "Change database.kind away from instance"
           }
         ],
         "action": "Storage encryption can only be enabled at creation time. Create a snapshot, copy it with encryption enabled, then restore to a new encrypted instance. Enable encryption by default for new instances."
@@ -1582,13 +1596,14 @@
         },
         "action": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1641,8 +1656,9 @@
           {
             "path": "api.kind",
             "current_value": "rest_api",
+            "required_value": "any value other than rest_api",
             "has_safe_default": false,
-            "description": "Change api.kind from rest_api"
+            "description": "Change api.kind away from rest_api"
           }
         ],
         "action": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name."
@@ -1723,13 +1739,14 @@
         },
         "action": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1782,8 +1799,9 @@
           {
             "path": "backup.kind",
             "current_value": "resource",
+            "required_value": "any value other than resource",
             "has_safe_default": false,
-            "description": "Change backup.kind from resource"
+            "description": "Change backup.kind away from resource"
           }
         ],
         "action": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type."
@@ -1867,13 +1885,14 @@
         },
         "action": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:..."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -1926,8 +1945,9 @@
           {
             "path": "audit_trail.kind",
             "current_value": "trail",
+            "required_value": "any value other than trail",
             "has_safe_default": false,
-            "description": "Change audit_trail.kind from trail"
+            "description": "Change audit_trail.kind away from trail"
           }
         ],
         "action": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:..."
@@ -2014,13 +2034,14 @@
         },
         "action": "Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation"
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -2066,8 +2087,9 @@
           {
             "path": "audit_trail.kind",
             "current_value": "trail",
+            "required_value": "any value other than trail",
             "has_safe_default": false,
-            "description": "Change audit_trail.kind from trail"
+            "description": "Change audit_trail.kind away from trail"
           },
           {
             "path": "audit_trail.log_file_validation_enabled",
@@ -2153,13 +2175,14 @@
         },
         "action": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365"
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1.5,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -2212,8 +2235,9 @@
           {
             "path": "log_group.kind",
             "current_value": "log_group",
+            "required_value": "any value other than log_group",
             "has_safe_default": false,
-            "description": "Change log_group.kind from log_group"
+            "description": "Change log_group.kind away from log_group"
           }
         ],
         "action": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365"
@@ -2295,13 +2319,14 @@
         },
         "action": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true"
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -2354,8 +2379,9 @@
           {
             "path": "identity.kind",
             "current_value": "user_pool",
+            "required_value": "any value other than user_pool",
             "has_safe_default": false,
-            "description": "Change identity.kind from user_pool"
+            "description": "Change identity.kind away from user_pool"
           }
         ],
         "action": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true"
@@ -2437,13 +2463,14 @@
         },
         "action": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:..."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -2496,8 +2523,9 @@
           {
             "path": "database.kind",
             "current_value": "table",
+            "required_value": "any value other than table",
             "has_safe_default": false,
-            "description": "Change database.kind from table"
+            "description": "Change database.kind away from table"
           }
         ],
         "action": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:..."
@@ -2584,13 +2612,14 @@
         },
         "action": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default"
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -2643,8 +2672,9 @@
           {
             "path": "compute.kind",
             "current_value": "instance",
+            "required_value": "any value other than instance",
             "has_safe_default": false,
-            "description": "Change compute.kind from instance"
+            "description": "Change compute.kind away from instance"
           }
         ],
         "action": "Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default"
@@ -2754,13 +2784,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Launch instances in private subnets without public IP assignment. Use NAT Gateway or VPC endpoints for outbound internet access. Use ALB or NLB for inbound traffic that requires internet access."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -2806,8 +2837,9 @@
           {
             "path": "compute.kind",
             "current_value": "instance",
+            "required_value": "any value other than instance",
             "has_safe_default": false,
-            "description": "Change compute.kind from instance"
+            "description": "Change compute.kind away from instance"
           },
           {
             "path": "compute.network.has_public_ip",
@@ -2897,13 +2929,14 @@
         },
         "action": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -2956,8 +2989,9 @@
           {
             "path": "cache.kind",
             "current_value": "cluster",
+            "required_value": "any value other than cluster",
             "has_safe_default": false,
-            "description": "Change cache.kind from cluster"
+            "description": "Change cache.kind away from cluster"
           }
         ],
         "action": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster."
@@ -3034,13 +3068,14 @@
         },
         "action": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -3154,13 +3189,14 @@
         },
         "action": "Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01)."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -3282,13 +3318,14 @@
         },
         "action": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\"."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -3334,8 +3371,9 @@
           {
             "path": "cryptography.kind",
             "current_value": "key",
+            "required_value": "any value other than key",
             "has_safe_default": false,
-            "description": "Change cryptography.kind from key"
+            "description": "Change cryptography.kind away from key"
           },
           {
             "path": "cryptography.policy.has_wildcard_principal",
@@ -3420,13 +3458,14 @@
         },
         "action": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately"
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -3479,8 +3518,9 @@
           {
             "path": "database.kind",
             "current_value": "instance",
+            "required_value": "any value other than instance",
             "has_safe_default": false,
-            "description": "Change database.kind from instance"
+            "description": "Change database.kind away from instance"
           }
         ],
         "action": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately"
@@ -3562,13 +3602,14 @@
         },
         "action": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -3621,8 +3662,9 @@
           {
             "path": "secret.kind",
             "current_value": "secret",
+            "required_value": "any value other than secret",
             "has_safe_default": false,
-            "description": "Change secret.kind from secret"
+            "description": "Change secret.kind away from secret"
           }
         ],
         "action": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation."
@@ -3700,13 +3742,14 @@
         },
         "action": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:..."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -3759,8 +3802,9 @@
           {
             "path": "messaging.kind",
             "current_value": "topic",
+            "required_value": "any value other than topic",
             "has_safe_default": false,
-            "description": "Change messaging.kind from topic"
+            "description": "Change messaging.kind away from topic"
           }
         ],
         "action": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:..."
@@ -3838,13 +3882,14 @@
         },
         "action": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:..."
       },
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -3897,8 +3942,9 @@
           {
             "path": "messaging.kind",
             "current_value": "queue",
+            "required_value": "any value other than queue",
             "has_safe_default": false,
-            "description": "Change messaging.kind from queue"
+            "description": "Change messaging.kind away from queue"
           }
         ],
         "action": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:..."
@@ -3977,13 +4023,14 @@
         },
         "action": "Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets)."
       },
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -4029,8 +4076,9 @@
           {
             "path": "availability.kind",
             "current_value": "resource",
+            "required_value": "any value other than resource",
             "has_safe_default": false,
-            "description": "Change availability.kind from resource"
+            "description": "Change availability.kind away from resource"
           },
           {
             "path": "availability.multi_az",
@@ -4116,13 +4164,14 @@
         },
         "action": "Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule."
       },
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -4175,8 +4224,9 @@
           {
             "path": "replication.kind",
             "current_value": "resource",
+            "required_value": "any value other than resource",
             "has_safe_default": false,
-            "description": "Change replication.kind from resource"
+            "description": "Change replication.kind away from resource"
           }
         ],
         "action": "Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule."
@@ -4259,13 +4309,14 @@
         },
         "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
       },
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -4318,8 +4369,9 @@
           {
             "path": "compliance.kind",
             "current_value": "recorder",
+            "required_value": "any value other than recorder",
             "has_safe_default": false,
-            "description": "Change compliance.kind from recorder"
+            "description": "Change compliance.kind away from recorder"
           }
         ],
         "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
@@ -4393,13 +4445,14 @@
         },
         "action": "Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true"
       },
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -4507,13 +4560,14 @@
         },
         "action": "Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs"
       },
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -4627,13 +4681,14 @@
         },
         "action": "Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{\"EnableLogTypes\":[\"audit\",\"error\",\"slowquery\"]}'"
       },
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -4679,8 +4734,9 @@
           {
             "path": "database.kind",
             "current_value": "instance",
+            "required_value": "any value other than instance",
             "has_safe_default": false,
-            "description": "Change database.kind from instance"
+            "description": "Change database.kind away from instance"
           },
           {
             "path": "database.logging.audit_log_enabled",
@@ -4766,13 +4822,14 @@
         },
         "action": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately"
       },
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -4825,8 +4882,9 @@
           {
             "path": "database.kind",
             "current_value": "instance",
+            "required_value": "any value other than instance",
             "has_safe_default": false,
-            "description": "Change database.kind from instance"
+            "description": "Change database.kind away from instance"
           }
         ],
         "action": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately"
@@ -4905,13 +4963,14 @@
         },
         "action": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90"
       },
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "reasoning_trace": [
@@ -4964,8 +5023,9 @@
           {
             "path": "secret.kind",
             "current_value": "secret",
+            "required_value": "any value other than secret",
             "has_safe_default": false,
-            "description": "Change secret.kind from secret"
+            "description": "Change secret.kind away from secret"
           }
         ],
         "action": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90"
@@ -5077,7 +5137,7 @@
         "sha256:4b8c49734af61142",
         "sha256:f237d540e872de4d"
       ],
-      "consolidated_score": 375,
+      "consolidated_score": 380.13698630136986,
       "consolidated_blast_radius": 2.5
     },
     {
@@ -5093,7 +5153,7 @@
         "sha256:aa66250e8a1dc01c",
         "sha256:c2ed914d02c8ae20"
       ],
-      "consolidated_score": 281.25,
+      "consolidated_score": 285.10273972602744,
       "consolidated_blast_radius": 2.5
     },
     {
@@ -5108,7 +5168,7 @@
       "member_finding_ids": [
         "sha256:81f43f35236b5e56"
       ],
-      "consolidated_score": 225,
+      "consolidated_score": 228.08219178082194,
       "consolidated_blast_radius": 2
     },
     {
@@ -5134,7 +5194,7 @@
         "sha256:c215d91c260588c6",
         "sha256:d3c473c720840e6d"
       ],
-      "consolidated_score": 200,
+      "consolidated_score": 202.73972602739727,
       "consolidated_blast_radius": 1
     },
     {
@@ -5150,7 +5210,7 @@
         "sha256:686a676fcb4f9731",
         "sha256:d1659912ae8d6344"
       ],
-      "consolidated_score": 150,
+      "consolidated_score": 152.05479452054794,
       "consolidated_blast_radius": 1
     },
     {
@@ -5166,7 +5226,7 @@
         "sha256:45813734adb9d32e",
         "sha256:571de1d96c48afd6"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5180,7 +5240,7 @@
       "member_finding_ids": [
         "sha256:801f9bd87a66bd5f"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1.5
     },
     {
@@ -5193,7 +5253,7 @@
       "member_finding_ids": [
         "sha256:a52edc7322ea1dde"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5211,7 +5271,7 @@
         "sha256:4faec0c040d11d18",
         "sha256:7ea0b9680c5e0447"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5225,7 +5285,7 @@
       "member_finding_ids": [
         "sha256:3a1554c5a78a5816"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5239,7 +5299,7 @@
       "member_finding_ids": [
         "sha256:6ecde267626a20de"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5253,7 +5313,7 @@
       "member_finding_ids": [
         "sha256:a73625cd410ebe3c"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5268,7 +5328,7 @@
       "member_finding_ids": [
         "sha256:284126ed74a244f3"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5283,7 +5343,7 @@
       "member_finding_ids": [
         "sha256:81b8ce81c12cc518"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5297,7 +5357,7 @@
       "member_finding_ids": [
         "sha256:1e9883ff6455c056"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5312,7 +5372,7 @@
       "member_finding_ids": [
         "sha256:57cf047d8c46d33b"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5327,7 +5387,7 @@
       "member_finding_ids": [
         "sha256:63bc7609a3b16aa7"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5342,7 +5402,7 @@
       "member_finding_ids": [
         "sha256:9ba0b33d2248da3a"
       ],
-      "consolidated_score": 75,
+      "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
     },
     {
@@ -5356,7 +5416,7 @@
       "member_finding_ids": [
         "sha256:be85087768aeabce"
       ],
-      "consolidated_score": 50,
+      "consolidated_score": 50.68493150684932,
       "consolidated_blast_radius": 1
     },
     {
@@ -5370,7 +5430,7 @@
       "member_finding_ids": [
         "sha256:0eea80a827ddcfa6"
       ],
-      "consolidated_score": 50,
+      "consolidated_score": 50.68493150684932,
       "consolidated_blast_radius": 1
     },
     {
@@ -5384,7 +5444,7 @@
       "member_finding_ids": [
         "sha256:99ff439877cf27fd"
       ],
-      "consolidated_score": 50,
+      "consolidated_score": 50.68493150684932,
       "consolidated_blast_radius": 1
     },
     {
@@ -5398,7 +5458,7 @@
       "member_finding_ids": [
         "sha256:826ab06811b86f5a"
       ],
-      "consolidated_score": 50,
+      "consolidated_score": 50.68493150684932,
       "consolidated_blast_radius": 1
     }
   ],
@@ -5780,13 +5840,14 @@
       "finding_index": 4,
       "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
       "asset_id": "main-trail",
-      "exposure_score": 375,
+      "exposure_score": 380.13698630136986,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5795,13 +5856,14 @@
       "finding_index": 9,
       "control_id": "CTL.CONFIG.ENABLED.001",
       "asset_id": "config-recorder",
-      "exposure_score": 281.25,
+      "exposure_score": 285.10273972602744,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5810,13 +5872,14 @@
       "finding_index": 31,
       "control_id": "CTL.VPC.FLOWLOG.001",
       "asset_id": "vpc-prod-001",
-      "exposure_score": 225,
+      "exposure_score": 228.08219178082194,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 2,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5825,13 +5888,14 @@
       "finding_index": 26,
       "control_id": "CTL.RDS.PUBLIC.001",
       "asset_id": "phi-database",
-      "exposure_score": 200,
+      "exposure_score": 202.73972602739727,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 2,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5840,13 +5904,14 @@
       "finding_index": 19,
       "control_id": "CTL.IAM.ROOT.ACCESSKEY.001",
       "asset_id": "aws-account-root",
-      "exposure_score": 150,
+      "exposure_score": 152.05479452054794,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5855,13 +5920,14 @@
       "finding_index": 20,
       "control_id": "CTL.IAM.ROOT.MFA.001",
       "asset_id": "aws-account-root",
-      "exposure_score": 150,
+      "exposure_score": 152.05479452054794,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5870,13 +5936,14 @@
       "finding_index": 23,
       "control_id": "CTL.RDS.ENCRYPT.001",
       "asset_id": "phi-database",
-      "exposure_score": 112.5,
+      "exposure_score": 114.04109589041097,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5885,13 +5952,14 @@
       "finding_index": 0,
       "control_id": "CTL.APIGATEWAY.TLS.001",
       "asset_id": "phi-api",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5900,13 +5968,14 @@
       "finding_index": 1,
       "control_id": "CTL.BACKUP.EXISTS.001",
       "asset_id": "backup-phi-database",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5915,13 +5984,14 @@
       "finding_index": 5,
       "control_id": "CTL.CLOUDTRAIL.ENCRYPT.001",
       "asset_id": "main-trail",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5930,13 +6000,14 @@
       "finding_index": 6,
       "control_id": "CTL.CLOUDTRAIL.VALIDATION.001",
       "asset_id": "main-trail",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5945,13 +6016,14 @@
       "finding_index": 7,
       "control_id": "CTL.CLOUDWATCH.RETENTION.001",
       "asset_id": "app-logs",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1.5,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5960,13 +6032,14 @@
       "finding_index": 8,
       "control_id": "CTL.COGNITO.MFA.001",
       "asset_id": "patient-portal",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5975,13 +6048,14 @@
       "finding_index": 11,
       "control_id": "CTL.DYNAMODB.ENCRYPT.001",
       "asset_id": "phi-events-table",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -5990,13 +6064,14 @@
       "finding_index": 12,
       "control_id": "CTL.EC2.EBS.ENCRYPT.001",
       "asset_id": "i-0abc123def",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6005,13 +6080,14 @@
       "finding_index": 13,
       "control_id": "CTL.EC2.PUBLIC.001",
       "asset_id": "i-0abc123def",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6020,13 +6096,14 @@
       "finding_index": 14,
       "control_id": "CTL.ELASTICACHE.TRANSIT.001",
       "asset_id": "session-cache",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6035,13 +6112,14 @@
       "finding_index": 16,
       "control_id": "CTL.ELB.HTTPS.001",
       "asset_id": "alb-phi-api",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6050,13 +6128,14 @@
       "finding_index": 18,
       "control_id": "CTL.ELB.TLS.001",
       "asset_id": "alb-phi-api",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6065,13 +6144,14 @@
       "finding_index": 21,
       "control_id": "CTL.KMS.POLICY.001",
       "asset_id": "phi-cmk",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6080,13 +6160,14 @@
       "finding_index": 22,
       "control_id": "CTL.RDS.BACKUP.001",
       "asset_id": "phi-database",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6095,13 +6176,14 @@
       "finding_index": 28,
       "control_id": "CTL.SECRETSMANAGER.ENCRYPT.001",
       "asset_id": "db-credentials",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6110,13 +6192,14 @@
       "finding_index": 29,
       "control_id": "CTL.SNS.ENCRYPT.001",
       "asset_id": "phi-alerts",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6125,13 +6208,14 @@
       "finding_index": 30,
       "control_id": "CTL.SQS.ENCRYPT.001",
       "asset_id": "phi-notifications",
-      "exposure_score": 75,
+      "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6140,13 +6224,14 @@
       "finding_index": 2,
       "control_id": "CTL.BACKUP.MULTIAZ.001",
       "asset_id": "backup-phi-database",
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6155,13 +6240,14 @@
       "finding_index": 3,
       "control_id": "CTL.BACKUP.REPLICATION.001",
       "asset_id": "backup-phi-database",
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6170,13 +6256,14 @@
       "finding_index": 10,
       "control_id": "CTL.CONFIG.RULES.001",
       "asset_id": "config-recorder",
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6185,13 +6272,14 @@
       "finding_index": 15,
       "control_id": "CTL.ELB.CROSSZONE.001",
       "asset_id": "alb-phi-api",
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6200,13 +6288,14 @@
       "finding_index": 17,
       "control_id": "CTL.ELB.LOG.001",
       "asset_id": "alb-phi-api",
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6215,13 +6304,14 @@
       "finding_index": 24,
       "control_id": "CTL.RDS.LOG.001",
       "asset_id": "phi-database",
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6230,13 +6320,14 @@
       "finding_index": 25,
       "control_id": "CTL.RDS.MULTIAZ.001",
       "asset_id": "phi-database",
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false
@@ -6245,13 +6336,14 @@
       "finding_index": 27,
       "control_id": "CTL.SECRETSMANAGER.ACCESS.001",
       "asset_id": "db-credentials",
-      "exposure_score": 50,
+      "exposure_score": 50.68493150684932,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
       "silent_killer": false

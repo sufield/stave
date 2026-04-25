@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.PERFINSIGHTS.RETENTION.001
+name: Performance Insights Retention Must Be At Least 7 Days
+description: >
+  Performance Insights retention on RDS instances must be set to
+  at least 7 days (the free-tier ceiling). Retention shorter than
+  7 days collapses the historical query-performance window to a
+  size that does not support routine workflows: trend analysis
+  across a release cycle becomes impossible, regression detection
+  after a deploy cannot reach back to the pre-deploy baseline, and
+  post-incident investigations that begin more than a few hours
+  after the fact find the relevant Top SQL data already aged out.
+  The 7-day floor is free; longer retention (24 months) is paid
+  but commonly worth it on production systems. Distinct from
+  CTL.RDS.PERFORMANCE.INSIGHTS.001 which checks that PI is enabled
+  and KMS-encrypted at all.
+domain: detection
+severity: low
+compliance:
+  nist_800_53_r5: "AU-11"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: Performance Insights retention is below the 7-day baseline.
+  action: Modify the instance to set Performance Insights retention to at least 7 days.
+  example: |
+    {"database": {"kind": "rds_instance", "performance_insights": {"enabled": true, "retention_days": 7}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.performance_insights.enabled
+      op: eq
+      value: true
+    - field: properties.database.performance_insights.retention_too_short
+      op: eq
+      value: true

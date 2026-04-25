@@ -82,13 +82,14 @@
         },
         "action": "Review the misconfigured properties and revert to compliant values."
       },
-      "exposure_score": 10,
+      "exposure_score": 10.273972602739727,
       "score_breakdown": {
         "base_score": 10,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "reasoning_trace": [
@@ -142,7 +143,7 @@
       "member_finding_ids": [
         "sha256:bee4ecb18ecc1193"
       ],
-      "consolidated_score": 10,
+      "consolidated_score": 10.273972602739727,
       "consolidated_blast_radius": 1
     }
   ],
@@ -169,13 +170,14 @@
       "finding_index": 0,
       "control_id": "CTL.EXP.DURATION.001",
       "asset_id": "res:aws:s3:bucket:sparse-bucket",
-      "exposure_score": 10,
+      "exposure_score": 10.273972602739727,
       "breakdown": {
         "base_score": 10,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },
       "silent_killer": false
@@ -274,11 +276,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0578f31dbab7ba7cc75679379c501bdc799e5a7f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-26-breach-disc-sparse-duration/controls/CTL.EXP.DURATION.001.yaml"
-      ]
+      "head_commit": "80a7ef56bf70a504c39fd3e9f7ca40a53d1f3f16",
+      "dirty": false
     }
   }
 }

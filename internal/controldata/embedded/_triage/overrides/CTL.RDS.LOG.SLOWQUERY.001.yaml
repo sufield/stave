@@ -1,0 +1,41 @@
+control: CTL.RDS.LOG.SLOWQUERY.001
+defect: >
+  RDS instance has slow-query logging disabled in its
+  parameter group (slow_query_log=0 on MySQL,
+  log_min_duration_statement=-1 or unset on
+  PostgreSQL).
+infection: >
+  Slow-query logs are tripled in their utility.
+  First, they are the highest-signal performance
+  channel the database produces — every query that
+  exceeds the slow threshold is recorded with its
+  text, parameters, execution time, rows examined
+  and rows returned, so the team can take a query
+  the application has not yet escalated and treat
+  it as actionable evidence rather than a generic
+  "the database is slow" complaint. Second, they
+  are a strong SQL-injection indicator: injected
+  payloads frequently produce execution plans that
+  fall outside the normal query distribution
+  (tautologies that defeat indexes, UNION
+  augmentations that touch unrelated tables,
+  obfuscation patterns that exhaust the planner)
+  and trip the slow threshold. Third, they surface
+  resource-exhaustion attacks where a hostile party
+  deliberately submits expensive queries that hold
+  connections and consume CPU — the queries that
+  ARE the attack are exactly the ones a slow-query
+  log captures. Without the log, all three signals
+  merge into the same dull "general latency"
+  symptom. The performance team owns slow-query
+  log enablement in most organizations; this
+  control surfaces the cases where the parameter
+  group never enabled it (the wizard default on
+  some engines is off) or it was disabled in a
+  production cutover that nobody reviewed.
+failure: >
+  Performance investigation, SQL-injection
+  detection, and resource-exhaustion detection
+  collapse to a single "the database is slow"
+  signal that cannot be attributed back to the
+  query, principal, or session responsible.

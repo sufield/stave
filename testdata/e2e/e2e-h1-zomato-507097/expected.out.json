@@ -136,13 +136,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 2508
       },
       "reasoning_trace": [
@@ -296,13 +297,14 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
       },
-      "exposure_score": 750,
+      "exposure_score": 3750,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 2508
       },
       "reasoning_trace": [
@@ -375,8 +377,9 @@
           {
             "path": "storage.kind",
             "current_value": "bucket",
+            "required_value": "any value other than bucket",
             "has_safe_default": false,
-            "description": "Change storage.kind from bucket"
+            "description": "Change storage.kind away from bucket"
           },
           {
             "path": "storage.tags.public_list_intended",
@@ -441,7 +444,7 @@
         "sha256:0eedb6ab2f180541",
         "sha256:78623a97e68d01d5"
       ],
-      "consolidated_score": 1000,
+      "consolidated_score": 5000,
       "consolidated_blast_radius": 1
     }
   ],
@@ -496,13 +499,14 @@
       "finding_index": 0,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "zomato-chat-images",
-      "exposure_score": 1000,
+      "exposure_score": 5000,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 2508
       },
       "silent_killer": true
@@ -511,13 +515,14 @@
       "finding_index": 1,
       "control_id": "CTL.S3.PUBLIC.LIST.002",
       "asset_id": "zomato-chat-images",
-      "exposure_score": 750,
+      "exposure_score": 3750,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
+        "blind_multiplier": 5,
         "days_blind": 2508
       },
       "silent_killer": true
@@ -616,7 +621,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e42b31ff03f614f66a9a82828959d1d537619153",
+      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
       "dirty": false
     }
   }

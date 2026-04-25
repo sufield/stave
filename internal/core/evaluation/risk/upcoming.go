@@ -162,6 +162,7 @@ type ThresholdRequest struct {
 type assetState struct {
 	FirstUnsafeAt   time.Time
 	LastSeenUnsafe  time.Time
+	LastObservedAt  time.Time
 	CurrentlyUnsafe bool
 	AssetType       kernel.AssetType
 }
@@ -230,12 +231,25 @@ func computeAssetStates(
 				states[a.ID] = st
 			}
 
+			// Record that we observed the asset in this snapshot
+			// regardless of whether the evaluator runs or returns an
+			// error. The main lifecycle's RecordInconclusive does the
+			// same — it advances lastObservedAt while preserving the
+			// exposure window — and the risk view must agree with the
+			// main view about which snapshots saw which assets.
+			if snap.CapturedAt.After(st.LastObservedAt) || st.LastObservedAt.IsZero() {
+				st.LastObservedAt = snap.CapturedAt
+			}
+
 			if eval == nil {
 				continue
 			}
 			result, evalErr := eval(ctl, a, snap.Identities)
 			if evalErr != nil {
 				// Inconclusive evaluation — freeze streak, do not reset.
+				// LastObservedAt above keeps the asset in the risk
+				// view so coverage does not diverge from the main
+				// lifecycle, which records inconclusives explicitly.
 				continue
 			}
 

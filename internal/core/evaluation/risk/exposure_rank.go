@@ -28,10 +28,13 @@ type ScoreBreakdown struct {
 	BlastMultiplier    float64 `json:"blast_multiplier"`
 	ExposureMultiplier float64 `json:"exposure_multiplier"`
 	ChainBonus         float64 `json:"chain_bonus"`
-	// DaysBlind is informational context, not a score multiplier.
-	// Duration is already captured in the score via DurationFactor.
-	// DaysBlind is used for SilentKiller classification and priority insights.
-	DaysBlind float64 `json:"days_blind"`
+	// BlindMultiplier scales the score continuously with how long the
+	// finding has been unsafe. DurationFactor steps in coarse buckets
+	// (1.0/1.5/2.0/3.0/5.0) for traceability; BlindMultiplier breaks
+	// ties within a bucket so a 360-day exposure outranks a 100-day
+	// exposure even though both fall in the same DurationFactor bucket.
+	BlindMultiplier float64 `json:"blind_multiplier"`
+	DaysBlind       float64 `json:"days_blind"`
 }
 
 // RankInput carries the data needed to score one finding without
@@ -63,6 +66,24 @@ func ChainBonus(chainCount int) float64 {
 // silentKillerDaysThreshold is the minimum days blind to flag a
 // finding as a silent killer.
 const silentKillerDaysThreshold = 300
+
+// BlindMultiplier returns a continuous multiplier that scales the
+// score by how many days the finding has been unsafe. Pairs with
+// the stepped DurationFactor: DurationFactor sets the bucket
+// (1.0/1.5/2.0/3.0/5.0) and BlindMultiplier discriminates within
+// the bucket so longer-blind findings rank higher even when they
+// fall in the same bucket as shorter-blind ones. Linear in days
+// at slope 1/365, capped at 5.0 (≈4 years blind).
+func BlindMultiplier(daysBlind float64) float64 {
+	if daysBlind <= 0 {
+		return 1.0
+	}
+	m := 1.0 + daysBlind/365.0
+	if m > 5.0 {
+		return 5.0
+	}
+	return m
+}
 
 // DurationFactor returns a stepped multiplier based on how long the
 // finding has been unsafe. Stepped (not continuous) for traceability
@@ -149,8 +170,9 @@ func RankExposures(
 		durFactor := DurationFactor(f.UnsafeDurationHours)
 		expMult := exposureMultiplier(f.Exposure)
 		chainBonus := ChainBonus(f.ChainMembershipCount)
+		blindMult := BlindMultiplier(daysBlind)
 
-		score := float64(base) * durFactor * blast * expMult * chainBonus
+		score := float64(base) * durFactor * blast * expMult * chainBonus * blindMult
 
 		ranks = append(ranks, ExposureRank{
 			FindingIndex:  i,
@@ -164,6 +186,7 @@ func RankExposures(
 				BlastMultiplier:    blast,
 				ExposureMultiplier: expMult,
 				ChainBonus:         chainBonus,
+				BlindMultiplier:    blindMult,
 				DaysBlind:          daysBlind,
 			},
 		})
