@@ -1,0 +1,36 @@
+control: CTL.RDS.GHOST.SUBNETGROUP.001
+defect: >
+  RDS DB subnet group references one or more
+  subnets that have been deleted from the VPC.
+infection: >
+  The DB subnet group is the placement pool RDS
+  consults at every Multi-AZ failover, every
+  read-replica creation, and every storage-
+  modification reboot. The placement algorithm
+  picks an availability zone according to the
+  group's policy and then provisions the standby
+  in a subnet from that AZ. A subnet that has
+  been deleted from the VPC inventory leaves the
+  group with fewer placement options than the
+  failover policy assumes, and the failure
+  surfaces only at the worst possible moment:
+  during an actual AZ outage, when the failover
+  attempt picks the (now non-existent) subnet
+  for the surviving AZ and fails the placement.
+  The primary instance is unaffected as long as
+  it is running, so the ghost is invisible to
+  every console view that looks at the live
+  instance — the staleness lives in the subnet
+  group, which gets opened maybe once a quarter.
+  The most common origin is a VPC refactor that
+  recycled subnet IDs without coordinating with
+  the database team; the second most common is
+  CloudFormation rollback that recreated subnets
+  with new IDs while the subnet group still
+  references the old ones.
+failure: >
+  Multi-AZ failover failure during an AZ outage.
+  RDS attempts to place the standby in a subnet
+  that does not exist; the failover does not
+  complete and the database stays down for the
+  duration of the outage.

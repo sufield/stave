@@ -45,7 +45,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 
 ## Features
 
-- **1412 built-in controls across 73 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, ECR, EKS, CloudTrail, CloudWatch, KMS, OpenSearch, Redshift, Neptune, DocumentDB, Glue, CodeBuild, SageMaker, Bedrock, Cognito, API Gateway, EMR, Kinesis, MSK, EFS, Route53, DMS, SSM, ACM, WAF, Shield, Network Firewall, EventBridge, Config, Backup, and [37 more](docs/controls/reference.md)
+- **1420 built-in controls across 73 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, ECR, EKS, CloudTrail, CloudWatch, KMS, OpenSearch, Redshift, Neptune, DocumentDB, Glue, CodeBuild, SageMaker, Bedrock, Cognito, API Gateway, EMR, Kinesis, MSK, EFS, Route53, DMS, SSM, ACM, WAF, Shield, Network Firewall, EventBridge, Config, Backup, and [37 more](docs/controls/reference.md)
 - **23 ghost reference controls** — cross-inventory reasoning detects dangling references to deleted resources across IAM policies, resource policies, event triggers, compute dependencies, network infrastructure, cross-account trust, and temporal confirmation. Detection no per-resource scanner can perform.
 - **30+ compound chain definitions** — detect multi-step attack paths across data protection, identity, detection, recovery, sovereignty, supply chain, cryptographic concentration, WAF safety envelope, ghost resource exfiltration, and silent monitoring collapse
 - **7-control WAF safety envelope** — presence, enforcement, OWASP coverage, logging, origin lockdown, parser overflow protection, evasion observability
@@ -153,7 +153,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-1412 controls across 73 domains:
+1420 controls across 73 domains:
 
 ### AWS S3 (111 controls)
 

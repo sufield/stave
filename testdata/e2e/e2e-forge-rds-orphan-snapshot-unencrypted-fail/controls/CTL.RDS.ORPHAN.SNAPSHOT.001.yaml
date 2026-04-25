@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.ORPHAN.SNAPSHOT.001
+name: RDS Snapshots Must Not Persist Past Their Source Instance
+description: >
+  RDS snapshots whose source DB instance has been deleted should
+  be removed (or their retention deliberately documented). When
+  an RDS instance is deleted, AWS optionally creates a
+  "final-snapshot" capturing the full database state, and any
+  manual snapshots taken during the instance's lifetime continue
+  to exist. The instance is decommissioned in the inventory; the
+  data is not. The snapshot contains every committed table, every
+  stored procedure, every user account in the engine's auth
+  catalog (with password hashes), and any application secrets the
+  team stored in config tables. Anyone with
+  rds:RestoreDBInstanceFromDBSnapshot rights — and there are
+  usually more such principals than the team has audited
+  recently — can restore the snapshot to a fresh instance and
+  read the entire historical database. The snapshot is rarely
+  the artifact security review focuses on, because the instance
+  it came from is "gone." Long-lived orphan snapshots are the
+  primary path by which decommissioned-database content
+  resurfaces months or years later.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "MP-6"
+  hipaa: "164.310(d)(2)(i)"
+  pci_dss_v4: "9.4"
+  ccm_v4: ["DSP-15", "DSP-17"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: RDS snapshot exists for an instance that has been deleted.
+  action: Delete the orphan snapshot (or document retention policy that requires keeping it).
+  example: |
+    {"database": {"kind": "rds_snapshot", "snapshot": {"is_orphaned": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_snapshot
+    - field: properties.database.snapshot.is_orphaned
+      op: eq
+      value: true

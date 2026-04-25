@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.GHOST.SUBNETGROUP.001
+name: RDS DB Subnet Groups Must Not Reference Deleted Subnets
+description: >
+  RDS DB subnet groups must reference only subnets that currently
+  exist in the VPC inventory. The DB subnet group is the placement
+  pool the engine uses for Multi-AZ failover and read-replica
+  positioning: when failover triggers, RDS picks an
+  availability-zone target from the group and provisions the
+  standby in a subnet from that AZ. A subnet that has been
+  deleted (typically by a network refactor that did not coordinate
+  with the database team) leaves the group with fewer placement
+  options than the failover policy assumes. The group still looks
+  valid in the console and the primary continues running, so the
+  ghost is invisible until the moment failover is needed — at
+  which point RDS attempts to place the standby in a subnet that
+  does not exist and the failover fails. The control surfaces the
+  ghost preemptively so the cleanup is paid in change-window time
+  rather than during an AZ outage.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-08", "IVS-04"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: RDS subnet group references one or more deleted subnets.
+  action: Remove the deleted subnets from the subnet group; replace with current subnets in the same AZs.
+  example: |
+    {"database": {"kind": "rds_subnet_group", "subnet_group": {"has_ghost_subnet": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_subnet_group
+    - field: properties.database.subnet_group.has_ghost_subnet
+      op: eq
+      value: true

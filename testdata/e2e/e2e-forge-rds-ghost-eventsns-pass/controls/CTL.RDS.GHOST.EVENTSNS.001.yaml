@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.GHOST.EVENTSNS.001
+name: RDS Event Subscriptions Must Not Target Deleted SNS Topics
+description: >
+  RDS event subscriptions must publish to SNS topics that
+  currently exist. The subscription persists after its target
+  SNS topic is deleted: the RDS API still records an active
+  subscription, the console still lists it as enabled, and RDS
+  continues to generate the configured event categories
+  (deletion, configuration change, failover, parameter changes,
+  security events). The events are published into the deleted
+  topic and silently dropped. The team operates under the
+  assumption that the on-call channel will see deletion events,
+  failovers, security-posture changes — and none of them arrive.
+  Same pattern as the existing CTL.CLOUDWATCH.ALARM.GHOST.001
+  control (CloudWatch alarm action targeting a deleted SNS
+  topic): both reflect SNS-topic decommissioning without
+  updating the consumers. The control catches it at the RDS
+  side specifically because the alarm-side check does not
+  cover RDS event subscriptions.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: RDS event subscription targets a deleted SNS topic.
+  action: Update the subscription to a current SNS topic or delete the orphaned subscription.
+  example: |
+    {"database": {"kind": "rds_event_subscription", "events": {"has_ghost_event_sns": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_event_subscription
+    - field: properties.database.events.has_ghost_event_sns
+      op: eq
+      value: true

@@ -1,0 +1,39 @@
+control: CTL.RDS.GHOST.EVENTSNS.001
+defect: >
+  RDS event subscription publishes to an SNS
+  topic that has been deleted.
+infection: >
+  This is the same pattern that
+  CTL.CLOUDWATCH.ALARM.GHOST.001 surfaces on
+  CloudWatch alarms — an alerting fan-out that
+  fires into a deleted target — applied to the
+  RDS event channel. The event subscription
+  remains active in DescribeEventSubscriptions
+  and the console renders it as enabled; RDS
+  generates the configured event categories
+  (deletion, configuration change, failover,
+  parameter changes, security categories like
+  SG and certificate rotation) on schedule.
+  Each event is published to the SNS ARN and
+  silently dropped because the topic does not
+  exist. Operators believe the on-call channel
+  receives RDS events; it does not. The most
+  common origins are SNS topic refactors that
+  consolidated topics without updating
+  consumers, account migrations that recreated
+  topics with new ARNs, and IaC reconciliations
+  that destroyed-and-recreated the topic in a
+  step that the event subscription was not
+  recreated alongside. The detective control
+  for database deletions and security-posture
+  changes (CTL.RDS.EVENTS.DELETION.001,
+  CTL.RDS.EVENTS.SECURITY.001) becomes
+  inoperative even though those subscriptions
+  themselves exist.
+failure: >
+  Silent event-notification dropout. Database
+  deletions, failovers, security-posture
+  changes generate notifications that never
+  reach the on-call channel; CloudTrail is the
+  only remaining record and it is not
+  real-time.

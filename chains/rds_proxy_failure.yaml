@@ -1,0 +1,22 @@
+id: rds_proxy_failure
+description: >
+  RDS Proxy references a deleted Secrets Manager secret OR has
+  a ghost security group attachment. Either condition
+  independently causes Proxy failure: the deleted secret means
+  authentication failure on the next pool refresh (delayed —
+  hours after the deletion that caused it); the ghost SG means
+  an undefined network policy that may permit or block
+  connections in ways the configuration cannot encode. Both
+  failure modes are invisible during steady-state operation and
+  surface only under traffic patterns that exercise the broken
+  reference (pool refresh, scale-out, network rule
+  re-evaluation).
+controls:
+  - CTL.RDS.GHOST.PROXYSECRET.001
+  - CTL.RDS.GHOST.SG.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - network_access_rds
+postconditions:
+  - rds_data_access

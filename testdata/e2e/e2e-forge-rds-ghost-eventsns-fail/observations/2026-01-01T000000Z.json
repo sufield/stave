@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "rds-evsub-ghost",
+      "type": "aws_rds_event_subscription",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_event_subscription","events":{"name":"prod-rds-events","sns_arn":"arn:aws:sns:us-east-1:111111111111:deleted-topic","sns_exists":false,"has_ghost_event_sns":true}}}
+    }
+  ]
+}

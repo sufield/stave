@@ -8,6 +8,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **RDS-3 — ghost references and orphaned resources
+  (8 new controls, 3 chains).** Third RDS gap-closure
+  iteration. Extends Stave's ghost-reference pattern
+  (cross-inventory existence checks) to the database
+  domain. All 8 controls net-new — no overlap with
+  the existing RDS catalog. Ghost references (6):
+  `GHOST.SUBNETGROUP` (DB subnet group references a
+  deleted subnet → Multi-AZ failover places standby in
+  a non-existent subnet during the AZ outage that
+  triggered the failover, high), `GHOST.PARAMGROUP`
+  (instance references a deleted parameter group →
+  silent regression to permissive engine defaults
+  while the console reads healthy, high),
+  `GHOST.OPTIONGROUP` (deleted option group → Oracle
+  TDE / SQL Server audit / S3 integration silently
+  disable, medium), `GHOST.EVENTSNS` (event
+  subscription targets a deleted SNS topic → events
+  fire, notifications drop into the void; same pattern
+  as CTL.CLOUDWATCH.ALARM.GHOST.001 on the RDS side,
+  high), `GHOST.PROXYSECRET` (RDS Proxy references a
+  deleted Secrets Manager secret → DELAYED failure on
+  pool refresh hours after the secret deletion,
+  critical — the only critical in the iteration and
+  the most dangerous ghost pattern in the catalog),
+  `GHOST.SG` (instance attaches a deleted security
+  group → undefined network policy at next
+  modification; distinct from CTL.VPC.SG.GHOST.001
+  which catches the SG-rule side, high). Orphaned
+  resources (2): `ORPHAN.SNAPSHOT` (snapshot whose
+  source instance has been deleted → full database
+  contents readable to any principal with
+  rds:RestoreDBInstanceFromDBSnapshot rights, medium),
+  `ORPHAN.SUBNETGROUP` (DB subnet group with zero
+  associated instances → cleanup-incomplete signal,
+  pins underlying VPC subnets, low). Chains:
+  `rds_ghost_cascade` (≥2 of subnetgroup / paramgroup
+  / eventsns / sg ghosts = systematic decommissioning
+  failure), `rds_proxy_failure` (proxy secret OR
+  proxy SG ghost = either alone causes Proxy failure
+  with delayed surfacing), `rds_decommission_incomplete`
+  (orphan snapshot + (orphan subnetgroup OR ghost
+  paramgroup) = data + config + settings all
+  un-cleaned). 19 e2e fixtures including
+  proxysecret-active-fail (delayed failure with
+  active connections), subnetgroup-allghost-fail
+  (complete placement failure), and
+  orphan-snapshot-unencrypted-fail (compound). 8
+  triage overrides. Ghost reference total in the
+  catalog: 42 → 48.
 - **RDS-2 — logging deepening, CloudWatch alarms, and event
   subscriptions (10 new controls, 3 chains).** Second RDS
   gap-closure iteration. Closes the operational-monitoring

@@ -1,0 +1,39 @@
+control: CTL.RDS.GHOST.PARAMGROUP.001
+defect: >
+  RDS instance references a parameter group that
+  has been deleted, or is in an in-sync state
+  that cannot be confirmed against the parameter
+  group inventory.
+infection: >
+  The parameter group is the authoritative source
+  of every engine setting that the security
+  review depends on. If the parameter group is
+  deleted, the instance falls back to the AWS
+  default group for its engine — and the AWS
+  default is permissive by design: TLS not
+  enforced, statement logging off, MD5 password
+  hashing on PostgreSQL, no slow-query log, no
+  audit logging. The instance keeps running. The
+  database keeps serving traffic. Application
+  smoke tests pass. The compliance dashboard
+  reads "instance: healthy." But the security
+  configuration the team committed to source
+  control has silently reverted. The drift has
+  no console signal — the parameter-group name
+  on the instance shows the original (now
+  ghost) name, and the engine settings are
+  observable only via DescribeDBParameters
+  against the now-default group. The most common
+  origins are a manual cleanup that misjudged
+  which custom groups were in use, an
+  infrastructure-as-code change that removed the
+  parameter group while a separate apply added
+  the instance, and a migration that copied
+  the instance to a new account without
+  re-creating the parameter group.
+failure: >
+  Silent security regression. TLS, audit
+  logging, password hashing, and other security-
+  relevant settings revert to permissive
+  engine defaults; the instance appears
+  configured as before in every dashboard view.

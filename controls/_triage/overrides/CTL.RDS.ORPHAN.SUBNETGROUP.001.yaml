@@ -1,0 +1,40 @@
+control: CTL.RDS.ORPHAN.SUBNETGROUP.001
+defect: >
+  RDS DB subnet group is associated with zero
+  current RDS instances or clusters.
+infection: >
+  An orphan DB subnet group is the catalog-level
+  signal that a database decommissioning
+  workflow stopped before reaching its
+  supporting infrastructure. The instance is
+  gone; the subnet group remains; and in
+  practice the parameter group, option group,
+  and final snapshot from the same database
+  remain alongside it. The combination tells
+  the team that "we deleted the database" was
+  not actually true. The subnet group itself
+  does not directly leak data — but it pins
+  the underlying VPC subnets in place during
+  any subsequent network refactor (RDS will
+  refuse to delete subnets that are referenced
+  by an active subnet group), and it masks
+  the cleanup-incomplete state from the team's
+  fleet review. The most common origins are
+  manual deletions through the console that
+  cleared the instance but skipped the dedicated
+  subnet group, IaC removals that destroyed
+  the instance resource without destroying
+  the subnet-group resource, and account
+  migrations that copied the subnet group
+  forward without copying the instance. The
+  control is low-severity by itself; in
+  combination with an orphan snapshot
+  (CTL.RDS.ORPHAN.SNAPSHOT.001) or a ghost
+  parameter group it identifies a systematic
+  decommissioning gap.
+failure: >
+  Decommissioning-incomplete signal. The team's
+  fleet review does not surface the gap, and
+  network refactors are blocked by subnets
+  that the orphan subnet group continues to
+  reference.

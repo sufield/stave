@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.GHOST.PARAMGROUP.001
+name: RDS Instances Must Not Reference Deleted Parameter Groups
+description: >
+  RDS instances must reference parameter groups that currently
+  exist and are in the in-sync state. The parameter group governs
+  every engine setting that the security review depends on:
+  force_ssl / require_secure_transport (TLS enforcement),
+  log_statement / log_connections (audit logging),
+  password_encryption (PostgreSQL hash algorithm), and dozens
+  more. When the parameter group is deleted (or stuck in an
+  inconsistent / pending-restart state), the instance falls back
+  to engine defaults — typically the AWS default group, which is
+  permissive by design (TLS not enforced, statement logging off,
+  md5 passwords on PostgreSQL). The instance keeps running. The
+  RDS console shows the instance healthy. But the security
+  configuration the team authored has silently reverted. The
+  failure is invisible: the only signal is that the next audit
+  reads completely different parameter values than the team
+  expects. The control catches the reference at the inventory
+  level so the silent degradation surfaces immediately.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-2"
+  pci_dss_v4: "2.2"
+  ccm_v4: ["CCC-04"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: RDS instance references a deleted or inconsistent parameter group.
+  action: Recreate the parameter group with the intended settings or point the instance at an existing equivalent group.
+  example: |
+    {"database": {"kind": "rds_instance", "parameter_group": {"has_ghost_paramgroup": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.parameter_group.has_ghost_paramgroup
+      op: eq
+      value: true

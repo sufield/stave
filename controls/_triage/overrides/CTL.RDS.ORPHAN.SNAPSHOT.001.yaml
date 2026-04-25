@@ -1,0 +1,36 @@
+control: CTL.RDS.ORPHAN.SNAPSHOT.001
+defect: >
+  RDS snapshot exists for a source DB instance
+  that has been deleted from the inventory.
+infection: >
+  When an RDS instance is deleted, AWS
+  optionally creates a final-snapshot capturing
+  the full database, and any manual snapshots
+  taken during the instance's lifetime persist
+  on their own retention. The instance is
+  decommissioned in the resource inventory,
+  the EC2-style "this database is gone" signal
+  fires through CloudTrail, and the team's
+  cleanup runbook (in many shops) considers the
+  decommissioning complete. The data does not
+  agree. The snapshot is a full point-in-time
+  capture of the engine's storage: every
+  committed table, every stored procedure,
+  every account in pg_authid / mysql.user
+  (with password hashes), every secret the
+  team stored in a config table, every
+  customer record, every audit row that had not
+  been exported. Restoring the snapshot to a
+  fresh instance is a single API call —
+  rds:RestoreDBInstanceFromDBSnapshot — and the
+  set of principals that hold this permission
+  is usually broader than the team has
+  audited. Long-lived orphan snapshots are the
+  primary path by which decommissioned-database
+  content resurfaces months or years after the
+  team marked the database "gone."
+failure: >
+  Decommissioned-database data persists in a
+  form that any principal with restore rights
+  can read. The instance was deleted; the
+  data was not.

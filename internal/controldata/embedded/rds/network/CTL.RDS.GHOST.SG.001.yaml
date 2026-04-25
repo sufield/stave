@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.GHOST.SG.001
+name: RDS Instances Must Not Reference Deleted Security Groups
+description: >
+  RDS instances must reference security groups that currently
+  exist in the VPC inventory. When an attached SG is deleted,
+  the instance's effective network policy becomes undefined: AWS
+  removes the deleted SG from the attachment list at the next
+  modification, but until then the instance is operating with a
+  rule set that no longer reflects what the security review
+  authored. In practice three failure modes are seen on this
+  pattern. (1) The team that owns the SG decommissions it
+  believing nothing references it; the database keeps running on
+  the residual rules until the next modification reconciles the
+  list. (2) The SG is replaced by a successor; the instance was
+  never re-pointed and falls back to whatever default is
+  applied. (3) An infrastructure-as-code drift removes the SG
+  from the configuration without removing the attachment from
+  the database resource. Distinct from the existing
+  CTL.VPC.SG.GHOST.001 (which checks SG-rule-to-SG references);
+  this control checks RDS-instance-to-SG references.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "CM-2"
+  pci_dss_v4: "1.2"
+  ccm_v4: ["IVS-04", "BCR-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: RDS instance references a deleted security group.
+  action: Detach the deleted SG and attach a current SG that encodes the intended network policy.
+  example: |
+    {"database": {"kind": "rds_instance", "network": {"has_ghost_sg": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.network.has_ghost_sg
+      op: eq
+      value: true

@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "proxy-current-secret",
+      "type": "aws_rds_proxy",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_proxy","proxy":{"name":"app-proxy","secret_arn":"arn:aws:secretsmanager:us-east-1:111111111111:secret:db-creds-DdEeFf","secret_exists":true,"has_ghost_proxy_secret":false}}}
+    }
+  ]
+}

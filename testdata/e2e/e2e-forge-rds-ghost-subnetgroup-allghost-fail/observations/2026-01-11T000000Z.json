@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "sg-prod-allghost",
+      "type": "aws_rds_db_subnet_group",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_subnet_group","subnet_group":{"name":"prod-db-subnets","has_ghost_subnet":true,"subnet_ids":["subnet-aaa111","subnet-bbb222","subnet-ccc333"],"ghost_subnets":["subnet-aaa111","subnet-bbb222","subnet-ccc333"]}}}
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+id: rds_decommission_incomplete
+description: >
+  An orphan snapshot persists AND either the source instance's
+  subnet group is also orphaned or the parameter group reference
+  is a ghost. Multiple artifacts from a decommissioned database
+  remain in the account: the data (snapshot), the placement
+  configuration (subnet group), and the engine settings
+  (parameter group). Each artifact alone is a cleanup miss;
+  together they prove the decommissioning workflow stopped
+  before reaching its supporting infrastructure, and the
+  resurfacing path (anyone with snapshot-restore rights can
+  rebuild the database) is intact.
+controls:
+  - CTL.RDS.ORPHAN.SNAPSHOT.001
+  - CTL.RDS.ORPHAN.SUBNETGROUP.001
+  - CTL.RDS.GHOST.PARAMGROUP.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_rds
+postconditions:
+  - invisible_data_exfiltration

@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "snap-orphan-plain",
+      "type": "aws_rds_snapshot",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_snapshot","snapshot":{"id":"snap-old-final","instance_id":"db-old","instance_exists":false,"is_orphaned":true,"age_days":900,"snapshot_type":"manual","encrypted":false}}}
+    }
+  ]
+}

@@ -3,31 +3,32 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1439
-**Pack hash:** `3573d8828fa3ae5fd938288cb24cf2bfde9976de3e3130c96d6c2b3c379ce247`
+**Total controls:** 1447
+**Pack hash:** `b65c8df416cc1c20df3203c340a012c1652af08c1f7540f26ee9611155c05f87`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 171 |
-| high | 635 |
+| critical | 172 |
+| high | 639 |
 | info | 16 |
-| low | 104 |
-| medium | 513 |
+| low | 105 |
+| medium | 515 |
 
 | Domain | Count |
 |--------|-------|
+| access | 1 |
 | audit | 32 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 42 |
+| detection | 43 |
 | encryption | 80 |
 | exposure | 848 |
-| governance | 43 |
+| governance | 48 |
 | hygiene | 16 |
 | identity | 326 |
-| network | 25 |
+| network | 26 |
 | resilience | 14 |
 | storage | 8 |
 
@@ -16846,6 +16847,96 @@ An RDS event subscription must be configured to notify on security-relevant even
 
 ---
 
+### CTL.RDS.GHOST.EVENTSNS.001
+
+**RDS Event Subscriptions Must Not Target Deleted SNS Topics**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.2;
+
+RDS event subscriptions must publish to SNS topics that currently exist. The subscription persists after its target SNS topic is deleted: the RDS API still records an active subscription, the console still lists it as enabled, and RDS continues to generate the configured event categories (deletion, configuration change, failover, parameter changes, security events). The events are published into the deleted topic and silently dropped. The team operates under the assumption that the on-call channel will see deletion events, failovers, security-posture changes — and none of them arrive. Same pattern as the existing CTL.CLOUDWATCH.ALARM.GHOST.001 control (CloudWatch alarm action targeting a deleted SNS topic): both reflect SNS-topic decommissioning without updating the consumers. The control catches it at the RDS side specifically because the alarm-side check does not cover RDS event subscriptions.
+
+**Remediation:** Update the subscription to a current SNS topic or delete the orphaned subscription.
+
+---
+
+### CTL.RDS.GHOST.OPTIONGROUP.001
+
+**RDS Instances Must Not Reference Deleted Option Groups**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC8.1;
+
+RDS instances must reference option groups that currently exist. Option groups configure the engine-specific feature set that the application depends on: Oracle TDE (transparent data encryption), SQL Server audit specifications, MySQL backtrack, S3 integration for backups, custom listener ports, and certificate-trust extensions. When the option group is deleted, the features it enabled silently revert. Oracle TDE-protected tables become unencrypted at the engine layer (data on disk is still EBS-encrypted, but the column-level protection is gone). SQL Server audit may stop emitting records. The instance continues serving traffic; the option-group-driven feature set has changed without any visible signal in the RDS console. Engine-specific compliance posture (FIPS modules, FedRAMP feature-flag requirements, customer-contractual TDE clauses) may quietly fall out of conformance.
+
+**Remediation:** Recreate the option group with the intended options or migrate the instance to an existing equivalent group.
+
+---
+
+### CTL.RDS.GHOST.PARAMGROUP.001
+
+**RDS Instances Must Not Reference Deleted Parameter Groups**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; pci_dss_v4: 2.2;
+
+RDS instances must reference parameter groups that currently exist and are in the in-sync state. The parameter group governs every engine setting that the security review depends on: force_ssl / require_secure_transport (TLS enforcement), log_statement / log_connections (audit logging), password_encryption (PostgreSQL hash algorithm), and dozens more. When the parameter group is deleted (or stuck in an inconsistent / pending-restart state), the instance falls back to engine defaults — typically the AWS default group, which is permissive by design (TLS not enforced, statement logging off, md5 passwords on PostgreSQL). The instance keeps running. The RDS console shows the instance healthy. But the security configuration the team authored has silently reverted. The failure is invisible: the only signal is that the next audit reads completely different parameter values than the team expects. The control catches the reference at the inventory level so the silent degradation surfaces immediately.
+
+**Remediation:** Recreate the parameter group with the intended settings or point the instance at an existing equivalent group.
+
+---
+
+### CTL.RDS.GHOST.PROXYSECRET.001
+
+**RDS Proxies Must Not Reference Deleted Secrets Manager Secrets**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** access
+- **Compliance:** nist_800_53_r5: CM-2; pci_dss_v4: 8.2;
+
+RDS Proxies must reference Secrets Manager secrets that currently exist. The Proxy authenticates to its backend database using credentials retrieved from Secrets Manager; when the secret is deleted, the Proxy keeps serving the connection pool it has already authenticated, but every new connection (pool growth, pool refresh after idle expiry, scale-out, restart) requires re-fetching the secret and fails. The failure mode is the most dangerous one in the ghost-reference family: it is delayed, not immediate. The Proxy console reports healthy. The application sees normal traffic. Hours later — frequently in the off-hours when the pool naturally turns over — a wave of connection failures surfaces, with no obvious link to the secret deletion that happened earlier in the day. Proxy-secret ghosts are particularly common after secret-rotation workflows that delete the previous secret without confirming the Proxy was actually pointed at the new one. The control fires on the reference at audit time so the failure is paid in change-window time rather than during incident time.
+
+**Remediation:** Point the Proxy at the current secret (or restore the secret if deletion was unintentional and within the recovery window).
+
+---
+
+### CTL.RDS.GHOST.SG.001
+
+**RDS Instances Must Not Reference Deleted Security Groups**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: CM-2; pci_dss_v4: 1.2;
+
+RDS instances must reference security groups that currently exist in the VPC inventory. When an attached SG is deleted, the instance's effective network policy becomes undefined: AWS removes the deleted SG from the attachment list at the next modification, but until then the instance is operating with a rule set that no longer reflects what the security review authored. In practice three failure modes are seen on this pattern. (1) The team that owns the SG decommissions it believing nothing references it; the database keeps running on the residual rules until the next modification reconciles the list. (2) The SG is replaced by a successor; the instance was never re-pointed and falls back to whatever default is applied. (3) An infrastructure-as-code drift removes the SG from the configuration without removing the attachment from the database resource. Distinct from the existing CTL.VPC.SG.GHOST.001 (which checks SG-rule-to-SG references); this control checks RDS-instance-to-SG references.
+
+**Remediation:** Detach the deleted SG and attach a current SG that encodes the intended network policy.
+
+---
+
+### CTL.RDS.GHOST.SUBNETGROUP.001
+
+**RDS DB Subnet Groups Must Not Reference Deleted Subnets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: A1.2;
+
+RDS DB subnet groups must reference only subnets that currently exist in the VPC inventory. The DB subnet group is the placement pool the engine uses for Multi-AZ failover and read-replica positioning: when failover triggers, RDS picks an availability-zone target from the group and provisions the standby in a subnet from that AZ. A subnet that has been deleted (typically by a network refactor that did not coordinate with the database team) leaves the group with fewer placement options than the failover policy assumes. The group still looks valid in the console and the primary continues running, so the ghost is invisible until the moment failover is needed — at which point RDS attempts to place the standby in a subnet that does not exist and the failover fails. The control surfaces the ghost preemptively so the cleanup is paid in change-window time rather than during an AZ outage.
+
+**Remediation:** Remove the deleted subnets from the subnet group; replace with current subnets in the same AZs.
+
+---
+
 ### CTL.RDS.IAMAUTH.001
 
 **RDS Must Enable IAM Authentication**
@@ -16977,6 +17068,35 @@ RDS Enhanced Monitoring must collect at intervals of 15 seconds or shorter when 
 Production RDS instances must use Multi-AZ deployment for high availability. Single-AZ instances have a single point of failure that can cause data unavailability during AZ outages.
 
 **Remediation:** Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately
+
+---
+
+### CTL.RDS.ORPHAN.SNAPSHOT.001
+
+**RDS Snapshots Must Not Persist Past Their Source Instance**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.310(d)(2)(i); nist_800_53_r5: MP-6; pci_dss_v4: 9.4;
+
+RDS snapshots whose source DB instance has been deleted should be removed (or their retention deliberately documented). When an RDS instance is deleted, AWS optionally creates a "final-snapshot" capturing the full database state, and any manual snapshots taken during the instance's lifetime continue to exist. The instance is decommissioned in the inventory; the data is not. The snapshot contains every committed table, every stored procedure, every user account in the engine's auth catalog (with password hashes), and any application secrets the team stored in config tables. Anyone with rds:RestoreDBInstanceFromDBSnapshot rights — and there are usually more such principals than the team has audited recently — can restore the snapshot to a fresh instance and read the entire historical database. The snapshot is rarely the artifact security review focuses on, because the instance it came from is "gone." Long-lived orphan snapshots are the primary path by which decommissioned-database content resurfaces months or years later.
+
+**Remediation:** Delete the orphan snapshot (or document retention policy that requires keeping it).
+
+---
+
+### CTL.RDS.ORPHAN.SUBNETGROUP.001
+
+**RDS DB Subnet Groups Must Be Used by at Least One Instance**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+
+RDS DB subnet groups should be associated with at least one active RDS instance or cluster. An orphan subnet group is the catalog-level signal that a database was decommissioned without the cleanup workflow reaching the supporting infrastructure: the instance is gone, the subnet group remains, and frequently the instance's parameter group, option group, and final snapshot remain alongside it. Orphan subnet groups also retain references to the underlying VPC subnets and may pin those subnets in place during a network refactor (the subnets cannot be deleted while a subnet group references them). Cleaning the subnet group is part of finishing decommissioning; the organization gets visibility into which decommissions stopped short of completion. The control is low-severity by itself because a stray subnet group does not directly leak data — but in combination with an orphan snapshot or a ghost parameter group it reveals a systematic gap in the decommissioning runbook.
+
+**Remediation:** Delete the orphan subnet group or document why it must be retained.
 
 ---
 

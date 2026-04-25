@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.ORPHAN.SUBNETGROUP.001
+name: RDS DB Subnet Groups Must Be Used by at Least One Instance
+description: >
+  RDS DB subnet groups should be associated with at least one
+  active RDS instance or cluster. An orphan subnet group is the
+  catalog-level signal that a database was decommissioned without
+  the cleanup workflow reaching the supporting infrastructure:
+  the instance is gone, the subnet group remains, and frequently
+  the instance's parameter group, option group, and final
+  snapshot remain alongside it. Orphan subnet groups also retain
+  references to the underlying VPC subnets and may pin those
+  subnets in place during a network refactor (the subnets cannot
+  be deleted while a subnet group references them). Cleaning the
+  subnet group is part of finishing decommissioning; the
+  organization gets visibility into which decommissions stopped
+  short of completion. The control is low-severity by itself
+  because a stray subnet group does not directly leak data — but
+  in combination with an orphan snapshot or a ghost parameter
+  group it reveals a systematic gap in the decommissioning
+  runbook.
+domain: governance
+severity: low
+compliance:
+  ccm_v4: ["DCS-06"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: RDS DB subnet group has no instances or clusters associated.
+  action: Delete the orphan subnet group or document why it must be retained.
+  example: |
+    {"database": {"kind": "rds_subnet_group", "subnet_group": {"is_orphaned": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_subnet_group
+    - field: properties.database.subnet_group.is_orphaned
+      op: eq
+      value: true

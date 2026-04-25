@@ -1,0 +1,41 @@
+control: CTL.RDS.GHOST.SG.001
+defect: >
+  RDS instance attaches a security group ID that
+  no longer exists in the VPC inventory.
+infection: >
+  The instance's effective network policy is the
+  union of the rules in every attached SG. When
+  one of the attached SGs is deleted, the union
+  is built from the remaining SGs and from
+  whatever residual rules AWS keeps cached
+  internally for the deleted SG; the
+  authoritative review against an exported
+  configuration shows a reference to a SG that
+  cannot be inspected. Three failure modes
+  recur in the field. First, the team that
+  owned the deleted SG decommissioned it
+  believing nothing referenced it; the database
+  keeps running on the remaining attachments
+  until the next instance modification
+  reconciles the list and the rules from the
+  deleted SG silently drop out (often opening
+  or closing a previously-permitted path,
+  surprising the application). Second, an SG
+  refactor replaced the original with a
+  successor of a different name; the instance
+  was never re-pointed and operates with a
+  stale reference plus the remaining
+  attachments. Third, IaC drift removed the SG
+  from the configuration without removing the
+  attachment from the database resource. The
+  control is distinct from CTL.VPC.SG.GHOST.001,
+  which catches SG-rule references to deleted
+  SGs; this one catches the instance side.
+failure: >
+  Network policy that does not match what the
+  configuration appears to encode. Either
+  unintended openness (rules quietly dropped)
+  or unintended unreachability (the next
+  modification reveals the database has fewer
+  attached SGs than the security review
+  thought).

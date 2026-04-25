@@ -1,0 +1,34 @@
+control: CTL.RDS.GHOST.OPTIONGROUP.001
+defect: >
+  RDS instance references an option group that
+  has been deleted from the option-group inventory.
+infection: >
+  Option groups configure the engine-specific
+  feature set the application depends on but the
+  parameter group does not cover: Oracle TDE
+  (transparent data encryption at the column
+  level), SQL Server audit specifications, MySQL
+  backtrack, S3-integration options for backups,
+  custom listener ports, and certificate-trust
+  extensions. When the option group is deleted,
+  the features it enabled silently disable.
+  Oracle TDE-protected columns continue to be
+  stored on encrypted EBS, but the column-level
+  protection that satisfies the customer-
+  contractual TDE clause is gone. SQL Server
+  audit may stop emitting records to its log.
+  S3 integration may revert to manual export.
+  The engine continues serving traffic; the
+  option-group-driven feature set has changed
+  without any console signal that points at the
+  cause. Engine-specific compliance posture
+  (FIPS modules, FedRAMP feature flags,
+  customer-contractual TDE, vendor-required
+  audit specs) may quietly fall out of
+  conformance until the next audit reads
+  feature flags directly.
+failure: >
+  Engine feature-set degradation. Customer-
+  contractual or compliance-required engine
+  features (TDE, native audit, S3 integration)
+  silently disable without a console signal.

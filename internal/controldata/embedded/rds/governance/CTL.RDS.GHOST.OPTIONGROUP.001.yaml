@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.GHOST.OPTIONGROUP.001
+name: RDS Instances Must Not Reference Deleted Option Groups
+description: >
+  RDS instances must reference option groups that currently exist.
+  Option groups configure the engine-specific feature set that
+  the application depends on: Oracle TDE (transparent data
+  encryption), SQL Server audit specifications, MySQL backtrack,
+  S3 integration for backups, custom listener ports, and
+  certificate-trust extensions. When the option group is deleted,
+  the features it enabled silently revert. Oracle TDE-protected
+  tables become unencrypted at the engine layer (data on disk is
+  still EBS-encrypted, but the column-level protection is gone).
+  SQL Server audit may stop emitting records. The instance
+  continues serving traffic; the option-group-driven feature set
+  has changed without any visible signal in the RDS console.
+  Engine-specific compliance posture (FIPS modules, FedRAMP
+  feature-flag requirements, customer-contractual TDE clauses)
+  may quietly fall out of conformance.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: RDS instance references a deleted option group.
+  action: Recreate the option group with the intended options or migrate the instance to an existing equivalent group.
+  example: |
+    {"database": {"kind": "rds_instance", "option_group": {"has_ghost_optiongroup": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.option_group.has_ghost_optiongroup
+      op: eq
+      value: true
