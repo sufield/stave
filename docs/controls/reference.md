@@ -3,32 +3,32 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1447
-**Pack hash:** `b65c8df416cc1c20df3203c340a012c1652af08c1f7540f26ee9611155c05f87`
+**Total controls:** 1453
+**Pack hash:** `b1c4a334dd41078b34ea943df12a95628206af09b81f9264f67bdba8f2a75f91`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 172 |
-| high | 639 |
+| high | 642 |
 | info | 16 |
 | low | 105 |
-| medium | 515 |
+| medium | 518 |
 
 | Domain | Count |
 |--------|-------|
-| access | 1 |
+| access | 5 |
 | audit | 32 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 43 |
-| encryption | 80 |
+| encryption | 81 |
 | exposure | 848 |
 | governance | 48 |
 | hygiene | 16 |
 | identity | 326 |
-| network | 26 |
+| network | 27 |
 | resilience | 14 |
 | storage | 8 |
 
@@ -16667,6 +16667,36 @@ RDS instances must have a CloudWatch alarm configured on the FreeStorageSpace me
 
 ---
 
+### CTL.RDS.AUTH.MASTERPASSWORD.AGE.001
+
+**RDS Master Password Must Be Rotated Within Threshold**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** access
+- **Compliance:** hipaa: 164.308(a)(5)(ii)(D); nist_800_53_r5: IA-5; pci_dss_v4: 8.3;
+
+RDS master passwords must be rotated at least every 90 days. The master password is the administrative credential — schema modification, user management, full data access, and configuration change all flow from it. Long-lived master passwords accumulate exposure across the lifetime of the organization: terminal sessions logged to shell history, config files committed to private-then-public repositories, connection pool definitions cached in build artifacts, Slack DMs and email threads from the database's initial setup, and team members who have rotated through the role and still have the credential in a password manager. Each individual exposure is small; the cumulative exposure of a 200-day-old password is significant and irreducible without rotation. The 90-day floor matches PCI-DSS 8.3 and FedRAMP credential-rotation expectations. Observable via the Secrets Manager secret's LastChangedDate when RDS uses ManageMasterUserPassword, or via CloudTrail ModifyDBInstance --master-user-password events otherwise.
+
+**Remediation:** Rotate the master password (or enable Secrets Manager automatic rotation if using ManageMasterUserPassword).
+
+---
+
+### CTL.RDS.AUTH.MASTERUSER.001
+
+**RDS Master Username Must Not Be a Common Default**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** access
+- **Compliance:** nist_800_53_r5: IA-5; pci_dss_v4: 8.3;
+
+RDS instances must not use a predictable master username such as admin, root, postgres, sa, master, dbadmin, mysql, or oracle. Predictable usernames hand the attacker half of the credential pair for free; brute-force, credential-stuffing, and password- spray campaigns target the well-known names first because they appear in every public account-enumeration wordlist. Unique per-fleet master usernames force the attacker to discover the username before any password attempt is meaningful, which moves the cost from "guess the password" to "first enumerate, then guess the password" and converts the attack from drive-by to targeted. The control is a defense-in-depth check: it does not replace strong passwords, MFA, or IAM authentication, but it removes the easy initial-access vector that public credential dumps and password-spray scripts assume.
+
+**Remediation:** Recreate the database with a unique, non-guessable master username (instance recreation is required; ALTER USER cannot rename the master).
+
+---
+
 ### CTL.RDS.AUTOUPGRADE.001
 
 **RDS Auto Minor Version Upgrade Must Be Enabled**
@@ -17175,6 +17205,51 @@ Performance Insights captures database query patterns and wait events. When encr
 
 ---
 
+### CTL.RDS.PROXY.EXPOSURE.001
+
+**RDS Proxies Must Not Be Reachable Beyond the Application Tier**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; pci_dss_v4: 1.4;
+
+RDS Proxy security groups must restrict ingress to the application-tier sources that need database access — not management subnets, not public subnets, not cross-VPC CIDRs that the Proxy was never intended to serve. The Proxy is the entry point to the backend database; its ingress policy is what decides which principals can attempt a connection through it, and any over-broad rule in that policy bypasses every authentication, encryption, and audit improvement the Proxy was deployed to provide. The Proxy's own auth (CTL.RDS.PROXY.IAM.001) and TLS (CTL.RDS.PROXY.TLS.001) defenses still apply, but unnecessary network reachability turns the Proxy into a high-visibility credential-test target — every IAM principal anywhere with rds-db:connect against the Proxy ARN can attempt connections, and the audit log fills with attempted-but-denied connections from places that should never have been able to reach the Proxy at all.
+
+**Remediation:** Tighten the Proxy's SG to allow only the application subnets / CIDRs that need database access.
+
+---
+
+### CTL.RDS.PROXY.IAM.001
+
+**RDS Proxies Must Require IAM Authentication for Client Connections**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** access
+- **Compliance:** nist_800_53_r5: IA-2; pci_dss_v4: 8.2;
+
+RDS Proxies must set ClientAuthType / RequireTLS-and-IAM such that client connections present an IAM authentication token, not a static database password. Without IAM auth at the Proxy the application authenticates to the Proxy with the same username/password it would have used directly against the database — defeating one of the principal reasons to deploy the Proxy in the first place (centralizing credential handling away from the application). With IAM auth required, clients generate a short-lived auth token via rds-db:connect (15-minute lifetime) using their own IAM identity; the Proxy validates the token, then uses the Secrets-Manager-managed backend credential to talk to the database. The application no longer holds the database password at all. Authentication, authorization, and audit all flow through IAM, the same mechanism that controls every other AWS access on the account.
+
+**Remediation:** Set the Proxy's auth scheme to require IAM (RequireIAM=true on the auth descriptor).
+
+---
+
+### CTL.RDS.PROXY.TLS.001
+
+**RDS Proxies Must Require TLS to the Backend Database**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4: 4.1;
+
+RDS Proxies must require TLS for the backend connection from Proxy to RDS instance, not only for the client-to-Proxy hop. The Proxy is a connection terminator: it accepts client connections (commonly TLS-encrypted), then opens its own separate connections to the backend database from a managed pool. If the backend connections are not TLS, the Proxy-to- database hop is plaintext — including the database password retrieved from Secrets Manager and every byte of query data. This is the exact "false-encryption" pattern documented for CDN-to-S3 origin (CTL.S3.CDN.TRANSPORT.001) and Cloudflare's Flexible mode: the client's TLS terminates at the edge service, the operator's mental model is "this is encrypted," and the actual confidentiality boundary is the path between the edge service and the origin. For Proxy-to-RDS, that path runs inside the VPC and is exposed to any same-VPC packet capture, ENI mirror, or compromised co-resident host. The fix is symmetric: require TLS at both hops; enforce certificate verification on the backend hop; reject any fallback that drops to plaintext.
+
+**Remediation:** Set RequireTLS=true on the Proxy's target group; ensure the backend instance has TLS enforcement enabled.
+
+---
+
 ### CTL.RDS.PUBLIC.001
 
 **RDS Instances Must Not Be Publicly Accessible**
@@ -17187,6 +17262,21 @@ Performance Insights captures database query patterns and wait events. When encr
 RDS instances must not have public accessibility enabled. A publicly accessible database is reachable from the internet, exposing it to brute force attacks, SQL injection, and unauthorized data access.
 
 **Remediation:** Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately
+
+---
+
+### CTL.RDS.SECRET.EXISTS.001
+
+**RDS Database Credentials Must Be Managed by Secrets Manager**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** access
+- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-5; pci_dss_v4: 8.2;
+
+RDS instances must have their database credentials managed by AWS Secrets Manager — either via the native ManageMasterUserPassword integration (creates and rotates the secret automatically) or via a Secrets Manager secret tagged with the instance identifier. When credentials are NOT in Secrets Manager, they are stored somewhere — and that somewhere is invariably a worse place: application config files committed to git, ECS task definitions where the password appears in plaintext to anyone with task-definition- describe rights, Lambda environment variables visible in CloudFormation console output, SSM Parameter Store with String type (not encrypted at rest), or hardcoded into source. Each storage location is a separate exposure surface; every application that connects to the database has its own copy of the credential; rotation requires updating every copy in every consumer, which means rotation does not happen. Secrets Manager centralizes the credential, supports automatic rotation, and logs every retrieval via CloudTrail.
+
+**Remediation:** Enable ManageMasterUserPassword on the instance, or create a Secrets Manager secret referenced by every application that connects.
 
 ---
 

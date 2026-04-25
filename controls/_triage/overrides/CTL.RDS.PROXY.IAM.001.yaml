@@ -1,0 +1,39 @@
+control: CTL.RDS.PROXY.IAM.001
+defect: >
+  RDS Proxy does not require IAM authentication
+  on client connections; clients authenticate
+  with the same database username/password they
+  would have used directly against the engine.
+infection: >
+  One of the principal reasons to deploy RDS
+  Proxy in front of a database is to centralize
+  credential handling away from applications.
+  When the Proxy accepts password-based client
+  authentication, every application that
+  connects continues to hold the database
+  password — defeating the centralization that
+  motivated the Proxy in the first place. With
+  IAM authentication required, clients generate
+  a short-lived token via rds-db:connect (15-
+  minute lifetime) using their own IAM
+  identity; the Proxy validates the token, and
+  uses the Secrets-Manager-managed backend
+  password to talk to the database itself. The
+  application no longer holds the database
+  password at all. Three concrete benefits
+  follow: revocation is immediate (remove the
+  IAM identity's rds-db:connect grant; no
+  password rotation cascade), audit is
+  centralized (every connection attempt
+  appears in CloudTrail with the IAM identity,
+  not as a database-side login record that has
+  to be reconciled with the application that
+  generated it), and the credential never sits
+  at rest anywhere — the token is generated
+  on demand and expires automatically.
+failure: >
+  Application still holds the database
+  password. The Proxy adds connection pooling
+  but not credential improvement; revocation,
+  audit, and rotation remain at the
+  password level rather than the IAM level.

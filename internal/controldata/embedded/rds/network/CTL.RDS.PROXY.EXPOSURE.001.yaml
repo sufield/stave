@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.PROXY.EXPOSURE.001
+name: RDS Proxies Must Not Be Reachable Beyond the Application Tier
+description: >
+  RDS Proxy security groups must restrict ingress to the
+  application-tier sources that need database access — not
+  management subnets, not public subnets, not cross-VPC
+  CIDRs that the Proxy was never intended to serve. The
+  Proxy is the entry point to the backend database; its
+  ingress policy is what decides which principals can
+  attempt a connection through it, and any over-broad rule
+  in that policy bypasses every authentication, encryption,
+  and audit improvement the Proxy was deployed to provide.
+  The Proxy's own auth (CTL.RDS.PROXY.IAM.001) and TLS
+  (CTL.RDS.PROXY.TLS.001) defenses still apply, but
+  unnecessary network reachability turns the Proxy into a
+  high-visibility credential-test target — every IAM
+  principal anywhere with rds-db:connect against the Proxy
+  ARN can attempt connections, and the audit log fills
+  with attempted-but-denied connections from places that
+  should never have been able to reach the Proxy at all.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  pci_dss_v4: "1.4"
+  ccm_v4: ["IVS-04"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: RDS Proxy security group permits ingress beyond the application tier.
+  action: Tighten the Proxy's SG to allow only the application subnets / CIDRs that need database access.
+  example: |
+    {"database": {"kind": "rds_proxy", "proxy": {"sg_broad": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_proxy
+    - field: properties.database.proxy.sg_broad
+      op: eq
+      value: true

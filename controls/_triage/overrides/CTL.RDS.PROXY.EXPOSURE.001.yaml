@@ -1,0 +1,38 @@
+control: CTL.RDS.PROXY.EXPOSURE.001
+defect: >
+  RDS Proxy security group permits ingress from
+  sources beyond the application tier — broad
+  CIDRs, public subnets, management networks,
+  cross-VPC peering paths, or 0.0.0.0/0.
+infection: >
+  The Proxy is the entry point to the backend
+  database; its ingress policy decides who can
+  attempt a connection through it. Over-broad
+  ingress turns the Proxy into a high-visibility
+  credential-test target: every IAM principal
+  with rds-db:connect against the Proxy ARN
+  can attempt a connection from anywhere the
+  SG admits, the audit log fills with
+  attempted-but-denied connections from places
+  that should never have been able to reach
+  the Proxy at all, and the Proxy's own
+  authentication and TLS defenses
+  (CTL.RDS.PROXY.IAM.001 and
+  CTL.RDS.PROXY.TLS.001) are doing more work
+  than they should — they are functioning as
+  expected, but they are functioning against
+  every reachable principal rather than the
+  curated app tier the architecture intended.
+  Network reachability is the cheapest control
+  to enforce and the cheapest one to leave
+  loose; the loose state is what frequently
+  ships from a wizard or a hurried CloudFormation
+  copy that opened the SG broadly during
+  initial bring-up and never tightened it.
+failure: >
+  The Proxy's other defenses (IAM, TLS, audit)
+  fire against every reachable principal
+  instead of the curated app tier. Audit
+  noise plus unnecessary attack-surface area;
+  the architectural assumption that "only the
+  app tier can reach the Proxy" is false.

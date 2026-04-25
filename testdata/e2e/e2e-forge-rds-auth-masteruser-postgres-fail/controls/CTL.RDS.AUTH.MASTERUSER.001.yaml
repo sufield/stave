@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.AUTH.MASTERUSER.001
+name: RDS Master Username Must Not Be a Common Default
+description: >
+  RDS instances must not use a predictable master username such as
+  admin, root, postgres, sa, master, dbadmin, mysql, or oracle.
+  Predictable usernames hand the attacker half of the credential
+  pair for free; brute-force, credential-stuffing, and password-
+  spray campaigns target the well-known names first because they
+  appear in every public account-enumeration wordlist. Unique
+  per-fleet master usernames force the attacker to discover the
+  username before any password attempt is meaningful, which moves
+  the cost from "guess the password" to "first enumerate, then
+  guess the password" and converts the attack from drive-by to
+  targeted. The control is a defense-in-depth check: it does not
+  replace strong passwords, MFA, or IAM authentication, but it
+  removes the easy initial-access vector that public credential
+  dumps and password-spray scripts assume.
+domain: access
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5"
+  pci_dss_v4: "8.3"
+  ccm_v4: ["IAM-08"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_theft
+remediation:
+  description: RDS master username matches a well-known default.
+  action: Recreate the database with a unique, non-guessable master username (instance recreation is required; ALTER USER cannot rename the master).
+  example: |
+    {"database": {"kind": "rds_instance", "auth": {"master_username_predictable": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.auth.master_username_predictable
+      op: eq
+      value: true

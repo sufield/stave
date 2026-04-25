@@ -8,6 +8,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **RDS-4 — authentication, Secrets Manager integration,
+  and RDS Proxy security (6 new controls, 3 chains).**
+  Fourth RDS gap-closure iteration. Closes the credential-
+  lifecycle and Proxy-security surface that RDS-1/2/3 did
+  not cover. Spec asked for ~8 controls; three duplicated
+  existing catalog entries (CTL.RDS.IAMAUTH.001 covered
+  IAM.ENFORCE; CTL.SECRETS.ROTATION.001 covered the
+  generic SM rotation case which the proposed RDS-specific
+  variant subsumes; CTL.SECRETSMANAGER.POLICY.PUBLIC.001
+  covered SECRET.POLICY's public-policy core), so 6
+  distinct additions shipped. Authentication (3):
+  `AUTH.MASTERUSER` (master username matches a well-known
+  default — admin / root / postgres / sa / master /
+  dbadmin / mysql / oracle — handing the attacker half
+  the credential pair for free; remediation requires
+  instance recreation since engines have no master-
+  rename, medium), `AUTH.MASTERPASSWORD.AGE` (master
+  password not rotated within 90 days; long-lived admin
+  credentials accumulate exposure across shell history,
+  config repos, build artifacts, and rotated-out team
+  members, high), `SECRET.EXISTS` (database credentials
+  not in Secrets Manager — therefore in config files,
+  ECS task definitions, Lambda env vars, SSM Parameter
+  Store as String, or hardcoded; multiple copies, no
+  rotation, no audit, high). RDS Proxy (3): `PROXY.IAM`
+  (Proxy does not require IAM auth on client connections;
+  applications still hold the database password defeating
+  the centralization that motivated the Proxy, medium),
+  `PROXY.TLS` (Proxy backend connection not TLS-required;
+  same false-encryption pattern as CDN-to-S3-origin and
+  Cloudflare Flexible mode — client side TLS terminates
+  at the Proxy and the Proxy-to-DB hop carries credentials
+  and query data plaintext through the VPC where any
+  same-VPC observer reads them, high), `PROXY.EXPOSURE`
+  (Proxy SG permits ingress beyond app tier; the Proxy's
+  own auth/TLS defenses fire against every reachable
+  principal instead of the curated app tier, medium).
+  Chains: `rds_credential_lifecycle` (no SM secret +
+  (no rotation OR stale master password) — uses existing
+  CTL.SECRETS.ROTATION.001), `rds_auth_weakness` (no IAM
+  auth + (predictable username OR public secret policy)
+  — uses existing CTL.RDS.IAMAUTH.001 +
+  CTL.SECRETSMANAGER.POLICY.PUBLIC.001), `rds_proxy_insecure`
+  (no backend TLS + (no IAM OR broad SG)). 14 e2e fixtures
+  including engine-specific MASTERUSER variants
+  (admin / postgres) and a Proxy false-TLS variant
+  asserting client-side TLS does not redeem backend
+  plaintext. 6 triage overrides. RDS Proxy coverage:
+  1 (ghost) → 4 controls. RDS auth coverage: partial →
+  comprehensive.
 - **RDS-3 — ghost references and orphaned resources
   (8 new controls, 3 chains).** Third RDS gap-closure
   iteration. Extends Stave's ghost-reference pattern

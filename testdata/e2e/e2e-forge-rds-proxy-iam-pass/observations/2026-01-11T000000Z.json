@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "proxy-iam",
+      "type": "aws_rds_proxy",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_proxy","proxy":{"name":"app-proxy","requires_iam":true,"iam_auth_mode":"REQUIRED"}}}
+    }
+  ]
+}

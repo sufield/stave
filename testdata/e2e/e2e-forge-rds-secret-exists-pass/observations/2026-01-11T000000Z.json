@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "db-managed-sm",
+      "type": "aws_rds_instance",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_instance","auth":{"manages_credentials_via_sm":true,"has_secrets_manager_secret":true,"secret_arn":"arn:aws:secretsmanager:us-east-1:111111111111:secret:rds!db-AbCdEf"}}}
+    }
+  ]
+}

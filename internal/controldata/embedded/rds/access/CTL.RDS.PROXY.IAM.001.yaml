@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.PROXY.IAM.001
+name: RDS Proxies Must Require IAM Authentication for Client Connections
+description: >
+  RDS Proxies must set ClientAuthType / RequireTLS-and-IAM such
+  that client connections present an IAM authentication token,
+  not a static database password. Without IAM auth at the Proxy
+  the application authenticates to the Proxy with the same
+  username/password it would have used directly against the
+  database — defeating one of the principal reasons to deploy
+  the Proxy in the first place (centralizing credential handling
+  away from the application). With IAM auth required, clients
+  generate a short-lived auth token via
+  rds-db:connect (15-minute lifetime) using their own IAM
+  identity; the Proxy validates the token, then uses the
+  Secrets-Manager-managed backend credential to talk to the
+  database. The application no longer holds the database
+  password at all. Authentication, authorization, and audit all
+  flow through IAM, the same mechanism that controls every
+  other AWS access on the account.
+domain: access
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-2"
+  pci_dss_v4: "8.2"
+  ccm_v4: ["IAM-08", "IAM-16"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_theft
+remediation:
+  description: RDS Proxy does not require IAM authentication on client connections.
+  action: Set the Proxy's auth scheme to require IAM (RequireIAM=true on the auth descriptor).
+  example: |
+    {"database": {"kind": "rds_proxy", "proxy": {"requires_iam": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_proxy
+    - field: properties.database.proxy.requires_iam
+      op: eq
+      value: false

@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.PROXY.TLS.001
+name: RDS Proxies Must Require TLS to the Backend Database
+description: >
+  RDS Proxies must require TLS for the backend connection from
+  Proxy to RDS instance, not only for the client-to-Proxy hop.
+  The Proxy is a connection terminator: it accepts client
+  connections (commonly TLS-encrypted), then opens its own
+  separate connections to the backend database from a managed
+  pool. If the backend connections are not TLS, the Proxy-to-
+  database hop is plaintext — including the database password
+  retrieved from Secrets Manager and every byte of query data.
+  This is the exact "false-encryption" pattern documented for
+  CDN-to-S3 origin (CTL.S3.CDN.TRANSPORT.001) and Cloudflare's
+  Flexible mode: the client's TLS terminates at the edge
+  service, the operator's mental model is "this is encrypted,"
+  and the actual confidentiality boundary is the path between
+  the edge service and the origin. For Proxy-to-RDS, that path
+  runs inside the VPC and is exposed to any same-VPC packet
+  capture, ENI mirror, or compromised co-resident host. The
+  fix is symmetric: require TLS at both hops; enforce
+  certificate verification on the backend hop; reject any
+  fallback that drops to plaintext.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  pci_dss_v4: "4.1"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["CEK-09", "DSP-10"]
+scope_tags: [aws, rds]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: data_in_transit_exposure
+remediation:
+  description: RDS Proxy does not require TLS on backend connections to the database.
+  action: Set RequireTLS=true on the Proxy's target group; ensure the backend instance has TLS enforcement enabled.
+  example: |
+    {"database": {"kind": "rds_proxy", "proxy": {"require_tls_backend": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_proxy
+    - field: properties.database.proxy.require_tls_backend
+      op: eq
+      value: false

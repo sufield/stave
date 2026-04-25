@@ -1,0 +1,40 @@
+control: CTL.RDS.AUTH.MASTERUSER.001
+defect: >
+  RDS instance master username matches a well-known
+  default — admin, root, postgres, sa, master,
+  dbadmin, mysql, oracle, or another name that
+  appears at the top of every public account-
+  enumeration wordlist.
+infection: >
+  Predictable usernames hand the attacker half of
+  the credential pair for free. Every public
+  password-spray and credential-stuffing toolkit
+  starts its attempt list with the well-known
+  database master usernames, because they are the
+  out-of-the-box defaults that AWS / RDS / engine
+  installers ship with and that operators
+  predominantly leave unchanged. The first 100
+  attempts in any drive-by campaign are
+  username=admin against the candidate password
+  list; the second 100 are username=postgres;
+  the third are username=root. With a unique
+  per-fleet master username, the attacker has to
+  first enumerate (which requires a separate
+  recon step against the engine, the application,
+  or whatever leak surface yields the username)
+  before any password attempt is meaningful at
+  all. The control does not replace strong
+  passwords, MFA, or IAM authentication; it
+  removes the easy initial-access vector that
+  unattended automated attacks assume. Note that
+  changing the master username on RDS requires
+  recreating the instance — the engine has no
+  ALTER USER RENAME for the master account, so
+  the remediation cost is non-trivial and the
+  control fires as awareness rather than as a
+  paged-incident.
+failure: >
+  Drive-by attacker enumerates the master
+  username for free; password-spray against the
+  Proxy or engine endpoint becomes immediately
+  productive against the well-known name.

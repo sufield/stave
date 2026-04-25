@@ -1,0 +1,40 @@
+control: CTL.RDS.PROXY.TLS.001
+defect: >
+  RDS Proxy does not require TLS for the backend
+  connection from Proxy to RDS instance. Client-
+  to-Proxy may be TLS, but Proxy-to-database is
+  not.
+infection: >
+  This is the same false-encryption pattern
+  documented for CDN-to-S3 origin
+  (CTL.S3.CDN.TRANSPORT.001) and Cloudflare's
+  Flexible TLS mode: the operator's mental
+  model is "this connection is encrypted"
+  because the client side terminates TLS,
+  while the actual confidentiality boundary
+  sits between the edge service and the
+  origin. For Proxy-to-RDS, that boundary
+  runs inside the VPC. Same-VPC packet
+  capture is available to any compromised
+  co-resident host, ENI mirroring is
+  available to anyone with the right IAM
+  permissions, and traffic-mirroring exporters
+  hooked up for performance analysis often
+  capture the database credential the Proxy
+  retrieves from Secrets Manager and sends to
+  the engine in cleartext on every new pool
+  connection. Query data, in addition, is
+  exposed in plaintext for the entire lifetime
+  of every backend connection. The fix is
+  symmetric: require TLS at both hops, enforce
+  certificate verification on the backend
+  hop, and reject any fallback that drops to
+  plaintext. The TLS-from-edge pattern looks
+  encrypted to the consumer of the edge
+  service and is not encrypted in the place
+  the data actually traverses.
+failure: >
+  False encryption. Database credentials and
+  query data flow plaintext between Proxy and
+  database for every connection in the pool;
+  any in-VPC observer reads them.

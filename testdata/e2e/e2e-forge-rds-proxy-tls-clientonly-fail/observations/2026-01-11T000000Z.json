@@ -1,0 +1,13 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "proxy-edge-tls-only",
+      "type": "aws_rds_proxy",
+      "vendor": "aws",
+      "properties": {"database":{"kind":"rds_proxy","proxy":{"name":"app-proxy","require_tls_backend":false,"client_tls":true,"backend_plaintext":true}}}
+    }
+  ]
+}
