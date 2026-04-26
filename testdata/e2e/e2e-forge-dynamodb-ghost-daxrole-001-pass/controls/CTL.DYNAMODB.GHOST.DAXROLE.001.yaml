@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.GHOST.DAXROLE.001
+name: DAX Cluster References Deleted IAM Role
+description: >
+  DAX cluster's service role IAM ARN references a role that
+  has been deleted. DAX uses this role for every DynamoDB
+  call it makes — every cache miss, every cache fill, every
+  write-through. With the role gone, DAX cannot perform
+  DynamoDB operations and returns errors on every call. The
+  failure mode is progressive rather than immediate: cache
+  hits continue to work because the data is already in DAX
+  memory, but cache misses fail with AccessDeniedException as
+  DAX tries to read from DynamoDB using the deleted role. As
+  cached items expire (TTL or eviction), the rate of cache
+  misses rises, and the application's error rate rises with
+  it. The progression goes from "occasional unexplained
+  errors" to "everything fails" over the cache TTL window —
+  minutes for short TTLs, hours for long ones.
+domain: governance
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "IAM-04"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    DAX service role has been deleted. Cache hits work; cache
+    misses fail; failure rate climbs as items expire.
+  action: >
+    Re-create the role with the trust policy
+    (dax.amazonaws.com) and the table-scoped DynamoDB
+    permissions DAX needs (GetItem, Query, Scan, BatchGetItem
+    plus PutItem/UpdateItem/DeleteItem if write-through is
+    on). Or update the DAX cluster to reference an existing
+    role with the same scope. Add a deletion guard on IAM
+    roles that cross-references active DAX clusters before
+    allowing the role to be deleted.
+  example: |
+    {
+      "database": {
+        "kind": "dynamodb_dax_cluster",
+        "dynamodb": {
+          "dax": {
+            "has_ghost_role": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dynamodb_dax_cluster
+    - field: properties.database.dynamodb.dax.has_ghost_role
+      op: eq
+      value: true

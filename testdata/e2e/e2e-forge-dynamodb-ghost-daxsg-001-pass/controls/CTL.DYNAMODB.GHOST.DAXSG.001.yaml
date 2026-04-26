@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.GHOST.DAXSG.001
+name: DAX Cluster References Deleted Security Group
+description: >
+  DAX cluster's network configuration references a security
+  group that has been deleted. The cluster's network access
+  rules are now undefined: AWS-side behavior on deleted SG
+  references is to silently drop the SG from the effective
+  rule set, so what looked like a tightly-scoped DAX
+  configuration may now be effectively unrestricted (if no
+  other SGs remain on the cluster) or effectively
+  inaccessible (if the deleted SG was the only one allowing
+  application traffic). Same ghost-reference pattern as the
+  other SG ghosts in the catalog —
+  CTL.RDS.GHOST.SG.001, CTL.EC2.LT.GHOST.SG.001,
+  CTL.LAMBDA.GHOST.VPC.001 — applied to the DAX surface.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "IVS-03"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    DAX cluster references one or more deleted security
+    groups. Network access rules are undefined.
+  action: >
+    Update the cluster's SG list to remove deleted SG IDs.
+    Verify the remaining SGs still allow the application
+    traffic the cluster needs (or add replacements if the
+    deleted SG carried the only inbound rule). Add a
+    deletion guard on security groups that cross-references
+    active DAX clusters before allowing the SG to be deleted.
+  example: |
+    {
+      "database": {
+        "kind": "dynamodb_dax_cluster",
+        "dynamodb": {
+          "dax": {
+            "has_ghost_sg": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dynamodb_dax_cluster
+    - field: properties.database.dynamodb.dax.has_ghost_sg
+      op: eq
+      value: true

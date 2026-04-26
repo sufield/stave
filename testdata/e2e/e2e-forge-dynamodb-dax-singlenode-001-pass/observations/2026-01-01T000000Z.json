@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:dax:us-east-1:123456789012:cluster/multi-node",
+      "type": "aws_dynamodb_dax_cluster",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "dynamodb_dax_cluster",
+          "dynamodb": {
+            "dax": {
+              "node_count": 3,
+              "single_node": false,
+              "node_type": "dax.r5.large"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

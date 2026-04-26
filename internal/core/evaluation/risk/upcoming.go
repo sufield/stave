@@ -157,6 +157,11 @@ type ThresholdRequest struct {
 	GlobalMaxUnsafeDuration time.Duration
 	Now                     time.Time
 	PredicateEval           policy.PredicateEval
+	// Exemptions is optional; when set, exempted assets are skipped
+	// from risk computation just as they are skipped from the main
+	// finding pipeline. Without this, exempted assets could surface
+	// as risk signals and still flip overall posture to AT_RISK.
+	Exemptions *policy.ExemptionConfig
 }
 
 type assetState struct {
@@ -188,7 +193,7 @@ func ComputeItems(req ThresholdRequest) ThresholdItems {
 		}
 
 		threshold := ctl.EffectiveMaxUnsafeDuration(req.GlobalMaxUnsafeDuration)
-		states := computeAssetStates(*ctl, sortedSnaps, req.PredicateEval)
+		states := computeAssetStates(*ctl, sortedSnaps, req.PredicateEval, req.Exemptions)
 
 		// 3. Convert states to risk items
 		for id, st := range states {
@@ -220,11 +225,36 @@ func computeAssetStates(
 	ctl policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	eval policy.PredicateEval,
+	exemptions *policy.ExemptionConfig,
 ) map[asset.ID]*assetState {
 	states := make(map[asset.ID]*assetState)
 
+	// Pre-stringify the control's scope tags once outside the
+	// per-asset loop. Vendor applicability flows through the
+	// shared helper kernel.AppliesToVendor — the single source
+	// of truth shared with engine/lifecycles.go.
+	ctlTags := make([]string, len(ctl.ScopeTags))
+	for i, t := range ctl.ScopeTags {
+		ctlTags[i] = string(t)
+	}
+
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
+			// Vendor applicability filter — a control scoped to
+			// one vendor must not produce risk signals against
+			// assets of another vendor.
+			if !kernel.AppliesToVendor(ctlTags, string(a.Vendor)) {
+				continue
+			}
+
+			// Asset-level exemptions: an exempted asset must not
+			// surface as a risk signal, mirroring the main
+			// finding pipeline's exemption check in
+			// engine/assessor.go.
+			if exemptions != nil && exemptions.ShouldExempt(a.ID) != nil {
+				continue
+			}
+
 			st, ok := states[a.ID]
 			if !ok {
 				st = &assetState{AssetType: a.Type}

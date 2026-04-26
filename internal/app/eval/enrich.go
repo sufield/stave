@@ -8,13 +8,15 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Enrich enriches findings from the result and returns a fully-sanitized
-// EnrichedResult suitable for passing to a FindingMarshaler. All metadata
-// that needs sanitization (findings, exempted assets, input hashes) is
-// handled here so marshalers receive clean data.
+// EnrichedResult suitable for passing to a FindingMarshaler. All
+// metadata that needs sanitization — findings, exempted assets, input
+// hashes, sidecar finding collections, metadata paths — is handled
+// here so marshalers receive clean data.
 func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result *evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
 	findings, err := PrepareFindings(enricher, sanitizer, result)
 	if err != nil {
@@ -22,16 +24,68 @@ func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, re
 	}
 	skippedAssets := result.ExemptedAssets
 	run := result.Run
+	resultCopy := *result
 	if sanitizer != nil {
 		skippedAssets = SanitizeExemptedAssets(sanitizer, skippedAssets)
 		run.InputHashes = SanitizeInputHashKeys(sanitizer, run.InputHashes)
+		sanitizeResultSidecars(sanitizer, &resultCopy)
 	}
 	return appcontracts.EnrichedResult{
-		Result:         *result,
+		Result:         resultCopy,
 		Findings:       findings,
 		ExemptedAssets: skippedAssets,
 		Run:            run,
 	}, nil
+}
+
+// sanitizeResultSidecars masks asset identifiers and resolved paths
+// across the report sidecars that flow into the assessment alongside
+// the main Findings collection. Without this, --sanitize hides
+// identifiers in Findings but leaks them through RiskSignals,
+// ExceptedFindings, AcknowledgedFindings, TopExposures, and
+// Metadata.ResolvedPaths — which all carry the same identifier shapes
+// the main collection does. Mutates the result copy in place.
+func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) {
+	if len(r.RiskSignals) > 0 {
+		signals := make(risk.ThresholdItems, len(r.RiskSignals))
+		for i := range r.RiskSignals {
+			item := r.RiskSignals[i]
+			item.AssetID = asset.ID(s.ID(string(item.AssetID)))
+			signals[i] = item
+		}
+		r.RiskSignals = signals
+	}
+	if len(r.ExceptedFindings) > 0 {
+		excepted := make([]evaluation.ExceptedFinding, len(r.ExceptedFindings))
+		for i, ef := range r.ExceptedFindings {
+			ef.AssetID = asset.ID(s.ID(string(ef.AssetID)))
+			excepted[i] = ef
+		}
+		r.ExceptedFindings = excepted
+	}
+	if len(r.AcknowledgedFindings) > 0 {
+		acks := make([]policy.AcknowledgedFinding, len(r.AcknowledgedFindings))
+		for i := range r.AcknowledgedFindings {
+			a := r.AcknowledgedFindings[i]
+			a.AssetID = asset.ID(s.ID(string(a.AssetID)))
+			acks[i] = a
+		}
+		r.AcknowledgedFindings = acks
+	}
+	if len(r.TopExposures) > 0 {
+		exposures := make([]risk.ExposureRank, len(r.TopExposures))
+		for i, e := range r.TopExposures {
+			e.AssetID = asset.ID(s.ID(string(e.AssetID)))
+			exposures[i] = e
+		}
+		r.TopExposures = exposures
+	}
+	if r.Metadata.ResolvedPaths.Controls != "" {
+		r.Metadata.ResolvedPaths.Controls = s.Path(r.Metadata.ResolvedPaths.Controls)
+	}
+	if r.Metadata.ResolvedPaths.Observations != "" {
+		r.Metadata.ResolvedPaths.Observations = s.Path(r.Metadata.ResolvedPaths.Observations)
+	}
 }
 
 // PrepareFindings enriches findings from the result and optionally sanitizes them.
@@ -96,6 +150,31 @@ func sanitizeFinding(f remediation.Finding, s kernel.Sanitizer) remediation.Find
 		se.IdentityStatements = sanitizeSlice(se.IdentityStatements, s)
 		se.ResourceGrantees = sanitizeSlice(se.ResourceGrantees, s)
 		out.Evidence.SourceEvidence = &se
+	}
+
+	// ReasoningTrace carries the same observed values that flow
+	// through Misconfiguration.ActualValue. The trace is built before
+	// sanitization runs (engine/finding_builder.go), so sanitization
+	// must mask its values alongside the Misconfigurations.
+	if len(f.ReasoningTrace) > 0 {
+		trace := make([]evaluation.MatchedClause, len(f.ReasoningTrace))
+		for i, mc := range f.ReasoningTrace {
+			mc.ObservedValue = sanitizeActualValue(mc.ObservedValue, s)
+			trace[i] = mc
+		}
+		out.ReasoningTrace = trace
+	}
+
+	// DeltaPath.CurrentValue is a string snapshot of the observed
+	// value rendered for human-readable fix guidance — route it
+	// through the per-field Sanitizer.
+	if len(f.Delta) > 0 {
+		delta := make([]policy.DeltaPath, len(f.Delta))
+		for i, d := range f.Delta {
+			d.CurrentValue = s.Value(d.CurrentValue)
+			delta[i] = d
+		}
+		out.Delta = delta
 	}
 
 	if f.RemediationPlan != nil {

@@ -1,0 +1,26 @@
+id: ddb_dax_insecure
+description: >
+  DAX cluster has multiple security failures stacked. The cache
+  is not encrypted at rest
+  (CTL.DYNAMODB.DAX.ENCRYPT.REST.001) — hot data sits in the
+  cluster's memory and disk overflow without encryption — AND
+  either traffic is plaintext on the network
+  (CTL.DYNAMODB.DAX.ENCRYPT.TRANSIT.001) or the cache is
+  reachable from broadly-scoped network sources
+  (CTL.DYNAMODB.DAX.SG.BROAD.001). Threshold of 2 reflects that
+  any one of these alone is a known posture concern; two
+  together describe a cache layer where the data is unprotected
+  at rest AND either observable in transit or reachable from
+  the wrong workloads. The cache fronts every read of the
+  table — its security posture should match or exceed the
+  table's, not fall below it.
+controls:
+  - CTL.DYNAMODB.DAX.ENCRYPT.REST.001
+  - CTL.DYNAMODB.DAX.ENCRYPT.TRANSIT.001
+  - CTL.DYNAMODB.DAX.SG.BROAD.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access

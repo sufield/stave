@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.DAX.SG.BROAD.001
+name: DAX Cluster Security Group Allows Broad Access
+description: >
+  DAX cluster security group accepts inbound traffic from the
+  entire VPC CIDR (10.0.0.0/8 and similar) or from 0.0.0.0/0
+  rather than restricting to specific application security
+  groups or subnets. DAX is a database cache — its access
+  surface should be narrow: only the application tier that
+  actually needs cached database access. A broad SG opens the
+  cache to every workload in the VPC, so any compromised
+  resource (a developer-tools EC2 instance, an unrelated
+  service, a runaway batch job) can read cached database
+  contents and replicate the access patterns of the legitimate
+  application.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "1.4.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    DAX security group accepts traffic from the whole VPC or
+    the internet. Any workload in scope can reach the cache.
+  action: >
+    Replace broad CIDR rules with security-group references
+    that name the application tier(s) that need DAX access.
+    The SG rule should look like "from sg-app-tier on port
+    8111 (DAX), proto TCP" — not "from 10.0.0.0/8". For
+    multi-tier applications with several legitimate consumers,
+    list each consumer SG explicitly.
+  example: |
+    {
+      "database": {
+        "kind": "dynamodb_dax_cluster",
+        "dynamodb": {
+          "dax": {
+            "sg_allows_broad": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dynamodb_dax_cluster
+    - field: properties.database.dynamodb.dax.sg_allows_broad
+      op: eq
+      value: true

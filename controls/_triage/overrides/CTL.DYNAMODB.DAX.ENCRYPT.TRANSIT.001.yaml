@@ -1,0 +1,30 @@
+control: CTL.DYNAMODB.DAX.ENCRYPT.TRANSIT.001
+defect: >
+  DAX cluster does not enforce TLS for client
+  connections.
+infection: >
+  Every read and write the application performs
+  through DAX traverses the connection between
+  the application and the DAX cluster. On a
+  busy table that's hundreds or thousands of
+  operations per second per node, all carrying
+  the actual item data — partition keys, sort
+  keys, attribute values, responses. Without
+  TLS, every byte of this is plaintext on the
+  VPC network. Any process with network
+  visibility on the DAX subnet — a compromised
+  EC2 instance, a malicious sidecar, a network
+  appliance — observes the full traffic. The
+  data leak is continuous, proportional to
+  application load, and includes whatever
+  identifiers the application uses as keys
+  (often user IDs, customer IDs, or session
+  tokens). TLS-in-transit is a cluster-creation
+  setting; remediation is the same migration
+  pattern as the at-rest encryption case
+  (recreate, switch endpoint, delete old).
+failure: >
+  Continuous plaintext data leak. Every cached
+  read is observable to anyone with VPC
+  network access; the leak rate scales with
+  application traffic.

@@ -2,8 +2,18 @@ dsl_version: ctrl.v1
 id: CTL.ECS.EXEC.001
 name: ECS Exec Must Be Disabled on Production Services
 description: >
-  ECS services in production environments must not have enableExecuteCommand: true. ECS Exec provides interactive shell access to running containers — an always-available persistence and lateral movement primitive for any IAM principal with ecs:ExecuteCommand permission. Intended for debugging, it creates a direct access path to production container runtime, filesystem, secrets, and execution role credentials.
-domain: exposure
+  ECS Exec allows running interactive shell commands in running ECS
+  containers via `aws ecs execute-command`. When enabled on a
+  production service, any IAM principal with ecs:ExecuteCommand can
+  run arbitrary commands inside production containers — equivalent
+  to SSH access. The shell session has the container's filesystem,
+  environment variables (including injected secrets), and the task
+  role's AWS credentials. Attackers with IAM access can use it to
+  establish persistence, exfiltrate data, or pivot to other services
+  reachable from the container's network. Intended for debugging,
+  exec on production removes a layer of separation between operator
+  intent and runtime modification.
+domain: governance
 severity: high
 compliance:
   nist_800_53_r5: "AC-17"
@@ -11,6 +21,7 @@ compliance:
   hipaa: "164.312(a)(1)"
   pci_dss_v4.0: "7.2.1"
   soc2: "CC6.1"
+  mitre_attack: "T1059"
   ccm_v4: ["IVS-06", "LOG-12"]
 scope_tags:
   - aws
@@ -21,9 +32,24 @@ params:
   attack_stage: persistence
 remediation:
   description: >
-    ECS Exec is enabled on a production service.
+    ECS Exec is enabled on a production service. Interactive shell
+    access is available to any principal with ecs:ExecuteCommand.
   action: >
-    Disable ECS Exec on production services via aws ecs update-service --enable-execute-command false.
+    Disable ECS Exec on production services:
+    aws ecs update-service --cluster <cluster> --service <service>
+    --no-enable-execute-command --force-new-deployment.
+    Restrict ecs:ExecuteCommand via IAM policy to break-glass roles
+    with MFA enforcement; audit usage with
+    CTL.ECS.EXEC.AUDIT.001.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_service",
+        "exec": {
+          "enabled_in_production": false
+        }
+      }
+    }
 unsafe_predicate:
   all:
     - field: properties.container.kind

@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.DAX.ENCRYPT.TRANSIT.001
+name: DAX Cluster Does Not Enforce TLS for Client Connections
+description: >
+  DAX cluster does not enforce TLS for connections from
+  applications. DAX sits between every cached read/write and
+  DynamoDB — every cache hit, every cache fill, every write-
+  through traverses the connection between the application and
+  the DAX cluster. Without TLS, all of this traffic is plaintext
+  on the VPC network: cached item data (customer records,
+  session tokens, application state), query parameters
+  (partition keys and sort keys that may include user
+  identifiers or business keys), and responses. Any process
+  with network access to the DAX subnet can observe the
+  traffic. TLS must be enabled at cluster creation; the cluster
+  endpoint advertises whether it accepts TLS-only or accepts
+  plaintext.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  fedramp_moderate: "SC-8"
+  pci_dss_v4.0: "4.2.1"
+  soc2: "CC6.7"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["AIS-01", "CEK-03"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    DAX cluster accepts plaintext connections. Cache traffic
+    between the application and DAX is unencrypted.
+  action: >
+    Create a new DAX cluster with ClusterEndpointEncryptionType
+    set to TLS, then update the application's DAX client to
+    point at the TLS endpoint. Existing clients that connected
+    to the plaintext endpoint will need to update their
+    connection configuration to use TLS-aware DAX clients.
+    Encryption-in-transit cannot be enabled on an existing
+    cluster — recreation is required.
+  example: |
+    {
+      "database": {
+        "kind": "dynamodb_dax_cluster",
+        "dynamodb": {
+          "dax": {
+            "tls_enabled": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dynamodb_dax_cluster
+    - field: properties.database.dynamodb.dax.tls_enabled
+      op: eq
+      value: false

@@ -2,17 +2,28 @@ dsl_version: ctrl.v1
 id: CTL.ECS.EXEC.AUDIT.001
 name: ECS Exec Must Have Audit Logging Enabled
 description: >
-  When ECS Exec is enabled, audit logging must be configured to
-  capture all Exec sessions. ECS Exec provides interactive shell
-  access to running containers, including access to the task metadata
-  credential endpoint. Without audit logging, an operator or attacker
-  using Exec leaves no trace of commands executed or credentials
-  accessed.
+  When ECS Exec is enabled on any service — production or
+  non-production — audit logging must be configured to capture
+  every Exec session. ECS Exec provides interactive shell access
+  to running containers, including read access to the task
+  metadata credential endpoint. Without audit logging, an
+  operator or attacker using Exec leaves no trace of commands
+  executed, files read, or credentials accessed. The control
+  fires whenever exec is enabled and audit logging is off,
+  regardless of environment — a compromised non-production
+  container with unaudited exec is still an unaudited
+  compromise, and dev environments are where attackers pivot
+  from when the prod environment is hardened. Distinct from
+  CTL.ECS.EXEC.001, which gates exec on production
+  specifically; this control gates audit on exec itself.
 domain: exposure
 severity: medium
 compliance:
   nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+  pci_dss_v4.0: "10.2.1"
   soc2: "CC7.1"
+  hipaa: "164.312(b)"
   ccm_v4: ["LOG-03", "LOG-05"]
 scope_tags:
   - aws
@@ -23,17 +34,24 @@ params:
   attack_stage: detection_evasion
 remediation:
   description: >
-    ECS Exec is enabled but audit logging is not configured. Exec
-    sessions — including credential access — are not recorded.
+    ECS Exec is enabled on the service but audit logging is not
+    configured. Exec sessions — including credential access —
+    are not recorded.
   action: >
-    Configure ECS Exec audit logging to CloudWatch Logs or S3.
-    Enable session logging in the cluster Execute Command
-    configuration.
+    Configure ECS Exec audit logging on the cluster:
+    aws ecs update-cluster --cluster <name> --configuration
+    executeCommandConfiguration={logging=OVERRIDE,logConfiguration={cloudWatchLogGroupName=...}}.
+    Route the logs to a CloudWatch log group with adequate
+    retention (see CTL.ECS.LOG.RETENTION.001) and KMS
+    encryption (see CTL.ECS.LOG.ENCRYPT.001). Verify that
+    every exec session opens a log stream and that command
+    output is captured.
   example: |
     {
       "container": {
         "kind": "ecs_service",
         "exec": {
+          "enabled": true,
           "audit_logging_enabled": true
         }
       }
@@ -43,7 +61,7 @@ unsafe_predicate:
     - field: properties.container.kind
       op: eq
       value: ecs_service
-    - field: properties.container.exec.enabled_in_production
+    - field: properties.container.exec.enabled
       op: eq
       value: true
     - field: properties.container.exec.audit_logging_enabled

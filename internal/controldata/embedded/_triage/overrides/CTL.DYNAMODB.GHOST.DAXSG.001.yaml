@@ -1,0 +1,33 @@
+control: CTL.DYNAMODB.GHOST.DAXSG.001
+defect: >
+  DAX cluster's network configuration
+  references one or more deleted security
+  groups.
+infection: >
+  Security groups are evaluated as a union —
+  the effective rule set is the union of all
+  SGs attached to the resource. When one of
+  the SGs is deleted, AWS silently drops it
+  from the effective rule set, so the
+  cluster's network behavior changes
+  abruptly with no configuration-side signal
+  that anything happened. Two paths from
+  there. If the deleted SG carried the
+  inbound rules the application relied on,
+  the application starts seeing connection
+  refusals to DAX at the network layer
+  (timeouts on first connection, no
+  CloudTrail event explaining why). If the
+  deleted SG was a tightening overlay (a
+  least-privilege SG layered onto a more
+  permissive default), removing it widens
+  the access surface. Same shape as every
+  other SG ghost reference in the catalog
+  (RDS, EC2 launch templates, Lambda VPC) —
+  silent state change at the network layer,
+  failure mode depends on which side of the
+  rule the deleted SG was on.
+failure: >
+  Cluster network rules silently changed.
+  Either the application can't reach DAX, or
+  unintended workloads now can.

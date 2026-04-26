@@ -1,0 +1,34 @@
+control: CTL.DYNAMODB.ENCRYPT.DAX.MISMATCH.001
+defect: >
+  DynamoDB table and its DAX cluster have
+  inconsistent encryption posture (typically
+  CMK on the table, no encryption on DAX).
+infection: >
+  Encryption choices made at the table layer
+  imply a security threshold for the data:
+  CMK encryption says "this data needs
+  key-policy-controlled encryption at rest."
+  DAX caches the most frequently accessed
+  rows from that table. If the table layer is
+  CMK and the DAX layer is unencrypted, the
+  hottest data — by definition the data the
+  application reads most — is stored at the
+  layer with no encryption. The table's CMK
+  decision is undermined every time DAX
+  serves a read, because the bytes the
+  application sees came from the unencrypted
+  cache layer, not the encrypted table layer.
+  The fix is to bring DAX's posture in line
+  with the table's. DAX encryption-at-rest
+  must be enabled at cluster creation, so
+  remediation requires a maintenance window —
+  but the alternative is a permanent
+  inconsistency between the operator's
+  declared encryption baseline and the
+  layer the application actually reads
+  through.
+failure: >
+  Encryption baseline undermined at the
+  hot-path layer. CMK at the table is moot
+  when DAX serves every cached read in
+  plaintext.

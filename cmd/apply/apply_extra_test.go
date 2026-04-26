@@ -249,6 +249,30 @@ func TestReporter_ReportApply_Quiet(t *testing.T) {
 	}
 }
 
+// TestReporter_ReportApply_QuietStillGates locks in the contract that
+// run_standard.go's --new-only path relies on: with Quiet=true and an
+// NON_COMPLIANT result, ReportApply must still return ErrViolationsFound
+// so the CLI exits non-zero. The new-only path uses Quiet=true on the
+// gate Reporter to suppress the duplicate user-facing summary while
+// preserving exit-code gating.
+func TestReporter_ReportApply_QuietStillGates(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	r := &Reporter{
+		Stdout:  &stdout,
+		Stderr:  &stderr,
+		Runtime: ui.NewRuntime(&stdout, &stderr),
+		Quiet:   true,
+	}
+	res := EvaluateResult{SecurityState: evaluation.StateNonCompliant}
+	err := r.ReportApply(res, evaluation.EnforcementPolicy{})
+	if !errors.Is(err, ui.ErrViolationsFound) {
+		t.Fatalf("expected ErrViolationsFound under Quiet=true, got: %v", err)
+	}
+	if stderr.Len() != 0 {
+		t.Fatalf("expected no output in quiet mode, got: %s", stderr.String())
+	}
+}
+
 // --- printReadinessIssue ---
 
 func TestPrintReadinessIssue(t *testing.T) {

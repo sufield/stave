@@ -1,0 +1,32 @@
+control: CTL.DYNAMODB.GHOST.DAXSUBNET.001
+defect: >
+  DAX cluster's subnet group includes
+  one or more deleted subnets.
+infection: >
+  DAX places its nodes in subnets specified
+  by the cluster's subnet group. AWS picks
+  which specific subnet(s) each node lands
+  in based on availability and AZ
+  distribution. When one of the listed
+  subnets has been deleted, AWS can still
+  place new nodes in the remaining subnets —
+  but if the cluster is configured to spread
+  across AZs and the deleted subnet was the
+  only one in its AZ, the AZ is effectively
+  removed from the cluster's availability.
+  Existing nodes continue to serve traffic
+  while they're alive. Failure surfaces on
+  the next replacement event: instance-level
+  failure, AWS-side maintenance, scheduled
+  upgrades, or operator-initiated replacement.
+  The replacement attempt fails, and the
+  cluster runs at reduced capacity until the
+  subnet group is repaired. Same shape as
+  other ghost references — config intact,
+  failure delayed, attribution hard once
+  enough time has passed between deletion
+  and the first failed replacement.
+failure: >
+  Delayed replacement failure. Cluster runs
+  fine until a node needs to be replaced,
+  then degrades to reduced or zero capacity.

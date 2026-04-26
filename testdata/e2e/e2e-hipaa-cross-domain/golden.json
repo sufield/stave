@@ -228,36 +228,6 @@
       "threshold_hours": 168
     },
     {
-      "control_id": "CTL.K8S.AUDIT.001",
-      "asset_id": "eks-prod-cluster",
-      "asset_type": "k8s_cluster",
-      "status": "UPCOMING",
-      "due_at": "2026-01-17T00:00:00Z",
-      "remaining_hours": 48,
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.K8S.NETPOL.001",
-      "asset_id": "ns-phi-workloads",
-      "asset_type": "k8s_namespace",
-      "status": "UPCOMING",
-      "due_at": "2026-01-17T00:00:00Z",
-      "remaining_hours": 48,
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.K8S.SECRETS.ENCRYPT.001",
-      "asset_id": "eks-prod-cluster",
-      "asset_type": "k8s_cluster",
-      "status": "UPCOMING",
-      "due_at": "2026-01-17T00:00:00Z",
-      "remaining_hours": 48,
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
       "control_id": "CTL.KMS.POLICY.001",
       "asset_id": "phi-cmk",
       "asset_type": "aws_kms_key",

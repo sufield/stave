@@ -1,0 +1,34 @@
+control: CTL.DYNAMODB.DAX.SG.BROAD.001
+defect: >
+  DAX cluster security group accepts inbound
+  traffic from the whole VPC or from
+  0.0.0.0/0 rather than from specific
+  application security groups.
+infection: >
+  DAX's role is to be the application tier's
+  cache for a specific table. The legitimate
+  consumers are the application servers,
+  Lambda functions, or container tasks that
+  read from that table heavily enough to
+  benefit from caching. Every other workload
+  in the VPC has no business reaching DAX —
+  yet a 10.0.0.0/8 inbound rule opens DAX to
+  every EC2 instance, every container, every
+  database admin's bastion in the VPC. A
+  compromised resource elsewhere in the VPC
+  can connect to DAX and read whatever the
+  cache holds, which is the table's hottest
+  rows. The cached data leaks via the side
+  channel even if the underlying DynamoDB IAM
+  policy is correctly scoped — the cache
+  doesn't enforce DynamoDB's IAM at the
+  client level, it enforces network access
+  via SG. Tightening the SG to specific
+  application SGs costs a one-time
+  configuration change and removes the lateral
+  movement vector.
+failure: >
+  Cache contents accessible to any compromised
+  workload in the VPC. The DAX layer has
+  weaker access boundary than the application
+  consuming it.

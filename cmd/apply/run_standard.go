@@ -88,8 +88,19 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 	}
 
 	// Signal-filtered output: --new-only or --new-since.
+	// The signal view replaces the standard reporter's user-facing
+	// summary, but the gating semantics — exit non-zero on
+	// violations / SLA breach — must still apply, otherwise CI runs
+	// with --new-only would pass on every active finding.
 	if opts.NewOnly || opts.NewSince != "" {
-		return runNewOnlyOutput(ctx, sio.Stdout, sio.Stderr, opts, results)
+		if err := runNewOnlyOutput(ctx, sio.Stdout, sio.Stderr, opts, results); err != nil {
+			return err
+		}
+		gate := &Reporter{Stdout: sio.Stdout, Stderr: sio.Stderr, Runtime: rt, Quiet: true}
+		if err := gate.ReportApply(results, evaluation.EnforcementPolicy{}); err != nil {
+			return err
+		}
+		return checkSLAPolicy(sio.Stderr, opts.SLAPolicy, results, true)
 	}
 
 	rep := &Reporter{Stdout: sio.Stdout, Stderr: sio.Stderr, Runtime: rt, Quiet: sio.Quiet}

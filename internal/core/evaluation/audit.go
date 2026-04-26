@@ -137,9 +137,9 @@ func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs
 				continue
 			}
 			total++
-			totalCitations++
 			if !failingIDs.Contains(ctlID) {
 				passing++
+				totalCitations++
 			}
 		}
 		pct := 100

@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.DAX.ROLE.BROAD.001
+name: DAX Cluster IAM Role Has Excessive DynamoDB Permissions
+description: >
+  DAX cluster's IAM service role has permissions beyond what's
+  needed for the tables it caches — typically dynamodb:* on
+  Resource: "*", or a wildcard table ARN. The DAX role's
+  legitimate need is read access (GetItem, Query, Scan,
+  BatchGetItem) and write-through access (PutItem, UpdateItem,
+  DeleteItem, BatchWriteItem) on the specific tables being
+  cached, scoped to those tables' ARNs. An overprivileged DAX
+  role means the cache layer carries broader database access
+  than the application it serves: a compromise of the DAX node
+  (via SG misconfiguration, a runtime vulnerability, or a
+  leaked credential) yields the role's full permission scope,
+  not just the cached table.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    DAX service role has dynamodb:* or wildcarded resources.
+    The cache layer's IAM scope exceeds what the cached tables
+    require.
+  action: >
+    Replace the DAX role's policy with explicit actions
+    (dynamodb:GetItem, Query, Scan, BatchGetItem,
+    DescribeTable, plus PutItem/UpdateItem/DeleteItem if
+    write-through is configured) scoped to the specific table
+    ARN(s) the cluster caches. Avoid Resource: "*" on
+    DynamoDB actions in this role.
+  example: |
+    {
+      "database": {
+        "kind": "dynamodb_dax_cluster",
+        "dynamodb": {
+          "dax": {
+            "role_has_wildcard": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dynamodb_dax_cluster
+    - field: properties.database.dynamodb.dax.role_has_wildcard
+      op: eq
+      value: true

@@ -122,6 +122,16 @@ var DefaultFieldRegistry = FieldRegistry{
 	"database.encryption.sse_type":               "the database SSE type",
 	"database.backup.enabled":                    "automated backups are enabled on the database",
 	"database.logging.audit_log_enabled":         "database audit logging is enabled",
+	"database.dynamodb.has_dax":                  "the table is paired with a DAX cluster",
+	"database.dynamodb.encryption_mismatch":      "the table and its DAX cluster have inconsistent encryption posture",
+	"database.dynamodb.dax.encrypted_at_rest":    "the DAX cluster is encrypted at rest",
+	"database.dynamodb.dax.tls_enabled":          "the DAX cluster enforces TLS for client connections",
+	"database.dynamodb.dax.sg_allows_broad":      "the DAX cluster's SG accepts traffic from a broad CIDR",
+	"database.dynamodb.dax.single_node":          "the DAX cluster has only one node",
+	"database.dynamodb.dax.role_has_wildcard":    "the DAX service role has wildcard DynamoDB permissions",
+	"database.dynamodb.dax.has_ghost_role":       "the DAX cluster's service role has been deleted",
+	"database.dynamodb.dax.has_ghost_subnet":     "the DAX cluster's subnet group references a deleted subnet",
+	"database.dynamodb.dax.has_ghost_sg":         "the DAX cluster references a deleted security group",
 
 	// --- compute (Lambda / EC2 / ECS) ---
 	"compute.execution_role.is_overprivileged":                    "the compute execution role is over-privileged",
@@ -157,6 +167,7 @@ var DefaultFieldRegistry = FieldRegistry{
 	"container.alarms.running_task_count_alarm":                   "a CloudWatch alarm watches the service's RunningTaskCount",
 	"container.alarms.failed_launch_alarm":                        "a CloudWatch alarm watches ECS task launch failures",
 	"container.cluster_config.allows_docker_socket_mount":         "the cluster configuration permits Docker socket mounts from tasks",
+	"container.exec.enabled":                                      "ECS Exec is enabled on the service",
 
 	// --- network ---
 	"network.flow_log.enabled": "VPC Flow Logs are enabled",

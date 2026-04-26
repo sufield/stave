@@ -45,71 +45,50 @@ func BuildLifecyclesPerControl(
 	return lifecyclesByControl, nil
 }
 
-// controlVendorIndex maps vendor strings to the indices of controls
-// whose scope tags include that vendor. Controls with no scope tags
-// are treated as universal (applicable to all vendors).
+// controlVendorIndex memoizes the per-vendor list of applicable
+// controls. Membership is computed via kernel.AppliesToVendor —
+// the single source of truth for the vendor-applicability
+// heuristic shared with the risk pipeline.
 type controlVendorIndex struct {
-	byVendor  map[string][]int                      // vendor string → control indices
-	universal []int                                 // controls with no scope tags
-	cache     map[string][]policy.ControlDefinition // vendor → cached result
+	stringTags [][]string                            // per-control pre-stringified scope tags
+	cache      map[string][]policy.ControlDefinition // vendor → cached result
 }
 
 func buildControlVendorIndex(controls []policy.ControlDefinition) controlVendorIndex {
-	idx := controlVendorIndex{
-		byVendor: make(map[string][]int),
-		cache:    make(map[string][]policy.ControlDefinition),
-	}
+	stringTags := make([][]string, len(controls))
 	for i := range controls {
-		ctl := &controls[i]
-		if len(ctl.ScopeTags) == 0 {
-			idx.universal = append(idx.universal, i)
+		tags := controls[i].ScopeTags
+		if len(tags) == 0 {
 			continue
 		}
-		added := false
-		for _, tag := range ctl.ScopeTags {
-			s := string(tag)
-			// Vendor tags are short identifiers like "aws", "gcp", "azure".
-			if len(s) <= 10 {
-				idx.byVendor[s] = append(idx.byVendor[s], i)
-				added = true
-			}
+		s := make([]string, len(tags))
+		for j, t := range tags {
+			s[j] = string(t)
 		}
-		if !added {
-			idx.universal = append(idx.universal, i)
-		}
+		stringTags[i] = s
 	}
-	return idx
+	return controlVendorIndex{
+		stringTags: stringTags,
+		cache:      make(map[string][]policy.ControlDefinition),
+	}
 }
 
 func (idx controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.ControlDefinition) []policy.ControlDefinition {
 	vendorStr := string(vendor)
 
-	// Return cached result if available — avoids per-asset allocation.
+	// Return cached result if available — avoids per-asset
+	// re-evaluation of the heuristic.
 	if cached, ok := idx.cache[vendorStr]; ok {
 		return cached
 	}
 
-	indices := idx.byVendor[vendorStr]
-	if len(indices) == 0 && len(idx.universal) == 0 {
-		return all // no index data — fall back to full scan
-	}
-
-	seen := make(map[int]bool, len(indices)+len(idx.universal))
-	result := make([]policy.ControlDefinition, 0, len(indices)+len(idx.universal))
-	for _, i := range indices {
-		if !seen[i] {
-			seen[i] = true
-			result = append(result, all[i])
-		}
-	}
-	for _, i := range idx.universal {
-		if !seen[i] {
-			seen[i] = true
+	var result []policy.ControlDefinition
+	for i := range all {
+		if kernel.AppliesToVendor(idx.stringTags[i], vendorStr) {
 			result = append(result, all[i])
 		}
 	}
 
-	// Cache for future calls with the same vendor.
 	if idx.cache != nil {
 		idx.cache[vendorStr] = result
 	}

@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1558
-**Pack hash:** `925cdfaa88aa5ba636c0f26ac644e4da86ffdeccdcab98aec63e9b6630229fb0`
+**Total controls:** 1566
+**Pack hash:** `4ad4a66edc79ff42710eb393cb8b5ed68155f6153d176c0278af3a7ab6d858c9`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 179 |
-| high | 686 |
+| critical | 180 |
+| high | 689 |
 | info | 16 |
 | low | 113 |
-| medium | 564 |
+| medium | 568 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,11 +23,11 @@
 | availability | 2 |
 | cryptography | 3 |
 | detection | 49 |
-| encryption | 89 |
+| encryption | 92 |
 | exposure | 886 |
-| governance | 82 |
+| governance | 86 |
 | hygiene | 16 |
-| identity | 332 |
+| identity | 333 |
 | network | 28 |
 | resilience | 18 |
 | secrets | 4 |
@@ -6633,6 +6633,81 @@ DynamoDB tables must be included in a backup plan.
 
 ---
 
+### CTL.DYNAMODB.DAX.ENCRYPT.REST.001
+
+**DAX Cluster Not Encrypted at Rest**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+DAX cluster does not have encryption at rest enabled. DAX caches the most frequently accessed items from a DynamoDB table — customer records, session state, lookup tables — in memory and may overflow to disk. Without encryption at rest, the cached data, which is by definition the hottest data the application reads, is stored unencrypted in the DAX cluster's memory and any disk overflow. DAX encryption at rest is a cluster creation-time setting and cannot be enabled on an existing cluster — remediation requires creating a new cluster and migrating the application.
+
+**Remediation:** Create a new DAX cluster with encryption at rest enabled (SSESpecification.Enabled=true on CreateCluster — choose a customer-managed KMS key for the strongest control). Migrate the application to the new cluster's endpoint, then delete the unencrypted cluster. Encryption cannot be enabled on an existing cluster, so a maintenance window is required.
+
+---
+
+### CTL.DYNAMODB.DAX.ENCRYPT.TRANSIT.001
+
+**DAX Cluster Does Not Enforce TLS for Client Connections**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+DAX cluster does not enforce TLS for connections from applications. DAX sits between every cached read/write and DynamoDB — every cache hit, every cache fill, every write- through traverses the connection between the application and the DAX cluster. Without TLS, all of this traffic is plaintext on the VPC network: cached item data (customer records, session tokens, application state), query parameters (partition keys and sort keys that may include user identifiers or business keys), and responses. Any process with network access to the DAX subnet can observe the traffic. TLS must be enabled at cluster creation; the cluster endpoint advertises whether it accepts TLS-only or accepts plaintext.
+
+**Remediation:** Create a new DAX cluster with ClusterEndpointEncryptionType set to TLS, then update the application's DAX client to point at the TLS endpoint. Existing clients that connected to the plaintext endpoint will need to update their connection configuration to use TLS-aware DAX clients. Encryption-in-transit cannot be enabled on an existing cluster — recreation is required.
+
+---
+
+### CTL.DYNAMODB.DAX.ROLE.BROAD.001
+
+**DAX Cluster IAM Role Has Excessive DynamoDB Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+DAX cluster's IAM service role has permissions beyond what's needed for the tables it caches — typically dynamodb:* on Resource: "*", or a wildcard table ARN. The DAX role's legitimate need is read access (GetItem, Query, Scan, BatchGetItem) and write-through access (PutItem, UpdateItem, DeleteItem, BatchWriteItem) on the specific tables being cached, scoped to those tables' ARNs. An overprivileged DAX role means the cache layer carries broader database access than the application it serves: a compromise of the DAX node (via SG misconfiguration, a runtime vulnerability, or a leaked credential) yields the role's full permission scope, not just the cached table.
+
+**Remediation:** Replace the DAX role's policy with explicit actions (dynamodb:GetItem, Query, Scan, BatchGetItem, DescribeTable, plus PutItem/UpdateItem/DeleteItem if write-through is configured) scoped to the specific table ARN(s) the cluster caches. Avoid Resource: "*" on DynamoDB actions in this role.
+
+---
+
+### CTL.DYNAMODB.DAX.SG.BROAD.001
+
+**DAX Cluster Security Group Allows Broad Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 1.4.2; soc2: CC6.6;
+
+DAX cluster security group accepts inbound traffic from the entire VPC CIDR (10.0.0.0/8 and similar) or from 0.0.0.0/0 rather than restricting to specific application security groups or subnets. DAX is a database cache — its access surface should be narrow: only the application tier that actually needs cached database access. A broad SG opens the cache to every workload in the VPC, so any compromised resource (a developer-tools EC2 instance, an unrelated service, a runaway batch job) can read cached database contents and replicate the access patterns of the legitimate application.
+
+**Remediation:** Replace broad CIDR rules with security-group references that name the application tier(s) that need DAX access. The SG rule should look like "from sg-app-tier on port 8111 (DAX), proto TCP" — not "from 10.0.0.0/8". For multi-tier applications with several legitimate consumers, list each consumer SG explicitly.
+
+---
+
+### CTL.DYNAMODB.DAX.SINGLENODE.001
+
+**DAX Cluster Has Single Node**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-10; nist_800_53_r5: CP-10; soc2: A1.2;
+
+DAX cluster has only one node — no replica, no failover. If the single node fails (instance failure, AZ outage, AWS maintenance), the cache disappears entirely and every request falls through to direct DynamoDB. For tables sized on the assumption that DAX absorbs most reads, the fall-through traffic can exceed the table's provisioned capacity and trigger throttling, cascading into application- visible latency or errors. A multi-node cluster (typically three nodes spread across AZs) preserves the cache through any single-node failure: one node loss reduces cache capacity but doesn't lose the cache entirely.
+
+**Remediation:** Resize the cluster to at least three nodes spread across AZs (UpdateCluster --replication-factor=3 plus subnet group covering multiple AZs). For smaller workloads where cost matters, two nodes is the minimum that survives single-node failure. Verify the table's provisioned capacity (or on-demand mode) is sized for the worst-case scenario where DAX is gone — even with HA DAX, transient fallthrough during failover is normal.
+
+---
+
 ### CTL.DYNAMODB.ENCRYPT.001
 
 **DynamoDB Must Use Customer-Managed KMS Encryption**
@@ -6645,6 +6720,66 @@ DynamoDB tables must be included in a backup plan.
 DynamoDB tables must use a customer-managed KMS key for encryption at rest. The default AWS-owned key does not support key revocation, audit of key usage, or cross-account key policies.
 
 **Remediation:** Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:...
+
+---
+
+### CTL.DYNAMODB.ENCRYPT.DAX.MISMATCH.001
+
+**DynamoDB Table and DAX Cluster Encryption Posture Mismatch**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** fedramp_moderate: SC-28; nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+DynamoDB table is paired with a DAX cluster, and the two layers have inconsistent encryption posture — typically the table is encrypted with a customer-managed KMS key while the DAX cache is not encrypted at rest, or vice versa. The most frequently accessed data lives in DAX. If DAX is unencrypted while the table is encrypted, the hottest rows have the weakest protection — operators who chose CMK at the table layer have implicitly accepted plaintext storage at the cache layer that fronts every read. The intent of the table- level encryption is undermined by the cache layer's looser posture. The control fires only on tables that have a DAX cluster (kind gate); tables with no DAX have no mismatch surface.
+
+**Remediation:** Bring the DAX cluster's encryption posture in line with the table's: enable encryption at rest on DAX (cluster recreation required — see CTL.DYNAMODB.DAX.ENCRYPT.REST.001) so the cache layer matches or exceeds the table's protection. If the table's CMK choice was the wrong layer (rare), align in the other direction by relaxing the table — but this typically means the original CMK decision was unjustified rather than the DAX gap acceptable.
+
+---
+
+### CTL.DYNAMODB.GHOST.DAXROLE.001
+
+**DAX Cluster References Deleted IAM Role**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC8.1;
+
+DAX cluster's service role IAM ARN references a role that has been deleted. DAX uses this role for every DynamoDB call it makes — every cache miss, every cache fill, every write-through. With the role gone, DAX cannot perform DynamoDB operations and returns errors on every call. The failure mode is progressive rather than immediate: cache hits continue to work because the data is already in DAX memory, but cache misses fail with AccessDeniedException as DAX tries to read from DynamoDB using the deleted role. As cached items expire (TTL or eviction), the rate of cache misses rises, and the application's error rate rises with it. The progression goes from "occasional unexplained errors" to "everything fails" over the cache TTL window — minutes for short TTLs, hours for long ones.
+
+**Remediation:** Re-create the role with the trust policy (dax.amazonaws.com) and the table-scoped DynamoDB permissions DAX needs (GetItem, Query, Scan, BatchGetItem plus PutItem/UpdateItem/DeleteItem if write-through is on). Or update the DAX cluster to reference an existing role with the same scope. Add a deletion guard on IAM roles that cross-references active DAX clusters before allowing the role to be deleted.
+
+---
+
+### CTL.DYNAMODB.GHOST.DAXSG.001
+
+**DAX Cluster References Deleted Security Group**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+DAX cluster's network configuration references a security group that has been deleted. The cluster's network access rules are now undefined: AWS-side behavior on deleted SG references is to silently drop the SG from the effective rule set, so what looked like a tightly-scoped DAX configuration may now be effectively unrestricted (if no other SGs remain on the cluster) or effectively inaccessible (if the deleted SG was the only one allowing application traffic). Same ghost-reference pattern as the other SG ghosts in the catalog — CTL.RDS.GHOST.SG.001, CTL.EC2.LT.GHOST.SG.001, CTL.LAMBDA.GHOST.VPC.001 — applied to the DAX surface.
+
+**Remediation:** Update the cluster's SG list to remove deleted SG IDs. Verify the remaining SGs still allow the application traffic the cluster needs (or add replacements if the deleted SG carried the only inbound rule). Add a deletion guard on security groups that cross-references active DAX clusters before allowing the SG to be deleted.
+
+---
+
+### CTL.DYNAMODB.GHOST.DAXSUBNET.001
+
+**DAX Cluster References Deleted Subnet Group**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+DAX cluster's subnet group references one or more subnets that have been deleted from the VPC. DAX nodes placed in the deleted subnets cannot be replaced — if a node fails or AWS performs maintenance that requires node replacement, the new node has nowhere to go. Existing nodes continue to serve traffic until they need to be replaced; from that point, the cluster degrades. Multi-node clusters degrade gracefully (one node loss reduces capacity but doesn't empty the cache); single-node clusters fail entirely. The failure mode is identical to the other ghost-reference cases — config intact, target deleted, surface only on next replacement event.
+
+**Remediation:** Update the subnet group to remove deleted subnet IDs and add replacement subnets in the same AZs as the deleted ones. If the original VPC layout was intentionally decommissioned, redeploy the DAX cluster into the new subnet topology rather than patching a stale subnet group. Add a deletion guard on subnets that cross-references active DAX clusters before allowing the subnet to be deleted.
 
 ---
 
@@ -7984,12 +8119,12 @@ ECS cluster's EC2 launch type configuration permits tasks to mount the Docker so
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-17; hipaa: 164.312(a)(1); nist_800_53_r5: AC-17; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-17; hipaa: 164.312(a)(1); mitre_attack: T1059; nist_800_53_r5: AC-17; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
-ECS services in production environments must not have enableExecuteCommand: true. ECS Exec provides interactive shell access to running containers — an always-available persistence and lateral movement primitive for any IAM principal with ecs:ExecuteCommand permission. Intended for debugging, it creates a direct access path to production container runtime, filesystem, secrets, and execution role credentials.
+ECS Exec allows running interactive shell commands in running ECS containers via `aws ecs execute-command`. When enabled on a production service, any IAM principal with ecs:ExecuteCommand can run arbitrary commands inside production containers — equivalent to SSH access. The shell session has the container's filesystem, environment variables (including injected secrets), and the task role's AWS credentials. Attackers with IAM access can use it to establish persistence, exfiltrate data, or pivot to other services reachable from the container's network. Intended for debugging, exec on production removes a layer of separation between operator intent and runtime modification.
 
-**Remediation:** Disable ECS Exec on production services via aws ecs update-service --enable-execute-command false.
+**Remediation:** Disable ECS Exec on production services: aws ecs update-service --cluster <cluster> --service <service> --no-enable-execute-command --force-new-deployment. Restrict ecs:ExecuteCommand via IAM policy to break-glass roles with MFA enforcement; audit usage with CTL.ECS.EXEC.AUDIT.001.
 
 ---
 
@@ -8000,26 +8135,11 @@ ECS services in production environments must not have enableExecuteCommand: true
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+- **Compliance:** fedramp_moderate: AU-2; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.1;
 
-When ECS Exec is enabled, audit logging must be configured to capture all Exec sessions. ECS Exec provides interactive shell access to running containers, including access to the task metadata credential endpoint. Without audit logging, an operator or attacker using Exec leaves no trace of commands executed or credentials accessed.
+When ECS Exec is enabled on any service — production or non-production — audit logging must be configured to capture every Exec session. ECS Exec provides interactive shell access to running containers, including read access to the task metadata credential endpoint. Without audit logging, an operator or attacker using Exec leaves no trace of commands executed, files read, or credentials accessed. The control fires whenever exec is enabled and audit logging is off, regardless of environment — a compromised non-production container with unaudited exec is still an unaudited compromise, and dev environments are where attackers pivot from when the prod environment is hardened. Distinct from CTL.ECS.EXEC.001, which gates exec on production specifically; this control gates audit on exec itself.
 
-**Remediation:** Configure ECS Exec audit logging to CloudWatch Logs or S3. Enable session logging in the cluster Execute Command configuration.
-
----
-
-### CTL.ECS.EXEC.RESTRICT.001
-
-**ECS Exec Must Be Disabled on Production Services**
-
-- **Severity:** high
-- **Type:** unsafe_state
-- **Domain:** governance
-- **Compliance:** mitre_attack: T1059; nist_800_53_r5: AC-3;
-
-ECS Exec allows running interactive shell commands in running ECS containers via aws ecs execute-command. When enabled, any principal with ecs:ExecuteCommand permission can run arbitrary commands in production containers — equivalent to SSH access. ECS Exec has legitimate debugging use in development, but in production it represents an unnecessary execution vector. Attackers with IAM access can use it to establish persistence, exfiltrate data, or pivot to other services accessible from the container's network.
-
-**Remediation:** Disable ECS Exec on production services: aws ecs update-service --cluster <cluster> --service <service> --no-enable-execute-command --force-new-deployment. Restrict ecs:ExecuteCommand via IAM policy to break-glass roles with MFA enforcement.
+**Remediation:** Configure ECS Exec audit logging on the cluster: aws ecs update-cluster --cluster <name> --configuration executeCommandConfiguration={logging=OVERRIDE,logConfiguration={cloudWatchLogGroupName=...}}. Route the logs to a CloudWatch log group with adequate retention (see CTL.ECS.LOG.RETENTION.001) and KMS encryption (see CTL.ECS.LOG.ENCRYPT.001). Verify that every exec session opens a log stream and that command output is captured.
 
 ---
 

@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.DAX.ENCRYPT.REST.001
+name: DAX Cluster Not Encrypted at Rest
+description: >
+  DAX cluster does not have encryption at rest enabled. DAX caches
+  the most frequently accessed items from a DynamoDB table —
+  customer records, session state, lookup tables — in memory and
+  may overflow to disk. Without encryption at rest, the cached
+  data, which is by definition the hottest data the application
+  reads, is stored unencrypted in the DAX cluster's memory and
+  any disk overflow. DAX encryption at rest is a cluster
+  creation-time setting and cannot be enabled on an existing
+  cluster — remediation requires creating a new cluster and
+  migrating the application.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+  pci_dss_v4.0: "3.5.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    DAX cluster has no encryption at rest. Hot table data is
+    cached unencrypted in cluster memory.
+  action: >
+    Create a new DAX cluster with encryption at rest enabled
+    (SSESpecification.Enabled=true on CreateCluster — choose a
+    customer-managed KMS key for the strongest control).
+    Migrate the application to the new cluster's endpoint, then
+    delete the unencrypted cluster. Encryption cannot be enabled
+    on an existing cluster, so a maintenance window is required.
+  example: |
+    {
+      "database": {
+        "kind": "dynamodb_dax_cluster",
+        "dynamodb": {
+          "dax": {
+            "encrypted_at_rest": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dynamodb_dax_cluster
+    - field: properties.database.dynamodb.dax.encrypted_at_rest
+      op: eq
+      value: false

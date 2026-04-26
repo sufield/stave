@@ -46,3 +46,46 @@ func (v *Vendor) UnmarshalJSON(b []byte) error {
 func (v Vendor) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.String())
 }
+
+// AppliesToVendor reports whether a control with the given scope tags
+// applies to an asset of the given vendor.
+//
+// Heuristic:
+//   - A control with no scope tags is universal — applies to every
+//     vendor (returns true).
+//   - A scope tag is treated as a vendor identifier when it is short
+//     (≤10 characters). Vendor identifiers in the catalog look like
+//     "aws", "gcp", "azure", "kubernetes" — never longer.
+//   - Longer tags are domain or feature tags ("apigateway",
+//     "supply-chain", "kubernetes-runtime") and are ignored by this
+//     check.
+//   - If at least one vendor-shaped tag (≤10 chars) is present and
+//     none equals the asset's vendor, the control does NOT apply.
+//   - If no vendor-shaped tag is present at all, the control is
+//     treated as universal — same as having no scope tags.
+//
+// This is the single source of truth for vendor applicability.
+// Both the engine pipeline (engine/lifecycles.go) and the risk
+// pipeline (risk/upcoming.go) call it so the two pipelines cannot
+// drift on the heuristic.
+//
+// An empty vendor never matches a vendor-shaped tag and falls
+// through to the universal-or-none branch — empty vendor against
+// no vendor tags returns true (universal); empty vendor against
+// any vendor tag returns false (no match).
+func AppliesToVendor(scopeTags []string, vendor string) bool {
+	if len(scopeTags) == 0 {
+		return true
+	}
+	hasVendorTag := false
+	for _, tag := range scopeTags {
+		if len(tag) > 10 {
+			continue
+		}
+		hasVendorTag = true
+		if tag == vendor {
+			return true
+		}
+	}
+	return !hasVendorTag
+}

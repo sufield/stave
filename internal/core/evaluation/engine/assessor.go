@@ -288,12 +288,17 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	)
 
 	// Calculate environmental risk based on pending violations.
+	// Pass Exemptions so the risk pipeline filters exempted assets
+	// the same way the main finding pipeline does — otherwise an
+	// exempted asset can still flip overall posture to AT_RISK
+	// through risk signals.
 	riskSignals := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                s.assessor.Controls,
 		Snapshots:               s.snapshots,
 		GlobalMaxUnsafeDuration: s.assessor.SLAThreshold,
 		Now:                     s.auditTime,
 		PredicateEval:           s.assessor.PredicateEval,
+		Exemptions:              s.assessor.Exemptions,
 	})
 
 	posture := evaluation.DeriveSecurityState(len(activeFindings), riskSignals)

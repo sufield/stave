@@ -68,13 +68,14 @@ func (a *qualityAssessor) checkCount() {
 		return
 	}
 
+	minSnapshots := params.MinSnapshots
 	a.report.addIssue(
 		"TOO_FEW_SNAPSHOTS",
 		severityError,
 		fmt.Sprintf("Need at least %d snapshots, found %d.", params.MinSnapshots, snapshotCount),
 		&issueEvidence{
-			MinSnapshots: new(params.MinSnapshots),
-			Actual:       new(snapshotCount),
+			MinSnapshots: &minSnapshots,
+			Actual:       &snapshotCount,
 		},
 	)
 }

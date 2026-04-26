@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.DAX.SINGLENODE.001
+name: DAX Cluster Has Single Node
+description: >
+  DAX cluster has only one node — no replica, no failover. If
+  the single node fails (instance failure, AZ outage, AWS
+  maintenance), the cache disappears entirely and every
+  request falls through to direct DynamoDB. For tables sized
+  on the assumption that DAX absorbs most reads, the
+  fall-through traffic can exceed the table's provisioned
+  capacity and trigger throttling, cascading into application-
+  visible latency or errors. A multi-node cluster (typically
+  three nodes spread across AZs) preserves the cache through
+  any single-node failure: one node loss reduces cache
+  capacity but doesn't lose the cache entirely.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  fedramp_moderate: "CP-10"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-01"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    DAX cluster has a single node. Node failure causes total
+    cache loss and direct-DynamoDB fall-through.
+  action: >
+    Resize the cluster to at least three nodes spread across
+    AZs (UpdateCluster --replication-factor=3 plus subnet
+    group covering multiple AZs). For smaller workloads where
+    cost matters, two nodes is the minimum that survives
+    single-node failure. Verify the table's provisioned
+    capacity (or on-demand mode) is sized for the worst-case
+    scenario where DAX is gone — even with HA DAX, transient
+    fallthrough during failover is normal.
+  example: |
+    {
+      "database": {
+        "kind": "dynamodb_dax_cluster",
+        "dynamodb": {
+          "dax": {
+            "single_node": false,
+            "node_count": 3
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dynamodb_dax_cluster
+    - field: properties.database.dynamodb.dax.single_node
+      op: eq
+      value: true

@@ -1,0 +1,32 @@
+control: CTL.DYNAMODB.DAX.ENCRYPT.REST.001
+defect: >
+  DAX cluster does not have encryption at rest
+  enabled.
+infection: >
+  DAX is a write-through cache for DynamoDB —
+  the cache's job is to hold the items the
+  application reads most often, so by
+  construction the contents are the hottest
+  data in the table. Customer records, session
+  tokens, lookup data, application state — all
+  of it sits in DAX memory because the
+  application reads it constantly. Without
+  encryption at rest, that cached data is
+  stored without encryption: in the cluster's
+  RAM, in any disk-overflow regions DAX uses
+  for items beyond the in-memory tier, and in
+  any storage AWS uses behind the cluster.
+  Encryption at rest is a cluster-creation
+  setting on DAX — there is no "enable
+  encryption now" operation on an existing
+  cluster. Remediation requires creating a new
+  cluster with encryption enabled, switching
+  the application's DAX endpoint, and deleting
+  the old unencrypted cluster. The migration is
+  feasible but requires planning and a
+  maintenance window.
+failure: >
+  Hot table data cached unencrypted. The most
+  frequently accessed items in the database
+  are stored in the cache layer with the
+  weakest encryption posture.

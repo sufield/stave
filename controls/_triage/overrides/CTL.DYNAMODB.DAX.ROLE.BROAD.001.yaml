@@ -1,0 +1,32 @@
+control: CTL.DYNAMODB.DAX.ROLE.BROAD.001
+defect: >
+  DAX cluster's IAM service role has wildcard
+  actions or wildcard resources on DynamoDB —
+  typically dynamodb:* on "*".
+infection: >
+  The DAX role is what DAX uses to read from
+  and (when write-through is configured)
+  write to DynamoDB on behalf of the
+  application. Its legitimate need is narrow:
+  the read API operations on the specific
+  tables being cached, plus optionally the
+  write API operations if write-through is
+  on. dynamodb:* on "*" gives the role
+  permission to manipulate every DynamoDB
+  resource in the account — every table,
+  every backup, every global table relationship,
+  every export. A compromise of the DAX
+  cluster (via the SG-broad pathway, via an
+  AWS-side vulnerability, via a leaked role
+  credential through metadata access) yields
+  this full scope. Scoping the role to the
+  specific tables and the specific actions
+  costs nothing operationally — DAX's
+  performance doesn't change with a tighter
+  policy — and bounds the blast radius of
+  any cluster-side compromise.
+failure: >
+  Cache layer carries broader database access
+  than the application. Compromise of DAX
+  yields wildcarded DynamoDB access across
+  the account.

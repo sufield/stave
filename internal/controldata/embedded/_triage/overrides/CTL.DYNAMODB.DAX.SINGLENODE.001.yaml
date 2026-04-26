@@ -1,0 +1,31 @@
+control: CTL.DYNAMODB.DAX.SINGLENODE.001
+defect: >
+  DAX cluster has only one node. No replica
+  exists; node failure means total cache loss.
+infection: >
+  A single-node DAX cluster is a single point
+  of failure for the table's read path.
+  AWS-side maintenance, AZ outages, or
+  instance-level failures all take the cache
+  offline. Two operational consequences
+  follow. First, the cache disappears
+  entirely — every cached read becomes a
+  direct DynamoDB read until the cache warms
+  up again. Second, the table's provisioned
+  capacity may not be sized for the
+  fall-through load: a service that runs at
+  10% of DynamoDB capacity because DAX
+  absorbs the rest can trip into throttling
+  the moment the cache vanishes, producing
+  application-visible latency or errors.
+  Multi-node DAX (typically three nodes
+  across AZs) preserves the cache through
+  single-node failures — one node loss
+  reduces capacity but doesn't empty the
+  cache. The cost difference between one and
+  three nodes is real but small relative to
+  the availability gain.
+failure: >
+  Single point of failure on the read path.
+  Node failure cascades into table throttling
+  and application-visible errors.

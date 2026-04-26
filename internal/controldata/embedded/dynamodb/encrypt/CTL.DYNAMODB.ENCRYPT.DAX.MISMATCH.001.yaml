@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.ENCRYPT.DAX.MISMATCH.001
+name: DynamoDB Table and DAX Cluster Encryption Posture Mismatch
+description: >
+  DynamoDB table is paired with a DAX cluster, and the two
+  layers have inconsistent encryption posture — typically the
+  table is encrypted with a customer-managed KMS key while the
+  DAX cache is not encrypted at rest, or vice versa. The most
+  frequently accessed data lives in DAX. If DAX is unencrypted
+  while the table is encrypted, the hottest rows have the
+  weakest protection — operators who chose CMK at the table
+  layer have implicitly accepted plaintext storage at the
+  cache layer that fronts every read. The intent of the table-
+  level encryption is undermined by the cache layer's looser
+  posture. The control fires only on tables that have a DAX
+  cluster (kind gate); tables with no DAX have no mismatch
+  surface.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+  pci_dss_v4.0: "3.5.1"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Table and DAX have inconsistent encryption posture. The
+    cache layer fronts every read; weakening it weakens the
+    table-level encryption decision.
+  action: >
+    Bring the DAX cluster's encryption posture in line with
+    the table's: enable encryption at rest on DAX (cluster
+    recreation required — see
+    CTL.DYNAMODB.DAX.ENCRYPT.REST.001) so the cache layer
+    matches or exceeds the table's protection. If the table's
+    CMK choice was the wrong layer (rare), align in the other
+    direction by relaxing the table — but this typically
+    means the original CMK decision was unjustified rather
+    than the DAX gap acceptable.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "has_dax": true,
+          "encryption_mismatch": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.has_dax
+      op: eq
+      value: true
+    - field: properties.database.dynamodb.encryption_mismatch
+      op: eq
+      value: true

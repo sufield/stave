@@ -1,0 +1,39 @@
+control: CTL.DYNAMODB.GHOST.DAXROLE.001
+defect: >
+  DAX cluster's service role IAM ARN
+  references a role that has been deleted.
+infection: >
+  The DAX service role is DAX's identity for
+  reading from and writing to DynamoDB. When
+  the role is deleted, the failure mode is
+  unusual among ghost references: it is
+  progressive rather than immediate. Cache
+  hits continue to work because DAX serves
+  them from memory without calling DynamoDB —
+  the role is not in the path. Cache misses
+  fail because DAX tries to read from
+  DynamoDB to fill the miss, and the role's
+  AssumeRole call returns
+  InvalidIdentityToken or
+  AccessDeniedException. Initially, only a
+  few percent of requests hit cache misses,
+  so only a few percent fail. As cached
+  items expire (TTL) or are evicted (size
+  pressure), the cache shrinks and miss rate
+  climbs. The failure rate climbs with it.
+  Over the cache TTL horizon — minutes for
+  short TTLs, hours for long — the rate
+  approaches 100% as the cache empties to
+  nothing. Operators see "intermittent
+  errors that get worse over time" without
+  an obvious cause, because the metric that
+  would explain it (DynamoDB API errors from
+  the DAX role) is in CloudTrail rather than
+  the application's error budget. The same
+  shape as other ghost references but with
+  a slow-burn failure curve unique to caches.
+failure: >
+  Progressive cache failure. Hit rate falls,
+  miss-failure rate rises, application error
+  rate climbs toward 100% as the cache
+  empties.

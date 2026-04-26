@@ -155,11 +155,16 @@ func (l *ExposureLifecycle) handleSecure(at time.Time) {
 }
 
 func (l *ExposureLifecycle) resolveTimestamp(at time.Time) time.Time {
-	if !l.lastObservedAt.IsZero() {
-		return l.lastObservedAt
-	}
+	// Prefer the secure-observation time itself: that is when the
+	// asset returned to a compliant state, per ExposureWindow.ResolvedAt
+	// docs. Falling back to lastObservedAt (the previous unsafe scan)
+	// would close the window at the last unsafe scan instead of the
+	// secure scan, undercounting dwell time by one scan interval.
 	if !at.IsZero() {
 		return at
+	}
+	if !l.lastObservedAt.IsZero() {
+		return l.lastObservedAt
 	}
 	if l.activeWindow != nil {
 		return l.activeWindow.OpenedAt()

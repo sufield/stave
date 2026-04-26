@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.GHOST.DAXSUBNET.001
+name: DAX Cluster References Deleted Subnet Group
+description: >
+  DAX cluster's subnet group references one or more subnets
+  that have been deleted from the VPC. DAX nodes placed in
+  the deleted subnets cannot be replaced — if a node fails or
+  AWS performs maintenance that requires node replacement,
+  the new node has nowhere to go. Existing nodes continue to
+  serve traffic until they need to be replaced; from that
+  point, the cluster degrades. Multi-node clusters degrade
+  gracefully (one node loss reduces capacity but doesn't
+  empty the cache); single-node clusters fail entirely. The
+  failure mode is identical to the other ghost-reference
+  cases — config intact, target deleted, surface only on
+  next replacement event.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "IVS-04"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    DAX subnet group references one or more deleted subnets.
+    Node replacement will fail.
+  action: >
+    Update the subnet group to remove deleted subnet IDs and
+    add replacement subnets in the same AZs as the deleted
+    ones. If the original VPC layout was intentionally
+    decommissioned, redeploy the DAX cluster into the new
+    subnet topology rather than patching a stale subnet
+    group. Add a deletion guard on subnets that
+    cross-references active DAX clusters before allowing
+    the subnet to be deleted.
+  example: |
+    {
+      "database": {
+        "kind": "dynamodb_dax_cluster",
+        "dynamodb": {
+          "dax": {
+            "has_ghost_subnet": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dynamodb_dax_cluster
+    - field: properties.database.dynamodb.dax.has_ghost_subnet
+      op: eq
+      value: true
