@@ -1,0 +1,37 @@
+control: CTL.DYNAMODB.ACCESS.EXPORT.001
+defect: >
+  IAM policy grants
+  dynamodb:ExportTableToPointInTime
+  without resource restriction.
+infection: >
+  ExportTableToPointInTime initiates a
+  continuous export of the table's entire
+  contents — all items, all attributes —
+  to an S3 bucket. Unlike GetItem or Query
+  (single item or predicate-filtered
+  results), Export retrieves the full
+  table in a single API call, producing
+  an S3 prefix with all data in DynamoDB
+  JSON or Amazon Ion format. The export
+  completes in minutes for most table
+  sizes. An unrestricted grant of this
+  permission means any principal bearing
+  the role or policy can export any
+  DynamoDB table in the account without
+  specifying which table. The exfiltration
+  operation does appear in CloudTrail
+  management events (unlike item-level
+  access, which requires data events) —
+  but the management event is
+  ExportTableToPointInTime, which sounds
+  operational rather than suspicious to
+  automated detection that doesn't know
+  what table was exported or where. The
+  export destination only needs to be an
+  S3 bucket the caller has PutObject
+  access to — which may include a bucket
+  controlled by the attacker.
+failure: >
+  Bulk exfiltration path. Full table
+  content extractable in a single API
+  call to any accessible S3 bucket.

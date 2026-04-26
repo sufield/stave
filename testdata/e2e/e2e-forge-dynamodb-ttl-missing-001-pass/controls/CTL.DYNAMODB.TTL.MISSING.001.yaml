@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.TTL.MISSING.001
+name: DynamoDB Temporal Table Has No TTL Configured
+description: >
+  DynamoDB table stores temporal data (sessions, tokens,
+  temporary records, or cache entries — identified by table
+  name patterns or tags) but does not have TTL enabled. Without
+  TTL, expired items accumulate indefinitely: consuming
+  provisioned capacity or increasing on-demand costs, growing
+  scan and backup sizes, and retaining data beyond its intended
+  lifetime. For tables containing PII or PHI, missing TTL may
+  violate data minimization requirements that mandate deletion
+  after a specified period. TTL provides automatic, item-level
+  expiration based on a timestamp attribute with no application
+  code required, no additional cost, and eventual deletion that
+  happens within 48 hours of expiry time. This control gates
+  on has_temporal_tags to avoid false positives on tables where
+  TTL does not apply (configuration tables, reference data).
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-12"
+  hipaa: "164.312(c)(2)"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-01", "DSP-07"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Table stores temporal data but TTL is not enabled.
+    Expired items accumulate without automatic deletion.
+  action: >
+    Designate a timestamp attribute in item data (epoch
+    seconds in the future representing the expiry time).
+    Enable TTL on the table using
+    aws dynamodb update-time-to-live --table-name TABLE
+    --time-to-live-specification
+    Enabled=true,AttributeName=expires_at.
+    DynamoDB will delete items within 48 hours after
+    their TTL attribute timestamp passes.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "ttl_enabled": true,
+          "ttl_attribute": "expires_at",
+          "has_temporal_tags": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.has_temporal_tags
+      op: eq
+      value: true
+    - field: properties.database.dynamodb.ttl_enabled
+      op: eq
+      value: false

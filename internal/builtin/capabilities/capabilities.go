@@ -34,6 +34,7 @@ var builtinNames = []string{
 	"ec2_code_execution",
 	"encryption_bypass",
 	"iam_credential_theft",
+	"initial_access",
 	"internet_access",
 	"invisible_data_exfiltration",
 	"k8s_cluster_admin",

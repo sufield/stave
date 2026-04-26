@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.LIFECYCLE.DORMANT.001
+name: DynamoDB Table Has No Activity in 90+ Days
+description: >
+  DynamoDB table has had no read or write activity (zero
+  ConsumedReadCapacityUnits and ConsumedWriteCapacityUnits) for
+  more than 90 days. The table retains its full configuration:
+  data, IAM access policies, stream configuration, global
+  replicas, and backup schedules. Nobody monitors a dormant
+  table for anomalous access — it is assumed unused. But the
+  IAM policies still grant access, and the data is readable
+  by any principal with dynamodb:GetItem, Query, or Scan on
+  the table. Dormant tables with customer data, historical
+  records, PII, or credentials are a latent data exposure
+  surface that combines inaccessible-looking status with
+  fully-accessible data. 90-day threshold matches Lambda,
+  IAM role, and EC2 dormant controls for consistency.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04", "DSP-01"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DynamoDB table has had no read or write activity in
+    more than 90 days but remains accessible.
+  action: >
+    Review whether the table is still needed. If data can
+    be archived, export to S3 and delete the table. If data
+    must be retained but is no longer actively queried,
+    disable any active streams, remove direct IAM grants,
+    and restrict access to a break-glass role. Tag the table
+    with the retention reason and review date. Use
+    aws cloudwatch get-metric-statistics to confirm zero
+    ConsumedReadCapacityUnits and ConsumedWriteCapacityUnits
+    over the last 90 days.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "is_dormant": false,
+          "last_activity_days": 3
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.is_dormant
+      op: eq
+      value: true

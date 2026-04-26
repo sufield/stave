@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.CAPACITY.NOSCALING.001
+name: Provisioned DynamoDB Table Has No Auto-Scaling
+description: >
+  DynamoDB table uses provisioned capacity mode but has no
+  auto-scaling configured on either read or write capacity.
+  The table has a fixed throughput ceiling — when traffic
+  exceeds the provisioned limit, requests are throttled with
+  ProvisionedThroughputExceededException. Auto-scaling adjusts
+  capacity up and down based on actual utilization, preventing
+  throttling during traffic spikes and reducing costs during
+  quiet periods. A provisioned table without auto-scaling
+  requires manual capacity adjustments and is prone to either
+  over-provisioning (cost waste) or under-provisioning
+  (throttling). This control gates on capacity_mode =
+  PROVISIONED — PAY_PER_REQUEST tables have no capacity
+  ceiling to scale.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-13"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-09"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Provisioned-capacity DynamoDB table has no auto-scaling
+    configured. Fixed capacity ceiling causes throttling on
+    traffic spikes.
+  action: >
+    Enable auto-scaling for read and write capacity via the
+    Application Auto Scaling API:
+    aws application-autoscaling register-scalable-target
+    --service-namespace dynamodb
+    --resource-id table/TABLE
+    --scalable-dimension dynamodb:table:ReadCapacityUnits
+    --min-capacity 5 --max-capacity 1000.
+    Or switch to on-demand mode (PAY_PER_REQUEST) to eliminate
+    capacity management entirely.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "capacity_mode": "PROVISIONED",
+          "has_autoscaling": true,
+          "read_autoscaling": true,
+          "write_autoscaling": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.capacity_mode
+      op: eq
+      value: PROVISIONED
+    - field: properties.database.dynamodb.has_autoscaling
+      op: eq
+      value: false

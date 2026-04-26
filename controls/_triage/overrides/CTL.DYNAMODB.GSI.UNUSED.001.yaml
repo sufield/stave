@@ -1,0 +1,31 @@
+control: CTL.DYNAMODB.GSI.UNUSED.001
+defect: >
+  DynamoDB global secondary index has had
+  no query activity in more than 90 days.
+infection: >
+  Every write to the DynamoDB base table
+  is synchronously replicated to each
+  GSI before the write is acknowledged.
+  The GSI does not buffer writes — if
+  the GSI has high write capacity
+  utilization, the base table write is
+  throttled. An unused GSI imposes this
+  write cost on every table write with
+  no read benefit. The cost is proportional
+  to the table's write throughput: a table
+  writing 1,000 items/second with an unused
+  GSI pays double the write cost. GSIs
+  also occupy storage proportional to the
+  projected attributes and item count —
+  a full projection GSI nearly doubles
+  the table storage cost. Removing an
+  unused GSI reduces write latency,
+  halves write capacity consumption for
+  that index, and eliminates its storage
+  cost. Verify no active query patterns
+  use the index before deleting — GSI
+  deletion cannot be undone.
+failure: >
+  Ongoing write cost and storage overhead
+  with no read benefit. Increases write
+  latency for every table write.

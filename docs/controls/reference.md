@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1581
-**Pack hash:** `8c5f318463efa4817ce16e71f43b3ca22464be406356edc29658a54885a53bb0`
+**Total controls:** 1587
+**Pack hash:** `0a1eb32c29471b55ac45f4f198bbf292b7400d95ed80027e1b1ec167fc015414`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 180 |
-| high | 695 |
+| high | 697 |
 | info | 16 |
-| low | 113 |
-| medium | 577 |
+| low | 114 |
+| medium | 580 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 92 |
-| exposure | 894 |
-| governance | 92 |
+| exposure | 895 |
+| governance | 97 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -6618,6 +6618,23 @@ DocumentDB snapshots must not be publicly accessible.
 
 ---
 
+### CTL.DYNAMODB.ACCESS.EXPORT.001
+
+**IAM Policy Grants Unrestricted DynamoDB Export Permission**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; pci_dss_v4.0: 7.1; soc2: CC6.1;
+
+IAM policy grants dynamodb:ExportTableToPointInTime without resource restriction or condition keys. This permission allows bulk export of the entire table to S3 in a single API call — every item and every attribute, in DynamoDB JSON or Amazon Ion format. Unlike GetItem, Query, or Scan, which retrieve items individually or by predicate, ExportTableToPointInTime retrieves the full table content without item-level filtering. Combined with write access to an S3 bucket, this is a complete data exfiltration path: the entire table can be extracted in minutes. The permission should be restricted to specific table ARNs and should require a condition key limiting the destination S3 bucket.
+
+**Remediation:** Restrict the permission to specific table ARNs: "Resource": "arn:aws:dynamodb:REGION:ACCOUNT:table/SPECIFIC_TABLE" Add a condition restricting the destination bucket: "Condition": {"StringEquals": {
+  "dynamodb:tableArn": "arn:aws:dynamodb:REGION:ACCOUNT:table/SPECIFIC_TABLE"
+}}. Review CloudTrail for recent ExportTableToPointInTime calls to identify any exports that may have exfiltrated data.
+
+---
+
 ### CTL.DYNAMODB.ALARM.READCAPACITY.001
 
 **No CloudWatch Alarm for DynamoDB Read Capacity Approaching Limit**
@@ -6705,6 +6722,21 @@ DynamoDB table is not covered by any CloudTrail trail with data events enabled. 
 DynamoDB tables must be included in a backup plan.
 
 **Remediation:** Add table to AWS Backup plan or enable PITR.
+
+---
+
+### CTL.DYNAMODB.CAPACITY.NOSCALING.001
+
+**Provisioned DynamoDB Table Has No Auto-Scaling**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-13; soc2: A1.1;
+
+DynamoDB table uses provisioned capacity mode but has no auto-scaling configured on either read or write capacity. The table has a fixed throughput ceiling — when traffic exceeds the provisioned limit, requests are throttled with ProvisionedThroughputExceededException. Auto-scaling adjusts capacity up and down based on actual utilization, preventing throttling during traffic spikes and reducing costs during quiet periods. A provisioned table without auto-scaling requires manual capacity adjustments and is prone to either over-provisioning (cost waste) or under-provisioning (throttling). This control gates on capacity_mode = PROVISIONED — PAY_PER_REQUEST tables have no capacity ceiling to scale.
+
+**Remediation:** Enable auto-scaling for read and write capacity via the Application Auto Scaling API: aws application-autoscaling register-scalable-target --service-namespace dynamodb --resource-id table/TABLE --scalable-dimension dynamodb:table:ReadCapacityUnits --min-capacity 5 --max-capacity 1000. Or switch to on-demand mode (PAY_PER_REQUEST) to eliminate capacity management entirely.
 
 ---
 
@@ -6963,6 +6995,21 @@ DynamoDB global table uses the 2017.11.29 legacy version instead of the current 
 
 ---
 
+### CTL.DYNAMODB.GSI.UNUSED.001
+
+**DynamoDB Global Secondary Index Has No Query Activity**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-6; soc2: CC8.1;
+
+DynamoDB table has a global secondary index (GSI) with no query activity in 90+ days. Every write to the base table is replicated to each GSI — the GSI consumes write capacity proportional to the write throughput on the base table, and occupies storage proportional to the projected attributes and item count. A GSI with no queries incurs ongoing write and storage cost with no read benefit. Unused GSIs also increase write latency because each item write must be replicated to the index. This control flags GSIs that may be candidates for removal after confirming no active queries depend on them.
+
+**Remediation:** Confirm no active application queries use the index (review CloudTrail data events for Query/Scan operations specifying the GSI name over the last 90 days). If the index is unused, delete it with aws dynamodb update-table --table-name TABLE --global-secondary-index-updates '[{"Delete":{"IndexName":"INDEX_NAME"}}]'. GSI deletion cannot be undone.
+
+---
+
 ### CTL.DYNAMODB.INCOMPLETE.001
 
 **Complete Data Required for DynamoDB Assessment**
@@ -6989,6 +7036,36 @@ The observation snapshot is missing required DynamoDB properties.
 DynamoDB Contributor Insights is not enabled for the table. Contributor Insights provides real-time identification of the most accessed and most throttled partition keys. Without it, hot key analysis requires enabling CloudTrail data events (high volume, high cost) and correlating raw logs by partition key. Hot keys are the most common cause of partition-level throttling that auto-scaling cannot fix — auto-scaling adjusts table capacity, not partition capacity.
 
 **Remediation:** Enable Contributor Insights on the table: aws dynamodb update-contributor-insights --table-name xxx --contributor-insights-action ENABLE. Repeat for each global secondary index that carries significant traffic. Review the resulting reports weekly to identify hot partitions and adjust the schema (write sharding, distributed counters) before throttling materializes.
+
+---
+
+### CTL.DYNAMODB.LIFECYCLE.DORMANT.001
+
+**DynamoDB Table Has No Activity in 90+ Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC8.1;
+
+DynamoDB table has had no read or write activity (zero ConsumedReadCapacityUnits and ConsumedWriteCapacityUnits) for more than 90 days. The table retains its full configuration: data, IAM access policies, stream configuration, global replicas, and backup schedules. Nobody monitors a dormant table for anomalous access — it is assumed unused. But the IAM policies still grant access, and the data is readable by any principal with dynamodb:GetItem, Query, or Scan on the table. Dormant tables with customer data, historical records, PII, or credentials are a latent data exposure surface that combines inaccessible-looking status with fully-accessible data. 90-day threshold matches Lambda, IAM role, and EC2 dormant controls for consistency.
+
+**Remediation:** Review whether the table is still needed. If data can be archived, export to S3 and delete the table. If data must be retained but is no longer actively queried, disable any active streams, remove direct IAM grants, and restrict access to a break-glass role. Tag the table with the retention reason and review date. Use aws cloudwatch get-metric-statistics to confirm zero ConsumedReadCapacityUnits and ConsumedWriteCapacityUnits over the last 90 days.
+
+---
+
+### CTL.DYNAMODB.LIFECYCLE.STREAM.ORPHAN.001
+
+**DynamoDB Stream Consumer Lambda Has Been Deleted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC8.1;
+
+DynamoDB Stream is enabled and a Lambda event source mapping (ESM) is configured, but the target Lambda function has been deleted. The stream produces a record for every item modification — creates, updates, deletes. The ESM is active. The Lambda function does not exist. Records are produced, never consumed, and expire after 24 hours unprocessed. If the stream consumer performed critical operations — event-driven replication to another system, audit pipeline, materialized view maintenance, notification dispatch — those operations silently stopped when the function was deleted. The stream appears configured and the ESM appears active; nothing surfaces the failure until downstream systems show stale data or missing notifications. Complementary to CTL.LAMBDA.TRIGGER.GHOST.001 (Lambda ESM referencing a deleted stream) — this control detects the inverse: stream exists, ESM exists, function deleted.
+
+**Remediation:** Either re-create the Lambda function and update the event source mapping, or remove the orphaned ESM using aws lambda delete-event-source-mapping --uuid ESM_UUID and disable the stream if it is no longer needed (aws dynamodb update-table --stream-specification StreamEnabled=false). Check whether downstream systems that depended on stream processing are receiving stale data.
 
 ---
 
@@ -7034,6 +7111,21 @@ DynamoDB Stream is configured with StreamViewType NEW_AND_OLD_IMAGES — every s
 DynamoDB Stream is enabled but no consumer is configured — no Lambda event source mapping and no Kinesis Data Streams shard-level consumer. Stream records are written for every item modification, accumulate for 24 hours, and then expire unprocessed. The stream is consuming DynamoDB capacity (stream reads are billed) and retaining a 24-hour window of change records that nobody processes. An unconsumed stream with NEW_AND_OLD_IMAGES or NEW_IMAGE view type is a data retention concern: change data for every item modification persists for 24 hours accessible to any principal with dynamodb:GetShardIterator and dynamodb:GetRecords on the stream ARN, regardless of application intent.
 
 **Remediation:** Either configure a consumer for the stream (Lambda event source mapping via aws lambda create-event-source-mapping --event-source-arn STREAM_ARN --function-name FUNCTION) or disable the stream if it is not needed (aws dynamodb update-table --table-name TABLE --stream-specification StreamEnabled=false).
+
+---
+
+### CTL.DYNAMODB.TTL.MISSING.001
+
+**DynamoDB Temporal Table Has No TTL Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(c)(2); nist_800_53_r5: SI-12; soc2: CC6.1;
+
+DynamoDB table stores temporal data (sessions, tokens, temporary records, or cache entries — identified by table name patterns or tags) but does not have TTL enabled. Without TTL, expired items accumulate indefinitely: consuming provisioned capacity or increasing on-demand costs, growing scan and backup sizes, and retaining data beyond its intended lifetime. For tables containing PII or PHI, missing TTL may violate data minimization requirements that mandate deletion after a specified period. TTL provides automatic, item-level expiration based on a timestamp attribute with no application code required, no additional cost, and eventual deletion that happens within 48 hours of expiry time. This control gates on has_temporal_tags to avoid false positives on tables where TTL does not apply (configuration tables, reference data).
+
+**Remediation:** Designate a timestamp attribute in item data (epoch seconds in the future representing the expiry time). Enable TTL on the table using aws dynamodb update-time-to-live --table-name TABLE --time-to-live-specification Enabled=true,AttributeName=expires_at. DynamoDB will delete items within 48 hours after their TTL attribute timestamp passes.
 
 ---
 

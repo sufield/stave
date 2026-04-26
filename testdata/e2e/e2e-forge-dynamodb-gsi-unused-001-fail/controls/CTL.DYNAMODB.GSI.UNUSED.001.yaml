@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.GSI.UNUSED.001
+name: DynamoDB Global Secondary Index Has No Query Activity
+description: >
+  DynamoDB table has a global secondary index (GSI) with no
+  query activity in 90+ days. Every write to the base table
+  is replicated to each GSI — the GSI consumes write capacity
+  proportional to the write throughput on the base table, and
+  occupies storage proportional to the projected attributes and
+  item count. A GSI with no queries incurs ongoing write and
+  storage cost with no read benefit. Unused GSIs also increase
+  write latency because each item write must be replicated to
+  the index. This control flags GSIs that may be candidates
+  for removal after confirming no active queries depend on them.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-6"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    DynamoDB GSI has had no query activity in 90+ days.
+    The index consumes write capacity and storage with no
+    read benefit.
+  action: >
+    Confirm no active application queries use the index
+    (review CloudTrail data events for Query/Scan operations
+    specifying the GSI name over the last 90 days). If the
+    index is unused, delete it with
+    aws dynamodb update-table --table-name TABLE
+    --global-secondary-index-updates
+    '[{"Delete":{"IndexName":"INDEX_NAME"}}]'.
+    GSI deletion cannot be undone.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "gsi_is_unused": false,
+          "gsi_last_query_days": 5,
+          "gsi_name": "user-email-index"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.gsi_is_unused
+      op: eq
+      value: true

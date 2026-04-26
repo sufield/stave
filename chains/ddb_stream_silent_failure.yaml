@@ -1,0 +1,26 @@
+id: ddb_stream_silent_failure
+description: >
+  DynamoDB stream is silently failing — records are produced
+  and discarded. Either the stream's Lambda consumer has been
+  deleted (CTL.DYNAMODB.LIFECYCLE.STREAM.ORPHAN.001) — ESM is
+  active, function is gone, records expire unprocessed — or the
+  stream has no consumer configured at all
+  (CTL.DYNAMODB.STREAM.NOCONSUMER.001). Threshold of 1 reflects
+  that either condition independently results in stream records
+  expiring unprocessed after 24 hours. The ghost consumer is
+  more insidious because it appears configured (ESM is active,
+  stream shows records written) while silently failing. No
+  consumer is more visible but equally broken. Both describe
+  a data pipeline where every item modification generates a
+  record that is never processed — data-driven workflows,
+  event notifications, audit pipelines, and replication
+  streams that depend on this data are silently broken.
+controls:
+  - CTL.DYNAMODB.LIFECYCLE.STREAM.ORPHAN.001
+  - CTL.DYNAMODB.STREAM.NOCONSUMER.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - data_destruction

@@ -1,0 +1,35 @@
+control: CTL.DYNAMODB.TTL.MISSING.001
+defect: >
+  DynamoDB temporal table (session store,
+  token table, or cache) does not have
+  TTL configured.
+infection: >
+  Without TTL, items written to a temporal
+  table persist until the application
+  explicitly deletes them with a DeleteItem
+  call. Session records for logged-out
+  users, expired authentication tokens,
+  invalidated temporary credentials, and
+  stale cache entries all remain in the
+  table indefinitely. The table grows
+  without bound: write and read capacity
+  consumption increases as the item count
+  grows, CloudWatch scans take longer,
+  and PITR backup size increases. For
+  tables containing PII or PHI, data
+  retention without a deletion mechanism
+  may violate data minimization obligations
+  — GDPR Article 5(1)(e) requires data
+  "not kept in a form which permits
+  identification of data subjects for
+  longer than is necessary." DynamoDB TTL
+  provides item-level expiration based on
+  an epoch timestamp attribute — items
+  are deleted within 48 hours of expiry,
+  at no cost, without consuming capacity.
+  Enabling TTL requires adding a timestamp
+  attribute to new items at write time.
+failure: >
+  Unbounded data retention. Expired
+  sessions, tokens, and temporal records
+  accumulate indefinitely.

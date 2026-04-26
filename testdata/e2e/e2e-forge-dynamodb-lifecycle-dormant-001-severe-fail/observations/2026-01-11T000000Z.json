@@ -1,0 +1,1 @@
+{"schema_version":"obs.v0.1","captured_at":"2026-01-01T00:00:00Z","source":"deployed","assets":[{"id":"arn:aws:dynamodb:us-east-1:123456789012:table/user-pii-archive","type":"aws_dynamodb_table","vendor":"aws","properties":{"database":{"kind":"table","dynamodb":{"table_name":"user-pii-archive","is_dormant":true,"last_activity_days":365,"item_count":200000}}}}]}

@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.ACCESS.EXPORT.001
+name: IAM Policy Grants Unrestricted DynamoDB Export Permission
+description: >
+  IAM policy grants dynamodb:ExportTableToPointInTime without
+  resource restriction or condition keys. This permission
+  allows bulk export of the entire table to S3 in a single API
+  call — every item and every attribute, in DynamoDB JSON or
+  Amazon Ion format. Unlike GetItem, Query, or Scan, which
+  retrieve items individually or by predicate, ExportTableToPointInTime
+  retrieves the full table content without item-level filtering.
+  Combined with write access to an S3 bucket, this is a
+  complete data exfiltration path: the entire table can be
+  extracted in minutes. The permission should be restricted to
+  specific table ARNs and should require a condition key
+  limiting the destination S3 bucket.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-05", "DSP-07"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    IAM policy grants unrestricted dynamodb:ExportTableToPointInTime,
+    enabling bulk exfiltration of any DynamoDB table.
+  action: >
+    Restrict the permission to specific table ARNs:
+    "Resource": "arn:aws:dynamodb:REGION:ACCOUNT:table/SPECIFIC_TABLE"
+    Add a condition restricting the destination bucket:
+    "Condition": {"StringEquals": {
+      "dynamodb:tableArn": "arn:aws:dynamodb:REGION:ACCOUNT:table/SPECIFIC_TABLE"
+    }}.
+    Review CloudTrail for recent ExportTableToPointInTime calls
+    to identify any exports that may have exfiltrated data.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "iam_export_unrestricted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.iam_export_unrestricted
+      op: eq
+      value: true

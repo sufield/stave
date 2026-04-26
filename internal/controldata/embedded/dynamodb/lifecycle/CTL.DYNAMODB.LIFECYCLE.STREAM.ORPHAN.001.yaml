@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.LIFECYCLE.STREAM.ORPHAN.001
+name: DynamoDB Stream Consumer Lambda Has Been Deleted
+description: >
+  DynamoDB Stream is enabled and a Lambda event source mapping
+  (ESM) is configured, but the target Lambda function has been
+  deleted. The stream produces a record for every item
+  modification — creates, updates, deletes. The ESM is active.
+  The Lambda function does not exist. Records are produced,
+  never consumed, and expire after 24 hours unprocessed.
+  If the stream consumer performed critical operations —
+  event-driven replication to another system, audit pipeline,
+  materialized view maintenance, notification dispatch — those
+  operations silently stopped when the function was deleted.
+  The stream appears configured and the ESM appears active;
+  nothing surfaces the failure until downstream systems show
+  stale data or missing notifications. Complementary to
+  CTL.LAMBDA.TRIGGER.GHOST.001 (Lambda ESM referencing a deleted
+  stream) — this control detects the inverse: stream exists,
+  ESM exists, function deleted.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    DynamoDB stream has an active event source mapping pointing
+    to a Lambda function that has been deleted. Stream records
+    expire unprocessed.
+  action: >
+    Either re-create the Lambda function and update the event
+    source mapping, or remove the orphaned ESM using
+    aws lambda delete-event-source-mapping --uuid ESM_UUID
+    and disable the stream if it is no longer needed
+    (aws dynamodb update-table --stream-specification
+    StreamEnabled=false). Check whether downstream systems
+    that depended on stream processing are receiving stale data.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "stream_enabled": true,
+          "stream_esm_exists": true,
+          "stream_consumer_lambda_exists": true,
+          "has_ghost_stream_consumer": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.stream_enabled
+      op: eq
+      value: true
+    - field: properties.database.dynamodb.has_ghost_stream_consumer
+      op: eq
+      value: true

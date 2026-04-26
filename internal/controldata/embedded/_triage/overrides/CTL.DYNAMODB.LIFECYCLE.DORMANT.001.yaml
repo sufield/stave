@@ -1,0 +1,33 @@
+control: CTL.DYNAMODB.LIFECYCLE.DORMANT.001
+defect: >
+  DynamoDB table has had no read or write
+  activity in more than 90 days but remains
+  fully accessible.
+infection: >
+  A dormant DynamoDB table retains its
+  complete operational configuration even
+  while unused. IAM policies granting access
+  still apply — any principal with
+  dynamodb:GetItem, Query, or Scan can read
+  every item. Stream configuration still
+  sends change records if writes occur.
+  Global replicas still replicate data
+  across regions. Backup schedules still
+  run and accumulate snapshots. PITR
+  retains a 35-day window even for tables
+  with zero activity. The table is assumed
+  unused by operators — but this assumption
+  suppresses monitoring. If an attacker or
+  insider reads items from a dormant table,
+  the access appears in CloudTrail data
+  events (if enabled) but no alarm or alert
+  is configured because nobody monitors a
+  "dead" table. Historical data, audit
+  records, archived customer data, and
+  credential stores are common dormant
+  table payloads — high-value data in a
+  low-visibility location.
+failure: >
+  Latent data exposure. Dormant table
+  with active IAM grants is readable
+  without monitoring or anomaly detection.

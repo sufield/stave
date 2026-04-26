@@ -1,0 +1,1 @@
+{"schema_version":"obs.v0.1","captured_at":"2026-01-01T00:00:00Z","source":"deployed","assets":[{"id":"arn:aws:dynamodb:us-east-1:123456789012:table/events","type":"aws_dynamodb_table","vendor":"aws","properties":{"database":{"kind":"table","dynamodb":{"table_name":"events","stream_enabled":true,"stream_esm_exists":false,"has_ghost_stream_consumer":false}}}}]}

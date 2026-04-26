@@ -1,0 +1,36 @@
+control: CTL.DYNAMODB.CAPACITY.NOSCALING.001
+defect: >
+  Provisioned-capacity DynamoDB table has
+  no auto-scaling configured on read or
+  write capacity.
+infection: >
+  A provisioned table without auto-scaling
+  has a fixed throughput ceiling set at
+  table creation or last manual update.
+  When traffic exceeds this ceiling, every
+  request above the limit is rejected with
+  ProvisionedThroughputExceededException —
+  the application must retry with backoff
+  or data is lost. Traffic patterns that
+  exceed static provisioning include:
+  diurnal spikes (business-hours vs
+  overnight), marketing events, feature
+  launches, and unexpected viral activity.
+  Without auto-scaling, operators must
+  manually update capacity before the
+  spike or accept throttling. Manual
+  updates have a 4-hour cooldown on
+  downscaling — over-provisioning is
+  expensive and cannot be rapidly
+  corrected. DynamoDB Application Auto
+  Scaling adjusts capacity automatically
+  based on a target utilization percentage
+  (typically 70%), scaling up rapidly and
+  scaling down gradually to prevent
+  thrash.
+failure: >
+  Fixed capacity ceiling. Traffic spikes
+  cause throttling without notification.
+  Requests are rejected until manual
+  capacity increase or auto-scaling is
+  configured.

@@ -1,0 +1,36 @@
+control: CTL.DYNAMODB.LIFECYCLE.STREAM.ORPHAN.001
+defect: >
+  DynamoDB stream has an active event
+  source mapping pointing to a Lambda
+  function that has been deleted.
+infection: >
+  The DynamoDB stream writes a record for
+  every item modification — PutItem,
+  UpdateItem, DeleteItem, and all Batch
+  write operations. The Lambda event source
+  mapping specifies the target function to
+  invoke with each batch of records. The
+  function was deleted. The mapping remains
+  active; records continue to be produced
+  by the stream; nothing processes them.
+  Records accumulate in the stream shard
+  and expire after 24 hours. The failure
+  is invisible: the stream dashboard shows
+  records written, the ESM shows active
+  status, but the function's invocation
+  count is zero. Downstream systems that
+  depended on stream-driven processing
+  stop receiving events silently — no
+  error rate, no alert. Data pipeline
+  failures that manifest as missing
+  notifications, stale search indexes,
+  inconsistent replicas, or absent audit
+  events. The time between deletion and
+  discovery depends entirely on how
+  quickly a dependent system surfaces
+  the missing data.
+failure: >
+  Silent data pipeline failure. Every
+  stream record expires unprocessed.
+  Dependent systems receive no events
+  and show no errors.
