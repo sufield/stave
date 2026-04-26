@@ -1,0 +1,31 @@
+control: CTL.ROUTE53.ZONE.DELEGATION.UNVERIFIED.001
+defect: >
+  Route 53 NS record for [subdomain] delegates
+  to external name servers [NS list] not under
+  organizational control.
+infection: >
+  NS delegation transfers DNS authority for a
+  subdomain to the specified name servers. When
+  those name servers are external (not Route 53,
+  not the organization's infrastructure), the
+  external operator controls DNS for the
+  subdomain. If the external service is:
+  discontinued (lame delegation — subdomain
+  takeover risk: attacker registers the name
+  server domain and serves forged records),
+  compromised (attacker modifies DNS records
+  for the subdomain), or misconfigured
+  (incorrect records served, MX records
+  intercepting email). The organization has
+  no visibility into or control over changes
+  made at the delegated name servers. For
+  subdomains that host production services,
+  email, or customer-facing applications,
+  unverified external DNS delegation is a
+  control gap. The risk increases if the
+  external service allows zone transfers or
+  has weaker access controls than Route 53.
+failure: >
+  DNS authority delegated externally. The
+  organization does not control DNS resolution
+  for this subdomain.

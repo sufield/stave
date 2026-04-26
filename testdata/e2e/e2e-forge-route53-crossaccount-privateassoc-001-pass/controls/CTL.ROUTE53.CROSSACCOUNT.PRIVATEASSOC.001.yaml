@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.CROSSACCOUNT.PRIVATEASSOC.001
+name: Private Hosted Zone Associated with VPC in External Account Without Organization Boundary
+description: >
+  Route 53 private hosted zone is associated with a VPC in an
+  account outside the organization. Private zone association grants
+  the associated VPC's resources the ability to resolve every record
+  in the zone — internal service names, database endpoints, internal
+  IP addresses, and other infrastructure details. When the
+  associated VPC belongs to an account that is not part of the
+  organization, that external account's resources can resolve the
+  organization's internal DNS. If the external account is later
+  compromised, the attacker discovers the organization's internal
+  infrastructure by querying the private zone's records. Private
+  zone VPC association should be limited to accounts within the
+  organization (verified via aws:PrincipalOrgID or an explicit
+  authorized account list). This is a HIGH-severity finding because
+  the exposure is not a single record — the entire zone's records
+  are accessible from the external VPC.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-08", "IVS-07"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Route 53 private hosted zone is associated with a VPC in an
+    external account that is not part of the organization. The
+    external VPC can resolve every record in the private zone.
+  action: >
+    Identify the associated VPCs: aws route53
+    get-hosted-zone --id {zone-id} and inspect the VPCs block for
+    associations whose AWS account is not in the organization's
+    account list. For each external association: confirm with the
+    business whether the cross-account resolution is intended. If
+    the association is intentional and the external account is a
+    trusted partner, document the cross-account dependency and
+    constrain it via a Route 53 resolver rule that limits which
+    records the external VPC can query (rather than full zone
+    resolution). If the association is unintended: disassociate the
+    VPC — aws route53 disassociate-vpc-from-hosted-zone --hosted-
+    zone-id {zone-id} --vpc VPCRegion={region},VPCId={vpc-id}. Audit
+    cross-account VPC associations periodically: a zone-association
+    authorization persists until revoked, so a former partner
+    relationship leaves stale access until the association is
+    actively removed.
+  example: |
+    {
+      "dns_service": {
+        "kind": "hosted_zone",
+        "is_private_zone": true,
+        "has_external_vpc": false,
+        "external_vpcs_in_org": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns_service.kind
+      op: eq
+      value: hosted_zone
+    - field: properties.dns_service.is_private_zone
+      op: eq
+      value: true
+    - field: properties.dns_service.has_external_vpc
+      op: eq
+      value: true
+    - field: properties.dns_service.external_vpcs_in_org
+      op: eq
+      value: false

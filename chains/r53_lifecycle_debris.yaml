@@ -1,0 +1,23 @@
+id: r53_lifecycle_debris
+description: >
+  Orphaned hosted zone AND at least one additional lifecycle gap.
+  A zone with no matching domain or NS delegation persists with
+  records exposing internal infrastructure, AND either an unused
+  health check consumes per-account quota or stale verification
+  tokens linger from decommissioned services. Multiple DNS resources
+  from decommissioned services persist together — a dead zone, an
+  unused health check, and old tokens cluttering the configuration.
+  Threshold of 2 reflects that any single lifecycle gap is a minor
+  governance issue; multiple gaps in the same Route 53 footprint
+  indicate systemic incomplete-cleanup discipline that compounds
+  audit risk and obscures meaningful records.
+controls:
+  - CTL.ROUTE53.LIFECYCLE.ORPHANZONE.001
+  - CTL.ROUTE53.LIFECYCLE.ORPHANHEALTH.001
+  - CTL.ROUTE53.LIFECYCLE.STALE.TXT.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - internet_access
+postconditions:
+  - ungoverned_operation

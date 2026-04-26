@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.RECORD.A.DATABASE.001
+name: DNS Record Points Directly to Database Endpoint
+description: >
+  Route 53 record resolves to a database endpoint directly — RDS
+  (*.rds.amazonaws.com), ElastiCache (*.cache.amazonaws.com),
+  Redshift (*.redshift.amazonaws.com), or DocumentDB
+  (*.docdb.amazonaws.com) — without an application tier or proxy
+  in between. The database is DNS-addressable from any client that
+  can resolve the name. If the record is in a public hosted zone,
+  the database endpoint is discoverable by anyone — combined with
+  a misconfigured security group, the database is directly
+  accessible from the internet. If the record is in a private
+  zone, internal-network access to the database does not require
+  service discovery via tagged resources or environment variables;
+  the database is one DNS query away from any compromised resource
+  in the VPC. The control flags this architectural pattern: a
+  database that is reachable directly from clients (rather than
+  through an application tier with its own credentials, rate
+  limiting, and audit log) increases blast radius for any client
+  compromise. The detection heuristic matches AWS database service
+  hostname patterns and should be extended as new database services
+  are added.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "1.3"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    DNS record points directly to a database endpoint. The database
+    is DNS-addressable without an intermediate application tier.
+  action: >
+    Determine why the database is exposed via DNS. If the record was
+    added for application configuration convenience, change the
+    application to read the database endpoint from secrets manager
+    or parameter store rather than from public/private DNS. If the
+    DNS abstraction is required (failover, environment-specific
+    endpoints), point the record at an application proxy or RDS
+    Proxy that fronts the database — preserving the indirection
+    while removing direct addressability. For records in public
+    zones: this is severity-elevated — combined with an unrestricted
+    security group, the database is internet-accessible. Audit the
+    security group for the database; if 0.0.0.0/0 is allowed on the
+    database port, this is a critical exposure pair (resolve both
+    the DNS record and the SG). For records in private zones: review
+    whether the application tier is still required as a control
+    point — direct database addressability removes the application's
+    role as an authorization boundary.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "api.example.com",
+          "record_value": "alb-1234.us-east-1.elb.amazonaws.com",
+          "target_is_database": false,
+          "is_public_zone": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.target_is_database
+      op: eq
+      value: true

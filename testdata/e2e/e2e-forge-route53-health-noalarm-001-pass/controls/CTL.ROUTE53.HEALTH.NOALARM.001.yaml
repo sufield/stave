@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.HEALTH.NOALARM.001
+name: No CloudWatch Alarm for Route 53 Health Check Status
+description: >
+  Route 53 health check exists but no CloudWatch alarm monitors its
+  HealthCheckStatus metric. When the health check transitions from
+  healthy to unhealthy, nobody is notified. Route 53 automatically
+  fails over traffic if failover routing is configured, but the team
+  does not know the primary endpoint is down until someone checks the
+  console or receives a customer report. A CloudWatch alarm on the
+  HealthCheckStatus metric sends an alert the moment the health check
+  detects failure — giving the team immediate visibility before
+  customers are affected and before the automatic failover becomes the
+  team's only signal. Without the alarm, the failover is silent
+  from the team's perspective: traffic moves, but there is no
+  notification, no incident trigger, and no audit trail that the
+  primary endpoint was down.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-03", "SEF-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Route 53 health check has no CloudWatch alarm monitoring its
+    HealthCheckStatus metric. Health check state changes are not
+    surfaced to the team.
+  action: >
+    Create a CloudWatch alarm for the health check: aws cloudwatch
+    put-metric-alarm with Namespace=AWS/Route53, MetricName=
+    HealthCheckStatus, Dimensions=[{Name=HealthCheckId,Value=[ID]}],
+    Threshold=1, ComparisonOperator=LessThanThreshold. Set
+    AlarmActions to an SNS topic that pages on-call. The alarm fires
+    when HealthCheckStatus drops below 1 (unhealthy). Use a short
+    evaluation period (1-2 minutes) so the alarm fires quickly after
+    failure detection.
+  example: |
+    {
+      "network": {
+        "kind": "route53_health_check",
+        "health_check": {
+          "id": "hc-abc123",
+          "alarm_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_health_check
+    - field: properties.network.health_check.alarm_configured
+      op: eq
+      value: false

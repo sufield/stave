@@ -1,0 +1,34 @@
+control: CTL.ROUTE53.LIFECYCLE.STALE.TXT.001
+defect: >
+  Route 53 zone has TXT records containing old
+  domain verification tokens that may no longer
+  be required.
+infection: >
+  Domain verification tokens (google-site-
+  verification, ms= for Microsoft 365,
+  atlassian-domain-verification, _amazonses,
+  docusign=, facebook-domain-verification, and
+  similar) are added when a service is
+  integrated with the domain. After
+  verification completes, some services require
+  the token to remain (as long as the
+  integration is active), while others use the
+  token only for one-time verification. Stale
+  verification tokens — those whose
+  corresponding services have been
+  decommissioned — clutter the zone, may be
+  reusable if the service is re-enabled by an
+  attacker who controls a tenant in the
+  service, and indicate incomplete cleanup
+  after a service change. The "stale" detection
+  is heuristic: it cannot determine with
+  certainty that a verification is no longer
+  needed, only that the token has not been
+  refreshed in a long time and matches a known
+  pattern.
+failure: >
+  Configuration debris. Old verification tokens
+  remain in DNS for services that may have been
+  decommissioned, cluttering the zone and
+  potentially permitting reuse of the
+  verification.

@@ -1,0 +1,30 @@
+control: CTL.ROUTE53.ZONE.CAA.MISSING.001
+defect: >
+  Domain [X] has no CAA record. Any certificate
+  authority can issue certificates for this domain.
+infection: >
+  CAA records specify which certificate authorities
+  are authorized to issue certificates for the
+  domain. The CA/Browser Forum requires CAs to
+  check CAA before issuance. Without CAA, any of
+  the hundreds of public CAs can issue a certificate
+  for the domain. If an attacker can compromise
+  or social-engineer any single CA (or use a CA
+  with weak domain validation — email-based
+  validation is particularly weak), they can
+  obtain a valid, publicly trusted certificate.
+  With a valid certificate, the attacker can
+  intercept HTTPS traffic without triggering
+  browser security warnings. CAA limits
+  certificate issuance to the specific CAs the
+  organization actually uses — typically 1-2.
+  A compromised CA may ignore the CAA check,
+  but CAA is most effective against the more
+  realistic threat: a CA with weak domain
+  validation being tricked into issuing for
+  a domain it shouldn't.
+failure: >
+  Unrestricted certificate issuance. Any
+  certificate authority can issue certificates
+  for this domain, enabling MITM with a valid
+  certificate.

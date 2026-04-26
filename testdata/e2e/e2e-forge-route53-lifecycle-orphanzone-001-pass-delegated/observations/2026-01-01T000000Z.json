@@ -1,0 +1,1 @@
+{"schema_version":"obs.v0.1","captured_at":"2026-01-01T00:00:00Z","source":"deployed","assets":[{"id":"Z789/external-registered.com","type":"aws_route53_zone","vendor":"aws","properties":{"network":{"kind":"route53_zone","dns":{"zone_name":"external-registered.com","zone_has_domain":false,"zone_delegated":true,"zone_ns_match":true}}}}]}

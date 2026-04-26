@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.EMAIL.SPF.MISSING.001
+name: Route 53 Zone Apex Has No SPF Record
+description: >
+  Route 53 public hosted zone apex has no SPF (Sender Policy Framework)
+  TXT record. Without SPF, any mail server on the internet can send
+  email appearing to be from this domain. There is no mechanism for
+  receiving mail servers to verify that the sending server is authorized.
+  Domain spoofing for phishing is trivial — an attacker sends email
+  from ceo@[domain] and receiving servers have no check to perform.
+  SPF is the foundational layer of email authentication: it restricts
+  which servers are authorized to send as the domain.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Zone apex has no SPF record. Any server can send email as this
+    domain with no authentication check.
+  action: >
+    Add a TXT record at the zone apex with value "v=spf1 ... -all"
+    listing the mail servers authorized to send for this domain.
+    Use -all (hardfail) to reject unauthorized senders, or ~all
+    (softfail) as a transition step. Do not use +all or ?all — these
+    provide no protection. Include all legitimate sending sources:
+    MX records, cloud mail providers (include:_spf.google.com for
+    Google Workspace, include:amazonses.com for SES), and any
+    authorized third-party senders.
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "is_zone_apex": true,
+          "has_spf": true,
+          "spf_record": "v=spf1 include:_spf.google.com ~all"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.is_zone_apex
+      op: eq
+      value: true
+    - field: properties.network.dns.has_spf
+      op: eq
+      value: false

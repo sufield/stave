@@ -1,0 +1,33 @@
+control: CTL.ROUTE53.RESOLVER.GHOST.FORWARDER.001
+defect: >
+  Route 53 resolver forwarding rule [resolver_rule_id]
+  targets [ghost_target_ips] which are unreachable.
+infection: >
+  Resolver forwarding rules route DNS queries for
+  specific domains to specified target IP
+  addresses — typically on-premises DNS servers
+  reached via VPN or Direct Connect. When the
+  forwarding rule was created, the targets existed
+  and responded. Since then: the on-premises DNS
+  servers were decommissioned, the VPN connection
+  was terminated, or the on-premises IP addresses
+  changed. The forwarding rule was never updated.
+  Now every DNS query for the forwarded domain
+  (e.g., corp.example.com) is sent to the
+  configured target IPs. The targets do not
+  respond. The resolver waits, times out, and
+  returns SERVFAIL to the querying resource.
+  Every VPC workload that resolves any hostname
+  under the forwarded domain fails — database
+  connections fail before they open, service
+  calls fail at DNS resolution, not at the
+  network layer. The rule appears correctly
+  configured in the console: it has a domain, it
+  has targets, it is associated with VPCs. The
+  targets are ghosts. The misconfiguration is
+  invisible until something tries to resolve a
+  name in the forwarded domain.
+failure: >
+  Hybrid DNS resolution broken. All DNS queries
+  for the forwarded domain return SERVFAIL —
+  forwarding targets are unreachable ghosts.

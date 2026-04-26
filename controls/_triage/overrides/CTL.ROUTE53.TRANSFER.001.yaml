@@ -1,0 +1,28 @@
+control: CTL.ROUTE53.TRANSFER.001
+defect: >
+  Domain [X] does not have transfer lock enabled.
+infection: >
+  A domain transfer moves the domain from one
+  registrar to another. The new registrar controls
+  the domain's name servers, WHOIS information,
+  and renewal. If an attacker initiates a transfer
+  — by compromising the registrant's email to
+  approve the transfer, social-engineering the
+  registrar, or exploiting a registrar
+  vulnerability — they control the domain. They
+  can change name servers (redirecting all
+  traffic), receive all email sent to the domain
+  (password resets, confidential communications),
+  issue TLS certificates via DNS validation, and
+  hold the domain for ransom. Transfer lock
+  (clientTransferProhibited) prevents the domain
+  from being transferred to another registrar
+  without first explicitly disabling the lock —
+  adding a required step an attacker cannot
+  complete without direct registrar access.
+failure: >
+  Domain transfer possible. An attacker who
+  compromises the registrant email or social-
+  engineers the registrar can transfer the domain,
+  gaining complete control of DNS, email, and
+  certificate issuance.

@@ -1,0 +1,34 @@
+control: CTL.ROUTE53.RESOLVER.SINGLEAZ.001
+defect: >
+  Route 53 resolver endpoint [resolver_endpoint_id]
+  ([resolver_endpoint_type]) has IP addresses in
+  only one Availability Zone: [resolver_azs].
+infection: >
+  Resolver endpoints bridge DNS resolution between
+  VPCs and on-premises networks. An inbound
+  endpoint receives DNS queries from on-premises
+  resolvers and forwards them to Route 53 private
+  zones — enabling on-premises systems to resolve
+  internal AWS service names. An outbound endpoint
+  receives DNS queries from VPC resources and
+  forwards them to on-premises DNS resolvers via
+  forwarding rules — enabling VPC workloads to
+  resolve internal corporate hostnames. With IPs
+  in a single AZ, an AZ failure (planned
+  maintenance, hardware failure, power event)
+  takes down the endpoint entirely: for inbound
+  endpoints, on-premises systems receive SERVFAIL
+  or timeout for all private zone queries —
+  hybrid application connections break; for
+  outbound endpoints, VPC resources receive
+  SERVFAIL or timeout for all forwarded-domain
+  queries — any workload depending on on-premises
+  DNS names fails. Multiple IPs across multiple
+  AZs are not optional redundancy — they are the
+  baseline configuration for a production DNS
+  endpoint.
+failure: >
+  Single point of failure for hybrid DNS
+  resolution. AZ failure takes down the endpoint
+  and breaks DNS resolution for all resources
+  that depend on it.

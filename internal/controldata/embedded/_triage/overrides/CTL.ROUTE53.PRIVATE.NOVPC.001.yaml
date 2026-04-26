@@ -1,0 +1,28 @@
+control: CTL.ROUTE53.PRIVATE.NOVPC.001
+defect: >
+  Route 53 private hosted zone [zone_name] is
+  not associated with any VPC.
+infection: >
+  A private hosted zone resolves DNS names only
+  within associated VPCs. Without any VPC
+  association, the zone's records are permanently
+  unreachable — no resource anywhere can resolve
+  them. The zone exists with DNS records
+  (typically internal service endpoints, database
+  hostnames, RDS instance addresses, internal API
+  endpoints) but serves no operational function.
+  The records persist as documentation of the
+  organization's internal infrastructure — the
+  full internal service map is readable to anyone
+  with route53:ListResourceRecordSets permission,
+  which may be broadly granted to developers and
+  DevOps engineers. If the zone was decommissioned
+  but not deleted, it represents an incomplete
+  cleanup: the service is gone but the internal
+  infrastructure details remain. The zone also
+  continues to consume Route 53 hosted zone
+  billing ($0.50/month) with no operational value.
+failure: >
+  Dead DNS zone. Private zone records exist but
+  no VPC can resolve them. Zone documents internal
+  infrastructure with no operational purpose.

@@ -1,0 +1,26 @@
+control: CTL.ROUTE53.EMAIL.SPF.LOOKUPLIMIT.001
+defect: >
+  Domain [X] SPF record requires [N] DNS lookups,
+  exceeding the RFC 7208 limit of 10.
+infection: >
+  RFC 7208 limits SPF evaluation to 10 DNS-
+  querying mechanisms per lookup chain. The
+  mechanisms that count are: include, a, mx,
+  ptr, exists, and redirect. When evaluation
+  exceeds 10 lookups, the receiving server
+  returns a PermError (permanent error) and
+  SPF evaluation fails. Depending on the
+  receiver's policy, PermError may cause the
+  email to be treated as if no SPF record
+  exists — all senders are implicitly
+  authorized. Nested includes are the most
+  common cause: include:provider1.com pulls
+  in 3 more includes, each pulling in more.
+  The 10-lookup limit is strict — there is no
+  grace margin. PermError from exceeded lookups
+  causes legitimate email delivery problems
+  AND provides no spoofing protection.
+failure: >
+  SPF evaluation fails with PermError. The
+  SPF record cannot be evaluated and may
+  provide no protection against spoofing.

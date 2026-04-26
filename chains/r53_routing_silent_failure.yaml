@@ -1,0 +1,29 @@
+id: r53_routing_silent_failure
+description: >
+  Geolocation routing without a default record
+  (CTL.ROUTE53.ROUTING.GEO.NODEFAULT.001) leaves viewers from
+  unlisted locations receiving NXDOMAIN. Combined with either a
+  ghost health check target (CTL.ROUTE53.HEALTHCHECK.GHOST.001) —
+  a health check monitoring an endpoint that no longer exists — or
+  a routing policy record with no health check
+  (CTL.ROUTE53.HEALTH.MISSING.001), DNS routing is both incomplete
+  and unmonitored. Geolocation without a default is a coverage gap:
+  unlisted locations get a resolution failure. A ghost health check
+  compounds this: the health check appears active but monitors
+  nothing — it provides no signal for routing decisions. A routing
+  policy without a health check means the policy has no mechanism
+  to detect endpoint failure. Together, DNS routing has a geographic
+  coverage gap and no reliable health signal. Threshold of 2 requires
+  the geolocation gap plus at least one health monitoring failure —
+  reflecting that incomplete routing coverage with broken health
+  monitoring is a compound DNS reliability failure.
+controls:
+  - CTL.ROUTE53.ROUTING.GEO.NODEFAULT.001
+  - CTL.ROUTE53.HEALTHCHECK.GHOST.001
+  - CTL.ROUTE53.HEALTH.MISSING.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - service_disruption

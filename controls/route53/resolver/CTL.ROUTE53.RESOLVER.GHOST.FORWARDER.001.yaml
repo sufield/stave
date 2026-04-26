@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.RESOLVER.GHOST.FORWARDER.001
+name: Route 53 Resolver Forwarding Rule Points to Unreachable Target
+description: >
+  Route 53 resolver outbound forwarding rule specifies target IP
+  addresses (typically on-premises DNS servers reached via VPN or
+  Direct Connect) that are unreachable. DNS queries matching the
+  forwarding rule's domain (e.g., corp.example.com) are forwarded
+  to the target IPs. When the targets are unreachable, every DNS
+  query for the forwarded domain times out — the resolver sends the
+  query to the configured IPs, receives no response, and returns
+  SERVFAIL. Every VPC resource that resolves any name under the
+  forwarded domain fails. The forwarding rule appears correctly
+  configured in the console — it has a domain, it has targets, it
+  is associated with a VPC. The targets do not respond. This is
+  the ghost reference pattern applied to DNS resolver targets:
+  the rule was configured when the on-premises DNS servers were
+  live; the servers were decommissioned, the VPN was reconfigured,
+  or the on-premises IPs changed; the forwarding rule was never
+  updated. The rule continues to look correct while silently
+  failing every query that matches its domain. For outbound
+  forwarding rules pointing to corporate DNS, the blast radius
+  covers every internal hostname that VPC resources query.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CP-7"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-03", "DCS-06"]
+scope_tags:
+  - aws
+  - route53
+vendor: aws
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Route 53 resolver forwarding rule has unreachable target IP
+    addresses. DNS queries for the forwarded domain fail with
+    SERVFAIL.
+  action: >
+    Identify unreachable targets: check connectivity to the target
+    IPs over port 53 (UDP and TCP) from within the VPC — if Direct
+    Connect or VPN is the path, verify the connection is active first.
+    Update the forwarding rule with correct target IPs: aws
+    route53resolver update-resolver-rule --resolver-rule-id {rule-id}
+    --config TargetIps=[{Ip={new-ip},Port=53}]. If the on-premises
+    DNS servers were decommissioned with no replacement, delete the
+    forwarding rule — aws route53resolver delete-resolver-rule — and
+    disassociate it from any VPCs first. If the forwarded domain
+    names should resolve via Route 53 public DNS instead, remove the
+    forwarding rule to let queries fall through to the default
+    Route 53 resolver.
+  example: |
+    {
+      "dns_service": {
+        "kind": "route53_resolver_rule",
+        "resolver_targets_reachable": true,
+        "has_ghost_forwarder": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns_service.kind
+      op: eq
+      value: route53_resolver_rule
+    - field: properties.dns_service.has_ghost_forwarder
+      op: eq
+      value: true

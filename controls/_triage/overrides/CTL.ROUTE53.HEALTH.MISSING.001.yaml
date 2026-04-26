@@ -1,0 +1,26 @@
+control: CTL.ROUTE53.HEALTH.MISSING.001
+defect: >
+  Route 53 [routing_policy] record [name] has no
+  associated health check.
+infection: >
+  Routing policies like failover, weighted, and
+  latency use health checks to determine which
+  endpoints receive traffic. Without a health
+  check, the routing policy has no health signal
+  to act on. Failover routing never triggers
+  failover — the primary is always considered
+  healthy, even when returning 500 errors.
+  Weighted routing sends traffic to unhealthy
+  endpoints proportionally — an endpoint with
+  weight 50 receives 50% of traffic even when
+  it is down. Latency routing sends traffic to
+  the nearest but potentially unhealthy endpoint.
+  The routing policy provides the mechanism. The
+  health check provides the signal. Without the
+  signal, the mechanism is inert — Route 53
+  routes traffic to failed endpoints as if they
+  were healthy.
+failure: >
+  Traffic routes to unhealthy endpoints. The
+  routing policy cannot detect failure and
+  has no health signal to act on.

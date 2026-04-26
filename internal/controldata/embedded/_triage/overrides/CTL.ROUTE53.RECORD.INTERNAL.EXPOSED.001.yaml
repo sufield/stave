@@ -1,0 +1,29 @@
+control: CTL.ROUTE53.RECORD.INTERNAL.EXPOSED.001
+defect: >
+  Route 53 public hosted zone has records
+  exposing internal infrastructure.
+infection: >
+  Public DNS is queryable by anyone — no
+  authentication, no access control. Records
+  in a public zone that point to internal IPs
+  (RFC 1918 ranges: 10.x, 172.16-31.x,
+  192.168.x) or internal hostnames (RDS
+  endpoints, internal ALB names, EC2 private
+  DNS names) expose the organization's internal
+  architecture. An attacker queries public DNS
+  for the domain and discovers: the internal
+  IP addressing scheme (10.0.1.0/24 for
+  production, 10.0.2.0/24 for staging),
+  database endpoints (RDS instance identifiers
+  reveal engine type, region, and account),
+  internal service names (service topology
+  revealed), and internal port numbers (SRV
+  records). This information aids targeted
+  attacks once the attacker has internal
+  network access — the reconnaissance
+  step is already complete.
+failure: >
+  Internal architecture disclosure. Public DNS
+  reveals internal IPs, database endpoints,
+  and service topology to anyone querying
+  the domain.

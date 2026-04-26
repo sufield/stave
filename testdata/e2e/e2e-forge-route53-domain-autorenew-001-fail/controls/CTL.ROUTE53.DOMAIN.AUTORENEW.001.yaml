@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DOMAIN.AUTORENEW.001
+name: Route 53 Domain Auto-Renew Not Enabled
+description: >
+  Route 53 registered domain does not have auto-renew enabled. If
+  the domain expires, it enters a grace period during which the
+  registrar holds it and renewal is possible but may incur a premium.
+  After the grace period, the domain enters redemption and eventually
+  deletion — at which point anyone can register it. An attacker who
+  registers the expired domain controls everything: DNS (all records),
+  email (all mail to the domain), TLS certificates (via DNS
+  validation), and all services that used the domain. Domain sniping
+  services monitor expiring domains specifically because domains with
+  existing traffic, backlinks, and email are valuable targets. The
+  domain's SEO history, inbound links, and existing DNS caches all
+  work in the attacker's favor. Auto-renew is a single configuration
+  change that prevents accidental expiration. Domain expiration is
+  the accidental equivalent of a domain transfer — same outcome,
+  different mechanism.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC6.1"
+  ccm_v4: ["DCS-06"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Route 53 registered domain does not have auto-renew enabled.
+    Accidental expiration allows anyone to register the domain and
+    control all its services.
+  action: >
+    Enable auto-renew on the domain: aws route53domains
+    enable-domain-auto-renew --domain-name [DOMAIN]. Verify the
+    domain expiry date and ensure auto-renew is configured far
+    enough in advance of expiry — Route 53 attempts renewal 30 days
+    before the expiry date. Also ensure the account has a valid
+    payment method to prevent renewal failure. Consider setting a
+    CloudWatch alarm for domains approaching expiry as a secondary
+    safeguard.
+  example: |
+    {
+      "network": {
+        "kind": "route53_domain",
+        "domain": {
+          "domain_name": "example.com",
+          "auto_renew_enabled": true,
+          "expiry_date": "2027-01-15T00:00:00Z",
+          "expiry_days": 365
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_domain
+    - field: properties.network.domain.auto_renew_enabled
+      op: eq
+      value: false

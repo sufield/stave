@@ -1,0 +1,29 @@
+control: CTL.ROUTE53.ROUTING.GEO.NODEFAULT.001
+defect: >
+  Route 53 geolocation routing for [name] has no
+  default record. Viewers from unlisted locations
+  receive NXDOMAIN.
+infection: >
+  Geolocation routing matches viewer location to
+  DNS records by country or continent. If the
+  viewer's location does not match any configured
+  record, Route 53 needs a default record to
+  return. Without a default record, a viewer in
+  a country not listed gets NXDOMAIN — the domain
+  does not resolve. If geolocation is configured
+  for US, EU, and APAC but not Africa or South
+  America, viewers from those continents see a
+  broken domain with no way to distinguish
+  between "service does not exist" and "service
+  was not configured for my location." This is
+  a silent failure: the organization does not
+  know unlisted viewers cannot reach the domain.
+  A default record catches all unmatched
+  locations and provides a fallback — typically
+  the same endpoint as the closest region or a
+  global endpoint.
+failure: >
+  DNS resolution failure for unlisted locations.
+  Viewers from countries not in the geolocation
+  configuration receive NXDOMAIN. The domain
+  appears to not exist for those users.

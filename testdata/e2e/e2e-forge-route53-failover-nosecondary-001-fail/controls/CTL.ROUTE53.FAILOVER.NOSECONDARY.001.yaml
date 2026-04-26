@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.FAILOVER.NOSECONDARY.001
+name: Route 53 Failover Record Has No Secondary Record
+description: >
+  Route 53 failover routing has a primary record but no secondary
+  (failover) record. Failover routing requires two records — primary
+  and secondary. The primary receives traffic when its health check
+  reports healthy. When the primary's health check fails, Route 53
+  returns the secondary record's value. Without a secondary record,
+  when the primary fails its health check, Route 53 has no fallback:
+  it returns NXDOMAIN or continues serving the unhealthy primary
+  depending on the record type. The failover mechanism is configured
+  — an auditor sees "failover routing configured" — but there is
+  nothing to fail over to. This is a false confidence pattern: the
+  infrastructure appears to have high availability but the failover
+  path does not exist. The secondary record typically points to a
+  different ALB, CloudFront distribution, or S3 static error page
+  in another region.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-7"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-03", "BCR-04"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Route 53 failover primary record exists but there is no secondary
+    record. When the primary fails its health check, Route 53 has no
+    failover target.
+  action: >
+    Create a secondary failover record pointing to a backup endpoint
+    in a different region or availability zone. The secondary record
+    uses the same record name and type as the primary but with
+    Failover=SECONDARY. Unlike the primary, the secondary does not
+    require a health check — it is the last resort when the primary
+    is unhealthy. Common secondary targets: an S3 bucket configured
+    for static website hosting with an error page, a CloudFront
+    distribution serving a maintenance page, or an ALB in a different
+    region. Ensure the secondary record's TTL is low enough for rapid
+    failover.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "api.example.com",
+          "routing_policy": "failover",
+          "failover_role": "PRIMARY",
+          "has_failover_secondary": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.routing_policy
+      op: eq
+      value: failover
+    - field: properties.network.dns.failover_role
+      op: eq
+      value: PRIMARY
+    - field: properties.network.dns.has_failover_secondary
+      op: eq
+      value: false

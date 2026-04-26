@@ -1,0 +1,1 @@
+{"schema_version":"obs.v0.1","captured_at":"2026-01-01T00:00:00Z","source":"deployed","assets":[{"id":"hc-noalarm-001","type":"aws_route53_health_check","vendor":"aws","properties":{"network":{"kind":"route53_health_check","health_check":{"id":"hc-noalarm-001","alarm_configured":false}}}}]}

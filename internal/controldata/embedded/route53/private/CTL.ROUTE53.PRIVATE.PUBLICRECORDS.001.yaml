@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.PRIVATE.PUBLICRECORDS.001
+name: Route 53 Private Hosted Zone Contains Records Pointing to Public IP Addresses
+description: >
+  Route 53 private hosted zone contains A records pointing to public
+  IP addresses (addresses outside RFC 1918 private ranges: 10.0.0.0/8,
+  172.16.0.0/12, 192.168.0.0/16). Private zones are designed for
+  internal DNS resolution — internal service names should resolve to
+  private IPs within the VPC. When an A record in a private zone
+  resolves to a public IP, traffic from VPC resources querying that
+  internal-looking name traverses the internet: it exits the VPC via
+  NAT gateway or internet gateway, travels over the public internet
+  to the public IP, and returns the same way. This is a
+  misconfiguration pattern: a service endpoint was changed to a
+  public IP (during troubleshooting, migration, or vendor IP
+  change) and the DNS record was updated but never reverted. From
+  a security standpoint, DNS resolution that appears internal
+  but routes to the internet creates an unexpected egress path —
+  traffic destined for what looks like an internal name actually
+  leaves the VPC. This control does not fire on CNAME records
+  (which point to hostnames, not IPs) or on link-local addresses
+  (169.254.x.x, which are expected for some AWS-internal services).
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-07"]
+scope_tags:
+  - aws
+  - route53
+vendor: aws
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: defense_evasion
+remediation:
+  description: >
+    Route 53 private hosted zone has A records resolving to public
+    IP addresses. Internal DNS names route to the internet instead
+    of staying within the VPC.
+  action: >
+    Identify the records: aws route53 list-resource-record-sets
+    --hosted-zone-id {zone-id} and filter A records with non-RFC-1918
+    values. For each: determine whether the service was migrated to
+    a public IP intentionally. If the service should be private,
+    update the record to point to the internal IP or internal load
+    balancer DNS name. If the service is now genuinely public and
+    internal name resolution is not needed, delete the record from
+    the private zone and use the public zone instead. If the service
+    uses an internal ALB with a private IP, update the A record to
+    the ALB's private IP or convert to an alias record pointing to
+    the internal ALB.
+  example: |
+    {
+      "dns_service": {
+        "kind": "hosted_zone",
+        "is_private_zone": true,
+        "has_public_ip_records": false,
+        "public_ip_count": 0
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns_service.kind
+      op: eq
+      value: hosted_zone
+    - field: properties.dns_service.is_private_zone
+      op: eq
+      value: true
+    - field: properties.dns_service.has_public_ip_records
+      op: eq
+      value: true

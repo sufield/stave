@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.RESOLVER.SINGLEAZ.001
+name: Route 53 Resolver Endpoint in Single Availability Zone
+description: >
+  Route 53 resolver endpoint (inbound or outbound) has IP addresses
+  assigned in only one Availability Zone. Resolver endpoints are the
+  DNS bridge between VPCs and on-premises networks: an inbound
+  endpoint allows on-premises DNS resolvers to forward queries for
+  Route 53 private zones to Route 53, enabling on-premises systems
+  to resolve internal AWS service names; an outbound endpoint allows
+  VPC resources to forward DNS queries for on-premises domains to
+  on-premises DNS resolvers via forwarding rules, enabling VPC
+  workloads to resolve internal corporate hostnames. With IP
+  addresses in a single AZ, an AZ failure renders the endpoint
+  unavailable: for inbound endpoints, on-premises systems receive
+  resolution failures for all private zone names — hybrid
+  application connectivity breaks; for outbound endpoints, VPC
+  resources receive resolution failures for all forwarded domains —
+  any workload that depends on on-premises DNS names fails. This is
+  the DNS equivalent of a single-AZ database: the endpoint works
+  under normal conditions but becomes a single point of failure
+  during the AZ events that DNS redundancy is specifically designed
+  to survive. Resolver endpoints should have IPs in at least two AZs.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CP-7"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-04", "BCR-11"]
+scope_tags:
+  - aws
+  - route53
+vendor: aws
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Route 53 resolver endpoint has IP addresses in only one
+    Availability Zone. AZ failure breaks DNS resolution through
+    this endpoint.
+  action: >
+    Add IP addresses in a second AZ to the resolver endpoint: aws
+    route53resolver update-resolver-endpoint --resolver-endpoint-id
+    {endpoint-id} --actions Operation=ADD,IpId=... The endpoint
+    requires a subnet in the target AZ — create the subnet first if
+    needed. Each AZ needs at least one IP address assigned. Route 53
+    Resolver automatically load-balances queries across all endpoint
+    IPs; adding a second AZ IP creates redundancy without any
+    configuration change to forwarding rules. Best practice is two
+    IPs in two different AZs; three IPs across three AZs for higher
+    availability in regions with three AZs.
+  example: |
+    {
+      "dns_service": {
+        "kind": "route53_resolver_endpoint",
+        "resolver_endpoint_type": "OUTBOUND",
+        "resolver_az_count": 2,
+        "resolver_single_az": false,
+        "resolver_azs": ["us-east-1a", "us-east-1b"]
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns_service.kind
+      op: eq
+      value: route53_resolver_endpoint
+    - field: properties.dns_service.resolver_single_az
+      op: eq
+      value: true

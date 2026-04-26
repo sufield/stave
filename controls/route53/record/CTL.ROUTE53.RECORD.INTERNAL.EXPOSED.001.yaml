@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.RECORD.INTERNAL.EXPOSED.001
+name: Public Hosted Zone Contains Records Exposing Internal Infrastructure
+description: >
+  Route 53 public hosted zone contains CNAME or A records that
+  reference internal infrastructure — RFC 1918 IP addresses
+  (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16), internal AWS
+  hostnames (RDS endpoints, internal ALB names, EC2 private DNS),
+  or SRV records exposing internal ports. Public DNS is queryable
+  by anyone — no authentication, no access control. Records like
+  internal.example.com → 10.0.1.50 or db.example.com →
+  rds-prod.c9abcdef.us-east-1.rds.amazonaws.com expose internal
+  architecture in public DNS. An attacker queries the domain and
+  discovers the internal IP addressing scheme (10.0.1.0/24 for
+  production, 10.0.2.0/24 for staging), database endpoints (RDS
+  identifiers reveal engine type, region, and account), and
+  service topology. This information aids targeted attacks once
+  the attacker has internal network access — they no longer need
+  to enumerate from inside. The check fires only on PUBLIC hosted
+  zones; private zones containing internal IPs is expected
+  behavior.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: reconnaissance
+remediation:
+  description: >
+    Route 53 public hosted zone contains records pointing to internal
+    IPs or internal AWS hostnames. Internal architecture is
+    discoverable by anyone querying public DNS.
+  action: >
+    Identify the internal records: aws route53
+    list-resource-record-sets --hosted-zone-id {zone-id} and filter
+    A records with RFC 1918 values (10.x, 172.16-31.x, 192.168.x)
+    and CNAME records pointing to internal AWS hostnames. For each
+    record: if the service is public-facing, repoint to the public
+    DNS name (the ALB DNS name, the CloudFront distribution name)
+    rather than the internal IP. If the service is internal-only,
+    move the record to a private hosted zone associated with the
+    appropriate VPC and remove it from the public zone. Audit SRV
+    records exposing internal port numbers — these reveal service
+    topology (database ports, Kerberos ports, internal RPC ports)
+    and should not appear in public DNS.
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "is_public_zone": true,
+          "has_internal_records": false,
+          "internal_record_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.is_public_zone
+      op: eq
+      value: true
+    - field: properties.network.dns.has_internal_records
+      op: eq
+      value: true

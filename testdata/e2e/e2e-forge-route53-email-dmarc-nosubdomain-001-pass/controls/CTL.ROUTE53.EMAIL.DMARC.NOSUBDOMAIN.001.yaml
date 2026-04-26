@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.EMAIL.DMARC.NOSUBDOMAIN.001
+name: Route 53 Zone DMARC Record Has Subdomain Policy Set to None
+description: >
+  Route 53 public hosted zone has a DMARC record with sp=none —
+  explicitly setting no enforcement for subdomains. When a DMARC
+  record omits the sp= tag, subdomains inherit the parent domain's
+  p= policy. When sp=none is explicitly set, subdomains have no
+  enforcement regardless of the parent domain's p= value: a domain
+  with p=reject and sp=none rejects spoofed @example.com email
+  but allows spoofed @billing.example.com, @hr.example.com, and
+  @payroll.example.com email through. Subdomain addresses are
+  especially effective for phishing — they appear credible
+  (billing@subdomain.example.com) while bypassing the parent
+  domain's DMARC enforcement. This finding fires only when sp=none
+  is explicitly set, overriding the natural inheritance. A DMARC
+  record with no sp= tag is not flagged — the parent p= applies.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DMARC record explicitly sets sp=none, removing enforcement for
+    all subdomains regardless of the parent domain's p= policy.
+  action: >
+    Remove sp=none from the DMARC record or replace it with
+    sp=quarantine or sp=reject. If the parent p= is already reject,
+    simply removing the sp= tag causes subdomains to inherit
+    p=reject automatically — the strongest protection with no
+    additional configuration. If some subdomains legitimately
+    send email with different sources, configure their own DMARC
+    records at _dmarc.[subdomain] rather than setting sp=none at
+    the parent.
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "has_dmarc": true,
+          "dmarc_record": "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@example.com",
+          "dmarc_policy": "reject",
+          "dmarc_subdomain_policy": "reject",
+          "dmarc_subdomain_unprotected": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.has_dmarc
+      op: eq
+      value: true
+    - field: properties.network.dns.dmarc_subdomain_unprotected
+      op: eq
+      value: true

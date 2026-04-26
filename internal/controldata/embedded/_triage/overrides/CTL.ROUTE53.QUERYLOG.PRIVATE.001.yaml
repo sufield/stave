@@ -1,0 +1,34 @@
+control: CTL.ROUTE53.QUERYLOG.PRIVATE.001
+defect: >
+  Route 53 private hosted zone [zone_name] does not
+  have resolver query logging enabled.
+infection: >
+  Resolver query logging captures all DNS queries
+  from VPC resources: EC2 instances, Lambda
+  functions, ECS tasks, and other workloads.
+  Internal DNS queries are how workloads discover
+  internal services — every database connection
+  begins with a DNS query for the database hostname,
+  every microservice call begins with a DNS query
+  for the target service name. Without resolver
+  query logging, internal DNS activity is
+  unaudited: an attacker who compromises any VPC
+  resource can systematically query internal DNS
+  names to enumerate the internal service map
+  (what databases exist, what internal APIs are
+  reachable, what microservices are running) and
+  no log records the reconnaissance. Anomalous
+  internal DNS patterns — a Lambda function that
+  starts querying database hostnames it has never
+  queried before, an EC2 instance querying
+  hundreds of internal names in sequence — are
+  invisible. Unlike public zone query logging
+  (which captures external resolver queries),
+  resolver query logging captures queries from
+  internal workloads, making it the primary signal
+  source for internal lateral movement detection.
+failure: >
+  No internal DNS visibility. Queries from VPC
+  resources are unrecorded — internal
+  reconnaissance and anomalous resolution patterns
+  from compromised workloads are invisible.

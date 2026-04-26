@@ -1,0 +1,29 @@
+control: CTL.ROUTE53.DOMAIN.AUTORENEW.001
+defect: >
+  Domain [X] does not have auto-renew enabled.
+  Expiry: [date] ([days] days).
+infection: >
+  An expired domain passes through a grace period
+  (registrar holds it — can still be renewed),
+  a redemption period (registrar may charge a
+  premium to renew), and deletion — at which
+  point the domain is available for anyone to
+  register. Domain sniping services monitor
+  expiring domains specifically because domains
+  with existing traffic, backlinks, DNS caches,
+  and email are valuable targets. An attacker
+  who registers the expired domain receives: all
+  traffic to the domain (existing bookmarks,
+  links, DNS caches), all email sent to the
+  domain (password resets, confidential
+  communications), the ability to issue
+  certificates via DNS validation, and the
+  domain's SEO value and reputation. Auto-renew
+  is a single configuration change that prevents
+  accidental expiration — one of the most severe
+  and irreversible DNS security failures.
+failure: >
+  Domain expiration risk. Accidental expiration
+  allows anyone to register the domain and gain
+  full control of DNS, email, certificates, and
+  all services that depend on the domain.

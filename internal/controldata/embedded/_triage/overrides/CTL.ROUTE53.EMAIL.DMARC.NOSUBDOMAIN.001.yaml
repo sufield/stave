@@ -1,0 +1,28 @@
+control: CTL.ROUTE53.EMAIL.DMARC.NOSUBDOMAIN.001
+defect: >
+  Domain [X] DMARC record explicitly sets
+  sp=none — subdomains have no enforcement
+  regardless of the parent policy.
+infection: >
+  The sp= tag in a DMARC record sets the policy
+  for organizational subdomains. When sp=none
+  is explicitly set, all subdomains have
+  monitoring-only DMARC — even if the parent
+  domain has p=reject. A phishing email from
+  billing@payroll.example.com, support@hr.example.com,
+  or ceo@corporate.example.com bypasses the
+  parent domain's enforcement. Subdomain
+  addresses are especially effective for
+  phishing: they carry the trust of the parent
+  domain while targeting a specific context
+  (billing, HR, IT) to increase urgency and
+  credibility. Without subdomain policy
+  enforcement, every subdomain is an
+  unprotected spoofing vector. Note: omitting
+  sp= causes subdomains to inherit the parent
+  p= value — the finding fires only when
+  sp=none is explicitly set.
+failure: >
+  Subdomain spoofing unprotected. Any server
+  can send email as @[subdomain].example.com
+  with no enforcement action from DMARC.

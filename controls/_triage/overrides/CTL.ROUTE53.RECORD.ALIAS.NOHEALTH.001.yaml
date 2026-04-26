@@ -1,0 +1,25 @@
+control: CTL.ROUTE53.RECORD.ALIAS.NOHEALTH.001
+defect: >
+  Route 53 alias record has evaluateTargetHealth
+  disabled.
+infection: >
+  Alias records can propagate health from the
+  target resource: when the target (ALB,
+  CloudFront, API Gateway, S3 website endpoint,
+  another Route 53 record) is unhealthy,
+  Route 53 stops returning the alias for queries.
+  With evaluateTargetHealth=false, Route 53
+  always returns the alias regardless of target
+  health. Traffic continues to be routed to
+  unhealthy or unreachable targets — the
+  resilience benefit of alias records is
+  defeated. This is sometimes intentional
+  (CloudFront origin failover handles its own
+  health, or the target type does not support
+  target health evaluation) but the disabled
+  state should be a deliberate decision rather
+  than a default-by-omission.
+failure: >
+  Routing to unhealthy targets. Alias records
+  return regardless of target state — clients
+  receive resolution to a broken endpoint.

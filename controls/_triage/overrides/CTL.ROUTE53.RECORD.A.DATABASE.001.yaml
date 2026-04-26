@@ -1,0 +1,31 @@
+control: CTL.ROUTE53.RECORD.A.DATABASE.001
+defect: >
+  Route 53 record points directly to a database
+  endpoint without an intermediate application
+  tier.
+infection: >
+  The record resolves to an AWS database service
+  hostname — RDS (*.rds.amazonaws.com),
+  ElastiCache (*.cache.amazonaws.com), Redshift
+  (*.redshift.amazonaws.com), or DocumentDB
+  (*.docdb.amazonaws.com). Any client that can
+  resolve the DNS name has a direct path to the
+  database. If the record is in a public hosted
+  zone, the database endpoint is discoverable
+  by anyone — combined with a misconfigured
+  security group, the database is internet-
+  accessible. If the record is in a private
+  zone, internal-network access to the database
+  does not require service discovery via tagged
+  resources or environment variables; the
+  database is one DNS query away from any
+  compromised resource in the VPC. The
+  application tier — which would normally enforce
+  authorization, rate limiting, and audit logging
+  — is no longer the only path to the data.
+failure: >
+  Direct database addressability. The
+  application tier is no longer the only client
+  path to the database; any compromised client
+  with DNS access can reach the database
+  directly.

@@ -1,0 +1,28 @@
+control: CTL.ROUTE53.RECORD.WILDCARD.001
+defect: >
+  Route 53 hosted zone has a wildcard record
+  (*.[zone]).
+infection: >
+  A wildcard record resolves EVERY subdomain
+  that does not have an explicit record. Any
+  subdomain — real, typo, test, or
+  attacker-probed — resolves to the wildcard
+  target. Implications: dangling DNS detection
+  is masked (a deleted service's subdomain
+  still resolves via the wildcard — the
+  NXDOMAIN signal that flags a dangling record
+  is suppressed), reconnaissance is hidden
+  (an attacker probing for subdomains always
+  gets a response — they cannot distinguish
+  real subdomains from wildcard matches), and
+  unintended traffic is routed to the wildcard
+  target (every non-existent subdomain sends
+  traffic to one endpoint). Wildcard records
+  have legitimate uses (catch-all for SaaS
+  multi-tenancy, fallback landing pages) but
+  should be reviewed for necessity.
+failure: >
+  Subdomain resolution masking. All subdomains
+  resolve — dangling DNS detection suppressed,
+  reconnaissance hidden, unintended traffic
+  routed to wildcard target.

@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.EMAIL.SPF.LOOKUPLIMIT.001
+name: Route 53 Zone SPF Record Exceeds 10 DNS Lookup Limit
+description: >
+  Route 53 public hosted zone has an SPF record that requires more than
+  10 DNS lookups to evaluate. RFC 7208 limits SPF evaluation to 10
+  DNS-querying mechanisms (include, a, mx, ptr, exists, redirect).
+  When the limit is exceeded, the receiving server returns a PermError
+  — permanent error — and may treat the domain as having no SPF
+  record, allowing all senders through. SPF lookups exceeding the
+  limit cause SPF to fail silently for legitimate email and provide
+  no protection against spoofing. Nested includes compound the
+  problem: include:provider.com may itself include 3-4 further domains,
+  each consuming lookup budget. Common cause: accumulation of cloud
+  mail provider includes over time (Google, SES, Sendgrid, Mailchimp,
+  Salesforce) without consolidation.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    SPF record requires more than 10 DNS lookups. SPF evaluation returns
+    PermError — the record fails to protect the domain.
+  action: >
+    Reduce the number of DNS-querying mechanisms to 10 or fewer. Audit
+    all include: directives and remove those for services no longer
+    used. Replace multiple provider includes with a single macro-
+    flattened SPF record using ip4:/ip6: directives (which don't
+    consume lookup budget). Use SPF flattening tools or a managed
+    SPF provider (Dmarcian, Valimail) to stay within limits. The
+    mechanisms that count toward the 10-lookup limit are: include,
+    a, mx, ptr, exists, and redirect. The ip4:, ip6:, and all
+    mechanisms do not count.
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "has_spf": true,
+          "spf_record": "v=spf1 ip4:192.0.2.0/24 include:_spf.google.com -all",
+          "spf_lookup_count": 5,
+          "spf_exceeds_lookup_limit": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.spf_exceeds_lookup_limit
+      op: eq
+      value: true

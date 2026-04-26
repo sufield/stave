@@ -1,0 +1,27 @@
+control: CTL.ROUTE53.FAILOVER.NOSECONDARY.001
+defect: >
+  Route 53 failover record [name] has a primary
+  record but no secondary record.
+infection: >
+  Failover routing requires a primary and a
+  secondary record. When the primary's health
+  check fails, Route 53 returns the secondary
+  record's value — typically a different ALB,
+  CloudFront distribution, or S3 static error
+  page in another region. Without a secondary
+  record, failover has no target. The primary
+  fails. Route 53 has nothing to fail over to.
+  Depending on the record type and configuration,
+  Route 53 either continues returning the
+  unhealthy primary (routing to a broken
+  endpoint) or returns no answer (NXDOMAIN).
+  Either way, the failover mechanism is broken.
+  This is a false confidence pattern: the
+  infrastructure shows "failover routing
+  configured" — but there is nothing to fail
+  over to. An auditor sees HA without the H.
+failure: >
+  Failover without a fallback. The primary
+  endpoint fails and there is no secondary to
+  route traffic to. The failover mechanism is
+  configured but cannot activate.

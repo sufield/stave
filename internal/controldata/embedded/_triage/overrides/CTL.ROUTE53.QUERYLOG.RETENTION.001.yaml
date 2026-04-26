@@ -1,0 +1,30 @@
+control: CTL.ROUTE53.QUERYLOG.RETENTION.001
+defect: >
+  Route 53 DNS query log group [query_log_group]
+  has no retention policy or retention below
+  365 days ([query_log_retention_days] days).
+infection: >
+  DNS query logs are the forensic record of all
+  DNS resolution activity against the hosted zone.
+  Security investigations typically require
+  months of log history: determining when a
+  compromise began, reconstructing the timeline
+  of DNS tunneling sessions, identifying which
+  subdomains were queried and from which resolvers.
+  Compliance audits require log availability for
+  the full audit period. When logs are deleted
+  before the investigation or audit window closes,
+  root-cause analysis is impossible and compliance
+  attestation for the missing period cannot be
+  provided. CloudWatch Logs retains log events
+  indefinitely by default only if no retention
+  policy is set — but the billing cost of
+  indefinite retention on high-volume DNS query
+  logs motivates teams to set short retention
+  periods. The result is logs that exist long
+  enough to appear configured but disappear when
+  an investigation actually needs them.
+failure: >
+  Query logs deleted before investigation windows
+  close. DNS-layer forensic evidence unavailable
+  for incident reconstruction or compliance audit.

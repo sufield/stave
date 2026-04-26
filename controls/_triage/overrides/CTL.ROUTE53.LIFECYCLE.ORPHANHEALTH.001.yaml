@@ -1,0 +1,28 @@
+control: CTL.ROUTE53.LIFECYCLE.ORPHANHEALTH.001
+defect: >
+  Route 53 health check is not referenced by
+  any DNS record.
+infection: >
+  The health check monitors an endpoint but no
+  routing decision uses the health status. The
+  check consumes per-month cost and occupies
+  one of the per-account 200-health-check
+  quota slots. CloudWatch alarms tied to the
+  health check may fire (unhealthy status), but
+  no DNS record reacts. This typically indicates
+  incomplete cleanup after a record was deleted
+  (the health check was created for the record
+  but the record was removed without removing
+  the check), or that a planned routing change
+  never completed (the check was created in
+  advance for a record that was never created).
+  Distinct from CTL.ROUTE53.HEALTHCHECK.GHOST
+  (which detects health checks pointing at
+  deleted target endpoints): this control flags
+  health checks not referenced by any DNS record,
+  regardless of whether the target endpoint
+  still exists.
+failure: >
+  Quota and cost leak. Unreferenced health
+  checks consume the per-account quota and bill
+  monthly without affecting routing decisions.

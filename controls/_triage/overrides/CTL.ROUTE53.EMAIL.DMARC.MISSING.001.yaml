@@ -1,0 +1,25 @@
+control: CTL.ROUTE53.EMAIL.DMARC.MISSING.001
+defect: >
+  Domain [X] has no DMARC record at
+  _dmarc.[domain].
+infection: >
+  DMARC is the policy layer on top of SPF and
+  DKIM. Without DMARC: receiving servers have
+  no instruction on how to handle authentication
+  failures (they decide independently, and most
+  default to accepting); SPF and DKIM results
+  are advisory only (the receiver may ignore
+  them); there is no reporting mechanism (the
+  domain owner has no visibility into who is
+  sending email as their domain); there is no
+  subdomain policy (each subdomain is fully
+  unprotected by default). DMARC with p=reject
+  tells receivers to reject email that fails
+  authentication — the strongest anti-phishing
+  control available via DNS. Without DMARC,
+  SPF and DKIM results exist in isolation with
+  no policy binding them to a protective action.
+failure: >
+  No email authentication policy. Receiving
+  servers have no instruction to reject spoofed
+  email from this domain.

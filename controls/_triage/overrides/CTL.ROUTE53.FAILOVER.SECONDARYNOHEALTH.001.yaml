@@ -1,0 +1,27 @@
+control: CTL.ROUTE53.FAILOVER.SECONDARYNOHEALTH.001
+defect: >
+  Route 53 failover secondary record [name] has
+  no health check.
+infection: >
+  When the primary record fails its health check,
+  Route 53 fails over to the secondary. Without
+  a health check on the secondary, the failover
+  destination may itself be unhealthy. Traffic
+  moves from a known-broken primary to a
+  potentially-broken secondary with no
+  verification. Customers experience a double
+  failure: the primary is down, and the failover
+  destination is also unavailable. A health
+  check on the secondary provides a signal: if
+  the secondary is also unhealthy, the operator
+  knows the entire failover mechanism has failed
+  and can take manual action. Without the signal,
+  the operator sees the failover trigger but has
+  no visibility into whether the secondary is
+  actually serving traffic correctly.
+failure: >
+  Blind failover. Traffic fails over to the
+  secondary without verifying that the secondary
+  is healthy. A broken secondary receives the
+  same traffic that a broken primary was
+  rejecting.

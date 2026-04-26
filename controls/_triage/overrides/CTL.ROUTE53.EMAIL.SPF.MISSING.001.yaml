@@ -1,0 +1,25 @@
+control: CTL.ROUTE53.EMAIL.SPF.MISSING.001
+defect: >
+  Domain [X] has no SPF record. Any mail server
+  can send email claiming to be from this domain.
+infection: >
+  SPF tells receiving mail servers which IP
+  addresses and mail servers are authorized to
+  send email for this domain. Without SPF, any
+  server can send email with a From address
+  @[domain] — and the receiving server has no
+  mechanism to detect the forgery. An attacker
+  sends phishing email from ceo@[domain] to
+  employees, customers, or partners. The email
+  passes basic checks (the domain exists, the
+  format is valid). Without SPF, the receiving
+  server can't verify that the attacker's server
+  is unauthorized. SPF is the first layer of
+  email authentication — it restricts which
+  servers can send as the domain. Without it,
+  domain spoofing for phishing is trivial and
+  undetectable at the network level.
+failure: >
+  Email domain spoofing. Any server can send
+  email as @[domain] with no authentication
+  check.

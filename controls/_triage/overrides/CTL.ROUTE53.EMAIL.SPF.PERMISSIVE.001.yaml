@@ -1,0 +1,26 @@
+control: CTL.ROUTE53.EMAIL.SPF.PERMISSIVE.001
+defect: >
+  Domain [X] SPF record uses [+all / ?all] —
+  any server is authorized to send email as
+  this domain.
+infection: >
+  An SPF record with +all explicitly authorizes
+  every server on the internet to send email for
+  this domain. The SPF record exists — an auditor
+  checking "does SPF exist?" sees it and marks
+  the domain as compliant. But the content of
+  the record provides zero protection. ?all is
+  equally useless — it tells receiving servers
+  to take no action on unauthorized senders
+  (neutral). The SPF record's existence creates
+  false confidence. The correct qualifiers are
+  ~all (softfail — mark as suspicious) or -all
+  (hardfail — reject). -all is the strongest
+  and recommended setting. ~all is an acceptable
+  transition state. +all and ?all are not
+  acceptable in any production configuration.
+failure: >
+  False SPF protection. The SPF record exists
+  but authorizes all servers — providing no
+  restriction on who can send email as this
+  domain.

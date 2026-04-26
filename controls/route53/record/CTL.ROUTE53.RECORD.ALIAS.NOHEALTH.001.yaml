@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.RECORD.ALIAS.NOHEALTH.001
+name: Route 53 Alias Record Has EvaluateTargetHealth Disabled
+description: >
+  Route 53 alias record has evaluateTargetHealth set to false. Alias
+  records can propagate health from the target resource (ALB,
+  CloudFront, API Gateway, S3 website endpoint, another Route 53
+  record) — when the target is unhealthy, Route 53 stops returning
+  this alias for queries. With evaluateTargetHealth disabled,
+  Route 53 always returns the alias regardless of whether the target
+  is healthy: traffic is routed to unhealthy or unreachable targets,
+  defeating the resilience benefit of alias records. The control is
+  medium severity because evaluateTargetHealth=false is sometimes
+  intentional — the target handles its own health management
+  (CloudFront origin failover, ALB internal target health), or the
+  target type does not support target health evaluation
+  (S3 buckets, certain API Gateway configurations). The finding is
+  a prompt to confirm that the disabled health evaluation is
+  intentional and that another mechanism (CloudWatch alarm,
+  application-level circuit breaker, secondary DNS-level health
+  check) handles unhealthy-target detection.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-7"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Route 53 alias record has evaluateTargetHealth disabled. Traffic
+    is routed to the alias target regardless of target health.
+  action: >
+    For alias records pointing to ALBs, NLBs, or other Route 53
+    records: enable evaluateTargetHealth — aws route53
+    change-resource-record-sets and set EvaluateTargetHealth=true
+    in the AliasTarget block. Route 53 will stop returning the alias
+    when the target is unhealthy. For alias records where target
+    health evaluation is not supported (S3, some CloudFront cases)
+    or is intentionally handled by the target itself: document the
+    decision in the record's owner-tag or an out-of-band registry
+    so future audits do not re-flag the finding, and verify the
+    compensating mechanism (CloudFront origin failover, ALB target
+    group health, application circuit breaker) is operational and
+    tested.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "www.example.com",
+          "is_alias": true,
+          "alias_evaluate_health": true,
+          "alias_target": "d111111abcdef8.cloudfront.net"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.is_alias
+      op: eq
+      value: true
+    - field: properties.network.dns.alias_evaluate_health
+      op: eq
+      value: false

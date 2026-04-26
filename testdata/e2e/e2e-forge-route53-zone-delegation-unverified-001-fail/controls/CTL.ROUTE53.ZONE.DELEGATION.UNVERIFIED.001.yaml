@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.ZONE.DELEGATION.UNVERIFIED.001
+name: Route 53 NS Record Delegates Subdomain to External Name Servers
+description: >
+  Route 53 has an NS record that delegates a subdomain to name servers
+  outside the organization's Route 53 infrastructure. NS delegation
+  transfers DNS authority for the subdomain to the specified name
+  servers — the delegated name servers control all DNS records for
+  the subdomain. When the delegated name servers are external (not
+  Route 53, not the organization's own DNS infrastructure), the
+  external operator controls DNS resolution for the subdomain. If
+  the external service is discontinued (lame delegation — the name
+  servers no longer serve the zone), compromised (attacker modifies
+  DNS records), or misconfigured, the organization has no control
+  over the subdomain's DNS. For subdomains hosting production
+  services, email, or customer-facing applications, external NS
+  delegation is a control gap requiring documented authorization.
+  This control identifies unverified external delegation — NS
+  records pointing to name servers not under organizational control.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-20"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    NS record delegates subdomain DNS authority to external name servers
+    not under organizational control.
+  action: >
+    Audit the NS delegation: verify the external name servers are
+    intentionally used and the delegation is authorized. If authorized,
+    document the delegation with the business justification and owner.
+    If the external service has been discontinued: remove the NS
+    delegation record from Route 53 immediately (lame delegation
+    creates subdomain takeover risk). If the subdomain should remain
+    on Route 53: create a hosted zone in Route 53 for the subdomain
+    and update the NS record to Route 53 name servers. Unverified
+    external delegation is a control gap regardless of intent.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "legacy.example.com",
+          "record_type": "NS",
+          "zone_name": "example.com",
+          "ns_servers": ["ns1.route53.amazonaws.com", "ns2.route53.amazonaws.com"],
+          "ns_external": false,
+          "ns_in_org": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.record_type
+      op: eq
+      value: NS
+    - field: properties.network.dns.ns_external
+      op: eq
+      value: true

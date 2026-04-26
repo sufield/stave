@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.FAILOVER.SECONDARYNOHEALTH.001
+name: Route 53 Failover Secondary Record Has No Health Check
+description: >
+  Route 53 failover routing has a health check on the primary record
+  but no health check on the secondary (failover) record. When the
+  primary fails its health check, Route 53 fails over to the
+  secondary — which may itself be unhealthy. Without a health check
+  on the secondary, failover moves traffic from a known-broken
+  primary to a potentially-broken secondary with no verification.
+  Customers experience a double failure: the primary is down, and
+  the failover destination is also unavailable. A health check on
+  the secondary provides a signal: if the secondary is also unhealthy,
+  the operator knows the entire failover mechanism has failed and
+  can take manual action. Without the signal, the operator sees the
+  failover trigger but has no visibility into whether the secondary
+  is actually serving traffic correctly.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Route 53 failover secondary record has no health check. If the
+    secondary endpoint is also unhealthy when failover triggers,
+    traffic moves to a broken endpoint with no detection.
+  action: >
+    Add a health check to the failover secondary record. Create a
+    health check for the secondary endpoint: aws route53
+    create-health-check. Update the secondary record set to include
+    the HealthCheckId. Route 53 will then mark the secondary as
+    unhealthy if it fails, providing a signal that both endpoints
+    are down. Note that if the secondary is unhealthy and there are
+    no other healthy records, Route 53 returns the unhealthy
+    secondary anyway as a last resort — but the health check ensures
+    the team knows the state.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "api.example.com",
+          "routing_policy": "failover",
+          "failover_role": "SECONDARY",
+          "has_health_check": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.routing_policy
+      op: eq
+      value: failover
+    - field: properties.network.dns.failover_role
+      op: eq
+      value: SECONDARY
+    - field: properties.network.dns.has_health_check
+      op: eq
+      value: false

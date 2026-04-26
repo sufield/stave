@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.RECORD.WILDCARD.001
+name: Route 53 Wildcard Record Catches All Subdomains
+description: >
+  Route 53 hosted zone has a wildcard record (*.example.com) that
+  matches every subdomain not explicitly defined in the zone.
+  Wildcard records resolve typos, test subdomains, and any subdomain
+  an attacker probes — all to the wildcard target. This: masks
+  dangling DNS detection (a deleted service's subdomain still resolves
+  via the wildcard, suppressing the NXDOMAIN signal that flags
+  dangling records), hides reconnaissance (an attacker probing for
+  subdomains always gets a response — they cannot distinguish real
+  subdomains from wildcard matches), and routes unintended traffic
+  to one endpoint regardless of intended audience. Wildcard records
+  have legitimate uses (catch-all for SaaS multi-tenancy, fallback
+  landing pages) — the finding is a request to review whether the
+  wildcard is intentional, and to understand that it suppresses the
+  organization's primary subdomain takeover detection signal.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: reconnaissance
+remediation:
+  description: >
+    Route 53 zone has a wildcard record. All non-existent subdomains
+    resolve to the wildcard target — masking dangling DNS detection
+    and revealing nothing about which subdomains exist.
+  action: >
+    Review whether the wildcard record is required. If it exists for
+    historical reasons or convenience, replace it with explicit records
+    for the subdomains the organization actually uses. If it is
+    required (SaaS multi-tenancy, customer-facing catch-all), document
+    the business justification and compensate by: (1) auditing
+    explicit records monthly to detect dangling entries that the
+    wildcard would otherwise mask, (2) using application-level checks
+    on the wildcard target to distinguish real tenants from probes,
+    (3) routing wildcard traffic to a dedicated landing page rather
+    than a production application. For zones that mix wildcards and
+    explicit records, ensure every legitimate subdomain has an explicit
+    record so dangling detection works for those names — only typos
+    and unknown probes resolve via the wildcard.
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "is_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.is_wildcard
+      op: eq
+      value: true

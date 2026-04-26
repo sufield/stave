@@ -1,0 +1,25 @@
+id: r53_email_false_protection
+description: >
+  Email authentication records exist but provide no protection. Any
+  of these three conditions independently means the authentication
+  controls pass a superficial audit while failing to protect the
+  domain: SPF with +all or ?all explicitly authorizes all senders
+  (or is neutral), so the record exists but any server is authorized;
+  DMARC with p=none provides monitoring but no enforcement — spoofed
+  email is delivered to recipients; SPF exceeding 10 DNS lookups
+  returns PermError, causing receivers to treat the domain as having
+  no SPF. Each condition creates false confidence that email security
+  is in place. The authentication infrastructure exists and appears
+  configured in security scanners. The domain is unprotected.
+  Threshold of 1 reflects that any single false protection condition
+  undermines the email authentication stack.
+controls:
+  - CTL.ROUTE53.EMAIL.SPF.PERMISSIVE.001
+  - CTL.ROUTE53.EMAIL.DMARC.NOENFORCE.001
+  - CTL.ROUTE53.EMAIL.SPF.LOOKUPLIMIT.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access

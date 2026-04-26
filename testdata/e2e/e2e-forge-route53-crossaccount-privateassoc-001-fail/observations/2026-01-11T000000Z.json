@@ -1,0 +1,1 @@
+{"schema_version":"obs.v0.1","captured_at":"2026-01-11T00:00:00Z","source":"deployed","assets":[{"id":"Z456/internal.example.com","type":"aws_route53_zone","vendor":"aws","properties":{"dns_service":{"kind":"hosted_zone","zone_name":"internal.example.com","is_private_zone":true,"has_external_vpc":true,"external_vpc_accounts":["999988887777"],"external_vpcs_in_org":false}}}]}

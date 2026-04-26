@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.ZONE.CAA.MISSING.001
+name: Route 53 Zone Has No CAA Record
+description: >
+  Route 53 public hosted zone has no CAA (Certificate Authority
+  Authorization) record. Without CAA, any of the hundreds of public
+  certificate authorities can issue SSL/TLS certificates for the
+  domain. The CA/Browser Forum requires CAs to check CAA records
+  before certificate issuance. An attacker who compromises a CA
+  with weak domain validation, or who social-engineers a CA's
+  issuance process, can obtain a legitimately signed certificate
+  for the domain. With a valid certificate, the attacker can
+  intercept HTTPS traffic without triggering browser security
+  warnings. CAA limits certificate issuance to the CAs the
+  organization actually uses — typically one or two (Amazon,
+  Let's Encrypt, DigiCert). This control is medium severity because
+  CAA is a defense-in-depth measure: a compromised CA may ignore
+  the CAA check, and most organizations use reputable CAs with
+  strong issuance controls. CAA is most effective against
+  legitimate CAs with weak validation processes.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-20"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Domain has no CAA record. Any certificate authority can issue
+    certificates for this domain.
+  action: >
+    Add CAA records to Route 53 restricting which CAs can issue
+    certificates for the domain. Add one CAA record per authorized CA:
+    example.com CAA 0 issue "amazon.com" — for ACM certificates.
+    example.com CAA 0 issue "letsencrypt.org" — if using Let's Encrypt.
+    Add a CAA record with tag "issuewild" to restrict wildcard
+    certificate issuance separately (optional, defaults to issue policy
+    if absent). Add iodef to report unauthorized issuance attempts:
+    example.com CAA 0 iodef "mailto:security@example.com"
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "has_caa": true,
+          "caa_issuers": ["amazon.com"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.has_caa
+      op: eq
+      value: false

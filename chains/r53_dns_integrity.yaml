@@ -1,0 +1,27 @@
+id: r53_dns_integrity
+description: >
+  DNSSEC is disabled AND at least one additional DNS integrity control
+  fails. DNS responses are unsigned (DNSSEC disabled), leaving the
+  zone vulnerable to cache poisoning — and either any CA can issue
+  certificates for the domain (no CAA), or DNS authority for a
+  subdomain is delegated to external name servers outside
+  organizational control (unverified delegation). DNSSEC disabled
+  alone is a gap; combined with absent CAA, a cache poisoning
+  attacker who redirects DNS can obtain a valid certificate for the
+  redirected domain — enabling MITM with no browser warnings.
+  Combined with unverified external delegation, the attacker has
+  two independent DNS control vectors: poison the unsigned parent
+  zone and the delegated subdomain is also controlled externally.
+  Threshold of 2 requires DNSSEC disabled plus at least one
+  additional control — reflecting that the compound risk exceeds
+  the sum of individual gaps.
+controls:
+  - CTL.ROUTE53.DNSSEC.DISABLED.001
+  - CTL.ROUTE53.ZONE.CAA.MISSING.001
+  - CTL.ROUTE53.ZONE.DELEGATION.UNVERIFIED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access

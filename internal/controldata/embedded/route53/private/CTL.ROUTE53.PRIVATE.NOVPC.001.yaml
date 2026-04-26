@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.PRIVATE.NOVPC.001
+name: Route 53 Private Hosted Zone Not Associated with Any VPC
+description: >
+  Route 53 private hosted zone exists but is not associated with any
+  VPC. A private hosted zone resolves DNS names only within the VPCs
+  it is associated with — VPC resources query the zone's records
+  when resolving names in that zone's namespace. Without any VPC
+  association, no resource can resolve the zone's records: the zone
+  is a dead configuration. DNS records in the zone (typically
+  internal service endpoints, database hostnames, RDS instance
+  addresses, internal API endpoints) are permanently unresolvable.
+  The zone retains those records — potentially containing the
+  organization's complete internal service map — visible to anyone
+  with route53:ListResourceRecordSets permission. This typically
+  indicates: the zone was created but VPC association was never
+  completed (incomplete provisioning); or all VPC associations were
+  removed during decommissioning but the zone itself was not deleted
+  (incomplete cleanup). Either way, the zone serves no function and
+  documents internal infrastructure for no operational benefit.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-07", "DCS-06"]
+scope_tags:
+  - aws
+  - route53
+vendor: aws
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: reconnaissance
+remediation:
+  description: >
+    Route 53 private hosted zone is not associated with any VPC.
+    The zone's records are unresolvable and expose internal
+    infrastructure details without serving any function.
+  action: >
+    Determine whether the zone is still needed. If needed: associate
+    the zone with the appropriate VPC — aws route53 associate-vpc-
+    with-hosted-zone --hosted-zone-id {zone-id} --vpc VPCRegion=
+    {region},VPCId={vpc-id}. If not needed: delete the zone — first
+    delete all resource record sets (excluding the SOA and NS records),
+    then delete the zone itself. Before deleting, verify that no
+    application depends on the zone's records. Check CloudTrail for
+    recent route53:ListResourceRecordSets API calls targeting the
+    zone-id to identify if any service is still attempting resolution.
+  example: |
+    {
+      "dns_service": {
+        "kind": "hosted_zone",
+        "is_private_zone": true,
+        "has_vpc_association": true,
+        "associated_vpc_count": 2
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns_service.kind
+      op: eq
+      value: hosted_zone
+    - field: properties.dns_service.is_private_zone
+      op: eq
+      value: true
+    - field: properties.dns_service.has_vpc_association
+      op: eq
+      value: false

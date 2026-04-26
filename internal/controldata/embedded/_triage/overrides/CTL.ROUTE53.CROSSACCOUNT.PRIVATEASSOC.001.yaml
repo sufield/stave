@@ -1,0 +1,33 @@
+control: CTL.ROUTE53.CROSSACCOUNT.PRIVATEASSOC.001
+defect: >
+  Route 53 private hosted zone is associated
+  with a VPC in an external account that is
+  not part of the organization.
+infection: >
+  Private hosted zone association grants the
+  associated VPC's resources the ability to
+  resolve all records in the zone — internal
+  service names, database endpoints, internal
+  IP addresses, and other infrastructure
+  details. When the associated VPC belongs to
+  an external account (not in the
+  organization's account list, not validated
+  via aws:PrincipalOrgID), that external
+  account's resources can resolve the
+  organization's internal DNS. If the external
+  account is compromised — or, for partner
+  relationships, if a former partner retains
+  the association — the attacker discovers
+  the organization's internal infrastructure
+  by querying the private zone. The exposure
+  is not a single record; it is the entire
+  zone's records. Private zone association
+  should be limited to accounts within the
+  organization or to explicitly authorized
+  partner accounts with documented business
+  justification and time-bound review.
+failure: >
+  Internal DNS exposed to external account.
+  External VPC can resolve every record in
+  the private zone — full internal
+  infrastructure visibility.

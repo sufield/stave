@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.EMAIL.DMARC.NOENFORCE.001
+name: Route 53 Zone DMARC Record Has No Enforcement Policy
+description: >
+  Route 53 public hosted zone has a DMARC record with p=none —
+  monitoring-only mode, no enforcement. Receiving servers report
+  authentication failures to the domain owner (via rua= aggregate
+  reports) but do not reject or quarantine spoofed email. The DMARC
+  record exists and appears in DNS audits as "DMARC configured." It
+  provides no protection. Spoofed email is delivered to recipients.
+  p=none is the intended starting point for DMARC deployment —
+  observe the sending landscape, fix legitimate sources, then
+  progress to enforcement. Organizations that enable p=none and
+  never advance create false confidence: the DMARC record exists,
+  security scans pass, but phishing email is still delivered. The
+  enforcement states are p=quarantine (deliver to spam) and p=reject
+  (reject outright). p=quarantine is acceptable enforcement;
+  p=reject is the strongest and recommended target.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DMARC policy is p=none — monitoring only, no enforcement. Spoofed
+    email from this domain is delivered to recipients.
+  action: >
+    Progress DMARC from p=none to enforcement. Review aggregate
+    reports (rua= destination) to identify all legitimate mail
+    sources and ensure they pass SPF or DKIM. Move to p=quarantine
+    (spoofed email goes to spam folder) to validate enforcement
+    doesn't break legitimate delivery. Then advance to p=reject
+    (spoofed email is rejected at the mail server). Target:
+    "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@[zone]"
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "has_dmarc": true,
+          "dmarc_record": "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@example.com",
+          "dmarc_policy": "reject",
+          "dmarc_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.has_dmarc
+      op: eq
+      value: true
+    - field: properties.network.dns.dmarc_enforced
+      op: eq
+      value: false

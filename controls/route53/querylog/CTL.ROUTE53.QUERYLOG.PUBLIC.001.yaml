@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.QUERYLOG.PUBLIC.001
+name: Route 53 Public Hosted Zone Has No DNS Query Logging
+description: >
+  Route 53 public hosted zone does not have DNS query logging enabled.
+  DNS query logs are the only visibility into DNS resolution patterns
+  for the zone — every query received by Route 53 is recorded: the
+  queried domain name, query type (A, AAAA, MX, TXT), response code
+  (NOERROR, NXDOMAIN, SERVFAIL), the resolver IP that sent the query,
+  and the timestamp. Without query logging: DNS tunneling (encoding
+  data in DNS queries to exfiltrate information to an attacker-
+  controlled authoritative server) is completely invisible — the
+  attacker's queries arrive and are answered but no log records them.
+  Reconnaissance (probing for internal subdomain names to map internal
+  infrastructure) is undetectable. Anomalous query patterns (sudden
+  spike in queries to a single subdomain, systematic enumeration of
+  subdomains, query patterns consistent with DGA-based C2) leave no
+  forensic trail. Public zones are the primary surface for DNS-layer
+  threat detection because they receive external resolver traffic —
+  any client on the internet can query a public zone, making these
+  zones the entry point for DNS-based attacks and surveillance.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "3.1"
+  nist_800_53_r5: "AU-2"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03", "SEF-03"]
+scope_tags:
+  - aws
+  - route53
+vendor: aws
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Route 53 public hosted zone does not have DNS query logging
+    enabled. DNS queries to the zone are unrecorded.
+  action: >
+    Enable DNS query logging for the hosted zone. Create a CloudWatch
+    Logs log group for query logs: aws logs create-log-group --log-
+    group-name /aws/route53/{zone-name}. Grant Route 53 permission to
+    write to the log group via a resource-based policy. Enable query
+    logging: aws route53 create-query-logging-config --hosted-zone-id
+    {zone-id} --cloud-watch-logs-log-group-arn {log-group-arn}. Query
+    logs are written to CloudWatch Logs within a few minutes of
+    enabling. Note: DNS query logging is only available for public
+    hosted zones. Private zone resolver query logging uses Resolver
+    Query Logging (CTL.ROUTE53.QUERYLOG.PRIVATE.001).
+  example: |
+    {
+      "dns_service": {
+        "kind": "hosted_zone",
+        "is_public_zone": true,
+        "query_logging_enabled": true,
+        "query_log_group": "/aws/route53/example.com"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns_service.kind
+      op: eq
+      value: hosted_zone
+    - field: properties.dns_service.is_public_zone
+      op: eq
+      value: true
+    - field: properties.dns_service.query_logging_enabled
+      op: eq
+      value: false

@@ -1,0 +1,31 @@
+control: CTL.ROUTE53.DNSSEC.DISABLED.001
+defect: >
+  Route 53 public hosted zone [X] does not
+  have DNSSEC signing enabled.
+infection: >
+  Without DNSSEC, DNS responses are unsigned.
+  A DNS cache poisoning attack (Kaminsky
+  attack) can inject forged records into
+  recursive resolver caches — redirecting
+  the domain to an attacker-controlled IP.
+  The attack works against resolvers without
+  source port randomization or against
+  networks where the attacker can observe
+  DNS queries. DNSSEC signs each DNS response
+  with the zone's key — resolvers that
+  validate DNSSEC reject forged responses.
+  Not all resolvers validate DNSSEC (adoption
+  is growing but not universal), but validating
+  resolvers represent a growing fraction of
+  internet traffic. DNSSEC protection is
+  asymmetric: the organizations that are most
+  targeted (financial, healthcare, government)
+  are served by resolvers that are most likely
+  to validate. Route 53 private hosted zones
+  don't support DNSSEC — this finding applies
+  only to public zones.
+failure: >
+  DNS response spoofing possible. Unsigned
+  DNS responses can be forged by a cache
+  poisoning attacker, redirecting traffic
+  to attacker infrastructure.

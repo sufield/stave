@@ -1,0 +1,1 @@
+{"schema_version":"obs.v0.1","captured_at":"2026-01-11T00:00:00Z","source":"deployed","assets":[{"id":"hc-orphan9","type":"aws_route53_healthcheck","vendor":"aws","properties":{"dns_service":{"kind":"route53_healthcheck","healthcheck":{"health_check_id":"hc-orphan9","health_check_referenced":false,"health_check_record_count":0}}}}]}

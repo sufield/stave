@@ -1,0 +1,23 @@
+id: r53_internal_exposure
+description: >
+  Public-zone records expose internal infrastructure AND at least
+  one additional record-security failure. Internal architecture is
+  discoverable via public DNS (RFC 1918 IPs, internal AWS hostnames,
+  SRV ports) AND either the database tier is directly addressable
+  via DNS (no application-tier indirection) or a wildcard record
+  masks dangling DNS detection (every probed subdomain resolves,
+  hiding which records are real). Threshold of 2 reflects that
+  internal exposure alone is reconnaissance value; combining with
+  direct database addressability or detection-blind wildcards
+  compounds the risk — the attacker has both targets and a path
+  to them, or both targets and concealed reconnaissance.
+controls:
+  - CTL.ROUTE53.RECORD.INTERNAL.EXPOSED.001
+  - CTL.ROUTE53.RECORD.A.DATABASE.001
+  - CTL.ROUTE53.RECORD.WILDCARD.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access

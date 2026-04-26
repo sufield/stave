@@ -1,0 +1,28 @@
+control: CTL.ROUTE53.LIFECYCLE.ORPHANZONE.001
+defect: >
+  Route 53 hosted zone has no matching domain
+  registration or NS delegation in the
+  visible scope.
+infection: >
+  A hosted zone without a matching domain
+  registration or NS delegation is unreachable
+  — no DNS queries reach it. The zone contains
+  records (potentially internal hostnames,
+  IP addresses, and service endpoints) that are
+  visible to anyone with route53:
+  ListResourceRecordSets permission but serve
+  no DNS function. The zone is a governance
+  artifact: monthly cost, configuration clutter,
+  and potential information exposure of
+  internal infrastructure via the records it
+  contains. The control flags only zones with
+  no domain AND no NS delegation in scope, so
+  externally-registered domains that delegate
+  to the zone are not falsely flagged — but
+  this requires verification when the domain
+  registrar is outside Route 53.
+failure: >
+  Dead hosted zone. The zone serves no DNS
+  resolution but retains records with internal
+  infrastructure information visible to anyone
+  with read access to Route 53.

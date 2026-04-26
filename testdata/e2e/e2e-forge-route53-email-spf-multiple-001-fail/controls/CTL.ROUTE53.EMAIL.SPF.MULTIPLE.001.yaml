@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.EMAIL.SPF.MULTIPLE.001
+name: Route 53 Zone Has Multiple SPF Records
+description: >
+  Route 53 public hosted zone has more than one TXT record beginning
+  with "v=spf1". RFC 7208 states a domain MUST NOT publish multiple
+  SPF records. When multiple SPF records exist, the behavior is
+  undefined — receiving servers may select any one record, return
+  a PermError, or produce inconsistent validation results. One
+  record may be restrictive (-all) while the other is permissive
+  (+all), making the effective policy depend on which record the
+  receiving server evaluates. SPF validation becomes unpredictable
+  across different mail providers. Multiple SPF records typically
+  result from multiple administrators independently adding records,
+  or from a failed migration between mail providers where the old
+  record was not removed.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Domain has multiple SPF TXT records. SPF validation behavior is
+    undefined — receiving servers may produce inconsistent results.
+  action: >
+    Consolidate all SPF records into a single TXT record. Merge the
+    include: directives, ip4:, and ip6: mechanisms from all existing
+    records into one record. Delete all but the consolidated record.
+    Verify the merged record is syntactically valid and does not
+    exceed 10 DNS lookups. Note: other TXT records (DKIM selectors,
+    domain verification tokens, Google Site Verification) are not
+    SPF records — only TXT records starting with "v=spf1" are SPF.
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "spf_record_count": 1,
+          "has_multiple_spf": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.has_multiple_spf
+      op: eq
+      value: true

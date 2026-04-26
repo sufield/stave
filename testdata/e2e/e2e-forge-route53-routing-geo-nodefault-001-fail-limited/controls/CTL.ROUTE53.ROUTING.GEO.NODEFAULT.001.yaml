@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.ROUTING.GEO.NODEFAULT.001
+name: Route 53 Geolocation Routing Has No Default Record
+description: >
+  Route 53 geolocation routing policy has records for specific
+  countries or continents but no default record. Geolocation routing
+  matches viewer location to DNS records by country or continent.
+  If the viewer's location does not match any configured record,
+  Route 53 needs a default record to return. Without a default
+  record, viewers from countries not covered by any geolocation
+  record receive NXDOMAIN — the domain appears to not exist for
+  those viewers. A user in a country not listed in the geolocation
+  configuration gets a complete DNS resolution failure. This is a
+  silent failure: the organization does not know viewers in unlisted
+  countries cannot reach the domain, and those viewers have no
+  way to distinguish between "the service does not exist" and
+  "the service exists but did not configure DNS for my location."
+  A default record catches all unmatched locations and provides
+  a fallback — typically the same endpoint as the nearest region
+  or a global endpoint.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-22"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-03", "IVS-08"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Route 53 geolocation routing has no default record. Viewers from
+    countries not covered by any geolocation record receive NXDOMAIN.
+  action: >
+    Add a default geolocation record to the record set. In the AWS
+    console, add a record with Location=Default. Via CLI, include
+    GeoLocation={CountryCode=*} in the resource record set. The
+    default record receives traffic from any location not matched
+    by a more specific geolocation record. Point the default to
+    the nearest global endpoint or to a global load balancer.
+    Ensure the default record has a health check if the endpoint
+    may become unhealthy — otherwise viewers in unmatched locations
+    will route to an unhealthy endpoint with no fallback.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "api.example.com",
+          "routing_policy": "geolocation",
+          "geo_has_default": true,
+          "geo_locations": ["US", "EU", "APAC", "*"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.routing_policy
+      op: eq
+      value: geolocation
+    - field: properties.network.dns.geo_has_default
+      op: eq
+      value: false

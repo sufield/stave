@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.HEALTH.MISSING.001
+name: Route 53 Routing Policy Record Has No Health Check
+description: >
+  Route 53 record with a routing policy that depends on endpoint health
+  — failover, weighted, latency, or multi-value — does not have an
+  associated health check. Without a health check, Route 53 cannot
+  detect when the endpoint is unhealthy and routes traffic to the
+  endpoint regardless of its state. Failover routing never triggers
+  failover (the primary is always considered healthy, even when
+  returning 500 errors). Weighted routing sends traffic to unhealthy
+  endpoints proportionally — an endpoint with weight 50 receives 50%
+  of traffic even when it is down. Latency routing sends traffic to
+  the nearest but potentially unhealthy endpoint. Simple routing
+  does not use health checks for routing decisions and is excluded
+  from this control. Geolocation routing uses health checks for
+  availability but the key safety gap for geolocation is the missing
+  default record (see CTL.ROUTE53.ROUTING.GEO.NODEFAULT.001).
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-7"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-03", "IVS-08"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Route 53 record with a health-dependent routing policy has no
+    associated health check. The routing mechanism cannot detect
+    endpoint failure.
+  action: >
+    Create a health check for the endpoint: aws route53
+    create-health-check. Associate the health check with the record
+    by updating the record set to include HealthCheckId. For failover
+    routing, the primary record must have a health check — without it,
+    failover never triggers. For weighted routing, each weighted record
+    should have a health check so Route 53 excludes unhealthy endpoints
+    from the weighted distribution. For latency routing, health checks
+    ensure Route 53 does not route to the lowest-latency endpoint when
+    that endpoint is unhealthy.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "api.example.com",
+          "routing_policy": "failover",
+          "has_health_check": true,
+          "health_check_id": "hc-abc123"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.routing_policy
+      op: in
+      value:
+        - failover
+        - weighted
+        - latency
+        - multivalue
+    - field: properties.network.dns.has_health_check
+      op: eq
+      value: false

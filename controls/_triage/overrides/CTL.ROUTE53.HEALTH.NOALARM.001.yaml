@@ -1,0 +1,27 @@
+control: CTL.ROUTE53.HEALTH.NOALARM.001
+defect: >
+  Route 53 health check [id] has no CloudWatch
+  alarm monitoring its status.
+infection: >
+  Route 53 health checks run continuously and
+  detect endpoint failures. When a health check
+  transitions from healthy to unhealthy, Route 53
+  automatically triggers any associated routing
+  changes (failover, weighted rebalancing) — but
+  this is silent. Without a CloudWatch alarm on
+  the HealthCheckStatus metric, the team has no
+  notification. The failover happens. Traffic
+  moves. But nobody knows the primary is down
+  until customers report it or someone checks
+  the console. A CloudWatch alarm fires the
+  moment the health check detects failure,
+  triggering the incident response process
+  before customers are significantly affected.
+  Without the alarm, the team's only signals
+  are customer reports and manual inspection —
+  both lagging indicators.
+failure: >
+  Silent health check failures. Endpoint failures
+  detected by Route 53 are not surfaced to the
+  team — no notification, no incident trigger,
+  no audit trail.

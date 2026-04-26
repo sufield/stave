@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.QUERYLOG.PRIVATE.001
+name: Route 53 Private Hosted Zone Has No Resolver Query Logging
+description: >
+  Route 53 private hosted zone (or the associated VPC's resolver)
+  does not have resolver query logging enabled. Internal DNS queries
+  from VPC resources — EC2 instances, Lambda functions, ECS tasks,
+  RDS connections to internal hostnames — are unaudited. Private
+  zones resolve internal service names, database hostnames, and
+  configuration endpoints. An attacker who compromises any VPC
+  resource can query internal DNS names to discover the internal
+  service map (what databases exist, what internal APIs are
+  reachable, what microservices are running) without any log
+  record of the reconnaissance. Resolver query logging captures
+  all DNS queries from VPC resources: the queried name, query
+  type, response code, the source IP of the querying instance,
+  and the VPC ID. Unlike public zone query logging (which captures
+  external resolver queries), resolver query logging captures
+  internal workload DNS activity — the signals needed to detect
+  internal lateral movement and internal reconnaissance that
+  public zone logs cannot see.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - route53
+vendor: aws
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Route 53 private hosted zone does not have resolver query logging
+    enabled. Internal DNS queries from VPC resources are unaudited.
+  action: >
+    Enable Resolver Query Logging for the VPC(s) associated with the
+    private zone. Create a query logging config: aws route53resolver
+    create-resolver-query-log-config --name {name} --destination-arn
+    {cloudwatch-log-group-arn or s3-bucket-arn}. Associate it with
+    the VPC: aws route53resolver associate-resolver-query-log-config
+    --resolver-query-log-config-id {config-id} --resource-id {vpc-id}.
+    Resolver query logging applies to all DNS queries from resources
+    in the VPC, not just queries to private hosted zones — enabling it
+    once per VPC covers all private zone resolution from that VPC.
+  example: |
+    {
+      "dns_service": {
+        "kind": "hosted_zone",
+        "is_private_zone": true,
+        "resolver_query_logging": true,
+        "resolver_log_config": "rqlc-abc123"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns_service.kind
+      op: eq
+      value: hosted_zone
+    - field: properties.dns_service.is_private_zone
+      op: eq
+      value: true
+    - field: properties.dns_service.resolver_query_logging
+      op: eq
+      value: false

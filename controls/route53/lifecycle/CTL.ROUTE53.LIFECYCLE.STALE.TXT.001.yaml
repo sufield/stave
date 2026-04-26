@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.LIFECYCLE.STALE.TXT.001
+name: Route 53 TXT Records Contain Old Verification Tokens
+description: >
+  Route 53 hosted zone contains TXT records with domain
+  verification tokens from completed verifications — google-site-
+  verification, ms= (Microsoft 365), atlassian-domain-verification,
+  _amazonses, docusign=, facebook-domain-verification, and
+  similar — that are no longer needed by the verification service.
+  These records: clutter the zone (a busy zone obscures meaningful
+  records), may contain tokens that could be reused if the
+  verification service is reconfigured, and indicate incomplete
+  cleanup after a service change. Stale verification tokens are
+  detected heuristically by matching known verification-token
+  patterns and flagging tokens that have not been refreshed in a
+  long time. The heuristic cannot determine with certainty that a
+  verification is no longer required — some services require the
+  token to remain in DNS as long as the integration is active.
+  The finding is a prompt to audit the verification tokens and
+  remove those whose corresponding services have been
+  decommissioned.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC8.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: reconnaissance
+remediation:
+  description: >
+    Route 53 zone contains TXT records with old verification tokens
+    from services that may no longer be in use.
+  action: >
+    Audit TXT records in the zone. For each verification token,
+    confirm with the team responsible for the corresponding service
+    (Google Workspace, Microsoft 365, SES, Atlassian, DocuSign,
+    Facebook, etc.) whether the token is still required. For tokens
+    whose service has been decommissioned: delete the TXT record.
+    For tokens whose service is still in use: re-issue the token
+    through the verification service to confirm it is current
+    (most services allow re-verification, which rotates the token).
+    Maintain an inventory of intentional verification tokens with
+    their owning service and last-verified date so future audits
+    can distinguish stale tokens from active ones.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_type": "TXT",
+          "is_verification_token": true,
+          "verification_service": "google-site-verification",
+          "verification_stale": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.record_type
+      op: eq
+      value: TXT
+    - field: properties.network.dns.is_verification_token
+      op: eq
+      value: true
+    - field: properties.network.dns.verification_stale
+      op: eq
+      value: true

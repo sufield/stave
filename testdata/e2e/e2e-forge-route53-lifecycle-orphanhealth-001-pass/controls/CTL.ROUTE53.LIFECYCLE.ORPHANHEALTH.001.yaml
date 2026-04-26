@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.LIFECYCLE.ORPHANHEALTH.001
+name: Route 53 Health Check Not Associated with Any Record
+description: >
+  Route 53 health check exists but is not referenced by any DNS
+  record's HealthCheckId association. The health check monitors an
+  endpoint but no routing decision uses the health status. The
+  check consumes per-month cost, occupies the per-account quota
+  (default 200 health checks), and may emit CloudWatch alarms,
+  but does not affect DNS resolution. This typically indicates
+  incomplete cleanup after a record was deleted (the health check
+  was created for the record but the record was removed without
+  removing the check), or that a planned routing change never
+  completed (the check was created in advance for a record that
+  was never created). Distinct from
+  CTL.ROUTE53.HEALTHCHECK.GHOST.001 which detects health checks
+  pointing at deleted target endpoints — this control detects
+  health checks not referenced by any DNS record, regardless of
+  whether the target endpoint still exists.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC8.1"
+  ccm_v4: ["BCR-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: reconnaissance
+remediation:
+  description: >
+    Route 53 health check is not referenced by any DNS record. The
+    check consumes cost and quota without affecting routing.
+  action: >
+    Determine whether the health check is still needed. If a planned
+    record creation is in progress: associate the health check with
+    the record by setting HealthCheckId on the record. If the health
+    check is leftover from a deleted record: delete the health check
+    via aws route53 delete-health-check --health-check-id {id}.
+    Audit health-check inventory periodically (the per-account
+    default quota is 200) so unreferenced checks do not exhaust the
+    quota and block creation of new checks. If the check was used
+    for a CloudWatch alarm independent of DNS routing, document the
+    intentional standalone use so future audits do not re-flag it.
+  example: |
+    {
+      "dns_service": {
+        "kind": "route53_healthcheck",
+        "healthcheck": {
+          "health_check_id": "hc-abc123",
+          "health_check_referenced": true,
+          "health_check_record_count": 2
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns_service.kind
+      op: eq
+      value: route53_healthcheck
+    - field: properties.dns_service.healthcheck.health_check_referenced
+      op: eq
+      value: false

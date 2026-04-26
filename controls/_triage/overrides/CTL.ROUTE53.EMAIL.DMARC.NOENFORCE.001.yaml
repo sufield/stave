@@ -1,0 +1,26 @@
+control: CTL.ROUTE53.EMAIL.DMARC.NOENFORCE.001
+defect: >
+  Domain [X] DMARC policy is p=none —
+  monitoring only, no enforcement.
+infection: >
+  p=none tells receiving servers to take no
+  action on email that fails SPF and DKIM
+  authentication. The email is delivered. The
+  domain owner receives aggregate reports
+  (if rua= is configured) showing who sent
+  email as their domain and whether it passed
+  authentication. But the email is still
+  delivered — the phishing email reaches the
+  recipient's inbox. p=none is the intended
+  starting phase for DMARC deployment: observe
+  the sending landscape, fix legitimate
+  sources, then advance to enforcement. Many
+  organizations enable p=none and never
+  progress. The DMARC record creates the
+  appearance of email authentication policy.
+  The policy does nothing to protect recipients
+  or the domain's reputation from spoofing.
+failure: >
+  False DMARC protection. The DMARC record
+  exists but doesn't reject spoofed email —
+  monitoring only, no enforcement.

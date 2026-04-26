@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.QUERYLOG.RETENTION.001
+name: Route 53 Query Log Group Has Insufficient Retention
+description: >
+  Route 53 DNS query log CloudWatch log group has no retention policy
+  or a retention period below 365 days. DNS query logs document
+  every query received by the hosted zone. When a security incident
+  is investigated — DNS tunneling detected, domain compromise
+  suspected, unauthorized subdomain queries found — the investigation
+  window typically extends 6 to 12 months. Logs deleted before the
+  investigation window closes make root-cause analysis impossible.
+  Compliance frameworks (PCI-DSS, NIST 800-53, SOC2) require audit
+  logs to be retained for periods that exceed typical CloudWatch
+  default retention (which is none — logs never expire unless a
+  retention policy is set, but the billing cost motivates teams to
+  set short retention policies). This control fires only when query
+  logging is already enabled — zones without logging are caught by
+  CTL.ROUTE53.QUERYLOG.PUBLIC.001 and CTL.ROUTE53.QUERYLOG.PRIVATE.001.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-11"
+  pci_dss_v4.0: "10.7"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - route53
+vendor: aws
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Route 53 DNS query log CloudWatch log group has no retention
+    policy or retention below 365 days. Logs may be deleted before
+    investigation or audit windows close.
+  action: >
+    Set a retention policy on the query log group: aws logs put-
+    retention-policy --log-group-name {log-group-name} --retention-
+    in-days 365. For compliance frameworks requiring longer retention
+    (HIPAA: 6 years, some PCI auditors: 12 months minimum), increase
+    accordingly. Consider exporting logs to S3 with an S3 lifecycle
+    policy for long-term retention — CloudWatch Logs is expensive for
+    multi-year retention of high-volume DNS query logs. Use CloudWatch
+    Logs Insights for interactive queries on recent logs; archive
+    to S3 for historical investigation.
+  example: |
+    {
+      "dns_service": {
+        "kind": "hosted_zone",
+        "query_logging_enabled": true,
+        "query_log_retention_set": true,
+        "query_log_retention_days": 365
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns_service.kind
+      op: eq
+      value: hosted_zone
+    - field: properties.dns_service.query_logging_enabled
+      op: eq
+      value: true
+    - any:
+      - field: properties.dns_service.query_log_retention_set
+        op: eq
+        value: false
+      - field: properties.dns_service.query_log_retention_days
+        op: lt
+        value: 365

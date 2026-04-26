@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.QUERYLOG.ENCRYPT.001
+name: Route 53 Query Log Group Not Encrypted with CMK
+description: >
+  Route 53 DNS query log CloudWatch log group is not encrypted with
+  a customer-managed KMS key (CMK). Query logs contain the source
+  resolver IP addresses for every DNS query (revealing which clients
+  queried which names), the queried domain names (which may include
+  internal service names, database hostnames, and API endpoints
+  encoded in subdomains), query types, and response codes. The
+  resolver IP combined with the queried name reveals behavioral
+  patterns: which workload queried which internal service, when,
+  and how often. CloudWatch Logs encrypts at rest by default with
+  an AWS-managed key (aws/logs). A CMK adds the ability to revoke
+  key access immediately (disabling log access without deleting
+  logs), to audit all decryption operations via CloudTrail, and to
+  enforce fine-grained access control on who can decrypt query logs.
+  This control fires only when query logging is enabled — zones
+  without logging are caught by the QUERYLOG.PUBLIC/PRIVATE controls.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-9"
+  pci_dss_v4.0: "10.5.1"
+  soc2: "CC6.1"
+  ccm_v4: ["LOG-03", "EKM-02"]
+scope_tags:
+  - aws
+  - route53
+vendor: aws
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Route 53 DNS query log CloudWatch log group is not encrypted with
+    a customer-managed KMS key.
+  action: >
+    Associate a CMK with the query log group: aws logs associate-kms-
+    key --log-group-name {log-group-name} --kms-key-id {kms-key-arn}.
+    The KMS key policy must grant CloudWatch Logs permission to use
+    the key (kms:Encrypt, kms:Decrypt, kms:ReEncrypt*, kms:
+    GenerateDataKey*, kms:Describe*) for the CloudWatch Logs service
+    principal (logs.{region}.amazonaws.com). Existing log events in
+    the group are not retroactively encrypted with the new key — only
+    new events use it. To encrypt all events, create a new log group
+    with the CMK, re-enable query logging pointing to the new group,
+    and archive the old group before deleting it.
+  example: |
+    {
+      "dns_service": {
+        "kind": "hosted_zone",
+        "query_logging_enabled": true,
+        "query_log_encrypted_cmk": true,
+        "query_log_group_kms": "arn:aws:kms:us-east-1:123456789012:key/abc"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.dns_service.kind
+      op: eq
+      value: hosted_zone
+    - field: properties.dns_service.query_logging_enabled
+      op: eq
+      value: true
+    - field: properties.dns_service.query_log_encrypted_cmk
+      op: eq
+      value: false

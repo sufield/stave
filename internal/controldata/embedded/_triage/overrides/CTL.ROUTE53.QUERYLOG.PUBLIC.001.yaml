@@ -1,0 +1,32 @@
+control: CTL.ROUTE53.QUERYLOG.PUBLIC.001
+defect: >
+  Route 53 public hosted zone [zone_name] does not
+  have DNS query logging enabled.
+infection: >
+  DNS query logging records every DNS query
+  received by Route 53 for the hosted zone: the
+  queried domain name, query type (A, AAAA, MX,
+  TXT, etc.), response code (NOERROR, NXDOMAIN,
+  SERVFAIL), the resolver IP that sent the query,
+  and the timestamp. Without query logging: DNS
+  tunneling (encoding data in DNS queries to
+  exfiltrate information to an attacker-controlled
+  authoritative server) is completely invisible —
+  the attacker sends queries to a subdomain of
+  the zone and no log records them. Reconnaissance
+  (probing for internal subdomain names to map
+  internal infrastructure) is undetectable.
+  Anomalous query patterns (sudden spike for a
+  specific subdomain, systematic subdomain
+  enumeration consistent with domain generation
+  algorithm activity) leave no forensic trail.
+  DNS query logs are the only data source for
+  DNS-layer threat detection. There is no
+  compensating control — if query logging is not
+  enabled, the queries are not recorded anywhere
+  else. CloudTrail records API calls to Route 53
+  but not DNS resolution events.
+failure: >
+  No DNS-layer visibility. DNS queries to the
+  zone are unrecorded — tunneling, reconnaissance,
+  and anomalous resolution patterns are invisible.

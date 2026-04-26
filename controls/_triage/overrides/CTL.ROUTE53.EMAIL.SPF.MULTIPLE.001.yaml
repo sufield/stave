@@ -1,0 +1,26 @@
+control: CTL.ROUTE53.EMAIL.SPF.MULTIPLE.001
+defect: >
+  Domain [X] has [N] SPF TXT records. RFC 7208
+  requires exactly one SPF record per domain.
+infection: >
+  When multiple TXT records starting with
+  "v=spf1" exist for a domain, the behavior
+  at receiving mail servers is undefined by
+  RFC 7208. Some implementations select the
+  first record alphabetically; others select
+  the last; some return PermError immediately.
+  Multiple SPF records frequently arise when
+  administrators add records independently
+  (one for Google Workspace, one for SES) or
+  when migrating mail providers without
+  removing the old record. The effective
+  policy becomes a function of which record
+  the receiving server happens to evaluate —
+  unpredictable across different mail systems.
+  One record may be restrictive (-all) while
+  another is permissive (+all), meaning half
+  of receiving servers provide no protection.
+failure: >
+  Unpredictable SPF validation. Multiple SPF
+  records produce undefined behavior at
+  receiving mail servers.

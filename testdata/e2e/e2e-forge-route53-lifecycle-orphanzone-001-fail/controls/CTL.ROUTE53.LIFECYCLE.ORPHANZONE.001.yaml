@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.LIFECYCLE.ORPHANZONE.001
+name: Route 53 Hosted Zone Has No Matching Domain Registration
+description: >
+  Route 53 hosted zone exists but no domain registered in this account
+  (or any organizational account whose registration is visible to
+  the observer) delegates to this zone's name servers. The zone has
+  records but no domain's NS records point to it — the zone serves
+  no DNS resolution. This typically indicates: the zone was created
+  for a domain registered elsewhere and the registration was moved,
+  the zone was created for a planned domain that was never registered,
+  or the zone is a leftover from testing. The dead zone retains
+  records — potentially internal hostnames, IP addresses, and
+  service endpoints — visible to anyone with
+  route53:ListResourceRecordSets permission, while serving no DNS
+  function. Note: this control can verify delegation only for
+  domains registered through Route 53 in this account; for domains
+  registered through external registrars, delegation must be
+  verified out-of-band. The control fires only when the zone has no
+  matching domain AND no NS delegation in the visible scope, to
+  avoid false positives from externally-registered domains that do
+  delegate to the zone.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-07"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: reconnaissance
+remediation:
+  description: >
+    Route 53 hosted zone has no matching domain registration or
+    NS delegation. The zone serves no DNS resolution but retains
+    records exposing internal infrastructure information.
+  action: >
+    Determine whether the domain associated with this zone is still
+    in use. If the domain was moved to an external registrar:
+    verify the external registrar's NS records delegate to this
+    zone — if so, the finding is a false positive (annotate the
+    zone with the registrar information so future audits do not
+    re-flag it). If the domain is no longer in use: review the
+    zone's records for internal infrastructure information,
+    document anything that should be tracked (in case it reveals
+    historical service architecture), then delete the zone — first
+    delete all resource record sets except SOA and NS, then delete
+    the zone itself. If the domain registration is pending: the
+    zone is reserving the configuration in advance; ensure the
+    domain registration is completed before the zone accumulates
+    further records.
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "zone_has_domain": true,
+          "zone_delegated": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.zone_has_domain
+      op: eq
+      value: false
+    - field: properties.network.dns.zone_delegated
+      op: eq
+      value: false

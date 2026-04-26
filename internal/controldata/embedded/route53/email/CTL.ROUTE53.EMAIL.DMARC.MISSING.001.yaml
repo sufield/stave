@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.EMAIL.DMARC.MISSING.001
+name: Route 53 Zone Has No DMARC Record
+description: >
+  Route 53 public hosted zone has no DMARC (Domain-based Message
+  Authentication, Reporting and Conformance) TXT record at
+  _dmarc.[zone]. Without DMARC, there is no policy telling receiving
+  mail servers what action to take when email fails SPF and DKIM
+  authentication. Even with SPF and DKIM configured, the receiving
+  server decides independently whether to accept, quarantine, or
+  reject unauthenticated email — and most default to accepting.
+  DMARC with p=reject tells receivers to reject email that fails
+  authentication. DMARC also enables aggregate reporting (rua=) so
+  the domain owner learns who is sending email as their domain —
+  the only mechanism for discovering unauthorized use of the domain
+  in email campaigns. Without DMARC, there is no enforcement layer
+  and no visibility.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Domain has no DMARC record at _dmarc.[zone]. Receiving servers
+    have no policy for handling email that fails authentication.
+  action: >
+    Create a TXT record at _dmarc.[zone] with a DMARC policy. Start
+    with p=none to collect reports without enforcement:
+    "v=DMARC1; p=none; rua=mailto:dmarc-reports@[zone]". Monitor
+    aggregate reports for 2-4 weeks to identify legitimate senders.
+    Progress to p=quarantine (deliver to spam) then p=reject (reject
+    outright). Add sp=reject to cover subdomain spoofing.
+    Target state: "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@[zone]"
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "has_dmarc": true,
+          "dmarc_record": "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@example.com"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.has_dmarc
+      op: eq
+      value: false

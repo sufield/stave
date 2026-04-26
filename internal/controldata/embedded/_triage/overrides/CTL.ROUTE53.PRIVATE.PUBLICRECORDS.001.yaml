@@ -1,0 +1,34 @@
+control: CTL.ROUTE53.PRIVATE.PUBLICRECORDS.001
+defect: >
+  Route 53 private hosted zone [zone_name] has
+  [public_ip_count] record(s) pointing to public
+  IP addresses.
+infection: >
+  Private hosted zones are designed for internal
+  DNS resolution — internal service names resolve
+  to private IPs within VPCs. Records pointing to
+  public IPs create a mismatch: the DNS name
+  looks internal (db.internal.example.com) but
+  resolves to a public IP. Traffic from VPC
+  resources to this internal-looking name exits
+  the VPC via NAT gateway or internet gateway,
+  traverses the public internet to the public IP,
+  and returns the same way. Traffic intended to
+  stay within the VPC unexpectedly leaves the
+  network boundary. This misconfiguration
+  typically occurs when: a service endpoint was
+  temporarily pointed to a public IP during
+  troubleshooting and never reverted; a vendor
+  IP changed from private to public and the DNS
+  record was updated but not the routing intent;
+  or a migration from an internal service to a
+  public cloud endpoint was completed but the
+  zone cleanup was missed. From a compliance
+  standpoint, sensitive data (database queries,
+  API calls, authentication tokens) in traffic
+  to these records may traverse the internet
+  without being recognized as external traffic.
+failure: >
+  Internal DNS resolves to public IPs. Traffic
+  intended to stay private exits the VPC to the
+  public internet via unexpected egress paths.

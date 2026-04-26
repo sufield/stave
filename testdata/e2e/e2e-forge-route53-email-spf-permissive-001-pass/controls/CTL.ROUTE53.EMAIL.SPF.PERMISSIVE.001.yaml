@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.EMAIL.SPF.PERMISSIVE.001
+name: Route 53 Zone SPF Record Is Too Permissive
+description: >
+  Route 53 public hosted zone has an SPF record that uses +all or ?all
+  — providing no restriction on which servers can send email as this
+  domain. +all explicitly authorizes every mail server on the internet.
+  ?all (neutral) provides no opinion on unauthorized senders. Both
+  qualifiers are effectively equivalent to having no SPF record. The
+  SPF record exists and passes a superficial "does SPF exist?" audit
+  check, creating false confidence that email authentication is in
+  place. Receiving servers that check SPF see a record and take no
+  restrictive action. The correct qualifiers are -all (hardfail —
+  reject unauthorized senders) or ~all (softfail — mark as suspicious).
+  -all is the strongest and recommended target state.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    SPF record uses +all or ?all — any server is authorized to send
+    email as this domain. The record provides no protection.
+  action: >
+    Update the SPF TXT record to use -all (hardfail) or at minimum
+    ~all (softfail). Replace +all or ?all with -all at the end of
+    the SPF record value. -all tells receiving servers to reject email
+    from servers not listed in the SPF record. ~all tells servers to
+    mark unauthorized email as suspicious (SoftFail). The transition
+    path is ~all first (observe, fix false positives), then -all for
+    full enforcement.
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "has_spf": true,
+          "spf_record": "v=spf1 include:_spf.google.com -all",
+          "spf_qualifier": "-all",
+          "spf_permissive": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.spf_permissive
+      op: eq
+      value: true

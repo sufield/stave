@@ -1,0 +1,30 @@
+control: CTL.ROUTE53.QUERYLOG.ENCRYPT.001
+defect: >
+  Route 53 DNS query log group [query_log_group]
+  is not encrypted with a customer-managed KMS key.
+infection: >
+  DNS query logs contain resolver IP addresses
+  (revealing which clients queried which names),
+  queried domain names (which may include internal
+  service names, configuration endpoints, and
+  data encoded in subdomains by DNS tunneling
+  tools), query types, and response codes. The
+  resolver IP combined with the queried name
+  reveals behavioral patterns: which workload
+  queried which internal service, when, and how
+  frequently. Without a CMK: the organization
+  cannot immediately revoke access to log data
+  (key rotation with AWS-managed keys is
+  controlled by AWS); decryption operations are
+  not audited in CloudTrail (AWS-managed key
+  usage is not customer-visible); access control
+  for log decryption cannot be tied to KMS key
+  policies. A CMK enables access revocation by
+  disabling the key, auditable decrypt operations
+  in CloudTrail, and fine-grained access control
+  over who can read query log content beyond
+  CloudWatch Logs IAM permissions.
+failure: >
+  Query log content protected by AWS-managed key
+  only. No key revocation capability, no decrypt
+  audit trail, no CMK-level access control.

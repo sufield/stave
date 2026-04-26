@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DNSSEC.DISABLED.001
+name: Route 53 Public Hosted Zone Does Not Have DNSSEC Enabled
+description: >
+  Route 53 public hosted zone does not have DNSSEC signing enabled.
+  Without DNSSEC, DNS responses for this zone are unsigned — a
+  man-in-the-middle or cache poisoning attacker (Kaminsky attack)
+  can inject forged DNS records into recursive resolver caches,
+  redirecting the domain to attacker-controlled infrastructure.
+  DNSSEC cryptographically signs each DNS response with the zone's
+  signing key — resolvers that validate DNSSEC reject forged
+  responses. This finding applies only to public hosted zones.
+  Route 53 private hosted zones serve VPC-internal DNS and do not
+  support DNSSEC; the VPC resolver handles internal DNS without the
+  public internet attack surface. DNSSEC protects validating
+  resolvers and is increasingly required by compliance frameworks
+  and enterprise security standards.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-20"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Route 53 public hosted zone does not have DNSSEC signing enabled.
+    DNS responses are unsigned and can be forged.
+  action: >
+    Enable DNSSEC signing for the Route 53 hosted zone in the AWS
+    console or via CLI: aws route53 enable-hosted-zone-dnssec
+    --hosted-zone-id [ID]. After enabling signing, create a DS
+    record at the parent zone (your domain registrar, or Route 53
+    if you registered through AWS) to complete the DNSSEC chain of
+    trust. Without the DS record, resolvers cannot validate the zone's
+    signatures. Monitor key rotation — Route 53 manages KSK rotation
+    automatically if configured. For zones registered through Route 53,
+    the DS record can be added via the console.
+  example: |
+    {
+      "network": {
+        "kind": "route53_zone",
+        "dns": {
+          "zone_name": "example.com",
+          "is_public_zone": true,
+          "dnssec_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_zone
+    - field: properties.network.dns.is_public_zone
+      op: eq
+      value: true
+    - field: properties.network.dns.dnssec_enabled
+      op: eq
+      value: false
