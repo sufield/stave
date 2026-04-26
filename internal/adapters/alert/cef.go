@@ -2,6 +2,7 @@ package alert
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -10,6 +11,9 @@ import (
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/version"
 )
+
+// errSinkClosed is returned when Emit is called after Close.
+var errSinkClosed = errors.New("alert sink: already closed")
 
 // CEFFileSink emits WatchAlerts in ArcSight Common Event Format (CEF)
 // to a file. Picked up by Splunk UF, Filebeat, or any log forwarder.
@@ -39,18 +43,23 @@ func (s *CEFFileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 	line := FormatCEF(a)
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.f == nil {
+		return errSinkClosed
+	}
 	_, err := fmt.Fprintln(s.f, line)
 	return err
 }
 
-// Close closes the CEF file.
+// Close closes the CEF file. Subsequent Emit calls return errSinkClosed.
 func (s *CEFFileSink) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.f != nil {
-		return s.f.Close()
+	if s.f == nil {
+		return nil
 	}
-	return nil
+	err := s.f.Close()
+	s.f = nil
+	return err
 }
 
 // FormatCEF produces a CEF line from a WatchAlert.

@@ -1,0 +1,26 @@
+control: CTL.KMS.MULTIREGION.POLICY.MISMATCH.001
+defect: >
+  KMS multi-region key has replicas in other regions whose
+  key policies differ from the primary's.
+infection: >
+  Multi-region keys share the same key material across
+  regions — ciphertext encrypted with the primary can be
+  decrypted with any replica. If the primary in us-east-1
+  has a restrictive policy (Decrypt only for specific
+  production roles) but the replica in ap-southeast-1 has a
+  broad policy (Decrypt for account root or for a wider
+  principal set), an attacker uses the replica's policy to
+  decrypt data originally encrypted with the primary. The
+  data is the same. The key material is the same. The access
+  control is different. Detection is hard because every
+  region's audit trail looks locally compliant — the
+  primary's CloudTrail shows narrow Decrypt usage, the
+  replica's CloudTrail shows the broad Decrypt that no one
+  was looking at because the replica was assumed to mirror
+  the primary. The weakest replica policy is the effective
+  access control for all data encrypted with the key.
+failure: >
+  Inconsistent access control across regions. The weakest
+  replica policy determines effective access to encrypted
+  data — the key's protection is upper-bounded by the most
+  permissive region.

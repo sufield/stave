@@ -95,8 +95,13 @@ func runResource(w io.Writer, stderr io.Writer, opts *resourceOpts) error {
 		checkClassificationTag(stderr, snap, opts.ResourceARN, opts.Classification)
 	}
 
-	// Build resource access index.
-	idx := buildResourceAccessIndex(snap)
+	// Build resource access index. Per-resource policy errors are
+	// surfaced as a warning so users see when the access view is
+	// incomplete; the command still proceeds with the partial index.
+	idx, idxErr := buildResourceAccessIndex(snap)
+	if idxErr != nil {
+		fmt.Fprintf(stderr, "Warning: %v\n", idxErr)
+	}
 	addIdentityBasedAccess(idx, snap, opts.ResourceARN)
 
 	entries := idx.EntriesFor(opts.ResourceARN)
@@ -166,8 +171,9 @@ var resourcePolicyPaths = [][]string{
 	{"secret", "resource_policy_json"},
 }
 
-func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
+func buildResourceAccessIndex(snap *asset.Snapshot) (*iam.ResourceAccessIndex, error) {
 	idx := iam.NewResourceAccessIndex()
+	var errs []error
 	for i := range snap.Assets {
 		a := &snap.Assets[i]
 		accountID := extractAccountID(string(a.ID))
@@ -176,10 +182,17 @@ func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 			if policyJSON == "" {
 				continue
 			}
-			_ = idx.AddResourcePolicy(string(a.ID), policyJSON, accountID)
+			if err := idx.AddResourcePolicy(string(a.ID), policyJSON, accountID); err != nil {
+				errs = append(errs, fmt.Errorf("resource %s (%s): %w",
+					a.ID, strings.Join(path, "."), err))
+			}
 		}
 	}
-	return idx
+	if len(errs) > 0 {
+		return idx, fmt.Errorf("partial access index — %d policy(ies) failed to parse: %w",
+			len(errs), errors.Join(errs...))
+	}
+	return idx, nil
 }
 
 var readClassActions = map[string][]string{

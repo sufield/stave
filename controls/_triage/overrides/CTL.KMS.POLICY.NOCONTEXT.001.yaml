@@ -1,0 +1,21 @@
+control: CTL.KMS.POLICY.NOCONTEXT.001
+defect: >
+  KMS key policy does not require kms:EncryptionContext on
+  usage statements.
+infection: >
+  Encryption context is per-operation additional authenticated
+  data. When required, a principal calling Decrypt must pass
+  the same context values that were used at Encrypt time —
+  otherwise Decrypt fails. Without context enforcement, Decrypt
+  succeeds on any ciphertext the principal can submit. Many
+  AWS services pass automatic context (S3 uses bucket ARN, EBS
+  uses volume ID), but the protection only applies when the
+  policy requires it. Multi-tenant or multi-application keys
+  without context enforcement allow one tenant to decrypt
+  another tenant's ciphertext if both flow through the same
+  service.
+failure: >
+  Tenant boundary collapse on the encryption layer. Any
+  principal authorized to call Decrypt can decrypt every
+  ciphertext encrypted by the key, regardless of which tenant
+  or workflow produced it.

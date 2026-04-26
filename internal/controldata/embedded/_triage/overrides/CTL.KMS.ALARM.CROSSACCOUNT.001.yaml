@@ -1,0 +1,18 @@
+control: CTL.KMS.ALARM.CROSSACCOUNT.001
+defect: >
+  Key permits cross-account access but no CloudWatch alarm
+  monitors cross-account KMS API calls.
+infection: >
+  Cross-account KMS usage is expected when keys are
+  intentionally shared — but unexpected cross-account usage may
+  indicate: a key policy broader than intended (an external
+  account using a key that shouldn't be shared), a compromised
+  external account (an attacker using shared key access), or
+  data exfiltration via cross-account decryption. Without an
+  alarm on principal.accountId mismatches, cross-account
+  activity is invisible until a manual review of CloudTrail —
+  and CloudTrail volume makes such reviews rare.
+failure: >
+  Undetected cross-account access. External principals may use
+  the key without notification — including for exfiltration of
+  data encrypted with the key.

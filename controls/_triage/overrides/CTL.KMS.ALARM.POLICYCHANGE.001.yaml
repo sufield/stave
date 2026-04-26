@@ -1,0 +1,20 @@
+control: CTL.KMS.ALARM.POLICYCHANGE.001
+defect: >
+  No CloudWatch alarm monitors PutKeyPolicy API calls on this
+  key.
+infection: >
+  PutKeyPolicy replaces the key's entire policy document. A
+  single API call can: add Principal "*" (any AWS account can
+  use the key), remove all condition keys (ViaService,
+  EncryptionContext, CallerAccount), add cross-account access
+  to an attacker's account, or remove the key administrator's
+  own access (locking themselves out — the key becomes
+  unmanageable). Key policy changes don't affect existing
+  encrypted data — but they change WHO can decrypt that data
+  going forward. An attacker with PutKeyPolicy can silently
+  grant themselves Decrypt access to all data encrypted with
+  the key.
+failure: >
+  Undetected access control change. Key policy modified — who
+  can use the key for encryption and decryption changed without
+  notification.

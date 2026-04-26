@@ -161,7 +161,9 @@ func run(stdout, _ io.Writer, opts *options) error {
 		}
 		fmt.Fprintln(stdout, string(output))
 	case "csv":
-		writeCSVRoadmap(stdout, roadmap, &assessment)
+		if err := writeCSVRoadmap(stdout, roadmap, &assessment); err != nil {
+			return fmt.Errorf("write CSV roadmap: %w", err)
+		}
 	default:
 		writeTextRoadmap(stdout, roadmap, opts.SortBy == "blast-radius", &assessment)
 	}
@@ -390,7 +392,7 @@ func runIdentity(stdout io.Writer, opts *options, assessment *report.Assessment)
 	return nil
 }
 
-func writeCSVRoadmap(w io.Writer, rm apprank.Roadmap, assessment *report.Assessment) {
+func writeCSVRoadmap(w io.Writer, rm apprank.Roadmap, assessment *report.Assessment) error {
 	// Build a finding index for enrichment.
 	type findingMeta struct {
 		severity  string
@@ -424,14 +426,15 @@ func writeCSVRoadmap(w io.Writer, rm apprank.Roadmap, assessment *report.Assessm
 	}
 
 	cw := csv.NewWriter(w)
-	defer cw.Flush()
 
 	// Header.
-	_ = cw.Write([]string{
+	if err := cw.Write([]string{
 		"rank", "control_id", "control_name", "severity", "asset_id",
 		"asset_type", "team", "risk_score", "sla_deadline_hours",
 		"sla_status", "chain_membership", "remediation_action",
-	})
+	}); err != nil {
+		return fmt.Errorf("write csv header: %w", err)
+	}
 
 	for i := range rm.Entries {
 		e := &rm.Entries[i]
@@ -453,7 +456,7 @@ func writeCSVRoadmap(w io.Writer, rm apprank.Roadmap, assessment *report.Assessm
 			chainMembership = strings.Join(m.chainIDs, ",")
 		}
 
-		_ = cw.Write([]string{
+		if err := cw.Write([]string{
 			strconv.Itoa(e.Rank),
 			string(e.ControlID),
 			e.ControlName,
@@ -466,8 +469,13 @@ func writeCSVRoadmap(w io.Writer, rm apprank.Roadmap, assessment *report.Assessm
 			slaStatus,
 			chainMembership,
 			e.FixAction,
-		})
+		}); err != nil {
+			return fmt.Errorf("write csv row %d: %w", e.Rank, err)
+		}
 	}
+
+	cw.Flush()
+	return cw.Error()
 }
 
 func runSprint(stdout io.Writer, opts *options, assessment *report.Assessment) error {

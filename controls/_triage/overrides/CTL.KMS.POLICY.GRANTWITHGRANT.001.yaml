@@ -1,0 +1,19 @@
+control: CTL.KMS.POLICY.GRANTWITHGRANT.001
+defect: >
+  KMS key has CreateGrant permissions and active grants whose
+  operations include GrantWithGrant.
+infection: >
+  Grants are a secondary access mechanism for KMS keys, separate
+  from the key policy. CreateGrant lets a principal delegate key
+  access to another principal. GrantWithGrant lets the delegate
+  delegate further — creating chains. Grant chains are not visible
+  in the key policy (grants live in a separate API surface), are
+  not depth-limited (A→B→C→D→...), require ListGrants to audit,
+  and create an expanding access surface that grows without
+  policy changes. An attacker with CreateGrant + GrantWithGrant
+  can silently expand key access to any principal in any account
+  without modifying the key policy.
+failure: >
+  Unauditable access delegation. Key access can be silently
+  expanded through grant chains without modifying the key
+  policy.

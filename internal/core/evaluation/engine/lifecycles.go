@@ -134,8 +134,7 @@ func recordAssetObservation(
 					"control", ctl.ID, "asset", a.ID, "error", evalErr)
 			}
 			if recErr := t.RecordInconclusive(snap.CapturedAt); recErr != nil {
-				slog.Error("failed to record inconclusive verdict",
-					"control", ctl.ID, "asset", a.ID, "error", recErr)
+				return fmt.Errorf("record inconclusive for control %s, asset %s: %w", ctl.ID, a.ID, recErr)
 			}
 			continue
 		}

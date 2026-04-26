@@ -1,0 +1,133 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ALARM.CROSSACCOUNT.001
+name: KMS Key Has No CloudWatch Alarm for Cross-Account Usage
+description: >
+  KMS key has cross-account access in its policy but no
+  CloudWatch alarm for KMS API calls from external accounts.
+  Cross-account KMS usage is expected when keys are
+  intentionally shared, but unexpected cross-account usage may
+  indicate: a key policy broader than intended, a compromised
+  external account using shared key access, or data
+  exfiltration via cross-account decryption. The control fires
+  ONLY when the key has cross-account access (precondition); a
+  key with no cross-account principal cannot be used cross-
+  account, so the alarm is unnecessary. Distinct from
+  CTL.KMS.POLICY.CROSSACCOUNT.001 (asserts the policy is broad
+  cross-account): this control assumes cross-account access is
+  intentional and fires on the missing detection wiring around
+  it.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.4.1"
+  soc2: "CC7.2"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08", "IAM-16"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.policy.has_cross_account_principal
+  - cryptography.alarms.has_cross_account_alarm
+remediation:
+  description: >
+    Key permits cross-account access but has no alarm on
+    cross-account API calls. Cross-account usage — including
+    exfiltration via external principals — is invisible.
+  action: >
+    Create a CloudTrail metric filter on KMS events where
+    userIdentity.accountId does not equal the key's account,
+    and a CloudWatch alarm with an SNS notification action.
+    Route to the security team and the SIEM. If cross-account
+    access is unintentional, remove the cross-account
+    statement from the key policy instead of relying solely on
+    the alarm.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "policy": {
+          "has_cross_account_principal": true
+        },
+        "alarms": {
+          "has_cross_account_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.policy.has_cross_account_principal
+      op: eq
+      value: true
+    - field: properties.cryptography.alarms.has_cross_account_alarm
+      op: eq
+      value: false
+defect: >
+  Key permits cross-account access but no CloudWatch alarm
+  monitors cross-account KMS API calls.
+infection: >
+  Cross-account KMS usage is expected when keys are
+  intentionally shared — but unexpected cross-account usage may
+  indicate: a key policy broader than intended (an external
+  account using a key that shouldn't be shared), a compromised
+  external account (an attacker using shared key access), or
+  data exfiltration via cross-account decryption. Without an
+  alarm on principal.accountId mismatches, cross-account
+  activity is invisible until a manual review of CloudTrail —
+  and CloudTrail volume makes such reviews rare.
+failure: >
+  Undetected cross-account access. External principals may use
+  the key without notification — including for exfiltration of
+  data encrypted with the key.
+tests:
+  - name: cross-account key without alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-cross-no-alarm"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            has_cross_account_principal: true
+          alarms:
+            has_cross_account_alarm: false
+  - name: cross-account key with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-cross-alarmed"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            has_cross_account_principal: true
+          alarms:
+            has_cross_account_alarm: true
+  - name: same-account key without alarm passes (no cross-account access — alarm not needed)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-same-account"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            has_cross_account_principal: false
+          alarms:
+            has_cross_account_alarm: false

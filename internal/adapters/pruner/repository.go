@@ -10,18 +10,23 @@ import (
 )
 
 // loadSnapshotCapturedAt opens a snapshot file and returns its CapturedAt timestamp.
-func loadSnapshotCapturedAt(ctx context.Context, loader appcontracts.SnapshotReader, path, name string) (time.Time, error) {
+func loadSnapshotCapturedAt(ctx context.Context, loader appcontracts.SnapshotReader, path, name string) (capturedAt time.Time, err error) {
 	if err := ctx.Err(); err != nil {
 		return time.Time{}, err
 	}
 	// #nosec G304 -- path is discovered from directory entries.
-	f, err := os.Open(path)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("open %s: %w", path, err)
+	f, openErr := os.Open(path)
+	if openErr != nil {
+		return time.Time{}, fmt.Errorf("open %s: %w", path, openErr)
 	}
+	defer func() {
+		// Surface late-flush failures from networked filesystems instead
+		// of silently dropping them; load errors still take priority.
+		if closeErr := f.Close(); closeErr != nil && err == nil {
+			err = fmt.Errorf("close %s: %w", path, closeErr)
+		}
+	}()
 	snapshot, loadErr := loader.LoadSnapshotFromReader(ctx, f, name)
-	// Best-effort close; file was opened read-only and load error takes priority.
-	_ = f.Close()
 	if loadErr != nil {
 		return time.Time{}, fmt.Errorf("failed to load snapshot %s: %w", path, loadErr)
 	}

@@ -2,6 +2,7 @@ package graph
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -17,6 +18,7 @@ var stixRelTypeMap = map[string]string{
 	"VIOLATES":             "related-to",
 	"HAS_EFFECTIVE_ACCESS": "uses",
 	"CAN_IMPERSONATE":      "impersonates",
+	"HAS_REMEDIATION":      "remediates",
 }
 
 // stixObjectTypeMap maps Stave node types to STIX object type prefixes.
@@ -34,6 +36,9 @@ var stixObjectTypeMap = map[string]string{
 
 // MarshalSTIX writes a STIX 2.1 Bundle JSON from GraphData.
 func MarshalSTIX(w io.Writer, g *GraphData) error {
+	if g == nil {
+		return errors.New("MarshalSTIX: nil GraphData")
+	}
 	now := g.GeneratedAt.Format(time.RFC3339)
 	staveIdentityID := stixID("identity", "stave-assessment-producer")
 

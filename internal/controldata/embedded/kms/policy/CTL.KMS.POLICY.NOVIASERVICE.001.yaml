@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.POLICY.NOVIASERVICE.001
+name: KMS Key Policy Does Not Restrict Usage to Specific AWS Services
+description: >
+  KMS key with key_usage=ENCRYPT_DECRYPT has no kms:ViaService
+  condition on its usage statements. Without ViaService, the key
+  is usable directly via the KMS Decrypt/Encrypt APIs — not just
+  through AWS services (S3, RDS, EBS, Secrets Manager). A
+  principal with kms:Decrypt can call KMS Decrypt directly with
+  any ciphertext encrypted by the key, bypassing the calling
+  service's access controls. ViaService restricts key usage to
+  operations performed through specific AWS services
+  (kms:ViaService = s3.us-east-1.amazonaws.com means the key can
+  only be used through S3 in us-east-1). Narrows
+  CTL.KMS.POLICY.CONDITION.001 to the specific case where
+  ViaService is missing, even when other protective conditions
+  (CallerAccount, EncryptionContext) are present. Only applies
+  to ENCRYPT_DECRYPT keys; SIGN_VERIFY and GENERATE_VERIFY_MAC
+  keys do not use ViaService.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "3.4.1"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "IAM-16"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.key_usage
+  - cryptography.policy.has_via_service
+  - cryptography.policy.via_service_values
+remediation:
+  description: >
+    KMS encryption key policy lacks kms:ViaService conditions.
+    Principals with Decrypt or Encrypt can call KMS APIs
+    directly, bypassing calling-service access controls.
+  action: >
+    Add kms:ViaService conditions to all usage statements in
+    the key policy. Use service-and-region-qualified values
+    such as "s3.us-east-1.amazonaws.com" or
+    "secretsmanager.us-east-1.amazonaws.com" rather than
+    service-only patterns. ViaService does not apply to keys
+    used for SIGN_VERIFY or GENERATE_VERIFY_MAC; this control
+    only fires on ENCRYPT_DECRYPT keys.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "key_usage": "ENCRYPT_DECRYPT",
+        "policy": {
+          "has_via_service": true,
+          "via_service_values": ["s3.us-east-1.amazonaws.com"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.key_usage
+      op: eq
+      value: ENCRYPT_DECRYPT
+    - field: properties.cryptography.policy.has_via_service
+      op: eq
+      value: false
+defect: >
+  KMS encryption key has no kms:ViaService restriction in its
+  policy.
+infection: >
+  Without kms:ViaService, a principal with kms:Decrypt can call
+  the KMS Decrypt API directly with raw ciphertext, bypassing
+  service-level access controls. Example: an S3 object is
+  encrypted with this key. The S3 bucket policy restricts which
+  principals can GetObject. But the principal has kms:Decrypt
+  on the key. The principal calls KMS Decrypt directly with the
+  ciphertext from the S3 object's metadata — bypassing the S3
+  bucket policy entirely. ViaService prevents this by requiring
+  Decrypt calls to come through a specific AWS service, not
+  direct KMS API calls.
+failure: >
+  Direct KMS API bypass. Principals can decrypt data by calling
+  KMS directly, bypassing service-level access controls (S3
+  bucket policies, RDS IAM auth, etc.).
+tests:
+  - name: encrypt-decrypt key without viaservice fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-via"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          key_usage: ENCRYPT_DECRYPT
+          policy:
+            has_via_service: false
+            via_service_values: []
+  - name: encrypt-decrypt key with viaservice passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-with-via"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          key_usage: ENCRYPT_DECRYPT
+          policy:
+            has_via_service: true
+            via_service_values:
+              - "s3.us-east-1.amazonaws.com"
+  - name: signing key without viaservice does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-signing"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          key_usage: SIGN_VERIFY
+          policy:
+            has_via_service: false

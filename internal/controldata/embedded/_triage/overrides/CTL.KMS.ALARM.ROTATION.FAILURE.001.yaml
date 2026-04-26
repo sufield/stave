@@ -1,0 +1,20 @@
+control: CTL.KMS.ALARM.ROTATION.FAILURE.001
+defect: >
+  No CloudWatch alarm monitors KMS key rotation events on this
+  key.
+infection: >
+  Rotation events indicate the key material was rotated —
+  which is expected annually if auto-rotation is enabled. But
+  a FAILED rotation or UNEXPECTED rotation (manual rotation
+  outside the schedule) should be investigated. A failed
+  rotation means the key material continues past its intended
+  lifetime, undermining the rotation control. An unexpected
+  manual rotation may be a compromise response or an
+  attacker rotating the key to disrupt envelope-decrypt
+  capabilities. Without an alarm, rotation success/failure is
+  invisible — and the team only learns of a rotation gap from
+  a downstream compliance audit months later.
+failure: >
+  Undetected rotation events. Failed or unexpected rotations
+  proceed without notification, undermining the cryptographic
+  hygiene the rotation policy is meant to provide.

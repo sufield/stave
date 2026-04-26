@@ -1,0 +1,22 @@
+id: kms_lifecycle_ungoverned
+description: >
+  Cross-environment key usage plus either no alias or a
+  dormant key. The key is shared across the prod/non-prod
+  trust boundary AND it is either unidentifiable (no alias)
+  or unused (dormant for 90+ days). Multiple lifecycle
+  governance failures on the same key — the operator cannot
+  name what the key is for, the key encrypts both production
+  and non-production data, and either no one is using it or
+  no one can find it. Threshold of 2 fires when at least two
+  of the three lifecycle governance gaps coexist on the same
+  key.
+controls:
+  - CTL.KMS.LIFECYCLE.CROSSENV.001
+  - CTL.KMS.LIFECYCLE.NOALIAS.001
+  - CTL.KMS.LIFECYCLE.DORMANT.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - ungoverned_operation

@@ -56,8 +56,14 @@ func TestResourceID_ARN_WithPath(t *testing.T) {
 
 func TestValue(t *testing.T) {
 	r := New(WithIDSanitization(true))
-	if got := r.Value("sensitive-data"); got != "[SANITIZED]" {
-		t.Errorf("Value() = %q, want [SANITIZED]", got)
+	got := r.Value("sensitive-data")
+	want := "SANITIZED_" + crypto.ShortToken("sensitive-data")
+	if got != want {
+		t.Errorf("Value() = %q, want %q", got, want)
+	}
+	// Distinct inputs must produce distinct redacted tokens.
+	if r.Value("a") == r.Value("b") {
+		t.Error("Value() collapsed distinct inputs to the same token")
 	}
 }
 

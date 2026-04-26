@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ALARM.DECRYPT.VOLUME.001
+name: KMS Key Has No CloudWatch Alarm for High-Frequency Decrypt
+description: >
+  KMS key has no CloudWatch alarm on Decrypt-call volume. KMS
+  Decrypt is invoked every time encrypted data is read — S3
+  GetObject, RDS data access, Lambda cold start, Secrets
+  Manager GetSecretValue. Normal usage has a baseline. A sudden
+  spike — 10x or 100x baseline — indicates bulk exfiltration
+  (an attacker decrypting thousands of S3 objects or database
+  records), credential theft (decrypting many secrets), or a
+  retry storm. The control checks for ALARM EXISTENCE only;
+  threshold tuning is operational. A static threshold that's
+  too low causes false positives on legitimate traffic spikes,
+  too high misses targeted exfiltration — anomaly detection or
+  baseline-relative thresholds are preferred.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.4.1"
+  soc2: "CC7.2"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08", "DSP-17"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.alarms.has_decrypt_volume_alarm
+remediation:
+  description: >
+    No CloudWatch alarm monitors high-frequency Decrypt API
+    calls on this key. Bulk decryption activity — including
+    data exfiltration — is invisible until the next manual
+    audit.
+  action: >
+    Create a CloudWatch alarm on the AWS/KMS Decrypt operation
+    count metric (NumberOfRequestsAccepted with
+    Operation=Decrypt). Use anomaly detection with a 2-week
+    baseline, or a threshold based on observed normal volume.
+    Period of 5 minutes balances detection speed against
+    false-positive rate. Notify the security team and route to
+    the SIEM for correlation with downstream S3/RDS/Secrets
+    Manager access patterns.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "alarms": {
+          "has_decrypt_volume_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.alarms.has_decrypt_volume_alarm
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors high-frequency Decrypt API
+  calls on this key.
+infection: >
+  KMS Decrypt is called every time encrypted data is read — S3
+  GetObject, RDS data access, Lambda cold start, Secrets
+  Manager GetSecretValue. Normal usage has a baseline Decrypt
+  rate. A sudden spike — 10x or 100x the baseline — indicates:
+  bulk exfiltration (an attacker decrypts thousands of S3
+  objects or database records), credential theft (decrypting
+  many secrets from Secrets Manager), or application error
+  (retry storm). Without a baseline alarm, the spike is visible
+  only in CloudTrail logs — which nobody watches in real time.
+  A CloudWatch metric alarm on Decrypt calls with anomaly
+  detection provides near-real-time detection of unusual
+  decryption patterns.
+failure: >
+  Undetected bulk decryption. High-frequency Decrypt activity —
+  potential exfiltration — occurs without notification.
+tests:
+  - name: key without Decrypt-volume alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-volume-alarm"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_decrypt_volume_alarm: false
+  - name: key with Decrypt-volume alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-volume-alarmed"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_decrypt_volume_alarm: true
+  - name: key with high-threshold Decrypt-volume alarm passes (threshold tuning is operational)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-highthresh-alarmed"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_decrypt_volume_alarm: true
+            decrypt_alarm_threshold: 100000

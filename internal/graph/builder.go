@@ -196,7 +196,10 @@ func Build(input BuildInput) *GraphData {
 			})
 		}
 
-		// RemediationAction node.
+		// RemediationAction node + HAS_REMEDIATION edge from the parent
+		// Finding. The edge is appended for every Finding that names a
+		// RemediationAction (even if the node itself was already
+		// recorded for a sibling finding) so dedup runs after.
 		if f.RemediationSpec.Action != "" {
 			remID := "remediation_" + findingID
 			if !seenNodes.Contains(remID) {
@@ -210,6 +213,9 @@ func Build(input BuildInput) *GraphData {
 					},
 				})
 			}
+			g.Edges = append(g.Edges, Edge{
+				From: findingID, To: remID, Type: "HAS_REMEDIATION",
+			})
 		}
 	}
 
@@ -288,15 +294,23 @@ func Build(input BuildInput) *GraphData {
 	return g
 }
 
+// edgeKey is the deduplication key for graph edges. Using a struct (rather
+// than a delimited string) avoids false collisions when node IDs contain
+// the separator character — ARNs and resource paths legitimately include
+// pipes, slashes, and colons.
+type edgeKey struct {
+	From, To, Type string
+}
+
 func deduplicateEdges(edges []Edge) []Edge {
-	seen := sets.New[string]()
+	seen := make(map[edgeKey]struct{}, len(edges))
 	out := make([]Edge, 0, len(edges))
 	for _, e := range edges {
-		key := e.From + "|" + e.To + "|" + e.Type
-		if seen.Contains(key) {
+		k := edgeKey{From: e.From, To: e.To, Type: e.Type}
+		if _, dup := seen[k]; dup {
 			continue
 		}
-		seen.Add(key)
+		seen[k] = struct{}{}
 		out = append(out, e)
 	}
 	return out

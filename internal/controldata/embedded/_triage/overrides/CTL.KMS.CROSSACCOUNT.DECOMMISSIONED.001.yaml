@@ -1,0 +1,25 @@
+control: CTL.KMS.CROSSACCOUNT.DECOMMISSIONED.001
+defect: >
+  KMS key policy grants access to an AWS account ID that is
+  no longer active in the organization.
+infection: >
+  AWS account IDs are not strictly retired — closed accounts
+  release the ID back to a pool, transferred accounts move
+  out of organizational control, and inventories of valid
+  account IDs drift from policy contents over time. A KMS
+  key policy that names a decommissioned account ID is a
+  live authorization to whatever entity holds that ID today.
+  If the account was transferred to an external party, the
+  policy is now a cross-organization grant with no
+  remediation in IAM, no SCP coverage, and no Organizations
+  audit trail. If the account was closed, the entry is
+  governance debt that obscures the actual access surface
+  and complicates cleanup. Either way, the key's
+  authorization is decided by data the operator no longer
+  controls — the principal in the policy is not the
+  principal that was originally granted access.
+failure: >
+  Authorization decisions tied to a decommissioned account
+  ID. The grant persists outside the organization's
+  authority and may name a current external entity that the
+  operator has no relationship with.

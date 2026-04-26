@@ -74,12 +74,14 @@ func (s *Sanitizer) Asset(id asset.ID) asset.ID {
 	return asset.ID(s.sanitizeRaw(id.String()))
 }
 
-// Value sanitizes an arbitrary string value.
+// Value sanitizes an arbitrary string value. Two distinct values produce
+// two distinct deterministic tokens, so equality of redacted output still
+// reflects equality of the original input.
 func (s *Sanitizer) Value(v string) string {
-	if s == nil || !s.sanitizeIDs {
+	if s == nil || !s.sanitizeIDs || v == "" {
 		return v
 	}
-	return "[SANITIZED]"
+	return "SANITIZED_" + crypto.ShortToken(v)
 }
 
 // Path sanitizes a file path according to the configured PathMode.
@@ -148,7 +150,8 @@ func (s *Sanitizer) Snapshot(snap asset.Snapshot) asset.Snapshot {
 }
 
 // ScrubMap returns a deep copy of a properties map with keys removed or
-// sanitized according to the profile. Nested maps are recursed.
+// sanitized according to the profile. Nested maps and lists are recursed
+// so sensitive values nested inside list-shaped properties are still scrubbed.
 func (s *Sanitizer) ScrubMap(props map[string]any, profile Profile) map[string]any {
 	if props == nil {
 		return nil
@@ -166,7 +169,32 @@ func (s *Sanitizer) ScrubMap(props map[string]any, profile Profile) map[string]a
 			out[k] = s.ScrubMap(nested, profile)
 			continue
 		}
+		if list, ok := v.([]any); ok {
+			out[k] = s.scrubList(list, profile)
+			continue
+		}
 		out[k] = v
+	}
+	return out
+}
+
+// scrubList recurses into list elements, scrubbing nested maps/lists with
+// the same profile. Non-container elements are kept as-is — the profile is
+// keyed by map property name and does not classify list elements directly.
+func (s *Sanitizer) scrubList(list []any, profile Profile) []any {
+	if list == nil {
+		return nil
+	}
+	out := make([]any, len(list))
+	for i, item := range list {
+		switch v := item.(type) {
+		case map[string]any:
+			out[i] = s.ScrubMap(v, profile)
+		case []any:
+			out[i] = s.scrubList(v, profile)
+		default:
+			out[i] = item
+		}
 	}
 	return out
 }
@@ -201,10 +229,41 @@ func (s *Sanitizer) scrubSource(src *asset.SourceRef) *asset.SourceRef {
 	}
 }
 
-func (s *Sanitizer) scrubValue(v any) string {
-	str, ok := v.(string)
-	if !ok {
-		return "[SANITIZED]"
+// scrubValue redacts a sanitized property's value while preserving its
+// underlying type so downstream JSON consumers see the same shape they
+// would for an unredacted property. String values are deterministically
+// hashed; numeric and boolean primitives are zeroed; containers recurse.
+func (s *Sanitizer) scrubValue(v any) any {
+	switch val := v.(type) {
+	case nil:
+		return nil
+	case string:
+		return s.ID(val)
+	case bool:
+		return false
+	case int:
+		return 0
+	case int32:
+		return int32(0)
+	case int64:
+		return int64(0)
+	case float32:
+		return float32(0)
+	case float64:
+		return float64(0)
+	case []any:
+		out := make([]any, len(val))
+		for i, item := range val {
+			out[i] = s.scrubValue(item)
+		}
+		return out
+	case map[string]any:
+		out := make(map[string]any, len(val))
+		for k, sub := range val {
+			out[k] = s.scrubValue(sub)
+		}
+		return out
+	default:
+		return SanitizedValue
 	}
-	return s.ID(str)
 }

@@ -1,7 +1,6 @@
 package contextcmd
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -86,8 +85,8 @@ func (r *Runner) List(st *contexts.Store, format appcontracts.OutputFormat) erro
 // Create adds or updates a named context in the store.
 func (r *Runner) Create(st *contexts.Store, name string, c contexts.Context) error {
 	name = contexts.NormalizeName(name)
-	if name == "" {
-		return &ui.UserError{Err: errors.New("context name cannot be empty")}
+	if err := contexts.ValidateName(name); err != nil {
+		return &ui.UserError{Err: err}
 	}
 
 	st.Contexts[name] = c

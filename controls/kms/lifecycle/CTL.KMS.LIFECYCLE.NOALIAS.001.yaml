@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.LIFECYCLE.NOALIAS.001
+name: KMS Key Has No Alias
+description: >
+  KMS key has no alias attached and is referenced only by its
+  key ID (a UUID). Aliases are the human-readable handle for a
+  key — alias/production-database, alias/s3-backup-encryption,
+  alias/api-secrets — and they are how IAM policies, resource
+  configurations, and runbooks should reference the key. A key
+  with no alias is unmanageable at scale: a key ID like
+  1234abcd-12ab-34cd-56ef-1234567890ab carries no information
+  about purpose, owner, or workload. Audit trails name the
+  ID; on-call cannot tell at a glance whether the key in
+  question encrypts production data or a developer
+  experiment. This is a governance signal, not a vulnerability
+  — the key is no less secure for lacking an alias — but
+  alias-less keys correlate with incomplete provisioning, lost
+  ownership, and key sprawl. Distinct from
+  CTL.KMS.ALIAS.GHOST.001 (alias points to a Disabled or
+  PendingDeletion key) and CTL.KMS.ALIAS.ORPHAN.001 (alias
+  points to a deleted key) — both check the validity of an
+  existing alias; this control checks for the alias's
+  presence at all.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.9, A.8.24"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    KMS key has no alias and is referenced only by its key ID.
+    Operability and governance are degraded.
+  action: >
+    Attach an alias that names the key's purpose
+    (aws kms create-alias --alias-name alias/<purpose>
+    --target-key-id <id>). Use a stable naming convention —
+    alias/<environment>-<workload>-<role> — and gate new key
+    creation on alias presence in your provisioning pipeline.
+    Update IAM policies and resource configurations to
+    reference the alias rather than the key ID, so that key
+    rotations and replacements do not require policy edits.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "lifecycle": {
+          "has_alias": true,
+          "alias_names": ["alias/production-database"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.lifecycle.has_alias
+      op: eq
+      value: false
+defect: >
+  KMS key has no alias and is referenced only by its key ID.
+infection: >
+  An alias-less key is unmanageable at scale. A key ID like
+  1234abcd-12ab-34cd-56ef-1234567890ab conveys no purpose,
+  owner, or workload — operators reading IAM policies,
+  CloudTrail events, or resource configurations cannot tell
+  whether the key encrypts production data or a developer
+  experiment without resolving the ID separately. The key
+  is no less secure for lacking an alias, but alias-less
+  keys correlate with incomplete provisioning (the workflow
+  that created the key never finished) and lost ownership
+  (no one knows what the key is for, no one is willing to
+  delete it). The downstream effect is governance debt:
+  decommission becomes harder because the key's purpose
+  cannot be confirmed, and key sprawl accumulates because
+  every operator who needs encryption creates a new key
+  rather than discovering an existing one.
+failure: >
+  Governance and operability degraded. The key is
+  unidentifiable in audits, runbooks, and policies; it
+  contributes to key sprawl and resists confident
+  decommission.
+tests:
+  - name: key with no alias fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-alias"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          lifecycle:
+            has_alias: false
+            alias_names: []
+  - name: key with alias passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-with-alias"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          lifecycle:
+            has_alias: true
+            alias_names:
+              - alias/production-database

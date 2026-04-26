@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ALARM.DISABLE.001
+name: KMS Key Has No CloudWatch Alarm for DisableKey
+description: >
+  KMS key has no CloudWatch alarm wired to a CloudTrail metric
+  filter for the kms:DisableKey API call. DisableKey takes effect
+  immediately — there is no waiting period. Every subsequent
+  Encrypt, Decrypt, GenerateDataKey, and ReEncrypt call returns
+  KMSInvalidStateException, breaking every dependent service on
+  its next cryptographic operation. EnableKey reverses the
+  damage but only after someone notices and acts. Without an
+  alarm, discovery depends on cascading error alerts from
+  dependent services — minutes to hours later depending on
+  traffic. Distinct from CTL.KMS.STATE.DISABLED.001 (asserts the
+  resulting state, fires after the fact): this control fires on
+  the missing detection wiring so the disable event itself is
+  caught in real time.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "4.7"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.4.1"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08", "CEK-03"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.alarms.has_disable_key_alarm
+remediation:
+  description: >
+    No CloudWatch alarm monitors CloudTrail for DisableKey on
+    this key. Immediate key disablement causes service-wide
+    failure with no notification.
+  action: >
+    Create a CloudTrail metric filter on eventName = DisableKey
+    and a CloudWatch alarm with an SNS notification action that
+    pages on-call. Threshold should be 1 (any occurrence) and
+    the period should be 60s so notification fires within
+    minutes — fast enough that EnableKey can run before
+    cascading service failures accumulate.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "alarms": {
+          "has_disable_key_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.alarms.has_disable_key_alarm
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors DisableKey API calls on this key.
+infection: >
+  DisableKey is immediate — there is no waiting period, no
+  countdown, no grace window. The moment DisableKey is called,
+  the key enters Disabled state. Every subsequent Encrypt,
+  Decrypt, GenerateDataKey, and ReEncrypt call fails with
+  KMSInvalidStateException. Every S3 GetObject on objects
+  encrypted with the key fails. Every Lambda cold start that
+  decrypts environment variables fails. Every RDS restart fails.
+  The impact is immediate and service-wide. EnableKey reverses
+  the damage — but only after someone notices and acts. Without
+  an alarm, the discovery depends on error alerts from
+  dependent services — which may take minutes or hours
+  depending on traffic patterns.
+failure: >
+  Undetected key disablement. All dependent resources fail
+  immediately with no notification, and the team learns about
+  the outage from cascading downstream errors rather than from
+  the KMS event itself.
+tests:
+  - name: key without DisableKey alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-disable-alarm"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_disable_key_alarm: false
+  - name: key with DisableKey alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-disable-alarmed"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_disable_key_alarm: true
+  - name: disabled key without alarm fires (compound with KMS-1)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-disabled-no-alarm"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          state: Disabled
+          alarms:
+            has_disable_key_alarm: false

@@ -1,0 +1,28 @@
+control: CTL.KMS.MULTIREGION.NONCOMPLIANT.REGION.001
+defect: >
+  KMS multi-region key has a replica in a region that does
+  not comply with applicable data residency requirements.
+infection: >
+  Data residency requirements typically apply to the
+  encrypted data and to the cryptographic material that can
+  decrypt it. A replica in a non-compliant region means the
+  key material — the decision authority for whether
+  ciphertext becomes plaintext — is present where data
+  processing is not authorized. An authorized principal in
+  the non-compliant region can fetch the ciphertext, ask the
+  local replica to decrypt it, and the plaintext exists in
+  the non-compliant region for the duration of that
+  operation. Even if the workflow does not currently exist,
+  the capability does: a future change to data-pull
+  permissions or a misconfigured cross-region replication
+  silently moves plaintext through a region that residency
+  rules did not authorize. The key's regional placement is
+  load-bearing for the data residency claim; residency
+  requires every replica region to be a compliant region.
+failure: >
+  Decryption capability exists outside the data-residency
+  perimeter. Even if encrypted data stays in compliant
+  regions today, the key material's presence in a
+  non-compliant region creates a latent path for plaintext
+  egress that residency controls cannot detect after the
+  fact.

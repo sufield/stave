@@ -46,12 +46,8 @@ func run(in Input) error {
 		return fmt.Errorf("parse ACL grants: %w", err)
 	}
 
-	// Use both List-based and convenience-function forms.
 	list := s3acl.New(grants)
 	assessment := list.Assess()
-
-	// Also exercise the package-level Assess convenience form.
-	_ = s3acl.Assess(grants)
 
 	// Per-grant detail analysis.
 	var details []GrantDetail
@@ -64,7 +60,6 @@ func run(in Input) error {
 			HasFullCtrl:  g.HasFullControl(),
 			PermissionID: g.Permissions(),
 		})
-		_ = s3acl.IsPublicGrantee(g.Grantee)
 	}
 
 	enc := json.NewEncoder(in.Stdout)

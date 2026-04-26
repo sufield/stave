@@ -1,0 +1,21 @@
+id: kms_destructive_undetected
+description: >
+  No CloudWatch alarm for ScheduleKeyDeletion plus either no
+  alarm for DisableKey or a key already in PendingDeletion.
+  Destructive KMS operations are either unmonitored or actively
+  occurring without detection. ScheduleKeyDeletion starts a
+  countdown to permanent data loss; DisableKey breaks every
+  dependent service immediately; the pending-deletion state
+  itself is the smoking gun. Threshold of 2 fires when at least
+  two of the three destructive-detection gaps coexist on the
+  same key.
+controls:
+  - CTL.KMS.ALARM.DELETION.001
+  - CTL.KMS.ALARM.DISABLE.001
+  - CTL.KMS.STATE.PENDINGDELETION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - data_destruction

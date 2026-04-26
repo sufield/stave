@@ -1,0 +1,20 @@
+id: kms_access_ungoverned
+description: >
+  No kms:ViaService restriction plus either no kms:EncryptionContext
+  enforcement or cross-account access without conditions. Key usage
+  is ungoverned: there is no service-channel restriction, AND either
+  no per-operation context binding or external accounts have blanket
+  access. Combined, the key can be used by anyone authorized for any
+  ciphertext through any channel — the policy authorizes Decrypt
+  without scoping how, where, or by whom. Threshold of 2 fires when
+  two of the three governance gaps coexist on the same key.
+controls:
+  - CTL.KMS.POLICY.NOVIASERVICE.001
+  - CTL.KMS.POLICY.NOCONTEXT.001
+  - CTL.KMS.POLICY.CROSSACCOUNT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - encryption_bypass

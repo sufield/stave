@@ -1,0 +1,22 @@
+control: CTL.KMS.ALARM.DELETION.001
+defect: >
+  No CloudWatch alarm monitors ScheduleKeyDeletion API calls on
+  this key.
+infection: >
+  ScheduleKeyDeletion starts a 7-30 day countdown to permanent
+  key deletion. Once the countdown expires, the key and all data
+  encrypted with it are permanently irrecoverable. Without a
+  real-time alarm: an insider schedules deletion of the
+  production encryption key on Friday evening; nobody notices
+  until Monday when dependent services fail. By Monday, two of
+  seven deletion-window days have passed. If the window was set
+  to 7 days (minimum), five days remain. If nobody notices until
+  day 7, the key is permanently deleted. A CloudTrail metric
+  filter plus CloudWatch alarm on ScheduleKeyDeletion provides
+  seconds-to-minutes notification — the team can
+  CancelKeyDeletion immediately and prevent permanent data loss.
+failure: >
+  Undetected key deletion. A key can be scheduled for permanent
+  deletion without real-time notification, leaving only the
+  deletion window between the API call and irreversible data
+  loss across every dependent service.

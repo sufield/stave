@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.GRANT.EXCESSIVE.001
+name: KMS Key Has Excessive Active Grants
+description: >
+  KMS key has more than 100 active grants. The KMS service limit
+  is 50,000 grants per key, but more than 100 active grants is a
+  red flag for: programmatic grant creation without governance
+  (grants created but never retired), an unauditable access
+  surface (100+ grants across many principals and operations
+  cannot be manually reviewed), and incomplete cleanup of
+  short-lived workloads. AWS services that use grants (EBS, RDS,
+  Redshift) may create many grants automatically; the threshold
+  is conservative to avoid false positives on service-managed
+  grant volume.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2.1"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "IAM-05"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+  threshold: 100
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.active_grant_count
+  - cryptography.has_excessive_grants
+remediation:
+  description: >
+    KMS key has more than 100 active grants. The grant set is
+    not manually auditable and likely contains stale grants
+    from short-lived workloads.
+  action: >
+    Audit grants with aws kms list-grants --key-id KEY. Retire
+    grants whose grantee principals no longer exist or whose
+    operations are no longer needed. Establish a grant
+    lifecycle: every workflow that creates a grant must retire
+    it on completion. Track grant count over time; investigate
+    unbounded growth.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "active_grant_count": 12,
+        "has_excessive_grants": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.has_excessive_grants
+      op: eq
+      value: true
+defect: >
+  KMS key has more than 100 active grants.
+infection: >
+  Grants are a secondary access-control mechanism for KMS keys.
+  Each grant authorizes a principal to perform specific
+  cryptographic operations. AWS services that use grants (EBS,
+  RDS, Redshift) typically create one grant per resource and
+  retire it when the resource is deleted. When grant counts
+  grow without bound, the symptom is incomplete retirement:
+  workflows create grants but never delete them. The result is
+  an access surface that no one is accountable for, with grants
+  pointing at principals that may have been deleted or
+  repurposed. The grant API does not surface granular permission
+  state the way an IAM policy does, so reviewing 100+ grants by
+  hand is not feasible.
+failure: >
+  Grant surface unauditable. The set of principals authorized
+  to use the key cannot be determined by reading the key policy
+  or by manual review of the grant list.
+tests:
+  - name: key with excessive grants fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-grant-flood"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          active_grant_count: 150
+          has_excessive_grants: true
+  - name: key with normal grant count passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-grant-ok"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          active_grant_count: 15
+          has_excessive_grants: false

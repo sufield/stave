@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ALARM.DECRYPT.FAILURE.001
+name: KMS Key Has No CloudWatch Alarm for Decrypt Failures
+description: >
+  KMS key has no CloudWatch alarm on Decrypt-failure errors
+  (AccessDeniedException, KMSInvalidStateException,
+  DisabledException). Decrypt failures appear as errorCode in
+  CloudTrail events and indicate either an active security
+  event (unauthorized access attempts, credential stuffing) or
+  an operational failure (key state change breaking dependent
+  services). The control fires on missing detection — alarms
+  on individual failures cause false-positive noise; the
+  intended threshold is a SPIKE in failures over a baseline.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.4.1"
+  soc2: "CC7.3"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08", "IAM-12"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.alarms.has_decrypt_failure_alarm
+remediation:
+  description: >
+    No CloudWatch alarm monitors KMS Decrypt failures. Spikes
+    in unauthorized access attempts or key state problems are
+    invisible until application-level errors surface.
+  action: >
+    Create a CloudTrail metric filter on errorCode in
+    [AccessDeniedException, KMSInvalidStateException,
+    DisabledException] for eventName = Decrypt, and a
+    CloudWatch alarm on the resulting metric. Use a
+    spike-relative threshold rather than absolute counts —
+    individual failures are normal; sustained elevated rates
+    indicate an active issue. Route to SIEM for correlation
+    with IAM events.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "alarms": {
+          "has_decrypt_failure_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.alarms.has_decrypt_failure_alarm
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors KMS Decrypt failures on this key.
+infection: >
+  KMS Decrypt failures appear as errorCode in CloudTrail events.
+  Common failure codes: AccessDeniedException (principal doesn't
+  have kms:Decrypt — may be an unauthorized access attempt or
+  IAM misconfiguration), KMSInvalidStateException (key is
+  Disabled or PendingDeletion — dependent resources are
+  breaking), DisabledException (key specifically disabled). A
+  spike in Decrypt failures indicates either an active security
+  event (unauthorized access attempts) or an operational
+  failure (key state change breaking services). Without an
+  alarm, both go undetected until application-level errors
+  surface — minutes or hours after the event.
+failure: >
+  Undetected decryption failures. Unauthorized access attempts
+  or key state problems manifest as KMS errors without
+  notification.
+tests:
+  - name: key without Decrypt-failure alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-failure-alarm"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_decrypt_failure_alarm: false
+  - name: key with Decrypt-failure alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-failure-alarmed"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_decrypt_failure_alarm: true

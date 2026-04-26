@@ -140,13 +140,22 @@ func TestScrubMap_SanitizesKeys(t *testing.T) {
 
 func TestScrubMap_SanitizesNonStringValue(t *testing.T) {
 	s := New(WithIDSanitization(true))
-	// A non-string value that needs sanitizing becomes "[SANITIZED]".
+	// Non-string values are zeroed in their original type rather than
+	// coerced to a string sentinel — preserving type lets downstream
+	// JSON/schema consumers continue parsing the property.
 	props := map[string]any{
 		"bucket_name": 12345, // non-string
 	}
 	result := s.ScrubMap(props, AssetProfile())
-	if got, ok := result["bucket_name"]; !ok || got != "[SANITIZED]" {
-		t.Errorf("non-string sanitize value = %v, want [SANITIZED]", got)
+	got, ok := result["bucket_name"]
+	if !ok {
+		t.Fatal("bucket_name should still be present after sanitize")
+	}
+	if got == 12345 {
+		t.Error("bucket_name should have been redacted, not pass-through")
+	}
+	if _, isInt := got.(int); !isInt {
+		t.Errorf("bucket_name redacted type = %T, want int (type preserved)", got)
 	}
 }
 

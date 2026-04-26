@@ -1,0 +1,22 @@
+control: CTL.KMS.ALARM.CREATEGRANT.001
+defect: >
+  No CloudWatch alarm monitors CreateGrant API calls on this
+  key.
+infection: >
+  Grants are a secondary access-control mechanism for KMS keys.
+  Each grant authorizes a principal to perform specific
+  cryptographic operations and lives outside the key policy.
+  Grants can be created by any principal with kms:CreateGrant
+  on the key. An attacker with kms:CreateGrant can silently
+  authorize themselves or another principal for Decrypt,
+  Encrypt, or GenerateDataKey on the key — without modifying
+  the key policy and without any notification. The grant is
+  visible only in aws kms list-grants output, which nobody
+  reviews in real time. The combination of CreateGrant
+  permission and the absence of a CloudTrail alarm makes
+  silent access expansion the path of least resistance for an
+  insider or a compromised role.
+failure: >
+  Undetected access expansion. New grants — potentially
+  authorizing Decrypt to attacker-controlled principals — are
+  created without notification.

@@ -206,15 +206,16 @@ func TestExposureHistoryRecurringViolationCount(t *testing.T) {
 		h.Record(ep)
 	}
 
-	// Window covering days 2-4 (exclusive start)
+	// Window covering days 1-4 (inclusive start, exclusive end —
+	// matches WindowSummary's overlap semantics).
 	w := kernel.NewTimeWindow(
 		base.Add(24*time.Hour),     // day 1
 		base.Add(4*24*time.Hour+1), // day 4+
 	)
 	count := h.RecurringViolationCount(w)
-	// ExposureWindows at day2, day3, day4 should match (start > w.Start && start < w.End)
-	if count != 3 {
-		t.Fatalf("count = %d, want 3", count)
+	// ExposureWindows at day1, day2, day3, day4 match (start >= w.Start && start < w.End).
+	if count != 4 {
+		t.Fatalf("count = %d, want 4", count)
 	}
 }
 

@@ -39,6 +39,18 @@ func NewEnv() (*cel.Env, error) {
 	)
 }
 
+// missingErrorPatterns lists substrings that cel-go uses (across versions)
+// to signal "field or key not present in data". Add new phrasings here if a
+// cel-go upgrade introduces them — failure to match makes Stave treat
+// absence as a runtime error and surface it as inconclusive.
+var missingErrorPatterns = []string{
+	"no such key",
+	"undefined field",
+	"no such attribute",
+	"no such overload",
+	"no matching overload",
+}
+
 // isMissing implements Stave's three-way absence semantics:
 // null, empty string (trimmed), empty list, empty map, structural CEL error.
 // Runtime errors (division by zero, type mismatch) are NOT treated as missing —
@@ -48,19 +60,23 @@ func isMissing(val ref.Val) bool {
 		return true
 	}
 	// CEL error — distinguish structural missing from runtime errors.
+	// cel-go does not export typed sentinels for absence, so we
+	// pattern-match its error wording. The patterns covered here are
+	// the union of phrasings emitted across cel-go versions for "field
+	// or key absent in data"; runtime errors (div-by-zero, type
+	// mismatch) deliberately fall through to the "not missing" branch
+	// so they surface as inconclusive.
 	if types.IsError(val) {
 		errVal, ok := val.Value().(error)
 		if !ok {
 			return false // unexpected error type — not missing
 		}
 		msg := errVal.Error()
-		// Structural: key/field not found in the data.
-		if strings.Contains(msg, "no such key") ||
-			strings.Contains(msg, "undefined field") ||
-			strings.Contains(msg, "no such attribute") {
-			return true
+		for _, pattern := range missingErrorPatterns {
+			if strings.Contains(msg, pattern) {
+				return true
+			}
 		}
-		// Runtime errors (div by zero, type mismatch, etc.) are NOT missing.
 		return false
 	}
 

@@ -1,0 +1,138 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.MULTIREGION.NOREPLICA.001
+name: KMS Multi-Region Key Has No Replicas
+description: >
+  KMS key has multi-region configuration enabled but no replica
+  keys exist in other regions. Multi-region keys carry overhead
+  — the service-linked role for replication, the cross-region
+  coordination, the key-policy semantics that admit replication
+  — without delivering the benefit (no cross-region key
+  availability, no latency reduction for cross-region workloads,
+  no DR position for encrypted data). Either the key should have
+  replicas in the regions where it is needed, or it should be a
+  single-region key. The configuration as it stands is the
+  multi-region overhead with the single-region utility. Same
+  pattern as CTL.DYNAMODB.GLOBAL.SINGLEREGION.001 and
+  CTL.RDS.AURORA.SINGLEINSTANCE.001 — declared multi-region
+  topology with no actual multi-region presence.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "SC-12, CP-6"
+  fedramp_moderate: "SC-12"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "BCR-08"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Multi-region key configuration is enabled but no replicas
+    exist in other regions. The key has multi-region overhead
+    without multi-region benefit.
+  action: >
+    Either replicate the key to the regions that need it
+    (aws kms replicate-key --key-id <primary-key-id>
+    --replica-region <region>) or remove multi-region
+    configuration by recreating the key as single-region.
+    Multi-region configuration without replicas is rarely
+    intentional — investigate the original design and align
+    the configuration with the actual usage.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "multi_region": {
+          "is_multi_region": true,
+          "multi_region_type": "PRIMARY",
+          "replica_count": 2
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.multi_region.is_multi_region
+      op: eq
+      value: true
+    - field: properties.cryptography.multi_region.replica_count
+      op: eq
+      value: 0
+defect: >
+  KMS multi-region key has no replicas in other regions. The
+  key carries multi-region overhead without delivering
+  multi-region benefit.
+infection: >
+  A multi-region key with no replicas has the worst of both
+  worlds: it is configured as multi-region (so any change to
+  the primary's policy or state must reckon with the
+  replication semantics) yet provides none of the cross-region
+  availability that justifies multi-region in the first place.
+  Cross-region workloads still incur the cost of cross-region
+  KMS calls. DR plans that assumed regional key availability
+  are silently broken — the planner thought multi-region meant
+  the key was reachable from the failover region, but no
+  replica was ever created. The configuration looks valid in
+  the console (the key shows as multi-region) which masks the
+  fact that nothing was replicated. This is governance debt
+  that compounds over time: each new resource encrypted with
+  the primary inherits a recovery dependency on the primary's
+  region.
+failure: >
+  Multi-region overhead without multi-region benefit. The key
+  cannot serve cross-region workloads or fail over to another
+  region. DR plans that assumed cross-region key availability
+  are broken in a way that only surfaces during an actual
+  region failure.
+tests:
+  - name: multi-region key with no replicas fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-replicas"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          multi_region:
+            is_multi_region: true
+            multi_region_type: PRIMARY
+            replica_count: 0
+            replica_regions: []
+  - name: multi-region key with two replicas passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-two-replicas"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          multi_region:
+            is_multi_region: true
+            multi_region_type: PRIMARY
+            replica_count: 2
+            replica_regions:
+              - us-west-2
+              - eu-west-1
+  - name: single-region key passes (multi-region not enabled)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/single-region-key"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          multi_region:
+            is_multi_region: false
+            replica_count: 0

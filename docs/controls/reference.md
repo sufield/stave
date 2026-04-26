@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1619
-**Pack hash:** `32c10984788b60472d9cf03113b98c99f4ecff978285bf82d43a6dec79120818`
+**Total controls:** 1691
+**Pack hash:** `5e0f832ee5ef3576f8bf2d59fdb64f7e7d6dbc9ee8fe3ed23c07617b1ffcc857`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 181 |
-| high | 707 |
+| critical | 188 |
+| high | 741 |
 | info | 16 |
-| low | 119 |
-| medium | 596 |
+| low | 122 |
+| medium | 624 |
 
 | Domain | Count |
 |--------|-------|
@@ -22,10 +22,10 @@
 | audit | 33 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 49 |
+| detection | 59 |
 | encryption | 92 |
-| exposure | 903 |
-| governance | 121 |
+| exposure | 943 |
+| governance | 143 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -15982,6 +15982,156 @@ Kinesis Data Streams must retain records for at least the required minimum durat
 
 ---
 
+### CTL.KMS.ALARM.CREATEGRANT.001
+
+**KMS Key Has No CloudWatch Alarm for CreateGrant**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
+
+KMS key has no CloudWatch alarm wired to a CloudTrail metric filter for the kms:CreateGrant API call. Grants are a secondary access-control mechanism that delegate key access without modifying the key policy. An attacker with kms:CreateGrant permission can silently expand key access to arbitrary principals — Decrypt, Encrypt, GenerateDataKey, or RetireGrant — without leaving a trace in the key policy. Distinct from CTL.KMS.GRANT.BROAD.001 (asserts that grants authorize broad operations) and CTL.KMS.GRANT.EXCESSIVE.001 (asserts grant volume): this control fires on the missing detection wiring so each grant creation is caught when it happens.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = CreateGrant and a CloudWatch alarm with an SNS notification action. AWS services (EBS, RDS, Redshift) create grants automatically; tune the threshold to baseline expected service-driven grant volume so human-driven grants stand out. Route notifications to the security team for grant audit.
+
+---
+
+### CTL.KMS.ALARM.CROSSACCOUNT.001
+
+**KMS Key Has No CloudWatch Alarm for Cross-Account Usage**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
+
+KMS key has cross-account access in its policy but no CloudWatch alarm for KMS API calls from external accounts. Cross-account KMS usage is expected when keys are intentionally shared, but unexpected cross-account usage may indicate: a key policy broader than intended, a compromised external account using shared key access, or data exfiltration via cross-account decryption. The control fires ONLY when the key has cross-account access (precondition); a key with no cross-account principal cannot be used cross- account, so the alarm is unnecessary. Distinct from CTL.KMS.POLICY.CROSSACCOUNT.001 (asserts the policy is broad cross-account): this control assumes cross-account access is intentional and fires on the missing detection wiring around it.
+
+**Remediation:** Create a CloudTrail metric filter on KMS events where userIdentity.accountId does not equal the key's account, and a CloudWatch alarm with an SNS notification action. Route to the security team and the SIEM. If cross-account access is unintentional, remove the cross-account statement from the key policy instead of relying solely on the alarm.
+
+---
+
+### CTL.KMS.ALARM.DECRYPT.FAILURE.001
+
+**KMS Key Has No CloudWatch Alarm for Decrypt Failures**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.4.1; soc2: CC7.3;
+
+KMS key has no CloudWatch alarm on Decrypt-failure errors (AccessDeniedException, KMSInvalidStateException, DisabledException). Decrypt failures appear as errorCode in CloudTrail events and indicate either an active security event (unauthorized access attempts, credential stuffing) or an operational failure (key state change breaking dependent services). The control fires on missing detection — alarms on individual failures cause false-positive noise; the intended threshold is a SPIKE in failures over a baseline.
+
+**Remediation:** Create a CloudTrail metric filter on errorCode in [AccessDeniedException, KMSInvalidStateException, DisabledException] for eventName = Decrypt, and a CloudWatch alarm on the resulting metric. Use a spike-relative threshold rather than absolute counts — individual failures are normal; sustained elevated rates indicate an active issue. Route to SIEM for correlation with IAM events.
+
+---
+
+### CTL.KMS.ALARM.DECRYPT.VOLUME.001
+
+**KMS Key Has No CloudWatch Alarm for High-Frequency Decrypt**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
+
+KMS key has no CloudWatch alarm on Decrypt-call volume. KMS Decrypt is invoked every time encrypted data is read — S3 GetObject, RDS data access, Lambda cold start, Secrets Manager GetSecretValue. Normal usage has a baseline. A sudden spike — 10x or 100x baseline — indicates bulk exfiltration (an attacker decrypting thousands of S3 objects or database records), credential theft (decrypting many secrets), or a retry storm. The control checks for ALARM EXISTENCE only; threshold tuning is operational. A static threshold that's too low causes false positives on legitimate traffic spikes, too high misses targeted exfiltration — anomaly detection or baseline-relative thresholds are preferred.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/KMS Decrypt operation count metric (NumberOfRequestsAccepted with Operation=Decrypt). Use anomaly detection with a 2-week baseline, or a threshold based on observed normal volume. Period of 5 minutes balances detection speed against false-positive rate. Notify the security team and route to the SIEM for correlation with downstream S3/RDS/Secrets Manager access patterns.
+
+---
+
+### CTL.KMS.ALARM.DELETION.001
+
+**KMS Key Has No CloudWatch Alarm for ScheduleKeyDeletion**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.7; fedramp_moderate: SI-4; hipaa: 164.312(b); iso_27001_2022: A.8.16; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
+
+KMS key has no CloudWatch alarm wired to a CloudTrail metric filter for the kms:ScheduleKeyDeletion API call. ScheduleKeyDeletion starts the 7-30 day countdown to permanent key destruction — the most destructive KMS operation. CloudTrail records the call by default, but without an alarm the event sits in the log unread until a dependent service fails. Combined with CTL.KMS.STATE.PENDINGDELETION.001, this control is the DETECTION layer: STATE detects the pending state itself; ALARM detects the moment the state is entered, so the team can run CancelKeyDeletion within seconds-to-minutes instead of discovering the change days later. Distinct from CTL.KMS.STATE.PENDINGDELETION.001 (asserts state, fires after the fact) and CTL.KMS.DELETION.MINWAIT.001 (asserts waiting window length, configuration).
+
+**Remediation:** Create a CloudTrail metric filter on eventName = ScheduleKeyDeletion and a CloudWatch alarm with an SNS notification action — aws logs put-metric-filter --filter-pattern '{ $.eventName = "ScheduleKeyDeletion" }' followed by aws cloudwatch put-metric-alarm with a SNS topic that pages on-call. Alarm threshold should be 1 (any occurrence) and the period should be the smallest available (60s) so notification fires within minutes of the API call.
+
+---
+
+### CTL.KMS.ALARM.DISABLE.001
+
+**KMS Key Has No CloudWatch Alarm for DisableKey**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.7; fedramp_moderate: SI-4; hipaa: 164.312(b); iso_27001_2022: A.8.16; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
+
+KMS key has no CloudWatch alarm wired to a CloudTrail metric filter for the kms:DisableKey API call. DisableKey takes effect immediately — there is no waiting period. Every subsequent Encrypt, Decrypt, GenerateDataKey, and ReEncrypt call returns KMSInvalidStateException, breaking every dependent service on its next cryptographic operation. EnableKey reverses the damage but only after someone notices and acts. Without an alarm, discovery depends on cascading error alerts from dependent services — minutes to hours later depending on traffic. Distinct from CTL.KMS.STATE.DISABLED.001 (asserts the resulting state, fires after the fact): this control fires on the missing detection wiring so the disable event itself is caught in real time.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = DisableKey and a CloudWatch alarm with an SNS notification action that pages on-call. Threshold should be 1 (any occurrence) and the period should be 60s so notification fires within minutes — fast enough that EnableKey can run before cascading service failures accumulate.
+
+---
+
+### CTL.KMS.ALARM.POLICYCHANGE.001
+
+**KMS Key Has No CloudWatch Alarm for PutKeyPolicy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.6; fedramp_moderate: SI-4; hipaa: 164.312(b); iso_27001_2022: A.8.16; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
+
+KMS key has no CloudWatch alarm wired to a CloudTrail metric filter for the kms:PutKeyPolicy API call. PutKeyPolicy replaces the entire key policy document — the access control for who may use the key. A single API call can grant Decrypt to new principals, add Principal "*", grant cross-account access, remove condition keys, or grant GrantWithGrant. Key policy changes don't affect existing ciphertexts, but they change WHO can decrypt that data going forward. Without a real-time alarm, key policy modifications are invisible until the next manual audit. Distinct from CTL.KMS.POLICY.ADMIN.BROAD.001 (asserts the resulting permission breadth) and CTL.KMS.POLICY.001 (asserts the presence of Principal "*"): this control fires on the missing detection wiring so the policy change itself is caught at the moment it happens.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = PutKeyPolicy and a CloudWatch alarm with an SNS notification action. Threshold should be 1 (any occurrence) and the period should be 60s so the security team is notified immediately. Consider routing the notification to both on-call and the audit logging system so the change is triaged AND retained for retrospective review.
+
+---
+
+### CTL.KMS.ALARM.ROTATION.FAILURE.001
+
+**KMS Key Has No CloudWatch Alarm for Rotation Events**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.24; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
+
+KMS key has no CloudWatch alarm wired to KMS key rotation events. Rotation events indicate the key material was rotated — expected annually if auto-rotation is enabled. A FAILED rotation means the key material did NOT change, so the old material continues past its intended lifetime. An UNEXPECTED rotation (manual rotation outside the schedule) may indicate a compromise response or unauthorized activity. Distinct from CTL.KMS.ROTATION.001 (asserts auto-rotation is enabled, configuration): this control fires on the missing detection wiring around rotation events themselves.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = RotateKeyOnDemand and EnableKeyRotation/DisableKeyRotation, plus the AWS/KMS RotationFailure metric where available. A CloudWatch alarm on the resulting metrics with an SNS notification action surfaces unexpected or failed rotations in real time. Route to the cryptography or platform team for follow-up.
+
+---
+
+### CTL.KMS.ALIAS.GHOST.001
+
+**KMS Alias Points to Disabled or Pending-Deletion Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-2; nist_800_53_r5: CM-2; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+KMS alias resolves to a key in Disabled or PendingDeletion state. KMS aliases are human-readable names for keys — alias/production- encryption, alias/database-key, alias/api-secrets — that resources and IAM policies use instead of bare key IDs. The alias still resolves and appears valid, but the underlying key cannot perform cryptographic operations. A developer reading the IAM policy sees alias/production-encryption and assumes the key is operational. An auditor sees the alias in a resource configuration and marks it compliant. Resources fail with non-obvious errors because the alias hides the key's broken state. This is the "appears to work" pattern at the encryption layer — the reference looks valid, the key cannot function. Distinct from CTL.KMS.ALIAS.ORPHAN.001 (alias points to a key that no longer exists at all): here the key still exists but cannot perform operations.
+
+**Remediation:** Identify the underlying key state (aws kms describe-key --key-id alias/NAME). If the key is Disabled, decide whether to re-enable it (aws kms enable-key) or repoint the alias to a different operational key (aws kms update-alias). If the key is PendingDeletion, either cancel the deletion (aws kms cancel-key-deletion) or repoint the alias before the deletion window expires. Audit which resources reference this alias so the impact of repointing is understood.
+
+---
+
+### CTL.KMS.ALIAS.ORPHAN.001
+
+**KMS Alias Points to a Non-Existent Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; nist_800_53_r5: CM-2; soc2: CC8.1;
+
+KMS alias references a key ID that no longer exists. The underlying key was permanently deleted (the deletion waiting period expired) or never existed. The alias persists in the account — visible to ListAliases, referenced by IAM policies and resource configurations — but cannot resolve to a usable key. Any attempt to use the alias for an Encrypt, Decrypt, GenerateDataKey, or ReEncrypt call returns NotFoundException. Distinct from CTL.KMS.ALIAS.GHOST.001 (alias points to a Disabled or PendingDeletion key that still exists): here the alias points to nothing at all. The orphan alias is operational debris from incomplete decommission — the key was deleted, the alias was not.
+
+**Remediation:** Audit IAM policies and resource configurations for references to this alias before deleting it — the references will fail too, but the failure mode (NotFoundException vs. NotAuthorizedException) and the alias name carry remediation information. Once dependent references are remediated (repoint or remove), delete the alias with aws kms delete-alias --alias-name alias/NAME. Track alias creation and key deletion together in decommission runbooks so future cleanups don't leave orphans.
+
+---
+
 ### CTL.KMS.CONCENTRATION.001
 
 **KMS Key Must Not Encrypt More Than 50 Resources**
@@ -16012,6 +16162,51 @@ KMS keys encrypting more than 50 resources must have deletion protection enabled
 
 ---
 
+### CTL.KMS.CROSSACCOUNT.BLASTRADIUS.001
+
+**KMS Key Shared with Excessive Number of External Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.24; nist_800_53_r5: AC-3, AC-4, AC-6; pci_dss_v4.0: 3.5, 7.1; soc2: CC6.1, CC6.6;
+
+KMS key policy grants access to more than five external AWS accounts. The key's blast radius spans many accounts in both directions: if the key is compromised, disabled, or deleted, every sharing account that depends on it is affected; if any one of the sharing accounts is compromised, the attacker acquires cryptographic operations on data in every other sharing account. The blast radius grows roughly quadratically in the number of sharing accounts — N accounts means N populations of data at risk if the key fails, and N independent compromise paths to the key if any account is breached. Distinct from CTL.KMS.POLICY.CROSSACCOUNT.001 (asserts the presence of conditions on cross-account access) — that control checks the protective semantics of the policy; this control checks the topology of who is sharing, regardless of whether conditions are present. Threshold of five is a heuristic that accommodates legitimate centralized patterns (organization logging key, shared encryption key for a small multi-account application) while flagging the cases where centralization has eroded into sprawl.
+
+**Remediation:** Audit the cross-account principals in the key policy (aws kms get-key-policy --key-id <id> --policy-name default). For each external account, determine whether the access is still required and whether a per-account or per-tenant key would isolate the blast radius. The typical fix is to split the key by tenant or by workload — one key per account or per logical group of accounts — rather than continue to centralize. If a single shared key remains necessary (e.g., a logging pipeline that genuinely spans the organization), document the residual blast radius and add cross- account decryption monitoring (CTL.KMS.ALARM.CROSSACCOUNT.001) to compensate.
+
+---
+
+### CTL.KMS.CROSSACCOUNT.DECOMMISSIONED.001
+
+**KMS Key Policy Grants Access to Decommissioned Account**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-2; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: AC-2, AC-3; pci_dss_v4.0: 3.5, 7.2.4; soc2: CC6.1, CC8.1;
+
+KMS key policy grants access to an AWS account ID that is no longer active in the organization — the account was closed, decommissioned, or transferred to an external party. The policy entry persists. The danger has two shapes: if the account ID was transferred, the key policy now grants access to an entity outside organizational control; if the account was closed, the residual policy entry is decommission debris that obscures the actual access topology. Detection requires cross-referencing the key policy's cross-account principals against the active account list (AWS Organizations or an inventory of authorized accounts). When account inventory is unavailable the control cannot fire — fail loud rather than silently passing keys whose authorization has not been reconciled. Same incomplete-decommission family as CTL.KMS.GRANT.ORPHAN.001 (orphan grant principal), CTL.KMS.ALIAS.ORPHAN.001 (alias orphan), and CTL.IAM.ROLE.GHOST.001 — debris that survives the decommission of its referent.
+
+**Remediation:** Confirm the account's status with AWS Organizations (aws organizations describe-account --account-id <id>). If the account was closed or transferred, remove the principal from the key policy (aws kms put-key-policy --key-id <id> --policy-name default --policy <updated>). Investigate any other artifacts that referenced the same account ID — IAM trust policies, S3 bucket policies, SCPs — to ensure the decommission is complete. If the account was migrated inside the organization to a new ID, repoint the policy to the new ID rather than leaving both.
+
+---
+
+### CTL.KMS.DELETION.MINWAIT.001
+
+**KMS Key Deletion Scheduled With Minimum Waiting Period**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-12(1); hipaa: 164.312(a)(1); nist_800_53_r5: SC-12(1); pci_dss_v4.0: 3.6.1.4; soc2: A1.1;
+
+KMS key is scheduled for deletion with the minimum waiting period (7 days). The deletion waiting period is the safety window between ScheduleKeyDeletion and permanent key deletion — the only time during which CancelKeyDeletion can stop the destruction and during which dependent resources surface failures that prompt investigation. The configurable range is 7-30 days. At 7 days, a weekly batch job may not run before deletion; a monthly report will not discover the failure; a low-traffic service may not trigger enough errors to be noticed. 30 days provides time for weekly jobs, monthly processes, and infrequently-invoked services to encounter the failure, alert, and prompt CancelKeyDeletion. The minimum window should be reserved for keys confirmed to have no dependent resources — an audit, not a default.
+
+**Remediation:** Cancel the deletion (aws kms cancel-key-deletion) and reschedule with a 30-day waiting period (--pending-window-in-days 30). The longer window allows weekly and monthly jobs to encounter failures and trigger investigation. Use the 7-day minimum only when an audit confirms no dependent resources reference the key across S3, RDS, EBS, Lambda, DynamoDB, CloudWatch Logs, Secrets Manager, SNS, SQS, and other services.
+
+---
+
 ### CTL.KMS.FIPS.001
 
 **KMS Keys Must Use FIPS 140-2 Validated HSM Origin**
@@ -16039,6 +16234,36 @@ KMS keys must have AWS_KMS origin, confirming they are generated and stored in F
 A KMS grant includes multiple sensitive operations (Decrypt, Encrypt, GenerateDataKey, ReEncryptFrom, ReEncryptTo) for a single grantee. Grants should follow least privilege — a grantee that needs to encrypt should not also have decrypt. Broad grants effectively give full cryptographic access to the key.
 
 **Remediation:** Restrict KMS grants to the minimum required operations. A grantee that needs Encrypt should not also have Decrypt. Use separate grants for distinct operational needs. Review grants with aws kms list-grants --key-id KEY.
+
+---
+
+### CTL.KMS.GRANT.EXCESSIVE.001
+
+**KMS Key Has Excessive Active Grants**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.24; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+KMS key has more than 100 active grants. The KMS service limit is 50,000 grants per key, but more than 100 active grants is a red flag for: programmatic grant creation without governance (grants created but never retired), an unauditable access surface (100+ grants across many principals and operations cannot be manually reviewed), and incomplete cleanup of short-lived workloads. AWS services that use grants (EBS, RDS, Redshift) may create many grants automatically; the threshold is conservative to avoid false positives on service-managed grant volume.
+
+**Remediation:** Audit grants with aws kms list-grants --key-id KEY. Retire grants whose grantee principals no longer exist or whose operations are no longer needed. Establish a grant lifecycle: every workflow that creates a grant must retire it on completion. Track grant count over time; investigate unbounded growth.
+
+---
+
+### CTL.KMS.GRANT.ORPHAN.001
+
+**KMS Grant References a Deleted Principal**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-2; nist_800_53_r5: AC-2; pci_dss_v4.0: 7.2.4; soc2: CC6.1;
+
+KMS grant grants cryptographic operations to a principal (IAM role or user) that has been deleted. The grant persists in the key's grant list — consuming grant quota (50,000 per key) and cluttering the access-control surface. Orphaned grants cannot be exercised (the principal does not exist) but they signal incomplete cleanup and obscure the actual access state of the key. Distinct from CTL.KMS.POLICY.GHOSTREF.001 (deleted principal in the key policy): grants are an alternative access mechanism not visible in the key policy document. They require a separate ListGrants API call to enumerate. Orphan grants imply the IAM role lifecycle drove the grantee out of existence but the grant retirement step was skipped.
+
+**Remediation:** Retire the orphan grant with aws kms retire-grant --grant-id GRANT_ID --key-id KEY. Audit the IAM lifecycle workflow that deleted the role to ensure grant retirement is part of the decommission runbook (the role-delete tooling should call ListGrantsForPrincipal across keys it had grants on, then RetireGrant for each).
 
 ---
 
@@ -16083,6 +16308,126 @@ The observation snapshot is missing required KMS key properties. A safety assess
 KMS keys protecting PHI or CDE data must not be shared with resources at a lower sensitivity classification. Shared keys collapse the cryptographic boundary between trust domains. A compromised developer account with access to a shared key can decrypt production PHI data even if all other access controls are correctly configured. Encryption is only as strong as the isolation of its keys.
 
 **Remediation:** Create dedicated KMS keys per sensitivity domain. Apply key policies that restrict usage to IAM roles operating within that domain. Rotate existing PHI/CDE data to new domain-exclusive keys. Use KMS key tags (sensitivity=phi) and SCPs to prevent cross-domain key usage at the organizational level.
+
+---
+
+### CTL.KMS.LIFECYCLE.CROSSENV.001
+
+**KMS Key Used Across Production and Non-Production Environments**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.5.10, A.8.24; nist_800_53_r5: AC-4, SC-12, SC-28; pci_dss_v4.0: 3.5, 7.2.4; soc2: CC6.1, CC6.7;
+
+KMS key encrypts resources tagged production AND resources tagged non-production (development, staging, testing). A single key crossing the prod/non-prod boundary is a bidirectional risk: a non-production action — a developer disabling the key during cleanup, a sandbox automation scheduling deletion, a policy broadened for debug access — silently changes the security posture of the production data also encrypted with that key. The relationship runs the other way too: anyone with Decrypt on the key in non-production can decrypt production ciphertext, because it is the same key. The remediation is a per-environment key with an alias that encodes the environment (alias/prod-database-key, alias/dev-database-key) and policies that do not authorize cross-environment use. Same cross-environment pattern as CTL.RDS.SNAPSHOT.CROSSENV.001, CTL.APIGATEWAY.STAGE.CROSSENV.001, and CTL.VPC.SEGMENT.ENVMIX.001 — environment is a trust domain, and shared cryptographic material collapses that domain.
+
+**Remediation:** Create per-environment keys with environment-encoded aliases (alias/prod-<workload>-key, alias/dev-<workload>-key). Re-encrypt non-production data under the non-production key and update resource references; production data should remain on a production-only key whose policy does not authorize non-production principals. Once split, gate future key use with provisioning pipelines that enforce environment alignment between key and resource. Use environment tags (env=prod, env=dev) consistently across resources so the drift can be re-detected.
+
+---
+
+### CTL.KMS.LIFECYCLE.DORMANT.001
+
+**KMS Key Not Used for 90+ Days With Active Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-2; hipaa: 164.312(a)(1); nist_800_53_r5: AC-2; pci_dss_v4.0: 7.2.4; soc2: CC6.1;
+
+KMS key has not been used for any cryptographic operation in more than 90 days, yet its key policy continues to grant access to principals. Dormant keys are a latent decryption surface: the policy still grants kms:Decrypt, the key can still be used by anyone with that permission, and nobody monitors the key for anomalous usage because it appears unused. If the key encrypted historical data in S3, RDS snapshots, or other services, that data remains decryptable to anyone who discovers the key ARN and has Decrypt permission — even though no application actively uses the key. Same 90-day dormancy threshold used across Lambda, IAM roles, DynamoDB, CloudFront, and Route 53 controls. The finding prompts review: if the key is truly unused, disable it (and eventually schedule deletion); if it encrypts archival data, minimize the policy to the principals who legitimately need archival decryption.
+
+**Remediation:** Audit the key's usage history (CloudTrail GetKeyPolicy / Encrypt / Decrypt events) to confirm true dormancy. If the key is unused, disable it (aws kms disable-key) and plan decommission. If it still encrypts archival data, minimize the key policy to the specific principals authorized for archival decryption and add aws:CalledVia or kms:ViaService conditions so the policy cannot be used outside the archival workflow.
+
+---
+
+### CTL.KMS.LIFECYCLE.NOALIAS.001
+
+**KMS Key Has No Alias**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.9, A.8.24; nist_800_53_r5: CM-2, CM-3; soc2: CC6.1, CC8.1;
+
+KMS key has no alias attached and is referenced only by its key ID (a UUID). Aliases are the human-readable handle for a key — alias/production-database, alias/s3-backup-encryption, alias/api-secrets — and they are how IAM policies, resource configurations, and runbooks should reference the key. A key with no alias is unmanageable at scale: a key ID like 1234abcd-12ab-34cd-56ef-1234567890ab carries no information about purpose, owner, or workload. Audit trails name the ID; on-call cannot tell at a glance whether the key in question encrypts production data or a developer experiment. This is a governance signal, not a vulnerability — the key is no less secure for lacking an alias — but alias-less keys correlate with incomplete provisioning, lost ownership, and key sprawl. Distinct from CTL.KMS.ALIAS.GHOST.001 (alias points to a Disabled or PendingDeletion key) and CTL.KMS.ALIAS.ORPHAN.001 (alias points to a deleted key) — both check the validity of an existing alias; this control checks for the alias's presence at all.
+
+**Remediation:** Attach an alias that names the key's purpose (aws kms create-alias --alias-name alias/<purpose> --target-key-id <id>). Use a stable naming convention — alias/<environment>-<workload>-<role> — and gate new key creation on alias presence in your provisioning pipeline. Update IAM policies and resource configurations to reference the alias rather than the key ID, so that key rotations and replacements do not require policy edits.
+
+---
+
+### CTL.KMS.LIFECYCLE.ROTATION.PERIOD.001
+
+**KMS Key Rotation Period Exceeds Compliance Requirement**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: CM-2, CM-3, SC-12; pci_dss_v4.0: 3.6; soc2: CC6.1, CC8.1;
+
+KMS key has automatic rotation enabled, but the configured rotation period exceeds the rotation cadence required by an applicable compliance profile. The AWS default is 365 days; KMS now supports configurable rotation periods between 90 and 2560 days. Some compliance interpretations and many internal policies require shorter cadences — 90 days is the common floor — to limit the volume of data encrypted under any single key version and to bound the recovery window after a key compromise. This control is profile-conditioned: it fires only when a compliance tag or compliance profile is present on the key AND the configured period exceeds the required period. Same compliance-profile pattern as CTL.RDS.BACKUP.RETENTION.COMPLIANCE.001 — the requirement comes from the profile, not from a single fixed threshold. Distinct from CTL.KMS.ROTATION.001 (asserts rotation is enabled at all): this control assumes rotation is on and asserts the period is short enough.
+
+**Remediation:** Reduce the rotation period to the required cadence (aws kms enable-key-rotation --key-id <id> --rotation-period-in-days 90). Confirm the required cadence with the compliance profile owner before setting the value — different profiles require different periods, and the floor of 90 days is not universal. If the key is shared across workloads with different compliance profiles, the strictest period applies. After updating, verify the next scheduled rotation (aws kms get-key-rotation-status --key-id <id>) aligns with the new cadence.
+
+---
+
+### CTL.KMS.MATERIAL.EXPIRED.001
+
+**KMS Imported Key Material Has Expired**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12(2); hipaa: 164.312(a)(1); nist_800_53_r5: SC-12(2); pci_dss_v4.0: 3.6.1.2; soc2: CC6.1;
+
+KMS key with EXTERNAL origin has key material whose expiration date has passed. The key still exists, but new Encrypt and GenerateDataKey calls fail with KMSInvalidStateException because the cryptographic material is past its valid-to date. Existing ciphertext can still be decrypted (KMS retains expired material for decryption), so historical workloads continue to work — but any new write path fails immediately. The failure pattern is asymmetric and confusing: read paths succeed, write paths fail, the key is enabled, the key has material. The fix is to import fresh key material via aws kms import-key-material with a new --valid-to or --expiration-model KEY_MATERIAL_DOES_NOT_EXPIRE. Distinct from CTL.KMS.IMPORTED.EXPIRY.001 (no expiration set): here the expiration was set and has been reached.
+
+**Remediation:** Import fresh key material with aws kms import-key-material. Fetch import parameters (aws kms get-parameters-for-import), wrap the fresh key bytes with the returned wrapping key, and submit them with the import token. Choose a deliberate expiration: either a future --valid-to that aligns with the key- rotation runbook, or KEY_MATERIAL_DOES_NOT_EXPIRE if the key must never auto-expire. Update the rotation runbook so the next expiration is detected before it is reached, not after.
+
+---
+
+### CTL.KMS.MULTIREGION.NONCOMPLIANT.REGION.001
+
+**KMS Multi-Region Key Replicated to Non-Compliant Region**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-12; gdpr: Art.44; iso_27001_2022: A.5.34, A.8.24; nist_800_53_r5: SC-12, SC-13, CP-6; pci_dss_v4.0: 3.5; soc2: CC6.1;
+
+KMS multi-region key has a replica in a region that does not comply with the data residency requirements applied to the key. Data residency typically constrains where ciphertext may live, but the same constraints almost always extend to the key material — the key material is the cryptographic decision authority for the data, and a key material present in a region is decryption-capable in that region. Even when the encrypted data remains in a compliant region, a replica in a non-compliant region means decryption can occur there: an authorized principal in the non-compliant region can pull ciphertext, decrypt it locally with the replica, and the plaintext exists in the non-compliant region for the duration of that operation. Same data residency inheritance pattern as CTL.S3.BUCKET.REGION.RESIDENCY.001 and CTL.RDS.SNAPSHOT.RESIDENCY.001.
+
+**Remediation:** Identify the offending replica (aws kms describe-key --key-id <id> in the suspect region), confirm with legal/compliance whether residency requirements extend to key material, and either schedule the replica for deletion (aws kms schedule-key-deletion in the non-compliant region) or relocate the workload to permit residency. If business requirements demand cryptographic operations in the region, escalate to revisit residency scope rather than ignore the gap.
+
+---
+
+### CTL.KMS.MULTIREGION.NOREPLICA.001
+
+**KMS Multi-Region Key Has No Replicas**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, CP-6; soc2: CC6.1;
+
+KMS key has multi-region configuration enabled but no replica keys exist in other regions. Multi-region keys carry overhead — the service-linked role for replication, the cross-region coordination, the key-policy semantics that admit replication — without delivering the benefit (no cross-region key availability, no latency reduction for cross-region workloads, no DR position for encrypted data). Either the key should have replicas in the regions where it is needed, or it should be a single-region key. The configuration as it stands is the multi-region overhead with the single-region utility. Same pattern as CTL.DYNAMODB.GLOBAL.SINGLEREGION.001 and CTL.RDS.AURORA.SINGLEINSTANCE.001 — declared multi-region topology with no actual multi-region presence.
+
+**Remediation:** Either replicate the key to the regions that need it (aws kms replicate-key --key-id <primary-key-id> --replica-region <region>) or remove multi-region configuration by recreating the key as single-region. Multi-region configuration without replicas is rarely intentional — investigate the original design and align the configuration with the actual usage.
+
+---
+
+### CTL.KMS.MULTIREGION.POLICY.MISMATCH.001
+
+**KMS Multi-Region Key Replicas Have Inconsistent Key Policies**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3, SC-12; pci_dss_v4.0: 3.5; soc2: CC6.1;
+
+KMS multi-region key has replicas in other regions whose key policies differ from the primary's. The same key material is present in multiple regions but the access control surface is not — principals authorized to use the key in one region may be unauthorized in another, or worse, principals denied at the primary may be permitted at a replica. Because every replica shares the primary's key material, ciphertext encrypted in any region can be decrypted in any region whose replica grants Decrypt to the caller. The effective access control for data encrypted with this key is the weakest replica policy. Same cryptographic-boundary-collapse pattern as CTL.DYNAMODB.GLOBAL.ENCRYPT.MISMATCH.001 and CTL.RDS.AURORA.GLOBAL.UNENCRYPTED.001 applied to the key- policy layer.
+
+**Remediation:** Standardize the key policy across the primary and all replicas. KMS does not automatically replicate key policies — every region's policy must be put explicitly. Establish a single policy template, apply it via aws kms put-key-policy in every region the key exists, and gate future changes with a deployment pipeline that updates all replicas atomically. If the regional differences are intentional (e.g., region-specific service principals), document them and confirm that the weakest policy is acceptable for the data the key protects.
 
 ---
 
@@ -16161,6 +16506,21 @@ KMS key policies must not grant kms:Decrypt, kms:Encrypt, kms:GenerateDataKey, o
 
 ---
 
+### CTL.KMS.POLICY.DECRYPT.BROAD.001
+
+**KMS Key Policy Grants Decrypt to Overly Broad Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.6; fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+Customer-managed KMS key policy grants kms:Decrypt to a broad principal — the account root (arn:aws:iam::ACCT:root) without IAM-side restrictions, a wildcard principal (Principal: *), or a broad IAM pattern (arn:aws:iam::ACCT:role/*). Decrypt is the most sensitive KMS operation: it reads encrypted data. Broad Decrypt access means any matching principal can decrypt any ciphertext encrypted with this key — S3 objects, RDS snapshots, EBS volumes, Lambda environment variables, Secrets Manager secrets. Distinct from CTL.KMS.POLICY.ADMIN.BROAD.001 (broad admin actions) and CTL.KMS.POLICY.001 (wildcard Principal "*" on any action): this control fires on Decrypt-specific broad scope even when admin and wildcard checks pass. Suppressed on AWS-managed keys, whose policies are AWS-controlled.
+
+**Remediation:** Replace broad Decrypt grants with explicit role ARNs that require Decrypt. Remove arn:aws:iam::ACCT:root grants of Decrypt unless the IAM side is locked down to specific consumers. Never use Principal "*" or role-wildcard ARNs on Decrypt statements.
+
+---
+
 ### CTL.KMS.POLICY.GHOSTREF.001
 
 **KMS Key Policy Must Not Reference Deleted Principals**
@@ -16173,6 +16533,51 @@ KMS key policies must not grant kms:Decrypt, kms:Encrypt, kms:GenerateDataKey, o
 KMS key policies must not grant cryptographic permissions to principal ARNs that don't exist in the IAM inventory. A ghost principal in a key policy inherits decrypt access to every resource encrypted by that key — S3 objects, RDS snapshots, EBS volumes, Secrets Manager secrets. KMS keys are the trust anchor for encryption. Resource-based policies (including key policies) evaluate ARN strings, not unique IDs. An attacker who creates a role matching the ghost principal's name inherits the key's full permission scope.
 
 **Remediation:** Remove the ghost principal ARN from the key policy. Audit which resources use this key for encryption.
+
+---
+
+### CTL.KMS.POLICY.GRANTWITHGRANT.001
+
+**KMS Key Allows GrantWithGrant Delegation Chains**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+KMS key policy grants kms:CreateGrant AND at least one existing grant on the key includes GrantWithGrant in its operations or retiring-principal constraints — enabling a chain of delegation. Principal A creates a grant for Principal B with GrantWithGrant. Principal B creates a grant for Principal C. Principal C creates a grant for Principal D. The key's effective access becomes a chain that is invisible from the key policy alone and grows without further policy changes.
+
+**Remediation:** Audit existing grants with aws kms list-grants --key-id KEY and retire any grant whose Operations include "GrantWithGrant" unless explicitly required. Restrict CreateGrant in the key policy to specific service-linked roles; deny the chain by forbidding GrantWithGrant in newly created grants.
+
+---
+
+### CTL.KMS.POLICY.NOCONTEXT.001
+
+**KMS Key Policy Does Not Require Encryption Context**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; pci_dss_v4.0: 3.6.1.4; soc2: CC6.1;
+
+KMS key policy does not include a kms:EncryptionContext condition on usage statements. Without encryption context enforcement, any ciphertext encrypted with the key can be decrypted without providing context — there is no per-operation additional authentication data. Encryption context provides per-operation access control: a principal must know the context (key-value pairs) used during encryption to decrypt. Without context enforcement, Decrypt is a blanket operation on every ciphertext encrypted by the key. Narrows CTL.KMS.POLICY.CONDITION.001 to the specific case where EncryptionContext is missing even if ViaService or CallerAccount is present.
+
+**Remediation:** Add kms:EncryptionContext or kms:EncryptionContextKeys conditions to usage statements in the key policy. Choose context keys that match how the calling application uses the key (e.g., tenant_id, object_id, application). Verify producers and consumers pass the same context values; mismatched context fails Decrypt.
+
+---
+
+### CTL.KMS.POLICY.NOVIASERVICE.001
+
+**KMS Key Policy Does Not Restrict Usage to Specific AWS Services**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+KMS key with key_usage=ENCRYPT_DECRYPT has no kms:ViaService condition on its usage statements. Without ViaService, the key is usable directly via the KMS Decrypt/Encrypt APIs — not just through AWS services (S3, RDS, EBS, Secrets Manager). A principal with kms:Decrypt can call KMS Decrypt directly with any ciphertext encrypted by the key, bypassing the calling service's access controls. ViaService restricts key usage to operations performed through specific AWS services (kms:ViaService = s3.us-east-1.amazonaws.com means the key can only be used through S3 in us-east-1). Narrows CTL.KMS.POLICY.CONDITION.001 to the specific case where ViaService is missing, even when other protective conditions (CallerAccount, EncryptionContext) are present. Only applies to ENCRYPT_DECRYPT keys; SIGN_VERIFY and GENERATE_VERIFY_MAC keys do not use ViaService.
+
+**Remediation:** Add kms:ViaService conditions to all usage statements in the key policy. Use service-and-region-qualified values such as "s3.us-east-1.amazonaws.com" or "secretsmanager.us-east-1.amazonaws.com" rather than service-only patterns. ViaService does not apply to keys used for SIGN_VERIFY or GENERATE_VERIFY_MAC; this control only fires on ENCRYPT_DECRYPT keys.
 
 ---
 
@@ -16203,6 +16608,51 @@ Customer-created symmetric KMS keys must have automatic key rotation enabled. Ke
 Same IAM principal has both key administration permissions (kms:Create*, kms:Delete*, kms:Enable*, kms:Disable*, kms:Put*) and key usage permissions (kms:Encrypt, kms:Decrypt, kms:GenerateDataKey). No separation of duties — the principal who manages the key also uses it for cryptographic operations. A compromised principal can both modify the key's security configuration and decrypt all protected data.
 
 **Remediation:** Separate key administration and key usage into distinct IAM principals. Key administrators should not have Encrypt, Decrypt, or GenerateDataKey permissions. Key users should not have Create*, Delete*, Enable*, Disable*, or Put* permissions.
+
+---
+
+### CTL.KMS.STATE.DISABLED.001
+
+**KMS Key Is Disabled While Referenced by Active Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12; hipaa: 164.312(a)(1); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+KMS key is in Disabled state while active resources reference it for encryption — S3 buckets, RDS instances, EBS volumes, Lambda functions, DynamoDB tables, CloudWatch log groups, Secrets Manager secrets, or other dependent services. Unlike PendingDeletion (which becomes permanent after the waiting period), Disabled is reversible via EnableKey. But while disabled, every Encrypt, Decrypt, GenerateDataKey, and ReEncrypt call returns KMSInvalidStateException. The key appears in the KMS console with a valid key ID and ARN — it looks operational — but cannot perform any cryptographic operation. Resources referencing this key fail in service-specific ways: S3 GetObject returns AccessDenied (ciphertext cannot be decrypted), Lambda fails on cold start (cannot decrypt environment variables), EBS volumes cannot be attached, and RDS instances enter inaccessible state on restart. The control fires when the key is disabled AND has at least one dependent resource; re-enabling the key (EnableKey) immediately restores all operations and no data is permanently lost.
+
+**Remediation:** Identify dependent resources with aws kms list-aliases and audit which services reference the key (S3 bucket encryption settings, RDS DescribeDBInstances, Lambda GetFunctionConfiguration, etc.). If the key should be operational, re-enable it: aws kms enable-key --key-id KEY. If the disable was intentional (e.g., emergency revocation), re-encrypt dependent resources with a different key before they fail at scale.
+
+---
+
+### CTL.KMS.STATE.PENDINGDELETION.001
+
+**KMS Key Scheduled for Deletion While Referenced by Active Resources**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12(1); hipaa: 164.312(a)(1); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12(1); pci_dss_v4.0: 3.6.1.4; soc2: A1.1;
+
+KMS key is in PendingDeletion state and is referenced by one or more active resources — S3 buckets, RDS instances, EBS volumes, Lambda functions, DynamoDB tables, CloudWatch log groups, Secrets Manager secrets, SNS topics, SQS queues, or other services using this key for encryption. When the deletion waiting period (7-30 days) expires, the key is permanently destroyed. Every resource encrypted with the key permanently loses its encryption capability. S3 objects encrypted with this key become permanently unreadable. RDS instances encrypted with this key cannot be started after shutdown. EBS volumes cannot be attached. Lambda functions cannot decrypt environment variables. Secrets Manager secrets become unrecoverable. CancelKeyDeletion can stop the countdown — but only during the waiting window. After expiry the data is gone with no recovery. This is the most destructive ghost reference in the catalog: one state change, cascading permanent data loss across every service the key encrypts. Distinct from CTL.KMS.PENDING.DELETION.001 (fires on pending_deletion=true with no dependent-resource gate, medium severity): this control fires only when active dependents are also present, escalating to critical because the blast radius is concrete and known.
+
+**Remediation:** Cancel the deletion immediately: aws kms cancel-key-deletion --key-id KEY. Then audit dependent resources across S3, RDS, EBS, Lambda, DynamoDB, CloudWatch Logs, Secrets Manager, SNS, and SQS to confirm the impact. If deletion is still required, re-encrypt every dependent resource with a different key BEFORE rescheduling deletion. Treat ScheduleKeyDeletion calls on keys with dependents as a pager-tier event.
+
+---
+
+### CTL.KMS.STATE.PENDINGIMPORT.001
+
+**KMS Key in PendingImport State Has No Key Material**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12; hipaa: 164.312(a)(1); nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+KMS key was created with Origin EXTERNAL but key material has not been imported. The key exists in KMS — it has a valid key ID, ARN, and key policy — but contains no cryptographic material. Any Encrypt, Decrypt, GenerateDataKey, or ReEncrypt call fails. The key appears valid in the console (the policy is syntactically correct, the alias resolves) but is operationally empty. Resources configured to use this key for encryption fail on every cryptographic operation. Distinct from Disabled (key exists with material but is administratively turned off): PendingImport means the key has never had material to operate on. The fix is not to enable but to import key material via aws kms import-key-material with a wrapped key blob and an import token.
+
+**Remediation:** Import key material with aws kms import-key-material. First fetch the import parameters (aws kms get-parameters-for-import with --wrapping-algorithm and --wrapping-key-spec), then wrap the raw key bytes with the returned public key, and call import-key-material with the wrapped material, the import token, and an expiration model. If the key was created in error, schedule it for deletion to remove the empty placeholder.
 
 ---
 
@@ -20040,6 +20490,21 @@ Redshift clusters must use enhanced VPC routing to force all COPY and UNLOAD tra
 
 ---
 
+### CTL.ROUTE53.CROSSACCOUNT.PRIVATEASSOC.001
+
+**Private Hosted Zone Associated with VPC in External Account Without Organization Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Route 53 private hosted zone is associated with a VPC in an account outside the organization. Private zone association grants the associated VPC's resources the ability to resolve every record in the zone — internal service names, database endpoints, internal IP addresses, and other infrastructure details. When the associated VPC belongs to an account that is not part of the organization, that external account's resources can resolve the organization's internal DNS. If the external account is later compromised, the attacker discovers the organization's internal infrastructure by querying the private zone's records. Private zone VPC association should be limited to accounts within the organization (verified via aws:PrincipalOrgID or an explicit authorized account list). This is a HIGH-severity finding because the exposure is not a single record — the entire zone's records are accessible from the external VPC.
+
+**Remediation:** Identify the associated VPCs: aws route53 get-hosted-zone --id {zone-id} and inspect the VPCs block for associations whose AWS account is not in the organization's account list. For each external association: confirm with the business whether the cross-account resolution is intended. If the association is intentional and the external account is a trusted partner, document the cross-account dependency and constrain it via a Route 53 resolver rule that limits which records the external VPC can query (rather than full zone resolution). If the association is unintended: disassociate the VPC — aws route53 disassociate-vpc-from-hosted-zone --hosted- zone-id {zone-id} --vpc VPCRegion={region},VPCId={vpc-id}. Audit cross-account VPC associations periodically: a zone-association authorization persists until revoked, so a former partner relationship leaves stale access until the association is actively removed.
+
+---
+
 ### CTL.ROUTE53.DANGLING.001
 
 **Route53 A Records Must Not Point to Unassigned IP Addresses**
@@ -20055,6 +20520,321 @@ Route53 A records using literal IP addresses must point to IP addresses currentl
 
 ---
 
+### CTL.ROUTE53.DANGLING.ALIAS.001
+
+**Route 53 Alias Record Points to Deleted AWS Resource — Silent Failure**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; soc2: CC7.1;
+
+Route 53 alias record points to an AWS resource (ALB, CloudFront distribution, S3 bucket, API Gateway, Elastic Beanstalk, or VPC endpoint) that has been deleted. Unlike CNAME records (where deletion of the target causes NXDOMAIN — visible failure), Route 53 alias records that point to deleted resources may return an empty answer with no error code — the query appears to succeed but returns no IP addresses. This is a silent failure: monitoring tools that check for NXDOMAIN miss alias danglings entirely, operators assume the domain is responding, and the silent service failure persists undetected. For reclaimable resources (S3 buckets, CloudFront CNAMEs, Elastic Beanstalk CNAMEs), the silent alias failure masks an active subdomain takeover opportunity.
+
+**Remediation:** Identify what resource the alias pointed to by checking the alias target field. If the resource was deleted intentionally: remove the Route 53 alias record. If the resource must be restored: recreate it and verify the alias record resolves correctly. Enable Route 53 health checks with alias record evaluate-target-health to detect silent resolution failures proactively.
+
+---
+
+### CTL.ROUTE53.DANGLING.APIGATEWAY.001
+
+**DNS Record Points to Deleted API Gateway Custom Domain**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC8.1;
+
+Route 53 record points to an API Gateway custom domain (execute-api.region.amazonaws.com or a custom domain name) that has been deleted from API Gateway. The custom domain was removed but the DNS record still points to it. Depending on the API Gateway endpoint type: for Regional APIs, the custom domain name resolves to NXDOMAIN when deleted; for Edge-Optimized APIs fronted by CloudFront, the underlying CloudFront distribution's CNAME may become unclaimed after the API Gateway custom domain is deleted. In the edge-optimized case, an attacker may be able to create a new API Gateway custom domain with the same name and claim the CloudFront CNAME. The organization's DNS record routes API traffic to the attacker's API.
+
+**Remediation:** If the API is no longer needed: remove the Route 53 record. If the API must be restored: re-create the API Gateway custom domain name before the DNS record can route to an attacker's API. For edge-optimized APIs, verify the underlying CloudFront distribution's CNAME is still claimed by your account before creating a new custom domain.
+
+---
+
+### CTL.ROUTE53.DANGLING.BEANSTALK.001
+
+**DNS Record Points to Terminated Elastic Beanstalk Environment**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC7.1;
+
+Route 53 CNAME record points to an Elastic Beanstalk environment CNAME (application.region.elasticbeanstalk.com) for an environment that has been terminated. Elastic Beanstalk environment CNAMEs are reclaimable — after the environment is terminated, the CNAME becomes available for any AWS customer to claim. An attacker creates a new Elastic Beanstalk environment, swaps the CNAME to the target value, and deploys an application. The organization's DNS record routes traffic to the attacker's application. Unlike S3 and CloudFront takeover (where the attacker must specifically discover the target), Elastic Beanstalk CNAMEs are of predictable form and can be scanned systematically. This is the third-most exploited takeover vector after S3 and CloudFront.
+
+**Remediation:** Check whether the Elastic Beanstalk CNAME has already been claimed by another account. If the subdomain is still needed, re-create the Beanstalk environment and claim the CNAME before removing and re-adding the Route 53 record. If the service is permanently decommissioned, remove the Route 53 CNAME record immediately.
+
+---
+
+### CTL.ROUTE53.DANGLING.CLOUDFRONT.001
+
+**DNS Record Points to CloudFront Distribution That Does Not Claim This Domain**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC7.1;
+
+Route 53 CNAME record points to a *.cloudfront.net distribution domain where either the distribution has been deleted or the distribution exists but does not have this domain registered as an alternate CNAME. CloudFront allows any distribution to claim any CNAME that is not already claimed by another distribution. If the original distribution is deleted, the CNAME becomes unclaimed — an attacker creates a new distribution, adds the organization's subdomain as an alternate CNAME, and points an origin at attacker-controlled content. The organization's DNS record then routes traffic to the attacker's distribution. This is the second most common subdomain takeover vector after S3, exploited actively in bug bounty programs and in the wild. Complements CTL.CLOUDFRONT.GHOST.ORIGIN.001 (which checks CloudFront → deleted origin) — this checks DNS → CloudFront.
+
+**Remediation:** If the distribution was deleted and the subdomain is still needed: create a new CloudFront distribution, add the subdomain as an alternate CNAME before the DNS record can route traffic to an attacker's distribution. If the distribution exists but doesn't claim the domain: update the distribution to add the subdomain as an alternate CNAME. If the subdomain is no longer needed: remove the Route 53 record immediately.
+
+---
+
+### CTL.ROUTE53.DANGLING.EC2.001
+
+**DNS A Record Points to Terminated EC2 Instance Public IP**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC7.1;
+
+Route 53 A record points to the public IP address of an EC2 instance that has been terminated. When an EC2 instance is terminated, its public IP (non-Elastic) is immediately released to the AWS IP pool and can be assigned to any customer's new EC2 instance — including an attacker's. The organization's A record points to whatever instance now holds that IP. Unlike EIPs (which can be explicitly tracked), EC2 public IPs change on every start/stop cycle and are reassigned unpredictably on termination. The attacker's instance receives all traffic directed to the organization's domain name. This is the ephemeral IP version of subdomain takeover — the IP can be reclaimed by any instance in the same region.
+
+**Remediation:** Remove the Route 53 A record. For production services requiring stable IPs, always use Elastic IPs rather than EC2 ephemeral public IPs — Elastic IPs persist until explicitly released and can be precisely tracked. If the service must be restored, launch a new instance, allocate an Elastic IP, associate it, and create a new DNS record pointing to the EIP.
+
+---
+
+### CTL.ROUTE53.DANGLING.EIP.001
+
+**DNS A Record Points to Released Elastic IP Address**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC7.1;
+
+Route 53 A record points to an Elastic IP address that has been released. When an Elastic IP is released, it returns to the AWS public IP pool and can be re-allocated by any AWS customer in the same region — including an attacker. The attacker allocates an EC2 instance and associates the reclaimed EIP. The organization's A record now points to the attacker's instance. The attacker can serve any content (phishing, malware, intercepted traffic) on the organization's domain. EIP recycling attacks have been demonstrated by security researchers who successfully reclaimed specific IPs by repeatedly allocating and releasing EIPs in the target region. Complements CTL.ROUTE53.DANGLING.001 (which detects general dangling IPs) by specifically checking whether a Route 53 A record points to a currently-released EIP.
+
+**Remediation:** If the Elastic IP was released intentionally: remove the Route 53 A record immediately. If the IP was accidentally released: check whether it has been re-allocated by another account via AWS IP address tracking. If the IP is still available, allocate a new EIP and update the Route 53 record. If the IP has been claimed by another account, remove the Route 53 record and allocate a new EIP for a new DNS record.
+
+---
+
+### CTL.ROUTE53.DANGLING.ELB.001
+
+**DNS Record Points to Deleted Load Balancer**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3; soc2: CC8.1;
+
+Route 53 alias or CNAME record points to an Application Load Balancer, Network Load Balancer, or Classic Load Balancer that has been deleted. The DNS record resolves to a load balancer DNS name that no longer exists, causing the subdomain to return NXDOMAIN or an empty answer. Unlike S3 and CloudFront (where the resource name is globally reclaimable), ELB DNS names contain account-specific components (randomly generated hex strings and account ID fragments) that make direct takeover harder. However, the dangling record still causes visible service failure on the organization's domain: the subdomain appears broken, returning errors to all visitors. Dangling ELB records indicate incomplete decommissioning — the load balancer was deleted without updating DNS.
+
+**Remediation:** If the load balancer was deleted intentionally and the subdomain is no longer needed: remove the Route 53 record. If the service must be restored: create a new load balancer, update the Route 53 record to point to the new load balancer, and restore the service. For alias records, use Route 53's built-in alias evaluation to detect when the target is deleted.
+
+---
+
+### CTL.ROUTE53.DANGLING.MX.001
+
+**MX Record Points to Decommissioned Mail Server**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC7.1;
+
+Route 53 MX record points to a mail server hostname that is no longer serving email for the domain. The mail server was decommissioned, the hosting was cancelled, or the DNS name was changed — but the MX record was not updated. Email delivery fails silently after the SMTP timeout: the sending server tries to connect to the mail server, waits for the timeout (minutes), and then delivers a non-delivery receipt to the sender. If the decommissioned mail server's hostname becomes reclaimable (expired domain, deleted EC2 instance with a reachable hostname, released service endpoint), an attacker who controls the reclaimed resource receives the organization's email — password resets, financial notifications, confidential communications, and multi-factor authentication codes. MX dangling is particularly insidious because email failures are reported to senders, not recipients, so the organization may not know email is being lost or intercepted.
+
+**Remediation:** Verify whether the mail server hostname resolves and accepts SMTP connections on port 25. If the mail server has been decommissioned: update the MX record to point to the new mail infrastructure. If the domain uses a hosted email service (Google Workspace, Microsoft 365, Proton Mail), replace the MX record with the provider's required MX records. Remove any MX records for mail servers that no longer exist.
+
+---
+
+### CTL.ROUTE53.DANGLING.NS.001
+
+**NS Record Delegates to Name Servers That Do Not Serve the Zone**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-20; pci_dss_v4.0: 6.5.6; soc2: CC7.1;
+
+Route 53 NS record delegates a subdomain to name servers that are not authoritative for that zone — lame delegation. The delegated zone was deleted or the name server configuration was removed, but the parent NS records remain. This is the most powerful form of subdomain takeover: an attacker who controls the delegated name servers (or who registers an expired name server domain) can serve any DNS records for the entire subdomain — A records pointing to attacker servers, MX records intercepting email, TXT records passing domain ownership verification for TLS certificates and service integrations, and CNAME records for unlimited sub-subdomains. NS delegation takeover gives the attacker full DNS control over the subtree, not just a single record. If the name server domain is expired and unregistered, the attacker simply registers it and serves the zone.
+
+**Remediation:** If the subdomain zone is still needed: restore the zone on the delegated name servers before the NS domain can be claimed by an attacker. If the subdomain is no longer needed: remove the NS delegation record from the parent zone. Check whether the name server domain is still registered to a trusted party — if it has expired, register it urgently before attackers claim it.
+
+---
+
+### CTL.ROUTE53.DANGLING.S3.001
+
+**DNS Record Points to Deleted S3 Bucket — Subdomain Takeover**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC7.1;
+
+Route 53 record (CNAME or alias) points to an S3 website hosting endpoint for a bucket that has been deleted. S3 bucket names are globally unique but reclaimable after deletion. An attacker creates a bucket with the same name in their own AWS account, enables static website hosting, and uploads content. The Route 53 record still points to the S3 website hosting endpoint. The endpoint now serves the attacker's content. Visitors to the organization's subdomain see attacker-controlled content — on a domain they trust. The attack requires no special access: the attacker only needs to discover the dangling record (automated tools scan for this pattern), create the bucket, and upload content. This is the most commonly exploited subdomain takeover vector, documented in the OWASP Testing Guide and actively rewarded in bug bounty programs. Complements CTL.S3.DANGLING.ORIGIN.001 (CloudFront distribution → S3) — this control checks Route 53 records → S3 directly.
+
+**Remediation:** Immediately check if the bucket name has been re-registered by another account. If the name is unclaimed, re-create the bucket in your account before an attacker claims it. If the subdomain is no longer needed, remove the Route 53 record. If the service must be restored, re-create the bucket, re-configure website hosting, and restore content before the DNS record points visitors there.
+
+---
+
+### CTL.ROUTE53.DNSSEC.DISABLED.001
+
+**Route 53 Public Hosted Zone Does Not Have DNSSEC Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-20; soc2: CC6.1;
+
+Route 53 public hosted zone does not have DNSSEC signing enabled. Without DNSSEC, DNS responses for this zone are unsigned — a man-in-the-middle or cache poisoning attacker (Kaminsky attack) can inject forged DNS records into recursive resolver caches, redirecting the domain to attacker-controlled infrastructure. DNSSEC cryptographically signs each DNS response with the zone's signing key — resolvers that validate DNSSEC reject forged responses. This finding applies only to public hosted zones. Route 53 private hosted zones serve VPC-internal DNS and do not support DNSSEC; the VPC resolver handles internal DNS without the public internet attack surface. DNSSEC protects validating resolvers and is increasingly required by compliance frameworks and enterprise security standards.
+
+**Remediation:** Enable DNSSEC signing for the Route 53 hosted zone in the AWS console or via CLI: aws route53 enable-hosted-zone-dnssec --hosted-zone-id [ID]. After enabling signing, create a DS record at the parent zone (your domain registrar, or Route 53 if you registered through AWS) to complete the DNSSEC chain of trust. Without the DS record, resolvers cannot validate the zone's signatures. Monitor key rotation — Route 53 manages KSK rotation automatically if configured. For zones registered through Route 53, the DS record can be added via the console.
+
+---
+
+### CTL.ROUTE53.DOMAIN.AUTORENEW.001
+
+**Route 53 Domain Auto-Renew Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC6.1;
+
+Route 53 registered domain does not have auto-renew enabled. If the domain expires, it enters a grace period during which the registrar holds it and renewal is possible but may incur a premium. After the grace period, the domain enters redemption and eventually deletion — at which point anyone can register it. An attacker who registers the expired domain controls everything: DNS (all records), email (all mail to the domain), TLS certificates (via DNS validation), and all services that used the domain. Domain sniping services monitor expiring domains specifically because domains with existing traffic, backlinks, and email are valuable targets. The domain's SEO history, inbound links, and existing DNS caches all work in the attacker's favor. Auto-renew is a single configuration change that prevents accidental expiration. Domain expiration is the accidental equivalent of a domain transfer — same outcome, different mechanism.
+
+**Remediation:** Enable auto-renew on the domain: aws route53domains enable-domain-auto-renew --domain-name [DOMAIN]. Verify the domain expiry date and ensure auto-renew is configured far enough in advance of expiry — Route 53 attempts renewal 30 days before the expiry date. Also ensure the account has a valid payment method to prevent renewal failure. Consider setting a CloudWatch alarm for domains approaching expiry as a secondary safeguard.
+
+---
+
+### CTL.ROUTE53.EMAIL.DMARC.MISSING.001
+
+**Route 53 Zone Has No DMARC Record**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Route 53 public hosted zone has no DMARC (Domain-based Message Authentication, Reporting and Conformance) TXT record at _dmarc.[zone]. Without DMARC, there is no policy telling receiving mail servers what action to take when email fails SPF and DKIM authentication. Even with SPF and DKIM configured, the receiving server decides independently whether to accept, quarantine, or reject unauthenticated email — and most default to accepting. DMARC with p=reject tells receivers to reject email that fails authentication. DMARC also enables aggregate reporting (rua=) so the domain owner learns who is sending email as their domain — the only mechanism for discovering unauthorized use of the domain in email campaigns. Without DMARC, there is no enforcement layer and no visibility.
+
+**Remediation:** Create a TXT record at _dmarc.[zone] with a DMARC policy. Start with p=none to collect reports without enforcement: "v=DMARC1; p=none; rua=mailto:dmarc-reports@[zone]". Monitor aggregate reports for 2-4 weeks to identify legitimate senders. Progress to p=quarantine (deliver to spam) then p=reject (reject outright). Add sp=reject to cover subdomain spoofing. Target state: "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@[zone]"
+
+---
+
+### CTL.ROUTE53.EMAIL.DMARC.NOENFORCE.001
+
+**Route 53 Zone DMARC Record Has No Enforcement Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Route 53 public hosted zone has a DMARC record with p=none — monitoring-only mode, no enforcement. Receiving servers report authentication failures to the domain owner (via rua= aggregate reports) but do not reject or quarantine spoofed email. The DMARC record exists and appears in DNS audits as "DMARC configured." It provides no protection. Spoofed email is delivered to recipients. p=none is the intended starting point for DMARC deployment — observe the sending landscape, fix legitimate sources, then progress to enforcement. Organizations that enable p=none and never advance create false confidence: the DMARC record exists, security scans pass, but phishing email is still delivered. The enforcement states are p=quarantine (deliver to spam) and p=reject (reject outright). p=quarantine is acceptable enforcement; p=reject is the strongest and recommended target.
+
+**Remediation:** Progress DMARC from p=none to enforcement. Review aggregate reports (rua= destination) to identify all legitimate mail sources and ensure they pass SPF or DKIM. Move to p=quarantine (spoofed email goes to spam folder) to validate enforcement doesn't break legitimate delivery. Then advance to p=reject (spoofed email is rejected at the mail server). Target: "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@[zone]"
+
+---
+
+### CTL.ROUTE53.EMAIL.DMARC.NOSUBDOMAIN.001
+
+**Route 53 Zone DMARC Record Has Subdomain Policy Set to None**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Route 53 public hosted zone has a DMARC record with sp=none — explicitly setting no enforcement for subdomains. When a DMARC record omits the sp= tag, subdomains inherit the parent domain's p= policy. When sp=none is explicitly set, subdomains have no enforcement regardless of the parent domain's p= value: a domain with p=reject and sp=none rejects spoofed @example.com email but allows spoofed @billing.example.com, @hr.example.com, and @payroll.example.com email through. Subdomain addresses are especially effective for phishing — they appear credible (billing@subdomain.example.com) while bypassing the parent domain's DMARC enforcement. This finding fires only when sp=none is explicitly set, overriding the natural inheritance. A DMARC record with no sp= tag is not flagged — the parent p= applies.
+
+**Remediation:** Remove sp=none from the DMARC record or replace it with sp=quarantine or sp=reject. If the parent p= is already reject, simply removing the sp= tag causes subdomains to inherit p=reject automatically — the strongest protection with no additional configuration. If some subdomains legitimately send email with different sources, configure their own DMARC records at _dmarc.[subdomain] rather than setting sp=none at the parent.
+
+---
+
+### CTL.ROUTE53.EMAIL.SPF.LOOKUPLIMIT.001
+
+**Route 53 Zone SPF Record Exceeds 10 DNS Lookup Limit**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Route 53 public hosted zone has an SPF record that requires more than 10 DNS lookups to evaluate. RFC 7208 limits SPF evaluation to 10 DNS-querying mechanisms (include, a, mx, ptr, exists, redirect). When the limit is exceeded, the receiving server returns a PermError — permanent error — and may treat the domain as having no SPF record, allowing all senders through. SPF lookups exceeding the limit cause SPF to fail silently for legitimate email and provide no protection against spoofing. Nested includes compound the problem: include:provider.com may itself include 3-4 further domains, each consuming lookup budget. Common cause: accumulation of cloud mail provider includes over time (Google, SES, Sendgrid, Mailchimp, Salesforce) without consolidation.
+
+**Remediation:** Reduce the number of DNS-querying mechanisms to 10 or fewer. Audit all include: directives and remove those for services no longer used. Replace multiple provider includes with a single macro- flattened SPF record using ip4:/ip6: directives (which don't consume lookup budget). Use SPF flattening tools or a managed SPF provider (Dmarcian, Valimail) to stay within limits. The mechanisms that count toward the 10-lookup limit are: include, a, mx, ptr, exists, and redirect. The ip4:, ip6:, and all mechanisms do not count.
+
+---
+
+### CTL.ROUTE53.EMAIL.SPF.MISSING.001
+
+**Route 53 Zone Apex Has No SPF Record**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Route 53 public hosted zone apex has no SPF (Sender Policy Framework) TXT record. Without SPF, any mail server on the internet can send email appearing to be from this domain. There is no mechanism for receiving mail servers to verify that the sending server is authorized. Domain spoofing for phishing is trivial — an attacker sends email from ceo@[domain] and receiving servers have no check to perform. SPF is the foundational layer of email authentication: it restricts which servers are authorized to send as the domain.
+
+**Remediation:** Add a TXT record at the zone apex with value "v=spf1 ... -all" listing the mail servers authorized to send for this domain. Use -all (hardfail) to reject unauthorized senders, or ~all (softfail) as a transition step. Do not use +all or ?all — these provide no protection. Include all legitimate sending sources: MX records, cloud mail providers (include:_spf.google.com for Google Workspace, include:amazonses.com for SES), and any authorized third-party senders.
+
+---
+
+### CTL.ROUTE53.EMAIL.SPF.MULTIPLE.001
+
+**Route 53 Zone Has Multiple SPF Records**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Route 53 public hosted zone has more than one TXT record beginning with "v=spf1". RFC 7208 states a domain MUST NOT publish multiple SPF records. When multiple SPF records exist, the behavior is undefined — receiving servers may select any one record, return a PermError, or produce inconsistent validation results. One record may be restrictive (-all) while the other is permissive (+all), making the effective policy depend on which record the receiving server evaluates. SPF validation becomes unpredictable across different mail providers. Multiple SPF records typically result from multiple administrators independently adding records, or from a failed migration between mail providers where the old record was not removed.
+
+**Remediation:** Consolidate all SPF records into a single TXT record. Merge the include: directives, ip4:, and ip6: mechanisms from all existing records into one record. Delete all but the consolidated record. Verify the merged record is syntactically valid and does not exceed 10 DNS lookups. Note: other TXT records (DKIM selectors, domain verification tokens, Google Site Verification) are not SPF records — only TXT records starting with "v=spf1" are SPF.
+
+---
+
+### CTL.ROUTE53.EMAIL.SPF.PERMISSIVE.001
+
+**Route 53 Zone SPF Record Is Too Permissive**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Route 53 public hosted zone has an SPF record that uses +all or ?all — providing no restriction on which servers can send email as this domain. +all explicitly authorizes every mail server on the internet. ?all (neutral) provides no opinion on unauthorized senders. Both qualifiers are effectively equivalent to having no SPF record. The SPF record exists and passes a superficial "does SPF exist?" audit check, creating false confidence that email authentication is in place. Receiving servers that check SPF see a record and take no restrictive action. The correct qualifiers are -all (hardfail — reject unauthorized senders) or ~all (softfail — mark as suspicious). -all is the strongest and recommended target state.
+
+**Remediation:** Update the SPF TXT record to use -all (hardfail) or at minimum ~all (softfail). Replace +all or ?all with -all at the end of the SPF record value. -all tells receiving servers to reject email from servers not listed in the SPF record. ~all tells servers to mark unauthorized email as suspicious (SoftFail). The transition path is ~all first (observe, fix false positives), then -all for full enforcement.
+
+---
+
+### CTL.ROUTE53.FAILOVER.NOSECONDARY.001
+
+**Route 53 Failover Record Has No Secondary Record**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-7; soc2: A1.1;
+
+Route 53 failover routing has a primary record but no secondary (failover) record. Failover routing requires two records — primary and secondary. The primary receives traffic when its health check reports healthy. When the primary's health check fails, Route 53 returns the secondary record's value. Without a secondary record, when the primary fails its health check, Route 53 has no fallback: it returns NXDOMAIN or continues serving the unhealthy primary depending on the record type. The failover mechanism is configured — an auditor sees "failover routing configured" — but there is nothing to fail over to. This is a false confidence pattern: the infrastructure appears to have high availability but the failover path does not exist. The secondary record typically points to a different ALB, CloudFront distribution, or S3 static error page in another region.
+
+**Remediation:** Create a secondary failover record pointing to a backup endpoint in a different region or availability zone. The secondary record uses the same record name and type as the primary but with Failover=SECONDARY. Unlike the primary, the secondary does not require a health check — it is the last resort when the primary is unhealthy. Common secondary targets: an S3 bucket configured for static website hosting with an error page, a CloudFront distribution serving a maintenance page, or an ALB in a different region. Ensure the secondary record's TTL is low enough for rapid failover.
+
+---
+
+### CTL.ROUTE53.FAILOVER.SECONDARYNOHEALTH.001
+
+**Route 53 Failover Secondary Record Has No Health Check**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-10; soc2: A1.2;
+
+Route 53 failover routing has a health check on the primary record but no health check on the secondary (failover) record. When the primary fails its health check, Route 53 fails over to the secondary — which may itself be unhealthy. Without a health check on the secondary, failover moves traffic from a known-broken primary to a potentially-broken secondary with no verification. Customers experience a double failure: the primary is down, and the failover destination is also unavailable. A health check on the secondary provides a signal: if the secondary is also unhealthy, the operator knows the entire failover mechanism has failed and can take manual action. Without the signal, the operator sees the failover trigger but has no visibility into whether the secondary is actually serving traffic correctly.
+
+**Remediation:** Add a health check to the failover secondary record. Create a health check for the secondary endpoint: aws route53 create-health-check. Update the secondary record set to include the HealthCheckId. Route 53 will then mark the secondary as unhealthy if it fails, providing a signal that both endpoints are down. Note that if the secondary is unhealthy and there are no other healthy records, Route 53 returns the unhealthy secondary anyway as a last resort — but the health check ensures the team knows the state.
+
+---
+
 ### CTL.ROUTE53.GHOST.001
 
 **Route53 Records Must Not Point to Deleted AWS Resources**
@@ -20067,6 +20847,36 @@ Route53 A records using literal IP addresses must point to IP addresses currentl
 Route53 records (A, AAAA, CNAME, Alias) must not point to AWS resources that have been deleted — ELBs, CloudFront distributions, S3 website endpoints, Elastic IPs, or API Gateways. For reclaimable resources (released EIPs, deleted S3 bucket names), an attacker claims the target and receives all traffic the DNS record directs. This extends CTL.ROUTE53.DANGLING.001 (dangling IPs) and CTL.DNS.DANGLING.001-003 (external hosting takeover) to cover deleted AWS resources specifically.
 
 **Remediation:** Remove or update the DNS record to point to an existing resource.
+
+---
+
+### CTL.ROUTE53.HEALTH.MISSING.001
+
+**Route 53 Routing Policy Record Has No Health Check**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-7; soc2: A1.1;
+
+Route 53 record with a routing policy that depends on endpoint health — failover, weighted, latency, or multi-value — does not have an associated health check. Without a health check, Route 53 cannot detect when the endpoint is unhealthy and routes traffic to the endpoint regardless of its state. Failover routing never triggers failover (the primary is always considered healthy, even when returning 500 errors). Weighted routing sends traffic to unhealthy endpoints proportionally — an endpoint with weight 50 receives 50% of traffic even when it is down. Latency routing sends traffic to the nearest but potentially unhealthy endpoint. Simple routing does not use health checks for routing decisions and is excluded from this control. Geolocation routing uses health checks for availability but the key safety gap for geolocation is the missing default record (see CTL.ROUTE53.ROUTING.GEO.NODEFAULT.001).
+
+**Remediation:** Create a health check for the endpoint: aws route53 create-health-check. Associate the health check with the record by updating the record set to include HealthCheckId. For failover routing, the primary record must have a health check — without it, failover never triggers. For weighted routing, each weighted record should have a health check so Route 53 excludes unhealthy endpoints from the weighted distribution. For latency routing, health checks ensure Route 53 does not route to the lowest-latency endpoint when that endpoint is unhealthy.
+
+---
+
+### CTL.ROUTE53.HEALTH.NOALARM.001
+
+**No CloudWatch Alarm for Route 53 Health Check Status**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-4; soc2: A1.1;
+
+Route 53 health check exists but no CloudWatch alarm monitors its HealthCheckStatus metric. When the health check transitions from healthy to unhealthy, nobody is notified. Route 53 automatically fails over traffic if failover routing is configured, but the team does not know the primary endpoint is down until someone checks the console or receives a customer report. A CloudWatch alarm on the HealthCheckStatus metric sends an alert the moment the health check detects failure — giving the team immediate visibility before customers are affected and before the automatic failover becomes the team's only signal. Without the alarm, the failover is silent from the team's perspective: traffic moves, but there is no notification, no incident trigger, and no audit trail that the primary endpoint was down.
+
+**Remediation:** Create a CloudWatch alarm for the health check: aws cloudwatch put-metric-alarm with Namespace=AWS/Route53, MetricName= HealthCheckStatus, Dimensions=[{Name=HealthCheckId,Value=[ID]}], Threshold=1, ComparisonOperator=LessThanThreshold. Set AlarmActions to an SNS topic that pages on-call. The alarm fires when HealthCheckStatus drops below 1 (unhealthy). Use a short evaluation period (1-2 minutes) so the alarm fires quickly after failure detection.
 
 ---
 
@@ -20113,6 +20923,51 @@ The observation snapshot is missing required Route 53 properties.
 
 ---
 
+### CTL.ROUTE53.LIFECYCLE.ORPHANHEALTH.001
+
+**Route 53 Health Check Not Associated with Any Record**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC8.1;
+
+Route 53 health check exists but is not referenced by any DNS record's HealthCheckId association. The health check monitors an endpoint but no routing decision uses the health status. The check consumes per-month cost, occupies the per-account quota (default 200 health checks), and may emit CloudWatch alarms, but does not affect DNS resolution. This typically indicates incomplete cleanup after a record was deleted (the health check was created for the record but the record was removed without removing the check), or that a planned routing change never completed (the check was created in advance for a record that was never created). Distinct from CTL.ROUTE53.HEALTHCHECK.GHOST.001 which detects health checks pointing at deleted target endpoints — this control detects health checks not referenced by any DNS record, regardless of whether the target endpoint still exists.
+
+**Remediation:** Determine whether the health check is still needed. If a planned record creation is in progress: associate the health check with the record by setting HealthCheckId on the record. If the health check is leftover from a deleted record: delete the health check via aws route53 delete-health-check --health-check-id {id}. Audit health-check inventory periodically (the per-account default quota is 200) so unreferenced checks do not exhaust the quota and block creation of new checks. If the check was used for a CloudWatch alarm independent of DNS routing, document the intentional standalone use so future audits do not re-flag it.
+
+---
+
+### CTL.ROUTE53.LIFECYCLE.ORPHANZONE.001
+
+**Route 53 Hosted Zone Has No Matching Domain Registration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC6.1;
+
+Route 53 hosted zone exists but no domain registered in this account (or any organizational account whose registration is visible to the observer) delegates to this zone's name servers. The zone has records but no domain's NS records point to it — the zone serves no DNS resolution. This typically indicates: the zone was created for a domain registered elsewhere and the registration was moved, the zone was created for a planned domain that was never registered, or the zone is a leftover from testing. The dead zone retains records — potentially internal hostnames, IP addresses, and service endpoints — visible to anyone with route53:ListResourceRecordSets permission, while serving no DNS function. Note: this control can verify delegation only for domains registered through Route 53 in this account; for domains registered through external registrars, delegation must be verified out-of-band. The control fires only when the zone has no matching domain AND no NS delegation in the visible scope, to avoid false positives from externally-registered domains that do delegate to the zone.
+
+**Remediation:** Determine whether the domain associated with this zone is still in use. If the domain was moved to an external registrar: verify the external registrar's NS records delegate to this zone — if so, the finding is a false positive (annotate the zone with the registrar information so future audits do not re-flag it). If the domain is no longer in use: review the zone's records for internal infrastructure information, document anything that should be tracked (in case it reveals historical service architecture), then delete the zone — first delete all resource record sets except SOA and NS, then delete the zone itself. If the domain registration is pending: the zone is reserving the configuration in advance; ensure the domain registration is completed before the zone accumulates further records.
+
+---
+
+### CTL.ROUTE53.LIFECYCLE.STALE.TXT.001
+
+**Route 53 TXT Records Contain Old Verification Tokens**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC8.1;
+
+Route 53 hosted zone contains TXT records with domain verification tokens from completed verifications — google-site- verification, ms= (Microsoft 365), atlassian-domain-verification, _amazonses, docusign=, facebook-domain-verification, and similar — that are no longer needed by the verification service. These records: clutter the zone (a busy zone obscures meaningful records), may contain tokens that could be reused if the verification service is reconfigured, and indicate incomplete cleanup after a service change. Stale verification tokens are detected heuristically by matching known verification-token patterns and flagging tokens that have not been refreshed in a long time. The heuristic cannot determine with certainty that a verification is no longer required — some services require the token to remain in DNS as long as the integration is active. The finding is a prompt to audit the verification tokens and remove those whose corresponding services have been decommissioned.
+
+**Remediation:** Audit TXT records in the zone. For each verification token, confirm with the team responsible for the corresponding service (Google Workspace, Microsoft 365, SES, Atlassian, DocuSign, Facebook, etc.) whether the token is still required. For tokens whose service has been decommissioned: delete the TXT record. For tokens whose service is still in use: re-issue the token through the verification service to confirm it is current (most services allow re-verification, which rotates the token). Maintain an inventory of intentional verification tokens with their owning service and last-verified date so future audits can distinguish stale tokens from active ones.
+
+---
+
 ### CTL.ROUTE53.LOG.001
 
 **Route53 Public Hosted Zones Must Enable Query Logging**
@@ -20143,6 +20998,201 @@ Registered domains must have WHOIS privacy protection enabled to redact registra
 
 ---
 
+### CTL.ROUTE53.PRIVATE.NOVPC.001
+
+**Route 53 Private Hosted Zone Not Associated with Any VPC**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC6.1;
+
+Route 53 private hosted zone exists but is not associated with any VPC. A private hosted zone resolves DNS names only within the VPCs it is associated with — VPC resources query the zone's records when resolving names in that zone's namespace. Without any VPC association, no resource can resolve the zone's records: the zone is a dead configuration. DNS records in the zone (typically internal service endpoints, database hostnames, RDS instance addresses, internal API endpoints) are permanently unresolvable. The zone retains those records — potentially containing the organization's complete internal service map — visible to anyone with route53:ListResourceRecordSets permission. This typically indicates: the zone was created but VPC association was never completed (incomplete provisioning); or all VPC associations were removed during decommissioning but the zone itself was not deleted (incomplete cleanup). Either way, the zone serves no function and documents internal infrastructure for no operational benefit.
+
+**Remediation:** Determine whether the zone is still needed. If needed: associate the zone with the appropriate VPC — aws route53 associate-vpc- with-hosted-zone --hosted-zone-id {zone-id} --vpc VPCRegion= {region},VPCId={vpc-id}. If not needed: delete the zone — first delete all resource record sets (excluding the SOA and NS records), then delete the zone itself. Before deleting, verify that no application depends on the zone's records. Check CloudTrail for recent route53:ListResourceRecordSets API calls targeting the zone-id to identify if any service is still attempting resolution.
+
+---
+
+### CTL.ROUTE53.PRIVATE.PUBLICRECORDS.001
+
+**Route 53 Private Hosted Zone Contains Records Pointing to Public IP Addresses**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC6.1;
+
+Route 53 private hosted zone contains A records pointing to public IP addresses (addresses outside RFC 1918 private ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16). Private zones are designed for internal DNS resolution — internal service names should resolve to private IPs within the VPC. When an A record in a private zone resolves to a public IP, traffic from VPC resources querying that internal-looking name traverses the internet: it exits the VPC via NAT gateway or internet gateway, travels over the public internet to the public IP, and returns the same way. This is a misconfiguration pattern: a service endpoint was changed to a public IP (during troubleshooting, migration, or vendor IP change) and the DNS record was updated but never reverted. From a security standpoint, DNS resolution that appears internal but routes to the internet creates an unexpected egress path — traffic destined for what looks like an internal name actually leaves the VPC. This control does not fire on CNAME records (which point to hostnames, not IPs) or on link-local addresses (169.254.x.x, which are expected for some AWS-internal services).
+
+**Remediation:** Identify the records: aws route53 list-resource-record-sets --hosted-zone-id {zone-id} and filter A records with non-RFC-1918 values. For each: determine whether the service was migrated to a public IP intentionally. If the service should be private, update the record to point to the internal IP or internal load balancer DNS name. If the service is now genuinely public and internal name resolution is not needed, delete the record from the private zone and use the public zone instead. If the service uses an internal ALB with a private IP, update the A record to the ALB's private IP or convert to an alias record pointing to the internal ALB.
+
+---
+
+### CTL.ROUTE53.QUERYLOG.ENCRYPT.001
+
+**Route 53 Query Log Group Not Encrypted with CMK**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AU-9; pci_dss_v4.0: 10.5.1; soc2: CC6.1;
+
+Route 53 DNS query log CloudWatch log group is not encrypted with a customer-managed KMS key (CMK). Query logs contain the source resolver IP addresses for every DNS query (revealing which clients queried which names), the queried domain names (which may include internal service names, database hostnames, and API endpoints encoded in subdomains), query types, and response codes. The resolver IP combined with the queried name reveals behavioral patterns: which workload queried which internal service, when, and how often. CloudWatch Logs encrypts at rest by default with an AWS-managed key (aws/logs). A CMK adds the ability to revoke key access immediately (disabling log access without deleting logs), to audit all decryption operations via CloudTrail, and to enforce fine-grained access control on who can decrypt query logs. This control fires only when query logging is enabled — zones without logging are caught by the QUERYLOG.PUBLIC/PRIVATE controls.
+
+**Remediation:** Associate a CMK with the query log group: aws logs associate-kms- key --log-group-name {log-group-name} --kms-key-id {kms-key-arn}. The KMS key policy must grant CloudWatch Logs permission to use the key (kms:Encrypt, kms:Decrypt, kms:ReEncrypt*, kms: GenerateDataKey*, kms:Describe*) for the CloudWatch Logs service principal (logs.{region}.amazonaws.com). Existing log events in the group are not retroactively encrypted with the new key — only new events use it. To encrypt all events, create a new log group with the CMK, re-enable query logging pointing to the new group, and archive the old group before deleting it.
+
+---
+
+### CTL.ROUTE53.QUERYLOG.PRIVATE.001
+
+**Route 53 Private Hosted Zone Has No Resolver Query Logging**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.1;
+
+Route 53 private hosted zone (or the associated VPC's resolver) does not have resolver query logging enabled. Internal DNS queries from VPC resources — EC2 instances, Lambda functions, ECS tasks, RDS connections to internal hostnames — are unaudited. Private zones resolve internal service names, database hostnames, and configuration endpoints. An attacker who compromises any VPC resource can query internal DNS names to discover the internal service map (what databases exist, what internal APIs are reachable, what microservices are running) without any log record of the reconnaissance. Resolver query logging captures all DNS queries from VPC resources: the queried name, query type, response code, the source IP of the querying instance, and the VPC ID. Unlike public zone query logging (which captures external resolver queries), resolver query logging captures internal workload DNS activity — the signals needed to detect internal lateral movement and internal reconnaissance that public zone logs cannot see.
+
+**Remediation:** Enable Resolver Query Logging for the VPC(s) associated with the private zone. Create a query logging config: aws route53resolver create-resolver-query-log-config --name {name} --destination-arn {cloudwatch-log-group-arn or s3-bucket-arn}. Associate it with the VPC: aws route53resolver associate-resolver-query-log-config --resolver-query-log-config-id {config-id} --resource-id {vpc-id}. Resolver query logging applies to all DNS queries from resources in the VPC, not just queries to private hosted zones — enabling it once per VPC covers all private zone resolution from that VPC.
+
+---
+
+### CTL.ROUTE53.QUERYLOG.PUBLIC.001
+
+**Route 53 Public Hosted Zone Has No DNS Query Logging**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 3.1; nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+Route 53 public hosted zone does not have DNS query logging enabled. DNS query logs are the only visibility into DNS resolution patterns for the zone — every query received by Route 53 is recorded: the queried domain name, query type (A, AAAA, MX, TXT), response code (NOERROR, NXDOMAIN, SERVFAIL), the resolver IP that sent the query, and the timestamp. Without query logging: DNS tunneling (encoding data in DNS queries to exfiltrate information to an attacker- controlled authoritative server) is completely invisible — the attacker's queries arrive and are answered but no log records them. Reconnaissance (probing for internal subdomain names to map internal infrastructure) is undetectable. Anomalous query patterns (sudden spike in queries to a single subdomain, systematic enumeration of subdomains, query patterns consistent with DGA-based C2) leave no forensic trail. Public zones are the primary surface for DNS-layer threat detection because they receive external resolver traffic — any client on the internet can query a public zone, making these zones the entry point for DNS-based attacks and surveillance.
+
+**Remediation:** Enable DNS query logging for the hosted zone. Create a CloudWatch Logs log group for query logs: aws logs create-log-group --log- group-name /aws/route53/{zone-name}. Grant Route 53 permission to write to the log group via a resource-based policy. Enable query logging: aws route53 create-query-logging-config --hosted-zone-id {zone-id} --cloud-watch-logs-log-group-arn {log-group-arn}. Query logs are written to CloudWatch Logs within a few minutes of enabling. Note: DNS query logging is only available for public hosted zones. Private zone resolver query logging uses Resolver Query Logging (CTL.ROUTE53.QUERYLOG.PRIVATE.001).
+
+---
+
+### CTL.ROUTE53.QUERYLOG.RETENTION.001
+
+**Route 53 Query Log Group Has Insufficient Retention**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AU-11; pci_dss_v4.0: 10.7; soc2: CC7.2;
+
+Route 53 DNS query log CloudWatch log group has no retention policy or a retention period below 365 days. DNS query logs document every query received by the hosted zone. When a security incident is investigated — DNS tunneling detected, domain compromise suspected, unauthorized subdomain queries found — the investigation window typically extends 6 to 12 months. Logs deleted before the investigation window closes make root-cause analysis impossible. Compliance frameworks (PCI-DSS, NIST 800-53, SOC2) require audit logs to be retained for periods that exceed typical CloudWatch default retention (which is none — logs never expire unless a retention policy is set, but the billing cost motivates teams to set short retention policies). This control fires only when query logging is already enabled — zones without logging are caught by CTL.ROUTE53.QUERYLOG.PUBLIC.001 and CTL.ROUTE53.QUERYLOG.PRIVATE.001.
+
+**Remediation:** Set a retention policy on the query log group: aws logs put- retention-policy --log-group-name {log-group-name} --retention- in-days 365. For compliance frameworks requiring longer retention (HIPAA: 6 years, some PCI auditors: 12 months minimum), increase accordingly. Consider exporting logs to S3 with an S3 lifecycle policy for long-term retention — CloudWatch Logs is expensive for multi-year retention of high-volume DNS query logs. Use CloudWatch Logs Insights for interactive queries on recent logs; archive to S3 for historical investigation.
+
+---
+
+### CTL.ROUTE53.RECORD.A.DATABASE.001
+
+**DNS Record Points Directly to Database Endpoint**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3; soc2: CC6.1;
+
+Route 53 record resolves to a database endpoint directly — RDS (*.rds.amazonaws.com), ElastiCache (*.cache.amazonaws.com), Redshift (*.redshift.amazonaws.com), or DocumentDB (*.docdb.amazonaws.com) — without an application tier or proxy in between. The database is DNS-addressable from any client that can resolve the name. If the record is in a public hosted zone, the database endpoint is discoverable by anyone — combined with a misconfigured security group, the database is directly accessible from the internet. If the record is in a private zone, internal-network access to the database does not require service discovery via tagged resources or environment variables; the database is one DNS query away from any compromised resource in the VPC. The control flags this architectural pattern: a database that is reachable directly from clients (rather than through an application tier with its own credentials, rate limiting, and audit log) increases blast radius for any client compromise. The detection heuristic matches AWS database service hostname patterns and should be extended as new database services are added.
+
+**Remediation:** Determine why the database is exposed via DNS. If the record was added for application configuration convenience, change the application to read the database endpoint from secrets manager or parameter store rather than from public/private DNS. If the DNS abstraction is required (failover, environment-specific endpoints), point the record at an application proxy or RDS Proxy that fronts the database — preserving the indirection while removing direct addressability. For records in public zones: this is severity-elevated — combined with an unrestricted security group, the database is internet-accessible. Audit the security group for the database; if 0.0.0.0/0 is allowed on the database port, this is a critical exposure pair (resolve both the DNS record and the SG). For records in private zones: review whether the application tier is still required as a control point — direct database addressability removes the application's role as an authorization boundary.
+
+---
+
+### CTL.ROUTE53.RECORD.ALIAS.NOHEALTH.001
+
+**Route 53 Alias Record Has EvaluateTargetHealth Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-7; soc2: A1.1;
+
+Route 53 alias record has evaluateTargetHealth set to false. Alias records can propagate health from the target resource (ALB, CloudFront, API Gateway, S3 website endpoint, another Route 53 record) — when the target is unhealthy, Route 53 stops returning this alias for queries. With evaluateTargetHealth disabled, Route 53 always returns the alias regardless of whether the target is healthy: traffic is routed to unhealthy or unreachable targets, defeating the resilience benefit of alias records. The control is medium severity because evaluateTargetHealth=false is sometimes intentional — the target handles its own health management (CloudFront origin failover, ALB internal target health), or the target type does not support target health evaluation (S3 buckets, certain API Gateway configurations). The finding is a prompt to confirm that the disabled health evaluation is intentional and that another mechanism (CloudWatch alarm, application-level circuit breaker, secondary DNS-level health check) handles unhealthy-target detection.
+
+**Remediation:** For alias records pointing to ALBs, NLBs, or other Route 53 records: enable evaluateTargetHealth — aws route53 change-resource-record-sets and set EvaluateTargetHealth=true in the AliasTarget block. Route 53 will stop returning the alias when the target is unhealthy. For alias records where target health evaluation is not supported (S3, some CloudFront cases) or is intentionally handled by the target itself: document the decision in the record's owner-tag or an out-of-band registry so future audits do not re-flag the finding, and verify the compensating mechanism (CloudFront origin failover, ALB target group health, application circuit breaker) is operational and tested.
+
+---
+
+### CTL.ROUTE53.RECORD.INTERNAL.EXPOSED.001
+
+**Public Hosted Zone Contains Records Exposing Internal Infrastructure**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Route 53 public hosted zone contains CNAME or A records that reference internal infrastructure — RFC 1918 IP addresses (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16), internal AWS hostnames (RDS endpoints, internal ALB names, EC2 private DNS), or SRV records exposing internal ports. Public DNS is queryable by anyone — no authentication, no access control. Records like internal.example.com → 10.0.1.50 or db.example.com → rds-prod.c9abcdef.us-east-1.rds.amazonaws.com expose internal architecture in public DNS. An attacker queries the domain and discovers the internal IP addressing scheme (10.0.1.0/24 for production, 10.0.2.0/24 for staging), database endpoints (RDS identifiers reveal engine type, region, and account), and service topology. This information aids targeted attacks once the attacker has internal network access — they no longer need to enumerate from inside. The check fires only on PUBLIC hosted zones; private zones containing internal IPs is expected behavior.
+
+**Remediation:** Identify the internal records: aws route53 list-resource-record-sets --hosted-zone-id {zone-id} and filter A records with RFC 1918 values (10.x, 172.16-31.x, 192.168.x) and CNAME records pointing to internal AWS hostnames. For each record: if the service is public-facing, repoint to the public DNS name (the ALB DNS name, the CloudFront distribution name) rather than the internal IP. If the service is internal-only, move the record to a private hosted zone associated with the appropriate VPC and remove it from the public zone. Audit SRV records exposing internal port numbers — these reveal service topology (database ports, Kerberos ports, internal RPC ports) and should not appear in public DNS.
+
+---
+
+### CTL.ROUTE53.RECORD.WILDCARD.001
+
+**Route 53 Wildcard Record Catches All Subdomains**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Route 53 hosted zone has a wildcard record (*.example.com) that matches every subdomain not explicitly defined in the zone. Wildcard records resolve typos, test subdomains, and any subdomain an attacker probes — all to the wildcard target. This: masks dangling DNS detection (a deleted service's subdomain still resolves via the wildcard, suppressing the NXDOMAIN signal that flags dangling records), hides reconnaissance (an attacker probing for subdomains always gets a response — they cannot distinguish real subdomains from wildcard matches), and routes unintended traffic to one endpoint regardless of intended audience. Wildcard records have legitimate uses (catch-all for SaaS multi-tenancy, fallback landing pages) — the finding is a request to review whether the wildcard is intentional, and to understand that it suppresses the organization's primary subdomain takeover detection signal.
+
+**Remediation:** Review whether the wildcard record is required. If it exists for historical reasons or convenience, replace it with explicit records for the subdomains the organization actually uses. If it is required (SaaS multi-tenancy, customer-facing catch-all), document the business justification and compensate by: (1) auditing explicit records monthly to detect dangling entries that the wildcard would otherwise mask, (2) using application-level checks on the wildcard target to distinguish real tenants from probes, (3) routing wildcard traffic to a dedicated landing page rather than a production application. For zones that mix wildcards and explicit records, ensure every legitimate subdomain has an explicit record so dangling detection works for those names — only typos and unknown probes resolve via the wildcard.
+
+---
+
+### CTL.ROUTE53.RESOLVER.GHOST.FORWARDER.001
+
+**Route 53 Resolver Forwarding Rule Points to Unreachable Target**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CP-7; soc2: A1.1;
+
+Route 53 resolver outbound forwarding rule specifies target IP addresses (typically on-premises DNS servers reached via VPN or Direct Connect) that are unreachable. DNS queries matching the forwarding rule's domain (e.g., corp.example.com) are forwarded to the target IPs. When the targets are unreachable, every DNS query for the forwarded domain times out — the resolver sends the query to the configured IPs, receives no response, and returns SERVFAIL. Every VPC resource that resolves any name under the forwarded domain fails. The forwarding rule appears correctly configured in the console — it has a domain, it has targets, it is associated with a VPC. The targets do not respond. This is the ghost reference pattern applied to DNS resolver targets: the rule was configured when the on-premises DNS servers were live; the servers were decommissioned, the VPN was reconfigured, or the on-premises IPs changed; the forwarding rule was never updated. The rule continues to look correct while silently failing every query that matches its domain. For outbound forwarding rules pointing to corporate DNS, the blast radius covers every internal hostname that VPC resources query.
+
+**Remediation:** Identify unreachable targets: check connectivity to the target IPs over port 53 (UDP and TCP) from within the VPC — if Direct Connect or VPN is the path, verify the connection is active first. Update the forwarding rule with correct target IPs: aws route53resolver update-resolver-rule --resolver-rule-id {rule-id} --config TargetIps=[{Ip={new-ip},Port=53}]. If the on-premises DNS servers were decommissioned with no replacement, delete the forwarding rule — aws route53resolver delete-resolver-rule — and disassociate it from any VPCs first. If the forwarded domain names should resolve via Route 53 public DNS instead, remove the forwarding rule to let queries fall through to the default Route 53 resolver.
+
+---
+
+### CTL.ROUTE53.RESOLVER.SINGLEAZ.001
+
+**Route 53 Resolver Endpoint in Single Availability Zone**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CP-7; soc2: A1.2;
+
+Route 53 resolver endpoint (inbound or outbound) has IP addresses assigned in only one Availability Zone. Resolver endpoints are the DNS bridge between VPCs and on-premises networks: an inbound endpoint allows on-premises DNS resolvers to forward queries for Route 53 private zones to Route 53, enabling on-premises systems to resolve internal AWS service names; an outbound endpoint allows VPC resources to forward DNS queries for on-premises domains to on-premises DNS resolvers via forwarding rules, enabling VPC workloads to resolve internal corporate hostnames. With IP addresses in a single AZ, an AZ failure renders the endpoint unavailable: for inbound endpoints, on-premises systems receive resolution failures for all private zone names — hybrid application connectivity breaks; for outbound endpoints, VPC resources receive resolution failures for all forwarded domains — any workload that depends on on-premises DNS names fails. This is the DNS equivalent of a single-AZ database: the endpoint works under normal conditions but becomes a single point of failure during the AZ events that DNS redundancy is specifically designed to survive. Resolver endpoints should have IPs in at least two AZs.
+
+**Remediation:** Add IP addresses in a second AZ to the resolver endpoint: aws route53resolver update-resolver-endpoint --resolver-endpoint-id {endpoint-id} --actions Operation=ADD,IpId=... The endpoint requires a subnet in the target AZ — create the subnet first if needed. Each AZ needs at least one IP address assigned. Route 53 Resolver automatically load-balances queries across all endpoint IPs; adding a second AZ IP creates redundancy without any configuration change to forwarding rules. Best practice is two IPs in two different AZs; three IPs across three AZs for higher availability in regions with three AZs.
+
+---
+
+### CTL.ROUTE53.ROUTING.GEO.NODEFAULT.001
+
+**Route 53 Geolocation Routing Has No Default Record**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-22; soc2: A1.1;
+
+Route 53 geolocation routing policy has records for specific countries or continents but no default record. Geolocation routing matches viewer location to DNS records by country or continent. If the viewer's location does not match any configured record, Route 53 needs a default record to return. Without a default record, viewers from countries not covered by any geolocation record receive NXDOMAIN — the domain appears to not exist for those viewers. A user in a country not listed in the geolocation configuration gets a complete DNS resolution failure. This is a silent failure: the organization does not know viewers in unlisted countries cannot reach the domain, and those viewers have no way to distinguish between "the service does not exist" and "the service exists but did not configure DNS for my location." A default record catches all unmatched locations and provides a fallback — typically the same endpoint as the nearest region or a global endpoint.
+
+**Remediation:** Add a default geolocation record to the record set. In the AWS console, add a record with Location=Default. Via CLI, include GeoLocation={CountryCode=*} in the resource record set. The default record receives traffic from any location not matched by a more specific geolocation record. Point the default to the nearest global endpoint or to a global load balancer. Ensure the default record has a health check if the endpoint may become unhealthy — otherwise viewers in unmatched locations will route to an unhealthy endpoint with no fallback.
+
+---
+
 ### CTL.ROUTE53.TRANSFER.001
 
 **Route53 Domains Must Enable Transfer Lock**
@@ -20155,6 +21205,36 @@ Registered domains must have WHOIS privacy protection enabled to redact registra
 Registered domains must have transfer lock (clientTransferProhibited) enabled to prevent unauthorized domain transfers. Without transfer lock, an attacker who compromises registrar credentials can transfer the domain to another registrar.
 
 **Remediation:** Enable transfer lock on the domain registration.
+
+---
+
+### CTL.ROUTE53.ZONE.CAA.MISSING.001
+
+**Route 53 Zone Has No CAA Record**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-20; soc2: CC6.1;
+
+Route 53 public hosted zone has no CAA (Certificate Authority Authorization) record. Without CAA, any of the hundreds of public certificate authorities can issue SSL/TLS certificates for the domain. The CA/Browser Forum requires CAs to check CAA records before certificate issuance. An attacker who compromises a CA with weak domain validation, or who social-engineers a CA's issuance process, can obtain a legitimately signed certificate for the domain. With a valid certificate, the attacker can intercept HTTPS traffic without triggering browser security warnings. CAA limits certificate issuance to the CAs the organization actually uses — typically one or two (Amazon, Let's Encrypt, DigiCert). This control is medium severity because CAA is a defense-in-depth measure: a compromised CA may ignore the CAA check, and most organizations use reputable CAs with strong issuance controls. CAA is most effective against legitimate CAs with weak validation processes.
+
+**Remediation:** Add CAA records to Route 53 restricting which CAs can issue certificates for the domain. Add one CAA record per authorized CA: example.com CAA 0 issue "amazon.com" — for ACM certificates. example.com CAA 0 issue "letsencrypt.org" — if using Let's Encrypt. Add a CAA record with tag "issuewild" to restrict wildcard certificate issuance separately (optional, defaults to issue policy if absent). Add iodef to report unauthorized issuance attempts: example.com CAA 0 iodef "mailto:security@example.com"
+
+---
+
+### CTL.ROUTE53.ZONE.DELEGATION.UNVERIFIED.001
+
+**Route 53 NS Record Delegates Subdomain to External Name Servers**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-20; soc2: CC6.1;
+
+Route 53 has an NS record that delegates a subdomain to name servers outside the organization's Route 53 infrastructure. NS delegation transfers DNS authority for the subdomain to the specified name servers — the delegated name servers control all DNS records for the subdomain. When the delegated name servers are external (not Route 53, not the organization's own DNS infrastructure), the external operator controls DNS resolution for the subdomain. If the external service is discontinued (lame delegation — the name servers no longer serve the zone), compromised (attacker modifies DNS records), or misconfigured, the organization has no control over the subdomain's DNS. For subdomains hosting production services, email, or customer-facing applications, external NS delegation is a control gap requiring documented authorization. This control identifies unverified external delegation — NS records pointing to name servers not under organizational control.
+
+**Remediation:** Audit the NS delegation: verify the external name servers are intentionally used and the delegation is authorized. If authorized, document the delegation with the business justification and owner. If the external service has been discontinued: remove the NS delegation record from Route 53 immediately (lame delegation creates subdomain takeover risk). If the subdomain should remain on Route 53: create a hosted zone in Route 53 for the subdomain and update the NS record to Route 53 name servers. Unverified external delegation is a control gap regardless of intent.
 
 ---
 

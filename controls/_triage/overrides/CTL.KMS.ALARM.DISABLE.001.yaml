@@ -1,0 +1,21 @@
+control: CTL.KMS.ALARM.DISABLE.001
+defect: >
+  No CloudWatch alarm monitors DisableKey API calls on this key.
+infection: >
+  DisableKey is immediate — there is no waiting period, no
+  countdown, no grace window. The moment DisableKey is called,
+  the key enters Disabled state. Every subsequent Encrypt,
+  Decrypt, GenerateDataKey, and ReEncrypt call fails with
+  KMSInvalidStateException. Every S3 GetObject on objects
+  encrypted with the key fails. Every Lambda cold start that
+  decrypts environment variables fails. Every RDS restart fails.
+  The impact is immediate and service-wide. EnableKey reverses
+  the damage — but only after someone notices and acts. Without
+  an alarm, the discovery depends on error alerts from
+  dependent services — which may take minutes or hours
+  depending on traffic patterns.
+failure: >
+  Undetected key disablement. All dependent resources fail
+  immediately with no notification, and the team learns about
+  the outage from cascading downstream errors rather than from
+  the KMS event itself.

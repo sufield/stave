@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.POLICY.NOCONTEXT.001
+name: KMS Key Policy Does Not Require Encryption Context
+description: >
+  KMS key policy does not include a kms:EncryptionContext
+  condition on usage statements. Without encryption context
+  enforcement, any ciphertext encrypted with the key can be
+  decrypted without providing context — there is no per-operation
+  additional authentication data. Encryption context provides
+  per-operation access control: a principal must know the
+  context (key-value pairs) used during encryption to decrypt.
+  Without context enforcement, Decrypt is a blanket operation
+  on every ciphertext encrypted by the key. Narrows
+  CTL.KMS.POLICY.CONDITION.001 to the specific case where
+  EncryptionContext is missing even if ViaService or
+  CallerAccount is present.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "3.6.1.4"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.policy.requires_encryption_context
+  - cryptography.policy.context_condition_keys
+remediation:
+  description: >
+    KMS key policy does not require kms:EncryptionContext.
+    Principals can decrypt any ciphertext encrypted with this
+    key without providing per-operation context.
+  action: >
+    Add kms:EncryptionContext or kms:EncryptionContextKeys
+    conditions to usage statements in the key policy. Choose
+    context keys that match how the calling application uses
+    the key (e.g., tenant_id, object_id, application). Verify
+    producers and consumers pass the same context values;
+    mismatched context fails Decrypt.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "policy": {
+          "requires_encryption_context": true,
+          "context_condition_keys": ["tenant_id"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.policy.requires_encryption_context
+      op: eq
+      value: false
+defect: >
+  KMS key policy does not require kms:EncryptionContext on
+  usage statements.
+infection: >
+  Encryption context is per-operation additional authenticated
+  data. When required, a principal calling Decrypt must pass
+  the same context values that were used at Encrypt time —
+  otherwise Decrypt fails. Without context enforcement, Decrypt
+  succeeds on any ciphertext the principal can submit. Many
+  AWS services pass automatic context (S3 uses bucket ARN, EBS
+  uses volume ID), but the protection only applies when the
+  policy requires it. Multi-tenant or multi-application keys
+  without context enforcement allow one tenant to decrypt
+  another tenant's ciphertext if both flow through the same
+  service.
+failure: >
+  Tenant boundary collapse on the encryption layer. Any
+  principal authorized to call Decrypt can decrypt every
+  ciphertext encrypted by the key, regardless of which tenant
+  or workflow produced it.
+tests:
+  - name: key without encryption context fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-context"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            requires_encryption_context: false
+            context_condition_keys: []
+  - name: key with encryption context passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-with-context"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            requires_encryption_context: true
+            context_condition_keys:
+              - "tenant_id"

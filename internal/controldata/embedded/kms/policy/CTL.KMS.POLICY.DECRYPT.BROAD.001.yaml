@@ -1,0 +1,152 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.POLICY.DECRYPT.BROAD.001
+name: KMS Key Policy Grants Decrypt to Overly Broad Principals
+description: >
+  Customer-managed KMS key policy grants kms:Decrypt to a broad
+  principal — the account root (arn:aws:iam::ACCT:root) without
+  IAM-side restrictions, a wildcard principal (Principal: *), or
+  a broad IAM pattern (arn:aws:iam::ACCT:role/*). Decrypt is the
+  most sensitive KMS operation: it reads encrypted data. Broad
+  Decrypt access means any matching principal can decrypt any
+  ciphertext encrypted with this key — S3 objects, RDS snapshots,
+  EBS volumes, Lambda environment variables, Secrets Manager
+  secrets. Distinct from CTL.KMS.POLICY.ADMIN.BROAD.001 (broad
+  admin actions) and CTL.KMS.POLICY.001 (wildcard Principal "*"
+  on any action): this control fires on Decrypt-specific broad
+  scope even when admin and wildcard checks pass. Suppressed on
+  AWS-managed keys, whose policies are AWS-controlled.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "3.6.1"
+  fedramp_moderate: "AC-3"
+  hipaa: "164.312(a)(1)"
+  iso_27001_2022: "A.8.24"
+  cis_aws_v3.0: "3.6"
+  ccm_v4: ["CEK-03", "IAM-05"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.is_aws_managed
+  - cryptography.policy.decrypt_broadly_granted
+  - cryptography.policy.decrypt_principals
+remediation:
+  description: >
+    KMS key policy grants kms:Decrypt to broad principals. Any
+    matching principal can decrypt every resource encrypted with
+    this key.
+  action: >
+    Replace broad Decrypt grants with explicit role ARNs that
+    require Decrypt. Remove arn:aws:iam::ACCT:root grants of
+    Decrypt unless the IAM side is locked down to specific
+    consumers. Never use Principal "*" or role-wildcard ARNs on
+    Decrypt statements.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "is_aws_managed": false,
+        "policy": {
+          "decrypt_broadly_granted": false,
+          "decrypt_principals": ["arn:aws:iam::111122223333:role/data-reader"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.is_aws_managed
+      op: eq
+      value: false
+    - field: properties.cryptography.policy.decrypt_broadly_granted
+      op: eq
+      value: true
+defect: >
+  Customer-managed KMS key grants kms:Decrypt to broad principals
+  in its key policy.
+infection: >
+  kms:Decrypt is the operation that reads encrypted data. A
+  principal with Decrypt on a key can decrypt ANY ciphertext
+  encrypted with that key — S3 objects, RDS snapshots, EBS
+  volumes, Lambda environment variables, Secrets Manager secrets.
+  Broad Decrypt access means: if the key encrypts production
+  database backups, any principal with broad Decrypt access can
+  read the backup data. The key policy should grant Decrypt only
+  to specific roles that need to read encrypted data — not to
+  the account root, not to role wildcards, and never to
+  Principal "*".
+failure: >
+  Broad decryption access. Any matching principal can decrypt
+  data encrypted with this key — including data from all services
+  using the key.
+tests:
+  - name: decrypt to root with no IAM restriction fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-decrypt-root"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          is_aws_managed: false
+          policy:
+            decrypt_broadly_granted: true
+            decrypt_principals:
+              - "arn:aws:iam::111122223333:root"
+  - name: decrypt to wildcard principal fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-decrypt-star"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          is_aws_managed: false
+          policy:
+            decrypt_broadly_granted: true
+            decrypt_principals:
+              - "*"
+  - name: decrypt scoped to specific role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-decrypt-scoped"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          is_aws_managed: false
+          policy:
+            decrypt_broadly_granted: false
+            decrypt_principals:
+              - "arn:aws:iam::111122223333:role/data-reader"
+  - name: aws-managed key with broad decrypt does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/aws-managed-s3"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          is_aws_managed: true
+          policy:
+            decrypt_broadly_granted: true

@@ -97,15 +97,17 @@ func runNonInteractive(ctx context.Context, w io.Writer, opts nonInteractiveOpts
 
 	fmt.Fprintln(w, "\nGeneration complete.")
 
-	// Validate the generated control YAML.
-	validateGeneratedControl(w, opts.ID, opts.Out)
-
-	return nil
+	// Validate the generated control YAML. Validation errors propagate
+	// so the command fails non-zero rather than silently shipping a
+	// broken control.
+	return validateGeneratedControl(w, opts.ID, opts.Out)
 }
 
 // validateGeneratedControl finds and validates the generated control YAML
-// using the same parsing path as stave validate.
-func validateGeneratedControl(w io.Writer, controlID, outDir string) {
+// using the same parsing path as stave validate. Returns nil on success or
+// when the YAML file cannot be located (skipped); returns a non-nil error
+// when the YAML exists but fails to parse or prepare.
+func validateGeneratedControl(w io.Writer, controlID, outDir string) error {
 	if outDir == "" {
 		outDir = "testdata/e2e"
 	}
@@ -128,27 +130,28 @@ func validateGeneratedControl(w io.Writer, controlID, outDir string) {
 
 	if yamlPath == "" {
 		fmt.Fprintln(w, "\nValidating generated control...  SKIPPED (YAML file not found)")
-		return
+		return nil
 	}
 
 	data, err := fsutil.ReadFileLimited(yamlPath)
 	if err != nil {
 		fmt.Fprintf(w, "\nValidating generated control...  FAILED\n  error: %v\n", err)
-		return
+		return fmt.Errorf("read generated control %s: %w", yamlPath, err)
 	}
 
 	ctl, err := ctlyaml.UnmarshalControlDefinition(data)
 	if err != nil {
 		fmt.Fprintf(w, "\nValidating generated control...  FAILED\n  error: %v\n", err)
 		fmt.Fprintf(w, "\nThe generated control has a schema error. Edit the file and\nrun 'stave validate %s' to verify.\n", yamlPath)
-		return
+		return fmt.Errorf("parse generated control %s: %w", yamlPath, err)
 	}
 
 	if err := ctl.Prepare(); err != nil {
 		fmt.Fprintf(w, "\nValidating generated control...  FAILED\n  error: %v\n", err)
 		fmt.Fprintf(w, "\nThe generated control has a preparation error. Edit the file and\nrun 'stave validate %s' to verify.\n", yamlPath)
-		return
+		return fmt.Errorf("prepare generated control %s: %w", yamlPath, err)
 	}
 
 	fmt.Fprintln(w, "\nValidating generated control...  OK")
+	return nil
 }

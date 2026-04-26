@@ -1,0 +1,148 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.MULTIREGION.NONCOMPLIANT.REGION.001
+name: KMS Multi-Region Key Replicated to Non-Compliant Region
+description: >
+  KMS multi-region key has a replica in a region that does not
+  comply with the data residency requirements applied to the
+  key. Data residency typically constrains where ciphertext
+  may live, but the same constraints almost always extend to
+  the key material — the key material is the cryptographic
+  decision authority for the data, and a key material present
+  in a region is decryption-capable in that region. Even when
+  the encrypted data remains in a compliant region, a replica
+  in a non-compliant region means decryption can occur there:
+  an authorized principal in the non-compliant region can pull
+  ciphertext, decrypt it locally with the replica, and the
+  plaintext exists in the non-compliant region for the
+  duration of that operation. Same data residency
+  inheritance pattern as CTL.S3.BUCKET.REGION.RESIDENCY.001
+  and CTL.RDS.SNAPSHOT.RESIDENCY.001.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "SC-12, SC-13, CP-6"
+  pci_dss_v4.0: "3.5"
+  fedramp_moderate: "SC-12"
+  gdpr: "Art.44"
+  iso_27001_2022: "A.5.34, A.8.24"
+  ccm_v4: ["CEK-03", "DSP-19"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Multi-region key has a replica in a region that does not
+    comply with applicable data residency constraints. Key
+    material is decryption-capable in any region it lives.
+  action: >
+    Identify the offending replica
+    (aws kms describe-key --key-id <id> in the suspect
+    region), confirm with legal/compliance whether residency
+    requirements extend to key material, and either schedule
+    the replica for deletion (aws kms schedule-key-deletion
+    in the non-compliant region) or relocate the workload to
+    permit residency. If business requirements demand
+    cryptographic operations in the region, escalate to
+    revisit residency scope rather than ignore the gap.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "multi_region": {
+          "is_multi_region": true,
+          "replica_regions": ["us-east-1", "eu-west-1"],
+          "has_noncompliant_replica": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.multi_region.is_multi_region
+      op: eq
+      value: true
+    - field: properties.cryptography.multi_region.has_noncompliant_replica
+      op: eq
+      value: true
+defect: >
+  KMS multi-region key has a replica in a region that does
+  not comply with applicable data residency requirements.
+infection: >
+  Data residency requirements typically apply to the
+  encrypted data and to the cryptographic material that can
+  decrypt it. A replica in a non-compliant region means the
+  key material — the decision authority for whether
+  ciphertext becomes plaintext — is present where data
+  processing is not authorized. An authorized principal in
+  the non-compliant region can fetch the ciphertext, ask
+  the local replica to decrypt it, and the plaintext exists
+  in the non-compliant region for the duration of that
+  operation. Even if the workflow does not currently exist,
+  the capability does: a future change to data-pull
+  permissions or a misconfigured cross-region replication
+  silently moves plaintext through a region that residency
+  rules did not authorize. The key's regional placement is
+  load-bearing for the data residency claim; residency
+  requires every replica region to be a compliant region.
+failure: >
+  Decryption capability exists outside the data-residency
+  perimeter. Even if encrypted data stays in compliant
+  regions today, the key material's presence in a non-
+  compliant region creates a latent path for plaintext
+  egress that residency controls cannot detect after the
+  fact.
+tests:
+  - name: multi-region key with non-compliant replica fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-noncompliant-replica"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          multi_region:
+            is_multi_region: true
+            multi_region_type: PRIMARY
+            replica_count: 2
+            replica_regions:
+              - eu-west-1
+              - ap-east-1
+            has_noncompliant_replica: true
+            noncompliant_regions:
+              - ap-east-1
+            compliance_regions:
+              - us-east-1
+              - eu-west-1
+  - name: multi-region key with all replicas in compliant regions passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-compliant-replicas"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          multi_region:
+            is_multi_region: true
+            multi_region_type: PRIMARY
+            replica_count: 1
+            replica_regions:
+              - eu-west-1
+            has_noncompliant_replica: false
+            compliance_regions:
+              - us-east-1
+              - eu-west-1

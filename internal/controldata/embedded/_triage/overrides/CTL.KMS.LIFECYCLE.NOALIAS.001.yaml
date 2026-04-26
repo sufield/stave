@@ -1,0 +1,24 @@
+control: CTL.KMS.LIFECYCLE.NOALIAS.001
+defect: >
+  KMS key has no alias and is referenced only by its key ID.
+infection: >
+  An alias-less key is unmanageable at scale. A key ID like
+  1234abcd-12ab-34cd-56ef-1234567890ab conveys no purpose,
+  owner, or workload — operators reading IAM policies,
+  CloudTrail events, or resource configurations cannot tell
+  whether the key encrypts production data or a developer
+  experiment without resolving the ID separately. The key
+  is no less secure for lacking an alias, but alias-less
+  keys correlate with incomplete provisioning (the workflow
+  that created the key never finished) and lost ownership
+  (no one knows what the key is for, no one is willing to
+  delete it). The downstream effect is governance debt:
+  decommission becomes harder because the key's purpose
+  cannot be confirmed, and key sprawl accumulates because
+  every operator who needs encryption creates a new key
+  rather than discovering an existing one.
+failure: >
+  Governance and operability degraded. The key is
+  unidentifiable in audits, runbooks, and policies; it
+  contributes to key sprawl and resists confident
+  decommission.

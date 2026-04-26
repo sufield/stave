@@ -1,0 +1,133 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ALARM.DELETION.001
+name: KMS Key Has No CloudWatch Alarm for ScheduleKeyDeletion
+description: >
+  KMS key has no CloudWatch alarm wired to a CloudTrail metric
+  filter for the kms:ScheduleKeyDeletion API call.
+  ScheduleKeyDeletion starts the 7-30 day countdown to permanent
+  key destruction — the most destructive KMS operation.
+  CloudTrail records the call by default, but without an alarm
+  the event sits in the log unread until a dependent service
+  fails. Combined with CTL.KMS.STATE.PENDINGDELETION.001, this
+  control is the DETECTION layer: STATE detects the pending state
+  itself; ALARM detects the moment the state is entered, so the
+  team can run CancelKeyDeletion within seconds-to-minutes
+  instead of discovering the change days later. Distinct from
+  CTL.KMS.STATE.PENDINGDELETION.001 (asserts state, fires after
+  the fact) and CTL.KMS.DELETION.MINWAIT.001 (asserts waiting
+  window length, configuration).
+domain: detection
+severity: critical
+compliance:
+  cis_aws_v3.0: "4.7"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.4.1"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08", "CEK-03"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.alarms.has_schedule_deletion_alarm
+remediation:
+  description: >
+    No CloudWatch alarm monitors CloudTrail for ScheduleKeyDeletion
+    on this key. Key deletion can be initiated without real-time
+    notification.
+  action: >
+    Create a CloudTrail metric filter on eventName =
+    ScheduleKeyDeletion and a CloudWatch alarm with an SNS
+    notification action — aws logs put-metric-filter
+    --filter-pattern '{ $.eventName = "ScheduleKeyDeletion" }'
+    followed by aws cloudwatch put-metric-alarm with a SNS topic
+    that pages on-call. Alarm threshold should be 1 (any
+    occurrence) and the period should be the smallest available
+    (60s) so notification fires within minutes of the API call.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "alarms": {
+          "has_schedule_deletion_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.alarms.has_schedule_deletion_alarm
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors ScheduleKeyDeletion API calls on
+  this key.
+infection: >
+  ScheduleKeyDeletion starts a 7-30 day countdown to permanent
+  key deletion. Once the countdown expires, the key and all data
+  encrypted with it are permanently irrecoverable. Without a
+  real-time alarm: an insider schedules deletion of the
+  production encryption key on Friday evening; nobody notices
+  until Monday when dependent services fail. By Monday, two of
+  seven deletion-window days have passed. If the window was set
+  to 7 days (minimum), five days remain. If nobody notices until
+  day 7, the key is permanently deleted. A CloudTrail metric
+  filter plus CloudWatch alarm on ScheduleKeyDeletion provides
+  seconds-to-minutes notification — the team can
+  CancelKeyDeletion immediately and prevent permanent data loss.
+failure: >
+  Undetected key deletion. A key can be scheduled for permanent
+  deletion without real-time notification, leaving only the
+  deletion window between the API call and irreversible data
+  loss across every dependent service.
+tests:
+  - name: key without ScheduleKeyDeletion alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-deletion-alarm"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_schedule_deletion_alarm: false
+  - name: key with ScheduleKeyDeletion alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-deletion-alarmed"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_schedule_deletion_alarm: true
+  - name: pending-deletion key without alarm fires (compound with KMS-1)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-pending-no-alarm"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          lifecycle:
+            pending_deletion: true
+          alarms:
+            has_schedule_deletion_alarm: false

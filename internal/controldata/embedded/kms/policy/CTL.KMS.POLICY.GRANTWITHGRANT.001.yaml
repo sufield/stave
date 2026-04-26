@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.POLICY.GRANTWITHGRANT.001
+name: KMS Key Allows GrantWithGrant Delegation Chains
+description: >
+  KMS key policy grants kms:CreateGrant AND at least one existing
+  grant on the key includes GrantWithGrant in its operations or
+  retiring-principal constraints — enabling a chain of delegation.
+  Principal A creates a grant for Principal B with GrantWithGrant.
+  Principal B creates a grant for Principal C. Principal C creates
+  a grant for Principal D. The key's effective access becomes a
+  chain that is invisible from the key policy alone and grows
+  without further policy changes.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "7.2.1"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "IAM-05"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.policy.allows_grant_with_grant
+  - cryptography.policy.grant_chain_depth
+  - cryptography.policy.create_grant_principals
+remediation:
+  description: >
+    KMS key has CreateGrant permission combined with grants that
+    include GrantWithGrant — allowing delegation chains that
+    cannot be audited from the key policy.
+  action: >
+    Audit existing grants with aws kms list-grants --key-id KEY
+    and retire any grant whose Operations include "GrantWithGrant"
+    unless explicitly required. Restrict CreateGrant in the key
+    policy to specific service-linked roles; deny the chain by
+    forbidding GrantWithGrant in newly created grants.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "policy": {
+          "allows_grant_with_grant": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.policy.allows_grant_with_grant
+      op: eq
+      value: true
+defect: >
+  KMS key has CreateGrant permissions and active grants whose
+  operations include GrantWithGrant.
+infection: >
+  Grants are a secondary access mechanism for KMS keys, separate
+  from the key policy. CreateGrant lets a principal delegate key
+  access to another principal. GrantWithGrant lets the delegate
+  delegate further — creating chains. Grant chains are not visible
+  in the key policy (grants live in a separate API surface), are
+  not depth-limited (A→B→C→D→...), require ListGrants to audit,
+  and create an expanding access surface that grows without
+  policy changes. An attacker with CreateGrant + GrantWithGrant
+  can silently expand key access to any principal in any account
+  without modifying the key policy.
+failure: >
+  Unauditable access delegation. Key access can be silently
+  expanded through grant chains without modifying the key
+  policy.
+tests:
+  - name: key with grant-with-grant chain fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-grant-chain"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            allows_grant_with_grant: true
+            grant_chain_depth: 3
+            create_grant_principals:
+              - "arn:aws:iam::111122223333:role/grantor-role"
+  - name: key with createGrant but no grant-with-grant passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-grant-leaf"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            allows_grant_with_grant: false
+            grant_chain_depth: 1
+            create_grant_principals:
+              - "arn:aws:iam::111122223333:role/svc-grantor"

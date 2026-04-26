@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ALARM.ROTATION.FAILURE.001
+name: KMS Key Has No CloudWatch Alarm for Rotation Events
+description: >
+  KMS key has no CloudWatch alarm wired to KMS key rotation
+  events. Rotation events indicate the key material was rotated
+  — expected annually if auto-rotation is enabled. A FAILED
+  rotation means the key material did NOT change, so the old
+  material continues past its intended lifetime. An UNEXPECTED
+  rotation (manual rotation outside the schedule) may indicate
+  a compromise response or unauthorized activity. Distinct
+  from CTL.KMS.ROTATION.001 (asserts auto-rotation is enabled,
+  configuration): this control fires on the missing detection
+  wiring around rotation events themselves.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.4.1"
+  soc2: "CC7.2"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["LOG-08", "CEK-15"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.alarms.has_rotation_alarm
+remediation:
+  description: >
+    No CloudWatch alarm monitors KMS key rotation events.
+    Rotation failures or unexpected rotations are invisible
+    until a manual rotation audit.
+  action: >
+    Create a CloudTrail metric filter on eventName =
+    RotateKeyOnDemand and EnableKeyRotation/DisableKeyRotation,
+    plus the AWS/KMS RotationFailure metric where available.
+    A CloudWatch alarm on the resulting metrics with an SNS
+    notification action surfaces unexpected or failed rotations
+    in real time. Route to the cryptography or platform team
+    for follow-up.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "alarms": {
+          "has_rotation_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.alarms.has_rotation_alarm
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors KMS key rotation events on this
+  key.
+infection: >
+  Rotation events indicate the key material was rotated —
+  which is expected annually if auto-rotation is enabled. But
+  a FAILED rotation or UNEXPECTED rotation (manual rotation
+  outside the schedule) should be investigated. A failed
+  rotation means the key material continues past its intended
+  lifetime, undermining the rotation control. An unexpected
+  manual rotation may be a compromise response or an
+  attacker rotating the key to disrupt envelope-decrypt
+  capabilities. Without an alarm, rotation success/failure is
+  invisible — and the team only learns of a rotation gap from
+  a downstream compliance audit months later.
+failure: >
+  Undetected rotation events. Failed or unexpected rotations
+  proceed without notification, undermining the cryptographic
+  hygiene the rotation policy is meant to provide.
+tests:
+  - name: key without rotation alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-rotation-alarm"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_rotation_alarm: false
+  - name: key with rotation alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-rotation-alarmed"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_rotation_alarm: true

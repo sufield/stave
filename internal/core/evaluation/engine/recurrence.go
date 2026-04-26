@@ -48,6 +48,9 @@ func EvaluateRecurrenceForControl(
 		}
 	}
 
+	// p.Limit is the violation threshold: reaching exactly Limit
+	// occurrences inside the window triggers a violation. Counts below
+	// Limit are within the configured tolerance.
 	if count < p.Limit {
 		return nil
 	}

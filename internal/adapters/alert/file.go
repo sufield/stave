@@ -12,9 +12,10 @@ import (
 
 // FileSink appends JSONL alerts to a file.
 type FileSink struct {
-	Path string
-	mu   sync.Mutex
-	f    *os.File
+	Path   string
+	mu     sync.Mutex
+	f      *os.File
+	closed bool
 }
 
 var _ ports.AlertSink = (*FileSink)(nil)
@@ -23,6 +24,10 @@ var _ ports.AlertSink = (*FileSink)(nil)
 func (s *FileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if s.closed {
+		return errSinkClosed
+	}
 
 	if s.f == nil {
 		f, err := os.OpenFile(s.Path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gosec // user-specified path
@@ -41,12 +46,15 @@ func (s *FileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 	return err
 }
 
-// Close flushes and closes the file.
+// Close flushes and closes the file. Subsequent Emit calls return errSinkClosed.
 func (s *FileSink) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.f != nil {
-		return s.f.Close()
+	s.closed = true
+	if s.f == nil {
+		return nil
 	}
-	return nil
+	err := s.f.Close()
+	s.f = nil
+	return err
 }

@@ -67,14 +67,17 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 	if s.Evidence.Misconfigurations[0].Property.String() != "properties.storage.access.public_read" {
 		t.Errorf("Misconfigurations[0].Property changed")
 	}
+	wantStmt := func(orig string) string { return "SANITIZED_" + crypto.ShortToken(orig) }
 	for i, v := range s.Evidence.SourceEvidence.IdentityStatements {
-		if v != "[SANITIZED]" {
-			t.Errorf("IdentityStatements[%d] = %q, want [SANITIZED]", i, v)
+		want := kernel.StatementID(wantStmt(string(stmts[i])))
+		if v != want {
+			t.Errorf("IdentityStatements[%d] = %q, want %q", i, v, want)
 		}
 	}
 	for i, v := range s.Evidence.SourceEvidence.ResourceGrantees {
-		if v != "[SANITIZED]" {
-			t.Errorf("ResourceGrantees[%d] = %q, want [SANITIZED]", i, v)
+		want := kernel.GranteeID(wantStmt(string(grantees[i])))
+		if v != want {
+			t.Errorf("ResourceGrantees[%d] = %q, want %q", i, v, want)
 		}
 	}
 	if s.Evidence.TemporalRisk != findings[0].Evidence.TemporalRisk {

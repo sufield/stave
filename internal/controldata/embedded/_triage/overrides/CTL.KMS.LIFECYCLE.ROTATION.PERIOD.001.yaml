@@ -1,0 +1,24 @@
+control: CTL.KMS.LIFECYCLE.ROTATION.PERIOD.001
+defect: >
+  KMS key rotation period exceeds the cadence required by
+  the applicable compliance profile.
+infection: >
+  Rotation cadence bounds the amount of data encrypted under
+  any single key version and the recovery window after a key
+  compromise. A 365-day period under a 90-day requirement
+  means roughly four times the data exposed per version and
+  four times the recovery work after a breach: every
+  ciphertext encrypted in that window must be re-encrypted
+  under the new key version, and any compromised version's
+  exposure window is four times longer than the profile
+  permits. The compliance gap is silent — the key has
+  rotation enabled, the console reports rotation healthy,
+  yet the cadence does not satisfy the profile attached to
+  the key. Detection requires correlating the key's
+  rotation period with the profile's required cadence; this
+  is a profile-conditioned check, not a fixed threshold.
+failure: >
+  Rotation cadence violates the compliance profile's
+  requirement. Each key version covers a longer interval
+  than permitted, expanding the data-at-risk envelope per
+  rotation cycle.

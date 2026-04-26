@@ -64,7 +64,10 @@ func (s *ObservationStats) RecordObservation(t time.Time) error {
 		s.observationCount = 1
 		return nil
 	}
-	if t.Before(s.prevSeenAt) {
+	// Skip out-of-order or duplicate timestamps. A duplicate carries no
+	// new coverage information, so counting it would inflate
+	// observationCount without advancing the coverage span.
+	if !t.After(s.prevSeenAt) {
 		return nil
 	}
 	if gap := t.Sub(s.prevSeenAt); gap > s.maxGap {

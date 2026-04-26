@@ -1,0 +1,155 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.MULTIREGION.POLICY.MISMATCH.001
+name: KMS Multi-Region Key Replicas Have Inconsistent Key Policies
+description: >
+  KMS multi-region key has replicas in other regions whose key
+  policies differ from the primary's. The same key material is
+  present in multiple regions but the access control surface is
+  not — principals authorized to use the key in one region may
+  be unauthorized in another, or worse, principals denied at the
+  primary may be permitted at a replica. Because every replica
+  shares the primary's key material, ciphertext encrypted in any
+  region can be decrypted in any region whose replica grants
+  Decrypt to the caller. The effective access control for data
+  encrypted with this key is the weakest replica policy. Same
+  cryptographic-boundary-collapse pattern as
+  CTL.DYNAMODB.GLOBAL.ENCRYPT.MISMATCH.001 and
+  CTL.RDS.AURORA.GLOBAL.UNENCRYPTED.001 applied to the key-
+  policy layer.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3, SC-12"
+  pci_dss_v4.0: "3.5"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "IAM-16"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Multi-region key replicas have inconsistent key policies.
+    The weakest replica policy determines effective access to
+    every ciphertext encrypted with the key.
+  action: >
+    Standardize the key policy across the primary and all
+    replicas. KMS does not automatically replicate key
+    policies — every region's policy must be put explicitly.
+    Establish a single policy template, apply it via
+    aws kms put-key-policy in every region the key exists,
+    and gate future changes with a deployment pipeline that
+    updates all replicas atomically. If the regional
+    differences are intentional (e.g., region-specific
+    service principals), document them and confirm that the
+    weakest policy is acceptable for the data the key
+    protects.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "multi_region": {
+          "is_multi_region": true,
+          "replica_policies_consistent": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.multi_region.is_multi_region
+      op: eq
+      value: true
+    - field: properties.cryptography.multi_region.replica_policies_consistent
+      op: eq
+      value: false
+defect: >
+  KMS multi-region key has replicas in other regions whose key
+  policies differ from the primary's.
+infection: >
+  Multi-region keys share the same key material across regions
+  — ciphertext encrypted with the primary can be decrypted
+  with any replica. If the primary in us-east-1 has a
+  restrictive policy (Decrypt only for specific production
+  roles) but the replica in ap-southeast-1 has a broad policy
+  (Decrypt for account root or for a wider principal set), an
+  attacker uses the replica's policy to decrypt data
+  originally encrypted with the primary. The data is the same.
+  The key material is the same. The access control is
+  different. Detection is hard because every region's audit
+  trail looks locally compliant — the primary's CloudTrail
+  shows narrow Decrypt usage, the replica's CloudTrail shows
+  the broad Decrypt that no one was looking at because the
+  replica was assumed to mirror the primary. The weakest
+  replica policy is the effective access control for all data
+  encrypted with the key.
+failure: >
+  Inconsistent access control across regions. The weakest
+  replica policy determines effective access to encrypted data
+  — the key's protection is upper-bounded by the most
+  permissive region.
+tests:
+  - name: multi-region key with mismatched policies fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-policy-mismatch"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          multi_region:
+            is_multi_region: true
+            multi_region_type: PRIMARY
+            replica_count: 1
+            replica_regions:
+              - ap-southeast-1
+            replica_policies_consistent: false
+  - name: multi-region key with consistent policies passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-policy-aligned"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          multi_region:
+            is_multi_region: true
+            multi_region_type: PRIMARY
+            replica_count: 2
+            replica_regions:
+              - us-west-2
+              - eu-west-1
+            replica_policies_consistent: true
+  - name: multi-region key with partial mismatch (2 of 3 match) fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-partial-mismatch"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          multi_region:
+            is_multi_region: true
+            multi_region_type: PRIMARY
+            replica_count: 3
+            replica_regions:
+              - us-west-2
+              - eu-west-1
+              - ap-southeast-1
+            replica_policies_consistent: false

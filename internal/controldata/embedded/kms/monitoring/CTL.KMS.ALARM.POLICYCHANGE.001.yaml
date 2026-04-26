@@ -1,0 +1,128 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ALARM.POLICYCHANGE.001
+name: KMS Key Has No CloudWatch Alarm for PutKeyPolicy
+description: >
+  KMS key has no CloudWatch alarm wired to a CloudTrail metric
+  filter for the kms:PutKeyPolicy API call. PutKeyPolicy
+  replaces the entire key policy document — the access control
+  for who may use the key. A single API call can grant Decrypt
+  to new principals, add Principal "*", grant cross-account
+  access, remove condition keys, or grant GrantWithGrant. Key
+  policy changes don't affect existing ciphertexts, but they
+  change WHO can decrypt that data going forward. Without a
+  real-time alarm, key policy modifications are invisible until
+  the next manual audit. Distinct from
+  CTL.KMS.POLICY.ADMIN.BROAD.001 (asserts the resulting
+  permission breadth) and CTL.KMS.POLICY.001 (asserts the
+  presence of Principal "*"): this control fires on the missing
+  detection wiring so the policy change itself is caught at the
+  moment it happens.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "4.6"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.4.1"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08", "IAM-05"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.alarms.has_put_key_policy_alarm
+remediation:
+  description: >
+    No CloudWatch alarm monitors CloudTrail for PutKeyPolicy on
+    this key. Key policy modifications — including grants to
+    Principal "*" or to external accounts — are invisible until
+    a manual audit.
+  action: >
+    Create a CloudTrail metric filter on eventName =
+    PutKeyPolicy and a CloudWatch alarm with an SNS notification
+    action. Threshold should be 1 (any occurrence) and the
+    period should be 60s so the security team is notified
+    immediately. Consider routing the notification to both
+    on-call and the audit logging system so the change is
+    triaged AND retained for retrospective review.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "alarms": {
+          "has_put_key_policy_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.alarms.has_put_key_policy_alarm
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors PutKeyPolicy API calls on this
+  key.
+infection: >
+  PutKeyPolicy replaces the key's entire policy document. A
+  single API call can: add Principal "*" (any AWS account can
+  use the key), remove all condition keys (ViaService,
+  EncryptionContext, CallerAccount), add cross-account access
+  to an attacker's account, or remove the key administrator's
+  own access (locking themselves out — the key becomes
+  unmanageable). Key policy changes don't affect existing
+  encrypted data — but they change WHO can decrypt that data
+  going forward. An attacker with PutKeyPolicy can silently
+  grant themselves Decrypt access to all data encrypted with
+  the key.
+failure: >
+  Undetected access control change. Key policy modified — who
+  can use the key for encryption and decryption changed without
+  notification.
+tests:
+  - name: key without PutKeyPolicy alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-policy-alarm"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_put_key_policy_alarm: false
+  - name: key with PutKeyPolicy alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-policy-alarmed"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_put_key_policy_alarm: true
+  - name: key with broad admin AND no policy alarm fires (compound with KMS-2)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-broadadmin-no-alarm"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            has_broad_admin: true
+          alarms:
+            has_put_key_policy_alarm: false

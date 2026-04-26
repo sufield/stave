@@ -1,0 +1,160 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.CROSSACCOUNT.BLASTRADIUS.001
+name: KMS Key Shared with Excessive Number of External Accounts
+description: >
+  KMS key policy grants access to more than five external AWS
+  accounts. The key's blast radius spans many accounts in both
+  directions: if the key is compromised, disabled, or deleted,
+  every sharing account that depends on it is affected; if any
+  one of the sharing accounts is compromised, the attacker
+  acquires cryptographic operations on data in every other
+  sharing account. The blast radius grows roughly quadratically
+  in the number of sharing accounts — N accounts means N
+  populations of data at risk if the key fails, and N
+  independent compromise paths to the key if any account is
+  breached. Distinct from CTL.KMS.POLICY.CROSSACCOUNT.001
+  (asserts the presence of conditions on cross-account access)
+  — that control checks the protective semantics of the policy;
+  this control checks the topology of who is sharing,
+  regardless of whether conditions are present. Threshold of
+  five is a heuristic that accommodates legitimate centralized
+  patterns (organization logging key, shared encryption key for
+  a small multi-account application) while flagging the cases
+  where centralization has eroded into sprawl.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, AC-6"
+  pci_dss_v4.0: "3.5, 7.1"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.24"
+  ccm_v4: ["CEK-03", "IAM-16"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: organization
+    multiplier: 2.5
+remediation:
+  description: >
+    KMS key policy grants access to more than five external
+    accounts. The key's blast radius spans many accounts in
+    both directions.
+  action: >
+    Audit the cross-account principals in the key policy
+    (aws kms get-key-policy --key-id <id> --policy-name
+    default). For each external account, determine whether
+    the access is still required and whether a per-account
+    or per-tenant key would isolate the blast radius. The
+    typical fix is to split the key by tenant or by
+    workload — one key per account or per logical group of
+    accounts — rather than continue to centralize. If a
+    single shared key remains necessary (e.g., a logging
+    pipeline that genuinely spans the organization),
+    document the residual blast radius and add cross-
+    account decryption monitoring
+    (CTL.KMS.ALARM.CROSSACCOUNT.001) to compensate.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "cross_account": {
+          "account_count": 2,
+          "excessive": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.cross_account.excessive
+      op: eq
+      value: true
+defect: >
+  KMS key is shared with more than five external accounts.
+infection: >
+  Each account with key access increases the blast radius in
+  both directions. Key compromise affects all accounts that
+  use it — any account's data encrypted with the key is at
+  risk. Account compromise in any one sharing account
+  provides access to the key — the compromised account can
+  Decrypt data from every other sharing account using the
+  same key. A key shared with 10 accounts means 10
+  populations of data at risk if the key is compromised, and
+  any one of 10 account compromises provides key access. The
+  blast radius grows quadratically with the number of
+  sharing accounts. Detection is hard because the abuse
+  looks normal — a Decrypt call from one of the authorized
+  sharing accounts is policy-compliant — and the key's
+  CloudTrail does not distinguish between an account using
+  its own data and an account using another sharing
+  account's data through the same key.
+failure: >
+  Excessive cross-account blast radius. Key compromise or any
+  one sharing account's compromise affects every other
+  account that shares the key.
+tests:
+  - name: key shared with 8 accounts fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-shared-eight"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          cross_account:
+            account_count: 8
+            excessive: true
+            account_ids:
+              - "222233334444"
+              - "333344445555"
+              - "444455556666"
+              - "555566667777"
+              - "666677778888"
+              - "777788889999"
+              - "888899990000"
+              - "999900001111"
+  - name: key shared with 2 accounts passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-shared-two"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          cross_account:
+            account_count: 2
+            excessive: false
+            account_ids:
+              - "222233334444"
+              - "333344445555"
+  - name: key shared with 5 accounts at threshold passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-shared-threshold"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          cross_account:
+            account_count: 5
+            excessive: false
+            account_ids:
+              - "222233334444"
+              - "333344445555"
+              - "444455556666"
+              - "555566667777"
+              - "666677778888"

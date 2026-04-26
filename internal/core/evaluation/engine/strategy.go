@@ -296,6 +296,9 @@ func (s *unsupportedStrategy) Evaluate(t *asset.ExposureLifecycle, _ time.Time, 
 // --- Internal Helpers ---
 
 func newControlRow(ctl *policy.ControlDefinition, t *asset.ExposureLifecycle) evaluation.ResourceCheck {
+	if t == nil {
+		return evaluation.ResourceCheck{ControlID: ctl.ID}
+	}
 	resType := t.Asset().Type
 	return evaluation.ResourceCheck{
 		ControlID:   ctl.ID,

@@ -45,19 +45,18 @@ func (c *Compiler) Compile(pred policy.UnsafePredicate) (CompiledPredicate, erro
 	if err != nil {
 		return CompiledPredicate{}, fmt.Errorf("predicate to expression: %w", err)
 	}
-	if expr == "" {
-		expr = "true" // Empty predicate = always-pass (no rules = compliant)
-	}
 
-	// Check cache
+	// Fast path: read-locked cache lookup.
 	c.mu.RLock()
-	if cached, ok := c.cache[expr]; ok {
-		c.mu.RUnlock()
+	cached, ok := c.cache[expr]
+	c.mu.RUnlock()
+	if ok {
 		return cached, nil
 	}
-	c.mu.RUnlock()
 
-	// Compile
+	// Compile under no lock — env.Compile is safe to call concurrently and
+	// holding the write lock during compilation would serialize all
+	// compiles across goroutines.
 	ast, issues := c.env.Compile(expr)
 	if issues != nil && issues.Err() != nil {
 		return CompiledPredicate{}, fmt.Errorf("compile CEL expression: %w\n  expression: %s", issues.Err(), expr)
@@ -70,8 +69,14 @@ func (c *Compiler) Compile(pred policy.UnsafePredicate) (CompiledPredicate, erro
 
 	result := CompiledPredicate{Program: prg, Expression: expr}
 
-	// Cache
+	// Double-checked write: another goroutine may have populated the
+	// cache while we were compiling. Prefer the existing entry to keep
+	// program identity stable for any callers that compared earlier.
 	c.mu.Lock()
+	if existing, exists := c.cache[expr]; exists {
+		c.mu.Unlock()
+		return existing, nil
+	}
 	c.cache[expr] = result
 	c.mu.Unlock()
 
@@ -199,20 +204,29 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 	case predicate.OpListEmpty:
 		return fmt.Sprintf("(!(%s) || size(%s) == 0)", hf, fa), nil
 	case predicate.OpNeqField:
+		// Cross-field inequality. Both fields must exist for the
+		// comparison to be meaningful — a missing target is treated as
+		// "safe" (no violation by absence) so the negative operators
+		// share a single, predictable convention.
 		other := fmt.Sprint(val)
 		ofa := scopedFieldAccess(other, scopeVar)
 		ohf := scopedHasField(other, scopeVar)
-		return fmt.Sprintf("(%s && (!(%s) || %s != %s))", hf, ohf, fa, ofa), nil
+		return fmt.Sprintf("(%s && %s && %s != %s)", hf, ohf, fa, ofa), nil
 	case predicate.OpNotInField:
+		// "source not in target list". Both fields must exist; missing
+		// data does not produce a violation. Mirrors OpNeqField.
 		other := fmt.Sprint(val)
 		ofa := scopedFieldAccess(other, scopeVar)
 		ohf := scopedHasField(other, scopeVar)
-		return fmt.Sprintf("(!(%s) || !(%s) || !(%s in %s))", hf, ohf, fa, ofa), nil
+		return fmt.Sprintf("(%s && %s && !(%s in %s))", hf, ohf, fa, ofa), nil
 	case predicate.OpNotSubsetOfField:
+		// "source list not subset of target list". Both must exist;
+		// missing data does not produce a violation. Mirrors the other
+		// negative cross-field operators.
 		other := fmt.Sprint(val)
 		ofa := scopedFieldAccess(other, scopeVar)
 		ohf := scopedHasField(other, scopeVar)
-		return fmt.Sprintf("(%s && %s.exists(x, !(%s) || !(x in %s)))", hf, fa, ohf, ofa), nil
+		return fmt.Sprintf("(%s && %s && %s.exists(x, !(x in %s)))", hf, ohf, fa, ofa), nil
 	case predicate.OpAnyInField:
 		// field.exists(x, x in other_field) — true when the field (a list)
 		// has at least one element that also appears in another field's

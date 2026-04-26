@@ -1,0 +1,22 @@
+id: kms_multiregion_weak
+description: >
+  Inconsistent replica policies plus either a non-compliant
+  replica region or no replicas at all. The multi-region key
+  has either a configuration that defeats the point (no
+  replicas) or replicas placed where they should not be (non-
+  compliant region) AND the policies across regions do not
+  match. The combination means the key has divergent access
+  control while also having topology that contradicts its
+  documented purpose. Threshold of 2 fires when at least two
+  of the three multi-region failure modes coexist on the same
+  key.
+controls:
+  - CTL.KMS.MULTIREGION.POLICY.MISMATCH.001
+  - CTL.KMS.MULTIREGION.NONCOMPLIANT.REGION.001
+  - CTL.KMS.MULTIREGION.NOREPLICA.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - encryption_bypass

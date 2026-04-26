@@ -1,0 +1,20 @@
+control: CTL.KMS.GRANT.EXCESSIVE.001
+defect: >
+  KMS key has more than 100 active grants.
+infection: >
+  Grants are a secondary access-control mechanism for KMS keys.
+  Each grant authorizes a principal to perform specific
+  cryptographic operations. AWS services that use grants (EBS,
+  RDS, Redshift) typically create one grant per resource and
+  retire it when the resource is deleted. When grant counts grow
+  without bound, the symptom is incomplete retirement: workflows
+  create grants but never delete them. The result is an access
+  surface that no one is accountable for, with grants pointing
+  at principals that may have been deleted or repurposed. The
+  grant API does not surface granular permission state the way
+  an IAM policy does, so reviewing 100+ grants by hand is not
+  feasible.
+failure: >
+  Grant surface unauditable. The set of principals authorized
+  to use the key cannot be determined by reading the key policy
+  or by manual review of the grant list.

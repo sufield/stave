@@ -30,12 +30,15 @@ func (h ExposureHistory) Count() int {
 	return len(h.windows)
 }
 
-// RecurringViolationCount returns count of windows that started in the time range.
+// RecurringViolationCount returns the count of windows whose start falls
+// inside the half-open range [w.Start, w.End). The lower bound is
+// inclusive — a window opened exactly at w.Start is counted — to match
+// WindowSummary's overlap semantics.
 func (h ExposureHistory) RecurringViolationCount(w kernel.TimeWindow) int {
 	var count int
 	for _, window := range h.windows {
 		start := window.OpenedAt()
-		if !start.After(w.Start) {
+		if start.Before(w.Start) {
 			continue
 		}
 		if !start.Before(w.End) {

@@ -1,0 +1,19 @@
+control: CTL.KMS.POLICY.DECRYPT.BROAD.001
+defect: >
+  Customer-managed KMS key grants kms:Decrypt to broad principals
+  in its key policy.
+infection: >
+  kms:Decrypt is the operation that reads encrypted data. A
+  principal with Decrypt on a key can decrypt ANY ciphertext
+  encrypted with that key — S3 objects, RDS snapshots, EBS
+  volumes, Lambda environment variables, Secrets Manager secrets.
+  Broad Decrypt access means: if the key encrypts production
+  database backups, any principal with broad Decrypt access can
+  read the backup data. The key policy should grant Decrypt only
+  to specific roles that need to read encrypted data — not to
+  the account root, not to role wildcards, and never to
+  Principal "*".
+failure: >
+  Broad decryption access. Any matching principal can decrypt
+  data encrypted with this key — including data from all services
+  using the key.

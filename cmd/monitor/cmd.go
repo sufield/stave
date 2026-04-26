@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -110,13 +111,17 @@ func runMonitor(ctx context.Context, stdout, _ io.Writer, opts *options) error {
 		}
 		var slaDeadlines map[string]float64
 		if opts.SLAFile != "" {
-			if pol, slaErr := infraSLA.LoadFromFile(opts.SLAFile); slaErr == nil {
-				slaDeadlines = map[string]float64{
-					"critical": pol.DeadlineHoursFor("critical"),
-					"high":     pol.DeadlineHoursFor("high"),
-					"medium":   pol.DeadlineHoursFor("medium"),
-					"low":      pol.DeadlineHoursFor("low"),
-				}
+			pol, slaErr := infraSLA.LoadFromFile(opts.SLAFile)
+			if slaErr != nil {
+				// User explicitly named a file — failing silently here
+				// would leave SLA deadlines nil with no diagnostic.
+				return nil, fmt.Errorf("load sla profile %s: %w", opts.SLAFile, slaErr)
+			}
+			slaDeadlines = map[string]float64{
+				"critical": pol.DeadlineHoursFor("critical"),
+				"high":     pol.DeadlineHoursFor("high"),
+				"medium":   pol.DeadlineHoursFor("medium"),
+				"low":      pol.DeadlineHoursFor("low"),
 			}
 		}
 		state := appmon.Build(appmon.BuildInput{
@@ -169,8 +174,14 @@ func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState
 	watcher, watchErr := fsnotify.NewWatcher()
 	if watchErr == nil {
 		defer func() { _ = watcher.Close() }()
-		_ = watcher.Add(opts.HistoryDir)
-		fsCh = watcher.Events
+		if addErr := watcher.Add(opts.HistoryDir); addErr != nil {
+			// Watcher creation succeeded but the directory could not be
+			// added — fall back to ticker-only refresh and tell the
+			// user why interactive refresh is degraded.
+			fmt.Fprintf(stdout, "Warning: filesystem watch disabled (%v); using --refresh interval only.\n", addErr)
+		} else {
+			fsCh = watcher.Events
+		}
 	}
 	// If fsnotify unavailable, fsCh is nil — select ignores nil channels.
 
@@ -195,14 +206,18 @@ func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState
 			if ok && ev.Op&fsnotify.Create != 0 && strings.HasSuffix(ev.Name, ".json") {
 				// Small delay to let file finish writing.
 				time.Sleep(200 * time.Millisecond)
-				_ = renderOnce(ctx, stdout, opts, loadState)
+				if err := renderOnce(ctx, stdout, opts, loadState); err != nil {
+					fmt.Fprintf(stdout, "\nRefresh error (fsnotify): %v\n", err)
+				}
 			}
 		case key := <-keyCh:
 			switch key {
 			case 'q', 'Q', 3: // q, Q, or Ctrl+C
 				return nil
 			case 'r', 'R':
-				_ = renderOnce(ctx, stdout, opts, loadState)
+				if err := renderOnce(ctx, stdout, opts, loadState); err != nil {
+					fmt.Fprintf(stdout, "\nRefresh error (manual): %v\n", err)
+				}
 			}
 		case <-ticker.C:
 			if err := renderOnce(ctx, stdout, opts, loadState); err != nil {
@@ -261,15 +276,29 @@ func loadAssessments(ctx context.Context, dir string) ([]*report.Assessment, err
 	}
 	loader := artifact.NewLoader()
 	var out []*report.Assessment
+	var skipped int
+	var firstSkipErr error
 	for _, e := range entries {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
 			continue
 		}
 		a, loadErr := loader.Evaluation(ctx, filepath.Join(dir, e.Name()))
 		if loadErr != nil {
+			skipped++
+			if firstSkipErr == nil {
+				firstSkipErr = fmt.Errorf("%s: %w", e.Name(), loadErr)
+			}
 			continue
 		}
 		out = append(out, a)
+	}
+	if skipped > 0 {
+		// Surface the count via a slog warning so live mode can render a
+		// footer note and json/plain modes log it to stderr; the loader
+		// keeps returning the partial list so monitoring degrades
+		// gracefully when a single file is corrupt.
+		slog.Warn("assessment history: skipped unreadable files",
+			"skipped", skipped, "loaded", len(out), "first_error", firstSkipErr)
 	}
 	return out, nil
 }

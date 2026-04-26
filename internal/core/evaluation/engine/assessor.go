@@ -16,6 +16,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/platform/crypto"
 )
 
 // Assessor orchestrates the evaluation of security controls against cloud resource states.
@@ -50,6 +51,7 @@ type Assessor struct {
 func NewAssessor() *Assessor {
 	return &Assessor{
 		Logger:          slog.Default(),
+		Hasher:          crypto.NewHasher(),
 		ContinuityLimit: DefaultContinuityLimit,
 		Confidence:      evaluation.DefaultConfidenceCalculator(),
 	}

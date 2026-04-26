@@ -1,0 +1,24 @@
+control: CTL.KMS.CROSSACCOUNT.BLASTRADIUS.001
+defect: >
+  KMS key is shared with more than five external accounts.
+infection: >
+  Each account with key access increases the blast radius in
+  both directions. Key compromise affects all accounts that
+  use it — any account's data encrypted with the key is at
+  risk. Account compromise in any one sharing account
+  provides access to the key — the compromised account can
+  Decrypt data from every other sharing account using the
+  same key. A key shared with 10 accounts means 10
+  populations of data at risk if the key is compromised, and
+  any one of 10 account compromises provides key access. The
+  blast radius grows quadratically with the number of
+  sharing accounts. Detection is hard because the abuse
+  looks normal — a Decrypt call from one of the authorized
+  sharing accounts is policy-compliant — and the key's
+  CloudTrail does not distinguish between an account using
+  its own data and an account using another sharing
+  account's data through the same key.
+failure: >
+  Excessive cross-account blast radius. Key compromise or
+  any one sharing account's compromise affects every other
+  account that shares the key.

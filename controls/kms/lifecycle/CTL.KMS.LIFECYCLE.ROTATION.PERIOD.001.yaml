@@ -1,0 +1,149 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.LIFECYCLE.ROTATION.PERIOD.001
+name: KMS Key Rotation Period Exceeds Compliance Requirement
+description: >
+  KMS key has automatic rotation enabled, but the configured
+  rotation period exceeds the rotation cadence required by an
+  applicable compliance profile. The AWS default is 365 days;
+  KMS now supports configurable rotation periods between 90 and
+  2560 days. Some compliance interpretations and many internal
+  policies require shorter cadences — 90 days is the common
+  floor — to limit the volume of data encrypted under any
+  single key version and to bound the recovery window after a
+  key compromise. This control is profile-conditioned: it
+  fires only when a compliance tag or compliance profile is
+  present on the key AND the configured period exceeds the
+  required period. Same compliance-profile pattern as
+  CTL.RDS.BACKUP.RETENTION.COMPLIANCE.001 — the requirement
+  comes from the profile, not from a single fixed threshold.
+  Distinct from CTL.KMS.ROTATION.001 (asserts rotation is
+  enabled at all): this control assumes rotation is on and
+  asserts the period is short enough.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, SC-12"
+  pci_dss_v4.0: "3.6"
+  fedramp_moderate: "SC-12"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "CEK-05"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    KMS key rotation period exceeds the cadence required by
+    the compliance profile applied to the key.
+  action: >
+    Reduce the rotation period to the required cadence
+    (aws kms enable-key-rotation --key-id <id>
+    --rotation-period-in-days 90). Confirm the required
+    cadence with the compliance profile owner before
+    setting the value — different profiles require
+    different periods, and the floor of 90 days is not
+    universal. If the key is shared across workloads with
+    different compliance profiles, the strictest period
+    applies. After updating, verify the next scheduled
+    rotation
+    (aws kms get-key-rotation-status --key-id <id>)
+    aligns with the new cadence.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "lifecycle": {
+          "rotation_enabled": true,
+          "rotation_period_days": 90,
+          "required_rotation_days": 90,
+          "rotation_period_compliant": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.lifecycle.rotation_enabled
+      op: eq
+      value: true
+    - field: properties.cryptography.lifecycle.rotation_period_compliant
+      op: eq
+      value: false
+defect: >
+  KMS key rotation period exceeds the cadence required by the
+  applicable compliance profile.
+infection: >
+  Rotation cadence bounds the amount of data encrypted under
+  any single key version and the recovery window after a key
+  compromise. A 365-day period under a 90-day requirement
+  means roughly four times the data exposed per version and
+  four times the recovery work after a breach: every
+  ciphertext encrypted in that window must be re-encrypted
+  under the new key version, and any compromised version's
+  exposure window is four times longer than the profile
+  permits. The compliance gap is silent — the key has
+  rotation enabled, the console reports rotation healthy,
+  yet the cadence does not satisfy the profile attached to
+  the key. Detection requires correlating the key's
+  rotation period with the profile's required cadence; this
+  is a profile-conditioned check, not a fixed threshold.
+failure: >
+  Rotation cadence violates the compliance profile's
+  requirement. Each key version covers a longer interval
+  than permitted, expanding the data-at-risk envelope per
+  rotation cycle.
+tests:
+  - name: rotation 365d under 90d compliance fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-rotation-too-long"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          lifecycle:
+            rotation_enabled: true
+            rotation_period_days: 365
+            required_rotation_days: 90
+            rotation_period_compliant: false
+          compliance_tags:
+            - pci-dss
+  - name: rotation 90d under 90d compliance passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-rotation-aligned"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          lifecycle:
+            rotation_enabled: true
+            rotation_period_days: 90
+            required_rotation_days: 90
+            rotation_period_compliant: true
+          compliance_tags:
+            - pci-dss
+  - name: key with no compliance tags passes (profile-conditioned)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-profile"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          lifecycle:
+            rotation_enabled: true
+            rotation_period_days: 365
+            rotation_period_compliant: true
+          compliance_tags: []

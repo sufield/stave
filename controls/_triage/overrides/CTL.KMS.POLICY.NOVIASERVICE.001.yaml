@@ -1,0 +1,19 @@
+control: CTL.KMS.POLICY.NOVIASERVICE.001
+defect: >
+  KMS encryption key has no kms:ViaService restriction in its
+  policy.
+infection: >
+  Without kms:ViaService, a principal with kms:Decrypt can call
+  the KMS Decrypt API directly with raw ciphertext, bypassing
+  service-level access controls. Example: an S3 object is
+  encrypted with this key. The S3 bucket policy restricts which
+  principals can GetObject. But the principal has kms:Decrypt
+  on the key. The principal calls KMS Decrypt directly with the
+  ciphertext from the S3 object's metadata — bypassing the S3
+  bucket policy entirely. ViaService prevents this by requiring
+  Decrypt calls to come through a specific AWS service, not
+  direct KMS API calls.
+failure: >
+  Direct KMS API bypass. Principals can decrypt data by calling
+  KMS directly, bypassing service-level access controls (S3
+  bucket policies, RDS IAM auth, etc.).

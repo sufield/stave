@@ -1,0 +1,136 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.CROSSACCOUNT.DECOMMISSIONED.001
+name: KMS Key Policy Grants Access to Decommissioned Account
+description: >
+  KMS key policy grants access to an AWS account ID that is no
+  longer active in the organization — the account was closed,
+  decommissioned, or transferred to an external party. The
+  policy entry persists. The danger has two shapes: if the
+  account ID was transferred, the key policy now grants access
+  to an entity outside organizational control; if the account
+  was closed, the residual policy entry is decommission debris
+  that obscures the actual access topology. Detection requires
+  cross-referencing the key policy's cross-account principals
+  against the active account list (AWS Organizations or an
+  inventory of authorized accounts). When account inventory is
+  unavailable the control cannot fire — fail loud rather than
+  silently passing keys whose authorization has not been
+  reconciled. Same incomplete-decommission family as
+  CTL.KMS.GRANT.ORPHAN.001 (orphan grant principal),
+  CTL.KMS.ALIAS.ORPHAN.001 (alias orphan), and
+  CTL.IAM.ROLE.GHOST.001 — debris that survives the
+  decommission of its referent.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-2, AC-3"
+  pci_dss_v4.0: "3.5, 7.2.4"
+  fedramp_moderate: "AC-2"
+  iso_27001_2022: "A.5.16, A.8.24"
+  ccm_v4: ["CEK-03", "IAM-08"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    KMS key policy grants access to an AWS account ID that is
+    no longer active in the organization. The policy entry is
+    decommission debris that may also be a live grant to an
+    external entity if the account ID has been reclaimed or
+    transferred.
+  action: >
+    Confirm the account's status with AWS Organizations
+    (aws organizations describe-account --account-id <id>).
+    If the account was closed or transferred, remove the
+    principal from the key policy
+    (aws kms put-key-policy --key-id <id> --policy-name
+    default --policy <updated>). Investigate any other
+    artifacts that referenced the same account ID — IAM
+    trust policies, S3 bucket policies, SCPs — to ensure the
+    decommission is complete. If the account was migrated
+    inside the organization to a new ID, repoint the policy
+    to the new ID rather than leaving both.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "cross_account": {
+          "account_count": 2,
+          "has_decommissioned_account": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.cross_account.has_decommissioned_account
+      op: eq
+      value: true
+defect: >
+  KMS key policy grants access to an AWS account ID that is
+  no longer active in the organization.
+infection: >
+  AWS account IDs are not strictly retired — closed accounts
+  release the ID back to a pool, transferred accounts move
+  out of organizational control, and inventories of valid
+  account IDs drift from policy contents over time. A KMS
+  key policy that names a decommissioned account ID is a
+  live authorization to whatever entity holds that ID today.
+  If the account was transferred to an external party, the
+  policy is now a cross-organization grant with no
+  remediation in IAM, no SCP coverage, and no Organizations
+  audit trail. If the account was closed, the entry is
+  governance debt that obscures the actual access surface
+  and complicates cleanup. Either way, the key's
+  authorization is decided by data the operator no longer
+  controls — the principal in the policy is not the
+  principal that was originally granted access.
+failure: >
+  Authorization decisions tied to a decommissioned account
+  ID. The grant persists outside the organization's
+  authority and may name a current external entity that the
+  operator has no relationship with.
+tests:
+  - name: key policy with decommissioned account fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-decom-account"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          cross_account:
+            account_count: 3
+            has_decommissioned_account: true
+            account_ids:
+              - "222233334444"
+              - "333344445555"
+              - "111111111111"
+            decommissioned_accounts:
+              - "111111111111"
+  - name: key policy with active accounts only passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-active-accounts"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          cross_account:
+            account_count: 2
+            has_decommissioned_account: false
+            account_ids:
+              - "222233334444"
+              - "333344445555"
+            decommissioned_accounts: []

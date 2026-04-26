@@ -116,9 +116,33 @@ func (s *Store) Save() error {
 	})
 }
 
-// NormalizeName trims whitespace from a context name.
+// NormalizeName trims whitespace from a context name. The result is not
+// guaranteed to be a valid context name — callers that persist the value
+// should also call ValidateName to reject empty, overlong, or
+// path-unsafe inputs.
 func NormalizeName(name string) string {
 	return strings.TrimSpace(name)
+}
+
+// maxContextNameLen caps the persisted name length. Long enough for
+// "team-environment-purpose" labels; short enough that filesystem paths
+// derived from the name stay well under typical limits.
+const maxContextNameLen = 100
+
+// ValidateName checks that a normalized context name is well-formed.
+// It rejects empty strings, overlong inputs, and characters that are
+// unsafe in filesystem paths or YAML keys.
+func ValidateName(name string) error {
+	if name == "" {
+		return errors.New("context name cannot be empty")
+	}
+	if len(name) > maxContextNameLen {
+		return fmt.Errorf("context name exceeds %d characters", maxContextNameLen)
+	}
+	if strings.ContainsAny(name, "/\\\x00\n\r\t") {
+		return errors.New("context name contains forbidden characters (/, \\, NUL, or whitespace control)")
+	}
+	return nil
 }
 
 // Names returns a sorted list of all available context names.
@@ -136,6 +160,11 @@ func (s *Store) Names() []string {
 
 // ResolveSelected identifies which context is currently active.
 // Precedence: STAVE_CONTEXT env var > active field in contexts.yaml.
+//
+// The returned *Context points at a stack-local COPY of the in-map value,
+// so mutations through the pointer are not visible to subsequent
+// ResolveSelected calls and are not persisted by Save. To update a
+// context, modify s.Contexts[name] directly and call Save.
 func (s *Store) ResolveSelected() (string, *Context, bool, error) {
 	name := strings.TrimSpace(os.Getenv(env.Context.Name))
 	source := "environment variable"

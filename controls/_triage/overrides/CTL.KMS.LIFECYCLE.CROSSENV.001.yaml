@@ -1,0 +1,28 @@
+control: CTL.KMS.LIFECYCLE.CROSSENV.001
+defect: >
+  KMS key is used by resources in both production and
+  non-production environments.
+infection: >
+  A key shared across environments creates a bidirectional
+  risk. Production risk from non-production actions: a
+  developer disables the key during cleanup, breaking
+  production. A non-production developer needs Decrypt for
+  debugging, so the policy is broadened — now they can also
+  decrypt production data. A sandbox automation schedules
+  the key for deletion when the sandbox is torn down, and
+  the production-data deletion countdown is silent for as
+  many days as the deletion window. Security risk from
+  shared access: anyone with Decrypt in non-production can
+  decrypt production data — it is the same key, and the
+  audit trail does not distinguish "decrypted my own
+  non-production data" from "decrypted production data with
+  a non-production permission." The key should be separate
+  per environment, with alias/prod-<workload>-key and
+  alias/dev-<workload>-key holding independent policies and
+  independent lifecycles.
+failure: >
+  Cross-environment blast radius. Key operations (disable,
+  delete, policy change) in one environment affect the
+  other; access granted in non-production extends to
+  production data because the same key material protects
+  both.

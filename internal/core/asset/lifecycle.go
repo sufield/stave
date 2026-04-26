@@ -147,7 +147,14 @@ func (l *ExposureLifecycle) handleSecure(at time.Time) {
 		return
 	}
 
-	resolved := l.activeWindow.Resolve(l.resolveTimestamp(at))
+	resolveAt := l.resolveTimestamp(at)
+	if resolveAt.IsZero() {
+		// No usable resolution timestamp — leave the active window open
+		// rather than recording a degenerate zero-duration window that
+		// would corrupt downstream dwell-time analysis.
+		return
+	}
+	resolved := l.activeWindow.Resolve(resolveAt)
 	l.history.Record(resolved)
 	l.activeWindow = nil
 	// Do not clear lastObservedAt — it records when asset was last seen
@@ -183,13 +190,16 @@ func (l *ExposureLifecycle) ExposureDuration(now time.Time) (time.Duration, erro
 	return now.Sub(l.activeWindow.OpenedAt()), nil
 }
 
-// ExceedsSLA reports whether the asset has been exposed longer than the allowed threshold.
+// ExceedsSLA reports whether the asset has been exposed for at least the
+// allowed threshold. The comparison is inclusive: an exposure of exactly
+// `threshold` is treated as exceeding it, so a zero threshold (the most
+// strict configuration) flags any non-zero exposure.
 func (l *ExposureLifecycle) ExceedsSLA(now time.Time, threshold time.Duration) (bool, error) {
 	d, err := l.ExposureDuration(now)
 	if err != nil {
 		return false, err
 	}
-	return d > threshold, nil
+	return d >= threshold, nil
 }
 
 // FormatExposureSummary provides a human-readable string for CLI output.

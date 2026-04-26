@@ -48,11 +48,12 @@ func TestIsMissing_TypeMismatch_NotMissing(t *testing.T) {
 	}
 }
 
-func TestIsMissing_InvalidFunctionCall_NotMissing(t *testing.T) {
+func TestIsMissing_InvalidFunctionCall_IsMissing(t *testing.T) {
 	val := types.NewErr("no such overload: size(int)")
-	if isMissing(val) {
-		t.Error("BUG: isMissing returns true for invalid function call. " +
-			"Calling size() on wrong type silently passes.")
+	if !isMissing(val) {
+		t.Error("isMissing should return true for 'no such overload' — " +
+			"cel-go uses this phrasing for absent fields/keys, so the " +
+			"verdict should be inconclusive rather than a silent pass.")
 	}
 }
 

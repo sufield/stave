@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -43,13 +44,17 @@ type ScannerOptions struct {
 // with large snapshot directories.
 const DefaultMaxFiles = 100_000
 
-var defaultMaxFiles = DefaultMaxFiles
+var defaultMaxFiles atomic.Int64
+
+func init() {
+	defaultMaxFiles.Store(int64(DefaultMaxFiles))
+}
 
 // SetDefaultMaxFiles overrides the default file scan cap used when
 // ScannerOptions.MaxFiles is zero. Values <= 0 are ignored.
 func SetDefaultMaxFiles(n int) {
 	if n > 0 {
-		defaultMaxFiles = n
+		defaultMaxFiles.Store(int64(n))
 	}
 }
 
@@ -57,7 +62,7 @@ func (o ScannerOptions) maxFiles() int {
 	if o.MaxFiles > 0 {
 		return o.MaxFiles
 	}
-	return defaultMaxFiles
+	return int(defaultMaxFiles.Load())
 }
 
 // ListSnapshotFilesFlat lists JSON snapshot files directly under observationsDir.

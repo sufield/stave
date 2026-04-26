@@ -1,0 +1,19 @@
+control: CTL.KMS.ALARM.DECRYPT.FAILURE.001
+defect: >
+  No CloudWatch alarm monitors KMS Decrypt failures on this key.
+infection: >
+  KMS Decrypt failures appear as errorCode in CloudTrail events.
+  Common failure codes: AccessDeniedException (principal doesn't
+  have kms:Decrypt — may be an unauthorized access attempt or
+  IAM misconfiguration), KMSInvalidStateException (key is
+  Disabled or PendingDeletion — dependent resources are
+  breaking), DisabledException (key specifically disabled). A
+  spike in Decrypt failures indicates either an active security
+  event (unauthorized access attempts) or an operational
+  failure (key state change breaking services). Without an
+  alarm, both go undetected until application-level errors
+  surface — minutes or hours after the event.
+failure: >
+  Undetected decryption failures. Unauthorized access attempts
+  or key state problems manifest as KMS errors without
+  notification.

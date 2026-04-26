@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ALARM.CREATEGRANT.001
+name: KMS Key Has No CloudWatch Alarm for CreateGrant
+description: >
+  KMS key has no CloudWatch alarm wired to a CloudTrail metric
+  filter for the kms:CreateGrant API call. Grants are a
+  secondary access-control mechanism that delegate key access
+  without modifying the key policy. An attacker with
+  kms:CreateGrant permission can silently expand key access to
+  arbitrary principals — Decrypt, Encrypt, GenerateDataKey, or
+  RetireGrant — without leaving a trace in the key policy.
+  Distinct from CTL.KMS.GRANT.BROAD.001 (asserts that grants
+  authorize broad operations) and CTL.KMS.GRANT.EXCESSIVE.001
+  (asserts grant volume): this control fires on the missing
+  detection wiring so each grant creation is caught when it
+  happens.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.4.1"
+  soc2: "CC7.2"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08", "IAM-05"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+applicable_asset_types:
+  - aws_kms_key
+observation_fields:
+  - cryptography.kind
+  - cryptography.alarms.has_create_grant_alarm
+remediation:
+  description: >
+    No CloudWatch alarm monitors CloudTrail for CreateGrant on
+    this key. Grants can be created silently, expanding key
+    access without policy modification.
+  action: >
+    Create a CloudTrail metric filter on eventName =
+    CreateGrant and a CloudWatch alarm with an SNS notification
+    action. AWS services (EBS, RDS, Redshift) create grants
+    automatically; tune the threshold to baseline expected
+    service-driven grant volume so human-driven grants stand
+    out. Route notifications to the security team for grant
+    audit.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "alarms": {
+          "has_create_grant_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.alarms.has_create_grant_alarm
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors CreateGrant API calls on this
+  key.
+infection: >
+  Grants are a secondary access-control mechanism for KMS keys.
+  Each grant authorizes a principal to perform specific
+  cryptographic operations and lives outside the key policy.
+  Grants can be created by any principal with kms:CreateGrant
+  on the key. An attacker with kms:CreateGrant can silently
+  authorize themselves or another principal for Decrypt,
+  Encrypt, or GenerateDataKey on the key — without modifying
+  the key policy and without any notification. The grant is
+  visible only in aws kms list-grants output, which nobody
+  reviews in real time. The combination of CreateGrant
+  permission and the absence of a CloudTrail alarm makes
+  silent access expansion the path of least resistance for an
+  insider or a compromised role.
+failure: >
+  Undetected access expansion. New grants — potentially
+  authorizing Decrypt to attacker-controlled principals — are
+  created without notification.
+tests:
+  - name: key without CreateGrant alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-no-grant-alarm"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_create_grant_alarm: false
+  - name: key with CreateGrant alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-grant-alarmed"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_create_grant_alarm: true

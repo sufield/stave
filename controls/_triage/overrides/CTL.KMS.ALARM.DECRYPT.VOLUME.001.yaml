@@ -1,0 +1,20 @@
+control: CTL.KMS.ALARM.DECRYPT.VOLUME.001
+defect: >
+  No CloudWatch alarm monitors high-frequency Decrypt API
+  calls on this key.
+infection: >
+  KMS Decrypt is called every time encrypted data is read — S3
+  GetObject, RDS data access, Lambda cold start, Secrets
+  Manager GetSecretValue. Normal usage has a baseline Decrypt
+  rate. A sudden spike — 10x or 100x the baseline — indicates:
+  bulk exfiltration (an attacker decrypts thousands of S3
+  objects or database records), credential theft (decrypting
+  many secrets from Secrets Manager), or application error
+  (retry storm). Without a baseline alarm, the spike is visible
+  only in CloudTrail logs — which nobody watches in real time.
+  A CloudWatch metric alarm on Decrypt calls with anomaly
+  detection provides near-real-time detection of unusual
+  decryption patterns.
+failure: >
+  Undetected bulk decryption. High-frequency Decrypt activity —
+  potential exfiltration — occurs without notification.

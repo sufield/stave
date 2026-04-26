@@ -1,0 +1,27 @@
+control: CTL.KMS.MULTIREGION.NOREPLICA.001
+defect: >
+  KMS multi-region key has no replicas in other regions. The
+  key carries multi-region overhead without delivering
+  multi-region benefit.
+infection: >
+  A multi-region key with no replicas has the worst of both
+  worlds: it is configured as multi-region (so any change to
+  the primary's policy or state must reckon with the
+  replication semantics) yet provides none of the cross-
+  region availability that justifies multi-region in the
+  first place. Cross-region workloads still incur the cost
+  of cross-region KMS calls. DR plans that assumed regional
+  key availability are silently broken — the planner thought
+  multi-region meant the key was reachable from the failover
+  region, but no replica was ever created. The configuration
+  looks valid in the console (the key shows as multi-region)
+  which masks the fact that nothing was replicated. This is
+  governance debt that compounds over time: each new
+  resource encrypted with the primary inherits a recovery
+  dependency on the primary's region.
+failure: >
+  Multi-region overhead without multi-region benefit. The
+  key cannot serve cross-region workloads or fail over to
+  another region. DR plans that assumed cross-region key
+  availability are broken in a way that only surfaces during
+  an actual region failure.
