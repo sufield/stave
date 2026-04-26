@@ -1,0 +1,332 @@
+package graph
+
+import (
+	"bufio"
+	"bytes"
+	_ "embed"
+	"encoding/json"
+	"fmt"
+	"io"
+	"sort"
+)
+
+//go:embed ontology.ttl
+var embeddedOntology []byte
+
+// Ontology returns the embedded Stave ontology as Turtle bytes.
+// Callers that need to ship the ontology alongside an export (or
+// expose it via an HTTP endpoint) can use this directly. The bytes
+// are read-only; do not mutate the returned slice.
+func Ontology() []byte { return embeddedOntology }
+
+// MarshalJSONLD writes a JSON-LD document for the graph. The output
+// is one JSON object with @context (binding short names from the
+// Stave ontology to full IRIs) and @graph (a flat array of subject
+// objects, each carrying its outgoing predicates as nested IRI
+// references). Algorithm-shortcut edges are annotated with
+// "stave:isAlgorithmShortcut": true so consumers can filter the
+// shortcut subgraph for GDS workloads.
+//
+// The serializer is hand-rolled — no JSON-LD framework — and
+// streams via a *bufio.Writer to keep allocations bounded for
+// large graphs.
+func MarshalJSONLD(w io.Writer, g *GraphData) error {
+	if g == nil {
+		return fmt.Errorf("MarshalJSONLD: nil GraphData")
+	}
+	rdf := mapToRDFGraph(g)
+
+	// Group edges by subject IRI so the document is one node per
+	// subject with all outgoing properties inline. JSON-LD's @graph
+	// can hold flat triples too, but the grouped form is what tools
+	// like rdflib's parse() expect to see by default and is also
+	// half the byte count.
+	edgesBySubject := make(map[string][]RDFEdge, len(rdf.Nodes))
+	for i := range rdf.Edges {
+		e := &rdf.Edges[i]
+		edgesBySubject[e.From] = append(edgesBySubject[e.From], *e)
+	}
+
+	bw := bufio.NewWriter(w)
+
+	// Write the document opening, @context, and @graph header by hand
+	// rather than constructing the full document in memory. This
+	// matters because @graph itself is the big array.
+	if _, err := bw.WriteString(jsonldHeader); err != nil {
+		return err
+	}
+
+	first := true
+	enc := newJSONLDNodeEncoder()
+	for i := range rdf.Nodes {
+		n := &rdf.Nodes[i]
+		out := enc.encodeNode(n, edgesBySubject[n.ID])
+		if !first {
+			if _, err := bw.WriteString(",\n"); err != nil {
+				return err
+			}
+		}
+		if _, err := bw.Write(out); err != nil {
+			return err
+		}
+		first = false
+	}
+	if _, err := bw.WriteString(jsonldFooter); err != nil {
+		return err
+	}
+	return bw.Flush()
+}
+
+// jsonldHeader is the literal start of the JSON-LD output. The
+// @context binds the short names used in the document body to their
+// full IRIs so downstream parsers can expand the document into RDF
+// triples. The "@vocab" binding makes any unqualified property name
+// in the body resolve relative to the Stave ontology — that lets
+// node datatype properties (severity, weight, account_id) appear as
+// bare keys instead of every key needing to be explicitly mapped.
+//
+// Indented for human readability; the @graph body starts on a new
+// line so the streaming writer can append node objects directly.
+const jsonldHeader = `{
+  "@context": {
+    "@vocab": "urn:stave:ontology#",
+    "stave": "urn:stave:ontology#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "id": "@id",
+    "type": "@type",
+    "targets": { "@id": "stave:targets", "@type": "@id" },
+    "violatesInvariant": { "@id": "stave:violatesInvariant", "@type": "@id" },
+    "violates": { "@id": "stave:violates", "@type": "@id" },
+    "violatesRequirement": { "@id": "stave:violatesRequirement", "@type": "@id" },
+    "mapsTo": { "@id": "stave:mapsTo", "@type": "@id" },
+    "hasRemediation": { "@id": "stave:hasRemediation", "@type": "@id" },
+    "memberOf": { "@id": "stave:memberOf", "@type": "@id" },
+    "produces": { "@id": "stave:produces", "@type": "@id" },
+    "belongsToScope": { "@id": "stave:belongsToScope", "@type": "@id" },
+    "hasEffectiveAccess": { "@id": "stave:hasEffectiveAccess", "@type": "@id" },
+    "canImpersonate": { "@id": "stave:canImpersonate", "@type": "@id" },
+    "governedBy": { "@id": "stave:governedBy", "@type": "@id" },
+    "isAlgorithmShortcut": "stave:isAlgorithmShortcut",
+    "severity_weight": { "@id": "stave:severityWeight", "@type": "xsd:double" },
+    "weight": { "@id": "stave:severityWeight", "@type": "xsd:double" }
+  },
+  "@graph": [
+`
+
+const jsonldFooter = "\n  ]\n}\n"
+
+// jsonldNodeEncoder is a per-export reusable encoder. The bytes.Buffer
+// is reset between nodes rather than reallocated, which keeps the
+// allocation count constant in the number of edges rather than nodes.
+type jsonldNodeEncoder struct {
+	buf bytes.Buffer
+}
+
+func newJSONLDNodeEncoder() *jsonldNodeEncoder { return &jsonldNodeEncoder{} }
+
+// edgeGroup collects edges for a single subject and groups them by
+// predicate. Multiple edges sharing a predicate become a JSON array;
+// a single edge stays a scalar IRI reference.
+type edgeGroup struct {
+	predIRI    string
+	objectIRIs []string
+	edgeProps  []map[string]any
+	shortcut   bool
+}
+
+func (enc *jsonldNodeEncoder) encodeNode(n *RDFNode, outgoing []RDFEdge) []byte {
+	enc.buf.Reset()
+	enc.buf.WriteString("    {\n      \"@id\": ")
+	encodeJSONString(&enc.buf, n.ID)
+	enc.buf.WriteString(",\n      \"@type\": ")
+	encodeJSONString(&enc.buf, n.Type)
+
+	// Datatype properties — emit in sorted key order so the document
+	// is byte-deterministic across runs.
+	if len(n.Properties) > 0 {
+		keys := make([]string, 0, len(n.Properties))
+		for k := range n.Properties {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			enc.buf.WriteString(",\n      ")
+			encodeJSONString(&enc.buf, k)
+			enc.buf.WriteString(": ")
+			encodeJSONValue(&enc.buf, n.Properties[k])
+		}
+	}
+
+	// Object properties — group by predicate, sorted predicate order.
+	if len(outgoing) > 0 {
+		groups := groupEdges(outgoing)
+		predKeys := make([]string, 0, len(groups))
+		for k := range groups {
+			predKeys = append(predKeys, k)
+		}
+		sort.Strings(predKeys)
+		for _, k := range predKeys {
+			grp := groups[k]
+			enc.buf.WriteString(",\n      ")
+			encodeJSONString(&enc.buf, k)
+			enc.buf.WriteString(": ")
+			writeEdgeGroup(&enc.buf, grp)
+		}
+	}
+	enc.buf.WriteString("\n    }")
+	out := make([]byte, enc.buf.Len())
+	copy(out, enc.buf.Bytes())
+	return out
+}
+
+// groupEdges keys edges by their predicate IRI. Predicates appear
+// in the JSON-LD document under their short context name where one
+// is bound — see jsonldHeader.
+func groupEdges(edges []RDFEdge) map[string]*edgeGroup {
+	out := make(map[string]*edgeGroup, len(edges))
+	for i := range edges {
+		e := &edges[i]
+		short := shortPredicate(e.Predicate)
+		grp, ok := out[short]
+		if !ok {
+			grp = &edgeGroup{predIRI: e.Predicate}
+			out[short] = grp
+		}
+		grp.objectIRIs = append(grp.objectIRIs, e.To)
+		grp.edgeProps = append(grp.edgeProps, e.Properties)
+		if e.Shortcut {
+			grp.shortcut = true
+		}
+	}
+	return out
+}
+
+// shortPredicate maps a full predicate IRI back to its short form
+// declared in the @context. Falls back to the full IRI for any
+// predicate not bound there.
+func shortPredicate(iri string) string {
+	switch iri {
+	case predTargets:
+		return "targets"
+	case predViolatesInvariant:
+		return "violatesInvariant"
+	case predViolates:
+		return "violates"
+	case predViolatesRequirement:
+		return "violatesRequirement"
+	case predMapsTo:
+		return "mapsTo"
+	case predHasRemediation:
+		return "hasRemediation"
+	case predMemberOf:
+		return "memberOf"
+	case predProduces:
+		return "produces"
+	case predBelongsToScope:
+		return "belongsToScope"
+	case predHasEffectiveAccess:
+		return "hasEffectiveAccess"
+	case predCanImpersonate:
+		return "canImpersonate"
+	case predGovernedBy:
+		return "governedBy"
+	default:
+		return iri
+	}
+}
+
+// writeEdgeGroup emits the value of one predicate. When edge
+// properties are present (e.g. weight on a shortcut edge), each
+// object becomes a node-shaped reference object so the edge weight
+// is preserved as RDF reification — the loss of edge attributes when
+// JSON-LD flattens to triples is a documented tradeoff. Plain
+// references stay scalar.
+func writeEdgeGroup(buf *bytes.Buffer, grp *edgeGroup) {
+	hasProps := false
+	for _, p := range grp.edgeProps {
+		if len(p) > 0 {
+			hasProps = true
+			break
+		}
+	}
+
+	switch {
+	case len(grp.objectIRIs) == 1 && !hasProps && !grp.shortcut:
+		buf.WriteString(`{"@id": `)
+		encodeJSONString(buf, grp.objectIRIs[0])
+		buf.WriteString("}")
+	default:
+		buf.WriteString("[")
+		for i, obj := range grp.objectIRIs {
+			if i > 0 {
+				buf.WriteString(", ")
+			}
+			props := grp.edgeProps[i]
+			if len(props) > 0 || grp.shortcut {
+				buf.WriteString("{\"@id\": ")
+				encodeJSONString(buf, obj)
+				if grp.shortcut {
+					buf.WriteString(", \"isAlgorithmShortcut\": true")
+				}
+				keys := make([]string, 0, len(props))
+				for k := range props {
+					keys = append(keys, k)
+				}
+				sort.Strings(keys)
+				for _, k := range keys {
+					buf.WriteString(", ")
+					encodeJSONString(buf, k)
+					buf.WriteString(": ")
+					encodeJSONValue(buf, props[k])
+				}
+				buf.WriteString("}")
+			} else {
+				buf.WriteString("{\"@id\": ")
+				encodeJSONString(buf, obj)
+				buf.WriteString("}")
+			}
+		}
+		buf.WriteString("]")
+	}
+}
+
+// encodeJSONString writes a JSON-quoted string. Routes through
+// json.Marshal to get correct escaping for control chars, quotes,
+// and Unicode without a custom escape table.
+func encodeJSONString(buf *bytes.Buffer, s string) {
+	b, _ := json.Marshal(s)
+	buf.Write(b)
+}
+
+// encodeJSONValue writes any JSON-encodable value into the buffer.
+// Used for datatype property values where the type is map[string]any
+// from upstream JSON parsing.
+func encodeJSONValue(buf *bytes.Buffer, v any) {
+	b, err := json.Marshal(v)
+	if err != nil {
+		buf.WriteString("null")
+		return
+	}
+	buf.Write(b)
+}
+
+// sortRDF orders nodes and edges so the output is byte-deterministic
+// across runs — important for golden tests and for diffing two
+// exports of the same assessment.
+func sortRDF(g *RDFGraph) {
+	sort.Slice(g.Nodes, func(i, j int) bool {
+		return g.Nodes[i].ID < g.Nodes[j].ID
+	})
+	sort.Slice(g.Edges, func(i, j int) bool {
+		if g.Edges[i].From != g.Edges[j].From {
+			return g.Edges[i].From < g.Edges[j].From
+		}
+		if g.Edges[i].Predicate != g.Edges[j].Predicate {
+			return g.Edges[i].Predicate < g.Edges[j].Predicate
+		}
+		return g.Edges[i].To < g.Edges[j].To
+	})
+}

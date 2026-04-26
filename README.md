@@ -8,7 +8,7 @@ A deterministic cloud security intelligence engine. Evaluates invariants against
 
 ## What is Stave?
 
-Stave detects compound attack paths in cloud infrastructure by evaluating invariants against local snapshots — no cloud credentials, no live API calls. It produces compliance evidence packages, SLA-tracked remediation guidance, identity blast radius rankings, and a standards-based security graph exportable to Neo4j, SIEM platforms, and GRC tools. The same snapshot that detects misconfigurations produces HIPAA audit evidence, MITRE ATT&CK-annotated findings, and OCSF-compliant graph exports
+Stave detects compound attack paths in cloud infrastructure by evaluating invariants against local snapshots — no cloud credentials, no live API calls. It produces compliance evidence packages, SLA-tracked remediation guidance, identity blast radius rankings, and a standards-based security graph exportable to JSON-LD, GraphML, STIX, SIEM platforms, and GRC tools — consumable by any graph data science library (Neo4j GDS, igraph, NetworkX, Spark GraphX, Gephi). The same snapshot that detects misconfigurations produces HIPAA audit evidence, MITRE ATT&CK-annotated findings, and OCSF-compliant graph exports
 
 ## Why this exists
 
@@ -59,7 +59,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 - **Drift detection** — `stave drift` compares two snapshots and treats configuration changes as violations, exit code 3 for CI/CD gating
 - **Continuous monitoring** — `stave watch` monitors observation directories for new snapshots, detects regressions in real time, emits alerts to stdout or JSONL file sinks
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
-- **Graph export** — `stave path` exports nodes and edges in JSON, DOT, and CSV for Neo4j GDS centrality analysis, choke point identification, and effective permission reasoning
+- **Graph export** — `stave path` and `stave graph export` emit nodes and edges in JSON, DOT, CSV, JSON-LD, and GraphML for graph-data-science workloads (centrality, community detection, shortest path, influence propagation) on any library — Neo4j GDS, igraph, NetworkX, Spark GraphX, Gephi
 - **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
 - **Evidence bundling** — `stave bundle` produces signed, portable evidence archives for air-gap GRC integration (ASFF compatible)
 - **CI/CD ready** — exit codes, SARIF output, baseline tracking, policy gating

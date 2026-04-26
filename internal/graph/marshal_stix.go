@@ -126,8 +126,7 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 	}
 
 	// Edges → STIX relationships. Dangling edges are skipped with a
-	// warning log so partial graph exports remain importable — see
-	// MarshalCypher for the matching policy.
+	// warning log so partial graph exports remain importable.
 	var skipped int
 	for i := range g.Edges {
 		e := &g.Edges[i]

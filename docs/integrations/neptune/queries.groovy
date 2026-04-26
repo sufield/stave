@@ -1,5 +1,6 @@
 // Stave Graph — Gremlin Query Library for Amazon Neptune
-// Translations of the top 5 Cypher queries from the Neo4j adapter.
+// Five canonical security-graph queries written against the Stave
+// graph topology emitted by `stave graph export`.
 
 // Q1: Active attack chains and member findings
 g.V().hasLabel('ThreatChain').has('active', true)

@@ -70,7 +70,7 @@ growth, not behavior. So:
 
 - `make test-unit` is the dev feedback loop. It uses `go test -short`
   and excludes `./e2e/`, so any test that gates on `testing.Short()`
-  (e2e, profile, neo4j, fixture-binary determinism) self-skips.
+  (e2e, profile, fixture-binary determinism) self-skips.
 - `make test-ci` is what CI runs. It regenerates goldens fresh and
   then runs the full suite, so behavior regressions are still caught
   but fingerprint churn never blocks a PR.

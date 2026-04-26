@@ -164,19 +164,19 @@ ATT&CK, and OSCAL.
    # Drop stave-graph.json onto the viewer
    ```
 
-3. **Load into Neo4j** — for Cypher queries:
+3. **Export JSON-LD** — for any RDF-aware library or Neo4j GDS via `n10s`:
 
    ```bash
-   python3 docs/integrations/neo4j/loader.py --input stave-graph.json
+   stave graph export --output assessment.json --format jsonld --out stave-graph.jsonld
    ```
 
-4. **Convert to GraphML** — for Gephi or yEd:
+4. **Export GraphML** — native to igraph, NetworkX, Gephi, yEd, Cytoscape:
 
    ```bash
-   python3 docs/integrations/graphml/to-graphml.py < stave-graph.json > graph.graphml
+   stave graph export --output assessment.json --format graphml --out stave-graph.graphml
    ```
 
-See `docs/integrations/` for Neo4j, Neptune, GraphML, and Cytoscape adapters.
+See `docs/integrations/` for Neptune, GraphML, and Cytoscape adapters.
 
 **Difference from coverage:** `stave graph coverage` shows which controls match which assets (a static coverage map). `stave graph export` produces the full security graph with findings, chains, compliance requirements, and ATT&CK tactic mapping.
 

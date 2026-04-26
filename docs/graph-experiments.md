@@ -247,58 +247,61 @@ Edges:
 
 ---
 
-## Experiment 6: Neo4j Round-Trip (Iteration 4)
+## Experiment 6: JSON-LD Round-Trip (Iteration 4)
 
 **Purpose:** Verify the complete pipeline from `stave apply` through
-graph-json to Neo4j load and Cypher query execution.
+graph export to JSON-LD load and SPARQL query execution.
 
 **Pipeline:**
 ```
 Experiment 2 scenario (PHI + chain)
   → stave apply → out.v0.1.json
-  → stave graph export --format graph-json → graph.json
-  → python3 docs/integrations/neo4j/loader.py → Neo4j
-  → run queries from queries.cypher
+  → stave graph export --format jsonld → graph.jsonld
+  → load into rdflib (Python) or Apache Jena
+  → run SPARQL assertions from sparql-assertions.rq
   → verify expected results
 ```
 
-**Cypher assertions (run against loaded Neo4j graph):**
+**SPARQL assertions (run against the loaded RDF graph):**
 
-```cypher
--- Assert 1: Active chain exists
-MATCH (c:ThreatChain {active: true})
-RETURN count(c) = 1 AS chain_exists;
+```sparql
+PREFIX stave: <urn:stave:ontology#>
 
--- Assert 2: All 3 findings are chain members
-MATCH (f:Finding)-[:MEMBER_OF]->(c:ThreatChain)
-RETURN count(f) = 3 AS all_members;
+# Assert 1: exactly one active threat chain
+ASK { ?c a stave:ThreatChain ; stave:active true . }
 
--- Assert 3: HIPAA requirement is violated
-MATCH (f:Finding)-[:VIOLATES]->(q:ComplianceRequirement)
-WHERE q.framework = 'hipaa'
-RETURN count(f) > 0 AS hipaa_violated;
+# Assert 2: all 3 findings are chain members
+SELECT (COUNT(?f) AS ?count) WHERE {
+  ?f a stave:Finding ; stave:memberOf ?chain .
+}
 
--- Assert 4: Attack stage uses ATT&CK IDs not raw strings
-MATCH (f:Finding)
-WHERE f.attack_stage_attck STARTS WITH 'TA'
-RETURN count(f) = 3 AS attck_ids_present;
+# Assert 3: HIPAA requirement is violated
+ASK {
+  ?f stave:violates ?req .
+  ?req stave:framework "hipaa" .
+}
 
--- Assert 5: Resource class is provider-agnostic
-MATCH (r:Resource)
-WHERE r.resource_class IN ['storage', 'key', 'log']
-RETURN count(r) = 3 AS resource_classes_correct;
+# Assert 4: attack-stage IRIs reuse the ATT&CK namespace
+SELECT (COUNT(?f) AS ?count) WHERE {
+  ?f stave:attackStage ?stage .
+  FILTER(STRSTARTS(STR(?stage), "https://attack.mitre.org/tactics/TA"))
+}
+
+# Assert 5: resource class is provider-agnostic
+SELECT (COUNT(?r) AS ?count) WHERE {
+  ?r a stave:Resource ; stave:resourceClass ?cls .
+  FILTER(?cls IN ("storage", "key", "log"))
+}
 ```
 
 **Idempotency test:**
-Run the loader twice on the same graph-json. Assert node and edge
-counts are identical after both runs.
+Re-run the export against the same assessment file twice. Assert
+node and edge counts are identical between runs.
 
 ```bash
-python3 loader.py --input graph.json
-BEFORE=$(cypher-shell "MATCH (n) RETURN count(n)")
-python3 loader.py --input graph.json  # second run
-AFTER=$(cypher-shell "MATCH (n) RETURN count(n)")
-assert $BEFORE == $AFTER
+stave graph export --output assessment.json --format jsonld --out a.jsonld
+stave graph export --output assessment.json --format jsonld --out b.jsonld
+diff a.jsonld b.jsonld   # must be empty (deterministic export)
 ```
 
 ---
@@ -448,10 +451,10 @@ testdata/e2e/graph-ontology/
     expected-graph.json     — expected graph-json output
     assertions.txt
 
-  experiment-06-neo4j/
+  experiment-06-jsonld/
     graph.json              — from experiment-02
-    cypher-assertions.cypher
-    README.md               — manual steps for Neo4j setup
+    sparql-assertions.rq    — SPARQL ASK/SELECT queries
+    README.md               — load steps for rdflib / Jena
 
   experiment-07-graphml/
     graph.json              — from experiment-02
@@ -474,11 +477,13 @@ testdata/e2e/graph-ontology/
 # Run all programmatic experiments
 go test ./testdata/e2e/graph-ontology/...
 
-# Run Neo4j experiment (requires running Neo4j)
-cd testdata/e2e/graph-ontology/experiment-06-neo4j
-cat ../experiment-02-active-chain/expected-graph.json | \
-  python3 docs/integrations/neo4j/loader.py
-cypher-shell < cypher-assertions.cypher
+# Run JSON-LD experiment
+cd testdata/e2e/graph-ontology/experiment-06-jsonld
+stave graph export \
+  --output ../experiment-02-active-chain/assessment.json \
+  --format jsonld --out graph.jsonld
+python3 -c 'import rdflib, sys; g = rdflib.Graph().parse("graph.jsonld", format="json-ld"); print(len(g))'
+# Run sparql-assertions.rq via your preferred SPARQL runner
 
 # Run GraphML experiment
 cd testdata/e2e/graph-ontology/experiment-07-graphml
@@ -496,8 +501,8 @@ bash testdata/e2e/graph-ontology/experiment-09-removal/assertions.sh
 
 - [ ] All 9 experiment directories created with input data
 - [ ] Experiments 1–5 pass as Go E2E tests
-- [ ] Experiment 6 Cypher assertions documented and runnable
-      against local Neo4j
+- [ ] Experiment 6 SPARQL assertions documented and runnable
+      against the JSON-LD export
 - [ ] Experiment 7 Python assertions pass against actual GraphML
       output
 - [ ] Experiment 8 Playwright assertions pass against actual viewer

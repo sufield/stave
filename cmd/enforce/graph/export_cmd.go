@@ -26,22 +26,29 @@ func newExportCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "export",
-		Short: "Export assessment as graph-json, STIX 2.1, or Neo4j Cypher",
+		Short: "Export assessment as graph-json, STIX 2.1, JSON-LD, or GraphML",
 		Long: `Export reads assessment JSON (from stave apply) and produces a
 standards-based graph document. Every node and edge maps to
 OCSF, STIX 2.1, ATT&CK, or OSCAL per docs/ontology/README.md.
 
 Formats:
-  graph-json     Stave graph-json (default)
-  stix           STIX 2.1 Bundle JSON
-  neo4j-cypher   Neo4j Cypher MERGE statements
+  graph-json   Stave graph-json (default)
+  stix         STIX 2.1 Bundle JSON
+  jsonld       JSON-LD against the Stave ontology — universal RDF
+               format consumable by Neo4j GDS, igraph, NetworkX,
+               Spark GraphX, Gephi, and any RDF-aware library.
+  graphml      GraphML XML — native to igraph, NetworkX, Gephi,
+               Cytoscape; carries node/edge attributes typed for
+               graph data science (severity weights, partition
+               labels).
 
 Exit Codes:
   0   Export complete
   2   Input error`,
 		Example: `  stave graph export --output assessment.json
   stave graph export --output assessment.json --format stix
-  stave graph export --output assessment.json --format neo4j-cypher | cypher-shell`,
+  stave graph export --output assessment.json --format jsonld --out graph.jsonld
+  stave graph export --output assessment.json --format graphml --out graph.graphml`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -52,7 +59,7 @@ Exit Codes:
 
 	cmd.Flags().StringVar(&opts.OutputFile, "output", "", "Path to out.v0.1 assessment JSON")
 	cmd.Flags().StringVar(&opts.OutPath, "out", "", "Write output to file instead of stdout")
-	cmd.Flags().StringVarP(&opts.Format, "format", "f", "graph-json", "Output format: graph-json | stix | neo4j-cypher")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", "graph-json", "Output format: graph-json | stix | jsonld | graphml")
 	_ = cmd.MarkFlagRequired("output")
 
 	return cmd
@@ -89,8 +96,10 @@ func runExport(stdout io.Writer, opts *exportOptions) error {
 	switch opts.Format {
 	case "stix":
 		return graphpkg.MarshalSTIX(out, g)
-	case "neo4j-cypher":
-		return graphpkg.MarshalCypher(out, g)
+	case "jsonld":
+		return graphpkg.MarshalJSONLD(out, g)
+	case "graphml":
+		return graphpkg.MarshalGraphML(out, g)
 	default:
 		enc := json.NewEncoder(out)
 		enc.SetIndent("", "  ")

@@ -1,0 +1,309 @@
+@prefix stave: <urn:stave:ontology#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+# -----------------------------------------------------------------
+# Stave Security Graph Ontology
+#
+# Authoritative IRI:  urn:stave:ontology
+# Source of truth:    docs/ontology/mapping.json (concept table) and
+#                     docs/ontology/extensions.json (Stave-specific
+#                     OCSF extensions). This Turtle file is the OWL
+#                     surface used by JSON-LD and GraphML export. Any
+#                     class or property added here must also appear
+#                     in mapping.json so the two views never drift.
+# Reuse policy:       Stave reuses OCSF, OSCAL, STIX, and ATT&CK
+#                     vocabularies via owl:equivalentClass / rdfs:seeAlso
+#                     rather than coining new local terms.
+# Algorithm-ready
+#   shortcut edges:   Stave annotates a small set of edges with
+#                     stave:isAlgorithmShortcut "true" — those edges
+#                     are materialized denormalizations of the full
+#                     finding-chain path so graph-data-science
+#                     workloads can run centrality, community
+#                     detection, and shortest-path without first
+#                     running their own multi-hop reasoning step.
+# -----------------------------------------------------------------
+
+<urn:stave:ontology>
+  a owl:Ontology ;
+  dcterms:title "Stave Security Graph Ontology" ;
+  owl:versionInfo "0.1.2" ;
+  rdfs:comment "Vocabulary for cloud-security findings, controls (invariants), threat chains, and remediations. Designed for graph-data-science consumption via JSON-LD and GraphML." .
+
+# -----------------------------------------------------------------
+# Annotation properties
+# -----------------------------------------------------------------
+
+stave:isAlgorithmShortcut a owl:AnnotationProperty ;
+  rdfs:label "is algorithm shortcut" ;
+  rdfs:comment "When true on an edge instance, the edge is a materialized denormalization of a longer property chain. Algorithms that need the topology (centrality, community detection, shortest path) should use these edges directly; auditors that need the full reasoning chain should follow the unannotated edges." ;
+  rdfs:range xsd:boolean .
+
+stave:hostStandard a owl:AnnotationProperty ;
+  rdfs:label "host standard" ;
+  rdfs:comment "Foreign vocabulary the term is anchored against (OCSF, OSCAL, STIX, ATT&CK)." ;
+  rdfs:range xsd:string .
+
+# -----------------------------------------------------------------
+# Classes — the node shapes that appear in the exported graph.
+# Names match docs/ontology/mapping.json one-for-one.
+# -----------------------------------------------------------------
+
+stave:Resource a owl:Class ;
+  rdfs:label "Resource" ;
+  rdfs:comment "A cloud resource being assessed. Subclassed per provider domain (Bucket, ComputeInstance, etc.)." ;
+  stave:hostStandard "OCSF/Infrastructure" .
+
+stave:StorageResource a owl:Class ;
+  rdfs:subClassOf stave:Resource ;
+  rdfs:label "Storage Resource" ;
+  stave:hostStandard "OCSF/Infrastructure/storage" .
+
+stave:Bucket a owl:Class ;
+  rdfs:subClassOf stave:StorageResource ;
+  rdfs:label "S3 Bucket" ;
+  rdfs:comment "Object-storage bucket. URI shape: stave:bucket/{account}/{bucket-name}." .
+
+stave:ComputeResource a owl:Class ;
+  rdfs:subClassOf stave:Resource ;
+  rdfs:label "Compute Resource" ;
+  stave:hostStandard "OCSF/Infrastructure/server" .
+
+stave:NetworkResource a owl:Class ;
+  rdfs:subClassOf stave:Resource ;
+  rdfs:label "Network Resource" ;
+  stave:hostStandard "OCSF/Infrastructure/network" .
+
+stave:DataResource a owl:Class ;
+  rdfs:subClassOf stave:Resource ;
+  rdfs:label "Data Resource" ;
+  stave:hostStandard "OCSF/Infrastructure/database" .
+
+stave:SecretResource a owl:Class ;
+  rdfs:subClassOf stave:Resource ;
+  rdfs:label "Secret Resource" ;
+  stave:hostStandard "OCSF/Infrastructure/service" .
+
+stave:Identity a owl:Class ;
+  rdfs:label "Cloud Identity" ;
+  rdfs:comment "User, role, group, or service account that can act on resources." ;
+  stave:hostStandard "OCSF/User|ServiceAccount" .
+
+stave:AccessPolicy a owl:Class ;
+  rdfs:label "Access Policy" ;
+  rdfs:comment "A resource-attached or identity-attached authorization document." ;
+  stave:hostStandard "OCSF/Policy" .
+
+stave:Control a owl:Class ;
+  rdfs:label "Control" ;
+  rdfs:comment "A named, versioned safety property whose CEL predicate must hold across the system. The user-facing 'invariant' is the same concept; stave:Invariant is provided as an owl:equivalentClass for vocabulary continuity." ;
+  stave:hostStandard "OSCAL/control" .
+
+stave:Invariant a owl:Class ;
+  owl:equivalentClass stave:Control ;
+  rdfs:label "Invariant" ;
+  rdfs:comment "User-facing alias for stave:Control. URI shape: stave:invariant/{category}.{number}." .
+
+stave:Finding a owl:Class ;
+  rdfs:label "Security Finding" ;
+  rdfs:comment "A specific instance of a Control (Invariant) failing on a Resource at a point in time. URI shape: stave:finding/{hash}." ;
+  stave:hostStandard "OCSF/SecurityFinding" .
+
+stave:ThreatChain a owl:Class ;
+  rdfs:label "Threat Chain" ;
+  rdfs:comment "N controls co-failing on related assets, producing a compound finding." ;
+  stave:hostStandard "STIX/attack-pattern" .
+
+stave:AttackerCapability a owl:Class ;
+  rdfs:label "Attacker Capability" ;
+  rdfs:comment "Capability gained when a threat chain activates." ;
+  stave:hostStandard "STIX/attack-pattern" .
+
+stave:ComplianceRequirement a owl:Class ;
+  rdfs:label "Compliance Requirement" ;
+  rdfs:comment "Single requirement statement within a regulatory or industry framework." ;
+  stave:hostStandard "OSCAL/control" .
+
+stave:RemediationAction a owl:Class ;
+  rdfs:label "Remediation Action" ;
+  stave:hostStandard "OCSF/RemediationActivity" .
+
+stave:TenantScope a owl:Class ;
+  rdfs:label "Tenant Scope" ;
+  rdfs:comment "Cloud account or organizational scope a resource lives in." ;
+  stave:hostStandard "OCSF/cloud.account" .
+
+stave:Exemption a owl:Class ;
+  rdfs:label "Exemption" ;
+  rdfs:comment "Governance-lifecycle decision to suppress a finding." ;
+  stave:hostStandard "Stave/x_stave_exemption" .
+
+# -----------------------------------------------------------------
+# Object properties — the edges between nodes.
+#
+# Edges are split into two groups:
+#   (1) Detail edges: hasFinding, violatesInvariant, mapsTo, ...
+#       — the full reasoning chain.
+#   (2) Algorithm shortcut edges: violates, hasAccess
+#       — materialized one-hop versions of multi-hop chains, marked
+#       with stave:isAlgorithmShortcut "true" so a graph-data-science
+#       run can ignore the chain and treat them as direct edges.
+# -----------------------------------------------------------------
+
+stave:hasFinding a owl:ObjectProperty ;
+  rdfs:label "has finding" ;
+  rdfs:domain stave:Resource ;
+  rdfs:range stave:Finding ;
+  rdfs:comment "Resource is the subject of a Finding. Inverse of stave:targets." ;
+  owl:inverseOf stave:targets .
+
+stave:targets a owl:ObjectProperty ;
+  rdfs:label "targets" ;
+  rdfs:domain stave:Finding ;
+  rdfs:range stave:Resource ;
+  rdfs:comment "Finding targets the named Resource. Wire name: TARGETS." .
+
+stave:violatesInvariant a owl:ObjectProperty ;
+  rdfs:label "violates invariant" ;
+  rdfs:domain stave:Finding ;
+  rdfs:range stave:Control ;
+  rdfs:comment "Finding violates the Control (Invariant). Use this for full-detail audit traces." .
+
+stave:violates a owl:ObjectProperty ;
+  rdfs:label "violates (algorithm shortcut)" ;
+  rdfs:domain stave:Resource ;
+  rdfs:range stave:Control ;
+  stave:isAlgorithmShortcut true ;
+  rdfs:comment "Materialized shortcut for Resource → Finding → Control. GDS centrality and community-detection algorithms use this single hop instead of joining through the Finding intermediate." .
+
+stave:mapsTo a owl:ObjectProperty ;
+  rdfs:label "maps to" ;
+  rdfs:domain stave:Control ;
+  rdfs:range stave:ComplianceRequirement ;
+  rdfs:comment "Control satisfies a Compliance Requirement. Wire name: MAPS_TO." .
+
+stave:violatesRequirement a owl:ObjectProperty ;
+  rdfs:subPropertyOf stave:violates ;
+  rdfs:label "violates requirement (algorithm shortcut)" ;
+  rdfs:domain stave:Finding ;
+  rdfs:range stave:ComplianceRequirement ;
+  stave:isAlgorithmShortcut true ;
+  rdfs:comment "Wire name: VIOLATES. Materialized shortcut for Finding → Control → ComplianceRequirement." .
+
+stave:hasRemediation a owl:ObjectProperty ;
+  rdfs:label "has remediation" ;
+  rdfs:domain stave:Finding ;
+  rdfs:range stave:RemediationAction ;
+  rdfs:comment "Wire name: HAS_REMEDIATION." .
+
+stave:memberOf a owl:ObjectProperty ;
+  rdfs:label "member of" ;
+  rdfs:domain stave:Finding ;
+  rdfs:range stave:ThreatChain ;
+  rdfs:comment "Finding is a member of a Threat Chain. Wire name: MEMBER_OF." .
+
+stave:produces a owl:ObjectProperty ;
+  rdfs:label "produces" ;
+  rdfs:domain stave:ThreatChain ;
+  rdfs:range stave:AttackerCapability ;
+  rdfs:comment "Active chain produces an Attacker Capability. Wire name: PRODUCES." .
+
+stave:belongsToScope a owl:ObjectProperty ;
+  rdfs:label "belongs to scope" ;
+  rdfs:domain stave:Resource ;
+  rdfs:range stave:TenantScope ;
+  rdfs:comment "Wire name: BELONGS_TO_SCOPE." .
+
+stave:hasEffectiveAccess a owl:ObjectProperty ;
+  rdfs:label "has effective access" ;
+  rdfs:domain stave:Identity ;
+  rdfs:range stave:Resource ;
+  stave:isAlgorithmShortcut true ;
+  rdfs:comment "Materialized identity-to-resource access edge derived from policy evaluation. Wire name: HAS_EFFECTIVE_ACCESS." .
+
+stave:canImpersonate a owl:ObjectProperty ;
+  rdfs:label "can impersonate" ;
+  rdfs:domain stave:Identity ;
+  rdfs:range stave:Identity ;
+  rdfs:comment "Wire name: CAN_IMPERSONATE." .
+
+stave:governedBy a owl:ObjectProperty ;
+  rdfs:label "governed by" ;
+  rdfs:domain stave:Resource ;
+  rdfs:range stave:AccessPolicy ;
+  rdfs:comment "Wire name: GOVERNED_BY." .
+
+# -----------------------------------------------------------------
+# Datatype properties — node and edge attributes.
+# Edge weights and partition labels are first-class so GDS
+# algorithms can read them directly.
+# -----------------------------------------------------------------
+
+stave:severity a owl:DatatypeProperty ;
+  rdfs:label "severity" ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Categorical severity: critical | high | medium | low | none." .
+
+stave:severityWeight a owl:DatatypeProperty ;
+  rdfs:label "severity weight" ;
+  rdfs:range xsd:double ;
+  rdfs:comment "Numeric weight derived from stave:severity for use as an edge weight in GDS algorithms (centrality, shortest path, influence propagation). Mapping: critical=10, high=7, medium=4, low=1, none=0." .
+
+stave:category a owl:DatatypeProperty ;
+  rdfs:label "category" ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Invariant category label (ACCESS, CONTROLS, GOVERNANCE, ...). Suitable as a partition label for community-detection algorithms." .
+
+stave:invariantNumber a owl:DatatypeProperty ;
+  rdfs:label "invariant number" ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Numeric suffix within a category (e.g. '001' in ACCESS.001)." .
+
+stave:account a owl:DatatypeProperty ;
+  rdfs:label "account id" ;
+  rdfs:range xsd:string .
+
+stave:bucketName a owl:DatatypeProperty ;
+  rdfs:label "bucket name" ;
+  rdfs:range xsd:string .
+
+stave:findingHash a owl:DatatypeProperty ;
+  rdfs:label "finding hash" ;
+  rdfs:range xsd:string .
+
+stave:verdict a owl:DatatypeProperty ;
+  rdfs:label "verdict" ;
+  rdfs:range xsd:string .
+
+stave:active a owl:DatatypeProperty ;
+  rdfs:label "active" ;
+  rdfs:range xsd:boolean .
+
+stave:resourceClass a owl:DatatypeProperty ;
+  rdfs:label "resource class" ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Provider-agnostic class label: storage | compute | network | data | secret | log | key | role." .
+
+stave:provider a owl:DatatypeProperty ;
+  rdfs:label "provider" ;
+  rdfs:range xsd:string .
+
+stave:framework a owl:DatatypeProperty ;
+  rdfs:label "compliance framework" ;
+  rdfs:range xsd:string .
+
+stave:requirementId a owl:DatatypeProperty ;
+  rdfs:label "requirement id" ;
+  rdfs:range xsd:string .
+
+stave:attackStage a owl:ObjectProperty ;
+  rdfs:label "attack stage" ;
+  rdfs:comment "ATT&CK tactic IRI; range is intentionally a Resource-typed Tactic IRI under https://attack.mitre.org/tactics/." .
+
+stave:slaBreached a owl:DatatypeProperty ;
+  rdfs:label "sla breached" ;
+  rdfs:range xsd:boolean .

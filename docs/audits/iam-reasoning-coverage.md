@@ -17,7 +17,6 @@ schema and engine capabilities.
 - **Priority 1 CLOSED** (4 gaps): Rhino parity (20/21, up from 18/21) + SQS/SNS resource policies
 - **KMS resource policies CLOSED** (4 controls): cross-account, admin-broad, conditions, pending deletion
 - **Priority 2+3 Gap A CLOSED** (5 controls): EC2 shared profile, instance profile escalation, inline on roles, Secrets Manager policy, resource wildcard
-- **Neo4j GDS export audit**: see `neo4j-export-completeness.md`
 
 ## Coverage by Area
 

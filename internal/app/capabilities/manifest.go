@@ -103,7 +103,7 @@ func newFeatureManifest() *featureManifest {
 
 	complianceFeatures := ComplianceSupport{
 		Enabled:            true,
-		ReportFormats:      []string{"text", "json", "sarif", "markdown", "oscal", "graph-json", "stix", "neo4j-cypher", "openmetrics"},
+		ReportFormats:      []string{"text", "json", "sarif", "markdown", "oscal", "graph-json", "stix", "jsonld", "graphml", "openmetrics"},
 		SLAThresholds:      []string{"critical", "high", "medium", "low", "none"},
 		SecurityFrameworks: compliance.FrameworkStrings(compliance.SupportedFrameworks()),
 	}

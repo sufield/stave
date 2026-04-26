@@ -1,6 +1,8 @@
 # Stave Data Ontology
 
-Graph data model for Neo4j, SPARQL, or OWL integration.
+Graph data model exposed via JSON-LD and GraphML for SPARQL,
+OWL, igraph, NetworkX, Neo4j GDS (via `n10s`), Gephi, and any
+graph data science library.
 
 ---
 
@@ -76,32 +78,43 @@ Graph data model for Neo4j, SPARQL, or OWL integration.
 
 ---
 
-## Example Cypher Queries
+## Example SPARQL Queries
 
-```cypher
-// All active chains
-MATCH (c:Chain {status: "active"}) RETURN c
+The same questions, expressed against the JSON-LD export
+(`stave graph export --format jsonld`). Load the file into any
+SPARQL endpoint or RDF library; queries below assume the
+`stave:` prefix bound to the ontology IRI in `ontology.ttl`.
 
-// Attack path from internet to RDS data access
-MATCH path = (entry:Capability {capability_id: "internet_access"})
-  -[:ENABLES*1..5]->
-  (target:Capability {capability_id: "rds_data_access"})
-RETURN path ORDER BY length(path) ASC LIMIT 5
+```sparql
+PREFIX stave: <urn:stave:ontology#>
 
-// Findings attributed to a specific team
-MATCH (f:Finding)-[:ATTRIBUTED_TO]->(t:Team {team_id: "identity"})
-WHERE f.verdict = "VIOLATION"
-RETURN f ORDER BY f.blast_radius DESC
+# All active threat chains
+SELECT ?chain WHERE {
+  ?chain a stave:ThreatChain ;
+         stave:active true .
+}
 
-// Controls with no findings (never triggered)
-MATCH (ctrl:Control)
-WHERE NOT (ctrl)<-[:INSTANCE_OF]-(:Finding)
-RETURN ctrl.control_id
+# Findings attributed to a specific team, ordered by blast radius
+SELECT ?finding ?blastRadius WHERE {
+  ?finding a stave:Finding ;
+           stave:attributedTo <urn:stave:team/identity> ;
+           stave:verdict "VIOLATION" ;
+           stave:blastRadius ?blastRadius .
+} ORDER BY DESC(?blastRadius)
 
-// Shared controls between two compliance frameworks
-MATCH (ctrl:Control)-[:SATISFIES]->(f1:ComplianceFramework {framework_id: "hipaa"}),
-      (ctrl)-[:SATISFIES]->(f2:ComplianceFramework {framework_id: "fedramp_moderate"})
-RETURN ctrl.control_id, ctrl.severity
+# Controls (invariants) with no associated findings
+SELECT ?control WHERE {
+  ?control a stave:Control .
+  FILTER NOT EXISTS { ?finding stave:violatesInvariant ?control . }
+}
+
+# Controls satisfying both HIPAA and FedRAMP-moderate
+SELECT ?control ?severity WHERE {
+  ?control a stave:Control ;
+           stave:mapsTo <urn:stave:framework/hipaa> ;
+           stave:mapsTo <urn:stave:framework/fedramp_moderate> ;
+           stave:severity ?severity .
+}
 ```
 
 ---
@@ -109,13 +122,13 @@ RETURN ctrl.control_id, ctrl.severity
 ## Import from Stave
 
 ```bash
-# Assessment graph
-stave apply --snapshot snapshot.json --format graph-json \
-  | python3 scripts/neo4j-import.py
+# JSON-LD export — universal RDF format
+stave graph export --output assessment.json --format jsonld --out graph.jsonld
 
-# Capability graph (attack paths)
-stave path --output findings.json --format json \
-  | python3 scripts/neo4j-capability-import.py
+# GraphML export — for igraph, NetworkX, Gephi, Cytoscape
+stave graph export --output assessment.json --format graphml --out graph.graphml
 ```
 
-See [integrations/neo4j.md](../integrations/neo4j.md) for complete import scripts.
+See `docs/integrations/graph-libraries.md` for library-specific
+load instructions (Neo4j GDS via `n10s`, igraph, NetworkX,
+Spark GraphX).

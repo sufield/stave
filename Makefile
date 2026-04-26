@@ -75,7 +75,7 @@ test: sync-schemas sync-controls sync-alternatives
 ## test-unit: Fast dev loop — unit tests only, skips e2e / golden / profile suites
 ##
 ## Targets only ./internal/... and ./cmd/... and passes -short so any test
-## that gates on testing.Short() (e2e, profile, neo4j, fixture-binary
+## that gates on testing.Short() (e2e, profile, fixture-binary
 ## determinism) self-skips. The ./e2e/ tree is excluded outright. Designed
 ## to finish under 30 seconds so adding a control does not pay a 2000+
 ## golden-regeneration tax on the dev machine.
