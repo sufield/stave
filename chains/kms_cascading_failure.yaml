@@ -1,0 +1,23 @@
+id: kms_cascading_failure
+description: >
+  Any single key state failure that risks cascading encryption
+  failure across multiple services — pending deletion with active
+  dependents, disabled with active dependents, or pending deletion
+  with the minimum 7-day waiting window. Each independently causes
+  or risks cascading failure across S3, RDS, EBS, Lambda, DynamoDB,
+  CloudWatch Logs, Secrets Manager, SNS, and SQS — every service
+  that referenced the key. The most impactful ghost reference
+  pattern in the catalog: one key, ten services broken. PendingDeletion
+  with dependents at the minimum window is the worst case — there
+  is the least time to discover and reverse before permanent data
+  loss.
+controls:
+  - CTL.KMS.STATE.PENDINGDELETION.001
+  - CTL.KMS.STATE.DISABLED.001
+  - CTL.KMS.DELETION.MINWAIT.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - data_destruction

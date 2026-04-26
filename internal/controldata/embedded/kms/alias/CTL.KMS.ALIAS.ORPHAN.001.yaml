@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ALIAS.ORPHAN.001
+name: KMS Alias Points to a Non-Existent Key
+description: >
+  KMS alias references a key ID that no longer exists. The
+  underlying key was permanently deleted (the deletion waiting
+  period expired) or never existed. The alias persists in the
+  account — visible to ListAliases, referenced by IAM policies and
+  resource configurations — but cannot resolve to a usable key. Any
+  attempt to use the alias for an Encrypt, Decrypt, GenerateDataKey,
+  or ReEncrypt call returns NotFoundException. Distinct from
+  CTL.KMS.ALIAS.GHOST.001 (alias points to a Disabled or
+  PendingDeletion key that still exists): here the alias points to
+  nothing at all. The orphan alias is operational debris from
+  incomplete decommission — the key was deleted, the alias was not.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    KMS alias references a key ID that no longer exists. The alias
+    persists as decommission debris and cannot resolve to a usable
+    key.
+  action: >
+    Audit IAM policies and resource configurations for references
+    to this alias before deleting it — the references will fail
+    too, but the failure mode (NotFoundException vs.
+    NotAuthorizedException) and the alias name carry remediation
+    information. Once dependent references are remediated (repoint
+    or remove), delete the alias with aws kms delete-alias
+    --alias-name alias/NAME. Track alias creation and key deletion
+    together in decommission runbooks so future cleanups don't
+    leave orphans.
+  example: |
+    {
+      "cryptography": {
+        "kind": "alias",
+        "alias_is_orphan": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: alias
+    - field: properties.cryptography.alias_is_orphan
+      op: eq
+      value: true

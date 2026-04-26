@@ -1,0 +1,27 @@
+control: CTL.KMS.STATE.DISABLED.001
+defect: >
+  KMS key is disabled while active resources
+  reference it for cryptographic operations.
+infection: >
+  A disabled KMS key exists but cannot perform
+  cryptographic operations. Every Encrypt,
+  Decrypt, GenerateDataKey, and ReEncrypt call
+  returns KMSInvalidStateException. Resources
+  that depend on this key fail in service-
+  specific ways: S3 GetObject returns
+  AccessDeniedException (cannot decrypt the
+  object), Lambda functions fail on cold start
+  (cannot decrypt environment variables),
+  EBS volumes cannot be attached, RDS instances
+  enter inaccessible state on restart. The
+  key is in the KMS console with a valid key
+  ID and ARN — it looks normal — but cannot do
+  anything. Re-enabling the key (EnableKey API)
+  immediately restores all operations; unlike
+  PendingDeletion, no data is permanently lost.
+failure: >
+  Encryption operations failing. Every
+  resource referencing this key cannot encrypt
+  or decrypt. Reversible by re-enabling the
+  key, but every minute disabled is downtime
+  for dependent workloads.

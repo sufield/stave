@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.STATE.PENDINGIMPORT.001
+name: KMS Key in PendingImport State Has No Key Material
+description: >
+  KMS key was created with Origin EXTERNAL but key material has not
+  been imported. The key exists in KMS — it has a valid key ID, ARN,
+  and key policy — but contains no cryptographic material. Any
+  Encrypt, Decrypt, GenerateDataKey, or ReEncrypt call fails. The key
+  appears valid in the console (the policy is syntactically correct,
+  the alias resolves) but is operationally empty. Resources
+  configured to use this key for encryption fail on every
+  cryptographic operation. Distinct from Disabled (key exists with
+  material but is administratively turned off): PendingImport means
+  the key has never had material to operate on. The fix is not to
+  enable but to import key material via aws kms import-key-material
+  with a wrapped key blob and an import token.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "SC-12"
+  pci_dss_v4.0: "3.6.1"
+  fedramp_moderate: "SC-12"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["CEK-04"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    KMS key was created with EXTERNAL origin but no key material has
+    been imported. The key exists but cannot perform cryptographic
+    operations.
+  action: >
+    Import key material with aws kms import-key-material. First
+    fetch the import parameters (aws kms get-parameters-for-import
+    with --wrapping-algorithm and --wrapping-key-spec), then wrap the
+    raw key bytes with the returned public key, and call
+    import-key-material with the wrapped material, the import token,
+    and an expiration model. If the key was created in error, schedule
+    it for deletion to remove the empty placeholder.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "origin": "AWS_KMS",
+        "is_pending_import": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.is_pending_import
+      op: eq
+      value: true

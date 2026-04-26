@@ -1,0 +1,27 @@
+control: CTL.KMS.STATE.PENDINGIMPORT.001
+defect: >
+  KMS key was created with EXTERNAL origin but
+  no key material has been imported.
+infection: >
+  An EXTERNAL-origin key without imported
+  material exists in KMS — it has a valid key
+  ID, ARN, and key policy — but contains no
+  cryptographic material. Every Encrypt,
+  Decrypt, GenerateDataKey, and ReEncrypt call
+  fails. The key looks valid in the console
+  (the policy is syntactically correct, the
+  alias resolves) but is operationally empty.
+  Resources configured to use this key for
+  encryption fail on every cryptographic
+  operation. Distinct from Disabled state: a
+  Disabled key has material and is
+  administratively turned off; PendingImport
+  means the key has never had material to
+  operate on. The fix is not EnableKey — it is
+  ImportKeyMaterial with a wrapped key blob and
+  an import token.
+failure: >
+  Operationally empty key. Every cryptographic
+  operation fails because the key has no key
+  material. The key cannot become useful
+  without an explicit ImportKeyMaterial call.

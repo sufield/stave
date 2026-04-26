@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.MATERIAL.EXPIRED.001
+name: KMS Imported Key Material Has Expired
+description: >
+  KMS key with EXTERNAL origin has key material whose expiration
+  date has passed. The key still exists, but new Encrypt and
+  GenerateDataKey calls fail with KMSInvalidStateException because
+  the cryptographic material is past its valid-to date. Existing
+  ciphertext can still be decrypted (KMS retains expired material
+  for decryption), so historical workloads continue to work — but
+  any new write path fails immediately. The failure pattern is
+  asymmetric and confusing: read paths succeed, write paths fail,
+  the key is enabled, the key has material. The fix is to import
+  fresh key material via aws kms import-key-material with a new
+  --valid-to or --expiration-model KEY_MATERIAL_DOES_NOT_EXPIRE.
+  Distinct from CTL.KMS.IMPORTED.EXPIRY.001 (no expiration set):
+  here the expiration was set and has been reached.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "SC-12(2)"
+  pci_dss_v4.0: "3.6.1.2"
+  fedramp_moderate: "SC-12(2)"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["CEK-04"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Imported KMS key material has expired. New encrypt operations
+    against the key fail; existing ciphertext is still decryptable
+    until the key itself is deleted.
+  action: >
+    Import fresh key material with aws kms import-key-material.
+    Fetch import parameters (aws kms get-parameters-for-import),
+    wrap the fresh key bytes with the returned wrapping key, and
+    submit them with the import token. Choose a deliberate
+    expiration: either a future --valid-to that aligns with the key-
+    rotation runbook, or KEY_MATERIAL_DOES_NOT_EXPIRE if the key
+    must never auto-expire. Update the rotation runbook so the next
+    expiration is detected before it is reached, not after.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "origin": "EXTERNAL",
+        "imported_material_expired": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.imported_material_expired
+      op: eq
+      value: true

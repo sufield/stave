@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ALIAS.GHOST.001
+name: KMS Alias Points to Disabled or Pending-Deletion Key
+description: >
+  KMS alias resolves to a key in Disabled or PendingDeletion state.
+  KMS aliases are human-readable names for keys — alias/production-
+  encryption, alias/database-key, alias/api-secrets — that resources
+  and IAM policies use instead of bare key IDs. The alias still
+  resolves and appears valid, but the underlying key cannot perform
+  cryptographic operations. A developer reading the IAM policy sees
+  alias/production-encryption and assumes the key is operational.
+  An auditor sees the alias in a resource configuration and marks
+  it compliant. Resources fail with non-obvious errors because the
+  alias hides the key's broken state. This is the "appears to work"
+  pattern at the encryption layer — the reference looks valid, the
+  key cannot function. Distinct from CTL.KMS.ALIAS.ORPHAN.001
+  (alias points to a key that no longer exists at all): here the
+  key still exists but cannot perform operations.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "CM-2"
+  pci_dss_v4.0: "3.6.1"
+  fedramp_moderate: "CM-2"
+  ccm_v4: ["CEK-03", "BCR-08"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    KMS alias points to a key in Disabled or PendingDeletion state.
+    Resources referencing the alias appear configured correctly but
+    fail on every cryptographic operation.
+  action: >
+    Identify the underlying key state (aws kms describe-key
+    --key-id alias/NAME). If the key is Disabled, decide whether to
+    re-enable it (aws kms enable-key) or repoint the alias to a
+    different operational key (aws kms update-alias). If the key is
+    PendingDeletion, either cancel the deletion (aws kms
+    cancel-key-deletion) or repoint the alias before the deletion
+    window expires. Audit which resources reference this alias so
+    the impact of repointing is understood.
+  example: |
+    {
+      "cryptography": {
+        "kind": "alias",
+        "alias_is_ghost": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: alias
+    - field: properties.cryptography.alias_is_ghost
+      op: eq
+      value: true

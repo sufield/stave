@@ -1,0 +1,21 @@
+id: kms_dormant_access
+description: >
+  Dormant key AND orphan grants on the same key footprint. Multiple
+  indicators of abandoned KMS infrastructure with active access
+  policies — the key has not been used for 90+ days yet still
+  retains an active key policy, AND grants to deleted principals
+  persist in the grant list. Together they signal a key whose
+  workload is gone but whose access surface was never cleaned up.
+  Threshold of 2 reflects that either signal alone is a minor
+  governance issue; both together indicate systemic incomplete-
+  cleanup discipline that compounds audit risk and obscures the
+  actual access topology of the key.
+controls:
+  - CTL.KMS.LIFECYCLE.DORMANT.001
+  - CTL.KMS.GRANT.ORPHAN.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - ungoverned_operation

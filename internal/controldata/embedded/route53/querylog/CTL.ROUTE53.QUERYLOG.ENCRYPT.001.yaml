@@ -23,11 +23,10 @@ compliance:
   nist_800_53_r5: "AU-9"
   pci_dss_v4.0: "10.5.1"
   soc2: "CC6.1"
-  ccm_v4: ["LOG-03", "EKM-02"]
+  ccm_v4: ["LOG-03", "CEK-02"]
 scope_tags:
   - aws
   - route53
-vendor: aws
 type: unsafe_state
 classification: state_assertion
 params:

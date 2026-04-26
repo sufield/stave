@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.STATE.DISABLED.001
+name: KMS Key Is Disabled While Referenced by Active Resources
+description: >
+  KMS key is in Disabled state while active resources reference it
+  for encryption — S3 buckets, RDS instances, EBS volumes, Lambda
+  functions, DynamoDB tables, CloudWatch log groups, Secrets Manager
+  secrets, or other dependent services. Unlike PendingDeletion (which
+  becomes permanent after the waiting period), Disabled is reversible
+  via EnableKey. But while disabled, every Encrypt, Decrypt,
+  GenerateDataKey, and ReEncrypt call returns
+  KMSInvalidStateException. The key appears in the KMS console with
+  a valid key ID and ARN — it looks operational — but cannot perform
+  any cryptographic operation. Resources referencing this key fail in
+  service-specific ways: S3 GetObject returns AccessDenied (ciphertext
+  cannot be decrypted), Lambda fails on cold start (cannot decrypt
+  environment variables), EBS volumes cannot be attached, and RDS
+  instances enter inaccessible state on restart. The control fires
+  when the key is disabled AND has at least one dependent resource;
+  re-enabling the key (EnableKey) immediately restores all
+  operations and no data is permanently lost.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "SC-12"
+  pci_dss_v4.0: "3.6.1"
+  fedramp_moderate: "SC-12"
+  hipaa: "164.312(a)(1)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "BCR-08"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    KMS key is disabled while active resources still depend on it.
+    Every cryptographic operation against this key fails; every
+    dependent resource is unable to encrypt or decrypt.
+  action: >
+    Identify dependent resources with aws kms list-aliases and audit
+    which services reference the key (S3 bucket encryption settings,
+    RDS DescribeDBInstances, Lambda GetFunctionConfiguration, etc.).
+    If the key should be operational, re-enable it: aws kms enable-key
+    --key-id KEY. If the disable was intentional (e.g., emergency
+    revocation), re-encrypt dependent resources with a different key
+    before they fail at scale.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "is_disabled": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.is_disabled
+      op: eq
+      value: true
+    - field: properties.cryptography.dependent_resource_count
+      op: gt
+      value: 0

@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.DELETION.MINWAIT.001
+name: KMS Key Deletion Scheduled With Minimum Waiting Period
+description: >
+  KMS key is scheduled for deletion with the minimum waiting period
+  (7 days). The deletion waiting period is the safety window
+  between ScheduleKeyDeletion and permanent key deletion — the only
+  time during which CancelKeyDeletion can stop the destruction and
+  during which dependent resources surface failures that prompt
+  investigation. The configurable range is 7-30 days. At 7 days, a
+  weekly batch job may not run before deletion; a monthly report
+  will not discover the failure; a low-traffic service may not
+  trigger enough errors to be noticed. 30 days provides time for
+  weekly jobs, monthly processes, and infrequently-invoked services
+  to encounter the failure, alert, and prompt CancelKeyDeletion. The
+  minimum window should be reserved for keys confirmed to have no
+  dependent resources — an audit, not a default.
+domain: governance
+severity: high
+compliance:
+  soc2: "A1.1"
+  nist_800_53_r5: "SC-12(1)"
+  pci_dss_v4.0: "3.6.1.4"
+  fedramp_moderate: "SC-12(1)"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["CEK-03", "BCR-08"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    KMS key is scheduled for deletion with the minimum 7-day waiting
+    period. Insufficient time to discover dependent resources before
+    permanent destruction.
+  action: >
+    Cancel the deletion (aws kms cancel-key-deletion) and reschedule
+    with a 30-day waiting period (--pending-window-in-days 30). The
+    longer window allows weekly and monthly jobs to encounter
+    failures and trigger investigation. Use the 7-day minimum only
+    when an audit confirms no dependent resources reference the key
+    across S3, RDS, EBS, Lambda, DynamoDB, CloudWatch Logs, Secrets
+    Manager, SNS, SQS, and other services.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "lifecycle": {
+          "pending_deletion": true,
+          "deletion_wait_days": 30
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.lifecycle.pending_deletion
+      op: eq
+      value: true
+    - field: properties.cryptography.lifecycle.deletion_wait_minimum
+      op: eq
+      value: true

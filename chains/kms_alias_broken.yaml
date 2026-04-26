@@ -1,0 +1,20 @@
+id: kms_alias_broken
+description: >
+  Either the alias points to a key in a non-operational state
+  (Disabled or PendingDeletion) or the alias points to a deleted
+  key. Both create a layer of indirection that hides the alias
+  target's broken state. Resources and IAM policies referencing the
+  alias appear to use a valid key — the alias resolves, the IAM
+  policy looks correct — but the underlying target either cannot
+  perform cryptographic operations (ghost) or no longer exists
+  (orphan). Threshold of 1 fires fast on either failure mode; both
+  are runtime cryptographic failures masked by alias indirection.
+controls:
+  - CTL.KMS.ALIAS.GHOST.001
+  - CTL.KMS.ALIAS.ORPHAN.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - encryption_bypass

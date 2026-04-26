@@ -1,0 +1,29 @@
+control: CTL.KMS.DELETION.MINWAIT.001
+defect: >
+  KMS key is scheduled for deletion with the
+  minimum waiting period (7 days).
+infection: >
+  The deletion waiting period is the safety
+  window — the time between
+  ScheduleKeyDeletion and permanent key
+  deletion. During this window dependent
+  resources fail (triggering investigation)
+  and CancelKeyDeletion can reverse the
+  decision. At 7 days a weekly batch job will
+  not run before the key is deleted; a monthly
+  report will not discover the failure; a
+  service with low traffic may not trigger
+  enough errors to be noticed. 30 days
+  provides time for weekly jobs, monthly
+  processes, and low-traffic services to
+  encounter the failure and alert. The minimum
+  window should be used only for keys that are
+  confirmed (via audit, not assumption) to
+  have no dependent resources.
+failure: >
+  Insufficient discovery window. The key may
+  be permanently deleted before dependent
+  resources are identified, leading to
+  cascading permanent data loss across
+  services that did not have time to surface
+  their dependency.

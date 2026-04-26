@@ -1,0 +1,31 @@
+control: CTL.KMS.GRANT.ORPHAN.001
+defect: >
+  KMS grant references a principal (IAM role
+  or user) that has been deleted.
+infection: >
+  KMS grants are an alternative access
+  mechanism not visible in the key policy
+  document — they are enumerated only via a
+  separate ListGrants API call. An orphan
+  grant cannot be exercised (the principal
+  does not exist) but persists in the key's
+  grant list, consuming the per-key grant
+  quota of 50,000 and obscuring the actual
+  access state of the key. Orphan grants
+  imply the IAM role lifecycle drove the
+  grantee out of existence but the grant
+  retirement step was skipped — a gap in the
+  decommission runbook. Beyond the quota
+  pressure, orphan grants make access audits
+  noisier: every grant must be evaluated to
+  determine whether it represents real
+  access, a deleted principal, or a soon-to-
+  be-recreated principal that would inherit
+  the orphan grant's permissions if the
+  ARN matches.
+failure: >
+  Grant-quota pressure and audit noise. The
+  grant cannot be exercised but persists as
+  decommission debris and prevents legitimate
+  grants from being created near the per-key
+  limit.

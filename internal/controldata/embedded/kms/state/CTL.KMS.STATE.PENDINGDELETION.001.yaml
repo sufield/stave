@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.STATE.PENDINGDELETION.001
+name: KMS Key Scheduled for Deletion While Referenced by Active Resources
+description: >
+  KMS key is in PendingDeletion state and is referenced by one or
+  more active resources — S3 buckets, RDS instances, EBS volumes,
+  Lambda functions, DynamoDB tables, CloudWatch log groups, Secrets
+  Manager secrets, SNS topics, SQS queues, or other services using
+  this key for encryption. When the deletion waiting period (7-30
+  days) expires, the key is permanently destroyed. Every resource
+  encrypted with the key permanently loses its encryption capability.
+  S3 objects encrypted with this key become permanently unreadable.
+  RDS instances encrypted with this key cannot be started after
+  shutdown. EBS volumes cannot be attached. Lambda functions cannot
+  decrypt environment variables. Secrets Manager secrets become
+  unrecoverable. CancelKeyDeletion can stop the countdown — but only
+  during the waiting window. After expiry the data is gone with no
+  recovery. This is the most destructive ghost reference in the
+  catalog: one state change, cascading permanent data loss across
+  every service the key encrypts. Distinct from
+  CTL.KMS.PENDING.DELETION.001 (fires on pending_deletion=true with
+  no dependent-resource gate, medium severity): this control fires
+  only when active dependents are also present, escalating to
+  critical because the blast radius is concrete and known.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "A1.1"
+  nist_800_53_r5: "SC-12(1)"
+  pci_dss_v4.0: "3.6.1.4"
+  fedramp_moderate: "SC-12(1)"
+  hipaa: "164.312(a)(1)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "BCR-08", "BCR-11"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    KMS key is scheduled for deletion while resources actively
+    reference it. When the waiting period expires the key is
+    permanently destroyed and every dependent resource permanently
+    loses access to its encrypted data.
+  action: >
+    Cancel the deletion immediately: aws kms cancel-key-deletion
+    --key-id KEY. Then audit dependent resources across S3, RDS,
+    EBS, Lambda, DynamoDB, CloudWatch Logs, Secrets Manager, SNS,
+    and SQS to confirm the impact. If deletion is still required,
+    re-encrypt every dependent resource with a different key BEFORE
+    rescheduling deletion. Treat ScheduleKeyDeletion calls on keys
+    with dependents as a pager-tier event.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "lifecycle": {
+          "pending_deletion": false
+        },
+        "dependent_resource_count": 0
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.lifecycle.pending_deletion
+      op: eq
+      value: true
+    - field: properties.cryptography.dependent_resource_count
+      op: gt
+      value: 0

@@ -1,0 +1,30 @@
+control: CTL.KMS.STATE.PENDINGDELETION.001
+defect: >
+  KMS key is scheduled for deletion while
+  active resources still reference it for
+  encryption.
+infection: >
+  When a KMS key enters PendingDeletion, a
+  countdown begins (7-30 days, set by the
+  ScheduleKeyDeletion call). During this window:
+  the key cannot be used for new Encrypt
+  operations (S3 PutObject with this key fails),
+  existing Decrypt operations also fail
+  (S3 GetObject on objects encrypted with this
+  key returns AccessDeniedException), RDS
+  instances using this key cannot be
+  stopped/started, EBS volumes cannot be
+  detached/reattached, and Lambda functions
+  cannot decrypt environment variables on cold
+  start. When the window expires the key is
+  PERMANENTLY deleted. There is no recovery.
+  Every resource encrypted with this key loses
+  access to its data permanently. CancelKeyDeletion
+  can stop the countdown — but only during the
+  waiting period. After expiry the data is
+  unrecoverable.
+failure: >
+  Cascading permanent data loss. Key deletion
+  will permanently break encryption for every
+  dependent resource. Data encrypted with this
+  key becomes permanently unreadable.

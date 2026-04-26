@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.LIFECYCLE.DORMANT.001
+name: KMS Key Not Used for 90+ Days With Active Policy
+description: >
+  KMS key has not been used for any cryptographic operation in more
+  than 90 days, yet its key policy continues to grant access to
+  principals. Dormant keys are a latent decryption surface: the
+  policy still grants kms:Decrypt, the key can still be used by
+  anyone with that permission, and nobody monitors the key for
+  anomalous usage because it appears unused. If the key encrypted
+  historical data in S3, RDS snapshots, or other services, that data
+  remains decryptable to anyone who discovers the key ARN and has
+  Decrypt permission — even though no application actively uses the
+  key. Same 90-day dormancy threshold used across Lambda, IAM
+  roles, DynamoDB, CloudFront, and Route 53 controls. The finding
+  prompts review: if the key is truly unused, disable it (and
+  eventually schedule deletion); if it encrypts archival data,
+  minimize the policy to the principals who legitimately need
+  archival decryption.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-2"
+  pci_dss_v4.0: "7.2.4"
+  fedramp_moderate: "AC-2"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["CEK-03", "IAM-08"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    KMS key has been dormant for 90+ days while its policy continues
+    to grant access. The key is a latent decryption surface — anyone
+    with Decrypt permission can still use it on historical
+    ciphertext.
+  action: >
+    Audit the key's usage history (CloudTrail GetKeyPolicy /
+    Encrypt / Decrypt events) to confirm true dormancy. If the key
+    is unused, disable it (aws kms disable-key) and plan
+    decommission. If it still encrypts archival data, minimize the
+    key policy to the specific principals authorized for archival
+    decryption and add aws:CalledVia or kms:ViaService conditions
+    so the policy cannot be used outside the archival workflow.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "is_dormant": false,
+        "last_used_days": 7
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.is_dormant
+      op: eq
+      value: true

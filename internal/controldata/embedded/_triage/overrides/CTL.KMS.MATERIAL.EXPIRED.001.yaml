@@ -1,0 +1,29 @@
+control: CTL.KMS.MATERIAL.EXPIRED.001
+defect: >
+  Imported KMS key material has expired. New
+  Encrypt operations against the key fail.
+infection: >
+  Imported key material with a passed valid-to
+  date stops accepting new Encrypt and
+  GenerateDataKey operations — they return
+  KMSInvalidStateException. KMS retains
+  expired material for Decrypt operations, so
+  existing ciphertext continues to read
+  successfully. The failure pattern is
+  asymmetric and confusing: read paths
+  succeed, write paths fail, the key shows
+  as Enabled in the console, the key has
+  material. Operators investigating
+  encrypt-side errors see "Enabled key with
+  material" and assume the problem is upstream
+  — IAM, condition keys, or service
+  configuration. The actual root cause is a
+  missed expiration that should have been
+  caught by a rotation runbook before the
+  expiry date was reached.
+failure: >
+  Asymmetric encryption failure. New ciphertext
+  cannot be created; existing ciphertext is
+  still decryptable. Workloads that mix read
+  and write paths fail intermittently in ways
+  that do not point at the key.

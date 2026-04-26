@@ -1,0 +1,28 @@
+control: CTL.KMS.ALIAS.ORPHAN.001
+defect: >
+  KMS alias references a key ID that no
+  longer exists.
+infection: >
+  An orphan alias persists in the account
+  after the underlying key was permanently
+  deleted. The alias is visible to ListAliases
+  and may be referenced by IAM policies and
+  resource configurations, but it cannot
+  resolve to a usable key. Any attempt to use
+  the alias for an Encrypt, Decrypt,
+  GenerateDataKey, or ReEncrypt call returns
+  NotFoundException — distinct from the
+  GHOST.001 case where the key still exists
+  but is in a non-operational state. Orphan
+  aliases are operational debris from
+  incomplete decommission: the key was
+  deleted, the alias was not. They obscure
+  the actual encryption topology — references
+  to the alias appear meaningful but route to
+  nothing.
+failure: >
+  Decommission debris. The alias persists with
+  no resolvable target. References to the
+  alias surface as runtime
+  NotFoundExceptions, often far from the
+  decommission event that caused them.

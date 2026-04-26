@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.GRANT.ORPHAN.001
+name: KMS Grant References a Deleted Principal
+description: >
+  KMS grant grants cryptographic operations to a principal (IAM role
+  or user) that has been deleted. The grant persists in the key's
+  grant list — consuming grant quota (50,000 per key) and cluttering
+  the access-control surface. Orphaned grants cannot be exercised
+  (the principal does not exist) but they signal incomplete cleanup
+  and obscure the actual access state of the key. Distinct from
+  CTL.KMS.POLICY.GHOSTREF.001 (deleted principal in the key
+  policy): grants are an alternative access mechanism not visible
+  in the key policy document. They require a separate ListGrants
+  API call to enumerate. Orphan grants imply the IAM role lifecycle
+  drove the grantee out of existence but the grant retirement step
+  was skipped.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-2"
+  pci_dss_v4.0: "7.2.4"
+  fedramp_moderate: "AC-2"
+  ccm_v4: ["CEK-03", "IAM-08"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    KMS grant references a principal that no longer exists. The
+    grant cannot be exercised but persists as decommission debris
+    against the per-key grant quota.
+  action: >
+    Retire the orphan grant with aws kms retire-grant
+    --grant-id GRANT_ID --key-id KEY. Audit the IAM lifecycle
+    workflow that deleted the role to ensure grant retirement is
+    part of the decommission runbook (the role-delete tooling
+    should call ListGrantsForPrincipal across keys it had grants
+    on, then RetireGrant for each).
+  example: |
+    {
+      "cryptography": {
+        "kind": "grant",
+        "grant_is_orphan": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: grant
+    - field: properties.cryptography.grant_is_orphan
+      op: eq
+      value: true

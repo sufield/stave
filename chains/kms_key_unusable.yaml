@@ -1,0 +1,21 @@
+id: kms_key_unusable
+description: >
+  Any key in an unusable state — Disabled with dependents,
+  PendingImport with no key material, or imported material expired.
+  Each independently means the key exists in KMS but cannot perform
+  cryptographic operations. Resources referencing the key fail on
+  every Encrypt, Decrypt, GenerateDataKey, or ReEncrypt call. The
+  failure mode differs (KMSInvalidStateException for Disabled and
+  expired material; NotFoundException-equivalent for PendingImport)
+  but the operational impact is identical — the key cannot be
+  used. Threshold of 1 fires on any single unusable-state failure.
+controls:
+  - CTL.KMS.STATE.DISABLED.001
+  - CTL.KMS.STATE.PENDINGIMPORT.001
+  - CTL.KMS.MATERIAL.EXPIRED.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - encryption_bypass

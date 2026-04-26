@@ -1,0 +1,33 @@
+control: CTL.KMS.ALIAS.GHOST.001
+defect: >
+  KMS alias points to a key that is in
+  Disabled or PendingDeletion state.
+infection: >
+  KMS aliases are human-readable names for
+  keys — alias/production-encryption,
+  alias/database-key, alias/api-secrets, etc.
+  Resources and IAM policies may reference
+  keys by alias instead of key ID. When the
+  underlying key is disabled or scheduled for
+  deletion, the alias still resolves — it
+  appears valid. A developer checking the
+  configuration sees alias/production-
+  encryption and assumes the key is
+  operational. An auditor sees the alias in
+  an IAM policy and marks it as compliant.
+  The alias hides the key's broken state.
+  This is the "appears to work" pattern at
+  the encryption layer — the reference looks
+  valid, the key does not function. Resources
+  referencing the alias fail with
+  KMSInvalidStateException on every
+  cryptographic operation. If the key is in
+  PendingDeletion, the failure becomes
+  permanent when the waiting period expires.
+failure: >
+  Hidden key failure. The alias masks the
+  key's disabled or pending-deletion state.
+  Resources referencing the alias fail with
+  non-obvious errors and there is no signal
+  in the alias name itself that something is
+  wrong.

@@ -1,0 +1,31 @@
+control: CTL.KMS.LIFECYCLE.DORMANT.001
+defect: >
+  KMS key has not been used for any
+  cryptographic operation in 90+ days, yet its
+  policy continues to grant access.
+infection: >
+  A dormant key retains its full key policy —
+  principals with kms:Decrypt can still use
+  the key. If the key encrypted historical data
+  in S3, RDS snapshots, EBS volumes, or other
+  services, that data is still decryptable by
+  anyone with Decrypt permission on the key —
+  even though no application actively uses the
+  key. An attacker who discovers the dormant
+  key's ARN and has (or can obtain) Decrypt
+  permission can decrypt historical data.
+  Because the key is unused, nobody monitors
+  it for anomalous usage; an attacker exercising
+  Decrypt against a dormant key is unlikely to
+  trigger alerts. Dormant keys should be
+  reviewed: if the key is truly unused, disable
+  it (and eventually schedule deletion); if it
+  encrypts archival data, minimize the policy
+  to the principals legitimately required for
+  archival decryption.
+failure: >
+  Latent decryption surface. A dormant key with
+  an active policy allows decryption of
+  historical data without monitoring or
+  legitimate workload activity to compare
+  against.
