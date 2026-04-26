@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.OAC.001
+name: CloudFront Origin Access Control Not Referenced by Any Distribution
+description: >
+  A CloudFront Origin Access Control (OAC) exists but is not
+  referenced by any distribution's S3 origin. The OAC was either
+  created for a distribution that has since been deleted or
+  modified to remove the OAC association, or it was created but
+  never attached to any distribution. An unreferenced OAC has
+  no security impact — it cannot grant or deny access to anything
+  because no distribution uses it. However, it accumulates in
+  the CloudFront configuration as governance clutter: IAM-review
+  tools may flag it as an unattached identity, it appears in
+  CloudFront ListOriginAccessControls output inflating the
+  apparent configuration complexity, and it may mislead operators
+  into thinking a distribution is protected by an OAC that is
+  not actually configured.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04", "IAM-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    CloudFront OAC is not referenced by any distribution. The OAC
+    is governance clutter and should be removed if not needed.
+  action: >
+    Verify whether the OAC was created for a distribution that
+    is in progress (not yet associated) or is a remnant of a
+    deleted distribution. If it is a remnant, delete it via
+    aws cloudfront delete-origin-access-control --id OAC_ID.
+    If it will be used by a future distribution, document the
+    intent and track the pending association.
+  example: |
+    {
+      "cdn": {
+        "kind": "origin_access_control",
+        "cloudfront": {
+          "oac_id": "E1234567890ABC",
+          "oac_referenced": true,
+          "oac_distribution_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: origin_access_control
+    - field: properties.cdn.cloudfront.oac_referenced
+      op: eq
+      value: false

@@ -1,0 +1,32 @@
+control: CTL.CLOUDFRONT.CONFIG.CNAME.NODNS.001
+defect: >
+  CloudFront distribution has an alternate
+  domain name with no DNS record pointing
+  to it.
+infection: >
+  A CNAME configured on a CloudFront
+  distribution asserts that this distribution
+  owns the named domain — CloudFront enforces
+  this ownership claim and prevents another
+  distribution from claiming the same CNAME.
+  But ownership without DNS routing creates
+  a split: the distribution claims the domain,
+  but traffic to the domain goes elsewhere
+  (or nowhere). The security scenarios:
+  DNS points to other infrastructure — the
+  CNAME claim on CloudFront is stale, but
+  the actual traffic bypasses CloudFront
+  entirely, avoiding WAF, geo-restriction,
+  signed URL enforcement, TLS policy, and
+  security headers. DNS is deleted — the
+  domain is unclaimed in DNS but claimed
+  on the distribution, which prevents using
+  the domain in a new distribution without
+  removing it from the old one. DNS record
+  doesn't exist yet — deployment is
+  incomplete and the distribution will not
+  serve traffic until DNS is configured.
+failure: >
+  CNAME-to-distribution routing inconsistent.
+  DNS may bypass CloudFront or the domain
+  may be orphaned on a stale distribution.

@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.CONFIG.NOHTTP2.001
+name: CloudFront Distribution Does Not Enable HTTP/2
+description: >
+  CloudFront distribution is configured for HTTP/1.1 only. HTTP/2
+  provides multiplexing (multiple requests over a single TCP
+  connection — reduces latency for pages with many resources),
+  header compression (HPACK reduces request/response header
+  overhead), and stream prioritization (browser indicates which
+  resources are more important). HTTP/2 also requires TLS in
+  practice — all major browsers only use HTTP/2 over HTTPS,
+  which provides an incidental security benefit. HTTP/3 (QUIC)
+  provides further improvements. CloudFront supports http1.1,
+  http2, http2and3, and http3 as the supported HTTP versions.
+  There is no operational reason to restrict to HTTP/1.1 for
+  CloudFront distributions — all current viewers support HTTP/2.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-07"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    CloudFront distribution uses HTTP/1.1 only. HTTP/2 provides
+    significant performance improvements and is supported by all
+    current viewers.
+  action: >
+    Update the distribution via UpdateDistribution to set
+    HttpVersion to http2 (or http2and3 to also support HTTP/3).
+    This is a non-breaking change — viewers that don't support
+    HTTP/2 fall back to HTTP/1.1 automatically.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "http_version": "http2",
+          "http2_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.http2_enabled
+      op: eq
+      value: false

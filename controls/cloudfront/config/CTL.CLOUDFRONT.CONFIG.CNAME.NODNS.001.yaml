@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.CONFIG.CNAME.NODNS.001
+name: CloudFront Distribution CNAME Has No DNS Record
+description: >
+  CloudFront distribution has an alternate domain name (CNAME)
+  configured but DNS for that domain does not resolve to this
+  distribution. The CNAME claim is registered on the distribution
+  but no traffic routes through it. This has two interpretations:
+  DNS is intentionally pointed elsewhere (configuration drift —
+  the distribution thinks it owns the domain but traffic goes to
+  a different infrastructure, bypassing all CloudFront controls),
+  or DNS was removed and the CNAME is orphaned on the distribution
+  (the domain is claimed but unused — blocking the CNAME from
+  being used on a different distribution without removing it first).
+  In either case, the CNAME configuration and DNS state are
+  inconsistent — either the DNS should be updated to point to
+  this distribution, or the CNAME should be removed from the
+  distribution.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront distribution has a CNAME with no matching DNS record
+    pointing to it. Configuration and DNS are inconsistent.
+  action: >
+    Verify the intended state: If traffic should route through
+    CloudFront for this domain, add or update the DNS CNAME record
+    to point to the distribution's *.cloudfront.net domain. If
+    traffic should not route through CloudFront, remove the CNAME
+    from the distribution's alternate domain names list via
+    UpdateDistribution. If the CNAME is a stale reference from
+    a previous configuration, remove it to free the domain claim.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "alternate_domain_names": ["cdn.example.com"],
+          "has_orphaned_cname": false,
+          "orphaned_cnames": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_orphaned_cname
+      op: eq
+      value: true

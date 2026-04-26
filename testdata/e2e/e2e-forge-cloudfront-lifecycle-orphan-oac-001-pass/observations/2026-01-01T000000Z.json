@@ -1,0 +1,1 @@
+{"schema_version":"obs.v0.1","captured_at":"2026-01-01T00:00:00Z","source":"deployed","assets":[{"id":"arn:aws:cloudfront::123456789012:distribution/E1ABCDEF","type":"aws_cloudfront_origin_access_control","vendor":"aws","properties":{"cdn":{"kind":"origin_access_control","cloudfront":{"oac_id":"E1234567890ABC","oac_referenced":true,"oac_distribution_count":1}}}}]}

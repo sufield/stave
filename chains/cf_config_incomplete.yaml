@@ -1,0 +1,25 @@
+id: cf_config_incomplete
+description: >
+  Multiple distribution configuration gaps. The distribution has
+  no default root object (CTL.CLOUDFRONT.CONFIG.NOROOTOBJECT.001)
+  — root URL requests may expose an S3 bucket listing or return an
+  error — AND either a CNAME is configured but DNS does not resolve
+  to this distribution (CTL.CLOUDFRONT.CONFIG.CNAME.NODNS.001),
+  meaning traffic may route around CloudFront's controls, or origin
+  failover is not configured (CTL.CLOUDFRONT.ORIGIN.FAILOVER.001),
+  meaning a single origin failure causes complete service disruption.
+  Threshold of 2 reflects that missing a root object alone is a
+  configuration gap; combined with a DNS mismatch or missing failover,
+  the distribution has multiple configuration decisions that appear
+  incomplete — root URL behavior is undefined AND either domain
+  routing is inconsistent or availability is not protected.
+controls:
+  - CTL.CLOUDFRONT.CONFIG.NOROOTOBJECT.001
+  - CTL.CLOUDFRONT.CONFIG.CNAME.NODNS.001
+  - CTL.CLOUDFRONT.ORIGIN.FAILOVER.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access

@@ -1,0 +1,35 @@
+control: CTL.CLOUDFRONT.CONFIG.NOROOTOBJECT.001
+defect: >
+  CloudFront distribution has no default
+  root object. Root URL requests are handled
+  by the origin unguided.
+infection: >
+  A request to the distribution's root URL
+  (https://domain/) asks CloudFront to serve
+  the object at path "/". CloudFront forwards
+  this to the origin without knowing which
+  specific object to serve. For S3 origins
+  where the bucket grants s3:ListBucket to
+  the OAC or publicly, the response is an
+  XML document listing all objects in the
+  bucket: every file name, size, storage
+  class, and last-modified timestamp. This
+  is the full content inventory of the
+  bucket — exposed by a single request to
+  the root URL. For S3 origins without
+  ListBucket, the response is 403 Access
+  Denied — confusing for users but not a
+  disclosure risk. For custom origins,
+  the root path behavior depends on the
+  origin's server configuration — some
+  servers return directory listings, others
+  return errors, and well-configured servers
+  return the intended page. Setting a default
+  root object (index.html) forces CloudFront
+  to request that specific object instead of
+  forwarding the bare "/" path.
+failure: >
+  S3 origin with ListBucket: full object
+  inventory exposed at root URL. S3 without
+  ListBucket: 403 at root. Custom origin:
+  origin-dependent behavior.

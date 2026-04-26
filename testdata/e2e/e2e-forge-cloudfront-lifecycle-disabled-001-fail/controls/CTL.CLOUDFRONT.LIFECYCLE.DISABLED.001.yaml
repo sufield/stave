@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.LIFECYCLE.DISABLED.001
+name: CloudFront Distribution Is Disabled With Alternate Domain Names Claimed
+description: >
+  CloudFront distribution is in a Disabled state but has alternate
+  domain names (CNAMEs) configured. A disabled distribution serves
+  no traffic — it is not a security risk in the conventional sense.
+  But it retains its CNAME claims: the alternate domain names
+  are registered as belonging to this distribution, blocking those
+  domains from being associated with any other distribution. If the
+  disabled distribution has an expired or deleted certificate, the
+  CNAME claim blocks future use of the domain. If the distribution
+  is being decommissioned, the CNAMEs should be removed before
+  or alongside disabling. If it is temporarily disabled (maintenance,
+  cost management), the state is acceptable but should be documented
+  and time-bounded. This control fires only on disabled distributions
+  with CNAMEs — a disabled distribution without CNAMEs has no impact
+  and is low governance priority.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    CloudFront distribution is disabled but retains CNAME claims,
+    blocking those domains from use on other distributions.
+  action: >
+    If the distribution is permanently decommissioned: remove the
+    alternate domain names via UpdateDistribution before or after
+    disabling. If the distribution is temporarily disabled: document
+    the expected duration and review in the next operational cycle.
+    If the distribution should be deleted: first remove all CNAMEs,
+    then delete the distribution.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "enabled": true,
+          "has_cnames": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.enabled
+      op: eq
+      value: false
+    - field: properties.cdn.cloudfront.has_cnames
+      op: eq
+      value: true

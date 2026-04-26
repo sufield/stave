@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.LIFECYCLE.DORMANT.001
+name: CloudFront Distribution Has No Request Traffic in 90+ Days
+description: >
+  CloudFront distribution is enabled but has received no viewer
+  requests in more than 90 days. The distribution retains its full
+  operational configuration: origins (potentially with live data),
+  WAF associations, TLS certificates, S3 OAC grants, IAM policies
+  granting origin access, and Lambda@Edge or CloudFront Functions
+  that execute for every request. Nobody monitors a dormant
+  distribution for anomalous access because it is assumed unused.
+  But the *.cloudfront.net domain is permanently assigned and
+  publicly reachable — anyone who discovers the URL (via web
+  archives, referrer logs, prior shared links, or OSINT) can
+  reach the origin through the distribution. 90-day threshold
+  matches Lambda, IAM, DynamoDB, ECS, and EC2 dormant controls
+  for consistency across the lifecycle category.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04", "DSP-01"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront distribution has received no requests in 90+ days
+    but remains enabled and reachable.
+  action: >
+    Verify whether the distribution is needed. If it is a permanent
+    part of the infrastructure but currently unused (e.g., a staging
+    environment), document the expected dormancy and set a reminder
+    to review again in 90 days. If the distribution is no longer
+    needed, disable it and schedule deletion after verifying no
+    active dependencies. Disabling prevents any new traffic and
+    removes the distribution from attack surface without losing
+    the configuration.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "is_dormant": false,
+          "last_request_days": 3,
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.is_dormant
+      op: eq
+      value: true

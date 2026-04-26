@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.POLICY.001
+name: CloudFront Cache or Response Headers Policy Not Referenced
+description: >
+  A CloudFront cache policy or response headers policy exists but
+  is not attached to any distribution's cache behavior. The policy
+  was either created for a distribution that was deleted, or was
+  created but never attached. An unreferenced policy has no
+  operational effect — it neither caches content nor adds headers.
+  However, it creates governance ambiguity: security teams reviewing
+  the CloudFront response headers policies may see a policy that
+  appears to be enforcing security headers for a distribution that
+  is actually using a different (potentially weaker) policy. Cache
+  policies accumulate silently in the CloudFront configuration and
+  may represent investment (complex cache key configurations) that
+  should be preserved, or dead weight that should be cleaned up.
+  The finding distinguishes between the two by surfacing the
+  unreferenced state for review.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    CloudFront cache or response headers policy is not referenced
+    by any distribution behavior. Policy is unused governance clutter.
+  action: >
+    Review whether the policy should be attached to an existing
+    distribution or deleted. For response headers policies: if it
+    was intended for a specific distribution, attach it to that
+    distribution's behaviors via UpdateDistribution. For cache
+    policies: verify the policy is not needed before deleting —
+    some policies represent significant configuration work.
+    Delete via aws cloudfront delete-cache-policy or
+    aws cloudfront delete-response-headers-policy.
+  example: |
+    {
+      "cdn": {
+        "kind": "cache_policy",
+        "cloudfront": {
+          "policy_id": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+          "policy_referenced": true,
+          "policy_distribution_count": 2
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: in
+      value:
+        - cache_policy
+        - response_headers_policy
+    - field: properties.cdn.cloudfront.policy_referenced
+      op: eq
+      value: false

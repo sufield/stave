@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.CONFIG.NOROOTOBJECT.001
+name: CloudFront Distribution Has No Default Root Object
+description: >
+  CloudFront distribution does not have a default root object
+  configured. When a viewer requests the root URL (https://domain/),
+  CloudFront forwards the request for the root path (/) to the origin
+  rather than serving a specific object. For S3 origins with
+  ListBucket permission granted, the response is an XML object
+  listing that exposes every file name, size, and last-modified
+  timestamp in the bucket — full content inventory disclosure. For
+  S3 origins without ListBucket, the response is 403 Access Denied.
+  For custom origins, the request is forwarded to the origin's
+  root handler. Setting the default root object to index.html (or
+  another appropriate object) ensures root URL requests serve the
+  intended content and eliminates the S3 object listing exposure.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront distribution has no default root object. Root URL
+    requests may expose S3 bucket listing or return an error.
+  action: >
+    Set the default root object in the CloudFront distribution
+    configuration via UpdateDistribution with
+    DefaultRootObject: "index.html" (or the appropriate root
+    document for the application). For S3 static websites, this
+    is typically index.html. For applications, it should be the
+    root path that serves the entry point.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "default_root_object": "index.html",
+          "has_default_root_object": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_default_root_object
+      op: eq
+      value: false

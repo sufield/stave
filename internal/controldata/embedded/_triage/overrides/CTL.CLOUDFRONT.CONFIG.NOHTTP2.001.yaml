@@ -1,0 +1,32 @@
+control: CTL.CLOUDFRONT.CONFIG.NOHTTP2.001
+defect: >
+  CloudFront distribution uses HTTP/1.1
+  only. HTTP/2 is not enabled.
+infection: >
+  HTTP/1.1 imposes a fundamental performance
+  constraint: each connection can only carry
+  one in-flight request at a time. A modern
+  web page with 100 resources requires
+  opening multiple parallel connections —
+  each with its own TLS handshake overhead
+  — to achieve acceptable load time. HTTP/2
+  multiplexing sends all 100 requests over a
+  single connection, eliminating the
+  connection overhead. For users on high-
+  latency connections (mobile, international),
+  HTTP/1.1 distributions load measurably
+  slower. The security relevance is indirect:
+  HTTP/2's mandatory TLS (enforced by all
+  browsers) means HTTP/2-only clients cannot
+  connect via plaintext even if the
+  distribution's viewer protocol policy
+  allows HTTP (the browser upgrades the
+  connection). This complements
+  CTL.CLOUDFRONT.HTTPS.ONLY.001. Enabling
+  HTTP/2 is a zero-risk change — clients
+  that don't support HTTP/2 negotiate
+  HTTP/1.1 transparently via ALPN.
+failure: >
+  HTTP/1.1 performance only. Increased
+  latency for multi-resource pages. HTTP/2
+  security benefits unavailable.

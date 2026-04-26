@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1612
-**Pack hash:** `54914f9ee6af8a99cc800e841fb6c9c34143eacc4314621cf1942e8f332c9ce0`
+**Total controls:** 1619
+**Pack hash:** `32c10984788b60472d9cf03113b98c99f4ecff978285bf82d43a6dec79120818`
 
 ## Summary
 
@@ -13,8 +13,8 @@
 | critical | 181 |
 | high | 707 |
 | info | 16 |
-| low | 115 |
-| medium | 593 |
+| low | 119 |
+| medium | 596 |
 
 | Domain | Count |
 |--------|-------|
@@ -25,7 +25,7 @@
 | detection | 49 |
 | encryption | 92 |
 | exposure | 903 |
-| governance | 114 |
+| governance | 121 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -4996,6 +4996,51 @@ No CloudWatch alarm monitors the CloudFront Requests metric. A sudden traffic sp
 
 ---
 
+### CTL.CLOUDFRONT.CONFIG.CNAME.NODNS.001
+
+**CloudFront Distribution CNAME Has No DNS Record**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3; soc2: CC8.1;
+
+CloudFront distribution has an alternate domain name (CNAME) configured but DNS for that domain does not resolve to this distribution. The CNAME claim is registered on the distribution but no traffic routes through it. This has two interpretations: DNS is intentionally pointed elsewhere (configuration drift — the distribution thinks it owns the domain but traffic goes to a different infrastructure, bypassing all CloudFront controls), or DNS was removed and the CNAME is orphaned on the distribution (the domain is claimed but unused — blocking the CNAME from being used on a different distribution without removing it first). In either case, the CNAME configuration and DNS state are inconsistent — either the DNS should be updated to point to this distribution, or the CNAME should be removed from the distribution.
+
+**Remediation:** Verify the intended state: If traffic should route through CloudFront for this domain, add or update the DNS CNAME record to point to the distribution's *.cloudfront.net domain. If traffic should not route through CloudFront, remove the CNAME from the distribution's alternate domain names list via UpdateDistribution. If the CNAME is a stale reference from a previous configuration, remove it to free the domain claim.
+
+---
+
+### CTL.CLOUDFRONT.CONFIG.NOHTTP2.001
+
+**CloudFront Distribution Does Not Enable HTTP/2**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.6;
+
+CloudFront distribution is configured for HTTP/1.1 only. HTTP/2 provides multiplexing (multiple requests over a single TCP connection — reduces latency for pages with many resources), header compression (HPACK reduces request/response header overhead), and stream prioritization (browser indicates which resources are more important). HTTP/2 also requires TLS in practice — all major browsers only use HTTP/2 over HTTPS, which provides an incidental security benefit. HTTP/3 (QUIC) provides further improvements. CloudFront supports http1.1, http2, http2and3, and http3 as the supported HTTP versions. There is no operational reason to restrict to HTTP/1.1 for CloudFront distributions — all current viewers support HTTP/2.
+
+**Remediation:** Update the distribution via UpdateDistribution to set HttpVersion to http2 (or http2and3 to also support HTTP/3). This is a non-breaking change — viewers that don't support HTTP/2 fall back to HTTP/1.1 automatically.
+
+---
+
+### CTL.CLOUDFRONT.CONFIG.NOROOTOBJECT.001
+
+**CloudFront Distribution Has No Default Root Object**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-6; soc2: CC6.1;
+
+CloudFront distribution does not have a default root object configured. When a viewer requests the root URL (https://domain/), CloudFront forwards the request for the root path (/) to the origin rather than serving a specific object. For S3 origins with ListBucket permission granted, the response is an XML object listing that exposes every file name, size, and last-modified timestamp in the bucket — full content inventory disclosure. For S3 origins without ListBucket, the response is 403 Access Denied. For custom origins, the request is forwarded to the origin's root handler. Setting the default root object to index.html (or another appropriate object) ensures root URL requests serve the intended content and eliminates the S3 object listing exposure.
+
+**Remediation:** Set the default root object in the CloudFront distribution configuration via UpdateDistribution with DefaultRootObject: "index.html" (or the appropriate root document for the application). For S3 static websites, this is typically index.html. For applications, it should be the root path that serves the entry point.
+
+---
+
 ### CTL.CLOUDFRONT.CORS.001
 
 **Response Headers Policy Must Not Combine Wildcard Origin With Credentials**
@@ -5173,6 +5218,66 @@ CloudFront response headers policy does not remove the Server or X-Powered-By re
 CloudFront distributions that allow HTTP (allow-all viewer protocol policy) serve content over plaintext connections. Session cookies, authentication tokens, and sensitive data transmitted over HTTP are visible to network-level attackers. Both the default cache behavior and all custom cache behaviors must enforce HTTPS. A single HTTP-permitting behavior is sufficient for session hijacking.
 
 **Remediation:** Update viewer protocol policy to redirect-to-https or https-only for all cache behaviors (default and custom) in the distribution configuration.
+
+---
+
+### CTL.CLOUDFRONT.LIFECYCLE.DISABLED.001
+
+**CloudFront Distribution Is Disabled With Alternate Domain Names Claimed**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3; soc2: CC8.1;
+
+CloudFront distribution is in a Disabled state but has alternate domain names (CNAMEs) configured. A disabled distribution serves no traffic — it is not a security risk in the conventional sense. But it retains its CNAME claims: the alternate domain names are registered as belonging to this distribution, blocking those domains from being associated with any other distribution. If the disabled distribution has an expired or deleted certificate, the CNAME claim blocks future use of the domain. If the distribution is being decommissioned, the CNAMEs should be removed before or alongside disabling. If it is temporarily disabled (maintenance, cost management), the state is acceptable but should be documented and time-bounded. This control fires only on disabled distributions with CNAMEs — a disabled distribution without CNAMEs has no impact and is low governance priority.
+
+**Remediation:** If the distribution is permanently decommissioned: remove the alternate domain names via UpdateDistribution before or after disabling. If the distribution is temporarily disabled: document the expected duration and review in the next operational cycle. If the distribution should be deleted: first remove all CNAMEs, then delete the distribution.
+
+---
+
+### CTL.CLOUDFRONT.LIFECYCLE.DORMANT.001
+
+**CloudFront Distribution Has No Request Traffic in 90+ Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC8.1;
+
+CloudFront distribution is enabled but has received no viewer requests in more than 90 days. The distribution retains its full operational configuration: origins (potentially with live data), WAF associations, TLS certificates, S3 OAC grants, IAM policies granting origin access, and Lambda@Edge or CloudFront Functions that execute for every request. Nobody monitors a dormant distribution for anomalous access because it is assumed unused. But the *.cloudfront.net domain is permanently assigned and publicly reachable — anyone who discovers the URL (via web archives, referrer logs, prior shared links, or OSINT) can reach the origin through the distribution. 90-day threshold matches Lambda, IAM, DynamoDB, ECS, and EC2 dormant controls for consistency across the lifecycle category.
+
+**Remediation:** Verify whether the distribution is needed. If it is a permanent part of the infrastructure but currently unused (e.g., a staging environment), document the expected dormancy and set a reminder to review again in 90 days. If the distribution is no longer needed, disable it and schedule deletion after verifying no active dependencies. Disabling prevents any new traffic and removes the distribution from attack surface without losing the configuration.
+
+---
+
+### CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.OAC.001
+
+**CloudFront Origin Access Control Not Referenced by Any Distribution**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3; soc2: CC8.1;
+
+A CloudFront Origin Access Control (OAC) exists but is not referenced by any distribution's S3 origin. The OAC was either created for a distribution that has since been deleted or modified to remove the OAC association, or it was created but never attached to any distribution. An unreferenced OAC has no security impact — it cannot grant or deny access to anything because no distribution uses it. However, it accumulates in the CloudFront configuration as governance clutter: IAM-review tools may flag it as an unattached identity, it appears in CloudFront ListOriginAccessControls output inflating the apparent configuration complexity, and it may mislead operators into thinking a distribution is protected by an OAC that is not actually configured.
+
+**Remediation:** Verify whether the OAC was created for a distribution that is in progress (not yet associated) or is a remnant of a deleted distribution. If it is a remnant, delete it via aws cloudfront delete-origin-access-control --id OAC_ID. If it will be used by a future distribution, document the intent and track the pending association.
+
+---
+
+### CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.POLICY.001
+
+**CloudFront Cache or Response Headers Policy Not Referenced**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3; soc2: CC8.1;
+
+A CloudFront cache policy or response headers policy exists but is not attached to any distribution's cache behavior. The policy was either created for a distribution that was deleted, or was created but never attached. An unreferenced policy has no operational effect — it neither caches content nor adds headers. However, it creates governance ambiguity: security teams reviewing the CloudFront response headers policies may see a policy that appears to be enforcing security headers for a distribution that is actually using a different (potentially weaker) policy. Cache policies accumulate silently in the CloudFront configuration and may represent investment (complex cache key configurations) that should be preserved, or dead weight that should be cleaned up. The finding distinguishes between the two by surfacing the unreferenced state for review.
+
+**Remediation:** Review whether the policy should be attached to an existing distribution or deleted. For response headers policies: if it was intended for a specific distribution, attach it to that distribution's behaviors via UpdateDistribution. For cache policies: verify the policy is not needed before deleting — some policies represent significant configuration work. Delete via aws cloudfront delete-cache-policy or aws cloudfront delete-response-headers-policy.
 
 ---
 

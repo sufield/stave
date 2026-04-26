@@ -1,0 +1,34 @@
+control: CTL.CLOUDFRONT.LIFECYCLE.DORMANT.001
+defect: >
+  CloudFront distribution is enabled but
+  has had no requests in 90+ days.
+infection: >
+  A dormant CloudFront distribution remains
+  fully operational: the *.cloudfront.net
+  domain is permanently assigned and will
+  not change, the origin is still configured
+  (the S3 bucket or ALB is still reachable),
+  Lambda@Edge functions still execute for
+  any incoming request, and WAF rules still
+  apply (or don't apply, if WAF is missing).
+  Nobody monitors a dormant distribution
+  for anomalous access because the CloudWatch
+  metric shows zero requests — alert
+  thresholds are set for traffic spikes, not
+  for traffic on a "dead" distribution. But
+  anyone who discovers the *.cloudfront.net
+  URL or a custom CNAME (from web archives,
+  prior referrer headers, shared links, DNS
+  history services) can issue requests. If
+  the origin is an S3 bucket with sensitive
+  archived data, if Lambda@Edge functions
+  are configured that perform backend
+  operations, or if the distribution was
+  inadvertently left enabled — the abandoned
+  distribution is an unmonitored ingress
+  point to potentially sensitive resources.
+failure: >
+  Unmonitored ingress to origin. Dormant
+  distributions receive no alert on access
+  and accumulate no baseline against which
+  anomalous access can be detected.

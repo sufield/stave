@@ -1,0 +1,32 @@
+control: CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.OAC.001
+defect: >
+  CloudFront Origin Access Control is not
+  referenced by any distribution.
+infection: >
+  An unreferenced OAC has no operational
+  effect — it grants no access to any S3
+  bucket because no distribution uses it
+  to sign requests. The primary concern is
+  governance visibility: the S3 bucket
+  policy may still contain a statement
+  granting the OAC's service principal
+  access. If the S3 bucket policy was not
+  updated when the OAC was detached from
+  the distribution, the bucket still
+  grants cloudfront.amazonaws.com access
+  for requests conditioned on the OAC's
+  ARN. This is harmless if the OAC is
+  orphaned (no distribution generates
+  signed requests with that OAC ID) but
+  it creates misleading bucket policy
+  entries that operators may not review.
+  The clean state: OAC referenced by a
+  distribution AND the corresponding S3
+  bucket policy grants access to that
+  distribution ARN specifically. Orphaned
+  OAC with stale bucket policy is a
+  governance inconsistency worth resolving.
+failure: >
+  Unreferenced OAC with potential stale
+  S3 bucket policy grants. No active
+  security risk; governance inconsistency.

@@ -1,0 +1,34 @@
+control: CTL.CLOUDFRONT.LIFECYCLE.DISABLED.001
+defect: >
+  CloudFront distribution is disabled but
+  retains alternate domain name claims.
+infection: >
+  When a CloudFront distribution is disabled,
+  it stops serving traffic — viewers receive
+  errors if they try to reach it. But the
+  distribution's configuration persists
+  unchanged, including its alternate domain
+  name (CNAME) registrations. CloudFront
+  enforces uniqueness of CNAMEs across
+  distributions: each CNAME can only be
+  registered on one distribution at a time.
+  A disabled distribution with CNAMEs blocks
+  those domains from being moved to a new
+  or different distribution. The operational
+  impact: if the team creates a replacement
+  distribution, they cannot register the
+  same domain names without first removing
+  them from the disabled distribution. In
+  practice, this creates pressure to re-
+  enable or modify the disabled distribution
+  during sensitive migration work. If the
+  distribution is permanently decommissioned,
+  the CNAMEs should be explicitly removed
+  as part of the decommission process —
+  not left attached to a disabled distribution
+  indefinitely.
+failure: >
+  CNAME claims block domain reuse. Disabled
+  distribution's domain registrations prevent
+  clean reassignment without re-engaging
+  the decommissioned configuration.

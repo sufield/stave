@@ -1,0 +1,33 @@
+control: CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.POLICY.001
+defect: >
+  CloudFront cache or response headers
+  policy is not attached to any distribution.
+infection: >
+  For response headers policies: an
+  unreferenced policy that was supposed to
+  enforce security headers (HSTS, CSP,
+  X-Frame-Options) appears in the CloudFront
+  configuration as existing security
+  infrastructure. A security review that
+  checks for policy existence will see it.
+  But because no distribution references
+  it, no distribution benefits from the
+  headers it defines. If the distribution
+  it was created for is using the CloudFront
+  default headers policy (or no policy),
+  the intended security headers are absent
+  in responses — the orphaned policy creates
+  false confidence. For cache policies:
+  an unreferenced cache policy may represent
+  a significant investment (complex cache
+  key configuration, TTL settings tuned for
+  specific content types) that is silently
+  not being used. The actual distribution
+  may be using the managed CloudFront
+  cache policies (CachingOptimized,
+  CachingDisabled) rather than the custom
+  policy.
+failure: >
+  Policy exists but is unused. Security
+  headers policy may create false confidence
+  that headers are being applied.
