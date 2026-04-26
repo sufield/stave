@@ -1,0 +1,30 @@
+control: CTL.CLOUDFRONT.GHOST.CERT.001
+defect: >
+  CloudFront distribution's ACM certificate
+  has been deleted or has expired.
+infection: >
+  CloudFront requires a valid ACM certificate
+  in us-east-1 to serve content over a custom
+  domain with HTTPS. When the certificate is
+  deleted or expires, TLS handshakes for the
+  custom domain fail: browsers show NET::ERR_CERT_INVALID,
+  ERR_CERT_AUTHORITY_INVALID, or similar
+  certificate errors and refuse the connection.
+  The default *.cloudfront.net domain continues
+  to work — CloudFront uses its own certificate
+  for that domain — but any custom domain (e.g.,
+  static.company.com, api.company.com, cdn.company.com)
+  fails. For expired certificates: ACM auto-renews
+  certificates it manages, but only if the DNS
+  validation CNAME record is still present.
+  If the CNAME was removed (common during DNS
+  migrations), auto-renewal silently fails and
+  the certificate expires. For deleted certificates:
+  deletion requires decoupling from the distribution
+  — if the certificate was deleted while still
+  associated, CloudFront retains a reference to
+  a nonexistent resource.
+failure: >
+  Custom domain TLS fails. Browsers reject
+  connections to the custom domain. Default
+  cloudfront.net domain still works.

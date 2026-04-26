@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.GHOST.LOGBUCKET.001
+name: CloudFront Standard Logging Destination Bucket Has Been Deleted
+description: >
+  CloudFront standard logging is configured but the destination S3
+  bucket has been deleted. Access logs are not delivered. The
+  distribution configuration shows the bucket name — logging appears
+  enabled. No log records are written because the destination
+  doesn't exist. CloudFront silently drops log entries when the
+  destination is unavailable. Without access logs, there is no
+  record of requests served — no IP addresses, no request URIs, no
+  response codes, no cache hit data, no evidence of scanning or
+  exploitation attempts. Same ghost logging pattern as
+  CTL.CLOUDFRONT.GHOST.WAF.001 — apparent security control that
+  silently failed. Complements CTL.CLOUDFRONT.LOGGING.001
+  (logging not configured) by catching cases where logging was
+  configured but the destination was removed.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-9"
+  pci_dss_v4.0: "10.3.2"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-05", "CCC-03"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudFront access logging destination S3 bucket has been deleted.
+    Log records are silently discarded.
+  action: >
+    Re-create the logging destination S3 bucket in us-east-1 (or the
+    region the distribution delivers logs to). Apply the bucket ACL
+    granting the CloudFront log delivery service write access
+    (s3:PutObject for awslogsdelivery). Update the distribution
+    logging configuration to reference the new bucket. Review the
+    gap in log coverage since the bucket was deleted.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "logging_enabled": true,
+          "logging_bucket": "prod-cf-logs.s3.amazonaws.com",
+          "logging_bucket_exists": true,
+          "has_ghost_log_bucket": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_ghost_log_bucket
+      op: eq
+      value: true

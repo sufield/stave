@@ -1,0 +1,33 @@
+control: CTL.CLOUDFRONT.GHOST.KEYGROUP.001
+defect: >
+  CloudFront key group references a public
+  key that has been deleted.
+infection: >
+  CloudFront signed URLs and signed cookies
+  protect premium content, user-specific
+  resources, and time-limited access links.
+  The key group specifies which public keys
+  CloudFront uses to validate the ECDSA or
+  RSA signatures in the signed URLs. When the
+  public key is deleted from the key group,
+  CloudFront cannot validate any signed URL
+  or cookie. One of two failure modes:
+  If CloudFront is configured to require signed
+  URLs (TrustedKeyGroups in the cache behavior),
+  it rejects all signatures as invalid —
+  every signed URL access fails with 403
+  Forbidden. Legitimate users cannot access
+  protected content until the key is restored.
+  If the signature requirement is configured
+  permissively, some implementations treat
+  "cannot validate" as "do not enforce" —
+  unsigned requests succeed because CloudFront
+  cannot compare against a key that doesn't
+  exist. In either case, the signed URL access
+  control is broken: either legitimate users
+  are locked out or unauthorized users can
+  bypass signed URL enforcement.
+failure: >
+  Signed URL validation broken. Either all
+  signed URL access fails (403) or unsigned
+  requests bypass enforcement.

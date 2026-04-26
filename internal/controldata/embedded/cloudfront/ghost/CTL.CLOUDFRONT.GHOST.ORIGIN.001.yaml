@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.GHOST.ORIGIN.001
+name: CloudFront Distribution Origin References Deleted or Unreachable Resource
+description: >
+  CloudFront distribution origin references an S3 bucket, ALB, API
+  Gateway, or custom HTTP endpoint that has been deleted or is
+  unreachable. Every request to the distribution fails. For deleted
+  S3 origins this is the highest-severity ghost reference in the
+  catalog: S3 bucket names are globally unique but reclaimable after
+  deletion. An attacker can create a bucket with the same name in
+  their own account — the CloudFront distribution then serves content
+  from the attacker's bucket through a trusted distribution and
+  custom domain. For ALB, API Gateway, or custom origins the failure
+  is visible (502 Bad Gateway) but not a takeover risk. For S3
+  origins, the failure may look like a permissions error (403) while
+  the bucket name remains available for attacker registration.
+  Complements CTL.S3.DANGLING.ORIGIN.001 (S3-side view) by adding
+  the ALB/custom origin failure modes and the S3 takeover narrative.
+domain: governance
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront origin references a resource that does not exist or
+    is unreachable. For S3, the deleted bucket name may be reclaimable.
+  action: >
+    For S3 origins: immediately check if the bucket name has been
+    re-registered by another account. If so, disable the distribution
+    immediately. If the name is unclaimed, re-create the bucket in
+    your account before it is registered by an attacker. Update the
+    distribution to reference the restored bucket and re-apply the
+    bucket policy restricting access to OAC. For ALB/custom origins:
+    restore the backend resource or update the distribution to remove
+    the deleted origin.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "origin_domain": "prod-static.s3.amazonaws.com",
+          "origin_type": "s3",
+          "origin_exists": true,
+          "has_ghost_origin": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_ghost_origin
+      op: eq
+      value: true

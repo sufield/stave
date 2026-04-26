@@ -1,0 +1,33 @@
+control: CTL.CLOUDFRONT.ORIGIN.HTTP.001
+defect: >
+  CloudFront custom origin uses HTTP protocol
+  policy (http-only or match-viewer). The
+  origin connection is plaintext.
+infection: >
+  The viewer sees HTTPS — the browser padlock
+  is present. CloudFront terminates the viewer's
+  TLS connection at the edge, then opens a new
+  HTTP connection to the origin. This HTTP
+  connection carries the full request and
+  response in plaintext through the network
+  between CloudFront's edge location and the
+  origin. Authorization headers (Bearer tokens,
+  API keys, Basic Auth), cookies (session IDs,
+  JWT tokens), custom headers forwarded from
+  the viewer (X-User-ID, X-Request-ID,
+  application-specific secrets), POST bodies
+  (login credentials, form data, JSON payloads),
+  and response bodies (user PII, API data,
+  rendered HTML) are all plaintext on the
+  network. match-viewer is not safer than
+  http-only — any viewer that sends an HTTP
+  request (robots, vulnerability scanners,
+  legacy clients, or simply http:// URLs)
+  triggers a plaintext origin connection.
+  The correct setting is https-only — it
+  enforces an encrypted origin connection
+  regardless of the viewer protocol.
+failure: >
+  False HTTPS. End-to-end encryption does not
+  exist. CloudFront to origin traffic is
+  observable plaintext.

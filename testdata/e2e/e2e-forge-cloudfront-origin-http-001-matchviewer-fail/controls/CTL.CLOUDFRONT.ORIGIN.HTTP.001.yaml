@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ORIGIN.HTTP.001
+name: CloudFront Custom Origin Uses HTTP — Origin Connection Is Plaintext
+description: >
+  CloudFront custom origin (ALB, API Gateway, EC2, custom HTTP
+  endpoint) is configured with OriginProtocolPolicy http-only or
+  match-viewer. The viewer connection from browser to CloudFront
+  uses HTTPS — the browser shows a padlock. CloudFront terminates
+  TLS and connects to the origin over HTTP — unencrypted. Request
+  headers (Authorization, Cookie, X-API-Key, session tokens),
+  request bodies (API payloads, form data, user input), and response
+  bodies (user data, API responses, credentials) traverse the network
+  in plaintext between CloudFront and the origin. match-viewer is
+  equally dangerous: HTTP requests from viewers cause plaintext
+  connections to the origin. The false-HTTPS pattern: the user
+  sees encryption that doesn't exist end-to-end. https-only is the
+  only safe origin protocol policy for custom origins. For S3 origins,
+  CTL.S3.CDN.TRANSPORT.001 covers the equivalent check.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  pci_dss_v4.0: "4.2.1"
+  hipaa: "164.312(e)(1)"
+  soc2: "CC6.6"
+  fedramp_moderate: "SC-8"
+  ccm_v4: ["IVS-07"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    CloudFront custom origin uses HTTP (http-only or match-viewer).
+    The origin connection is plaintext despite HTTPS to the viewer.
+  action: >
+    Update the origin OriginProtocolPolicy to https-only via
+    UpdateDistribution. Ensure the origin (ALB, API Gateway, EC2)
+    has a valid TLS certificate installed. For ALBs: use ACM to
+    provision a certificate and configure the HTTPS listener. For
+    API Gateway: ensure the custom domain has a certificate. After
+    updating to https-only, test end-to-end that CloudFront can
+    reach the origin over HTTPS.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "origin_protocol_policy": "https-only",
+          "origin_uses_http": false,
+          "origin_type": "alb"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.origin_uses_http
+      op: eq
+      value: true

@@ -1,0 +1,32 @@
+control: CTL.CLOUDFRONT.GHOST.FUNCTION.001
+defect: >
+  CloudFront behavior references a Lambda@Edge
+  or CloudFront Function that has been deleted.
+infection: >
+  CloudFront Functions and Lambda@Edge allow
+  custom logic at the edge: request routing,
+  authentication, header manipulation, A/B
+  testing, URL rewriting. When a referenced
+  function is deleted, the behavior determines
+  failure mode. Viewer-request trigger: the
+  function runs before the request is evaluated
+  against the cache or forwarded to the origin.
+  With the function gone, every request fails
+  with 502 Bad Gateway — complete distribution
+  failure. Origin-request trigger: the function
+  runs on cache misses before the request
+  reaches the origin. Cached content still
+  serves; every cache miss fails with 502.
+  The failure pattern is masked by cache — the
+  distribution appears to work until the cache
+  fills with stale content and misses increase.
+  Response triggers (viewer-response,
+  origin-response): requests succeed but
+  response processing fails — missing security
+  headers, unmodified content that was supposed
+  to be transformed, or broken A/B testing.
+failure: >
+  Viewer-request trigger: 502 on every request.
+  Origin-request trigger: 502 on cache misses.
+  Response triggers: malformed responses, missing
+  security headers.

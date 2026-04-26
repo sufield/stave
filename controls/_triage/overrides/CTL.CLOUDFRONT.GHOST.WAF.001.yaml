@@ -1,0 +1,27 @@
+control: CTL.CLOUDFRONT.GHOST.WAF.001
+defect: >
+  CloudFront distribution references a WAF
+  web ACL that has been deleted.
+infection: >
+  The distribution's configuration shows a
+  WAF web ACL ARN in the WebAclId field. The
+  web ACL does not exist. CloudFront applies
+  no WAF rules. Every request — SQL injection
+  attempts, XSS payloads, known vulnerability
+  scanners, botnet traffic, rate-limited abuse
+  — reaches the origin without filtering. The
+  false confidence this creates is worse than
+  no WAF: automated security audits that check
+  for WAF association see an ARN and report
+  "WAF configured." Human reviewers see the
+  ARN and assume protection. Nobody investigates
+  further because the signal of "WAF present"
+  suppresses further review. CloudFront does not
+  surface an alarm when the referenced WAF ACL
+  is deleted — the distribution continues to
+  operate, the configuration shows the ARN,
+  and filtering is silently absent.
+failure: >
+  False WAF protection. WAF ACL deleted.
+  Zero application-layer filtering active
+  while configuration reports WAF associated.

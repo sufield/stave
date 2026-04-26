@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ORIGIN.OAI.LEGACY.001
+name: CloudFront S3 Origin Uses Legacy Origin Access Identity
+description: >
+  CloudFront S3 origin uses the legacy Origin Access Identity (OAI)
+  mechanism instead of the current Origin Access Control (OAC). OAI
+  is a legacy authentication mechanism that pre-dates SigV4 — it
+  uses a special IAM user identity that CloudFront manages internally.
+  OAI has critical limitations: it cannot read S3 objects encrypted
+  with a customer-managed KMS key (CloudFront cannot assume the
+  KMS Decrypt permission through the OAI identity), it does not
+  support S3 Object Lambda access points, it does not support S3
+  in opt-in regions (GovCloud, China), and AWS has stated it is
+  being deprecated. OAC uses SigV4 for request signing (the same
+  standard AWS authentication used by all services) and supports
+  all S3 features including SSE-KMS. Migration from OAI to OAC
+  is non-disruptive and requires only a configuration change.
+  Complements CTL.S3.CDN.OAC.001 (S3 bucket side) — this control
+  fires on the CloudFront distribution side.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-03", "CCC-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    CloudFront S3 origin uses legacy OAI. KMS-encrypted objects
+    are inaccessible and the mechanism is deprecated.
+  action: >
+    Create an OAC for the distribution via CreateOriginAccessControl
+    with OriginAccessControlOriginType=s3 and SigningBehavior=always.
+    Update the distribution's S3 origin to reference the OAC.
+    Update the S3 bucket policy to allow Principal: cloudfront.amazonaws.com
+    with Condition: StringEquals aws:SourceArn to the distribution ARN.
+    Remove the old OAI bucket policy statement. The migration is
+    non-disruptive — no TTL or cache invalidation required.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "origin_type": "s3",
+          "origin_uses_oai": false,
+          "origin_uses_oac": true,
+          "origin_access_control": "E1234567890ABC"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.origin_uses_oai
+      op: eq
+      value: true

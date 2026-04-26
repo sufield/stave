@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ORIGIN.BYPASS.001
+name: CloudFront Custom Origin Is Accessible Directly — Bypass Possible
+description: >
+  CloudFront custom origin (ALB, API Gateway, EC2) has no mechanism
+  to verify that requests came from CloudFront — no custom origin
+  header and no security group restriction to CloudFront's origin-
+  facing IP ranges. An attacker can bypass CloudFront entirely by
+  connecting directly to the origin's public IP or DNS name. All
+  CloudFront security controls are bypassed: WAF (SQL injection,
+  XSS, rate limiting, IP reputation blocking), geo-restrictions
+  (country-level blocking), signed URL/cookie enforcement, field-
+  level encryption, and custom response headers (HSTS, CSP). Two
+  mechanisms verify CloudFront origin identity: (1) a custom origin
+  header — a secret that CloudFront forwards and the origin validates;
+  (2) security group restriction — ALB SG allows inbound only from
+  CloudFront's managed prefix list (com.amazonaws.global.cloudfront.origin-facing).
+  If either mechanism is in place, direct access is blocked.
+  Complements CTL.WAF.ORIGIN.LOCKDOWN.001 (WAF asset side) — this
+  control fires on the CloudFront distribution side.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  pci_dss_v4.0: "1.3.4"
+  soc2: "CC6.6"
+  fedramp_moderate: "SC-7"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront custom origin is directly accessible from the internet.
+    All CloudFront security controls can be bypassed.
+  action: >
+    For ALB origins: restrict the ALB security group inbound to the
+    CloudFront managed prefix list (pl-XX for your region) for HTTP/HTTPS.
+    For API Gateway: disable the default endpoint
+    (CTL.APIGATEWAY.ENDPOINT.DEFAULT.001) and require requests to include
+    a custom header via resource policy. For any origin: configure
+    CloudFront to forward a secret custom header (X-Origin-Verify with
+    a random value) and validate it in the origin's access control logic.
+    Rotate the header secret periodically.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "origin_type": "alb",
+          "origin_has_custom_header": true,
+          "origin_sg_restricts_cloudfront": true,
+          "origin_bypassable": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.origin_bypassable
+      op: eq
+      value: true

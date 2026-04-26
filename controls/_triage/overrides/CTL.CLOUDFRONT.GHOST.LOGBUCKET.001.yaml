@@ -1,0 +1,30 @@
+control: CTL.CLOUDFRONT.GHOST.LOGBUCKET.001
+defect: >
+  CloudFront standard logging destination
+  bucket has been deleted. Logs are silently
+  discarded.
+infection: >
+  CloudFront access logs record every request:
+  viewer IP, request method and URI, HTTP
+  status, bytes transferred, cache status,
+  edge location, and user agent. These logs
+  are the primary forensic record for a
+  CloudFront distribution — they show attempted
+  exploits (SQL injection in query strings,
+  path traversal attempts), successful exfiltration
+  (unusually large response sizes), geographic
+  access patterns, and the timeline of any
+  incident. When the destination bucket is
+  deleted, CloudFront silently stops delivering
+  logs. No error surfaces — the distribution
+  operates normally from the user's perspective.
+  The configuration still shows logging enabled
+  with the bucket name. Log data is not buffered
+  or queued — it is dropped. Every request from
+  the moment of bucket deletion to restoration
+  is unrecorded. If an incident occurs during
+  this gap, forensic reconstruction is impossible.
+failure: >
+  Zero log coverage during the gap. Configuration
+  shows logging enabled. Evidence of any incident
+  during the gap period is permanently lost.

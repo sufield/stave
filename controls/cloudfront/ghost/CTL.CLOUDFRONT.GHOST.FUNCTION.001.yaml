@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.GHOST.FUNCTION.001
+name: CloudFront Distribution References Deleted Lambda@Edge or CloudFront Function
+description: >
+  CloudFront distribution behavior references a Lambda@Edge function
+  or CloudFront Function that has been deleted. The failure impact
+  depends on the trigger type: viewer-request — function runs before
+  the request reaches the cache or origin; if deleted, every request
+  returns 502 (complete failure); origin-request — function runs on
+  cache misses before the request reaches the origin; cache hits
+  still work but misses fail; viewer-response or origin-response —
+  function runs when assembling the response; requests reach the
+  origin successfully but response processing fails. Lambda@Edge
+  functions run globally at CloudFront edge locations — deletion of
+  the function in us-east-1 (where Lambda@Edge functions must exist)
+  removes the function from all edge locations simultaneously.
+  CloudFront Functions are regional — deletion is immediate.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    CloudFront behavior references a Lambda@Edge or CloudFront
+    Function that has been deleted. Impact depends on trigger type.
+  action: >
+    Identify the deleted function's purpose from the distribution
+    behavior configuration (event type and ARN). Re-create the
+    function with the same logic and associate it with the behavior.
+    For Lambda@Edge, the function must be in us-east-1, must have
+    the correct execution role with edgelambda.amazonaws.com trust,
+    and must be a published version (not $LATEST). Remove the
+    ghost function association while recreating to prevent errors.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "has_ghost_function": false,
+          "ghost_function_arns": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_ghost_function
+      op: eq
+      value: true

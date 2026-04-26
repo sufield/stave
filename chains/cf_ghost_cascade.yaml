@@ -1,0 +1,27 @@
+id: cf_ghost_cascade
+description: >
+  Any CloudFront infrastructure ghost reference. A deleted origin
+  (CTL.CLOUDFRONT.GHOST.ORIGIN.001) — every request fails or the
+  S3 bucket name is reclaimable for attacker content injection; a
+  deleted ACM certificate (CTL.CLOUDFRONT.GHOST.CERT.001) — custom
+  domain TLS fails; a deleted WAF web ACL
+  (CTL.CLOUDFRONT.GHOST.WAF.001) — WAF filtering inactive while
+  appearing configured; a deleted Lambda@Edge or CloudFront Function
+  (CTL.CLOUDFRONT.GHOST.FUNCTION.001) — viewer-request functions
+  cause 502 on every request. Threshold of 1 reflects that each
+  independently causes distribution failure or creates false
+  security confidence. Ghost origin is the highest severity —
+  S3 bucket takeover is an actively exploited attack vector. Ghost
+  WAF is the most insidious — it creates false confidence that
+  filtering is active when it is not.
+controls:
+  - CTL.CLOUDFRONT.GHOST.ORIGIN.001
+  - CTL.CLOUDFRONT.GHOST.CERT.001
+  - CTL.CLOUDFRONT.GHOST.WAF.001
+  - CTL.CLOUDFRONT.GHOST.FUNCTION.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access

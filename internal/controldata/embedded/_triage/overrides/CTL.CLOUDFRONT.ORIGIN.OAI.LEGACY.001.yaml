@@ -1,0 +1,33 @@
+control: CTL.CLOUDFRONT.ORIGIN.OAI.LEGACY.001
+defect: >
+  CloudFront S3 origin uses the legacy Origin
+  Access Identity (OAI) instead of Origin
+  Access Control (OAC).
+infection: >
+  OAI was the original mechanism for restricting
+  S3 access to CloudFront. It works by creating
+  a special CloudFront-managed IAM user identity
+  and granting it s3:GetObject on the bucket.
+  OAI predates SigV4 — it uses a custom signing
+  mechanism rather than the standard AWS
+  authentication. The practical limitation for
+  security is encryption: if the S3 bucket
+  uses SSE-KMS with a customer-managed key,
+  CloudFront via OAI cannot decrypt the objects.
+  The OAI identity cannot call kms:Decrypt —
+  it has no way to be granted KMS permissions
+  because it is not a regular IAM entity.
+  The result: encrypted objects return 403
+  Forbidden through CloudFront even though the
+  bucket policy grants OAI access. OAC uses
+  SigV4 — the same standard authentication
+  used by every AWS service. The OAC identity
+  is a CloudFront service principal, and the
+  bucket policy grants it access scoped to the
+  specific distribution ARN. KMS key policies
+  can grant the CloudFront service principal
+  kms:Decrypt for specific distributions.
+failure: >
+  KMS-encrypted S3 objects inaccessible via
+  CloudFront. OAI deprecated and will eventually
+  be removed by AWS.

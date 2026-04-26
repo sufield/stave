@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.GHOST.WAF.001
+name: CloudFront Distribution References Deleted WAF Web ACL
+description: >
+  CloudFront distribution references a WAF web ACL that has been
+  deleted. The distribution configuration shows a web ACL ARN —
+  it appears protected. The web ACL does not exist. CloudFront
+  does not apply any WAF rules. SQL injection, XSS, bot traffic,
+  rate limiting, IP reputation filtering, and all other WAF rules
+  are inactive while the configuration reports WAF as associated.
+  This creates false confidence: an auditor checking the distribution
+  sees a WAF ACL ARN and concludes WAF protection is active. An
+  automated security scanner reporting on WAF association sees the
+  ARN. Nobody detects the absence of actual filtering because the
+  reference exists — only the referenced resource does not.
+  Complements CTL.CLOUDFRONT.WAF.001 (no WAF configured at all):
+  this control catches the more dangerous case where WAF appears
+  configured but the ACL was silently removed.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  fedramp_moderate: "SI-3"
+  ccm_v4: ["IVS-09", "CCC-03"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront distribution references a WAF web ACL that has been
+    deleted. WAF filtering is inactive while appearing configured.
+  action: >
+    Create a new WAF web ACL in us-east-1 with equivalent rules
+    (AWSManagedRulesCommonRuleSet, rate limiting, IP reputation).
+    Associate it with the distribution via UpdateDistribution to
+    replace the deleted ACL ARN. Investigate why the WAF ACL was
+    deleted — if it was accidental, audit IAM permissions for
+    wafv2:DeleteWebACL. If intentional, determine if the WAF
+    association was supposed to be removed from this distribution.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "waf_acl_arn": "arn:aws:wafv2:us-east-1:123:global/webacl/prod/abc",
+          "waf_acl_exists": true,
+          "has_ghost_waf": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_ghost_waf
+      op: eq
+      value: true

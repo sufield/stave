@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1587
-**Pack hash:** `0a1eb32c29471b55ac45f4f198bbf292b7400d95ed80027e1b1ec167fc015414`
+**Total controls:** 1596
+**Pack hash:** `e58118c31920ae74ae4fdbff1ae805dab0ef32201805991abe8bcffb4947f38c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 180 |
-| high | 697 |
+| critical | 181 |
+| high | 703 |
 | info | 16 |
 | low | 114 |
-| medium | 580 |
+| medium | 582 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 92 |
-| exposure | 895 |
-| governance | 97 |
+| exposure | 897 |
+| governance | 104 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -4921,6 +4921,96 @@ CloudFront distributions that are required to enforce geographic restrictions mu
 
 ---
 
+### CTL.CLOUDFRONT.GHOST.CERT.001
+
+**CloudFront Distribution References Deleted or Expired ACM Certificate**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.6;
+
+CloudFront distribution references an ACM certificate that has been deleted, has expired, or is expiring within 30 days. Clients connecting via the custom domain receive TLS errors — browsers show certificate warnings or refuse the connection entirely. The default *.cloudfront.net domain uses CloudFront's own certificate and continues to work, but any custom domain fails. For expired certificates, the distribution was likely working until the certificate was not renewed. For deleted certificates, someone deleted the certificate while it was still in use — intentional or accidental removal of a dependency.
+
+**Remediation:** Request a new ACM certificate for the distribution's custom domain in us-east-1 (required for CloudFront). Validate DNS ownership, wait for ACM to issue the certificate, then associate it with the distribution via UpdateDistribution. For expiring certificates, ACM auto-renews certificates it manages — check whether the DNS validation record (CNAME) still exists in your DNS configuration. Deleted validation records prevent auto-renewal.
+
+---
+
+### CTL.CLOUDFRONT.GHOST.FUNCTION.001
+
+**CloudFront Distribution References Deleted Lambda@Edge or CloudFront Function**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC8.1;
+
+CloudFront distribution behavior references a Lambda@Edge function or CloudFront Function that has been deleted. The failure impact depends on the trigger type: viewer-request — function runs before the request reaches the cache or origin; if deleted, every request returns 502 (complete failure); origin-request — function runs on cache misses before the request reaches the origin; cache hits still work but misses fail; viewer-response or origin-response — function runs when assembling the response; requests reach the origin successfully but response processing fails. Lambda@Edge functions run globally at CloudFront edge locations — deletion of the function in us-east-1 (where Lambda@Edge functions must exist) removes the function from all edge locations simultaneously. CloudFront Functions are regional — deletion is immediate.
+
+**Remediation:** Identify the deleted function's purpose from the distribution behavior configuration (event type and ARN). Re-create the function with the same logic and associate it with the behavior. For Lambda@Edge, the function must be in us-east-1, must have the correct execution role with edgelambda.amazonaws.com trust, and must be a published version (not $LATEST). Remove the ghost function association while recreating to prevent errors.
+
+---
+
+### CTL.CLOUDFRONT.GHOST.KEYGROUP.001
+
+**CloudFront Trusted Key Group References Deleted Public Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SC-13; pci_dss_v4.0: 3.7.5; soc2: CC6.1;
+
+CloudFront trusted key group references a public key that has been deleted. CloudFront uses trusted key groups to validate signed URL and signed cookie signatures — the key group contains public key IDs, and CloudFront verifies that signed URLs or cookies were signed with the corresponding private key. If the public key in the key group is deleted, CloudFront cannot verify signatures. The behavior depends on the distribution's viewer access policy: if signed URLs are required, all access fails (CloudFront rejects signatures it cannot verify); if signed URLs are optional, the signed URL requirement may be bypassed entirely — unsigned requests succeed because signature verification is not enforced when the key is missing.
+
+**Remediation:** Generate a new RSA key pair. Upload the new public key to CloudFront via CreatePublicKey. Add the new public key to the trusted key group via UpdateKeyGroup. Update application signing code to use the new private key. Remove the deleted public key reference from the key group. Audit signed URL access during the gap — if signature verification was bypassed, review CloudFront access logs for requests that should have been rejected.
+
+---
+
+### CTL.CLOUDFRONT.GHOST.LOGBUCKET.001
+
+**CloudFront Standard Logging Destination Bucket Has Been Deleted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AU-9; pci_dss_v4.0: 10.3.2; soc2: CC7.2;
+
+CloudFront standard logging is configured but the destination S3 bucket has been deleted. Access logs are not delivered. The distribution configuration shows the bucket name — logging appears enabled. No log records are written because the destination doesn't exist. CloudFront silently drops log entries when the destination is unavailable. Without access logs, there is no record of requests served — no IP addresses, no request URIs, no response codes, no cache hit data, no evidence of scanning or exploitation attempts. Same ghost logging pattern as CTL.CLOUDFRONT.GHOST.WAF.001 — apparent security control that silently failed. Complements CTL.CLOUDFRONT.LOGGING.001 (logging not configured) by catching cases where logging was configured but the destination was removed.
+
+**Remediation:** Re-create the logging destination S3 bucket in us-east-1 (or the region the distribution delivers logs to). Apply the bucket ACL granting the CloudFront log delivery service write access (s3:PutObject for awslogsdelivery). Update the distribution logging configuration to reference the new bucket. Review the gap in log coverage since the bucket was deleted.
+
+---
+
+### CTL.CLOUDFRONT.GHOST.ORIGIN.001
+
+**CloudFront Distribution Origin References Deleted or Unreachable Resource**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC8.1;
+
+CloudFront distribution origin references an S3 bucket, ALB, API Gateway, or custom HTTP endpoint that has been deleted or is unreachable. Every request to the distribution fails. For deleted S3 origins this is the highest-severity ghost reference in the catalog: S3 bucket names are globally unique but reclaimable after deletion. An attacker can create a bucket with the same name in their own account — the CloudFront distribution then serves content from the attacker's bucket through a trusted distribution and custom domain. For ALB, API Gateway, or custom origins the failure is visible (502 Bad Gateway) but not a takeover risk. For S3 origins, the failure may look like a permissions error (403) while the bucket name remains available for attacker registration. Complements CTL.S3.DANGLING.ORIGIN.001 (S3-side view) by adding the ALB/custom origin failure modes and the S3 takeover narrative.
+
+**Remediation:** For S3 origins: immediately check if the bucket name has been re-registered by another account. If so, disable the distribution immediately. If the name is unclaimed, re-create the bucket in your account before it is registered by an attacker. Update the distribution to reference the restored bucket and re-apply the bucket policy restricting access to OAC. For ALB/custom origins: restore the backend resource or update the distribution to remove the deleted origin.
+
+---
+
+### CTL.CLOUDFRONT.GHOST.WAF.001
+
+**CloudFront Distribution References Deleted WAF Web ACL**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-3; nist_800_53_r5: SC-7; soc2: CC6.6;
+
+CloudFront distribution references a WAF web ACL that has been deleted. The distribution configuration shows a web ACL ARN — it appears protected. The web ACL does not exist. CloudFront does not apply any WAF rules. SQL injection, XSS, bot traffic, rate limiting, IP reputation filtering, and all other WAF rules are inactive while the configuration reports WAF as associated. This creates false confidence: an auditor checking the distribution sees a WAF ACL ARN and concludes WAF protection is active. An automated security scanner reporting on WAF association sees the ARN. Nobody detects the absence of actual filtering because the reference exists — only the referenced resource does not. Complements CTL.CLOUDFRONT.WAF.001 (no WAF configured at all): this control catches the more dangerous case where WAF appears configured but the ACL was silently removed.
+
+**Remediation:** Create a new WAF web ACL in us-east-1 with equivalent rules (AWSManagedRulesCommonRuleSet, rate limiting, IP reputation). Associate it with the distribution via UpdateDistribution to replace the deleted ACL ARN. Investigate why the WAF ACL was deleted — if it was accidental, audit IAM permissions for wafv2:DeleteWebACL. If intentional, determine if the WAF association was supposed to be removed from this distribution.
+
+---
+
 ### CTL.CLOUDFRONT.HEADERS.001
 
 **CloudFront Distributions Must Enforce Security Response Headers**
@@ -4966,6 +5056,21 @@ CloudFront access logs record every request served by the distribution — viewe
 
 ---
 
+### CTL.CLOUDFRONT.ORIGIN.BYPASS.001
+
+**CloudFront Custom Origin Is Accessible Directly — Bypass Possible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: AC-4; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+CloudFront custom origin (ALB, API Gateway, EC2) has no mechanism to verify that requests came from CloudFront — no custom origin header and no security group restriction to CloudFront's origin- facing IP ranges. An attacker can bypass CloudFront entirely by connecting directly to the origin's public IP or DNS name. All CloudFront security controls are bypassed: WAF (SQL injection, XSS, rate limiting, IP reputation blocking), geo-restrictions (country-level blocking), signed URL/cookie enforcement, field- level encryption, and custom response headers (HSTS, CSP). Two mechanisms verify CloudFront origin identity: (1) a custom origin header — a secret that CloudFront forwards and the origin validates; (2) security group restriction — ALB SG allows inbound only from CloudFront's managed prefix list (com.amazonaws.global.cloudfront.origin-facing). If either mechanism is in place, direct access is blocked. Complements CTL.WAF.ORIGIN.LOCKDOWN.001 (WAF asset side) — this control fires on the CloudFront distribution side.
+
+**Remediation:** For ALB origins: restrict the ALB security group inbound to the CloudFront managed prefix list (pl-XX for your region) for HTTP/HTTPS. For API Gateway: disable the default endpoint (CTL.APIGATEWAY.ENDPOINT.DEFAULT.001) and require requests to include a custom header via resource policy. For any origin: configure CloudFront to forward a secret custom header (X-Origin-Verify with a random value) and validate it in the origin's access control logic. Rotate the header secret periodically.
+
+---
+
 ### CTL.CLOUDFRONT.ORIGIN.FAILOVER.001
 
 **CloudFront Distributions Must Have Origin Failover Configured**
@@ -4981,6 +5086,21 @@ CloudFront origin failover automatically routes requests to a secondary origin w
 
 ---
 
+### CTL.CLOUDFRONT.ORIGIN.HTTP.001
+
+**CloudFront Custom Origin Uses HTTP — Origin Connection Is Plaintext**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.6;
+
+CloudFront custom origin (ALB, API Gateway, EC2, custom HTTP endpoint) is configured with OriginProtocolPolicy http-only or match-viewer. The viewer connection from browser to CloudFront uses HTTPS — the browser shows a padlock. CloudFront terminates TLS and connects to the origin over HTTP — unencrypted. Request headers (Authorization, Cookie, X-API-Key, session tokens), request bodies (API payloads, form data, user input), and response bodies (user data, API responses, credentials) traverse the network in plaintext between CloudFront and the origin. match-viewer is equally dangerous: HTTP requests from viewers cause plaintext connections to the origin. The false-HTTPS pattern: the user sees encryption that doesn't exist end-to-end. https-only is the only safe origin protocol policy for custom origins. For S3 origins, CTL.S3.CDN.TRANSPORT.001 covers the equivalent check.
+
+**Remediation:** Update the origin OriginProtocolPolicy to https-only via UpdateDistribution. Ensure the origin (ALB, API Gateway, EC2) has a valid TLS certificate installed. For ALBs: use ACM to provision a certificate and configure the HTTPS listener. For API Gateway: ensure the custom domain has a certificate. After updating to https-only, test end-to-end that CloudFront can reach the origin over HTTPS.
+
+---
+
 ### CTL.CLOUDFRONT.ORIGIN.NOACCESS.001
 
 **CloudFront S3 Origin Must Have Origin Access Control**
@@ -4993,6 +5113,21 @@ CloudFront origin failover automatically routes requests to a secondary origin w
 CloudFront distributions with S3 origins must have Origin Access Control (OAC) or at minimum Origin Access Identity (OAI) configured. Without either, CloudFront accesses the bucket via its public endpoint, requiring the bucket to have a public or permissive policy. This makes CloudFront's authentication, WAF, and geo-restriction bypassable by hitting the S3 endpoint directly.
 
 **Remediation:** Configure Origin Access Control (OAC) on the distribution. Update the S3 bucket policy to grant access only to the CloudFront distribution via the OAC principal. Remove any public access from the bucket policy.
+
+---
+
+### CTL.CLOUDFRONT.ORIGIN.OAI.LEGACY.001
+
+**CloudFront S3 Origin Uses Legacy Origin Access Identity**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.1;
+
+CloudFront S3 origin uses the legacy Origin Access Identity (OAI) mechanism instead of the current Origin Access Control (OAC). OAI is a legacy authentication mechanism that pre-dates SigV4 — it uses a special IAM user identity that CloudFront manages internally. OAI has critical limitations: it cannot read S3 objects encrypted with a customer-managed KMS key (CloudFront cannot assume the KMS Decrypt permission through the OAI identity), it does not support S3 Object Lambda access points, it does not support S3 in opt-in regions (GovCloud, China), and AWS has stated it is being deprecated. OAC uses SigV4 for request signing (the same standard AWS authentication used by all services) and supports all S3 features including SSE-KMS. Migration from OAI to OAC is non-disruptive and requires only a configuration change. Complements CTL.S3.CDN.OAC.001 (S3 bucket side) — this control fires on the CloudFront distribution side.
+
+**Remediation:** Create an OAC for the distribution via CreateOriginAccessControl with OriginAccessControlOriginType=s3 and SigningBehavior=always. Update the distribution's S3 origin to reference the OAC. Update the S3 bucket policy to allow Principal: cloudfront.amazonaws.com with Condition: StringEquals aws:SourceArn to the distribution ARN. Remove the old OAI bucket policy statement. The migration is non-disruptive — no TTL or cache invalidation required.
 
 ---
 

@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.GHOST.CERT.001
+name: CloudFront Distribution References Deleted or Expired ACM Certificate
+description: >
+  CloudFront distribution references an ACM certificate that has
+  been deleted, has expired, or is expiring within 30 days. Clients
+  connecting via the custom domain receive TLS errors — browsers
+  show certificate warnings or refuse the connection entirely. The
+  default *.cloudfront.net domain uses CloudFront's own certificate
+  and continues to work, but any custom domain fails. For expired
+  certificates, the distribution was likely working until the
+  certificate was not renewed. For deleted certificates, someone
+  deleted the certificate while it was still in use — intentional
+  or accidental removal of a dependency.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  pci_dss_v4.0: "4.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-07"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront custom domain certificate has been deleted or expired.
+    Connections to the custom domain fail with TLS errors.
+  action: >
+    Request a new ACM certificate for the distribution's custom
+    domain in us-east-1 (required for CloudFront). Validate DNS
+    ownership, wait for ACM to issue the certificate, then associate
+    it with the distribution via UpdateDistribution. For expiring
+    certificates, ACM auto-renews certificates it manages — check
+    whether the DNS validation record (CNAME) still exists in your
+    DNS configuration. Deleted validation records prevent auto-renewal.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "certificate_arn": "arn:aws:acm:us-east-1:123:certificate/abc",
+          "certificate_exists": true,
+          "certificate_expired": false,
+          "has_ghost_cert": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_ghost_cert
+      op: eq
+      value: true

@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.GHOST.KEYGROUP.001
+name: CloudFront Trusted Key Group References Deleted Public Key
+description: >
+  CloudFront trusted key group references a public key that has been
+  deleted. CloudFront uses trusted key groups to validate signed URL
+  and signed cookie signatures — the key group contains public key
+  IDs, and CloudFront verifies that signed URLs or cookies were
+  signed with the corresponding private key. If the public key in
+  the key group is deleted, CloudFront cannot verify signatures.
+  The behavior depends on the distribution's viewer access policy:
+  if signed URLs are required, all access fails (CloudFront rejects
+  signatures it cannot verify); if signed URLs are optional, the
+  signed URL requirement may be bypassed entirely — unsigned requests
+  succeed because signature verification is not enforced when the
+  key is missing.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SC-13"
+  pci_dss_v4.0: "3.7.5"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-03", "CCC-03"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront key group references a public key that has been deleted.
+    Signed URL/cookie validation fails or is bypassed.
+  action: >
+    Generate a new RSA key pair. Upload the new public key to
+    CloudFront via CreatePublicKey. Add the new public key to the
+    trusted key group via UpdateKeyGroup. Update application signing
+    code to use the new private key. Remove the deleted public key
+    reference from the key group. Audit signed URL access during the
+    gap — if signature verification was bypassed, review CloudFront
+    access logs for requests that should have been rejected.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "has_ghost_key": false,
+          "ghost_key_ids": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_ghost_key
+      op: eq
+      value: true

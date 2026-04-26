@@ -1,0 +1,35 @@
+control: CTL.CLOUDFRONT.ORIGIN.BYPASS.001
+defect: >
+  CloudFront custom origin is directly
+  accessible from the internet without
+  CloudFront verification.
+infection: >
+  CloudFront applies security controls before
+  forwarding requests to the origin: WAF
+  inspects application-layer payloads (SQL
+  injection, XSS, known exploits), geographic
+  restrictions block requests from specific
+  countries, signed URLs enforce time-limited
+  or user-specific access, rate limiting prevents
+  brute-force and DDoS, and response headers
+  (HSTS, CSP, X-Frame-Options) protect the
+  viewer. If the origin accepts direct connections
+  from the public internet, every one of these
+  controls is optional — an attacker uses the
+  origin's DNS name or IP directly and none of
+  CloudFront's enforcement applies. The attack
+  does not require discovering the origin's
+  IP by scanning; the origin domain is often
+  discoverable via TLS certificate transparency
+  logs, historical DNS records, or the
+  Referer header. The fix requires the origin
+  to authenticate that requests came from
+  CloudFront — either a shared secret (custom
+  origin header) or network-level restriction
+  (security group allowing only CloudFront's
+  origin-facing IP ranges).
+failure: >
+  CloudFront bypass. WAF, geo-restrictions,
+  signed URLs, and rate limiting are all
+  optional for attackers who connect to the
+  origin directly.

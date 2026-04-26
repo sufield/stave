@@ -1,0 +1,36 @@
+control: CTL.CLOUDFRONT.GHOST.ORIGIN.001
+defect: >
+  CloudFront distribution origin references
+  a resource that does not exist or is
+  unreachable.
+infection: >
+  When the origin is deleted, every request
+  to the CloudFront distribution fails. For
+  S3 origins, the failure carries a unique
+  risk that other ghost references do not:
+  S3 bucket names are globally unique but
+  reclaimable after deletion. An attacker who
+  discovers the deleted bucket name — via the
+  distribution error response, a prior web
+  archive snapshot, or the CloudFront
+  configuration in a public repository — can
+  create a bucket with the same name in their
+  own account. The CloudFront distribution,
+  still configured with the original bucket
+  domain, begins serving content from the
+  attacker's bucket. The distribution's domain
+  name (d1234.cloudfront.net or a trusted
+  custom CNAME like static.company.com) now
+  serves attacker-controlled content: malware
+  download links, phishing pages, JavaScript
+  exfiltration scripts, or credential-harvesting
+  forms — all delivered through the company's
+  trusted CDN domain. For ALB or custom origins,
+  every request returns 502 Bad Gateway —
+  visible service failure without the takeover
+  risk.
+failure: >
+  S3 origins: bucket name reclaimable by
+  attacker, enabling malicious content delivery
+  through the trusted distribution domain.
+  ALB/custom origins: 502 on every request.
