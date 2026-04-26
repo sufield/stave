@@ -69,6 +69,24 @@ func TestAppliesToVendor(t *testing.T) {
 			vendor:    "aws",
 			want:      true,
 		},
+		{
+			name:      "multicloud tag is universal regardless of asset vendor",
+			scopeTags: []string{"multicloud", "iam"},
+			vendor:    "aws",
+			want:      true,
+		},
+		{
+			name:      "multicloud tag is universal for gcp",
+			scopeTags: []string{"multicloud", "iam"},
+			vendor:    "gcp",
+			want:      true,
+		},
+		{
+			name:      "multicloud tag is universal for empty vendor",
+			scopeTags: []string{"multicloud"},
+			vendor:    "",
+			want:      true,
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

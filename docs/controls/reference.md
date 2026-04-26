@@ -3,29 +3,29 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1566
-**Pack hash:** `4ad4a66edc79ff42710eb393cb8b5ed68155f6153d176c0278af3a7ab6d858c9`
+**Total controls:** 1574
+**Pack hash:** `6dbb21f6d7154c9706cd9b800af45cc49d4a8197b406f30f9735ec30905d258d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 180 |
-| high | 689 |
+| high | 692 |
 | info | 16 |
 | low | 113 |
-| medium | 568 |
+| medium | 573 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 32 |
+| audit | 33 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 92 |
-| exposure | 886 |
-| governance | 86 |
+| exposure | 890 |
+| governance | 89 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -6618,6 +6618,81 @@ DocumentDB snapshots must not be publicly accessible.
 
 ---
 
+### CTL.DYNAMODB.ALARM.READCAPACITY.001
+
+**No CloudWatch Alarm for DynamoDB Read Capacity Approaching Limit**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+Provisioned-capacity DynamoDB table has no CloudWatch alarm monitoring ConsumedReadCapacityUnits approaching the provisioned limit. An alarm at 80% of provisioned capacity provides lead time to scale before throttling begins. Without it, the only signal of capacity exhaustion is throttling itself — by which point reads are already being rejected. This control fires only on PROVISIONED tables; on-demand tables have no provisioned limit to approach.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/DynamoDB ConsumedReadCapacityUnits metric scoped to this table at 80% of provisioned read capacity, with SNS notification to the operations team. Pair with auto-scaling so capacity is added before throttling begins. For tables with on-demand capacity mode, this alarm does not apply — switch to the ThrottledRequests alarm instead.
+
+---
+
+### CTL.DYNAMODB.ALARM.SYSTEMERRORS.001
+
+**No CloudWatch Alarm for DynamoDB System Errors**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch alarm monitors the SystemErrors metric for this DynamoDB table. SystemErrors are HTTP 5xx responses from DynamoDB itself — infrastructure-level failures the application cannot resolve through retry alone. Without an alarm, internal DynamoDB failures are invisible until application error rates spike.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/DynamoDB SystemErrors metric scoped to this table, threshold > 0 over a short evaluation window, with SNS notification to the operations team. SystemErrors that persist warrant an AWS Support case — the application cannot fix infrastructure-level failures.
+
+---
+
+### CTL.DYNAMODB.ALARM.THROTTLE.001
+
+**No CloudWatch Alarm for DynamoDB Throttled Requests**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch alarm monitors the DynamoDB ThrottledRequests metric for this table. Throttled requests mean reads or writes are being rejected by the service. For provisioned tables this indicates capacity exhaustion; for on-demand tables it indicates exceeding the per-partition limit. Without an alarm, throttling escalates from occasional rejected requests to sustained data loss (writes without retry) or latency degradation without notification.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/DynamoDB ThrottledRequests metric scoped to this table, threshold > 0 over a short evaluation window (1-5 minutes), with SNS notification to the operations team. Pair the alarm with application-level retry with exponential backoff so transient throttling does not become data loss.
+
+---
+
+### CTL.DYNAMODB.ALARM.WRITECAPACITY.001
+
+**No CloudWatch Alarm for DynamoDB Write Capacity Approaching Limit**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+Provisioned-capacity DynamoDB table has no CloudWatch alarm monitoring ConsumedWriteCapacityUnits approaching the provisioned limit. Write throttling without retry logic causes data loss — the application receives a ProvisionedThroughputExceededException and the write is dropped. An 80%-capacity alarm provides lead time to scale before throttling begins. This control fires only on PROVISIONED tables; on-demand tables have no provisioned limit to approach.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/DynamoDB ConsumedWriteCapacityUnits metric scoped to this table at 80% of provisioned write capacity, with SNS notification to the operations team. Pair with auto-scaling so capacity is added before throttling begins. For tables with on-demand capacity mode, this alarm does not apply — switch to the ThrottledRequests alarm instead.
+
+---
+
+### CTL.DYNAMODB.AUDIT.DATAEVENTS.001
+
+**DynamoDB Table Has No CloudTrail Data Event Coverage**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-12; hipaa: 164.312(b); nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2.1.7; soc2: CC7.1;
+
+DynamoDB table is not covered by any CloudTrail trail with data events enabled. Management events (CreateTable, DeleteTable, UpdateTable) are logged by default, but data events — the actual reads and writes to items (GetItem, PutItem, UpdateItem, DeleteItem, Query, Scan, BatchGetItem, BatchWriteItem) — are not logged unless explicitly enabled. DynamoDB has no other built-in audit log: CloudTrail data events are the only item-level audit trail. Without them, unauthorized data access is invisible.
+
+**Remediation:** Add a CloudTrail data event selector that includes this table: event category Data, resource type AWS::DynamoDB::Table, ARN matching this table, with read/write type All. Verify the trail is delivering events to S3 and CloudWatch Logs.
+
+---
+
 ### CTL.DYNAMODB.BACKUP.001
 
 **DynamoDB Tables Must Have Backup Plan**
@@ -6630,6 +6705,36 @@ DocumentDB snapshots must not be publicly accessible.
 DynamoDB tables must be included in a backup plan.
 
 **Remediation:** Add table to AWS Backup plan or enable PITR.
+
+---
+
+### CTL.DYNAMODB.DAX.ALARM.CACHEHIT.001
+
+**No CloudWatch Alarm for DAX Cache Hit Rate**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch alarm monitors the DAX CacheHitRate metric for the cluster. A low cache hit rate means most requests are cache misses — DAX forwards them to DynamoDB and the cluster is consuming resources (network, compute, memory) without providing the cache benefit it was sized for. A sudden hit rate drop may indicate cache flush, TTL expiration, key pattern change, or progressive cache failure (for example, a deleted DAX service role failing on each miss). Without an alarm, the degradation is invisible until DynamoDB capacity itself shows pressure.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/DAX CacheHitRate metric scoped to this cluster, threshold below the cluster's expected steady-state hit rate (typically 0.8 for read-heavy workloads), with SNS notification to the operations team. Sustained low hit rates warrant a review of the table's access pattern — DAX may not be the right tool for write-heavy or scan-heavy access.
+
+---
+
+### CTL.DYNAMODB.DAX.ALARM.ERRORS.001
+
+**No CloudWatch Alarm for DAX Error Rate**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch alarm monitors the DAX cluster's error metrics (ErrorRequestCount, FaultRequestCount, ConnectionErrors). DAX errors indicate cache-layer failures — connection errors, timeout errors, or internal DAX errors. If DAX is in the critical path, applications fail or degrade without notification. Combined with a deleted DAX service role (CTL.DYNAMODB.GHOST.DAXROLE.001), this blind spot is the difference between catching a progressive failure early and discovering it during a customer incident.
+
+**Remediation:** Create CloudWatch alarms on the AWS/DAX ErrorRequestCount and FaultRequestCount metrics scoped to this cluster, threshold > 0 over a short evaluation window, with SNS notification to the operations team. Add a separate alarm on ClientConnectionCount dropping below the expected application baseline — that pattern catches DAX connectivity loss that the error metrics miss.
 
 ---
 
@@ -6794,6 +6899,21 @@ DAX cluster's subnet group references one or more subnets that have been deleted
 The observation snapshot is missing required DynamoDB properties.
 
 **Remediation:** Ensure the extractor calls aws dynamodb describe-table and maps the SSEDescription to the database.encryption observation properties.
+
+---
+
+### CTL.DYNAMODB.INSIGHTS.001
+
+**DynamoDB Contributor Insights Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+DynamoDB Contributor Insights is not enabled for the table. Contributor Insights provides real-time identification of the most accessed and most throttled partition keys. Without it, hot key analysis requires enabling CloudTrail data events (high volume, high cost) and correlating raw logs by partition key. Hot keys are the most common cause of partition-level throttling that auto-scaling cannot fix — auto-scaling adjusts table capacity, not partition capacity.
+
+**Remediation:** Enable Contributor Insights on the table: aws dynamodb update-contributor-insights --table-name xxx --contributor-insights-action ENABLE. Repeat for each global secondary index that carries significant traffic. Review the resulting reports weekly to identify hot partitions and adjust the schema (write sharding, distributed counters) before throttling materializes.
 
 ---
 

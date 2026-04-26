@@ -79,6 +79,10 @@ func AppliesToVendor(scopeTags []string, vendor string) bool {
 	}
 	hasVendorTag := false
 	for _, tag := range scopeTags {
+		// "multicloud" signals a cross-provider control — treat as universal.
+		if tag == "multicloud" {
+			return true
+		}
 		if len(tag) > 10 {
 			continue
 		}
