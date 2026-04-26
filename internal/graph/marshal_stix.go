@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"time"
 )
 
@@ -124,7 +125,10 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 		objects = append(objects, obj)
 	}
 
-	// Edges → STIX relationships.
+	// Edges → STIX relationships. Dangling edges are skipped with a
+	// warning log so partial graph exports remain importable — see
+	// MarshalCypher for the matching policy.
+	var skipped int
 	for i := range g.Edges {
 		e := &g.Edges[i]
 		relType := stixRelTypeMap[e.Type]
@@ -134,6 +138,14 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 		srcRef := nodeSTIXIDs[e.From]
 		tgtRef := nodeSTIXIDs[e.To]
 		if srcRef == "" || tgtRef == "" {
+			missing := "source"
+			if srcRef != "" {
+				missing = "target"
+			}
+			slog.Warn("graph: skipping dangling edge in stix export",
+				"missing", missing,
+				"from", e.From, "to", e.To, "type", e.Type)
+			skipped++
 			continue
 		}
 
@@ -149,6 +161,10 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 			"created_by_ref":    staveIdentityID,
 		}
 		objects = append(objects, rel)
+	}
+	if skipped > 0 {
+		slog.Warn("graph: stix export skipped dangling edges",
+			"skipped", skipped, "total_edges", len(g.Edges))
 	}
 
 	bundle := map[string]any{

@@ -208,9 +208,22 @@ func (c Context) AbsPath(p string) string {
 }
 
 // resolveStorePath determines where the context file should be stored.
+// When STAVE_CONTEXTS_FILE is set, the path is canonicalized
+// (filepath.Clean collapses traversal sequences like "../") and
+// resolved against the working directory if relative — both steps
+// neutralize attempts to read or write outside the intended config
+// scope by setting the env var to a constructed path.
 func resolveStorePath() (string, error) {
 	if v := strings.TrimSpace(os.Getenv(env.ContextsFile.Name)); v != "" {
-		return v, nil
+		cleaned := filepath.Clean(v)
+		if !filepath.IsAbs(cleaned) {
+			cwd, err := os.Getwd()
+			if err != nil {
+				return "", fmt.Errorf("resolve %s: cwd unavailable: %w", env.ContextsFile.Name, err)
+			}
+			cleaned = filepath.Clean(filepath.Join(cwd, cleaned))
+		}
+		return cleaned, nil
 	}
 
 	if cfgDir, err := os.UserConfigDir(); err == nil && cfgDir != "" {

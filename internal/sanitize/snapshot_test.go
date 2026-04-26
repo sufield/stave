@@ -138,6 +138,28 @@ func TestScrubMap_SanitizesKeys(t *testing.T) {
 	}
 }
 
+// Profile-driven scrubbing must run regardless of sanitizeIDs — that
+// flag governs whether bare identifiers passed through ID()/Asset() are
+// hashed, but a property name in the profile's Sanitize set is a
+// stronger signal: the schema author has classified it as sensitive,
+// and a zero-value Sanitizer must honor that classification.
+func TestScrubMap_ZeroValueSanitizer_StillSanitizesProfileKeys(t *testing.T) {
+	s := New() // sanitizeIDs is false (zero value)
+	props := map[string]any{
+		"bucket_name": "my-secret-bucket",
+	}
+	result := s.ScrubMap(props, AssetProfile())
+	got, ok := result["bucket_name"]
+	if !ok {
+		t.Fatal("bucket_name should still be present after sanitize")
+	}
+	if got == "my-secret-bucket" {
+		t.Error("zero-value Sanitizer leaked a profile-classified " +
+			"sensitive value — profile sanitization must run regardless " +
+			"of the sanitizeIDs flag")
+	}
+}
+
 func TestScrubMap_SanitizesNonStringValue(t *testing.T) {
 	s := New(WithIDSanitization(true))
 	// Non-string values are zeroed in their original type rather than

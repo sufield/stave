@@ -32,6 +32,15 @@ func NewEnv() (*cel.Env, error) {
 				[]*cel.Type{cel.DynType},
 				cel.BoolType,
 				cel.UnaryBinding(func(val ref.Val) ref.Val {
+					// Propagate type errors instead of silently
+					// classifying them as "not missing" — a wrong-type
+					// argument to size() or a comparison between
+					// incompatible types is a flawed predicate, not a
+					// safe verdict. CEL handles error propagation by
+					// returning the error value verbatim.
+					if IsTypeError(val) {
+						return val
+					}
 					return types.Bool(isMissing(val))
 				}),
 			),
@@ -40,32 +49,66 @@ func NewEnv() (*cel.Env, error) {
 }
 
 // missingErrorPatterns lists substrings that cel-go uses (across versions)
-// to signal "field or key not present in data". Add new phrasings here if a
-// cel-go upgrade introduces them — failure to match makes Stave treat
-// absence as a runtime error and surface it as inconclusive.
+// to signal "field or key not present in data". Add new phrasings here if
+// a cel-go upgrade introduces a new structural-absence wording. Function
+// overload errors ("no such overload", "no matching overload") are NOT
+// included — those signal a type mismatch (e.g. calling size() on an int
+// or comparing a string to a list) and must surface as evaluation
+// failures so the predicate is flagged as inconclusive rather than
+// silently passing.
 var missingErrorPatterns = []string{
 	"no such key",
 	"undefined field",
 	"no such attribute",
+}
+
+// typeErrorPatterns lists substrings that cel-go emits for type errors —
+// failed function-overload resolution and incompatible-type comparisons.
+// Distinct from missingErrorPatterns: a type error means the predicate
+// asked the wrong question of the data, which is a programming defect,
+// not absence.
+var typeErrorPatterns = []string{
 	"no such overload",
 	"no matching overload",
 }
 
+// IsTypeError reports whether a CEL ref.Val carries a cel-go type error
+// (overload-resolution failure or incompatible-type comparison). Use
+// this at evaluation boundaries to distinguish a flawed predicate (type
+// error → inconclusive) from a legitimately absent field
+// (missingErrorPatterns → handled by isMissing).
+func IsTypeError(val ref.Val) bool {
+	if val == nil || !types.IsError(val) {
+		return false
+	}
+	errVal, ok := val.Value().(error)
+	if !ok {
+		return false
+	}
+	msg := errVal.Error()
+	for _, pattern := range typeErrorPatterns {
+		if strings.Contains(msg, pattern) {
+			return true
+		}
+	}
+	return false
+}
+
 // isMissing implements Stave's three-way absence semantics:
-// null, empty string (trimmed), empty list, empty map, structural CEL error.
-// Runtime errors (division by zero, type mismatch) are NOT treated as missing —
-// they indicate a flawed predicate that should surface as inconclusive.
+// null, empty string (trimmed), empty list, empty map, structural CEL
+// error. Runtime errors (division by zero, type mismatch, overload
+// resolution failure) are NOT treated as missing — they indicate a
+// flawed predicate that must surface as inconclusive. Use IsTypeError
+// at evaluation boundaries to distinguish those from legitimate absence.
 func isMissing(val ref.Val) bool {
 	if val == nil || val == types.NullValue {
 		return true
 	}
-	// CEL error — distinguish structural missing from runtime errors.
-	// cel-go does not export typed sentinels for absence, so we
-	// pattern-match its error wording. The patterns covered here are
-	// the union of phrasings emitted across cel-go versions for "field
-	// or key absent in data"; runtime errors (div-by-zero, type
-	// mismatch) deliberately fall through to the "not missing" branch
-	// so they surface as inconclusive.
+	// CEL error — match only structural-absence phrasings. Type errors
+	// (overload mismatch, comparisons between incompatible types) and
+	// runtime errors (div-by-zero) deliberately fall through to "not
+	// missing" so callers see them as inconclusive instead of silent
+	// passes.
 	if types.IsError(val) {
 		errVal, ok := val.Value().(error)
 		if !ok {

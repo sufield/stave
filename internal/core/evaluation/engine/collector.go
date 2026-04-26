@@ -92,3 +92,36 @@ func (c *AssessmentCollector) RecordFindings(findings []*evaluation.Finding) {
 		}
 	}
 }
+
+// RecordSeenAsset registers id in the seen-assets set under the
+// collector mutex. Returns true if the asset is new in this run.
+func (c *AssessmentCollector) RecordSeenAsset(id asset.ID) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.seenAssets.register(id)
+}
+
+// RecordNonCompliantAsset registers id in the non-compliant set under
+// the collector mutex. Returns true if the asset is new in this run.
+func (c *AssessmentCollector) RecordNonCompliantAsset(id asset.ID) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.nonCompliantAssets.register(id)
+}
+
+// SeenAssetCount returns the number of unique assets seen so far.
+// Read under the collector mutex so callers can reach for the value
+// after concurrent applyControl calls have returned.
+func (c *AssessmentCollector) SeenAssetCount() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return len(c.seenAssets)
+}
+
+// NonCompliantAssetCount returns the number of unique non-compliant
+// assets seen so far. See SeenAssetCount for locking notes.
+func (c *AssessmentCollector) NonCompliantAssetCount() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return len(c.nonCompliantAssets)
+}

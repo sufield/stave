@@ -45,6 +45,9 @@ func NewEvaluator(controls []policy.ControlDefinition, maxUnsafe time.Duration, 
 	r.SLAThreshold = maxUnsafe
 	r.Clock = clock
 	r.PredicateEval = testCELEvaluator()
+	r.PredicateParser = func(_ any) (*policy.UnsafePredicate, error) {
+		return &policy.UnsafePredicate{}, nil
+	}
 	return &testEvaluator{runner: *r}
 }
 

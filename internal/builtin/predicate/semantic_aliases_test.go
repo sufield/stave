@@ -224,3 +224,43 @@ func ExampleResolve() {
 	// Output:
 	// rules: 3
 }
+
+// S3NotUsingKMSCMK uses AND combinator semantics: a finding requires
+// both signals (algorithm != aws:kms AND kms_key_id == "") to be true.
+// Either signal alone is treated as ambiguous (likely inventory drift)
+// rather than a violation.
+func TestS3NotUsingKMSCMK_UsesAllCombinator(t *testing.T) {
+	pred, err := Resolve(S3NotUsingKMSCMK)
+	if err != nil {
+		t.Fatalf("Resolve(%q): %v", S3NotUsingKMSCMK, err)
+	}
+	if len(pred.Any) != 0 {
+		t.Errorf("Any rules found (%d) — predicate should use All combinator only", len(pred.Any))
+	}
+	if len(pred.All) != 2 {
+		t.Errorf("expected 2 All rules, got %d", len(pred.All))
+	}
+}
+
+// CMK-with-empty-key-id and non-CMK-with-populated-key-id are partial
+// signals; neither alone should fire under the AND combinator.
+func TestS3NotUsingKMSCMK_PartialSignals_NotFlagged(t *testing.T) {
+	pred, err := Resolve(S3NotUsingKMSCMK)
+	if err != nil {
+		t.Fatalf("Resolve: %v", err)
+	}
+	// Both rules must be present in All for the AND semantics.
+	if len(pred.All) != 2 {
+		t.Fatalf("expected 2 All rules, got %d", len(pred.All))
+	}
+	// Rule 1 must check the algorithm; rule 2 must check kms_key_id.
+	// Field paths should reflect those distinct signals.
+	field0 := pred.All[0].Field.String()
+	field1 := pred.All[1].Field.String()
+	if field0 != "properties.storage.encryption.algorithm" {
+		t.Errorf("first rule field = %q, want algorithm check", field0)
+	}
+	if field1 != "properties.storage.encryption.kms_key_id" {
+		t.Errorf("second rule field = %q, want kms_key_id check", field1)
+	}
+}

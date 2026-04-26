@@ -105,3 +105,36 @@ func TestContextsFilePathDefaultsToUserConfigDir(t *testing.T) {
 		t.Fatalf("contextsFilePath=%q want=%q", got, want)
 	}
 }
+
+func TestResolveStorePath_EnvWithTraversal_Canonicalized(t *testing.T) {
+	tmp := t.TempDir()
+	// Build a path with redundant traversal — "/tmp/x/../y" → "/tmp/y".
+	t.Setenv(env.ContextsFile.Name, filepath.Join(tmp, "x", "..", "y", "contexts.yaml"))
+
+	got, err := resolveStorePath()
+	if err != nil {
+		t.Fatalf("resolveStorePath: %v", err)
+	}
+	want := filepath.Join(tmp, "y", "contexts.yaml")
+	if got != want {
+		t.Errorf("traversal sequence not canonicalized: got %q want %q", got, want)
+	}
+}
+
+func TestResolveStorePath_RelativeEnv_ResolvedFromCwd(t *testing.T) {
+	tmp := t.TempDir()
+	t.Chdir(tmp)
+	t.Setenv(env.ContextsFile.Name, "rel/contexts.yaml")
+
+	got, err := resolveStorePath()
+	if err != nil {
+		t.Fatalf("resolveStorePath: %v", err)
+	}
+	if !filepath.IsAbs(got) {
+		t.Errorf("expected absolute path, got %q", got)
+	}
+	want := filepath.Join(tmp, "rel", "contexts.yaml")
+	if got != want {
+		t.Errorf("relative path not anchored to cwd: got %q want %q", got, want)
+	}
+}

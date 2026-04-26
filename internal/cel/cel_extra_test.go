@@ -376,8 +376,12 @@ func TestTraceResultRenderTextWithError(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestBuildTrace_NilArgs(t *testing.T) {
-	if BuildTrace(nil, nil, nil) != nil {
-		t.Fatal("nil args should return nil")
+	tr, err := BuildTrace(nil, nil, nil)
+	if tr != nil {
+		t.Error("nil args should return nil TraceResult")
+	}
+	if err == nil {
+		t.Error("nil args should return a descriptive error")
 	}
 }
 
@@ -391,7 +395,10 @@ func TestBuildTrace_Simple(t *testing.T) {
 		},
 	}
 	a := &asset.Asset{ID: asset.ID("bucket-a"), Properties: map[string]any{"x": true}}
-	tr := BuildTrace(ctl, a, nil)
+	tr, err := BuildTrace(ctl, a, nil)
+	if err != nil {
+		t.Fatalf("BuildTrace: %v", err)
+	}
 	if tr == nil {
 		t.Fatal("expected non-nil trace")
 	}

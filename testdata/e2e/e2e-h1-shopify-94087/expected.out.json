@@ -20,7 +20,7 @@
   "summary": {
     "total_assets": 1,
     "exposed_resources": 1,
-    "violations": 1
+    "violations": 3
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
@@ -283,6 +283,236 @@
           "fix_action": "remove this property from the configuration"
         }
       ]
+    },
+    {
+      "finding_id": "sha256:4f25d30e17220d31",
+      "control_id": "CTL.S3.PUBLIC.004",
+      "control_name": "No Public Read via Bucket Policy",
+      "control_description": "S3 bucket policies must not grant read access to an anonymous or wildcard principal. A Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:GetObject without a restricting Condition enables any unauthenticated caller to read objects. This is distinct from CTL.S3.PUBLIC.001, which fires on the composite public_read signal regardless of mechanism; this control narrows to the bucket-policy path so the finding points the operator at the policy specifically. For ACL-based public read, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
+      "asset_id": "shopify-merchant-assets",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "property": "storage.access.read_via_resource",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "resource"
+        ],
+        "temporal_risk": "Asset is currently in a non-compliant state."
+      },
+      "control_severity": "medium",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "policy_public_read",
+        "principal_scope": "public"
+      },
+      "remediation": {
+        "description": "Bucket policy grants s3:GetObject, s3:GetObjectAcl, or equivalent read action to an anonymous or wildcard principal. Any unauthenticated caller can read objects.",
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_resource\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-5525d3f3e0d5d686",
+        "target": {
+          "asset_id": "shopify-merchant-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.read_via_resource eq true",
+          "observation_key": "storage.access.read_via_resource",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-merchant-assets",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.004",
+          "control_name": "No Public Read via Bucket Policy",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "the bucket policy grants read to a public principal = false",
+              "observation_key": "storage.access.read_via_resource",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.read_via_resource",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.access.read_via_resource to true"
+          }
+        ],
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
+      },
+      "classification": "aggregate_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket policy contains a Statement with Effect \"Allow\", Principal \"*\" (or AWS: \"*\"), and a read action such as s3:GetObject or s3:GetObjectAcl. No restricting Condition narrows the principal to a specific account, VPC, IP range, or organization.\n",
+      "infection": "Any unauthenticated HTTP caller can fetch objects from this bucket. Distinct from ACL-driven exposure in that policy- based public read often applies to specific prefixes or objects, not the whole bucket — but adopters miss the distinction and treat \"policy allows public read\" as \"this bucket is public.\" Search engines and scanners enumerate buckets via GetBucketPolicy lookups specifically to find policy-granted read access, because it persists even when ACLs are tightened.\n",
+      "failure": "Data exposure for objects matched by the policy's Resource clause. Scope depends on whether the policy grants read on the whole bucket (arn:aws:s3:::bucket/*) or a subset — but adopters commonly over-scope the Resource clause during authoring, so \"intentional limited public read\" often becomes \"entire bucket public\" in practice. Audit the policy's Resource ARNs to understand exposure surface.\n",
+      "delta": [
+        {
+          "property_label": "access read via resource",
+          "property_path": "storage.access.read_via_resource",
+          "current_value": "false",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:ad640d10eb5f35f4",
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "control_name": "Complete Data Required for Safety Assessment",
+      "control_description": "S3 bucket safety cannot be proven when policy or ACL data is missing from the snapshot.",
+      "asset_id": "shopify-merchant-assets",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "property": "safety_provable",
+            "actual_value": null,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset is currently in a non-compliant state."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "nist_800_53_r5": "SI-12"
+      },
+      "control_compliance_ccm_v4": [
+        "DCS-06"
+      ],
+      "remediation": {
+        "description": "Bucket safety cannot be assessed because policy or ACL data is missing from the observation snapshot. The bucket may be safe but cannot be proven so.",
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions.",
+        "example": "{\n  \"safety_provable\": true\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-b4082fbbf062effb",
+        "target": {
+          "asset_id": "shopify-merchant-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "exposure_score": 25,
+      "score_breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "safety_provable eq false",
+          "observation_key": "safety_provable",
+          "operator": "eq",
+          "expected_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-merchant-assets",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.INCOMPLETE.001",
+          "control_name": "Complete Data Required for Safety Assessment",
+          "severity": "low",
+          "reasoning": [
+            {
+              "clause": "safety_provable = not set",
+              "observation_key": "safety_provable"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "safety_provable",
+            "current_value": "",
+            "required_value": "any value other than false",
+            "has_safe_default": false,
+            "description": "Change safety_provable away from false"
+          }
+        ],
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "classification": "aggregate_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [
@@ -301,9 +531,79 @@
       ],
       "consolidated_score": 1875,
       "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:6365c75f843b9074",
+      "asset_id": "shopify-merchant-assets",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.read_via_resource"
+      ],
+      "headline_finding_id": "sha256:4f25d30e17220d31",
+      "member_finding_ids": [
+        "sha256:4f25d30e17220d31"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:882cf8809ef3069f",
+      "asset_id": "shopify-merchant-assets",
+      "shared_keys": [
+        "safety_provable"
+      ],
+      "headline_finding_id": "sha256:ad640d10eb5f35f4",
+      "member_finding_ids": [
+        "sha256:ad640d10eb5f35f4"
+      ],
+      "consolidated_score": 25,
+      "consolidated_blast_radius": 1
     }
   ],
   "remediation_groups": [
+    {
+      "asset_id": "shopify-merchant-assets",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-5525d3f3e0d5d686",
+        "target": {
+          "asset_id": "shopify-merchant-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.004"
+      ],
+      "finding_count": 1
+    },
     {
       "asset_id": "shopify-merchant-assets",
       "asset_type": "aws_s3_bucket",
@@ -316,14 +616,15 @@
         "action": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
       },
       "contributing_controls": [
+        "CTL.S3.INCOMPLETE.001",
         "CTL.S3.TENANT.ISOLATION.001"
       ],
-      "finding_count": 1
+      "finding_count": 2
     }
   ],
   "top_exposures": [
     {
-      "finding_index": 0,
+      "finding_index": 2,
       "control_id": "CTL.S3.TENANT.ISOLATION.001",
       "asset_id": "shopify-merchant-assets",
       "exposure_score": 1875,
@@ -337,6 +638,38 @@
         "days_blind": 3741
       },
       "silent_killer": true
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-merchant-assets",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "asset_id": "shopify-merchant-assets",
+      "exposure_score": 25,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
     }
   ],
   "coverage_posture": {
@@ -427,12 +760,12 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-shopify-94087/controls",
-      "observations": "testdata/e2e/e2e-h1-shopify-94087/observations"
+      "controls": "controls",
+      "observations": "observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
+      "head_commit": "8e9e2fb05a3a69738019457f6d0bfe84fa678aa4",
       "dirty": false
     }
   }

@@ -48,12 +48,42 @@ func TestIsMissing_TypeMismatch_NotMissing(t *testing.T) {
 	}
 }
 
-func TestIsMissing_InvalidFunctionCall_IsMissing(t *testing.T) {
+func TestIsMissing_OverloadFailure_NotMissing(t *testing.T) {
 	val := types.NewErr("no such overload: size(int)")
-	if !isMissing(val) {
-		t.Error("isMissing should return true for 'no such overload' — " +
-			"cel-go uses this phrasing for absent fields/keys, so the " +
-			"verdict should be inconclusive rather than a silent pass.")
+	if isMissing(val) {
+		t.Error("BUG: isMissing returns true for 'no such overload' — " +
+			"overload-resolution failures are type errors (e.g. calling " +
+			"size() on an int), not absence. They must surface as " +
+			"inconclusive rather than be silently classified as missing.")
+	}
+	if !IsTypeError(val) {
+		t.Error("IsTypeError should return true for 'no such overload'")
+	}
+}
+
+func TestIsTypeError_NoMatchingOverload(t *testing.T) {
+	val := types.NewErr("no matching overload for '_==_'")
+	if !IsTypeError(val) {
+		t.Error("IsTypeError should return true for 'no matching overload'")
+	}
+	if isMissing(val) {
+		t.Error("type errors must not be classified as missing")
+	}
+}
+
+func TestIsTypeError_StructuralMissing_False(t *testing.T) {
+	val := types.NewErr("no such key: foo")
+	if IsTypeError(val) {
+		t.Error("IsTypeError must not flag structural-absence errors as type errors")
+	}
+}
+
+func TestIsTypeError_NonError_False(t *testing.T) {
+	if IsTypeError(types.String("ok")) {
+		t.Error("IsTypeError must return false for non-error values")
+	}
+	if IsTypeError(nil) {
+		t.Error("IsTypeError must return false for nil")
 	}
 }
 

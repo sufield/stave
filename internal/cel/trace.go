@@ -2,6 +2,7 @@ package cel
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"text/tabwriter"
@@ -42,24 +43,28 @@ func (r *TraceResult) RenderJSON(w io.Writer) error {
 	return enc.Encode(r)
 }
 
-// BuildTrace compiles and evaluates a control's predicate against an asset,
-// returning a TraceResult with the CEL expression and evaluation result.
+// BuildTrace compiles and evaluates a control's predicate against an
+// asset, returning a TraceResult with the CEL expression and
+// evaluation result. Returns (nil, error) for missing inputs (a nil
+// control or asset is a programming defect, not data absence) or for
+// compiler initialization failure. Compile and evaluate errors are
+// captured in the returned TraceResult's Error field rather than
+// surfaced as a Go error so callers can still render a partial trace.
 func BuildTrace(
 	ctl *policy.ControlDefinition,
 	a *asset.Asset,
 	snapshot *asset.Snapshot,
-) *TraceResult {
-	if ctl == nil || a == nil {
-		return nil
+) (*TraceResult, error) {
+	if ctl == nil {
+		return nil, errors.New("BuildTrace: control is nil")
+	}
+	if a == nil {
+		return nil, errors.New("BuildTrace: asset is nil")
 	}
 
 	compiler, err := NewCompiler()
 	if err != nil {
-		return &TraceResult{
-			ControlID: ctl.ID,
-			AssetID:   a.ID,
-			Error:     fmt.Sprintf("CEL compiler init: %v", err),
-		}
+		return nil, fmt.Errorf("BuildTrace: CEL compiler init: %w", err)
 	}
 
 	cp, err := compiler.Compile(ctl.UnsafePredicate)
@@ -70,7 +75,7 @@ func BuildTrace(
 			AssetID:    a.ID,
 			Expression: expr,
 			Error:      fmt.Sprintf("CEL compile: %v", err),
-		}
+		}, nil
 	}
 
 	var identities []asset.CloudIdentity
@@ -89,5 +94,5 @@ func BuildTrace(
 	if evalErr != nil {
 		tr.Error = fmt.Sprintf("CEL eval: %v", evalErr)
 	}
-	return tr
+	return tr, nil
 }

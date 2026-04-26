@@ -190,14 +190,22 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 	case predicate.OpContains:
 		return fmt.Sprintf("(%s && string(%s).contains(%s))", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpMissing:
+		wantMissing, err := coerceBool(val, true)
+		if err != nil {
+			return "", fmt.Errorf("op missing: %w", err)
+		}
 		isMissing := fmt.Sprintf("(!(%s) || missing(%s))", hf, fa)
-		if wantMissing, ok := val.(bool); ok && !wantMissing {
+		if !wantMissing {
 			return fmt.Sprintf("!(%s)", isMissing), nil
 		}
 		return isMissing, nil
 	case predicate.OpPresent:
+		wantPresent, err := coerceBool(val, true)
+		if err != nil {
+			return "", fmt.Errorf("op present: %w", err)
+		}
 		isPresent := fmt.Sprintf("(%s && !missing(%s))", hf, fa)
-		if wantPresent, ok := val.(bool); ok && !wantPresent {
+		if !wantPresent {
 			return fmt.Sprintf("!(%s)", isPresent), nil
 		}
 		return isPresent, nil
@@ -240,6 +248,33 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 		return ruleToExprAnyMatch(r, val)
 	default:
 		return "", fmt.Errorf("unsupported operator: %s", op)
+	}
+}
+
+// coerceBool returns val as a Go bool. It accepts native bool and the
+// case-insensitive strings "true"/"false" — YAML round-trips can leave a
+// boolean literal as either, depending on whether the author quoted the
+// value. nil falls back to defaultVal so callers can pick the
+// "unspecified" semantics (e.g. op: missing with no value defaults to
+// "field must be missing"). Any other type or unrecognized string is a
+// compilation error rather than a silent default.
+func coerceBool(val any, defaultVal bool) (bool, error) {
+	switch v := val.(type) {
+	case nil:
+		return defaultVal, nil
+	case bool:
+		return v, nil
+	case string:
+		switch strings.ToLower(strings.TrimSpace(v)) {
+		case "true":
+			return true, nil
+		case "false":
+			return false, nil
+		default:
+			return false, fmt.Errorf("expected bool or \"true\"/\"false\" string, got %q", v)
+		}
+	default:
+		return false, fmt.Errorf("expected bool or \"true\"/\"false\" string, got %T", val)
 	}
 }
 

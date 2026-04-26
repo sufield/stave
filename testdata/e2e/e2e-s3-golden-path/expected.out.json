@@ -20,7 +20,7 @@
   "summary": {
     "total_assets": 2,
     "exposed_resources": 2,
-    "violations": 16
+    "violations": 20
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
@@ -1193,308 +1193,6 @@
           },
           {
             "property": "protected_prefix",
-            "actual_value": "backups/",
-            "operator": "eq",
-            "unsafe_value": "backups/"
-          }
-        ],
-        "temporal_risk": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
-      },
-      "control_severity": "high",
-      "control_compliance_ccm_v4": [
-        "DSP-07",
-        "DSP-17"
-      ],
-      "exposure": {
-        "type": "prefix_exposure",
-        "principal_scope": "public"
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
-        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
-      },
-      "fix_plan": {
-        "id": "fix-ddeb6cdb0d875ed0",
-        "target": {
-          "asset_id": "private-bucket",
-          "asset_type": "aws_s3_bucket"
-        },
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
-      },
-      "exposure_score": 150,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1,
-        "days_blind": 0
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "exposure_source eq \"missing_evidence\"",
-          "observation_key": "exposure_source",
-          "operator": "eq",
-          "expected_value": "missing_evidence",
-          "observed_value": "missing_evidence"
-        },
-        {
-          "predicate_expr": "protected_prefix eq \"backups/\"",
-          "observation_key": "protected_prefix",
-          "operator": "eq",
-          "expected_value": "backups/",
-          "observed_value": "backups/"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "private-bucket",
-          "type": "aws_s3_bucket",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "the exposure source = \"missing_evidence\"",
-              "observation_key": "exposure_source",
-              "observed_value": "missing_evidence"
-            },
-            {
-              "clause": "the protected prefix = \"backups/\"",
-              "observation_key": "protected_prefix",
-              "observed_value": "backups/"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "exposure_source",
-            "current_value": "missing_evidence",
-            "required_value": "any value other than missing_evidence",
-            "has_safe_default": false,
-            "description": "Change exposure_source away from missing_evidence"
-          },
-          {
-            "path": "protected_prefix",
-            "current_value": "backups/",
-            "required_value": "any value other than backups/",
-            "has_safe_default": false,
-            "description": "Change protected_prefix away from backups/"
-          }
-        ],
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
-      },
-      "classification": "absence_check",
-      "scope_tags": [
-        "aws",
-        "s3"
-      ]
-    },
-    {
-      "finding_id": "sha256:cfc8d5e23f723d4e",
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "control_name": "Protected Prefixes Must Not Be Publicly Readable",
-      "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
-      "asset_id": "private-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "misconfigurations": [
-          {
-            "property": "exposure_source",
-            "actual_value": "missing_evidence",
-            "operator": "eq",
-            "unsafe_value": "missing_evidence"
-          },
-          {
-            "property": "protected_prefix",
-            "actual_value": "internal/",
-            "operator": "eq",
-            "unsafe_value": "internal/"
-          }
-        ],
-        "temporal_risk": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
-      },
-      "control_severity": "high",
-      "control_compliance_ccm_v4": [
-        "DSP-07",
-        "DSP-17"
-      ],
-      "exposure": {
-        "type": "prefix_exposure",
-        "principal_scope": "public"
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
-        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
-      },
-      "fix_plan": {
-        "id": "fix-ddeb6cdb0d875ed0",
-        "target": {
-          "asset_id": "private-bucket",
-          "asset_type": "aws_s3_bucket"
-        },
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
-      },
-      "exposure_score": 150,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1,
-        "days_blind": 0
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "exposure_source eq \"missing_evidence\"",
-          "observation_key": "exposure_source",
-          "operator": "eq",
-          "expected_value": "missing_evidence",
-          "observed_value": "missing_evidence"
-        },
-        {
-          "predicate_expr": "protected_prefix eq \"internal/\"",
-          "observation_key": "protected_prefix",
-          "operator": "eq",
-          "expected_value": "internal/",
-          "observed_value": "internal/"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "private-bucket",
-          "type": "aws_s3_bucket",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "the exposure source = \"missing_evidence\"",
-              "observation_key": "exposure_source",
-              "observed_value": "missing_evidence"
-            },
-            {
-              "clause": "the protected prefix = \"internal/\"",
-              "observation_key": "protected_prefix",
-              "observed_value": "internal/"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "exposure_source",
-            "current_value": "missing_evidence",
-            "required_value": "any value other than missing_evidence",
-            "has_safe_default": false,
-            "description": "Change exposure_source away from missing_evidence"
-          },
-          {
-            "path": "protected_prefix",
-            "current_value": "internal/",
-            "required_value": "any value other than internal/",
-            "has_safe_default": false,
-            "description": "Change protected_prefix away from internal/"
-          }
-        ],
-        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
-      },
-      "classification": "absence_check",
-      "scope_tags": [
-        "aws",
-        "s3"
-      ]
-    },
-    {
-      "finding_id": "sha256:cfc8d5e23f723d4e",
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "control_name": "Protected Prefixes Must Not Be Publicly Readable",
-      "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
-      "asset_id": "private-bucket",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "misconfigurations": [
-          {
-            "property": "exposure_source",
-            "actual_value": "missing_evidence",
-            "operator": "eq",
-            "unsafe_value": "missing_evidence"
-          },
-          {
-            "property": "protected_prefix",
             "actual_value": "invoices/",
             "operator": "eq",
             "unsafe_value": "invoices/"
@@ -1618,6 +1316,157 @@
             "required_value": "any value other than invoices/",
             "has_safe_default": false,
             "description": "Change protected_prefix away from invoices/"
+          }
+        ],
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      },
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
+    },
+    {
+      "finding_id": "sha256:cfc8d5e23f723d4e",
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+      "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
+      "asset_id": "private-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "property": "exposure_source",
+            "actual_value": "missing_evidence",
+            "operator": "eq",
+            "unsafe_value": "missing_evidence"
+          },
+          {
+            "property": "protected_prefix",
+            "actual_value": "backups/",
+            "operator": "eq",
+            "unsafe_value": "backups/"
+          }
+        ],
+        "temporal_risk": "Protected prefix \"backups/\" is publicly readable via missing_evidence."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "prefix_exposure",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
+        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
+      },
+      "fix_plan": {
+        "id": "fix-ddeb6cdb0d875ed0",
+        "target": {
+          "asset_id": "private-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      },
+      "exposure_score": 150,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "exposure_source eq \"missing_evidence\"",
+          "observation_key": "exposure_source",
+          "operator": "eq",
+          "expected_value": "missing_evidence",
+          "observed_value": "missing_evidence"
+        },
+        {
+          "predicate_expr": "protected_prefix eq \"backups/\"",
+          "observation_key": "protected_prefix",
+          "operator": "eq",
+          "expected_value": "backups/",
+          "observed_value": "backups/"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source = \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix = \"backups/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "backups/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "missing_evidence",
+            "required_value": "any value other than missing_evidence",
+            "has_safe_default": false,
+            "description": "Change exposure_source away from missing_evidence"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "backups/",
+            "required_value": "any value other than backups/",
+            "has_safe_default": false,
+            "description": "Change protected_prefix away from backups/"
           }
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -1780,6 +1629,157 @@
       ]
     },
     {
+      "finding_id": "sha256:cfc8d5e23f723d4e",
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+      "control_description": "S3 bucket prefixes marked as protected must not be publicly readable. Evaluates bucket policies, ACL grants, and public access block settings to determine effective public read access for each protected prefix. Customize the prefix lists below to match your bucket layout.\n",
+      "asset_id": "private-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "property": "exposure_source",
+            "actual_value": "missing_evidence",
+            "operator": "eq",
+            "unsafe_value": "missing_evidence"
+          },
+          {
+            "property": "protected_prefix",
+            "actual_value": "internal/",
+            "operator": "eq",
+            "unsafe_value": "internal/"
+          }
+        ],
+        "temporal_risk": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "prefix_exposure",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "One or more protected S3 prefixes are publicly readable via bucket policy or ACL grants. Objects under these prefixes can be downloaded by anyone on the internet.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers.",
+        "example": "params:\n  protected_prefixes:\n    - \"invoices/\"\n    - \"secrets/\"\n  allowed_public_prefixes:\n    - \"images/\"\n    - \"static/\"\n"
+      },
+      "fix_plan": {
+        "id": "fix-ddeb6cdb0d875ed0",
+        "target": {
+          "asset_id": "private-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      },
+      "exposure_score": 150,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "exposure_source eq \"missing_evidence\"",
+          "observation_key": "exposure_source",
+          "operator": "eq",
+          "expected_value": "missing_evidence",
+          "observed_value": "missing_evidence"
+        },
+        {
+          "predicate_expr": "protected_prefix eq \"internal/\"",
+          "observation_key": "protected_prefix",
+          "operator": "eq",
+          "expected_value": "internal/",
+          "observed_value": "internal/"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+          "control_name": "Protected Prefixes Must Not Be Publicly Readable",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the exposure source = \"missing_evidence\"",
+              "observation_key": "exposure_source",
+              "observed_value": "missing_evidence"
+            },
+            {
+              "clause": "the protected prefix = \"internal/\"",
+              "observation_key": "protected_prefix",
+              "observed_value": "internal/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "exposure_source",
+            "current_value": "missing_evidence",
+            "required_value": "any value other than missing_evidence",
+            "has_safe_default": false,
+            "description": "Change exposure_source away from missing_evidence"
+          },
+          {
+            "path": "protected_prefix",
+            "current_value": "internal/",
+            "required_value": "any value other than internal/",
+            "has_safe_default": false,
+            "description": "Change protected_prefix away from internal/"
+          }
+        ],
+        "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
+      },
+      "classification": "absence_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
+    },
+    {
       "finding_id": "sha256:d94d878f0d5908e3",
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "control_name": "Protected Prefixes Must Not Be Publicly Readable",
@@ -2381,6 +2381,278 @@
       "scope_tags": [
         "aws",
         "s3"
+      ]
+    },
+    {
+      "finding_id": "sha256:03676995c9716c59",
+      "control_id": "CTL.S3.PUBLIC.004",
+      "control_name": "No Public Read via Bucket Policy",
+      "control_description": "S3 bucket policies must not grant read access to an anonymous or wildcard principal. A Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:GetObject without a restricting Condition enables any unauthenticated caller to read objects. This is distinct from CTL.S3.PUBLIC.001, which fires on the composite public_read signal regardless of mechanism; this control narrows to the bucket-policy path so the finding points the operator at the policy specifically. For ACL-based public read, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
+      "asset_id": "private-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "property": "storage.access.read_via_resource",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "resource"
+        ],
+        "temporal_risk": "Asset is currently in a non-compliant state."
+      },
+      "control_severity": "medium",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "policy_public_read",
+        "principal_scope": "public"
+      },
+      "remediation": {
+        "description": "Bucket policy grants s3:GetObject, s3:GetObjectAcl, or equivalent read action to an anonymous or wildcard principal. Any unauthenticated caller can read objects.",
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_resource\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-ddeb6cdb0d875ed0",
+        "target": {
+          "asset_id": "private-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.read_via_resource eq true",
+          "observation_key": "storage.access.read_via_resource",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.004",
+          "control_name": "No Public Read via Bucket Policy",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "the bucket policy grants read to a public principal = false",
+              "observation_key": "storage.access.read_via_resource",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.read_via_resource",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.access.read_via_resource to true"
+          }
+        ],
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
+      },
+      "classification": "aggregate_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket policy contains a Statement with Effect \"Allow\", Principal \"*\" (or AWS: \"*\"), and a read action such as s3:GetObject or s3:GetObjectAcl. No restricting Condition narrows the principal to a specific account, VPC, IP range, or organization.\n",
+      "infection": "Any unauthenticated HTTP caller can fetch objects from this bucket. Distinct from ACL-driven exposure in that policy- based public read often applies to specific prefixes or objects, not the whole bucket — but adopters miss the distinction and treat \"policy allows public read\" as \"this bucket is public.\" Search engines and scanners enumerate buckets via GetBucketPolicy lookups specifically to find policy-granted read access, because it persists even when ACLs are tightened.\n",
+      "failure": "Data exposure for objects matched by the policy's Resource clause. Scope depends on whether the policy grants read on the whole bucket (arn:aws:s3:::bucket/*) or a subset — but adopters commonly over-scope the Resource clause during authoring, so \"intentional limited public read\" often becomes \"entire bucket public\" in practice. Audit the policy's Resource ARNs to understand exposure surface.\n",
+      "delta": [
+        {
+          "property_label": "access read via resource",
+          "property_path": "storage.access.read_via_resource",
+          "current_value": "false",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:c400e1d27af89a6a",
+      "control_id": "CTL.S3.PUBLIC.004",
+      "control_name": "No Public Read via Bucket Policy",
+      "control_description": "S3 bucket policies must not grant read access to an anonymous or wildcard principal. A Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:GetObject without a restricting Condition enables any unauthenticated caller to read objects. This is distinct from CTL.S3.PUBLIC.001, which fires on the composite public_read signal regardless of mechanism; this control narrows to the bucket-policy path so the finding points the operator at the policy specifically. For ACL-based public read, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
+      "asset_id": "public-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "property": "storage.access.read_via_resource",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "resource"
+        ],
+        "temporal_risk": "Asset is currently in a non-compliant state."
+      },
+      "control_severity": "medium",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "policy_public_read",
+        "principal_scope": "public"
+      },
+      "remediation": {
+        "description": "Bucket policy grants s3:GetObject, s3:GetObjectAcl, or equivalent read action to an anonymous or wildcard principal. Any unauthenticated caller can read objects.",
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_resource\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-659c6cef69b9707f",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.read_via_resource eq true",
+          "observation_key": "storage.access.read_via_resource",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.004",
+          "control_name": "No Public Read via Bucket Policy",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "the bucket policy grants read to a public principal = false",
+              "observation_key": "storage.access.read_via_resource",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.read_via_resource",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.access.read_via_resource to true"
+          }
+        ],
+        "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
+      },
+      "classification": "aggregate_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket policy contains a Statement with Effect \"Allow\", Principal \"*\" (or AWS: \"*\"), and a read action such as s3:GetObject or s3:GetObjectAcl. No restricting Condition narrows the principal to a specific account, VPC, IP range, or organization.\n",
+      "infection": "Any unauthenticated HTTP caller can fetch objects from this bucket. Distinct from ACL-driven exposure in that policy- based public read often applies to specific prefixes or objects, not the whole bucket — but adopters miss the distinction and treat \"policy allows public read\" as \"this bucket is public.\" Search engines and scanners enumerate buckets via GetBucketPolicy lookups specifically to find policy-granted read access, because it persists even when ACLs are tightened.\n",
+      "failure": "Data exposure for objects matched by the policy's Resource clause. Scope depends on whether the policy grants read on the whole bucket (arn:aws:s3:::bucket/*) or a subset — but adopters commonly over-scope the Resource clause during authoring, so \"intentional limited public read\" often becomes \"entire bucket public\" in practice. Audit the policy's Resource ARNs to understand exposure surface.\n",
+      "delta": [
+        {
+          "property_label": "access read via resource",
+          "property_path": "storage.access.read_via_resource",
+          "current_value": "false",
+          "fix_action": "set to false (disable)"
+        }
       ]
     },
     {
@@ -2667,11 +2939,199 @@
           "fix_action": "populate this property in the configuration"
         }
       ]
+    },
+    {
+      "finding_id": "sha256:3a88fc445585b641",
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "control_name": "Complete Data Required for Safety Assessment",
+      "control_description": "S3 bucket safety cannot be proven when policy or ACL data is missing from the snapshot.",
+      "asset_id": "private-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "property": "safety_provable",
+            "actual_value": null,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset is currently in a non-compliant state."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "nist_800_53_r5": "SI-12"
+      },
+      "control_compliance_ccm_v4": [
+        "DCS-06"
+      ],
+      "remediation": {
+        "description": "Bucket safety cannot be assessed because policy or ACL data is missing from the observation snapshot. The bucket may be safe but cannot be proven so.",
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions.",
+        "example": "{\n  \"safety_provable\": true\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-50a3325077dca86e",
+        "target": {
+          "asset_id": "private-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "exposure_score": 25,
+      "score_breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "safety_provable eq false",
+          "observation_key": "safety_provable",
+          "operator": "eq",
+          "expected_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.INCOMPLETE.001",
+          "control_name": "Complete Data Required for Safety Assessment",
+          "severity": "low",
+          "reasoning": [
+            {
+              "clause": "safety_provable = not set",
+              "observation_key": "safety_provable"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "safety_provable",
+            "current_value": "",
+            "required_value": "any value other than false",
+            "has_safe_default": false,
+            "description": "Change safety_provable away from false"
+          }
+        ],
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "classification": "aggregate_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
+    },
+    {
+      "finding_id": "sha256:d20077a62b9fa3bf",
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "control_name": "Complete Data Required for Safety Assessment",
+      "control_description": "S3 bucket safety cannot be proven when policy or ACL data is missing from the snapshot.",
+      "asset_id": "public-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "property": "safety_provable",
+            "actual_value": null,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset is currently in a non-compliant state."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "nist_800_53_r5": "SI-12"
+      },
+      "control_compliance_ccm_v4": [
+        "DCS-06"
+      ],
+      "remediation": {
+        "description": "Bucket safety cannot be assessed because policy or ACL data is missing from the observation snapshot. The bucket may be safe but cannot be proven so.",
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions.",
+        "example": "{\n  \"safety_provable\": true\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-e80ea979b508da8c",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "exposure_score": 25,
+      "score_breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "safety_provable eq false",
+          "observation_key": "safety_provable",
+          "operator": "eq",
+          "expected_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.INCOMPLETE.001",
+          "control_name": "Complete Data Required for Safety Assessment",
+          "severity": "low",
+          "reasoning": [
+            {
+              "clause": "safety_provable = not set",
+              "observation_key": "safety_provable"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "safety_provable",
+            "current_value": "",
+            "required_value": "any value other than false",
+            "has_safe_default": false,
+            "description": "Change safety_provable away from false"
+          }
+        ],
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "classification": "aggregate_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [
     {
-      "issue_id": "sha256:16865eb8ca711f5b",
+      "issue_id": "sha256:eb5a8922656820ee",
       "asset_id": "public-phi-bucket",
       "shared_keys": [
         "storage.access",
@@ -2679,6 +3139,7 @@
         "storage.access.public_list",
         "storage.access.public_read",
         "storage.access.read_via_identity",
+        "storage.access.read_via_resource",
         "storage.tags",
         "storage.tags.data-classification",
         "storage.tags.public_list_intended"
@@ -2690,7 +3151,8 @@
         "sha256:4213b4640ec19233",
         "sha256:5ce777d4af066e45",
         "sha256:5d1205a18974cf1c",
-        "sha256:a8db07ec8df71531"
+        "sha256:a8db07ec8df71531",
+        "sha256:c400e1d27af89a6a"
       ],
       "consolidated_score": 205.47945205479454,
       "consolidated_blast_radius": 1
@@ -2730,6 +3192,20 @@
       "consolidated_blast_radius": 1
     },
     {
+      "issue_id": "sha256:ca0422151244beac",
+      "asset_id": "private-bucket",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.read_via_resource"
+      ],
+      "headline_finding_id": "sha256:03676995c9716c59",
+      "member_finding_ids": [
+        "sha256:03676995c9716c59"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    },
+    {
       "issue_id": "sha256:ea4fd3e5dcf1765d",
       "asset_id": "public-phi-bucket",
       "shared_keys": [
@@ -2756,6 +3232,32 @@
       ],
       "consolidated_score": 25.684931506849317,
       "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:9688d71242d48e40",
+      "asset_id": "private-bucket",
+      "shared_keys": [
+        "safety_provable"
+      ],
+      "headline_finding_id": "sha256:3a88fc445585b641",
+      "member_finding_ids": [
+        "sha256:3a88fc445585b641"
+      ],
+      "consolidated_score": 25,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:fcd9124a1c5a6fb0",
+      "asset_id": "public-phi-bucket",
+      "shared_keys": [
+        "safety_provable"
+      ],
+      "headline_finding_id": "sha256:d20077a62b9fa3bf",
+      "member_finding_ids": [
+        "sha256:d20077a62b9fa3bf"
+      ],
+      "consolidated_score": 25,
+      "consolidated_blast_radius": 1
     }
   ],
   "remediation_groups": [
@@ -2771,9 +3273,10 @@
         "action": "Add a data-classification tag to the bucket with an appropriate value (e.g., phi, pii, confidential, internal, public, non-sensitive). Update your tagging policy to require this tag on all S3 buckets."
       },
       "contributing_controls": [
-        "CTL.S3.GOVERNANCE.001"
+        "CTL.S3.GOVERNANCE.001",
+        "CTL.S3.INCOMPLETE.001"
       ],
-      "finding_count": 1
+      "finding_count": 2
     },
     {
       "asset_id": "private-bucket",
@@ -2814,9 +3317,10 @@
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
       "contributing_controls": [
+        "CTL.S3.PUBLIC.004",
         "CTL.S3.PUBLIC.PREFIX.001"
       ],
-      "finding_count": 4
+      "finding_count": 5
     },
     {
       "asset_id": "public-phi-bucket",
@@ -2859,13 +3363,14 @@
       "contributing_controls": [
         "CTL.S3.PUBLIC.001",
         "CTL.S3.PUBLIC.002",
+        "CTL.S3.PUBLIC.004",
         "CTL.S3.PUBLIC.007",
         "CTL.S3.PUBLIC.008",
         "CTL.S3.PUBLIC.LIST.001",
         "CTL.S3.PUBLIC.LIST.002",
         "CTL.S3.PUBLIC.PREFIX.001"
       ],
-      "finding_count": 10
+      "finding_count": 11
     },
     {
       "asset_id": "public-phi-bucket",
@@ -2879,14 +3384,15 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001"
+        "CTL.S3.CONTROLS.001",
+        "CTL.S3.INCOMPLETE.001"
       ],
-      "finding_count": 1
+      "finding_count": 2
     }
   ],
   "top_exposures": [
     {
-      "finding_index": 2,
+      "finding_index": 4,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "public-phi-bucket",
       "exposure_score": 205.47945205479454,
@@ -2902,7 +3408,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 3,
+      "finding_index": 5,
       "control_id": "CTL.S3.PUBLIC.002",
       "asset_id": "public-phi-bucket",
       "exposure_score": 205.47945205479454,
@@ -2918,7 +3424,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 4,
+      "finding_index": 8,
       "control_id": "CTL.S3.PUBLIC.007",
       "asset_id": "public-phi-bucket",
       "exposure_score": 205.47945205479454,
@@ -2934,7 +3440,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 5,
+      "finding_index": 9,
       "control_id": "CTL.S3.PUBLIC.008",
       "asset_id": "public-phi-bucket",
       "exposure_score": 205.47945205479454,
@@ -2950,7 +3456,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 6,
+      "finding_index": 10,
       "control_id": "CTL.S3.PUBLIC.LIST.001",
       "asset_id": "public-phi-bucket",
       "exposure_score": 154.10958904109592,
@@ -2966,7 +3472,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 7,
+      "finding_index": 11,
       "control_id": "CTL.S3.PUBLIC.LIST.002",
       "asset_id": "public-phi-bucket",
       "exposure_score": 154.10958904109592,
@@ -2982,55 +3488,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 8,
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "asset_id": "private-bucket",
-      "exposure_score": 150,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1,
-        "days_blind": 0
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 9,
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "asset_id": "private-bucket",
-      "exposure_score": 150,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1,
-        "days_blind": 0
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 10,
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "asset_id": "private-bucket",
-      "exposure_score": 150,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1,
-        "days_blind": 0
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 11,
+      "finding_index": 14,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "asset_id": "private-bucket",
       "exposure_score": 150,
@@ -3048,39 +3506,7 @@
     {
       "finding_index": 12,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "asset_id": "public-phi-bucket",
-      "exposure_score": 150,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1,
-        "days_blind": 0
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 13,
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "asset_id": "public-phi-bucket",
-      "exposure_score": 150,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1,
-        "days_blind": 0
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 14,
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "asset_id": "public-phi-bucket",
+      "asset_id": "private-bucket",
       "exposure_score": 150,
       "breakdown": {
         "base_score": 75,
@@ -3096,10 +3522,122 @@
     {
       "finding_index": 15,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "private-bucket",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 13,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "private-bucket",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 16,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "asset_id": "public-phi-bucket",
       "exposure_score": 150,
       "breakdown": {
         "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 17,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "public-phi-bucket",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 18,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "public-phi-bucket",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 19,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "public-phi-bucket",
+      "exposure_score": 150,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 6,
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "private-bucket",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 7,
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "public-phi-bucket",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
@@ -3138,6 +3676,38 @@
         "chain_bonus": 1,
         "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 2,
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "asset_id": "private-bucket",
+      "exposure_score": 25,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "asset_id": "public-phi-bucket",
+      "exposure_score": 25,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
       },
       "silent_killer": false
     }
@@ -3230,12 +3800,12 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-s3-golden-path/controls",
-      "observations": "testdata/e2e/e2e-s3-golden-path/observations"
+      "controls": "controls",
+      "observations": "observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
+      "head_commit": "8e9e2fb05a3a69738019457f6d0bfe84fa678aa4",
       "dirty": false
     }
   }

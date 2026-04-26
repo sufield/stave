@@ -233,12 +233,21 @@ func (s *Sanitizer) scrubSource(src *asset.SourceRef) *asset.SourceRef {
 // underlying type so downstream JSON consumers see the same shape they
 // would for an unredacted property. String values are deterministically
 // hashed; numeric and boolean primitives are zeroed; containers recurse.
+//
+// Profile-driven scrubbing is independent of the sanitizeIDs flag: by
+// the time scrubValue runs, ScrubMap has already determined that this
+// key is in the profile's Sanitize set, so the value is always
+// redacted — a zero-value Sanitizer (sanitizeIDs=false) still strips
+// values whose property names are profile-classified as sensitive.
 func (s *Sanitizer) scrubValue(v any) any {
 	switch val := v.(type) {
 	case nil:
 		return nil
 	case string:
-		return s.ID(val)
+		if val == "" {
+			return val
+		}
+		return "SANITIZED_" + crypto.ShortToken(val)
 	case bool:
 		return false
 	case int:

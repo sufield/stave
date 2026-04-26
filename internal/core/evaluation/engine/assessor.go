@@ -145,6 +145,12 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 	if a.Clock == nil {
 		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a Clock")
 	}
+	if a.PredicateEval == nil {
+		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a PredicateEval")
+	}
+	if a.PredicateParser == nil {
+		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a PredicateParser")
+	}
 	var opt AssessmentOptions
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -222,23 +228,36 @@ func (s *assessmentSession) applyControl(
 			if s.collector.RecordExemption(id) {
 				s.collector.RecordExemptedAsset(id, rule.Pattern, rule.Reason)
 			}
-			s.collector.RecordCheck(evaluation.ResourceCheck{
-				ControlID:   ctl.ID,
-				AssetID:     id,
-				AssetType:   lifecycle.Asset().Type,
-				AssetDomain: lifecycle.Asset().Type.Domain(),
-				Verdict:     evaluation.VerdictSkipped,
-				Confidence:  evaluation.ConfidenceHigh,
-				Reason:      rule.Reason,
-			})
+			// A nil lifecycle here is unexpected — the lifecycle map is
+			// produced by BuildLifecyclesPerControl and the caller
+			// iterates its keys. Record the check with empty type
+			// metadata rather than panicking, and emit a debug log so
+			// the upstream invariant violation is traceable.
+			check := evaluation.ResourceCheck{
+				ControlID:  ctl.ID,
+				AssetID:    id,
+				Verdict:    evaluation.VerdictSkipped,
+				Confidence: evaluation.ConfidenceHigh,
+				Reason:     rule.Reason,
+			}
+			if lifecycle != nil {
+				check.AssetType = lifecycle.Asset().Type
+				check.AssetDomain = lifecycle.Asset().Type.Domain()
+			} else {
+				s.assessor.logger().Debug("exemption check: nil lifecycle",
+					"control", ctl.ID, "asset", id)
+			}
+			s.collector.RecordCheck(check)
 			continue
 		}
 		span.RecordStep("exemption_check", nil, map[string]any{"exempted": false})
 
-		// 2. Track evaluated snapshots
-		s.collector.seenAssets.register(id)
-		if lifecycle.IsExposed() {
-			s.collector.nonCompliantAssets.register(id)
+		// 2. Track evaluated snapshots — go through the collector's
+		//    mutex-protected entry points so applyControl is safe to
+		//    call from concurrent goroutines.
+		s.collector.RecordSeenAsset(id)
+		if lifecycle != nil && lifecycle.IsExposed() {
+			s.collector.RecordNonCompliantAsset(id)
 		}
 
 		// 3. Evaluate the security strategy against the asset lifecycle.
@@ -316,8 +335,8 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 			EvaluatedState:    evaluatedState(s.snapshots),
 		},
 		Summary: evaluation.ComplianceSummary{
-			TotalAssets:      len(s.collector.seenAssets),
-			ExposedResources: len(s.collector.nonCompliantAssets),
+			TotalAssets:      s.collector.SeenAssetCount(),
+			ExposedResources: s.collector.NonCompliantAssetCount(),
 			Violations:       len(activeFindings),
 		},
 		SecurityState:        posture,

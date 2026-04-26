@@ -494,3 +494,69 @@ func TestCompile_AnyMatchTypedPredicate(t *testing.T) {
 		t.Fatal("expected unsafe (true) for typed predicate any_match path")
 	}
 }
+
+func TestCompile_OpPresent_StringTrue(t *testing.T) {
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpPresent, Value: policy.Str("true")},
+		},
+	}
+	cp, err := compiler.Compile(pred)
+	if err != nil {
+		t.Fatalf("compile string \"true\" should succeed: %v", err)
+	}
+	props := map[string]any{"storage": map[string]any{"kind": "bucket"}}
+	got, err := evaluateWithParams(cp, props, nil, nil)
+	if err != nil {
+		t.Fatalf("eval: %v", err)
+	}
+	if !got {
+		t.Error("OpPresent with string \"true\" should match a present field")
+	}
+}
+
+func TestCompile_OpMissing_StringFalse(t *testing.T) {
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// op: missing, value: "false" — author wants the field to be PRESENT.
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpMissing, Value: policy.Str("false")},
+		},
+	}
+	cp, err := compiler.Compile(pred)
+	if err != nil {
+		t.Fatalf("compile string \"false\" should succeed: %v", err)
+	}
+	// Field is present → predicate (asserting "must NOT be missing") should be true.
+	props := map[string]any{"storage": map[string]any{"kind": "bucket"}}
+	got, err := evaluateWithParams(cp, props, nil, nil)
+	if err != nil {
+		t.Fatalf("eval: %v", err)
+	}
+	if !got {
+		t.Error("OpMissing with string \"false\" should evaluate equivalently to bool false " +
+			"(author wants the field to be present)")
+	}
+}
+
+func TestCompile_OpPresent_NonBoolValue_Errors(t *testing.T) {
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpPresent, Value: policy.NewOperand(42)},
+		},
+	}
+	if _, err := compiler.Compile(pred); err == nil {
+		t.Error("OpPresent with non-bool, non-string-bool value should fail compilation")
+	}
+}

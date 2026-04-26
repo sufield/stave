@@ -85,6 +85,16 @@ func (b *assessorBuilder) build() *Assessor {
 	a.Exemptions = b.exemptions
 	a.Exceptions = b.exceptions
 	a.PredicateEval = b.predicateEval
+	if a.PredicateEval == nil {
+		// Default the precondition fields so tests that don't care about
+		// predicate evaluation continue to satisfy Assess()'s preconditions.
+		a.PredicateEval = func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+			return false, nil
+		}
+	}
+	a.PredicateParser = func(_ any) (*policy.UnsafePredicate, error) {
+		return &policy.UnsafePredicate{}, nil
+	}
 	a.Tracer = b.tracer
 	return a
 }

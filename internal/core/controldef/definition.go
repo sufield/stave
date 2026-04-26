@@ -126,33 +126,33 @@ func preparePrefixExposure(params ControlParams) PrefixExposureParams {
 
 // RecurrencePolicy returns the parsed recurrence parameters.
 func (ctl *ControlDefinition) RecurrencePolicy() RecurrencePolicy {
-	ctl.ensurePrepared()
+	_ = ctl.ensurePrepared() // load-time Prepare() validates; lazy fallback logs.
 	return ctl.Prepared.Recurrence
 }
 
 // MaxUnsafeDuration returns the per-control max_unsafe_duration param.
 // Returns 0 if not set (caller should apply CLI default fallback).
 func (ctl *ControlDefinition) MaxUnsafeDuration() time.Duration {
-	ctl.ensurePrepared()
+	_ = ctl.ensurePrepared()
 	return ctl.Prepared.MaxUnsafeDuration
 }
 
 // SLADeadline returns the per-control sla_deadline if set, otherwise 0.
 func (ctl *ControlDefinition) SLADeadline() time.Duration {
-	ctl.ensurePrepared()
+	_ = ctl.ensurePrepared()
 	return ctl.Prepared.SLADeadline
 }
 
 // HasSLADeadline reports whether this control has an explicit sla_deadline param.
 func (ctl *ControlDefinition) HasSLADeadline() bool {
-	ctl.ensurePrepared()
+	_ = ctl.ensurePrepared()
 	return ctl.Prepared.HasSLADeadline
 }
 
 // EffectiveMaxUnsafeDuration returns the per-control max_unsafe_duration if explicitly set,
 // otherwise returns the provided fallback (typically the CLI --max-unsafe value).
 func (ctl *ControlDefinition) EffectiveMaxUnsafeDuration(fallback time.Duration) time.Duration {
-	ctl.ensurePrepared()
+	_ = ctl.ensurePrepared()
 	if ctl.Prepared.HasMaxUnsafeDuration {
 		return ctl.Prepared.MaxUnsafeDuration
 	}
@@ -161,18 +161,25 @@ func (ctl *ControlDefinition) EffectiveMaxUnsafeDuration(fallback time.Duration)
 
 // ExposurePrefixes returns the typed prefix lists for prefix_exposure controls.
 func (ctl *ControlDefinition) ExposurePrefixes() PrefixExposureParams {
-	ctl.ensurePrepared()
+	_ = ctl.ensurePrepared()
 	return ctl.Prepared.PrefixExposure
 }
 
-// ensurePrepared lazily calls Prepare() on first access.
-// Logs errors instead of silently discarding them so that
-// misconfigurations in control YAML (e.g., invalid duration)
-// are visible in diagnostic output.
-func (ctl *ControlDefinition) ensurePrepared() {
+// ensurePrepared lazily calls Prepare() on first access. Returns the
+// underlying Prepare error so callers can distinguish "ready" from
+// "ready-but-bad-params" — the loader path
+// (adapters/controls/{builtin,yaml}/loader.go) calls Prepare() eagerly
+// and surfaces parse errors at that time. The accessors above
+// intentionally discard the error: by the time they run, Prepare has
+// already been validated, and a recurrence of the failure here
+// indicates a programming error in the loader. The slog.Warn keeps the
+// diagnostic visible without forcing every accessor to return a tuple.
+func (ctl *ControlDefinition) ensurePrepared() error {
 	if err := ctl.Prepare(); err != nil {
 		slog.Warn("control prepare failed", "control", ctl.ID, "error", err)
+		return err
 	}
+	return nil
 }
 
 // --- Parameter Handling ---

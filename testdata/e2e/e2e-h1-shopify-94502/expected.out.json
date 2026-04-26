@@ -20,7 +20,7 @@
   "summary": {
     "total_assets": 3,
     "exposed_resources": 3,
-    "violations": 10
+    "violations": 13
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
@@ -1612,6 +1612,288 @@
           "fix_action": "set to true (enable)"
         }
       ]
+    },
+    {
+      "finding_id": "sha256:7c4024324b080b1a",
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "control_name": "Complete Data Required for Safety Assessment",
+      "control_description": "S3 bucket safety cannot be proven when policy or ACL data is missing from the snapshot.",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "property": "safety_provable",
+            "actual_value": null,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset is currently in a non-compliant state."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "nist_800_53_r5": "SI-12"
+      },
+      "control_compliance_ccm_v4": [
+        "DCS-06"
+      ],
+      "remediation": {
+        "description": "Bucket safety cannot be assessed because policy or ACL data is missing from the observation snapshot. The bucket may be safe but cannot be proven so.",
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions.",
+        "example": "{\n  \"safety_provable\": true\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-615ea15597343a26",
+        "target": {
+          "asset_id": "shopify-owned-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "exposure_score": 25,
+      "score_breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "safety_provable eq false",
+          "observation_key": "safety_provable",
+          "operator": "eq",
+          "expected_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.INCOMPLETE.001",
+          "control_name": "Complete Data Required for Safety Assessment",
+          "severity": "low",
+          "reasoning": [
+            {
+              "clause": "safety_provable = not set",
+              "observation_key": "safety_provable"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "safety_provable",
+            "current_value": "",
+            "required_value": "any value other than false",
+            "has_safe_default": false,
+            "description": "Change safety_provable away from false"
+          }
+        ],
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "classification": "aggregate_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
+    },
+    {
+      "finding_id": "sha256:7bfbc31c23c613b3",
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "control_name": "Complete Data Required for Safety Assessment",
+      "control_description": "S3 bucket safety cannot be proven when policy or ACL data is missing from the snapshot.",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "property": "safety_provable",
+            "actual_value": null,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset is currently in a non-compliant state."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "nist_800_53_r5": "SI-12"
+      },
+      "control_compliance_ccm_v4": [
+        "DCS-06"
+      ],
+      "remediation": {
+        "description": "Bucket safety cannot be assessed because policy or ACL data is missing from the observation snapshot. The bucket may be safe but cannot be proven so.",
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions.",
+        "example": "{\n  \"safety_provable\": true\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-7e4244a99e10acdb",
+        "target": {
+          "asset_id": "shopify-owned-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "exposure_score": 25,
+      "score_breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "safety_provable eq false",
+          "observation_key": "safety_provable",
+          "operator": "eq",
+          "expected_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-2",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.INCOMPLETE.001",
+          "control_name": "Complete Data Required for Safety Assessment",
+          "severity": "low",
+          "reasoning": [
+            {
+              "clause": "safety_provable = not set",
+              "observation_key": "safety_provable"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "safety_provable",
+            "current_value": "",
+            "required_value": "any value other than false",
+            "has_safe_default": false,
+            "description": "Change safety_provable away from false"
+          }
+        ],
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "classification": "aggregate_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
+    },
+    {
+      "finding_id": "sha256:59d1e24c11f70528",
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "control_name": "Complete Data Required for Safety Assessment",
+      "control_description": "S3 bucket safety cannot be proven when policy or ACL data is missing from the snapshot.",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "misconfigurations": [
+          {
+            "property": "safety_provable",
+            "actual_value": null,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset is currently in a non-compliant state."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "nist_800_53_r5": "SI-12"
+      },
+      "control_compliance_ccm_v4": [
+        "DCS-06"
+      ],
+      "remediation": {
+        "description": "Bucket safety cannot be assessed because policy or ACL data is missing from the observation snapshot. The bucket may be safe but cannot be proven so.",
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions.",
+        "example": "{\n  \"safety_provable\": true\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-655489696a02bf28",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "exposure_score": 25,
+      "score_breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "safety_provable eq false",
+          "observation_key": "safety_provable",
+          "operator": "eq",
+          "expected_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-writeable-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.INCOMPLETE.001",
+          "control_name": "Complete Data Required for Safety Assessment",
+          "severity": "low",
+          "reasoning": [
+            {
+              "clause": "safety_provable = not set",
+              "observation_key": "safety_provable"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "safety_provable",
+            "current_value": "",
+            "required_value": "any value other than false",
+            "has_safe_default": false,
+            "description": "Change safety_provable away from false"
+          }
+        ],
+        "action": "Re-run the observation collector with full permissions to read bucket policies and ACLs. Ensure the collector IAM role has s3:GetBucketPolicy, s3:GetBucketAcl, and s3:GetBucketPolicyStatus permissions."
+      },
+      "classification": "aggregate_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ]
     }
   ],
   "issues": [
@@ -1706,6 +1988,45 @@
       ],
       "consolidated_score": 1875,
       "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:950719f2fa9728e0",
+      "asset_id": "shopify-owned-1",
+      "shared_keys": [
+        "safety_provable"
+      ],
+      "headline_finding_id": "sha256:7c4024324b080b1a",
+      "member_finding_ids": [
+        "sha256:7c4024324b080b1a"
+      ],
+      "consolidated_score": 25,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:01096aeb0b6815b0",
+      "asset_id": "shopify-owned-2",
+      "shared_keys": [
+        "safety_provable"
+      ],
+      "headline_finding_id": "sha256:7bfbc31c23c613b3",
+      "member_finding_ids": [
+        "sha256:7bfbc31c23c613b3"
+      ],
+      "consolidated_score": 25,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:31fc632cb644505e",
+      "asset_id": "shopify-writeable-1",
+      "shared_keys": [
+        "safety_provable"
+      ],
+      "headline_finding_id": "sha256:59d1e24c11f70528",
+      "member_finding_ids": [
+        "sha256:59d1e24c11f70528"
+      ],
+      "consolidated_score": 25,
+      "consolidated_blast_radius": 1
     }
   ],
   "remediation_groups": [
@@ -1721,9 +2042,10 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001"
+        "CTL.S3.CONTROLS.001",
+        "CTL.S3.INCOMPLETE.001"
       ],
-      "finding_count": 1
+      "finding_count": 2
     },
     {
       "asset_id": "shopify-owned-1",
@@ -1781,9 +2103,10 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001"
+        "CTL.S3.CONTROLS.001",
+        "CTL.S3.INCOMPLETE.001"
       ],
-      "finding_count": 1
+      "finding_count": 2
     },
     {
       "asset_id": "shopify-owned-2",
@@ -1886,14 +2209,15 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001"
+        "CTL.S3.CONTROLS.001",
+        "CTL.S3.INCOMPLETE.001"
       ],
-      "finding_count": 1
+      "finding_count": 2
     }
   ],
   "top_exposures": [
     {
-      "finding_index": 3,
+      "finding_index": 6,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-owned-1",
       "exposure_score": 5000,
@@ -1909,7 +2233,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 4,
+      "finding_index": 7,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-owned-2",
       "exposure_score": 5000,
@@ -1925,7 +2249,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 5,
+      "finding_index": 8,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-writeable-1",
       "exposure_score": 5000,
@@ -1941,7 +2265,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 6,
+      "finding_index": 9,
       "control_id": "CTL.S3.PUBLIC.003",
       "asset_id": "shopify-writeable-1",
       "exposure_score": 5000,
@@ -1957,7 +2281,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 7,
+      "finding_index": 10,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-owned-1",
       "exposure_score": 2500,
@@ -1973,7 +2297,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 8,
+      "finding_index": 11,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-owned-2",
       "exposure_score": 2500,
@@ -1989,7 +2313,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 9,
+      "finding_index": 12,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-writeable-1",
       "exposure_score": 2500,
@@ -2051,6 +2375,54 @@
         "days_blind": 3738
       },
       "silent_killer": true
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "asset_id": "shopify-owned-1",
+      "exposure_score": 25,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 4,
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "asset_id": "shopify-owned-2",
+      "exposure_score": 25,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 5,
+      "control_id": "CTL.S3.INCOMPLETE.001",
+      "asset_id": "shopify-writeable-1",
+      "exposure_score": 25,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
     }
   ],
   "coverage_posture": {
@@ -2141,12 +2513,12 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-shopify-94502/controls",
-      "observations": "testdata/e2e/e2e-h1-shopify-94502/observations"
+      "controls": "controls",
+      "observations": "observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
+      "head_commit": "8e9e2fb05a3a69738019457f6d0bfe84fa678aa4",
       "dirty": false
     }
   }

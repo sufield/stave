@@ -30,7 +30,10 @@ func (t *PolicyTracer) Trace(req *TraceRequest) (*stavecel.TraceResult, error) {
 		return nil, err
 	}
 
-	result := stavecel.BuildTrace(&req.Control, resource, req.Snapshot)
+	result, err := stavecel.BuildTrace(&req.Control, resource, req.Snapshot)
+	if err != nil {
+		return nil, fmt.Errorf("trace: build trace for %s: %w", req.TargetID, err)
+	}
 	if result == nil {
 		return nil, fmt.Errorf("trace: engine failed to produce a logic audit for %s", req.TargetID)
 	}

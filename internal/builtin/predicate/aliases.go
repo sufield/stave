@@ -148,11 +148,21 @@ func builtinAliases() map[string]aliasEntry {
 			},
 		},
 		S3NotUsingKMSCMK: {
-			Description: "Encryption does not use a customer-managed KMS key",
+			Description: "Encryption is neither configured with the aws:kms algorithm nor associated with a KMS key (both signals of customer-managed KMS are absent)",
 			Category:    CategoryEncryption,
 			Service:     "s3",
+			// AND semantics: a finding requires BOTH signals of "not
+			// CMK" — the algorithm is something other than aws:kms AND
+			// no kms_key_id is recorded. Either signal alone is
+			// ambiguous: an aws:kms algorithm with an empty key_id
+			// could indicate AWS-managed KMS data still in transit
+			// from the inventory side, and a non-aws:kms algorithm
+			// with a populated key_id is typically inventory drift.
+			// Requiring both prevents false positives at the cost of
+			// slightly weaker detection of misconfigurations that
+			// only partially clear the bar.
 			Predicate: policy.UnsafePredicate{
-				Any: []policy.PredicateRule{
+				All: []policy.PredicateRule{
 					{Field: predicate.NewFieldPath("properties.storage.encryption.algorithm"), Op: predicate.OpNe, Value: policy.Str(kernel.AlgorithmAWSKMS.String())},
 					{Field: predicate.NewFieldPath("properties.storage.encryption.kms_key_id"), Op: predicate.OpEq, Value: policy.Str("")},
 				},

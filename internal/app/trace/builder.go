@@ -22,7 +22,17 @@ func (b *Builder) BuildTrace(req evaluation.TraceRequest) *evaluation.FindingTra
 		return nil
 	}
 
-	tr := stavecel.BuildTrace(req.Control, found, snapshot)
+	tr, err := stavecel.BuildTrace(req.Control, found, snapshot)
+	if err != nil {
+		// A trace-build error means we cannot describe how this
+		// finding was decided. Surface as a synthetic FindingTrace so
+		// the consumer can still render the failure rather than seeing
+		// a silent nil.
+		return &evaluation.FindingTrace{
+			Raw:         &stavecel.TraceResult{Error: err.Error()},
+			FinalResult: false,
+		}
+	}
 	if tr == nil {
 		return nil
 	}

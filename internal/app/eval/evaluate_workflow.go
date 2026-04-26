@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -53,7 +54,13 @@ func Evaluate(input EvaluateInput) (evaluation.ComplianceReport, error) {
 	runner.Exceptions = input.ExceptionConfig
 	runner.Acknowledgments = input.AcknowledgmentConfig
 	runner.PredicateParser = input.PredicateParser
+	if runner.PredicateParser == nil {
+		runner.PredicateParser = noopPredicateParser
+	}
 	runner.PredicateEval = input.CELEvaluator
+	if runner.PredicateEval == nil {
+		runner.PredicateEval = inconclusiveCELEvaluator
+	}
 	runner.Tracer = input.Tracer
 	if input.Confidence.HighMultiplier > 0 {
 		runner.Confidence = input.Confidence
@@ -83,11 +90,39 @@ type EvaluationRequest struct {
 	GenerateEvidence  bool
 }
 
+// noopPredicateParser is the fallback parser used when EvaluationRequest
+// does not set one. Stave's domain code declares PredicateParser as a
+// required dependency on the Assessor (see assessor.Assess preconditions)
+// but the runtime never actually invokes the parser today. The fallback
+// satisfies the precondition without forcing every caller — including
+// tests that exercise non-predicate paths — to import the YAML parser.
+func noopPredicateParser(_ any) (*policy.UnsafePredicate, error) {
+	return &policy.UnsafePredicate{}, nil
+}
+
+// inconclusiveCELEvaluator is the fallback used when EvaluationRequest
+// does not set a CELEvaluator. Returning an error here matches the
+// downstream checkUnsafe semantics: each control becomes inconclusive
+// rather than silently passing as "safe". Some flows (e.g. snapshot
+// risk metrics that don't depend on per-asset findings) intentionally
+// run without a real evaluator; the inconclusive path keeps their
+// observable behavior unchanged after the Assessor's nil-precondition
+// was added.
+func inconclusiveCELEvaluator(ctl policy.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	return false, fmt.Errorf("no CEL evaluator configured (control %s, asset %s)", ctl.ID, a.ID)
+}
+
 // EvaluateLoaded evaluates already-loaded controls and snapshots.
 // This keeps command adapters from directly constructing domain evaluators.
 func EvaluateLoaded(req EvaluationRequest) (evaluation.ComplianceReport, error) {
 	if req.Clock == nil {
 		req.Clock = ports.RealClock{}
+	}
+	if req.PredicateParser == nil {
+		req.PredicateParser = noopPredicateParser
+	}
+	if req.CELEvaluator == nil {
+		req.CELEvaluator = inconclusiveCELEvaluator
 	}
 
 	return Evaluate(EvaluateInput{

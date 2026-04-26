@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"strconv"
 	"strings"
 )
@@ -77,25 +78,35 @@ func MarshalCypher(w io.Writer, g *GraphData) error {
 		cw.printf("SET n += %s;\n\n", cypherMap(props))
 	}
 
-	// Edges.
+	// Edges. Dangling edges are skipped with a warning log so partial
+	// graph imports do not fail wholesale on missing referents — see
+	// MarshalSTIX for the matching policy.
 	cw.println("// --- Edges ---")
+	var skipped int
 	for i := range g.Edges {
 		e := &g.Edges[i]
 
-		fromLabel, ok := nodeTypes[e.From]
-		if !ok {
-			cw.err = fmt.Errorf("dangling edge: source node %q not present", e.From)
-			return cw.err
-		}
-		toLabel, ok := nodeTypes[e.To]
-		if !ok {
-			cw.err = fmt.Errorf("dangling edge: target node %q not present", e.To)
-			return cw.err
+		fromLabel, fromOK := nodeTypes[e.From]
+		toLabel, toOK := nodeTypes[e.To]
+		if !fromOK || !toOK {
+			missing := "source"
+			if fromOK {
+				missing = "target"
+			}
+			slog.Warn("graph: skipping dangling edge in cypher export",
+				"missing", missing,
+				"from", e.From, "to", e.To, "type", e.Type)
+			skipped++
+			continue
 		}
 
 		cw.printf("MATCH (a:%s {id: %s})\n", fromLabel, cypherValue(e.From))
 		cw.printf("MATCH (b:%s {id: %s})\n", toLabel, cypherValue(e.To))
 		cw.printf("MERGE (a)-[:%s]->(b);\n\n", e.Type)
+	}
+	if skipped > 0 {
+		slog.Warn("graph: cypher export skipped dangling edges",
+			"skipped", skipped, "total_edges", len(g.Edges))
 	}
 
 	return cw.err

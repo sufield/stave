@@ -256,6 +256,12 @@ func TestAssessorAssess_EmptySnapshots(t *testing.T) {
 		Clock:      stubClock{t: time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)},
 		Exemptions: policy.NewExemptionConfig("", nil),
 		Exceptions: policy.NewExceptionConfig(nil),
+		PredicateEval: func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+			return false, nil
+		},
+		PredicateParser: func(_ any) (*policy.UnsafePredicate, error) {
+			return &policy.UnsafePredicate{}, nil
+		},
 	}
 	result, err := a.Assess(nil)
 	if err != nil {
@@ -283,6 +289,9 @@ func TestAssessorAssess_BasicViolation(t *testing.T) {
 		Exceptions:   policy.NewExceptionConfig(nil),
 		PredicateEval: func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 			return true, nil
+		},
+		PredicateParser: func(_ any) (*policy.UnsafePredicate, error) {
+			return &policy.UnsafePredicate{}, nil
 		},
 	}
 
