@@ -49,12 +49,15 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 	}
 
 	svc := NewService(ports.FixedClock(now))
-	stats := svc.ComputeRisk(controls, snapshots, RiskOptions{
+	stats, err := svc.ComputeRisk(controls, snapshots, RiskOptions{
 		GlobalMaxUnsafeDuration: 30 * time.Minute,
 		DueSoonThreshold:        2 * time.Hour,
 		StaveVersion:            "test",
 		CELEvaluator:            mustPredicateEval(),
 	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if stats.ActiveFindings == 0 {
 		t.Fatalf("expected violations in SLA posture, got %+v", stats)
 	}
@@ -65,10 +68,13 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 
 func TestComputeRisk_EmptyInput(t *testing.T) {
 	svc := NewService(ports.FixedClock(time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)))
-	stats := svc.ComputeRisk(nil, nil, RiskOptions{
+	stats, err := svc.ComputeRisk(nil, nil, RiskOptions{
 		GlobalMaxUnsafeDuration: 24 * time.Hour,
 		DueSoonThreshold:        time.Hour,
 	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if stats != (appcontracts.SLAPosture{}) {
 		t.Fatalf("empty SLA posture expected, got %+v", stats)
 	}

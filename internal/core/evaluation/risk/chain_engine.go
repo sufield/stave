@@ -5,13 +5,22 @@ import (
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
 )
+
+// FailingControl is a (control, asset) pair for a detected violation.
+// Used as input to chain and attack-stage analysis to preserve asset context.
+type FailingControl struct {
+	ControlID kernel.ControlID
+	AssetID   asset.ID
+}
 
 // CompoundFinding represents a chain-detected compound risk — multiple
 // co-failing controls that together create a risk greater than their sum.
 type CompoundFinding struct {
 	ChainID           string             `json:"chain"`
+	AssetID           asset.ID           `json:"asset_id,omitempty"`
 	Description       string             `json:"description,omitempty"`
 	ControlsFailing   []kernel.ControlID `json:"controls_failing"`
 	MissingSafeguards []kernel.ControlID `json:"missing_safeguards,omitempty"`
@@ -21,78 +30,92 @@ type CompoundFinding struct {
 	AttackStages      []string           `json:"attack_stages,omitempty"`
 }
 
-// DetectChains matches a set of failing control IDs against chain
-// definitions and returns compound findings for chains whose escalation
-// threshold is met.
+// DetectChains checks each chain definition per asset: a chain fires only
+// when a single asset has enough of the chain's controls failing. This
+// prevents a control failing on asset A from triggering compound risk for
+// an unrelated asset B.
 //
-// failingIDs is the set of control IDs that have violations.
+// failures is the set of (control, asset) pairs with active violations.
 // chains is the catalog of chain definitions to check.
 // controlLookup maps control IDs to their definitions (for attack stage).
 func DetectChains(
-	failingIDs map[kernel.ControlID]bool,
+	failures []FailingControl,
 	chains []policy.ChainDefinition,
 	controlLookup map[kernel.ControlID]*policy.ControlDefinition,
 ) []CompoundFinding {
+	// Group failing control IDs by asset.
+	byAsset := make(map[asset.ID]map[kernel.ControlID]bool)
+	for i := range failures {
+		f := &failures[i]
+		if byAsset[f.AssetID] == nil {
+			byAsset[f.AssetID] = make(map[kernel.ControlID]bool)
+		}
+		byAsset[f.AssetID][f.ControlID] = true
+	}
+
 	var findings []CompoundFinding
 
 	for i := range chains {
 		chain := &chains[i]
-		var failing []kernel.ControlID
-		var holding []kernel.ControlID
-		for _, cid := range chain.ControlIDs {
-			if failingIDs[cid] {
-				failing = append(failing, cid)
-			} else {
-				holding = append(holding, cid)
-			}
-		}
-
-		if len(failing) < chain.EscalationThreshold {
-			continue
-		}
-
-		// Collect attack stages and compute scope-aware blast multiplier.
-		stageSet := make(map[string]bool)
-		maxBlast := 1.0
-		for _, cid := range failing {
-			if ctl, ok := controlLookup[cid]; ok {
-				if stage := ctl.AttackStage(); stage != "" {
-					stageSet[stage] = true
-				}
-				mult := scopeAdjustedBlast(ctl)
-				if mult > maxBlast {
-					maxBlast = mult
+		for assetID, assetFailing := range byAsset {
+			var failing []kernel.ControlID
+			var holding []kernel.ControlID
+			for _, cid := range chain.ControlIDs {
+				if assetFailing[cid] {
+					failing = append(failing, cid)
+				} else {
+					holding = append(holding, cid)
 				}
 			}
+
+			if len(failing) < chain.EscalationThreshold {
+				continue
+			}
+
+			// Collect attack stages and compute scope-aware blast multiplier.
+			stageSet := make(map[string]bool)
+			maxBlast := 1.0
+			for _, cid := range failing {
+				if ctl, ok := controlLookup[cid]; ok {
+					if stage := ctl.AttackStage(); stage != "" {
+						stageSet[stage] = true
+					}
+					mult := scopeAdjustedBlast(ctl)
+					if mult > maxBlast {
+						maxBlast = mult
+					}
+				}
+			}
+
+			var stages []string
+			for s := range stageSet {
+				stages = append(stages, s)
+			}
+			slices.Sort(stages)
+
+			escalation := ChainEscalation(len(failing))
+			// Derive base score from the highest severity among failing
+			// member controls rather than a hardcoded default.
+			base := baseScoreFromMembers(failing, controlLookup)
+			score := Compound(base, escalation, maxBlast)
+			if score > float64(ScoreCatastrophic) {
+				score = float64(ScoreCatastrophic)
+			}
+
+			narrative := buildNarrative(chain, failing)
+
+			findings = append(findings, CompoundFinding{
+				ChainID:           chain.ID,
+				AssetID:           assetID,
+				Description:       chain.Description,
+				ControlsFailing:   failing,
+				MissingSafeguards: holding,
+				CompoundScore:     score,
+				Severity:          chain.CompoundSeverity,
+				Narrative:         narrative,
+				AttackStages:      stages,
+			})
 		}
-
-		var stages []string
-		for s := range stageSet {
-			stages = append(stages, s)
-		}
-		slices.Sort(stages)
-
-		escalation := ChainEscalation(len(failing))
-		// Derive base score from the highest severity among failing
-		// member controls rather than a hardcoded default.
-		base := baseScoreFromMembers(failing, controlLookup)
-		score := Compound(base, escalation, maxBlast)
-		if score > float64(ScoreCatastrophic) {
-			score = float64(ScoreCatastrophic)
-		}
-
-		narrative := buildNarrative(chain, failing)
-
-		findings = append(findings, CompoundFinding{
-			ChainID:           chain.ID,
-			Description:       chain.Description,
-			ControlsFailing:   failing,
-			MissingSafeguards: holding,
-			CompoundScore:     score,
-			Severity:          chain.CompoundSeverity,
-			Narrative:         narrative,
-			AttackStages:      stages,
-		})
 	}
 
 	return findings

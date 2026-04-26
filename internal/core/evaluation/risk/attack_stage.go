@@ -27,16 +27,17 @@ var AllAttackStages = []string{
 // BuildAttackStageSummary maps each attack stage to the worst severity
 // found across all findings. Stages with no findings are marked "PASS".
 //
-// failingControlIDs is the set of control IDs that have violations.
+// failures is the slice of (control, asset) pairs with active violations.
 // lookup maps control IDs to their definitions for attack_stage metadata.
 func BuildAttackStageSummary(
-	failingControlIDs map[kernel.ControlID]bool,
+	failures []FailingControl,
 	lookup map[kernel.ControlID]*policy.ControlDefinition,
 ) map[string]string {
 	// Track worst severity per stage.
 	worstPerStage := make(map[string]policy.Severity)
 
-	for cid := range failingControlIDs {
+	for i := range failures {
+		cid := failures[i].ControlID
 		ctl, ok := lookup[cid]
 		if !ok {
 			continue

@@ -98,10 +98,21 @@ func Detect(in Input) []LapsedFinding {
 	return lapsed
 }
 
-func severityFromFinding(_ *policy.AcknowledgedFinding) string {
-	// AcknowledgedFinding doesn't carry original severity directly.
-	// Default to medium; the bump logic still applies.
-	return "medium"
+func severityFromFinding(af *policy.AcknowledgedFinding) string {
+	switch af.Severity {
+	case policy.SeverityCritical:
+		return "critical"
+	case policy.SeverityHigh:
+		return "high"
+	case policy.SeverityMedium:
+		return "medium"
+	case policy.SeverityLow:
+		return "low"
+	case policy.SeverityInfo:
+		return "info"
+	default:
+		return "medium"
+	}
 }
 
 // bumpSeverity increases severity by one level.

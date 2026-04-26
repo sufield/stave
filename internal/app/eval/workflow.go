@@ -162,10 +162,13 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 		return
 	}
 
-	// Build lookup structures.
-	failingIDs := make(map[kernel.ControlID]bool, len(report.Findings))
+	// Build per-asset failure list for asset-aware chain and attack-stage analysis.
+	failures := make([]risk.FailingControl, len(report.Findings))
 	for i := range report.Findings {
-		failingIDs[report.Findings[i].ControlID] = true
+		failures[i] = risk.FailingControl{
+			ControlID: report.Findings[i].ControlID,
+			AssetID:   report.Findings[i].AssetID,
+		}
 	}
 
 	controlLookup := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
@@ -175,12 +178,12 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 
 	// Detect chain-based compound findings.
 	if len(chainDefs) > 0 {
-		report.ChainFindings = risk.DetectChains(failingIDs, chainDefs, controlLookup)
+		report.ChainFindings = risk.DetectChains(failures, chainDefs, controlLookup)
 		annotateChainMembership(report)
 	}
 
 	// Build attack stage summary.
-	report.AttackStageSummary = risk.BuildAttackStageSummary(failingIDs, controlLookup)
+	report.AttackStageSummary = risk.BuildAttackStageSummary(failures, controlLookup)
 
 	// Rank findings by exposure score (silent killer detection).
 	// ChainMembership must be annotated before this loop runs so the

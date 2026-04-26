@@ -110,7 +110,7 @@ func TestApplyExceptions_ValidException(t *testing.T) {
 		RequiresPassing: []kernel.ControlID{"CONTROLS.001", "AUDIT.001"},
 	}}
 
-	acks := ApplyExceptions(excs, results)
+	acks := ApplyExceptions(excs, results, "my-bucket")
 	if len(acks) != 1 {
 		t.Fatalf("got %d acks, want 1", len(acks))
 	}
@@ -142,7 +142,7 @@ func TestApplyExceptions_CompensatingControlFailing(t *testing.T) {
 		RequiresPassing: []kernel.ControlID{"CONTROLS.001", "AUDIT.001"},
 	}}
 
-	acks := ApplyExceptions(excs, results)
+	acks := ApplyExceptions(excs, results, "my-bucket")
 	if len(acks) != 1 {
 		t.Fatalf("got %d acks, want 1", len(acks))
 	}
@@ -169,7 +169,7 @@ func TestApplyExceptions_NoExceptions(t *testing.T) {
 	results := []profile.Result{
 		{Outcome: compliance.Outcome{ControlID: "ACCESS.001", Pass: false}},
 	}
-	acks := ApplyExceptions(nil, results)
+	acks := ApplyExceptions(nil, results, "")
 	if len(acks) != 0 {
 		t.Error("expected no acks")
 	}
@@ -185,7 +185,7 @@ func TestApplyExceptions_AlreadyPassing(t *testing.T) {
 		Rationale:       "test",
 		RequiresPassing: []kernel.ControlID{"CONTROLS.001"},
 	}}
-	acks := ApplyExceptions(excs, results)
+	acks := ApplyExceptions(excs, results, "my-bucket")
 	if len(acks) != 0 {
 		t.Error("already passing invariant should not produce ack")
 	}

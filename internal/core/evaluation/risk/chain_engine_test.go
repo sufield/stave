@@ -4,8 +4,17 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
 )
+
+func failingControls(assetID asset.ID, ctlIDs ...kernel.ControlID) []FailingControl {
+	out := make([]FailingControl, len(ctlIDs))
+	for i, cid := range ctlIDs {
+		out[i] = FailingControl{ControlID: cid, AssetID: assetID}
+	}
+	return out
+}
 
 func TestDetectChains(t *testing.T) {
 	chains := []policy.ChainDefinition{
@@ -36,18 +45,18 @@ func TestDetectChains(t *testing.T) {
 		"CTL.S3.ENCRYPT.001": ctlEncrypt,
 	}
 
-	t.Run("two controls trigger chain", func(t *testing.T) {
-		failing := map[kernel.ControlID]bool{
-			"CTL.S3.PUBLIC.001":  true,
-			"CTL.S3.ENCRYPT.001": true,
-		}
-		findings := DetectChains(failing, chains, lookup)
+	t.Run("two controls on same asset trigger chain", func(t *testing.T) {
+		failures := failingControls("bucket-1", "CTL.S3.PUBLIC.001", "CTL.S3.ENCRYPT.001")
+		findings := DetectChains(failures, chains, lookup)
 		if len(findings) != 1 {
 			t.Fatalf("expected 1 compound finding, got %d", len(findings))
 		}
 		f := findings[0]
 		if f.ChainID != "phi_exposure" {
 			t.Errorf("ChainID = %q, want phi_exposure", f.ChainID)
+		}
+		if f.AssetID != "bucket-1" {
+			t.Errorf("AssetID = %q, want bucket-1", f.AssetID)
 		}
 		if len(f.ControlsFailing) != 2 {
 			t.Errorf("ControlsFailing = %d, want 2", len(f.ControlsFailing))
@@ -67,31 +76,43 @@ func TestDetectChains(t *testing.T) {
 		}
 	})
 
-	t.Run("below threshold no finding", func(t *testing.T) {
-		failing := map[kernel.ControlID]bool{
-			"CTL.S3.PUBLIC.001": true,
+	t.Run("controls on different assets do not trigger chain", func(t *testing.T) {
+		// CTL.S3.PUBLIC.001 fails on bucket-A, CTL.S3.ENCRYPT.001 fails on bucket-B.
+		// The chain should NOT fire because no single asset has both gaps.
+		failures := []FailingControl{
+			{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-a"},
+			{ControlID: "CTL.S3.ENCRYPT.001", AssetID: "bucket-b"},
 		}
-		findings := DetectChains(failing, chains, lookup)
+		findings := DetectChains(failures, chains, lookup)
+		if len(findings) != 0 {
+			t.Errorf("expected 0 findings for cross-asset controls, got %d", len(findings))
+		}
+	})
+
+	t.Run("below threshold no finding", func(t *testing.T) {
+		failures := failingControls("bucket-1", "CTL.S3.PUBLIC.001")
+		findings := DetectChains(failures, chains, lookup)
 		if len(findings) != 0 {
 			t.Errorf("expected 0 findings below threshold, got %d", len(findings))
 		}
 	})
 
 	t.Run("no failing controls", func(t *testing.T) {
-		findings := DetectChains(map[kernel.ControlID]bool{}, chains, lookup)
+		findings := DetectChains(nil, chains, lookup)
 		if len(findings) != 0 {
 			t.Errorf("expected 0 findings, got %d", len(findings))
 		}
 	})
 
-	t.Run("multiple chains can fire", func(t *testing.T) {
-		failing := map[kernel.ControlID]bool{
-			"CTL.S3.PUBLIC.001":          true,
-			"CTL.S3.ENCRYPT.001":         true,
-			"CTL.IAM.ROOT.MFA.001":       true,
-			"CTL.IAM.ROOT.ACCESSKEY.001": true,
+	t.Run("multiple chains can fire for different assets", func(t *testing.T) {
+		// S3 chain fires for bucket-1, IAM chain fires for account-root.
+		failures := []FailingControl{
+			{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-1"},
+			{ControlID: "CTL.S3.ENCRYPT.001", AssetID: "bucket-1"},
+			{ControlID: "CTL.IAM.ROOT.MFA.001", AssetID: "account-root"},
+			{ControlID: "CTL.IAM.ROOT.ACCESSKEY.001", AssetID: "account-root"},
 		}
-		findings := DetectChains(failing, chains, lookup)
+		findings := DetectChains(failures, chains, lookup)
 		if len(findings) != 2 {
 			t.Errorf("expected 2 compound findings, got %d", len(findings))
 		}
@@ -119,11 +140,8 @@ func TestDetectChains(t *testing.T) {
 			"CTL.CLOUDTRAIL.001": blastCtl,
 			"CTL.GUARDDUTY.001":  blastCtl,
 		}
-		failing := map[kernel.ControlID]bool{
-			"CTL.CLOUDTRAIL.001": true,
-			"CTL.GUARDDUTY.001":  true,
-		}
-		findings := DetectChains(failing, detectionChain, detectionLookup)
+		failures := failingControls("account", "CTL.CLOUDTRAIL.001", "CTL.GUARDDUTY.001")
+		findings := DetectChains(failures, detectionChain, detectionLookup)
 		if len(findings) != 1 {
 			t.Fatalf("expected 1 finding, got %d", len(findings))
 		}
@@ -164,14 +182,14 @@ func TestDetectChains(t *testing.T) {
 
 		// Resource-scoped: effective = 1.0 + (2.0-1.0)*0.50 = 1.5
 		resourceFindings := DetectChains(
-			map[kernel.ControlID]bool{"A": true, "B": true},
+			failingControls("asset-1", "A", "B"),
 			chain,
 			map[kernel.ControlID]*policy.ControlDefinition{"A": resourceCtl, "B": resourceCtl},
 		)
 
 		// Account-scoped: effective = 2.0 (no attenuation)
 		accountFindings := DetectChains(
-			map[kernel.ControlID]bool{"A": true, "B": true},
+			failingControls("asset-1", "A", "B"),
 			chain,
 			map[kernel.ControlID]*policy.ControlDefinition{"A": accountCtl, "B": accountCtl},
 		)

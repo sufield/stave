@@ -97,8 +97,7 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Contro
 	for _, ctrl := range controls {
 		ctl := lookup[ctrl.ControlID]
 		if ctl == nil {
-			// Control not yet implemented — skip silently.
-			continue
+			return Report{}, fmt.Errorf("control %s declared in profile but not found in any registry", ctrl.ControlID)
 		}
 
 		r := ctl.Evaluate(snap)

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -27,14 +28,14 @@ func TestBuildAttackStageSummary(t *testing.T) {
 		},
 	}
 
-	failing := map[kernel.ControlID]bool{
-		"CTL.S3.PUBLIC.001":  true,
-		"CTL.S3.ENCRYPT.001": true,
-		"CTL.CLOUDTRAIL.001": true,
-		"CTL.NO.STAGE":       true,
+	failures := []FailingControl{
+		{ControlID: "CTL.S3.PUBLIC.001", AssetID: asset.ID("bucket-1")},
+		{ControlID: "CTL.S3.ENCRYPT.001", AssetID: asset.ID("bucket-1")},
+		{ControlID: "CTL.CLOUDTRAIL.001", AssetID: asset.ID("account")},
+		{ControlID: "CTL.NO.STAGE", AssetID: asset.ID("bucket-1")},
 	}
 
-	summary := BuildAttackStageSummary(failing, lookup)
+	summary := BuildAttackStageSummary(failures, lookup)
 
 	if summary["initial_access"] != "CRITICAL" {
 		t.Errorf("initial_access = %q, want CRITICAL", summary["initial_access"])
@@ -57,7 +58,7 @@ func TestBuildAttackStageSummary(t *testing.T) {
 }
 
 func TestBuildAttackStageSummary_Empty(t *testing.T) {
-	summary := BuildAttackStageSummary(nil, nil)
+	summary := BuildAttackStageSummary(nil, nil) //nolint:staticcheck
 	for _, stage := range AllAttackStages {
 		if summary[stage] != "PASS" {
 			t.Errorf("%s = %q, want PASS", stage, summary[stage])

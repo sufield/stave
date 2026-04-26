@@ -85,6 +85,7 @@ type AcknowledgedFinding struct {
 	FindingID            string                      `json:"finding_id"`
 	ControlID            kernel.ControlID            `json:"control_id"`
 	AssetID              asset.ID                    `json:"asset_id"`
+	Severity             Severity                    `json:"severity,omitempty"`
 	Verdict              string                      `json:"verdict"`
 	Rationale            string                      `json:"rationale"`
 	AcknowledgedBy       string                      `json:"acknowledged_by"`

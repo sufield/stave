@@ -145,8 +145,10 @@ type CompensatingControl struct {
 
 // ApplyExceptions processes exception declarations against profile results.
 // It modifies results in place: valid exceptions change FAIL to ACKNOWLEDGED.
+// currentBucket is the bucket name being evaluated; exceptions scoped to a
+// different bucket (non-empty Bucket field that does not match) are skipped.
 // Returns the list of acknowledged results for reporting.
-func ApplyExceptions(exceptions []Config, results []profile.Result) []AcknowledgedResult {
+func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucket string) []AcknowledgedResult {
 	if len(exceptions) == 0 {
 		return nil
 	}
@@ -160,6 +162,11 @@ func ApplyExceptions(exceptions []Config, results []profile.Result) []Acknowledg
 	var acknowledged []AcknowledgedResult
 
 	for _, exc := range exceptions {
+		// Skip exceptions scoped to a different bucket.
+		if exc.Bucket != "" && exc.Bucket != currentBucket {
+			continue
+		}
+
 		r, exists := resultMap[exc.ControlID]
 		if !exists || r.Pass {
 			continue // not evaluated or already passing

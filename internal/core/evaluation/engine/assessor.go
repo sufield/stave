@@ -283,7 +283,6 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	activeFindings, acknowledgedFindings := applyAcknowledgments(
 		activeFindings,
 		s.assessor.Acknowledgments,
-		s.collector.findings,
 		s.auditTime,
 	)
 
@@ -369,20 +368,23 @@ func partitionFindings(
 
 // applyAcknowledgments separates acknowledged findings from active findings.
 // Returns remaining active findings and a slice of acknowledged finding records.
+// Compensating control validation uses the active findings set — already-excepted
+// findings are not counted as failing, so they don't block valid acknowledgments.
 func applyAcknowledgments(
 	findings []evaluation.Finding,
 	acks *policy.AcknowledgmentConfig,
-	allFindings []evaluation.Finding,
 	now time.Time,
 ) ([]evaluation.Finding, []policy.AcknowledgedFinding) {
 	if acks == nil {
 		return findings, nil
 	}
 
-	// Build set of failing control IDs for compensating control validation.
+	// Build set of failing control IDs from the active (non-excepted) findings only.
+	// Using allFindings here would allow already-excepted findings to invalidate
+	// unrelated acknowledgments whose compensating controls were also excepted.
 	failingControls := make(map[kernel.ControlID]bool)
-	for i := range allFindings {
-		failingControls[allFindings[i].ControlID] = true
+	for i := range findings {
+		failingControls[findings[i].ControlID] = true
 	}
 
 	var active []evaluation.Finding
@@ -400,6 +402,7 @@ func applyAcknowledgments(
 			FindingID:        f.FindingID,
 			ControlID:        f.ControlID,
 			AssetID:          f.AssetID,
+			Severity:         f.ControlSeverity,
 			Rationale:        rule.Rationale,
 			AcknowledgedBy:   rule.AcknowledgedBy,
 			AcknowledgedDate: rule.AcknowledgedDate,

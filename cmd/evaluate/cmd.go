@@ -108,7 +108,7 @@ func run(w io.Writer, opts *options) error {
 		return fmt.Errorf("load exceptions: %w", excErr)
 	}
 	if len(excs) > 0 {
-		acks := exception.ApplyExceptions(excs, report.Results)
+		acks := exception.ApplyExceptions(excs, report.Results, extractBucketName(snap))
 		for i := range acks {
 			ack := &acks[i]
 			report.Acknowledged = append(report.Acknowledged, profile.AcknowledgedEntry{

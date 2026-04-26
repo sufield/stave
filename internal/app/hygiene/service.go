@@ -2,6 +2,7 @@
 package hygiene
 
 import (
+	"fmt"
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -46,7 +47,7 @@ func (s *Service) ComputeRisk(
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	opts RiskOptions,
-) appcontracts.SLAPosture {
+) (appcontracts.SLAPosture, error) {
 	violations := 0
 	if len(controls) > 0 && len(snapshots) > 0 {
 		result, err := appeval.Evaluate(appeval.EvaluateInput{
@@ -59,13 +60,13 @@ func (s *Service) ComputeRisk(
 			CELEvaluator:      opts.CELEvaluator,
 		})
 		if err != nil {
-			return appcontracts.SLAPosture{}
+			return appcontracts.SLAPosture{}, fmt.Errorf("evaluate risk: %w", err)
 		}
 		violations = len(result.Findings)
 	}
 	summary := computeUpcomingSummary(controls, snapshots, opts, s.Clock.Now())
 
-	return appcontracts.NewSLAPosture(violations, summary)
+	return appcontracts.NewSLAPosture(violations, summary), nil
 }
 
 func computeUpcomingSummary(

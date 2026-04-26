@@ -2,6 +2,7 @@ package hygiene
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
@@ -118,7 +119,10 @@ func (r *runner) RunRisk(ctx context.Context, cfg config) error {
 	}
 
 	previousNow := cfg.Now.Add(-cfg.Lookback)
-	currentRisk, trend := computeRiskTrend(cfg, previousNow, loaded.Controls, loaded.Snapshots)
+	currentRisk, trend, err := computeRiskTrend(cfg, previousNow, loaded.Controls, loaded.Snapshots)
+	if err != nil {
+		return err
+	}
 
 	if cfg.Quiet {
 		return nil
@@ -179,18 +183,24 @@ func computeRiskTrend(
 	previousNow time.Time,
 	controls []policy.ControlDefinition,
 	activeSnapshots []asset.Snapshot,
-) (appcontracts.SLAPosture, []evaluation.TrendMetric) {
+) (appcontracts.SLAPosture, []evaluation.TrendMetric, error) {
 	riskOpts := buildRiskOptions(cfg)
 
 	svc := hygieneapp.NewService(ports.FixedClock(cfg.Now))
-	currentRisk := svc.ComputeRisk(controls, activeSnapshots, riskOpts)
+	currentRisk, err := svc.ComputeRisk(controls, activeSnapshots, riskOpts)
+	if err != nil {
+		return appcontracts.SLAPosture{}, nil, fmt.Errorf("compute current risk: %w", err)
+	}
 
 	previousSnapshots := filterSnapshotsBefore(activeSnapshots, previousNow)
 	prevSvc := hygieneapp.NewService(ports.FixedClock(previousNow))
-	previousRisk := prevSvc.ComputeRisk(controls, previousSnapshots, riskOpts)
+	previousRisk, err := prevSvc.ComputeRisk(controls, previousSnapshots, riskOpts)
+	if err != nil {
+		return appcontracts.SLAPosture{}, nil, fmt.Errorf("compute previous risk: %w", err)
+	}
 
 	trend := hygieneapp.CalculateTrend(currentRisk, previousRisk)
-	return currentRisk, trend
+	return currentRisk, trend, nil
 }
 
 func buildRiskOptions(cfg config) hygieneapp.RiskOptions {
