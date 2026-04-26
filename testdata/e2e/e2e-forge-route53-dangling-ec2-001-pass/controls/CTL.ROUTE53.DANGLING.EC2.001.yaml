@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.EC2.001
+name: DNS A Record Points to Terminated EC2 Instance Public IP
+description: >
+  Route 53 A record points to the public IP address of an EC2 instance
+  that has been terminated. When an EC2 instance is terminated, its
+  public IP (non-Elastic) is immediately released to the AWS IP pool
+  and can be assigned to any customer's new EC2 instance — including
+  an attacker's. The organization's A record points to whatever
+  instance now holds that IP. Unlike EIPs (which can be explicitly
+  tracked), EC2 public IPs change on every start/stop cycle and are
+  reassigned unpredictably on termination. The attacker's instance
+  receives all traffic directed to the organization's domain name.
+  This is the ephemeral IP version of subdomain takeover — the IP
+  can be reclaimed by any instance in the same region.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DNS A record points to an EC2 instance's public IP that has been
+    reassigned after termination. The IP may now belong to another account.
+  action: >
+    Remove the Route 53 A record. For production services requiring
+    stable IPs, always use Elastic IPs rather than EC2 ephemeral
+    public IPs — Elastic IPs persist until explicitly released and
+    can be precisely tracked. If the service must be restored, launch
+    a new instance, allocate an Elastic IP, associate it, and create
+    a new DNS record pointing to the EIP.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "dev.example.com",
+          "target_type": "ec2",
+          "target_exists": true,
+          "has_dangling_ec2_ip": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_ec2_ip
+      op: eq
+      value: true

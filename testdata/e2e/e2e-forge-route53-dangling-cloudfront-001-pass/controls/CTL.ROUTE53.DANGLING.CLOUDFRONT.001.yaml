@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.CLOUDFRONT.001
+name: DNS Record Points to CloudFront Distribution That Does Not Claim This Domain
+description: >
+  Route 53 CNAME record points to a *.cloudfront.net distribution
+  domain where either the distribution has been deleted or the
+  distribution exists but does not have this domain registered as an
+  alternate CNAME. CloudFront allows any distribution to claim any
+  CNAME that is not already claimed by another distribution. If the
+  original distribution is deleted, the CNAME becomes unclaimed — an
+  attacker creates a new distribution, adds the organization's subdomain
+  as an alternate CNAME, and points an origin at attacker-controlled
+  content. The organization's DNS record then routes traffic to the
+  attacker's distribution. This is the second most common subdomain
+  takeover vector after S3, exploited actively in bug bounty programs
+  and in the wild. Complements CTL.CLOUDFRONT.GHOST.ORIGIN.001
+  (which checks CloudFront → deleted origin) — this checks DNS → CloudFront.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03", "IVS-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DNS CNAME points to a CloudFront distribution that does not exist
+    or does not claim this domain. The CNAME is unprotected.
+  action: >
+    If the distribution was deleted and the subdomain is still needed:
+    create a new CloudFront distribution, add the subdomain as an
+    alternate CNAME before the DNS record can route traffic to an
+    attacker's distribution. If the distribution exists but doesn't
+    claim the domain: update the distribution to add the subdomain as
+    an alternate CNAME. If the subdomain is no longer needed: remove
+    the Route 53 record immediately.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "cdn.example.com",
+          "target_type": "cloudfront",
+          "target_exists": true,
+          "target_claims_domain": true,
+          "has_dangling_cloudfront_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_cloudfront_target
+      op: eq
+      value: true

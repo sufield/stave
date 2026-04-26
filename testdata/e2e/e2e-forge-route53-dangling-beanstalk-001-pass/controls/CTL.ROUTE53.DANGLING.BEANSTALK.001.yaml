@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.BEANSTALK.001
+name: DNS Record Points to Terminated Elastic Beanstalk Environment
+description: >
+  Route 53 CNAME record points to an Elastic Beanstalk environment
+  CNAME (application.region.elasticbeanstalk.com) for an environment
+  that has been terminated. Elastic Beanstalk environment CNAMEs are
+  reclaimable — after the environment is terminated, the CNAME becomes
+  available for any AWS customer to claim. An attacker creates a new
+  Elastic Beanstalk environment, swaps the CNAME to the target value,
+  and deploys an application. The organization's DNS record routes
+  traffic to the attacker's application. Unlike S3 and CloudFront
+  takeover (where the attacker must specifically discover the target),
+  Elastic Beanstalk CNAMEs are of predictable form and can be scanned
+  systematically. This is the third-most exploited takeover vector
+  after S3 and CloudFront.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03", "IVS-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DNS CNAME points to an Elastic Beanstalk CNAME for an environment
+    that has been terminated. The CNAME is reclaimable by an attacker.
+  action: >
+    Check whether the Elastic Beanstalk CNAME has already been claimed
+    by another account. If the subdomain is still needed, re-create the
+    Beanstalk environment and claim the CNAME before removing and
+    re-adding the Route 53 record. If the service is permanently
+    decommissioned, remove the Route 53 CNAME record immediately.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "app.example.com",
+          "target_type": "elasticbeanstalk",
+          "target_exists": true,
+          "has_dangling_beanstalk_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_beanstalk_target
+      op: eq
+      value: true

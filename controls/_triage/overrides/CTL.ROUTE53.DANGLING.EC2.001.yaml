@@ -1,0 +1,34 @@
+control: CTL.ROUTE53.DANGLING.EC2.001
+defect: >
+  DNS A record points to an EC2 ephemeral
+  public IP that was released when the
+  instance was terminated.
+infection: >
+  EC2 instances receive ephemeral public IP
+  addresses from the AWS IP pool. Unlike
+  Elastic IPs, these addresses are released
+  automatically when the instance is stopped
+  or terminated. They are immediately
+  returned to the pool for reassignment.
+  The organization's A record points to this
+  IP, which now belongs to a different
+  customer's resource — potentially a new
+  instance in the same region. That new
+  instance receives HTTP/S requests intended
+  for the organization's subdomain. The
+  customer who now has the IP is unaware their
+  instance is receiving traffic from the
+  organization's domain — but they see it in
+  their web server logs. A malicious customer
+  who deliberately occupies the recycled IP
+  (by launching instances in the same AZ and
+  watching which IPs they receive) can respond
+  to the organization's traffic with arbitrary
+  content. DNS A records for EC2 instances
+  should always reference Elastic IPs, not
+  ephemeral public IPs.
+failure: >
+  Organization's subdomain receives another
+  customer's instance responses. Attacker
+  who recycled the IP receives production
+  web traffic.

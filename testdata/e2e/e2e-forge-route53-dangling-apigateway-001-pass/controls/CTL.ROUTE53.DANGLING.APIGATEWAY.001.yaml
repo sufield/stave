@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.APIGATEWAY.001
+name: DNS Record Points to Deleted API Gateway Custom Domain
+description: >
+  Route 53 record points to an API Gateway custom domain
+  (execute-api.region.amazonaws.com or a custom domain name) that
+  has been deleted from API Gateway. The custom domain was removed
+  but the DNS record still points to it. Depending on the API Gateway
+  endpoint type: for Regional APIs, the custom domain name resolves
+  to NXDOMAIN when deleted; for Edge-Optimized APIs fronted by
+  CloudFront, the underlying CloudFront distribution's CNAME may
+  become unclaimed after the API Gateway custom domain is deleted.
+  In the edge-optimized case, an attacker may be able to create a
+  new API Gateway custom domain with the same name and claim the
+  CloudFront CNAME. The organization's DNS record routes API
+  traffic to the attacker's API.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DNS record points to an API Gateway custom domain that has been
+    deleted. API traffic routes to a non-existent endpoint.
+  action: >
+    If the API is no longer needed: remove the Route 53 record. If
+    the API must be restored: re-create the API Gateway custom domain
+    name before the DNS record can route to an attacker's API.
+    For edge-optimized APIs, verify the underlying CloudFront
+    distribution's CNAME is still claimed by your account before
+    creating a new custom domain.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "api.example.com",
+          "target_type": "apigateway",
+          "target_exists": true,
+          "has_dangling_apigateway_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_apigateway_target
+      op: eq
+      value: true

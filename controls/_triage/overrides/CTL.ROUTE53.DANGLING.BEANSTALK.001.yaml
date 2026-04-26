@@ -1,0 +1,27 @@
+control: CTL.ROUTE53.DANGLING.BEANSTALK.001
+defect: >
+  DNS CNAME points to an Elastic Beanstalk
+  environment CNAME that has been terminated.
+infection: >
+  Elastic Beanstalk environment CNAMEs follow
+  a predictable pattern:
+  [appname].[environment].[region].elasticbeanstalk.com.
+  When an environment is terminated, the CNAME
+  becomes available for any AWS customer to
+  claim via CNAME swap during environment
+  creation. An attacker scans for Beanstalk
+  CNAME patterns in DNS (automated tools check
+  common patterns from DNS dumps and certificate
+  transparency logs), creates a new Elastic
+  Beanstalk application, and during environment
+  creation selects the CNAME as the environment
+  URL. The Beanstalk environment starts serving
+  the attacker's application code. The organization's
+  Route 53 CNAME routes visitors to the attacker's
+  environment. The attack requires only an AWS
+  account and knowledge of the target CNAME —
+  both readily available from DNS records.
+failure: >
+  Elastic Beanstalk subdomain takeover. Attacker
+  claims the CNAME for a new environment and
+  serves arbitrary application code.

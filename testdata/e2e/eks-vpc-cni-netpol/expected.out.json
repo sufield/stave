@@ -34,16 +34,6 @@
       "remaining_hours": 144,
       "first_unsafe_at": "2026-01-10T00:00:00Z",
       "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.K8S.JOB.TTL.001",
-      "asset_id": "arn:aws:eks:us-east-1:123:cluster/staging",
-      "asset_type": "eks_cluster",
-      "status": "UPCOMING",
-      "due_at": "2026-01-17T00:00:00Z",
-      "remaining_hours": 144,
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 168
     }
   ],
   "findings": [
@@ -365,12 +355,12 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/eks-vpc-cni-netpol/controls",
-      "observations": "testdata/e2e/eks-vpc-cni-netpol/observations"
+      "controls": "controls",
+      "observations": "observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "78298779194d942bd65b75511c37dd7258157aec",
+      "head_commit": "9dd2e9f5cb0ccd3214fc6e62cf7079375af140f5",
       "dirty": false
     }
   }

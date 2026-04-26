@@ -1,0 +1,33 @@
+control: CTL.ROUTE53.DANGLING.MX.001
+defect: >
+  MX record points to a mail server that
+  is not accepting email for this domain.
+infection: >
+  An MX record specifies the mail server
+  that receives email for the domain. When
+  the mail server is decommissioned without
+  updating the MX record, email delivery
+  fails — the sending server receives a
+  connection timeout or a bounce from the
+  defunct server. The failure is reported
+  to the SENDER, not the recipient: the
+  organization doesn't know email is failing
+  unless they monitor inbound mail delivery.
+  If the decommissioned mail server's hostname
+  becomes reclaimable (expired service
+  subscription, deleted EC2 instance with a
+  predictable public IP, cancelled SaaS
+  email service), an attacker who claims
+  the reclaimed resource receives the
+  organization's inbound email. This includes:
+  password reset emails (enabling account
+  takeover on services that use this domain
+  for authentication), financial notifications,
+  confidential communications from clients
+  and partners, and multi-factor authentication
+  codes from services using email as a
+  second factor.
+failure: >
+  Email delivery failure or interception.
+  Attacker who controls the reclaimed mail
+  server receives the organization's email.

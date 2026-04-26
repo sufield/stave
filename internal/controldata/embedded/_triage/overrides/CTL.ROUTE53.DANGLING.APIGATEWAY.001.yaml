@@ -1,0 +1,32 @@
+control: CTL.ROUTE53.DANGLING.APIGATEWAY.001
+defect: >
+  DNS record points to an API Gateway custom
+  domain that has been deleted.
+infection: >
+  API Gateway custom domain names resolve
+  to different endpoints depending on the
+  API type. Regional API custom domains
+  resolve directly to an execute-api endpoint;
+  when the custom domain is deleted, the DNS
+  name returns NXDOMAIN. Edge-optimized API
+  custom domains are backed by CloudFront
+  distributions — when the custom domain is
+  deleted from API Gateway, the underlying
+  CloudFront CNAME may become unclaimed.
+  For edge-optimized APIs, this becomes a
+  CloudFront CNAME takeover: an attacker
+  creates a new CloudFront distribution or
+  API Gateway custom domain and claims the
+  CNAME. API requests from the organization's
+  clients are routed to the attacker's API.
+  The attacker can serve arbitrary API
+  responses — returning forged data,
+  intercepting credentials from authentication
+  calls, or performing actions on behalf of
+  clients who assume they're calling the
+  legitimate API.
+failure: >
+  API endpoint takeover risk (edge-optimized)
+  or service failure (regional). API clients
+  receive responses from an attacker-controlled
+  endpoint.

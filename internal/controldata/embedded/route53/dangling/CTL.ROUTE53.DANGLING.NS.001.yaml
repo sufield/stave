@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.NS.001
+name: NS Record Delegates to Name Servers That Do Not Serve the Zone
+description: >
+  Route 53 NS record delegates a subdomain to name servers that are
+  not authoritative for that zone — lame delegation. The delegated
+  zone was deleted or the name server configuration was removed, but
+  the parent NS records remain. This is the most powerful form of
+  subdomain takeover: an attacker who controls the delegated name
+  servers (or who registers an expired name server domain) can serve
+  any DNS records for the entire subdomain — A records pointing to
+  attacker servers, MX records intercepting email, TXT records
+  passing domain ownership verification for TLS certificates and
+  service integrations, and CNAME records for unlimited sub-subdomains.
+  NS delegation takeover gives the attacker full DNS control over the
+  subtree, not just a single record. If the name server domain is
+  expired and unregistered, the attacker simply registers it and
+  serves the zone.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "SC-20"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03", "IVS-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    NS record delegates a subdomain to name servers that don't serve
+    the zone. An attacker who controls those name servers controls
+    all DNS for the delegated subdomain.
+  action: >
+    If the subdomain zone is still needed: restore the zone on the
+    delegated name servers before the NS domain can be claimed by an
+    attacker. If the subdomain is no longer needed: remove the NS
+    delegation record from the parent zone. Check whether the name
+    server domain is still registered to a trusted party — if it has
+    expired, register it urgently before attackers claim it.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "legacy.example.com",
+          "record_type": "NS",
+          "target_type": "ns",
+          "ns_serves_zone": true,
+          "has_lame_delegation": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_lame_delegation
+      op: eq
+      value: true

@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.EIP.001
+name: DNS A Record Points to Released Elastic IP Address
+description: >
+  Route 53 A record points to an Elastic IP address that has been
+  released. When an Elastic IP is released, it returns to the AWS
+  public IP pool and can be re-allocated by any AWS customer in the
+  same region — including an attacker. The attacker allocates an
+  EC2 instance and associates the reclaimed EIP. The organization's
+  A record now points to the attacker's instance. The attacker can
+  serve any content (phishing, malware, intercepted traffic) on the
+  organization's domain. EIP recycling attacks have been demonstrated
+  by security researchers who successfully reclaimed specific IPs by
+  repeatedly allocating and releasing EIPs in the target region.
+  Complements CTL.ROUTE53.DANGLING.001 (which detects general
+  dangling IPs) by specifically checking whether a Route 53 A record
+  points to a currently-released EIP.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03", "IVS-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DNS A record points to an Elastic IP that has been released back
+    to the AWS IP pool and may be re-allocated to an attacker.
+  action: >
+    If the Elastic IP was released intentionally: remove the Route 53
+    A record immediately. If the IP was accidentally released: check
+    whether it has been re-allocated by another account via AWS IP
+    address tracking. If the IP is still available, allocate a new
+    EIP and update the Route 53 record. If the IP has been claimed
+    by another account, remove the Route 53 record and allocate a
+    new EIP for a new DNS record.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "app.example.com",
+          "target_type": "eip",
+          "target_ip": "54.23.45.67",
+          "ip_allocated": true,
+          "has_dangling_eip": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_eip
+      op: eq
+      value: true

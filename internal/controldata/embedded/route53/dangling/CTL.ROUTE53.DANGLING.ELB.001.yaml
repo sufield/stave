@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.ELB.001
+name: DNS Record Points to Deleted Load Balancer
+description: >
+  Route 53 alias or CNAME record points to an Application Load
+  Balancer, Network Load Balancer, or Classic Load Balancer that has
+  been deleted. The DNS record resolves to a load balancer DNS name
+  that no longer exists, causing the subdomain to return NXDOMAIN or
+  an empty answer. Unlike S3 and CloudFront (where the resource name
+  is globally reclaimable), ELB DNS names contain account-specific
+  components (randomly generated hex strings and account ID fragments)
+  that make direct takeover harder. However, the dangling record still
+  causes visible service failure on the organization's domain: the
+  subdomain appears broken, returning errors to all visitors. Dangling
+  ELB records indicate incomplete decommissioning — the load balancer
+  was deleted without updating DNS.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    DNS record points to a load balancer that has been deleted.
+    The subdomain is returning errors to all visitors.
+  action: >
+    If the load balancer was deleted intentionally and the subdomain
+    is no longer needed: remove the Route 53 record. If the service
+    must be restored: create a new load balancer, update the Route 53
+    record to point to the new load balancer, and restore the service.
+    For alias records, use Route 53's built-in alias evaluation to
+    detect when the target is deleted.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "api.example.com",
+          "target_type": "elb",
+          "target_exists": true,
+          "has_dangling_elb_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_elb_target
+      op: eq
+      value: true

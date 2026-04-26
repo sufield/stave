@@ -1,0 +1,37 @@
+control: CTL.ROUTE53.DANGLING.NS.001
+defect: >
+  NS record delegates a subdomain to name
+  servers that are not authoritative for
+  the zone — lame delegation.
+infection: >
+  An NS delegation record in the parent
+  zone assigns DNS authority for a subdomain
+  to specific name servers. When the
+  delegated zone is deleted but the parent
+  NS records remain, those name servers
+  are no longer serving the zone — this
+  is "lame delegation." The name servers
+  may be entirely unrelated to the organization
+  (if the name server domain was transferred
+  or expired), or they may be the organization's
+  name servers that simply no longer have the
+  zone configured. In either case: an attacker
+  who controls the listed name servers (by
+  claiming the expired NS domain, by
+  compromising the name server, or by
+  registering the name server domain if it
+  was deregistered) can add the zone to their
+  name server and serve any records:
+  A records pointing to attacker infrastructure,
+  CNAME records creating sub-subdomains,
+  MX records intercepting all email for
+  @subdomain.example.com addresses, TXT records
+  for domain verification (enabling TLS
+  certificate issuance, cloud service takeover).
+  NS delegation takeover is the most powerful
+  form — it gives the attacker the entire DNS
+  subtree.
+failure: >
+  Full subdomain DNS authority. Attacker who
+  controls the name servers serves all DNS
+  records for the delegated subtree.

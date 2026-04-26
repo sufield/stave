@@ -1,0 +1,32 @@
+control: CTL.ROUTE53.DANGLING.ALIAS.001
+defect: >
+  Route 53 alias record points to a deleted
+  AWS resource and fails silently.
+infection: >
+  Route 53 alias records are AWS-specific DNS
+  records that resolve directly to the IP
+  addresses of supported AWS resources without
+  an extra DNS lookup. When an alias target
+  is deleted, Route 53's behavior depends on
+  the record type and configuration: the record
+  may return an empty answer (no IPs, no
+  NXDOMAIN) rather than an error. CNAME
+  danglings produce NXDOMAIN — visible to
+  monitoring tools that check for DNS
+  resolution failures. Alias danglings may
+  produce no answer — invisible to NXDOMAIN-
+  based monitors. The domain appears to exist
+  in DNS (SOA, NS records respond) but resolves
+  to no IP, so HTTP connections timeout
+  silently. Infrastructure monitoring that
+  checks for HTTP 200 would catch this, but
+  DNS-level monitoring would miss it. For
+  reclaimable resources (S3, CloudFront, EB),
+  the silent alias dangling masks an active
+  subdomain takeover opportunity — the target
+  resource is reclaimable but the silent
+  failure hides the urgency.
+failure: >
+  Silent resolution failure. Domain exists in
+  DNS but resolves to no IPs. Alias danglings
+  bypass NXDOMAIN-based monitoring.

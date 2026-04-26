@@ -1,0 +1,32 @@
+control: CTL.ROUTE53.DANGLING.CLOUDFRONT.001
+defect: >
+  DNS CNAME points to a CloudFront distribution
+  that does not exist or does not claim this
+  subdomain as an alternate CNAME.
+infection: >
+  CloudFront alternate CNAME claims are
+  first-come, first-served. When an organization's
+  distribution is deleted, the CNAME
+  [subdomain.example.com] becomes unclaimed.
+  Any AWS customer can create a distribution,
+  add [subdomain.example.com] as an alternate
+  CNAME, configure an origin with arbitrary
+  content, and the organization's Route 53
+  record routes traffic to that distribution.
+  CloudFront distributes the content globally
+  — with a TLS certificate that the attacker
+  can provision for the domain (since they
+  control the DNS validation record through
+  the CNAME claim). Visitors see a padlock,
+  the organization's domain, and the attacker's
+  content. This is the second most common
+  subdomain takeover vector after S3 bucket
+  takeover. Bug bounty programs pay $2K-$15K
+  for this class of finding because any
+  organization with infrastructure churn
+  (deleted distributions without DNS cleanup)
+  is vulnerable.
+failure: >
+  CloudFront subdomain takeover. Attacker claims
+  the unclaimed CNAME on their own distribution
+  and serves content with a valid TLS certificate.

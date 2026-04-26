@@ -18,7 +18,7 @@
     "evaluated_state": "deployed"
   },
   "summary": {
-    "total_assets": 1,
+    "total_assets": 0,
     "exposed_resources": 0,
     "violations": 0
   },
@@ -112,12 +112,12 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-h1-kubernetes-1580493/controls",
-      "observations": "testdata/e2e/e2e-h1-kubernetes-1580493/observations"
+      "controls": "controls",
+      "observations": "observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1ae8b4da8479e5e75eaf0d7d9b907f3f5e5929e7",
+      "head_commit": "9dd2e9f5cb0ccd3214fc6e62cf7079375af140f5",
       "dirty": false
     }
   }

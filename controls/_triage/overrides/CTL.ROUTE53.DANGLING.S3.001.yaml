@@ -1,0 +1,36 @@
+control: CTL.ROUTE53.DANGLING.S3.001
+defect: >
+  DNS record points to an S3 website hosting
+  endpoint for a bucket that does not exist.
+infection: >
+  The Route 53 record resolves the subdomain
+  to the S3 static website hosting endpoint:
+  [bucket].s3-website-[region].amazonaws.com.
+  The bucket has been deleted. S3 bucket names
+  are globally unique — only one bucket with
+  a given name can exist at any time. After
+  deletion, the name is available for anyone
+  to claim. An attacker discovers the dangling
+  record (automated scanners — subzy, subjack,
+  can3nito — check thousands of records per
+  minute), creates a bucket with the exact same
+  name in their own AWS account, enables
+  static website hosting, and uploads content.
+  The Route 53 record still points to the
+  endpoint. The endpoint now resolves to the
+  attacker's content. Visitors to the
+  organization's subdomain — who trust the
+  domain because it has always been legitimate
+  — see attacker-controlled content without
+  any browser warning. The attacker can serve
+  phishing login forms, malware downloads,
+  defacement, SEO spam, or credential
+  harvesting scripts. The attack requires
+  no special access to the organization's
+  AWS account — only knowledge of the bucket
+  name, which is embedded in the DNS record.
+failure: >
+  Subdomain takeover. An attacker claims the
+  deleted bucket name and serves arbitrary
+  content on the organization's domain with
+  no certificate warning.

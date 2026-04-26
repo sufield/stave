@@ -1,0 +1,28 @@
+id: r53_service_dangling
+description: >
+  Any dangling DNS record pointing to a non-existent service. A deleted
+  load balancer (CTL.ROUTE53.DANGLING.ELB.001) — the subdomain returns
+  errors or empty answers; a deleted API Gateway custom domain
+  (CTL.ROUTE53.DANGLING.APIGATEWAY.001) — API clients receive errors;
+  a terminated EC2 instance's ephemeral IP
+  (CTL.ROUTE53.DANGLING.EC2.001) — the IP is now assigned to another
+  customer's resource; or a decommissioned mail server
+  (CTL.ROUTE53.DANGLING.MX.001) — email delivery fails or is
+  intercepted. Threshold of 1 reflects that each independently
+  causes visible service failure on the organization's domain or
+  enables email interception. While less directly exploitable for
+  subdomain takeover than S3/CloudFront/EIP danglings, each
+  represents an incomplete decommission: the service was deleted
+  without cleaning up DNS, leaving a broken reference on the
+  organization's domain.
+controls:
+  - CTL.ROUTE53.DANGLING.ELB.001
+  - CTL.ROUTE53.DANGLING.APIGATEWAY.001
+  - CTL.ROUTE53.DANGLING.EC2.001
+  - CTL.ROUTE53.DANGLING.MX.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access

@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.MX.001
+name: MX Record Points to Decommissioned Mail Server
+description: >
+  Route 53 MX record points to a mail server hostname that is no
+  longer serving email for the domain. The mail server was
+  decommissioned, the hosting was cancelled, or the DNS name was
+  changed — but the MX record was not updated. Email delivery fails
+  silently after the SMTP timeout: the sending server tries to connect
+  to the mail server, waits for the timeout (minutes), and then
+  delivers a non-delivery receipt to the sender. If the decommissioned
+  mail server's hostname becomes reclaimable (expired domain, deleted
+  EC2 instance with a reachable hostname, released service endpoint),
+  an attacker who controls the reclaimed resource receives the
+  organization's email — password resets, financial notifications,
+  confidential communications, and multi-factor authentication codes.
+  MX dangling is particularly insidious because email failures are
+  reported to senders, not recipients, so the organization may not
+  know email is being lost or intercepted.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    MX record points to a mail server that is not accepting email.
+    Email delivery is failing or being intercepted.
+  action: >
+    Verify whether the mail server hostname resolves and accepts SMTP
+    connections on port 25. If the mail server has been decommissioned:
+    update the MX record to point to the new mail infrastructure. If
+    the domain uses a hosted email service (Google Workspace, Microsoft
+    365, Proton Mail), replace the MX record with the provider's
+    required MX records. Remove any MX records for mail servers that
+    no longer exist.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "example.com",
+          "record_type": "MX",
+          "mx_host": "mail.example.com",
+          "mx_target_exists": true,
+          "has_dangling_mx": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_mx
+      op: eq
+      value: true

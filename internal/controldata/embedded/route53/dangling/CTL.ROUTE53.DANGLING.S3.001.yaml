@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.S3.001
+name: DNS Record Points to Deleted S3 Bucket — Subdomain Takeover
+description: >
+  Route 53 record (CNAME or alias) points to an S3 website hosting
+  endpoint for a bucket that has been deleted. S3 bucket names are
+  globally unique but reclaimable after deletion. An attacker creates
+  a bucket with the same name in their own AWS account, enables static
+  website hosting, and uploads content. The Route 53 record still
+  points to the S3 website hosting endpoint. The endpoint now serves
+  the attacker's content. Visitors to the organization's subdomain
+  see attacker-controlled content — on a domain they trust. The
+  attack requires no special access: the attacker only needs to
+  discover the dangling record (automated tools scan for this
+  pattern), create the bucket, and upload content. This is the most
+  commonly exploited subdomain takeover vector, documented in the
+  OWASP Testing Guide and actively rewarded in bug bounty programs.
+  Complements CTL.S3.DANGLING.ORIGIN.001 (CloudFront distribution
+  → S3) — this control checks Route 53 records → S3 directly.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03", "IVS-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DNS record points to an S3 website hosting endpoint for a bucket
+    that no longer exists. The bucket name is reclaimable by an attacker.
+  action: >
+    Immediately check if the bucket name has been re-registered by
+    another account. If the name is unclaimed, re-create the bucket
+    in your account before an attacker claims it. If the subdomain
+    is no longer needed, remove the Route 53 record. If the service
+    must be restored, re-create the bucket, re-configure website
+    hosting, and restore content before the DNS record points
+    visitors there.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "static.example.com",
+          "target_type": "s3",
+          "target_exists": true,
+          "has_dangling_s3_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_s3_target
+      op: eq
+      value: true

@@ -1,0 +1,33 @@
+control: CTL.ROUTE53.DANGLING.ELB.001
+defect: >
+  DNS record points to a load balancer that
+  has been deleted. The subdomain returns
+  errors.
+infection: >
+  When an ALB, NLB, or CLB is deleted, its
+  DNS name is decommissioned. For alias
+  records, Route 53 may return an empty
+  answer (no IP addresses, no error) — the
+  subdomain appears to exist but resolves
+  to nothing. HTTP connections timeout
+  silently. For CNAME records, the ELB
+  DNS name returns NXDOMAIN — the subdomain
+  visibly fails. Either way, the organization's
+  subdomain is broken. Unlike S3 and CloudFront
+  (where the resource name is globally
+  reclaimable), ELB DNS names include
+  account-specific and region-specific
+  randomly generated identifiers, making
+  direct takeover significantly harder.
+  However, the dangling record indicates
+  incomplete decommissioning: the service
+  was deleted without cleaning up DNS.
+  Incomplete decommissioning is often
+  a symptom of rushed work — where other
+  cleanup steps (firewall rule removal,
+  IAM policy cleanup, security group cleanup)
+  may also be incomplete.
+failure: >
+  Service failure. Organization's subdomain
+  returns errors or empty answers because the
+  backend load balancer was deleted.

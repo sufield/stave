@@ -1,0 +1,30 @@
+control: CTL.ROUTE53.DANGLING.EIP.001
+defect: >
+  DNS A record points to a released Elastic
+  IP that is available for re-allocation.
+infection: >
+  A released Elastic IP returns to the AWS
+  public IP pool for the region. AWS allocates
+  it to the next customer who requests a new
+  EIP. The allocation is not targeted — it
+  goes to whoever requests an EIP at that
+  moment. But attackers can make EIP recycling
+  deliberate: by allocating and releasing EIPs
+  in rapid succession, they sample from the
+  pool. Security researchers have demonstrated
+  reclaiming specific recently-released IPs
+  by cycling allocations. Once the attacker's
+  instance is associated with the reclaimed
+  IP, the organization's A record points to
+  the attacker's instance. The attacker can
+  run any service on port 80/443 and receive
+  traffic intended for the organization.
+  Unlike S3 bucket takeover (requires creating
+  specific infrastructure), EIP takeover
+  requires only launching an EC2 instance and
+  cycling EIP allocations — both are trivial
+  operations with a standard AWS account.
+failure: >
+  IP reclaim attack. Organization's domain
+  points to an IP now controlled by another
+  AWS customer via EIP recycling.

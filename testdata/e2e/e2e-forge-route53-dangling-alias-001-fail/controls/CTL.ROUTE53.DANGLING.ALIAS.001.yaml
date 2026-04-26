@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.ALIAS.001
+name: Route 53 Alias Record Points to Deleted AWS Resource — Silent Failure
+description: >
+  Route 53 alias record points to an AWS resource (ALB, CloudFront
+  distribution, S3 bucket, API Gateway, Elastic Beanstalk, or VPC
+  endpoint) that has been deleted. Unlike CNAME records (where
+  deletion of the target causes NXDOMAIN — visible failure), Route 53
+  alias records that point to deleted resources may return an empty
+  answer with no error code — the query appears to succeed but
+  returns no IP addresses. This is a silent failure: monitoring tools
+  that check for NXDOMAIN miss alias danglings entirely, operators
+  assume the domain is responding, and the silent service failure
+  persists undetected. For reclaimable resources (S3 buckets,
+  CloudFront CNAMEs, Elastic Beanstalk CNAMEs), the silent alias
+  failure masks an active subdomain takeover opportunity.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03"]
+scope_tags:
+  - aws
+  - route53
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Route 53 alias record points to a deleted resource. The domain
+    returns empty answers silently — no NXDOMAIN, no visible failure.
+  action: >
+    Identify what resource the alias pointed to by checking the alias
+    target field. If the resource was deleted intentionally: remove
+    the Route 53 alias record. If the resource must be restored:
+    recreate it and verify the alias record resolves correctly.
+    Enable Route 53 health checks with alias record evaluate-target-health
+    to detect silent resolution failures proactively.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "www.example.com",
+          "is_alias": true,
+          "alias_target": "dualstack.my-alb.us-east-1.elb.amazonaws.com",
+          "alias_target_exists": true,
+          "has_dangling_alias": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_alias
+      op: eq
+      value: true
