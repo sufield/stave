@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ALARM.5XX.001
+name: No CloudWatch Alarm for CloudFront 5xx Error Rate
+description: >
+  No CloudWatch alarm monitors the CloudFront 5xxErrorRate metric.
+  5xx errors indicate origin failures: 502 (Bad Gateway — origin
+  returned an invalid response or is unreachable), 503 (Service
+  Unavailable — origin overloaded), 504 (Gateway Timeout — origin
+  too slow to respond). For ghost origins (deleted S3 bucket, deleted
+  ALB), every cache miss returns 502 — the 5xx rate climbs from
+  0% toward 100% as the cache empties. Without an alarm, this
+  failure is invisible: the application is breaking for viewers while
+  no notification is sent. 5xxErrorRate is one of CloudFront's
+  default metrics — it requires no additional metrics subscription.
+  An alarm threshold of 5% provides lead time before complete
+  service failure; 1% catches issues earlier.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["IVS-04", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    CloudFront distribution has no CloudWatch alarm for 5xx error
+    rate. Origin failures are undetected until users report them.
+  action: >
+    Create a CloudWatch alarm on the 5xxErrorRate metric for the
+    distribution. Note: CloudFront metrics are published to the
+    us-east-1 region — the alarm must be created in us-east-1.
+    aws cloudwatch put-metric-alarm --alarm-name "CF-5xx-DIST_ID"
+    --namespace "AWS/CloudFront" --metric-name "5xxErrorRate"
+    --dimensions Name=DistributionId,Value=DIST_ID
+    Name=Region,Value=Global
+    --threshold 5 --comparison-operator GreaterThanThreshold
+    --evaluation-periods 2 --period 300 --statistic Average
+    --alarm-actions SNS_ARN.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "alarm_5xx": true,
+          "distribution_id": "E1ABCDEF123"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.alarm_5xx
+      op: eq
+      value: false

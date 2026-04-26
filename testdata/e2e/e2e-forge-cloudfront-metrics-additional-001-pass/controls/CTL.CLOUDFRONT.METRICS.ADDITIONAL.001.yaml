@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.METRICS.ADDITIONAL.001
+name: CloudFront Distribution Does Not Have Additional CloudWatch Metrics Enabled
+description: >
+  CloudFront distribution does not have the additional CloudWatch
+  metrics subscription enabled. By default, CloudFront publishes
+  6 metrics to CloudWatch: Requests, BytesDownloaded, BytesUploaded,
+  4xxErrorRate, 5xxErrorRate, and TotalErrorRate. The additional
+  metrics subscription provides: CacheHitRate (essential for cache
+  poisoning detection and cache efficiency monitoring), OriginLatency
+  (measures how fast the origin responds — baseline for anomaly
+  detection), and per-status-code error rates (detailed breakdown of
+  which 4xx/5xx codes are occurring). These metrics are essential for
+  operational monitoring and security analysis of the CDN layer.
+  Without CacheHitRate, cache poisoning and cache misconfiguration
+  are undetectable. Without OriginLatency, origin performance
+  degradation that precedes 5xx errors is invisible. The additional
+  subscription has a per-distribution cost.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.1"
+  ccm_v4: ["IVS-04", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudFront distribution does not have additional CloudWatch
+    metrics enabled. CacheHitRate and OriginLatency metrics are
+    unavailable.
+  action: >
+    Enable the additional metrics subscription via the CloudFront
+    console (Distribution → Monitoring → Enable additional metrics)
+    or via the API:
+    aws cloudfront create-monitoring-subscription
+    --distribution-id DIST_ID
+    --monitoring-subscription RealtimeMetricsSubscriptionConfig={RealtimeMetricsSubscriptionStatus=Enabled}.
+    Note: This has a per-distribution hourly cost. Review your
+    monitoring requirements before enabling for all distributions.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "additional_metrics_enabled": true,
+          "monitoring_subscription": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.additional_metrics_enabled
+      op: eq
+      value: false

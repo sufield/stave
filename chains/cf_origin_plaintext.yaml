@@ -1,0 +1,24 @@
+id: cf_origin_plaintext
+description: >
+  Any origin-facing plaintext path. The custom origin uses HTTP
+  protocol — the origin connection is always or sometimes plaintext
+  (CTL.CLOUDFRONT.ORIGIN.HTTP.001, which covers both http-only and
+  match-viewer policies); or the origin SSL protocols allow TLS 1.0
+  or older — the origin connection may negotiate deprecated TLS
+  (CTL.CLOUDFRONT.ORIGIN.TLS.VERSION.001). Threshold of 1 reflects
+  that any single failure independently allows plaintext or weakly
+  encrypted origin connections. HTTP-origin means request and
+  response bodies traverse the CloudFront→origin segment in
+  plaintext despite viewer-facing HTTPS. Weak origin TLS means
+  the end-to-end chain is as weak as its weakest link. Both
+  failures create false HTTPS — the viewer sees encryption that
+  does not extend to the origin.
+controls:
+  - CTL.CLOUDFRONT.ORIGIN.HTTP.001
+  - CTL.CLOUDFRONT.ORIGIN.TLS.VERSION.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_in_transit_exposure

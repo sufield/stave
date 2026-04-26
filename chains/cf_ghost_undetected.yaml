@@ -1,0 +1,26 @@
+id: cf_ghost_undetected
+description: >
+  Ghost origin AND no 5xx alarm — the origin is broken and nobody
+  is notified. The CloudFront distribution origin references a
+  resource that does not exist or is unreachable
+  (CTL.CLOUDFRONT.GHOST.ORIGIN.001) — every cache miss returns 502,
+  and for S3 origins the deleted bucket name is reclaimable for
+  attacker content injection — AND no CloudWatch alarm monitors the
+  5xxErrorRate metric (CTL.CLOUDFRONT.ALARM.5XX.001), so the rising
+  5xx rate (as the cache empties) produces no notification. Threshold
+  of 2 requires both: a ghost origin alone is a critical finding with
+  S3 takeover risk; no 5xx alarm alone is a high finding. Together
+  they describe the most dangerous ghost origin scenario: the origin
+  is broken or reclaimable AND the detection mechanism (5xx alarm)
+  is absent. The failure escalates from "some requests fail" to
+  "everything fails" to "attacker serves content" with no signal
+  throughout.
+controls:
+  - CTL.CLOUDFRONT.GHOST.ORIGIN.001
+  - CTL.CLOUDFRONT.ALARM.5XX.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access

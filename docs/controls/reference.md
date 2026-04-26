@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1596
-**Pack hash:** `e58118c31920ae74ae4fdbff1ae805dab0ef32201805991abe8bcffb4947f38c`
+**Total controls:** 1606
+**Pack hash:** `938f44b17f1917745038cba048ce8ac312d1e93e791c6953425b0d942213bd13`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 181 |
-| high | 703 |
+| high | 706 |
 | info | 16 |
 | low | 114 |
-| medium | 582 |
+| medium | 589 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 92 |
-| exposure | 897 |
-| governance | 104 |
+| exposure | 899 |
+| governance | 112 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -4891,6 +4891,66 @@ CloudFormation root stacks must enable termination protection to prevent acciden
 
 ---
 
+### CTL.CLOUDFRONT.ALARM.4XX.001
+
+**No CloudWatch Alarm for CloudFront 4xx Error Rate**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch alarm monitors the CloudFront 4xxErrorRate metric. 4xx errors have multiple operational and security interpretations: 403 Forbidden — OAC misconfiguration, expired signed URL, or geo-restriction blocking a legitimate user; 404 Not Found — content removed, origin path mismatch, or an attacker scanning for paths and files; 400 Bad Request — malformed request, often from vulnerability scanners or malicious clients. A 4xx spike may indicate: OAC configuration drift (403 surge), content migration gap (404 surge), active reconnaissance (high-volume 404 from a single IP), or a legitimate traffic pattern change. Without an alarm, these patterns are invisible. 4xxErrorRate is one of CloudFront's default metrics — no additional subscription required.
+
+**Remediation:** Create a CloudWatch alarm on the 4xxErrorRate metric in us-east-1. Use a higher threshold than 5xx (e.g., 10-20%) because legitimate 4xx errors are more common (bots, crawlers, typos). Set evaluation to 3 periods of 5 minutes to avoid transient spikes triggering alerts. Monitor for sustained elevated 4xx rates rather than brief spikes.
+
+---
+
+### CTL.CLOUDFRONT.ALARM.5XX.001
+
+**No CloudWatch Alarm for CloudFront 5xx Error Rate**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch alarm monitors the CloudFront 5xxErrorRate metric. 5xx errors indicate origin failures: 502 (Bad Gateway — origin returned an invalid response or is unreachable), 503 (Service Unavailable — origin overloaded), 504 (Gateway Timeout — origin too slow to respond). For ghost origins (deleted S3 bucket, deleted ALB), every cache miss returns 502 — the 5xx rate climbs from 0% toward 100% as the cache empties. Without an alarm, this failure is invisible: the application is breaking for viewers while no notification is sent. 5xxErrorRate is one of CloudFront's default metrics — it requires no additional metrics subscription. An alarm threshold of 5% provides lead time before complete service failure; 1% catches issues earlier.
+
+**Remediation:** Create a CloudWatch alarm on the 5xxErrorRate metric for the distribution. Note: CloudFront metrics are published to the us-east-1 region — the alarm must be created in us-east-1. aws cloudwatch put-metric-alarm --alarm-name "CF-5xx-DIST_ID" --namespace "AWS/CloudFront" --metric-name "5xxErrorRate" --dimensions Name=DistributionId,Value=DIST_ID Name=Region,Value=Global --threshold 5 --comparison-operator GreaterThanThreshold --evaluation-periods 2 --period 300 --statistic Average --alarm-actions SNS_ARN.
+
+---
+
+### CTL.CLOUDFRONT.ALARM.CACHEHIT.001
+
+**No CloudWatch Alarm for CloudFront Cache Hit Rate**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+No CloudWatch alarm monitors the CacheHitRate metric. A dropping cache hit rate may indicate: cache poisoning (an attacker deliberately crafting requests to populate the cache with malicious responses), cache key misconfiguration (too many cache variants causing a cache miss for every request), application changes that broke caching, or a cache invalidation storm. When the hit rate drops, more requests reach the origin — origin load increases, latency rises, and backend costs grow. A security-relevant drop: cache poisoning by response header manipulation can cause cached responses to be delivered to different users than intended. CacheHitRate requires the additional CloudWatch metrics subscription — it is not available by default. This control checks that the alarm exists; CTL.CLOUDFRONT.METRICS.ADDITIONAL.001 checks that the metrics subscription is active.
+
+**Remediation:** First enable additional CloudWatch metrics on the distribution (CTL.CLOUDFRONT.METRICS.ADDITIONAL.001) — CacheHitRate is not available without the metrics subscription. Then create a CloudWatch alarm in us-east-1 on the CacheHitRate metric with a threshold based on your expected cache efficiency (e.g., alarm when CacheHitRate drops below 80% for 3 consecutive 5-minute periods).
+
+---
+
+### CTL.CLOUDFRONT.ALARM.REQUESTS.001
+
+**No CloudWatch Alarm for CloudFront Request Count**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch alarm monitors the CloudFront Requests metric. A sudden traffic spike may indicate: DDoS attack at the application layer (L7 DDoS exploiting CloudFront rate limiting gaps), bot traffic at scale (credential stuffing, content scraping, API abuse), hotlinking (another site linking directly to content), or a legitimate traffic event (product launch, viral content). Without a request count alarm, traffic anomalies are invisible until they cause performance degradation or cost spikes. Shield Standard provides volumetric DDoS protection but does not alert on application-layer request anomalies. A request count alarm provides the first signal that traffic has changed. Requests is one of CloudFront's default metrics — no additional subscription required.
+
+**Remediation:** Create a CloudWatch alarm on the Requests metric in us-east-1. Threshold depends on normal traffic baseline — set to 3-5x the typical peak to catch genuine anomalies without excessive alerts. Review CloudFront access logs or existing metric history to determine the baseline before setting the threshold.
+
+---
+
 ### CTL.CLOUDFRONT.CORS.001
 
 **Response Headers Policy Must Not Combine Wildcard Origin With Credentials**
@@ -5041,6 +5101,36 @@ CloudFront distributions that allow HTTP (allow-all viewer protocol policy) serv
 
 ---
 
+### CTL.CLOUDFRONT.LOG.BUCKET.NOENCRYPT.001
+
+**CloudFront Access Log Bucket Not Encrypted With Customer-Managed Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-9; pci_dss_v4.0: 10.3.2; soc2: CC7.2;
+
+CloudFront access logging is enabled but the destination S3 bucket does not use a customer-managed KMS key for default encryption. Access logs contain viewer IP addresses, full request URIs (including query strings with potential PII), HTTP status codes, referer headers, and user-agents. This is the full request audit trail for the internet edge. Without CMK encryption on the log bucket: there is no key-policy control over which principals can decrypt the logs, no CloudTrail audit of decrypt operations (who read the logs and when), and no ability to revoke log access by disabling or deleting the key. Same pattern as S3 server access log buckets and CloudTrail S3 destinations — the log store should have at least as strong encryption as the resources it audits. This control gates on logging_enabled to avoid false positives on distributions without logging.
+
+**Remediation:** Configure the log destination S3 bucket's default encryption to use SSE-KMS with a customer-managed key. Existing log files must be re-encrypted or archived. Update the bucket default encryption via aws s3api put-bucket-encryption. Ensure the CloudFront log delivery service principal can write to the bucket (requires bucket ACL for awslogsdelivery — verify after changing encryption).
+
+---
+
+### CTL.CLOUDFRONT.LOG.BUCKET.NOLIFECYCLE.001
+
+**CloudFront Access Log Bucket Has No Lifecycle Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-11; pci_dss_v4.0: 10.7; soc2: CC7.2;
+
+CloudFront access logging is enabled but the destination S3 bucket has no lifecycle policy to transition or expire old logs. A busy CloudFront distribution generates log files continuously — hundreds of small files per hour, each containing a few minutes of request data. Without a lifecycle policy, log objects accumulate indefinitely: storage costs grow linearly with traffic over time, viewer IP addresses and request patterns (PII under GDPR and similar regulations) persist beyond any retention requirement, and log analysis tools degrade as the dataset grows. Most compliance frameworks mandate a maximum log retention period as well as a minimum — logs must be deleted after the retention window closes. A lifecycle policy should transition logs to Glacier after 90 days and expire them after the required retention period. This control gates on logging_enabled to avoid false positives.
+
+**Remediation:** Create an S3 lifecycle rule on the log bucket: transition to S3 Standard-IA after 30 days, transition to Glacier after 90 days, and expire objects after your required retention period (commonly 365 days for PCI-DSS, 6+ years for HIPAA). Apply via aws s3api put-bucket-lifecycle-configuration or via the console. Also apply S3 Intelligent-Tiering if log access patterns are unpredictable.
+
+---
+
 ### CTL.CLOUDFRONT.LOGGING.001
 
 **CloudFront Distributions Must Have Access Logging Enabled**
@@ -5053,6 +5143,21 @@ CloudFront distributions that allow HTTP (allow-all viewer protocol policy) serv
 CloudFront access logs record every request served by the distribution — viewer IP, request URI, response code, bytes transferred, and cache hit/miss status. Without access logs, there is no record of attempted exploitation, data exfiltration via large response payloads, reconnaissance scanning, or suspicious geographic access patterns. A distribution without logging is a blind spot in the organization's visibility.
 
 **Remediation:** Enable access logging in the distribution configuration, specifying an S3 bucket as destination. The S3 bucket must grant CloudFront write access via bucket ACL or bucket policy.
+
+---
+
+### CTL.CLOUDFRONT.METRICS.ADDITIONAL.001
+
+**CloudFront Distribution Does Not Have Additional CloudWatch Metrics Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AU-6; soc2: CC7.1;
+
+CloudFront distribution does not have the additional CloudWatch metrics subscription enabled. By default, CloudFront publishes 6 metrics to CloudWatch: Requests, BytesDownloaded, BytesUploaded, 4xxErrorRate, 5xxErrorRate, and TotalErrorRate. The additional metrics subscription provides: CacheHitRate (essential for cache poisoning detection and cache efficiency monitoring), OriginLatency (measures how fast the origin responds — baseline for anomaly detection), and per-status-code error rates (detailed breakdown of which 4xx/5xx codes are occurring). These metrics are essential for operational monitoring and security analysis of the CDN layer. Without CacheHitRate, cache poisoning and cache misconfiguration are undetectable. Without OriginLatency, origin performance degradation that precedes 5xx errors is invisible. The additional subscription has a per-distribution cost.
+
+**Remediation:** Enable the additional metrics subscription via the CloudFront console (Distribution → Monitoring → Enable additional metrics) or via the API: aws cloudfront create-monitoring-subscription --distribution-id DIST_ID --monitoring-subscription RealtimeMetricsSubscriptionConfig={RealtimeMetricsSubscriptionStatus=Enabled}. Note: This has a per-distribution hourly cost. Review your monitoring requirements before enabling for all distributions.
 
 ---
 
@@ -5146,6 +5251,21 @@ Origin Shield adds an additional caching layer between CloudFront edge locations
 
 ---
 
+### CTL.CLOUDFRONT.ORIGIN.TLS.VERSION.001
+
+**CloudFront Origin Accepts Weak TLS Version**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8; hipaa: 164.312(e)(2)(ii); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.6;
+
+CloudFront custom origin SSL protocols include SSLv3, TLSv1, or TLSv1.1. The connection from CloudFront to the origin can negotiate a deprecated, vulnerable TLS version. Even if the viewer-facing TLS enforces TLS 1.2, the CloudFront→origin segment may use TLS 1.0 — the weakest link in the end-to-end chain. The same attacks that affect viewer-facing TLS (BEAST on TLS 1.0, POODLE on SSLv3, lack of AEAD in TLS 1.1) apply to the origin connection. CloudFront requires that the origin present a valid certificate for HTTPS connections — the origin SSL protocols define which TLS versions CloudFront attempts when connecting. Acceptable: TLSv1.2 only, or TLSv1.2 and TLSv1.3. The minimum acceptable origin SSL protocol is TLSv1.2.
+
+**Remediation:** Update the origin SSL protocols configuration in the CloudFront distribution to allow only TLSv1.2 (and optionally TLSv1.3 if the origin supports it). Remove SSLv3, TLSv1, and TLSv1.1 from the allowed protocol list. This requires that the origin's web server or load balancer supports TLS 1.2 — most modern servers do. If the origin cannot support TLS 1.2, upgrade the origin before restricting CloudFront protocols.
+
+---
+
 ### CTL.CLOUDFRONT.TLS.001
 
 **CloudFront Distributions Must Enforce TLS 1.2 or Higher**
@@ -5173,6 +5293,36 @@ CloudFront distributions must use a security policy that enforces TLS 1.2 or hig
 CloudFront distributions using TLSv1 or TLSv1.1 security policies accept connections over deprecated TLS versions vulnerable to BEAST, POODLE, and other protocol attacks. The security policy controls the minimum TLS version and cipher suites accepted from viewers. TLSv1.2_2021 or TLSv1.3_2022 are recommended — they exclude all vulnerable cipher suites and protocol versions.
 
 **Remediation:** Update the distribution viewer certificate configuration to use TLSv1.2_2021 or TLSv1.3_2022 as the minimum protocol version. Requires a custom SSL certificate from ACM in us-east-1.
+
+---
+
+### CTL.CLOUDFRONT.VIEWER.CERT.COVERAGE.001
+
+**CloudFront Certificate Does Not Cover All Alternate Domain Names**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-23; pci_dss_v4.0: 4.2.1; soc2: CC6.6;
+
+CloudFront distribution has alternate domain names (CNAMEs) that are not covered by the ACM certificate's Subject Alternative Names (SANs). When a viewer connects via an uncovered CNAME, the TLS handshake presents a certificate for a different domain — the browser shows a certificate mismatch error and the connection is rejected or warned. The distribution partially works: CNAMEs matching the certificate's SANs or wildcard succeed; CNAMEs not covered by the certificate fail. For wildcard certificates (*.example.com), only one level of subdomain is covered — a wildcard on *.example.com does not cover sub.sub.example.com. All CNAMEs configured on the distribution must be explicitly listed in the certificate's SANs or matched by a wildcard in the certificate.
+
+**Remediation:** Either expand the ACM certificate to include the uncovered CNAMEs as additional SANs (request a new certificate with all required names, or add SANs to the existing certificate if not yet issued), or use a wildcard certificate (*.example.com) that covers all required subdomains. Wildcard certificates cover only one level of subdomain — *.example.com does not cover sub.sub.example.com. After updating the certificate, associate it with the CloudFront distribution.
+
+---
+
+### CTL.CLOUDFRONT.VIEWER.DEFAULTCERT.001
+
+**CloudFront Distribution Uses Default CloudFront Certificate**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SC-23; soc2: CC6.1;
+
+CloudFront distribution uses the default *.cloudfront.net wildcard certificate instead of a custom ACM certificate bound to the organization's domain. Without a custom certificate: the distribution cannot serve content on a custom domain with a trusted certificate (all content is at d1234.cloudfront.net); the security policy is limited to TLSv1 (default CloudFront policy, which allows legacy TLS — CTL.CLOUDFRONT.TLS.001 may also fire), and the certificate lifecycle is not in the organization's control. Custom ACM certificates enable: binding to organizational domain names, stronger TLS security policies (TLSv1.2_2021), Certificate Transparency logging, and independent certificate lifecycle management. This is most relevant when the distribution is user-facing with a custom domain — a distribution deliberately using the cloudfront.net domain (internal tools, development environments) may intentionally use the default certificate.
+
+**Remediation:** Request an ACM certificate for the custom domain in us-east-1 (required for CloudFront). Validate via DNS CNAME. Attach the certificate to the distribution and update ViewerCertificate to AcmCertificateArn. Set MinimumProtocolVersion to TLSv1.2_2021 and SSLSupportMethod to sni-only. Add the domain as an Alternate Domain Name (CNAME) in the distribution configuration.
 
 ---
 

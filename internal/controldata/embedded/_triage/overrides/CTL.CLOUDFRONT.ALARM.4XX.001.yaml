@@ -1,0 +1,29 @@
+control: CTL.CLOUDFRONT.ALARM.4XX.001
+defect: >
+  CloudFront distribution has no CloudWatch
+  alarm for 4xx error rate.
+infection: >
+  4xx error rates contain both operational
+  and security signals. A sudden 403 spike
+  often means an OAC misconfiguration (the
+  S3 bucket policy changed and CloudFront
+  can no longer access objects), a WAF rule
+  now blocking too aggressively, or signed
+  URL rotation that left old URLs active. A
+  404 spike may mean content was removed or
+  renamed (operational gap) or an attacker
+  is scanning the distribution's path space
+  (security signal). Automated scanners hit
+  CloudFront distributions continuously —
+  looking for admin panels (/admin, /wp-admin,
+  /phpmyadmin), exposed API endpoints, and
+  configuration files (.env, .git). A sustained
+  elevated 4xx rate from a small number of IPs
+  is reconnaissance. Without an alarm, these
+  patterns are invisible — they appear only
+  in CloudFront access logs that may not be
+  monitored in real-time.
+failure: >
+  Reconnaissance and configuration drift
+  invisible. 4xx spikes from attackers or
+  misconfiguration go unnoticed.

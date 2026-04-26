@@ -1,0 +1,30 @@
+control: CTL.CLOUDFRONT.ALARM.REQUESTS.001
+defect: >
+  CloudFront distribution has no CloudWatch
+  alarm for request count.
+infection: >
+  CloudFront request count is the primary
+  traffic signal for the internet edge. A
+  sudden multi-fold increase in requests may
+  indicate: Layer 7 DDoS targeting the
+  application logic (not volumetric — WAF
+  may not block these), automated content
+  scrapers (crawling the entire content
+  catalog), credential stuffing (using
+  CloudFront-fronted login endpoints), API
+  abuse (excessive API calls through the
+  distribution), or hotlinking from another
+  site referencing content directly. Shield
+  Standard protects against volumetric L3/L4
+  DDoS but does not alert on application-
+  layer request anomalies. WAF rate limiting
+  can block excessive requests from a single
+  IP but does not alert before blocking. A
+  request count alarm provides early warning
+  of abnormal traffic before it degrades
+  performance or depletes budget (on-demand
+  pricing scales with requests).
+failure: >
+  Traffic anomalies invisible. DDoS, scraping,
+  and API abuse undetected until performance
+  degrades or costs spike.

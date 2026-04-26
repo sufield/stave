@@ -1,0 +1,31 @@
+control: CTL.CLOUDFRONT.VIEWER.DEFAULTCERT.001
+defect: >
+  CloudFront distribution uses the default
+  *.cloudfront.net certificate instead of
+  a custom ACM certificate.
+infection: >
+  The default CloudFront certificate is a
+  wildcard for *.cloudfront.net — it covers
+  the d1234567890abcd.cloudfront.net domain.
+  Without a custom certificate: the distribution
+  cannot have an alternate domain name (CNAME)
+  without a certificate warning, the TLS
+  security policy defaults to the CloudFront
+  default which allows TLS 1.0 (customers
+  using the default certificate cannot set
+  TLSv1.2_2021 — minimum TLS version requires
+  a custom certificate), and the certificate's
+  Subject field shows cloudfront.net rather
+  than the organization's domain in browser
+  certificate inspection. The security policy
+  limitation is the most operationally
+  significant: the stronger TLS policies
+  (TLSv1.2_2018, TLSv1.2_2019, TLSv1.2_2021)
+  require a custom certificate in ACM. Using
+  the default certificate locks the distribution
+  to weaker TLS negotiation.
+failure: >
+  Custom domain branding not possible. TLS
+  policy locked to CloudFront default (allows
+  TLS 1.0). Certificate lifecycle not under
+  organizational control.

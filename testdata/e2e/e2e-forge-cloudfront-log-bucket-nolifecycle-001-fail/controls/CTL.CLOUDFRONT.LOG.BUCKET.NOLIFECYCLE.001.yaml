@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.LOG.BUCKET.NOLIFECYCLE.001
+name: CloudFront Access Log Bucket Has No Lifecycle Policy
+description: >
+  CloudFront access logging is enabled but the destination S3 bucket
+  has no lifecycle policy to transition or expire old logs. A busy
+  CloudFront distribution generates log files continuously —
+  hundreds of small files per hour, each containing a few minutes
+  of request data. Without a lifecycle policy, log objects accumulate
+  indefinitely: storage costs grow linearly with traffic over time,
+  viewer IP addresses and request patterns (PII under GDPR and
+  similar regulations) persist beyond any retention requirement, and
+  log analysis tools degrade as the dataset grows. Most compliance
+  frameworks mandate a maximum log retention period as well as a
+  minimum — logs must be deleted after the retention window closes.
+  A lifecycle policy should transition logs to Glacier after 90 days
+  and expire them after the required retention period. This control
+  gates on logging_enabled to avoid false positives.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-11"
+  hipaa: "164.312(b)"
+  pci_dss_v4.0: "10.7"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-07", "DSP-01"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudFront access log bucket has no lifecycle policy. Logs
+    accumulate without expiration, retaining PII beyond retention
+    requirements.
+  action: >
+    Create an S3 lifecycle rule on the log bucket: transition to
+    S3 Standard-IA after 30 days, transition to Glacier after 90 days,
+    and expire objects after your required retention period
+    (commonly 365 days for PCI-DSS, 6+ years for HIPAA). Apply via
+    aws s3api put-bucket-lifecycle-configuration or via the console.
+    Also apply S3 Intelligent-Tiering if log access patterns are
+    unpredictable.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "logging_enabled": true,
+          "logging_bucket": "prod-cf-logs.s3.amazonaws.com",
+          "logging_bucket_has_lifecycle": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.logging_enabled
+      op: eq
+      value: true
+    - field: properties.cdn.cloudfront.logging_bucket_has_lifecycle
+      op: eq
+      value: false

@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.VIEWER.CERT.COVERAGE.001
+name: CloudFront Certificate Does Not Cover All Alternate Domain Names
+description: >
+  CloudFront distribution has alternate domain names (CNAMEs) that
+  are not covered by the ACM certificate's Subject Alternative Names
+  (SANs). When a viewer connects via an uncovered CNAME, the TLS
+  handshake presents a certificate for a different domain — the
+  browser shows a certificate mismatch error and the connection is
+  rejected or warned. The distribution partially works: CNAMEs
+  matching the certificate's SANs or wildcard succeed; CNAMEs not
+  covered by the certificate fail. For wildcard certificates
+  (*.example.com), only one level of subdomain is covered — a
+  wildcard on *.example.com does not cover sub.sub.example.com.
+  All CNAMEs configured on the distribution must be explicitly
+  listed in the certificate's SANs or matched by a wildcard in
+  the certificate.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-23"
+  pci_dss_v4.0: "4.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-07"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    One or more alternate domain names on the distribution are not
+    covered by the certificate SANs. Viewers on those domains see
+    certificate mismatch errors.
+  action: >
+    Either expand the ACM certificate to include the uncovered CNAMEs
+    as additional SANs (request a new certificate with all required
+    names, or add SANs to the existing certificate if not yet issued),
+    or use a wildcard certificate (*.example.com) that covers all
+    required subdomains. Wildcard certificates cover only one level
+    of subdomain — *.example.com does not cover sub.sub.example.com.
+    After updating the certificate, associate it with the CloudFront
+    distribution.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "has_uncovered_cnames": false,
+          "uncovered_cnames": [],
+          "alternate_domain_names": ["api.example.com", "cdn.example.com"],
+          "certificate_sans": ["api.example.com", "cdn.example.com"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_uncovered_cnames
+      op: eq
+      value: true

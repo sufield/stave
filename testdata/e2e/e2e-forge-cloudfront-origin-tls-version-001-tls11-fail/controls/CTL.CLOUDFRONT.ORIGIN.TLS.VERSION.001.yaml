@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ORIGIN.TLS.VERSION.001
+name: CloudFront Origin Accepts Weak TLS Version
+description: >
+  CloudFront custom origin SSL protocols include SSLv3, TLSv1, or
+  TLSv1.1. The connection from CloudFront to the origin can negotiate
+  a deprecated, vulnerable TLS version. Even if the viewer-facing TLS
+  enforces TLS 1.2, the CloudFront→origin segment may use TLS 1.0 —
+  the weakest link in the end-to-end chain. The same attacks that
+  affect viewer-facing TLS (BEAST on TLS 1.0, POODLE on SSLv3, lack
+  of AEAD in TLS 1.1) apply to the origin connection. CloudFront
+  requires that the origin present a valid certificate for HTTPS
+  connections — the origin SSL protocols define which TLS versions
+  CloudFront attempts when connecting. Acceptable: TLSv1.2 only, or
+  TLSv1.2 and TLSv1.3. The minimum acceptable origin SSL protocol
+  is TLSv1.2.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  pci_dss_v4.0: "4.2.1"
+  hipaa: "164.312(e)(2)(ii)"
+  soc2: "CC6.6"
+  fedramp_moderate: "SC-8"
+  ccm_v4: ["CEK-03", "CEK-04", "DSP-10"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    CloudFront origin SSL protocols include deprecated TLS versions.
+    The CloudFront-to-origin connection may negotiate TLS 1.0 or older.
+  action: >
+    Update the origin SSL protocols configuration in the CloudFront
+    distribution to allow only TLSv1.2 (and optionally TLSv1.3 if
+    the origin supports it). Remove SSLv3, TLSv1, and TLSv1.1 from
+    the allowed protocol list. This requires that the origin's web
+    server or load balancer supports TLS 1.2 — most modern servers do.
+    If the origin cannot support TLS 1.2, upgrade the origin before
+    restricting CloudFront protocols.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "origin_ssl_protocols": ["TLSv1.2"],
+          "origin_allows_tls10": false,
+          "origin_allows_sslv3": false,
+          "origin_min_protocol": "TLSv1.2"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.origin_allows_weak_tls
+      op: eq
+      value: true

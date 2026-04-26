@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.LOG.BUCKET.NOENCRYPT.001
+name: CloudFront Access Log Bucket Not Encrypted With Customer-Managed Key
+description: >
+  CloudFront access logging is enabled but the destination S3 bucket
+  does not use a customer-managed KMS key for default encryption.
+  Access logs contain viewer IP addresses, full request URIs
+  (including query strings with potential PII), HTTP status codes,
+  referer headers, and user-agents. This is the full request audit
+  trail for the internet edge. Without CMK encryption on the log
+  bucket: there is no key-policy control over which principals
+  can decrypt the logs, no CloudTrail audit of decrypt operations
+  (who read the logs and when), and no ability to revoke log access
+  by disabling or deleting the key. Same pattern as S3 server access
+  log buckets and CloudTrail S3 destinations — the log store should
+  have at least as strong encryption as the resources it audits.
+  This control gates on logging_enabled to avoid false positives on
+  distributions without logging.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-9"
+  hipaa: "164.312(b)"
+  pci_dss_v4.0: "10.3.2"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-05", "DSP-17"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudFront access log destination bucket lacks CMK encryption.
+    Log contents (viewer IPs, request paths) are not key-policy
+    protected.
+  action: >
+    Configure the log destination S3 bucket's default encryption to
+    use SSE-KMS with a customer-managed key. Existing log files must
+    be re-encrypted or archived. Update the bucket default encryption
+    via aws s3api put-bucket-encryption. Ensure the CloudFront log
+    delivery service principal can write to the bucket (requires
+    bucket ACL for awslogsdelivery — verify after changing encryption).
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "logging_enabled": true,
+          "logging_bucket": "prod-cf-logs.s3.amazonaws.com",
+          "logging_bucket_encrypted_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.logging_enabled
+      op: eq
+      value: true
+    - field: properties.cdn.cloudfront.logging_bucket_encrypted_cmk
+      op: eq
+      value: false

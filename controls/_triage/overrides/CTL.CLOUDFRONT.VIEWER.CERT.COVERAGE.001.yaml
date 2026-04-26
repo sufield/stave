@@ -1,0 +1,30 @@
+control: CTL.CLOUDFRONT.VIEWER.CERT.COVERAGE.001
+defect: >
+  CloudFront distribution has alternate domain
+  names (CNAMEs) not covered by the certificate.
+infection: >
+  During a TLS handshake, the browser validates
+  that the certificate presented by the server
+  matches the domain the browser is connecting
+  to. If the certificate does not list the CNAME
+  in its Subject Alternative Names (SANs), the
+  browser shows NET::ERR_CERT_COMMON_NAME_INVALID
+  or equivalent — "Your connection is not private."
+  Users who encounter this warning and click
+  through have been trained to ignore certificate
+  warnings. This is the exact behavior that
+  phishing attacks exploit — a certificate
+  warning on a legitimate site teaches users
+  that certificate warnings are acceptable to
+  dismiss. For wildcards: *.example.com covers
+  api.example.com and cdn.example.com but NOT
+  sub.api.example.com — wildcards match exactly
+  one label to the left of the base domain.
+  The certificate SANs must be comprehensive
+  enough to cover all CNAMEs the distribution
+  serves, accounting for wildcard scope limitations.
+failure: >
+  Certificate mismatch on uncovered CNAMEs.
+  Browsers show security warnings for affected
+  domains. Users may dismiss warnings, training
+  them to accept certificate errors.

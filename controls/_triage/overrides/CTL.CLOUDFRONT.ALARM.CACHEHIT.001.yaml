@@ -1,0 +1,30 @@
+control: CTL.CLOUDFRONT.ALARM.CACHEHIT.001
+defect: >
+  CloudFront distribution has no CloudWatch
+  alarm for cache hit rate.
+infection: >
+  A dropping cache hit rate is a silent
+  performance and security degradation.
+  Security relevance: cache poisoning attacks
+  work by injecting malicious content into
+  the CDN cache — after poisoning, the
+  attacker's response is served to all users
+  requesting that path. A successful cache
+  poison creates a sudden drop in effective
+  cache hit rate for the poisoned paths.
+  Operational relevance: every cache miss
+  hits the origin — when the hit rate drops
+  from 90% to 50%, origin traffic doubles;
+  at 10%, it is 9x baseline. Without a cache
+  hit rate alarm, gradual degradation goes
+  unnoticed until origin costs double or
+  latency spikes trigger user complaints.
+  CacheHitRate requires the additional
+  CloudWatch metrics subscription (separate
+  cost). If additional metrics are not
+  enabled, the metric does not exist and an
+  alarm cannot be configured.
+failure: >
+  Cache degradation and potential cache
+  poisoning invisible. Origin receives
+  unexpected traffic load without notification.

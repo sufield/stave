@@ -1,0 +1,35 @@
+control: CTL.CLOUDFRONT.ORIGIN.TLS.VERSION.001
+defect: >
+  CloudFront origin SSL protocols allow
+  TLS 1.0, TLS 1.1, or SSLv3 on the
+  CloudFront-to-origin connection.
+infection: >
+  The CloudFront distribution enforces strong
+  TLS from viewer to CloudFront edge — the
+  browser connects over TLS 1.2 with modern
+  cipher suites. But the connection from
+  CloudFront to the origin is negotiated
+  independently using the origin SSL protocol
+  configuration. If the allowed protocols
+  include TLS 1.0 or older, CloudFront and
+  the origin may negotiate a weaker protocol
+  on the backend segment. The same attacks
+  apply: BEAST on TLS 1.0 (enables MITM
+  decryption of session cookies), POODLE on
+  SSLv3 (enables CBC padding oracle attack),
+  and SWEET32 on 3DES cipher suites present
+  in TLS 1.0/1.1 (birthday attack on 64-bit
+  block ciphers). The origin segment is
+  typically within the AWS network, which
+  reduces (but doesn't eliminate) interception
+  risk. However, for workloads with custom
+  origins on EC2 or in other data centers,
+  the origin segment may traverse networks
+  with different trust levels. The principle
+  of minimum protocol version should apply
+  equally to viewer-facing and origin-facing
+  connections.
+failure: >
+  Weak TLS possible on CloudFront-to-origin
+  segment. End-to-end TLS strength is
+  determined by the weakest link.

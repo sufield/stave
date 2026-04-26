@@ -1,0 +1,32 @@
+control: CTL.CLOUDFRONT.ALARM.5XX.001
+defect: >
+  CloudFront distribution has no CloudWatch
+  alarm for 5xx error rate.
+infection: >
+  CloudFront 5xx errors indicate origin
+  failure — the CDN can't get a valid
+  response from the backend. The failure
+  modes range from momentary to permanent:
+  a transient origin overload returns 503
+  for a few requests; a completely unreachable
+  origin (deleted ALB, stopped EC2, misconfigured
+  SG) returns 502 on every cache miss. As
+  the cache empties over time, the 5xx rate
+  climbs — from 1% (only recent content
+  missing) toward 100% (entire cache stale).
+  For ghost origin configurations (deleted
+  S3 bucket, deleted ALB), the 5xx rate
+  reaches 100% as the cache empties completely.
+  Without an alarm, this progression happens
+  silently — the team discovers the outage
+  when customers report errors, social media
+  complains, or monitoring services (not
+  operated by the team) alert on uptime.
+  The alert is always the customer, never
+  an operational signal. A 5xx alarm on the
+  CDN edge is the first line of origin health
+  detection.
+failure: >
+  Silent origin failure. 5xx rate rises from
+  0% to 100% without notification as the
+  cache empties. Customers discover the outage.

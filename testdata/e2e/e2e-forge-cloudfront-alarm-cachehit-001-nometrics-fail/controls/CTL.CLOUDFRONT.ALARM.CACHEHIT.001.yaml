@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ALARM.CACHEHIT.001
+name: No CloudWatch Alarm for CloudFront Cache Hit Rate
+description: >
+  No CloudWatch alarm monitors the CacheHitRate metric. A dropping
+  cache hit rate may indicate: cache poisoning (an attacker
+  deliberately crafting requests to populate the cache with malicious
+  responses), cache key misconfiguration (too many cache variants
+  causing a cache miss for every request), application changes that
+  broke caching, or a cache invalidation storm. When the hit rate
+  drops, more requests reach the origin — origin load increases,
+  latency rises, and backend costs grow. A security-relevant drop:
+  cache poisoning by response header manipulation can cause cached
+  responses to be delivered to different users than intended.
+  CacheHitRate requires the additional CloudWatch metrics subscription
+  — it is not available by default. This control checks that the
+  alarm exists; CTL.CLOUDFRONT.METRICS.ADDITIONAL.001 checks that
+  the metrics subscription is active.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["IVS-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront distribution has no CloudWatch alarm for cache hit
+    rate. Cache degradation from poisoning or misconfiguration is
+    undetected.
+  action: >
+    First enable additional CloudWatch metrics on the distribution
+    (CTL.CLOUDFRONT.METRICS.ADDITIONAL.001) — CacheHitRate is not
+    available without the metrics subscription. Then create a
+    CloudWatch alarm in us-east-1 on the CacheHitRate metric with
+    a threshold based on your expected cache efficiency (e.g., alarm
+    when CacheHitRate drops below 80% for 3 consecutive 5-minute
+    periods).
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "alarm_cache_hit": true,
+          "additional_metrics_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.alarm_cache_hit
+      op: eq
+      value: false

@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ALARM.4XX.001
+name: No CloudWatch Alarm for CloudFront 4xx Error Rate
+description: >
+  No CloudWatch alarm monitors the CloudFront 4xxErrorRate metric.
+  4xx errors have multiple operational and security interpretations:
+  403 Forbidden — OAC misconfiguration, expired signed URL, or
+  geo-restriction blocking a legitimate user; 404 Not Found — content
+  removed, origin path mismatch, or an attacker scanning for paths
+  and files; 400 Bad Request — malformed request, often from
+  vulnerability scanners or malicious clients. A 4xx spike may
+  indicate: OAC configuration drift (403 surge), content migration
+  gap (404 surge), active reconnaissance (high-volume 404 from a
+  single IP), or a legitimate traffic pattern change. Without an
+  alarm, these patterns are invisible. 4xxErrorRate is one of
+  CloudFront's default metrics — no additional subscription required.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["IVS-04", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront distribution has no CloudWatch alarm for 4xx error
+    rate. Reconnaissance, misconfiguration, and content gaps are
+    undetected.
+  action: >
+    Create a CloudWatch alarm on the 4xxErrorRate metric in us-east-1.
+    Use a higher threshold than 5xx (e.g., 10-20%) because legitimate
+    4xx errors are more common (bots, crawlers, typos). Set evaluation
+    to 3 periods of 5 minutes to avoid transient spikes triggering
+    alerts. Monitor for sustained elevated 4xx rates rather than
+    brief spikes.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "alarm_4xx": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.alarm_4xx
+      op: eq
+      value: false

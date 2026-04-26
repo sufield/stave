@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.VIEWER.DEFAULTCERT.001
+name: CloudFront Distribution Uses Default CloudFront Certificate
+description: >
+  CloudFront distribution uses the default *.cloudfront.net wildcard
+  certificate instead of a custom ACM certificate bound to the
+  organization's domain. Without a custom certificate: the distribution
+  cannot serve content on a custom domain with a trusted certificate
+  (all content is at d1234.cloudfront.net); the security policy is
+  limited to TLSv1 (default CloudFront policy, which allows legacy
+  TLS — CTL.CLOUDFRONT.TLS.001 may also fire), and the certificate
+  lifecycle is not in the organization's control. Custom ACM
+  certificates enable: binding to organizational domain names, stronger
+  TLS security policies (TLSv1.2_2021), Certificate Transparency
+  logging, and independent certificate lifecycle management. This is
+  most relevant when the distribution is user-facing with a custom
+  domain — a distribution deliberately using the cloudfront.net domain
+  (internal tools, development environments) may intentionally use
+  the default certificate.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-23"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-07"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront distribution uses the default *.cloudfront.net
+    certificate. A custom ACM certificate is required for a custom
+    domain, stronger TLS policy, and certificate lifecycle control.
+  action: >
+    Request an ACM certificate for the custom domain in us-east-1
+    (required for CloudFront). Validate via DNS CNAME. Attach the
+    certificate to the distribution and update ViewerCertificate to
+    AcmCertificateArn. Set MinimumProtocolVersion to TLSv1.2_2021
+    and SSLSupportMethod to sni-only. Add the domain as an Alternate
+    Domain Name (CNAME) in the distribution configuration.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "uses_default_cert": false,
+          "has_custom_cert": true,
+          "certificate_source": "acm"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.uses_default_cert
+      op: eq
+      value: true

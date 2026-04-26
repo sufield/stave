@@ -1,0 +1,28 @@
+control: CTL.CLOUDFRONT.LOG.BUCKET.NOENCRYPT.001
+defect: >
+  CloudFront access log destination bucket
+  does not use a customer-managed KMS key.
+infection: >
+  CloudFront access logs contain the internet-
+  edge request record: every viewer's IP
+  address, the exact URI they requested
+  (including query strings that may contain
+  session tokens, search terms, or user
+  identifiers), HTTP response codes, bytes
+  transferred, and user-agents. These logs
+  are both an operational tool and a privacy-
+  sensitive dataset. Without CMK encryption
+  on the log bucket, the logs are protected
+  only by the bucket policy and IAM — there
+  is no key-level access control, no
+  CloudTrail audit of decrypt operations
+  (who accessed the logs and when), and no
+  ability to revoke log access by disabling
+  the key. An attacker with s3:GetObject on
+  the log bucket can read the full request
+  history of the distribution without any
+  evidence in a key audit log.
+failure: >
+  Log access unauditable at the key level.
+  Viewer IP addresses and request patterns
+  readable without key-level audit trail.

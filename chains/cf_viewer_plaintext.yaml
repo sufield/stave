@@ -1,0 +1,24 @@
+id: cf_viewer_plaintext
+description: >
+  Any viewer-facing connection weakness. The distribution allows
+  HTTP viewer connections — content is served in plaintext
+  (CTL.CLOUDFRONT.HTTPS.ONLY.001); or the TLS security policy
+  allows TLS versions below 1.2 — BEAST, POODLE, or cipher suite
+  downgrade attacks are possible (CTL.CLOUDFRONT.TLS.001); or the
+  TLS minimum version policy is below 1.2 in the security policy
+  configuration (CTL.CLOUDFRONT.TLS.MINIMUM.001). Threshold of 1
+  reflects that any single failure independently allows plaintext
+  or weakly encrypted viewer connections. HTTP-allowed is the most
+  direct failure — plaintext content delivery. Weak TLS policy
+  allows downgrade attacks. Either leaves viewer traffic
+  insufficiently protected.
+controls:
+  - CTL.CLOUDFRONT.HTTPS.ONLY.001
+  - CTL.CLOUDFRONT.TLS.001
+  - CTL.CLOUDFRONT.TLS.MINIMUM.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_in_transit_exposure

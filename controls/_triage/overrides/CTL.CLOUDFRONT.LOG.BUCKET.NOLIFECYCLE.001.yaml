@@ -1,0 +1,31 @@
+control: CTL.CLOUDFRONT.LOG.BUCKET.NOLIFECYCLE.001
+defect: >
+  CloudFront access log bucket has no
+  lifecycle policy. Logs accumulate without
+  expiration.
+infection: >
+  A CloudFront distribution serving moderate
+  traffic produces thousands of log objects
+  per day — each covering a few seconds or
+  minutes of requests. Without a lifecycle
+  policy, every log object created since
+  logging was enabled remains in the bucket
+  indefinitely. The effects compound over time:
+  storage costs grow linearly with traffic and
+  time, viewer IP addresses from years ago
+  persist under GDPR/CCPA data minimization
+  rules that require deletion after use, and
+  log analysis tools (Athena, S3 Select) scan
+  larger datasets with each passing month,
+  increasing query time and cost. Compliance
+  frameworks create the two-sided requirement:
+  logs must be retained for a minimum period
+  (90 days for PCI-DSS, 6 years for HIPAA)
+  AND deleted after the maximum retention
+  period. Without a lifecycle rule, only one
+  side is satisfied — logs are kept but never
+  deleted.
+failure: >
+  Unbounded log retention. Viewer PII in logs
+  retained beyond required deletion period.
+  Storage costs grow without bound.

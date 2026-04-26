@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ALARM.REQUESTS.001
+name: No CloudWatch Alarm for CloudFront Request Count
+description: >
+  No CloudWatch alarm monitors the CloudFront Requests metric. A
+  sudden traffic spike may indicate: DDoS attack at the application
+  layer (L7 DDoS exploiting CloudFront rate limiting gaps), bot
+  traffic at scale (credential stuffing, content scraping, API
+  abuse), hotlinking (another site linking directly to content),
+  or a legitimate traffic event (product launch, viral content).
+  Without a request count alarm, traffic anomalies are invisible
+  until they cause performance degradation or cost spikes. Shield
+  Standard provides volumetric DDoS protection but does not alert
+  on application-layer request anomalies. A request count alarm
+  provides the first signal that traffic has changed. Requests is
+  one of CloudFront's default metrics — no additional subscription
+  required.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["IVS-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront distribution has no CloudWatch alarm for request count.
+    Traffic anomalies (DDoS, scraping, hotlinking) are undetected.
+  action: >
+    Create a CloudWatch alarm on the Requests metric in us-east-1.
+    Threshold depends on normal traffic baseline — set to 3-5x the
+    typical peak to catch genuine anomalies without excessive alerts.
+    Review CloudFront access logs or existing metric history to
+    determine the baseline before setting the threshold.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "alarm_requests": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.alarm_requests
+      op: eq
+      value: false

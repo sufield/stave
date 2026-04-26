@@ -1,0 +1,32 @@
+control: CTL.CLOUDFRONT.METRICS.ADDITIONAL.001
+defect: >
+  CloudFront distribution does not have
+  additional CloudWatch metrics enabled.
+infection: >
+  The default CloudFront metrics tell you
+  if requests are succeeding or failing at
+  a coarse level. The additional metrics
+  tell you WHY they are succeeding or failing.
+  CacheHitRate: the ratio of cache hits to
+  total requests. Required to detect cache
+  poisoning (sudden drop for poisoned paths),
+  cache misconfiguration (low hit rate for
+  all paths indicating a cache key problem),
+  and cache warming failure (hit rate that
+  never climbs after deployment). OriginLatency:
+  how long the origin takes to respond on
+  cache misses. Required to detect origin
+  performance degradation before it causes
+  5xx errors — rising latency precedes timeouts.
+  Per-status-code rates: breakdowns of which
+  specific 4xx and 5xx codes are occurring,
+  essential for distinguishing a 403 OAC
+  problem from a 404 content gap from a 429
+  rate limit. Without these metrics, the
+  CloudWatch dashboard shows aggregate error
+  rates without the detail needed to identify
+  root cause.
+failure: >
+  Cache poisoning, origin latency degradation,
+  and specific error code patterns are
+  invisible in CloudWatch monitoring.
