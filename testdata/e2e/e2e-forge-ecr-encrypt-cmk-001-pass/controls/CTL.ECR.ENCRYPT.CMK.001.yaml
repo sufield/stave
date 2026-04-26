@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.ENCRYPT.CMK.001
+name: ECR Repository Not Encrypted with Customer-Managed KMS Key
+description: >
+  ECR repository uses the default AES-256 encryption rather than a
+  customer-managed KMS key (CMK). The default encryption is real
+  encryption — image layers and manifests are encrypted at rest
+  inside ECR — but the key is AWS-owned: the account has no key
+  policy to control, no audit trail for decrypts, and no way to
+  revoke encryption (deny decrypt) if the data needs to become
+  unreadable. Same pattern as S3 default encryption vs. CMK, EBS
+  default encryption vs. CMK, and Lambda environment KMS — the
+  operational control over the key is the upgrade. For
+  repositories that hold proprietary application code, embedded
+  build artifacts, or images for regulated workloads, the CMK is
+  the typical baseline; for ephemeral test repositories or
+  intentionally public images the default may be acceptable and
+  the finding can be acknowledged in a triage override.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+  pci_dss_v4.0: "3.5.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - ecr
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    ECR repository uses the AWS-managed default encryption rather
+    than a customer-managed KMS key.
+  action: >
+    Re-create the repository with a customer-managed KMS key
+    selected at creation time (encryptionConfiguration.kmsKey
+    set to your CMK ARN). Existing repositories cannot be
+    converted in place — mirror images to the new repository,
+    update task definitions to point at the new repository ARN,
+    and delete the old one. Update the CMK's key policy to grant
+    ecr.amazonaws.com use of the key on behalf of the
+    repository's account.
+  example: |
+    {
+      "container_registry": {
+        "kind": "repository",
+        "encryption": {
+          "uses_cmk": true,
+          "encryption_type": "KMS",
+          "kms_key_arn": "arn:aws:kms:us-east-1:123456789012:key/abcd1234-..."
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.encryption.uses_cmk
+      op: eq
+      value: false

@@ -1,0 +1,35 @@
+control: CTL.ECR.ENHANCED.SCANNING.001
+defect: >
+  ECR scanning is enabled but in BASIC mode
+  (Clair-based, OS-package-only) rather than
+  ENHANCED (Amazon Inspector).
+infection: >
+  Two scanning modes look similar in the ECR
+  console but cover different surfaces. BASIC
+  scanning is OS-package-only: it walks the
+  installed package database (apt, yum, apk)
+  inside the image and looks up CVEs against
+  those packages. It runs once, on push, and
+  doesn't rescan. Application dependencies —
+  npm packages, pip libraries, Maven JARs, Go
+  modules, ruby gems, rust crates — are
+  invisible to BASIC. ENHANCED scanning is
+  Amazon Inspector: it covers OS packages plus
+  every major application dependency manager,
+  it scans on push, and crucially it rescans
+  existing images on a continuous schedule —
+  a CVE published today is reported against a
+  six-month-old image without anyone touching
+  the image. The gap matters most for images
+  built once and run for a long time;
+  long-lived deployments accumulate
+  application-layer CVEs that BASIC scanning
+  never reports. Distinct from
+  CTL.ECR.SCAN.001 (which checks "any
+  scanning"); this control fires on the
+  refinement: BASIC enabled, ENHANCED not.
+failure: >
+  Application-dependency CVEs unseen and
+  long-lived images uninspected. The scan
+  status looks green; the actual coverage is
+  partial.

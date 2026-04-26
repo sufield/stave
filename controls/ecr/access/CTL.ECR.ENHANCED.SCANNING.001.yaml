@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.ENHANCED.SCANNING.001
+name: ECR Repository Uses Basic Scanning Instead of Enhanced
+description: >
+  ECR repository has scanning enabled but uses BASIC scanning
+  (Clair-based, OS package only) rather than ENHANCED scanning
+  (Amazon Inspector). Basic scanning runs only on push and only
+  detects vulnerabilities in OS packages installed via the
+  distro package manager — it misses vulnerabilities in
+  application dependencies (npm, pip, Maven, Go modules, gem,
+  cargo) and does not rescan when new CVEs are published.
+  Enhanced scanning catches application-layer dependencies and
+  rescans existing images continuously — a CVE published today
+  shows up against an image pushed six months ago. Distinct
+  from CTL.ECR.SCAN.001, which checks only that some kind of
+  scanning is enabled; this control fires when scanning is
+  enabled but in BASIC mode where ENHANCED is the appropriate
+  baseline for production registries.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "RA-5"
+  fedramp_moderate: "RA-5"
+  pci_dss_v4.0: "11.3.1"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-07", "AIS-06"]
+scope_tags:
+  - aws
+  - ecr
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    ECR scanning is enabled but only in BASIC mode. Application
+    dependency CVEs and continuous rescans are not covered.
+  action: >
+    Enable Amazon Inspector for ECR enhanced scanning at the
+    registry level (it covers all repositories in the account
+    by default). Confirm Inspector findings appear against
+    existing images within the documented rescan window
+    (typically minutes for new pushes, hours for backlog).
+    Adjust the existing CTL.ECR.SCAN.001 finding workflow if
+    it relied on basic scanning being sufficient.
+  example: |
+    {
+      "container_registry": {
+        "kind": "repository",
+        "scanning": {
+          "enabled": true,
+          "enhanced": true,
+          "scan_type": "ENHANCED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.scanning.enabled
+      op: eq
+      value: true
+    - field: properties.container_registry.scanning.enhanced
+      op: eq
+      value: false

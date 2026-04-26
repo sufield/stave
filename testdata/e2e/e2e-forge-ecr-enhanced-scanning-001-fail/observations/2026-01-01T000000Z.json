@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecr:us-east-1:123456789012:repository/basic-only",
+      "type": "aws_ecr_repository",
+      "vendor": "aws",
+      "properties": {
+        "container_registry": {
+          "kind": "repository",
+          "scanning": {
+            "enabled": true,
+            "enhanced": false,
+            "scan_type": "BASIC"
+          }
+        }
+      }
+    }
+  ]
+}

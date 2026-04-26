@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.FINDINGS.UNRESOLVED.001
+name: ECR Image Has Unresolved Critical or High Vulnerability Findings
+description: >
+  ECR repository contains image scan findings of CRITICAL or
+  HIGH severity that have been outstanding past the policy
+  remediation window — 14 days for CRITICAL, 30 days for HIGH.
+  The vulnerabilities have been detected. Patches or updated
+  base images are available. The image has not been rebuilt.
+  The finding is not "scanning detected something"; it is
+  "scanning detected something and it has been ignored long
+  enough to qualify as an operational gap." Distinct from
+  CTL.ECR.SCAN.001 (scanning is enabled at all) and
+  CTL.ECR.ENHANCED.SCANNING.001 (scanning is the appropriate
+  type) — both of those check that the scanner is running;
+  this control checks that its output is being acted on.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  fedramp_moderate: "SI-2"
+  pci_dss_v4.0: "6.3.3"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-07", "TVM-09"]
+scope_tags:
+  - aws
+  - ecr
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ECR repository has CRITICAL or HIGH severity findings
+    outstanding past the remediation window. Known-vulnerable
+    images are still pullable.
+  action: >
+    Identify the affected images and rebuild them against
+    patched base images / dependency versions, then push the
+    rebuilt images and update task definitions or deployments
+    to reference the new digests. For findings that genuinely
+    cannot be remediated (CVE has no patch, false positive
+    against the workload), record the rationale in a triage
+    override on this control with the specific finding ID and
+    affected image digest.
+  example: |
+    {
+      "container_registry": {
+        "kind": "repository",
+        "findings": {
+          "has_unresolved_critical_or_high": false,
+          "critical_count": 0,
+          "high_count": 0,
+          "oldest_finding_days": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.findings.has_unresolved_critical_or_high
+      op: eq
+      value: true

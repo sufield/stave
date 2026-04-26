@@ -1,0 +1,38 @@
+control: CTL.ECR.FINDINGS.UNRESOLVED.001
+defect: >
+  ECR repository has CRITICAL or HIGH severity
+  vulnerability findings outstanding past the
+  remediation window (14 days for CRITICAL, 30
+  days for HIGH).
+infection: >
+  ECR's value as a control surface compounds
+  through three layers. SCAN.001 says "the
+  scanner runs"; ENHANCED.SCANNING.001 says
+  "the scanner runs at the right depth"; this
+  control says "the scanner's output is being
+  acted on." A repository with scanning
+  configured but a backlog of unresolved
+  high-severity CVEs is not protected by
+  scanning — the scan produced findings, the
+  findings sat in the queue, and the
+  vulnerable image continued to deploy because
+  nothing prevents deployment of vulnerable
+  images and no alarm forced remediation.
+  Each task that pulls the image runs with
+  the vulnerability live in production; the
+  attacker's job is to find a path from the
+  application's exposure to one of the listed
+  CVEs. Severity is high because critical and
+  high CVEs typically have public exploit code
+  or active exploitation in the wild — the
+  remediation window (14 / 30 days) is set by
+  the typical patch-release cadence, not by
+  the time it takes for an attacker to
+  weaponize a published CVE. For findings
+  that genuinely cannot be remediated, record
+  the rationale and CVE in a triage override
+  rather than leaving the finding unmanaged.
+failure: >
+  Known vulnerabilities running in production.
+  Patches are available; the image has not
+  been rebuilt; deployments continue.

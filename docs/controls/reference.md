@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1541
-**Pack hash:** `4827c5884580928540c6c5629f23ccad988846dc81b0bdad0de0bdfbc813b30c`
+**Total controls:** 1544
+**Pack hash:** `155a5a716500e03b1d702dfbaed77620eb0acedf2a976a63ad18de06f2bc4226`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 178 |
-| high | 681 |
+| high | 683 |
 | info | 16 |
 | low | 113 |
-| medium | 553 |
+| medium | 554 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,9 +23,9 @@
 | availability | 2 |
 | cryptography | 3 |
 | detection | 49 |
-| encryption | 87 |
-| exposure | 881 |
-| governance | 72 |
+| encryption | 88 |
+| exposure | 882 |
+| governance | 73 |
 | hygiene | 16 |
 | identity | 332 |
 | network | 28 |
@@ -7781,6 +7781,51 @@ EC2 instance user data is stored in plaintext in the instance metadata and is vi
 VPC interface endpoints without custom policies use the default full-access policy — any principal in the VPC can use the endpoint to reach any resource in the target service. A custom endpoint policy restricts which principals and resources are accessible. For S3 endpoints, restricting access to specific buckets prevents data exfiltration to attacker-controlled buckets via the endpoint.
 
 **Remediation:** Apply a restrictive endpoint policy: aws ec2 modify-vpc-endpoint --vpc-endpoint-id <id> --policy-document file://endpoint-policy.json
+
+---
+
+### CTL.ECR.ENCRYPT.CMK.001
+
+**ECR Repository Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+ECR repository uses the default AES-256 encryption rather than a customer-managed KMS key (CMK). The default encryption is real encryption — image layers and manifests are encrypted at rest inside ECR — but the key is AWS-owned: the account has no key policy to control, no audit trail for decrypts, and no way to revoke encryption (deny decrypt) if the data needs to become unreadable. Same pattern as S3 default encryption vs. CMK, EBS default encryption vs. CMK, and Lambda environment KMS — the operational control over the key is the upgrade. For repositories that hold proprietary application code, embedded build artifacts, or images for regulated workloads, the CMK is the typical baseline; for ephemeral test repositories or intentionally public images the default may be acceptable and the finding can be acknowledged in a triage override.
+
+**Remediation:** Re-create the repository with a customer-managed KMS key selected at creation time (encryptionConfiguration.kmsKey set to your CMK ARN). Existing repositories cannot be converted in place — mirror images to the new repository, update task definitions to point at the new repository ARN, and delete the old one. Update the CMK's key policy to grant ecr.amazonaws.com use of the key on behalf of the repository's account.
+
+---
+
+### CTL.ECR.ENHANCED.SCANNING.001
+
+**ECR Repository Uses Basic Scanning Instead of Enhanced**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: RA-5; nist_800_53_r5: RA-5; pci_dss_v4.0: 11.3.1; soc2: CC7.1;
+
+ECR repository has scanning enabled but uses BASIC scanning (Clair-based, OS package only) rather than ENHANCED scanning (Amazon Inspector). Basic scanning runs only on push and only detects vulnerabilities in OS packages installed via the distro package manager — it misses vulnerabilities in application dependencies (npm, pip, Maven, Go modules, gem, cargo) and does not rescan when new CVEs are published. Enhanced scanning catches application-layer dependencies and rescans existing images continuously — a CVE published today shows up against an image pushed six months ago. Distinct from CTL.ECR.SCAN.001, which checks only that some kind of scanning is enabled; this control fires when scanning is enabled but in BASIC mode where ENHANCED is the appropriate baseline for production registries.
+
+**Remediation:** Enable Amazon Inspector for ECR enhanced scanning at the registry level (it covers all repositories in the account by default). Confirm Inspector findings appear against existing images within the documented rescan window (typically minutes for new pushes, hours for backlog). Adjust the existing CTL.ECR.SCAN.001 finding workflow if it relied on basic scanning being sufficient.
+
+---
+
+### CTL.ECR.FINDINGS.UNRESOLVED.001
+
+**ECR Image Has Unresolved Critical or High Vulnerability Findings**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-2; nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+ECR repository contains image scan findings of CRITICAL or HIGH severity that have been outstanding past the policy remediation window — 14 days for CRITICAL, 30 days for HIGH. The vulnerabilities have been detected. Patches or updated base images are available. The image has not been rebuilt. The finding is not "scanning detected something"; it is "scanning detected something and it has been ignored long enough to qualify as an operational gap." Distinct from CTL.ECR.SCAN.001 (scanning is enabled at all) and CTL.ECR.ENHANCED.SCANNING.001 (scanning is the appropriate type) — both of those check that the scanner is running; this control checks that its output is being acted on.
+
+**Remediation:** Identify the affected images and rebuild them against patched base images / dependency versions, then push the rebuilt images and update task definitions or deployments to reference the new digests. For findings that genuinely cannot be remediated (CVE has no patch, false positive against the workload), record the rationale in a triage override on this control with the specific finding ID and affected image digest.
 
 ---
 

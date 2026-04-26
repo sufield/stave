@@ -1,0 +1,26 @@
+id: ecr_registry_weakness
+description: >
+  Registry-level vulnerability hygiene is broken in two
+  reinforcing ways. Either CRITICAL/HIGH findings are
+  outstanding past the remediation window
+  (CTL.ECR.FINDINGS.UNRESOLVED.001) — known vulnerabilities
+  in deployable images — combined with either basic-only
+  scanning (CTL.ECR.ENHANCED.SCANNING.001) — many CVEs go
+  undetected — or no lifecycle policy
+  (CTL.ECR.LIFECYCLE.001) — old vulnerable images persist
+  alongside the active ones. Threshold of 2 reflects that a
+  single scanning gap is improvement-worthy but tolerable; two
+  together describe a registry where vulnerable images are
+  both undetected and uncleaned, and the unresolved findings
+  on top of that are the operational signal that the workflow
+  is not converting scan output into action.
+controls:
+  - CTL.ECR.FINDINGS.UNRESOLVED.001
+  - CTL.ECR.ENHANCED.SCANNING.001
+  - CTL.ECR.LIFECYCLE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - data_access

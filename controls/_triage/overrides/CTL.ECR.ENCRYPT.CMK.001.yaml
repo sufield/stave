@@ -1,0 +1,34 @@
+control: CTL.ECR.ENCRYPT.CMK.001
+defect: >
+  ECR repository uses the AWS-managed default
+  AES-256 encryption rather than a customer-
+  managed KMS key.
+infection: >
+  The default ECR encryption is not "no
+  encryption" — image layers and manifests are
+  encrypted at rest, the AWS-owned key is
+  rotated, and unauthorized callers cannot
+  decrypt. What's missing on the default key is
+  operational control: the account has no key
+  policy to attach (so the granular permission
+  surface that distinguishes "may use the key"
+  from "may administer the key" doesn't exist),
+  no CloudTrail kms:Decrypt audit (so reads
+  against the encrypted data aren't traceable
+  to a principal), and no revocation lever
+  (denying use of the key on demand is the
+  emergency response if the data has to become
+  unreadable; the AWS-owned key cannot be
+  denied). Same pattern that recurs across S3,
+  EBS, RDS, Lambda env, Secrets Manager. The
+  upgrade to CMK adds those three controls;
+  whether the cost is worth paying depends on
+  the repository's content. Test repositories
+  and intentionally public images don't need
+  CMK — acknowledge those in triage overrides
+  rather than carrying noise.
+failure: >
+  No key-policy control, no decrypt audit, no
+  revocation. The encryption protects the data
+  from theft of disks but doesn't give the
+  account operational control over who decrypts.

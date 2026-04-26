@@ -85,5 +85,29 @@ The family aggregates all revisions of a task definition.
 | `container.revision_history.stale_credential_revision_count` | int | Number of inactive revisions whose env vars still contain plaintext credentials |
 | `container.revision_history.stale_credential_revisions` | []int | Revision numbers whose env vars contain plaintext credentials |
 
+### ECR Repository (`aws_ecr_repository`)
+
+ECR repositories use the `container_registry.*` namespace; the
+discriminator field `container_registry.kind` is `"repository"`.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `container_registry.kind` | string | `"repository"` — discriminator |
+| `container_registry.access.public` | bool | The repository allows public pull |
+| `container_registry.scanning.enabled` | bool | Image scanning is configured (any mode) |
+| `container_registry.scanning.enhanced` | bool | Scanning uses Amazon Inspector (ENHANCED) rather than Clair-based (BASIC) |
+| `container_registry.scanning.scan_type` | string | `"BASIC"` or `"ENHANCED"` |
+| `container_registry.signing.enforced` | bool | Image signing verification is in enforce mode |
+| `container_registry.has_lifecycle_policy` | bool | A lifecycle policy is attached |
+| `container_registry.image_tag_mutability` | string | `"MUTABLE"` or `"IMMUTABLE"` |
+| `container_registry.policy.has_broad_cross_account` | bool | Repository policy grants cross-account access without specific account IDs or `aws:PrincipalOrgID` |
+| `container_registry.encryption.uses_cmk` | bool | Repository is encrypted with a customer-managed KMS key (rather than AWS-owned default) |
+| `container_registry.encryption.encryption_type` | string | `"AES256"` (default) or `"KMS"` |
+| `container_registry.encryption.kms_key_arn` | string | The customer-managed KMS key ARN (when `uses_cmk` is true) |
+| `container_registry.findings.has_unresolved_critical_or_high` | bool | CRITICAL or HIGH findings outstanding past remediation window (14d / 30d) |
+| `container_registry.findings.critical_count` | int | Outstanding CRITICAL findings count |
+| `container_registry.findings.high_count` | int | Outstanding HIGH findings count |
+| `container_registry.findings.oldest_finding_days` | int | Age of the oldest unresolved CRITICAL or HIGH finding |
+
 ---
 
