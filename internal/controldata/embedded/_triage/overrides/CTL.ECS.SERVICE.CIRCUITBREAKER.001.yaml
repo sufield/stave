@@ -1,0 +1,36 @@
+control: CTL.ECS.SERVICE.CIRCUITBREAKER.001
+defect: >
+  ECS service has no deployment circuit
+  breaker enabled.
+infection: >
+  An ECS deployment replaces tasks one batch at
+  a time. When a new task definition is broken
+  — image gone, environment variable wrong,
+  application code crashes on startup, health
+  check times out — ECS tries to replace each
+  old task with a new one, and each new task
+  fails. Without a circuit breaker, the
+  deployment doesn't notice the pattern: it
+  keeps killing healthy old tasks and starting
+  failing new ones until the deployment
+  timeout fires (often configured to multiple
+  hours). During that window the service runs
+  in a degraded state — fewer healthy tasks
+  than required, possibly serving partial
+  traffic, possibly fully out. The circuit
+  breaker watches consecutive task launch and
+  health-check failures and stops the
+  deployment when the failure rate breaches
+  the threshold; with auto-rollback also
+  enabled, ECS reverts to the previous working
+  task definition automatically. The breaker
+  alone is the floor — without rollback the
+  service is left partially deployed until an
+  operator intervenes; see
+  CTL.ECS.SERVICE.CIRCUITBREAKER.NOROLLBACK.001
+  for that gap.
+failure: >
+  Failed deployments keep rolling out. The
+  service degrades for the full deployment
+  timeout window before any automatic action
+  fires.

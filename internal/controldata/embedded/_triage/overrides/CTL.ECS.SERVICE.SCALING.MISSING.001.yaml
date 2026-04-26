@@ -1,0 +1,39 @@
+control: CTL.ECS.SERVICE.SCALING.MISSING.001
+defect: >
+  ECS service has no auto-scaling configured.
+  desiredCount is fixed.
+infection: >
+  A fixed desiredCount means the service has
+  the same capacity at peak load as at idle.
+  Both ends are problems. Under a spike — a
+  traffic surge, a downstream slowdown, a
+  retry storm — the fixed task pool serves
+  every request until it saturates; depending
+  on the workload, saturation looks like
+  rising latency, queue backup, or outright
+  failed connections. ECS doesn't add tasks
+  because no scaling policy is attached. Under
+  low load the fixed pool keeps running,
+  accumulating cost for capacity that isn't
+  doing work. The fix is Application
+  Auto-Scaling: register the service as a
+  scalable target, attach a target-tracking
+  policy on a metric that responds to load
+  (ALBRequestCountPerTarget for LB-backed,
+  CPU for compute-bound, custom metric for
+  queue-driven), and set min/max bounds. The
+  metric matters: scaling on CPU when the
+  bottleneck is downstream-dependency latency
+  produces no useful response; scaling on a
+  metric the workload doesn't actually
+  saturate produces the same fixed-count
+  behavior with extra configuration. Severity
+  is medium because the failure mode is
+  operational; tighten to high for services
+  where capacity loss has user-visible
+  consequence (revenue-bearing API, customer-
+  facing site).
+failure: >
+  Service capacity does not respond to load.
+  Spikes degrade or fail; idle periods waste
+  cost.

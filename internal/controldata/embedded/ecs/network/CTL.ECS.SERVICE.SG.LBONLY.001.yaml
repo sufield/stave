@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.SERVICE.SG.LBONLY.001
+name: ECS Service Security Group Allows Traffic Beyond Load Balancer
+description: >
+  ECS service is fronted by a load balancer, but the task
+  security group accepts inbound traffic from sources other
+  than the load balancer's security group — typically the
+  whole VPC CIDR or 0.0.0.0/0. The intended access path is
+  client → LB → task; the LB enforces the WAF, TLS
+  termination, health checking, and request-rate controls
+  that protect the task. When the task SG accepts traffic
+  from anywhere else, every one of those LB-layer protections
+  can be bypassed: an attacker with VPC access reaches the
+  task directly, the LB sees nothing, and the WAF rules don't
+  apply. The control fires only when the service IS behind a
+  load balancer; for services without an LB the SG IS the
+  primary access control and this finding doesn't apply.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  fedramp_moderate: "AC-4"
+  pci_dss_v4.0: "1.4.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Task SG allows inbound traffic from sources other than the
+    load balancer's SG. Clients can reach the task without
+    traversing the LB.
+  action: >
+    Replace the broad inbound rule on the task SG with a rule
+    referencing the LB's security group as the source. Remove
+    any 10.0.0.0/8, VPC CIDR, or 0.0.0.0/0 inbound rules on
+    the task port. Verify the workload still functions —
+    requests through the LB still arrive, requests bypassing
+    the LB now fail.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_service",
+        "behind_load_balancer": true,
+        "service_security_group": {
+          "allows_beyond_lb": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_service
+    - field: properties.container.behind_load_balancer
+      op: eq
+      value: true
+    - field: properties.container.service_security_group.allows_beyond_lb
+      op: eq
+      value: true

@@ -1,0 +1,38 @@
+control: CTL.ECS.SERVICE.SCALING.MINZERO.001
+defect: >
+  Application Auto-Scaling is configured on
+  the service with minCapacity of 0.
+infection: >
+  Auto-scaling normally protects a service
+  from saturation; min=0 inverts that
+  protection at the low end of the curve. The
+  service is allowed to drain to zero tasks
+  during quiet periods, and "quiet" is defined
+  by the chosen metric — a target-tracking
+  policy on ALB request count drops the
+  service to zero whenever inbound requests
+  fall below the threshold. Any request that
+  lands during the zero window hits no
+  capacity and fails. Cold-start recovery is
+  not instant: ECS must provision a task,
+  pull the image (potentially seconds even
+  for a cached image), run the container's
+  startup logic (application warm-up, JIT
+  compilation, dependency probing), and wait
+  for the health check to pass. Across that
+  window every incoming request fails.
+  Operationally, min=0 is correct for
+  workloads that genuinely tolerate
+  scale-from-zero — batch consumers waiting
+  on a queue, scheduled jobs, dev
+  environments — and wrong for anything that
+  responds to ad-hoc client traffic. The
+  control's severity is high because the
+  configuration silently produces an
+  availability gap: "auto-scaling is
+  configured" looks healthy in summary, the
+  zero floor is buried inside the policy.
+failure: >
+  Service available only when warm. Cold
+  requests fail; recovery takes the cold-start
+  duration of the workload.

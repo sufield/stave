@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:service/cluster/mh-fail",
+      "type": "aws_ecs_service",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "ecs_service",
+          "deployment": {
+            "min_healthy_percent": 0
+          }
+        }
+      }
+    }
+  ]
+}

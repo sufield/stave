@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.SERVICE.NETWORKMODE.BRIDGE.001
+name: ECS Task Definition Uses Bridge Networking
+description: >
+  Task definition uses networkMode: bridge — the legacy Docker
+  default — instead of awsvpc. Bridge mode shares one host ENI
+  across every container on the instance and exposes container
+  ports through dynamic host port mappings. Two consequences
+  follow. First, the security group attached to the host
+  applies to every container on it; the SG rule that opens
+  port 8080 opens it for every container that maps to that
+  port. Second, all containers share the host's source IP for
+  outbound traffic — VPC flow logs, downstream IP allowlists,
+  and audit attribution can't tell which container made which
+  call. awsvpc mode gives each task its own ENI with its own
+  IP and SG, restoring per-task identity and per-task network
+  control. Distinct from CTL.ECS.NETWORK.001
+  (host network mode); this control fires on bridge mode
+  specifically and only on EC2 launch type — Fargate requires
+  awsvpc and rejects bridge structurally.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  fedramp_moderate: "AC-4"
+  pci_dss_v4.0: "1.4.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Task definition uses bridge networking. Per-task SG and
+    per-task source-IP attribution are not available.
+  action: >
+    Change the task definition's networkMode to awsvpc and
+    configure networkConfiguration on the service with the
+    intended subnets and security group. Verify the workload
+    still binds to its ports (awsvpc removes host port
+    mapping; the container port is the listening port).
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "network": {
+          "mode": "awsvpc",
+          "uses_bridge_network": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.network.uses_bridge_network
+      op: eq
+      value: true

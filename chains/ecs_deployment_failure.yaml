@@ -1,0 +1,28 @@
+id: ecs_deployment_failure
+description: >
+  ECS service has multiple availability-protection failures
+  stacked. No deployment circuit breaker
+  (CTL.ECS.SERVICE.CIRCUITBREAKER.001) — failed deployments
+  keep rolling out for the full deployment timeout window.
+  Combined with either minimumHealthyPercent of 0
+  (CTL.ECS.SERVICE.MINHEALTHY.001) — the service goes to
+  zero capacity during every deployment, successful or not —
+  or auto-scaling minimum of 0
+  (CTL.ECS.SERVICE.SCALING.MINZERO.001) — the service can
+  scale to zero during low traffic. Threshold of 2 reflects
+  that any single one of these is a known availability gap
+  but two together describe a service that can drop to zero
+  capacity from multiple unrelated triggers (a bad
+  deployment, a quiet hour, a routine deploy with no
+  rollback brake) and has no automatic protection against
+  any of them.
+controls:
+  - CTL.ECS.SERVICE.CIRCUITBREAKER.001
+  - CTL.ECS.SERVICE.MINHEALTHY.001
+  - CTL.ECS.SERVICE.SCALING.MINZERO.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - audit_trail_destroyed

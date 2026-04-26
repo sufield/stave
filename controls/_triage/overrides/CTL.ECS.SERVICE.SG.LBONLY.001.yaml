@@ -1,0 +1,34 @@
+control: CTL.ECS.SERVICE.SG.LBONLY.001
+defect: >
+  ECS service is behind a load balancer, but
+  the task security group accepts inbound
+  traffic from sources other than the LB's
+  security group.
+infection: >
+  When a service is fronted by an ALB or NLB,
+  the LB is where the request-layer protections
+  live: WAF rules, TLS termination, listener
+  rate-limit policies, target health checks,
+  and (for ALBs) request-level authorization
+  via Cognito or OIDC. The intended traffic
+  path is client → LB → task. The task SG is
+  meant to allow only the LB's SG as a source;
+  every other inbound rule opens a parallel
+  path that doesn't traverse the LB. A 10.0/8
+  rule means anyone in the VPC reaches the
+  task without WAF; a 0.0.0.0/0 rule on a
+  publicly-routable subnet means the LB is
+  optional. Operators frequently add the broad
+  rule to "make local testing easy" or
+  "support direct access from the bastion" —
+  both of which work but undermine the LB
+  layer. The control fires only when the
+  service is actually behind an LB; services
+  with no LB at all have a different posture
+  question (the SG IS the primary control)
+  that this finding doesn't try to answer.
+failure: >
+  LB-layer protections bypassable. Direct task
+  access skips WAF, TLS termination, and health
+  checking; audit trails at the LB don't see
+  the bypass traffic.

@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.SERVICE.SCALING.MISSING.001
+name: ECS Service Has No Auto-Scaling Configuration
+description: >
+  ECS service runs with a fixed desiredCount and no Application
+  Auto-Scaling target tracking, step scaling, or scheduled
+  scaling configured. Two operational consequences follow.
+  Under a traffic spike the fixed count serves all requests
+  and either degrades (queues build, latency rises, errors
+  start) or fails outright depending on the workload's
+  saturation curve; ECS will not add tasks because no scaling
+  policy tells it to. Under low traffic the fixed count keeps
+  running unchanged, accumulating cost for capacity that isn't
+  serving load. For services behind a load balancer, ALB
+  request-count target tracking is the most operationally
+  useful policy; for non-LB services CPU or custom CloudWatch
+  metric tracking is appropriate. Severity is medium because
+  the consequence is operational rather than directly
+  exploitable; for services with strict SLOs or unpredictable
+  load patterns it is worth treating as high.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  soc2: "A1.1"
+  ccm_v4: ["AIS-01", "IVS-09"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    ECS service has no auto-scaling configured. Capacity is
+    fixed at desiredCount regardless of load.
+  action: >
+    Register the service as a scalable target with Application
+    Auto-Scaling and attach a target-tracking policy on a
+    metric the workload responds to — ALBRequestCountPerTarget
+    for LB-backed services, ECSServiceAverageCPUUtilization
+    for compute-bound workloads, or a custom CloudWatch
+    metric for queue-depth-driven services. Set
+    minCapacity above 0 (see SCALING.MINZERO.001) and
+    maxCapacity high enough to absorb realistic spikes.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_service",
+        "scaling": {
+          "configured": true,
+          "min_capacity": 2,
+          "max_capacity": 20
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_service
+    - field: properties.container.scaling.configured
+      op: eq
+      value: false

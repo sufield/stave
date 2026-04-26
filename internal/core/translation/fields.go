@@ -142,6 +142,14 @@ var DefaultFieldRegistry = FieldRegistry{
 	"container_registry.encryption.uses_cmk":                      "the ECR repository is encrypted with a customer-managed KMS key",
 	"container_registry.scanning.enhanced":                        "the ECR repository uses Amazon Inspector enhanced scanning",
 	"container_registry.findings.has_unresolved_critical_or_high": "the ECR repository has CRITICAL or HIGH findings outstanding past the remediation window",
+	"container.network.uses_bridge_network":                       "the task uses Docker bridge networking instead of awsvpc",
+	"container.behind_load_balancer":                              "the ECS service is fronted by a load balancer",
+	"container.service_security_group.allows_beyond_lb":           "the task SG accepts inbound traffic from sources other than the LB SG",
+	"container.deployment.circuit_breaker_enabled":                "the service has a deployment circuit breaker enabled",
+	"container.deployment.circuit_breaker_rollback":               "the deployment circuit breaker auto-rolls back failed deployments",
+	"container.deployment.min_healthy_percent":                    "the service deployment minimum healthy percent",
+	"container.scaling.configured":                                "Application Auto-Scaling is configured on the service",
+	"container.scaling.min_capacity":                              "the auto-scaling minimum task count",
 
 	// --- network ---
 	"network.flow_log.enabled": "VPC Flow Logs are enabled",

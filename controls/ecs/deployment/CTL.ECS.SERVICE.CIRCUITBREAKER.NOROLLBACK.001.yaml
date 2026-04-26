@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.SERVICE.CIRCUITBREAKER.NOROLLBACK.001
+name: ECS Deployment Circuit Breaker Without Auto-Rollback
+description: >
+  ECS service has the deployment circuit breaker enabled but
+  auto-rollback is not configured. The breaker will stop a
+  failed deployment — but it leaves the service in a
+  partially-deployed state: some tasks running the old
+  revision, some running the new (failing) revision. Manual
+  intervention is required to roll back to the working
+  revision. Auto-rollback flips that to "breaker fires →
+  service automatically reverts to the previous working task
+  definition." The control fires only when the breaker IS
+  enabled but rollback is off; if the breaker itself is off
+  the more general CTL.ECS.SERVICE.CIRCUITBREAKER.001 fires
+  instead. Both should not fire on the same service at the
+  same time.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-10"
+  fedramp_moderate: "CP-10"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-01"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Deployment circuit breaker is enabled but auto-rollback
+    is off. The breaker stops failed deployments but leaves
+    the service partially deployed.
+  action: >
+    Enable rollback on the deployment circuit breaker:
+    deploymentConfiguration.deploymentCircuitBreaker.rollback=true.
+    The next time a deployment fails the threshold check,
+    ECS will automatically revert to the previous task
+    definition rather than waiting for manual cleanup.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_service",
+        "deployment": {
+          "circuit_breaker_enabled": true,
+          "circuit_breaker_rollback": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_service
+    - field: properties.container.deployment.circuit_breaker_enabled
+      op: eq
+      value: true
+    - field: properties.container.deployment.circuit_breaker_rollback
+      op: eq
+      value: false

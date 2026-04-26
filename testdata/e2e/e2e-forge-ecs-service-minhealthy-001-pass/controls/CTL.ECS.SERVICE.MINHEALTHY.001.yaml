@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.SERVICE.MINHEALTHY.001
+name: ECS Service Minimum Healthy Percent Is Zero
+description: >
+  ECS service deploymentConfiguration.minimumHealthyPercent is
+  set to 0. During every deployment — successful or failed —
+  the deployment can stop all existing tasks before any new
+  tasks are running. The service goes to zero healthy tasks
+  while the rolling update transitions, which means complete
+  outage during every routine deployment, not just during
+  failures. The default is 100% for both Fargate and EC2
+  rolling-update deployments — the service maintains at least
+  the desired task count throughout. minimumHealthyPercent of
+  0 is sometimes set deliberately for stateful services that
+  cannot run in parallel (singleton workers, batch jobs that
+  hold a global lock) — those cases should record the
+  rationale in a triage override on this control rather than
+  leaving the finding unacknowledged.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CP-10"
+  fedramp_moderate: "CP-10"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-01", "BCR-02"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Service minimumHealthyPercent is 0. Deployments take the
+    service to zero capacity during every transition.
+  action: >
+    Set minimumHealthyPercent to 100 (default) on the service
+    deploymentConfiguration. ECS will keep at least the
+    desired task count healthy throughout deployments. For
+    services that genuinely require singleton execution
+    (workers holding a global lock, batch jobs that cannot
+    run in parallel), document the constraint in a triage
+    override on this finding so the rationale is visible
+    rather than implicit.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_service",
+        "deployment": {
+          "min_healthy_percent": 100
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_service
+    - field: properties.container.deployment.min_healthy_percent
+      op: eq
+      value: 0

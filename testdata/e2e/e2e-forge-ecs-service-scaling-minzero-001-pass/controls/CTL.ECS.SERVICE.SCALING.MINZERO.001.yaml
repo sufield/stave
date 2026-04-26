@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.SERVICE.SCALING.MINZERO.001
+name: ECS Service Auto-Scaling Minimum Is Zero
+description: >
+  ECS service has Application Auto-Scaling configured with a
+  minimum capacity of 0. The service is allowed to scale to
+  zero running tasks during low-traffic windows. A request
+  that arrives while the service is at zero hits no task and
+  fails — there is nothing to handle it. Scale-from-zero is
+  not instant: a cold start requires task provisioning, image
+  pull, container startup, application warm-up, and health
+  check passing — typically tens of seconds even on Fargate.
+  During that window all incoming requests fail. min=0 is
+  appropriate for genuinely interruptible workloads (test
+  environments, batch consumers that wake on schedule) but
+  not for any service that needs to respond to ad-hoc
+  requests. Severity is high because the failure mode is
+  silent in scaling configuration — the operator sees "auto-
+  scaling configured" without noticing the service can drop
+  to zero.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CP-10"
+  fedramp_moderate: "CP-10"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-01"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Auto-scaling minimum is 0. The service can drop to zero
+    tasks; requests during scale-from-zero fail.
+  action: >
+    Raise minCapacity on the scalable target to at least 1
+    (preferably 2 for high availability across AZs). For
+    test or batch services that genuinely need to scale to
+    zero, document the rationale in a triage override on
+    this finding rather than leaving the gap implicit.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_service",
+        "scaling": {
+          "configured": true,
+          "min_capacity": 2
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_service
+    - field: properties.container.scaling.configured
+      op: eq
+      value: true
+    - field: properties.container.scaling.min_capacity
+      op: eq
+      value: 0

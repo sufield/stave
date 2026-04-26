@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1544
-**Pack hash:** `155a5a716500e03b1d702dfbaed77620eb0acedf2a976a63ad18de06f2bc4226`
+**Total controls:** 1551
+**Pack hash:** `7e6cd55da547c37ed93a0f9cc2d2850bab7586453b4c0d052931619e52d37731`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 178 |
-| high | 683 |
+| high | 685 |
 | info | 16 |
 | low | 113 |
-| medium | 554 |
+| medium | 559 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 88 |
-| exposure | 882 |
-| governance | 73 |
+| exposure | 884 |
+| governance | 78 |
 | hygiene | 16 |
 | identity | 332 |
 | network | 28 |
@@ -8274,6 +8274,111 @@ ECS container definitions must not pass credentials as plaintext environment var
 ECS task definitions must not add dangerous Linux capabilities (SYS_ADMIN, NET_ADMIN, SYS_PTRACE, SYS_RAWIO, DAC_OVERRIDE, NET_RAW) and should drop all unnecessary capabilities. Dangerous capabilities grant kernel-level access enabling container escape.
 
 **Remediation:** Remove added capabilities from the task definition. Use linuxParameters.capabilities.drop = ["ALL"] and only add the specific capabilities the application requires.
+
+---
+
+### CTL.ECS.SERVICE.CIRCUITBREAKER.001
+
+**ECS Service Has No Deployment Circuit Breaker**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+ECS service does not have a deployment circuit breaker enabled. Without one, a deployment with a broken task definition (image pull failure, configuration error, application crash loop) keeps trying: ECS replaces healthy old tasks with failing new tasks until the deployment timeout fires — a window that can run hours. During that window the service is degraded, and the broken state is visible in metrics but not stopped automatically. The circuit breaker watches consecutive task launch and health-check failures and halts the deployment when the failure rate breaches a threshold. With auto-rollback enabled (separate setting; see CTL.ECS.SERVICE.CIRCUITBREAKER.NOROLLBACK.001) the service automatically reverts to the previous working task definition.
+
+**Remediation:** Enable the deployment circuit breaker on the service via deploymentConfiguration.deploymentCircuitBreaker.enable=true. Set rollback=true to revert automatically when the breaker fires; without rollback the service is left partially deployed until manual intervention. Verify by deploying a deliberately-broken task definition in a non-prod environment and confirming the breaker stops the rollout.
+
+---
+
+### CTL.ECS.SERVICE.CIRCUITBREAKER.NOROLLBACK.001
+
+**ECS Deployment Circuit Breaker Without Auto-Rollback**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-10; nist_800_53_r5: CP-10; soc2: A1.2;
+
+ECS service has the deployment circuit breaker enabled but auto-rollback is not configured. The breaker will stop a failed deployment — but it leaves the service in a partially-deployed state: some tasks running the old revision, some running the new (failing) revision. Manual intervention is required to roll back to the working revision. Auto-rollback flips that to "breaker fires → service automatically reverts to the previous working task definition." The control fires only when the breaker IS enabled but rollback is off; if the breaker itself is off the more general CTL.ECS.SERVICE.CIRCUITBREAKER.001 fires instead. Both should not fire on the same service at the same time.
+
+**Remediation:** Enable rollback on the deployment circuit breaker: deploymentConfiguration.deploymentCircuitBreaker.rollback=true. The next time a deployment fails the threshold check, ECS will automatically revert to the previous task definition rather than waiting for manual cleanup.
+
+---
+
+### CTL.ECS.SERVICE.MINHEALTHY.001
+
+**ECS Service Minimum Healthy Percent Is Zero**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-10; nist_800_53_r5: CP-10; soc2: A1.2;
+
+ECS service deploymentConfiguration.minimumHealthyPercent is set to 0. During every deployment — successful or failed — the deployment can stop all existing tasks before any new tasks are running. The service goes to zero healthy tasks while the rolling update transitions, which means complete outage during every routine deployment, not just during failures. The default is 100% for both Fargate and EC2 rolling-update deployments — the service maintains at least the desired task count throughout. minimumHealthyPercent of 0 is sometimes set deliberately for stateful services that cannot run in parallel (singleton workers, batch jobs that hold a global lock) — those cases should record the rationale in a triage override on this control rather than leaving the finding unacknowledged.
+
+**Remediation:** Set minimumHealthyPercent to 100 (default) on the service deploymentConfiguration. ECS will keep at least the desired task count healthy throughout deployments. For services that genuinely require singleton execution (workers holding a global lock, batch jobs that cannot run in parallel), document the constraint in a triage override on this finding so the rationale is visible rather than implicit.
+
+---
+
+### CTL.ECS.SERVICE.NETWORKMODE.BRIDGE.001
+
+**ECS Task Definition Uses Bridge Networking**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-4; nist_800_53_r5: AC-4; pci_dss_v4.0: 1.4.2; soc2: CC6.6;
+
+Task definition uses networkMode: bridge — the legacy Docker default — instead of awsvpc. Bridge mode shares one host ENI across every container on the instance and exposes container ports through dynamic host port mappings. Two consequences follow. First, the security group attached to the host applies to every container on it; the SG rule that opens port 8080 opens it for every container that maps to that port. Second, all containers share the host's source IP for outbound traffic — VPC flow logs, downstream IP allowlists, and audit attribution can't tell which container made which call. awsvpc mode gives each task its own ENI with its own IP and SG, restoring per-task identity and per-task network control. Distinct from CTL.ECS.NETWORK.001 (host network mode); this control fires on bridge mode specifically and only on EC2 launch type — Fargate requires awsvpc and rejects bridge structurally.
+
+**Remediation:** Change the task definition's networkMode to awsvpc and configure networkConfiguration on the service with the intended subnets and security group. Verify the workload still binds to its ports (awsvpc removes host port mapping; the container port is the listening port).
+
+---
+
+### CTL.ECS.SERVICE.SCALING.MINZERO.001
+
+**ECS Service Auto-Scaling Minimum Is Zero**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-10; nist_800_53_r5: CP-10; soc2: A1.2;
+
+ECS service has Application Auto-Scaling configured with a minimum capacity of 0. The service is allowed to scale to zero running tasks during low-traffic windows. A request that arrives while the service is at zero hits no task and fails — there is nothing to handle it. Scale-from-zero is not instant: a cold start requires task provisioning, image pull, container startup, application warm-up, and health check passing — typically tens of seconds even on Fargate. During that window all incoming requests fail. min=0 is appropriate for genuinely interruptible workloads (test environments, batch consumers that wake on schedule) but not for any service that needs to respond to ad-hoc requests. Severity is high because the failure mode is silent in scaling configuration — the operator sees "auto- scaling configured" without noticing the service can drop to zero.
+
+**Remediation:** Raise minCapacity on the scalable target to at least 1 (preferably 2 for high availability across AZs). For test or batch services that genuinely need to scale to zero, document the rationale in a triage override on this finding rather than leaving the gap implicit.
+
+---
+
+### CTL.ECS.SERVICE.SCALING.MISSING.001
+
+**ECS Service Has No Auto-Scaling Configuration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-5; nist_800_53_r5: SC-5; soc2: A1.1;
+
+ECS service runs with a fixed desiredCount and no Application Auto-Scaling target tracking, step scaling, or scheduled scaling configured. Two operational consequences follow. Under a traffic spike the fixed count serves all requests and either degrades (queues build, latency rises, errors start) or fails outright depending on the workload's saturation curve; ECS will not add tasks because no scaling policy tells it to. Under low traffic the fixed count keeps running unchanged, accumulating cost for capacity that isn't serving load. For services behind a load balancer, ALB request-count target tracking is the most operationally useful policy; for non-LB services CPU or custom CloudWatch metric tracking is appropriate. Severity is medium because the consequence is operational rather than directly exploitable; for services with strict SLOs or unpredictable load patterns it is worth treating as high.
+
+**Remediation:** Register the service as a scalable target with Application Auto-Scaling and attach a target-tracking policy on a metric the workload responds to — ALBRequestCountPerTarget for LB-backed services, ECSServiceAverageCPUUtilization for compute-bound workloads, or a custom CloudWatch metric for queue-depth-driven services. Set minCapacity above 0 (see SCALING.MINZERO.001) and maxCapacity high enough to absorb realistic spikes.
+
+---
+
+### CTL.ECS.SERVICE.SG.LBONLY.001
+
+**ECS Service Security Group Allows Traffic Beyond Load Balancer**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-4; nist_800_53_r5: AC-4; pci_dss_v4.0: 1.4.2; soc2: CC6.6;
+
+ECS service is fronted by a load balancer, but the task security group accepts inbound traffic from sources other than the load balancer's security group — typically the whole VPC CIDR or 0.0.0.0/0. The intended access path is client → LB → task; the LB enforces the WAF, TLS termination, health checking, and request-rate controls that protect the task. When the task SG accepts traffic from anywhere else, every one of those LB-layer protections can be bypassed: an attacker with VPC access reaches the task directly, the LB sees nothing, and the WAF rules don't apply. The control fires only when the service IS behind a load balancer; for services without an LB the SG IS the primary access control and this finding doesn't apply.
+
+**Remediation:** Replace the broad inbound rule on the task SG with a rule referencing the LB's security group as the source. Remove any 10.0.0.0/8, VPC CIDR, or 0.0.0.0/0 inbound rules on the task port. Verify the workload still functions — requests through the LB still arrive, requests bypassing the LB now fail.
 
 ---
 

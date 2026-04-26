@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:service/cluster/orders-svc-bypass",
+      "type": "aws_ecs_service",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "ecs_service",
+          "behind_load_balancer": true,
+          "service_security_group": {
+            "allows_beyond_lb": true,
+            "lb_sg_id": "sg-aaaaaaaa",
+            "extra_sources": ["10.0.0.0/8"]
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.SERVICE.CIRCUITBREAKER.001
+name: ECS Service Has No Deployment Circuit Breaker
+description: >
+  ECS service does not have a deployment circuit breaker
+  enabled. Without one, a deployment with a broken task
+  definition (image pull failure, configuration error,
+  application crash loop) keeps trying: ECS replaces healthy
+  old tasks with failing new tasks until the deployment
+  timeout fires — a window that can run hours. During that
+  window the service is degraded, and the broken state is
+  visible in metrics but not stopped automatically. The
+  circuit breaker watches consecutive task launch and
+  health-check failures and halts the deployment when the
+  failure rate breaches a threshold. With auto-rollback
+  enabled (separate setting; see
+  CTL.ECS.SERVICE.CIRCUITBREAKER.NOROLLBACK.001) the
+  service automatically reverts to the previous working task
+  definition.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "GRC-04"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    ECS service has no deployment circuit breaker. Failed
+    deployments keep rolling out until the timeout fires.
+  action: >
+    Enable the deployment circuit breaker on the service via
+    deploymentConfiguration.deploymentCircuitBreaker.enable=true.
+    Set rollback=true to revert automatically when the
+    breaker fires; without rollback the service is left
+    partially deployed until manual intervention. Verify by
+    deploying a deliberately-broken task definition in a
+    non-prod environment and confirming the breaker stops
+    the rollout.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_service",
+        "deployment": {
+          "circuit_breaker_enabled": true,
+          "circuit_breaker_rollback": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_service
+    - field: properties.container.deployment.circuit_breaker_enabled
+      op: eq
+      value: false

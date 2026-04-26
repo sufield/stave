@@ -1,0 +1,34 @@
+control: CTL.ECS.SERVICE.NETWORKMODE.BRIDGE.001
+defect: >
+  Task definition uses networkMode: bridge
+  rather than awsvpc.
+infection: >
+  Bridge mode is the Docker default — every
+  container on a host shares the host's network
+  namespace and gets reached via dynamic port
+  mapping. The security implications follow
+  from sharing. The host's security group is
+  the only network control: opening a port on
+  the host opens it for every container that
+  happens to map to that port; closing a port
+  on a problem container requires identifying
+  which port it actually mapped to (which
+  changes between task launches). Outbound
+  traffic comes from the host's IP, so VPC
+  flow logs see one source for every container,
+  downstream services that allowlist by IP can
+  only allowlist the host (allowing every
+  container on it), and audit attribution at
+  the network layer fails. awsvpc mode gives
+  each task its own ENI: per-task SG, per-task
+  IP, per-task flow log identity. Fargate
+  rejects bridge mode at the API level, so
+  this finding is structurally impossible on
+  Fargate launch types — the predicate gates
+  on the bridge flag rather than launch type
+  to keep the asset shape simple.
+failure: >
+  No per-task SG and no per-task source-IP
+  attribution. Network controls and audit
+  trails apply at the host granularity, not
+  the task.

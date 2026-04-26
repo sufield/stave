@@ -1,0 +1,34 @@
+control: CTL.ECS.SERVICE.CIRCUITBREAKER.NOROLLBACK.001
+defect: >
+  Deployment circuit breaker is enabled on the
+  service, but auto-rollback is not configured.
+infection: >
+  The breaker without rollback is half a
+  protection: the breaker detects the failure
+  pattern and stops the rollout, which prevents
+  the "kill all healthy tasks for hours"
+  failure mode covered by
+  CTL.ECS.SERVICE.CIRCUITBREAKER.001, but the
+  service is left in a partially-deployed
+  state — some tasks on the old revision, some
+  on the new (failing) revision, and the
+  desired-count math hasn't reconciled. The
+  service may be serving traffic at reduced
+  capacity, may be intermittently failing
+  depending on which revision a request lands
+  on, and is waiting for an operator to
+  manually update the service back to the
+  working task definition. Auto-rollback
+  closes the loop: when the breaker fires,
+  ECS automatically updates the service back
+  to the last known-good task definition
+  without operator action. Same shape as the
+  fully-disabled case but at a different
+  point in the deployment-safety curve;
+  severity is medium because the breaker
+  alone provides the worst-case protection.
+failure: >
+  Service left partially deployed after a
+  failed rollout. Manual cleanup required;
+  the service runs at reduced or
+  intermittently-broken capacity until then.

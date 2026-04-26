@@ -67,13 +67,25 @@ represented as one asset of type `aws_ecs_task_definition_container`
 | `container.execution_role.is_ghost` | bool | The execution role IAM ARN does not exist |
 | `container.task_role.is_ghost` | bool | The task role IAM ARN does not exist |
 
-### ECS Service Network Configuration (`aws_ecs_service`)
+### ECS Service Configuration (`aws_ecs_service`)
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `container.kind` | string | `"ecs_service"` — discriminator |
 | `container.network.has_ghost_subnet` | bool | Service references a deleted subnet (awsvpc mode) |
 | `container.network.ghost_subnet_ids` | []string | Specific deleted subnet IDs |
+| `container.behind_load_balancer` | bool | Service is fronted by an ALB or NLB |
+| `container.service_security_group.allows_beyond_lb` | bool | Task SG accepts inbound traffic from sources other than the LB SG |
+| `container.deployment.circuit_breaker_enabled` | bool | Deployment circuit breaker is enabled |
+| `container.deployment.circuit_breaker_rollback` | bool | Circuit breaker auto-rolls back failed deployments |
+| `container.deployment.min_healthy_percent` | int | Minimum healthy task percent during deployments |
+| `container.scaling.configured` | bool | Application Auto-Scaling is configured |
+| `container.scaling.min_capacity` | int | Auto-scaling minimum task count |
+| `container.scaling.max_capacity` | int | Auto-scaling maximum task count |
+
+The bridge-vs-awsvpc network mode lives on the task definition asset
+under `container.network.uses_bridge_network` (see the task
+definition section above).
 
 ### ECS Task Definition Family (`aws_ecs_task_definition_family`)
 

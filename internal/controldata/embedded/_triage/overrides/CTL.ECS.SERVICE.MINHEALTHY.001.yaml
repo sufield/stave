@@ -1,0 +1,37 @@
+control: CTL.ECS.SERVICE.MINHEALTHY.001
+defect: >
+  ECS service minimumHealthyPercent is 0.
+infection: >
+  minimumHealthyPercent caps how many existing
+  tasks ECS may stop in parallel during a
+  deployment. At 100% — the default — ECS keeps
+  the desired count of tasks healthy throughout
+  the rolling update, only stopping old tasks
+  after new tasks are running and healthy. At
+  0% the deployment is allowed to stop every
+  existing task before any new task is running:
+  the service goes to zero capacity, every
+  request fails, and the gap closes only when
+  the new tasks pass health checks and start
+  serving. Two characteristics matter. First,
+  the failure mode hits every deployment, not
+  just failed ones — a perfectly successful
+  rollout still has a window of zero capacity.
+  Second, the failure is silent in metrics
+  unless the operator looks for it: the
+  deployment "succeeded" in ECS terms but the
+  service was unavailable for the transition
+  window. Some workloads genuinely require
+  singleton execution (a worker that holds a
+  global lock, a batch job that cannot run
+  twice) — those record the constraint in a
+  triage override; the more common cause of
+  this finding is operator unfamiliarity with
+  the parameter or a copy-paste of an old
+  CodeDeploy configuration where 0 was
+  intentional.
+failure: >
+  Complete service outage during every
+  deployment. The window scales with how long
+  new tasks take to start and pass health
+  checks.
