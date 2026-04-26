@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.GHOST.EXECROLE.001
+name: ECS Task Definition References Deleted Execution Role
+description: >
+  Task definition's executionRoleArn references an IAM role that
+  has been deleted. The execution role is what the ECS agent
+  assumes to perform launch operations: pull the container image
+  from ECR, write to the CloudWatch log group, and retrieve
+  secrets from Secrets Manager or SSM. With the role deleted,
+  every one of those operations fails before the container is
+  even started. Distinct from
+  CTL.ECS.EXECROLE.OVERBROAD.001 — that control checks whether
+  the role's permissions are too broad; this control checks
+  whether the role exists at all. The two findings are
+  orthogonal: an over-privileged role passes EXECROLE.OVERBROAD's
+  check by being scoped down, but if the scoped-down role is then
+  deleted, this control catches it.
+domain: governance
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "IAM-04"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Task definition references an execution role that has been
+    deleted. Every task launch fails — image pull, log writes,
+    secret retrieval all require the execution role.
+  action: >
+    Re-create the execution role with the
+    AmazonECSTaskExecutionRolePolicy managed policy plus any
+    workload-specific permissions, or update the task
+    definition to reference an execution role that exists.
+    Add a deletion guard on IAM roles that cross-references
+    active task definitions before allowing the role to be
+    deleted.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "execution_role": {
+          "exists": true,
+          "is_ghost": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.execution_role.is_ghost
+      op: eq
+      value: true

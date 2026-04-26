@@ -59,6 +59,31 @@ represented as one asset of type `aws_ecs_task_definition_container`
 | `container.resources.memory_reservation_mib` | int | Soft memory reservation in MiB (0 if not set) |
 | `container.health.has_health_check` | bool | A `healthCheck` block is configured |
 | `container.health.health_check_type` | string | Health check command form (typically `CMD-SHELL` or `CMD`) |
+| `container.image.has_ghost_reference` | bool | The container image was deleted from the registry |
+| `container.secrets.has_ghost_reference` | bool | A Secrets Manager secret referenced by valueFrom has been deleted |
+| `container.secrets.exec_role_can_access` | bool | Execution role has IAM permission for every secret/parameter referenced |
+| `container.ssm_parameters.has_ghost_reference` | bool | An SSM parameter referenced by valueFrom has been deleted |
+| `container.ssm_parameters.has_insecure_string_type` | bool | At least one referenced SSM parameter is stored as String, not SecureString |
+| `container.execution_role.is_ghost` | bool | The execution role IAM ARN does not exist |
+| `container.task_role.is_ghost` | bool | The task role IAM ARN does not exist |
+
+### ECS Service Network Configuration (`aws_ecs_service`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `container.kind` | string | `"ecs_service"` — discriminator |
+| `container.network.has_ghost_subnet` | bool | Service references a deleted subnet (awsvpc mode) |
+| `container.network.ghost_subnet_ids` | []string | Specific deleted subnet IDs |
+
+### ECS Task Definition Family (`aws_ecs_task_definition_family`)
+
+The family aggregates all revisions of a task definition.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `container.kind` | string | `"task_definition_family"` — discriminator |
+| `container.revision_history.stale_credential_revision_count` | int | Number of inactive revisions whose env vars still contain plaintext credentials |
+| `container.revision_history.stale_credential_revisions` | []int | Revision numbers whose env vars contain plaintext credentials |
 
 ---
 

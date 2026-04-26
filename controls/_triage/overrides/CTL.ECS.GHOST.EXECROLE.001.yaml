@@ -1,0 +1,35 @@
+control: CTL.ECS.GHOST.EXECROLE.001
+defect: >
+  Task definition's executionRoleArn names an
+  IAM role that has been deleted.
+infection: >
+  The execution role is the ECS agent's identity
+  for launch-time operations. Three things
+  require it: pulling the container image from
+  ECR (ecr:BatchGetImage,
+  ecr:GetDownloadUrlForLayer,
+  ecr:GetAuthorizationToken), writing
+  stdout/stderr to CloudWatch
+  (logs:CreateLogStream, logs:PutLogEvents),
+  and retrieving any valueFrom-injected secrets
+  or SSM parameters
+  (secretsmanager:GetSecretValue,
+  ssm:GetParameter). When the role is deleted,
+  every one of those calls fails with
+  AccessDeniedException, and the task never
+  reaches the running state. Distinct from
+  CTL.ECS.EXECROLE.OVERBROAD.001, which checks
+  whether the role's permissions are too broad
+  — both findings can fire on the same task
+  definition if the role was scoped down to fix
+  OVERBROAD and then later deleted. The blast
+  radius is total: every running task that gets
+  replaced for any reason — deployment, health
+  check failure, scaling — fails to come back.
+  The failure mode is "service runs fine until
+  it doesn't" with no warning at the
+  configuration layer.
+failure: >
+  Total task launch failure. Image pull, log
+  setup, and secret retrieval all fail because
+  the execution role doesn't exist.

@@ -1,0 +1,34 @@
+control: CTL.ECS.TASKDEF.SSM.INSECURE.001
+defect: >
+  Container's valueFrom references an SSM
+  parameter stored as String type. Sensitive
+  values are stored in plaintext.
+infection: >
+  SSM Parameter Store has three types: String
+  (plaintext), StringList (plaintext list),
+  and SecureString (KMS-encrypted). The task
+  definition's valueFrom mechanism works
+  identically for all three — the operator
+  who set up the integration usually doesn't
+  remember which type the underlying parameter
+  is. When a credential is stored as String,
+  three protections are missing: encryption at
+  rest (the value is stored in plaintext on
+  the SSM side), a decrypt audit trail (no
+  CloudTrail kms:Decrypt event when the value
+  is read), and a permission boundary
+  separating "may read parameter metadata"
+  from "may read the encrypted value" (the
+  KMS key ACL is its own access boundary on
+  SecureString parameters; String parameters
+  have no such layer). The fix is type-only:
+  re-create the parameter as SecureString,
+  update the execution role to grant
+  kms:Decrypt on the chosen key, redeploy.
+  Same pattern as
+  CTL.LAMBDA.SECRETS.SSM.INSECURE.001 on the
+  ECS surface.
+failure: >
+  Plaintext credentials in SSM. No
+  encryption-at-rest, no decrypt audit, no
+  KMS-based access boundary.

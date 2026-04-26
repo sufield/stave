@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.GHOST.SSMPARAMETER.001
+name: ECS Task Definition References Deleted SSM Parameter
+description: >
+  Container definition uses valueFrom to inject an SSM Parameter
+  Store parameter, but the parameter has been deleted. Same
+  delayed-failure pattern as CTL.ECS.SECRET.GHOST.001 (Secrets
+  Manager) — running tasks that already retrieved the value at
+  their launch time keep working; new task launches fail when the
+  ECS agent calls ssm:GetParameter and gets ParameterNotFound.
+  The task definition appears valid in the console, the parameter
+  ARN is intact, and the failure surfaces only on the next
+  deployment, scaling event, or task replacement. Distinct from
+  the existing SECRET.GHOST.001 because that control is
+  Secrets-Manager-only — SSM parameters are a separate API surface
+  with their own deletion path and their own ARN format.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "GRC-04"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Task definition's valueFrom references an SSM parameter that
+    has been deleted. New task launches fail at parameter
+    retrieval.
+  action: >
+    Re-create the parameter at the expected name with the
+    appropriate type (SecureString for credentials), or update
+    the task definition to point at a parameter that exists.
+    Add a deletion guard on SSM parameters that cross-references
+    active task definitions before allowing the parameter to be
+    deleted.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "ssm_parameters": {
+          "has_ghost_reference": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.ssm_parameters.has_ghost_reference
+      op: eq
+      value: true

@@ -1,0 +1,35 @@
+control: CTL.ECS.GHOST.SUBNET.001
+defect: >
+  ECS service in awsvpc network mode names one
+  or more subnets that have been deleted.
+infection: >
+  awsvpc network mode gives every task its own
+  ENI placed into one of the subnets the
+  service was configured with. ECS picks a
+  subnet at task placement time; if the chosen
+  subnet has been deleted, the
+  CreateNetworkInterface call fails and the
+  task never reaches the running state. The
+  configuration in the ECS console still shows
+  the subnet as part of the service's network
+  configuration; the VPC console shows the
+  subnet is gone. Existing running tasks that
+  already have an ENI in the deleted subnet
+  keep operating until the platform reclaims
+  the ENI for unrelated reasons — typically the
+  next time the task gets replaced for any
+  cause (deployment, health check failure,
+  scaling, instance replacement). Same shape
+  as the other ghost references in the family:
+  the configuration looks intact, the failure
+  is delayed, and root-cause attribution is
+  hard once enough time has passed between
+  deletion and the first failure. Different
+  from CTL.ECS.NETWORK.PUBLIC.001, which
+  checks whether the subnet is public — this
+  control checks whether it exists at all.
+failure: >
+  Delayed task placement failure. New tasks
+  fail at ENI creation when ECS picks a deleted
+  subnet; running tasks continue until next
+  replacement.

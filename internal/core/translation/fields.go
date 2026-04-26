@@ -132,6 +132,13 @@ var DefaultFieldRegistry = FieldRegistry{
 	"container.resources.has_memory_limit":     "the container has a memory limit configured",
 	"container.logging.has_ghost_log_group":    "the awslogs log group does not exist",
 	"container.health.has_health_check":        "the container has a healthCheck configured",
+	"container.ssm_parameters.has_ghost_reference":              "an SSM parameter referenced by valueFrom does not exist",
+	"container.ssm_parameters.has_insecure_string_type":         "an SSM parameter referenced by valueFrom is plaintext String type",
+	"container.execution_role.is_ghost":                         "the execution role does not exist",
+	"container.task_role.is_ghost":                              "the task role does not exist",
+	"container.network.has_ghost_subnet":                        "an ECS service subnet has been deleted",
+	"container.secrets.exec_role_can_access":                    "the execution role can retrieve every valueFrom-referenced secret",
+	"container.revision_history.stale_credential_revision_count": "count of older revisions still containing plaintext credentials",
 
 	// --- network ---
 	"network.flow_log.enabled": "VPC Flow Logs are enabled",

@@ -1,0 +1,34 @@
+control: CTL.ECS.GHOST.TASKROLE.001
+defect: >
+  Task definition's taskRoleArn names an IAM
+  role that has been deleted.
+infection: >
+  The task role is what the application code
+  inside the container uses to call AWS APIs.
+  It is distinct from the execution role, which
+  is what the ECS agent uses to perform launch
+  operations. Because the execution role
+  handles all the launch-time work, deleting
+  the task role does not prevent the task from
+  starting — the container comes up, the
+  application begins serving traffic, and from
+  the outside everything looks normal. The
+  failure surfaces the first time the
+  application code reaches for AWS credentials
+  via the metadata endpoint and tries to use
+  them: STS assume-role-with-web-identity (or
+  the equivalent task-role flow) returns
+  InvalidIdentityToken or
+  AccessDeniedException, the AWS SDK call
+  fails, and the application emits an error
+  the operator has to trace back to "the role
+  doesn't exist." Same shape as
+  CTL.EC2.LT.GHOST.PROFILE.001 — the
+  workload runs, the AWS-side identity is
+  gone, every API call fails. Distinct from
+  TASKROLE.SHARED (reuse) and TASKROLE.ADMIN
+  (over-privilege).
+failure: >
+  Application runs but every AWS API call
+  fails. The container appears healthy at the
+  ECS level while the workload is broken.

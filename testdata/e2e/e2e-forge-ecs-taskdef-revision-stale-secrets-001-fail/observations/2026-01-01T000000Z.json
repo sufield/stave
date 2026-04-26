@@ -1,0 +1,21 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:task-definition/legacy-with-stale-secrets",
+      "type": "aws_ecs_task_definition_family",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition_family",
+          "revision_history": {
+            "stale_credential_revision_count": 2,
+            "stale_credential_revisions": [3, 5]
+          }
+        }
+      }
+    }
+  ]
+}

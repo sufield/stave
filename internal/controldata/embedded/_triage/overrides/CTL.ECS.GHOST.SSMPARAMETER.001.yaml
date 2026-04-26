@@ -1,0 +1,33 @@
+control: CTL.ECS.GHOST.SSMPARAMETER.001
+defect: >
+  Container's valueFrom references an SSM
+  Parameter Store parameter that has been
+  deleted.
+infection: >
+  ECS lets task definitions inject configuration
+  values at launch time using valueFrom against
+  either a Secrets Manager secret or an SSM
+  parameter. The ECS agent calls
+  ssm:GetParameter when the task starts, reads
+  the value, and writes it into the container's
+  environment. When the parameter is deleted
+  the call returns ParameterNotFound and the
+  task fails before the container ever runs.
+  The existing CTL.ECS.SECRET.GHOST.001 covers
+  Secrets Manager only — SSM parameters and
+  Secrets Manager secrets are separate API
+  surfaces with separate ARNs and separate
+  deletion paths. The failure mode is the same
+  delayed-blast pattern as the SECRET.GHOST
+  case: running tasks are unaffected because
+  they already retrieved the parameter at their
+  launch time; the next deployment, scaling
+  event, or task replacement fails. If the
+  service is stable, the failure may not
+  surface for days or weeks after the actual
+  deletion.
+failure: >
+  Delayed task launch failure. New tasks fail
+  at SSM parameter retrieval; running tasks
+  continue. The failure surfaces on next
+  deployment or scaling event.

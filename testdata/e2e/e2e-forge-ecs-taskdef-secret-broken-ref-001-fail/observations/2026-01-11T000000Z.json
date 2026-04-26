@@ -1,0 +1,21 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:task-definition/api:6/secret-noperm",
+      "type": "aws_ecs_task_definition_container",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "secrets": {
+            "exec_role_can_access": false,
+            "inaccessible_arns": ["arn:aws:secretsmanager:us-east-1:123456789012:secret:db-password-AbCdEf"]
+          }
+        }
+      }
+    }
+  ]
+}

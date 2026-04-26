@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:task-definition/legacy:3/exec-ghost",
+      "type": "aws_ecs_task_definition_container",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "execution_role": {
+            "arn": "arn:aws:iam::123456789012:role/deleted-exec-role",
+            "exists": false,
+            "is_ghost": true
+          }
+        }
+      }
+    }
+  ]
+}

@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1534
-**Pack hash:** `c885658e7dd4fd3255bd0718affdedf267d64e86fe24170b4329b83c03ddb9cf`
+**Total controls:** 1541
+**Pack hash:** `4827c5884580928540c6c5629f23ccad988846dc81b0bdad0de0bdfbc813b30c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 177 |
-| high | 677 |
+| critical | 178 |
+| high | 681 |
 | info | 16 |
 | low | 113 |
-| medium | 551 |
+| medium | 553 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,10 +24,10 @@
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 87 |
-| exposure | 879 |
-| governance | 68 |
+| exposure | 881 |
+| governance | 72 |
 | hygiene | 16 |
-| identity | 331 |
+| identity | 332 |
 | network | 28 |
 | resilience | 18 |
 | secrets | 4 |
@@ -7963,6 +7963,66 @@ ECS Fargate tasks must use the latest platform version. Fargate platform version
 
 ---
 
+### CTL.ECS.GHOST.EXECROLE.001
+
+**ECS Task Definition References Deleted Execution Role**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC8.1;
+
+Task definition's executionRoleArn references an IAM role that has been deleted. The execution role is what the ECS agent assumes to perform launch operations: pull the container image from ECR, write to the CloudWatch log group, and retrieve secrets from Secrets Manager or SSM. With the role deleted, every one of those operations fails before the container is even started. Distinct from CTL.ECS.EXECROLE.OVERBROAD.001 — that control checks whether the role's permissions are too broad; this control checks whether the role exists at all. The two findings are orthogonal: an over-privileged role passes EXECROLE.OVERBROAD's check by being scoped down, but if the scoped-down role is then deleted, this control catches it.
+
+**Remediation:** Re-create the execution role with the AmazonECSTaskExecutionRolePolicy managed policy plus any workload-specific permissions, or update the task definition to reference an execution role that exists. Add a deletion guard on IAM roles that cross-references active task definitions before allowing the role to be deleted.
+
+---
+
+### CTL.ECS.GHOST.SSMPARAMETER.001
+
+**ECS Task Definition References Deleted SSM Parameter**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC8.1;
+
+Container definition uses valueFrom to inject an SSM Parameter Store parameter, but the parameter has been deleted. Same delayed-failure pattern as CTL.ECS.SECRET.GHOST.001 (Secrets Manager) — running tasks that already retrieved the value at their launch time keep working; new task launches fail when the ECS agent calls ssm:GetParameter and gets ParameterNotFound. The task definition appears valid in the console, the parameter ARN is intact, and the failure surfaces only on the next deployment, scaling event, or task replacement. Distinct from the existing SECRET.GHOST.001 because that control is Secrets-Manager-only — SSM parameters are a separate API surface with their own deletion path and their own ARN format.
+
+**Remediation:** Re-create the parameter at the expected name with the appropriate type (SecureString for credentials), or update the task definition to point at a parameter that exists. Add a deletion guard on SSM parameters that cross-references active task definitions before allowing the parameter to be deleted.
+
+---
+
+### CTL.ECS.GHOST.SUBNET.001
+
+**ECS Service References Deleted Subnet**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+ECS service running in awsvpc network mode references one or more subnets that have been deleted. New task launches require an ENI placement in one of the configured subnets; if the subnet is gone the placement fails and the task never starts. Existing running tasks that already received an ENI in the deleted subnet keep operating until the underlying ENI is reclaimed by other VPC operations or the task is replaced. Same delayed-failure shape as CTL.LAMBDA.GHOST.VPC.001 — the configuration shows the subnets that were configured, the VPC console shows those subnets are gone, and the failure surfaces only when ECS tries to place a new task. Different from CTL.ECS.NETWORK.PUBLIC.001 (which checks public-subnet placement) — the subnet may be intentionally private, the problem is just that it doesn't exist anymore.
+
+**Remediation:** Update the service's network configuration to use subnets that exist. If the original VPC layout was intentionally decommissioned, redeploy the service into the replacement subnets and verify ENI placement succeeds. Add a deletion guard on subnets that cross-references active ECS services and Lambda VPC configurations before allowing the subnet to be deleted.
+
+---
+
+### CTL.ECS.GHOST.TASKROLE.001
+
+**ECS Task Definition References Deleted Task Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+Task definition's taskRoleArn references an IAM role that has been deleted. The task role is the application's identity for AWS API calls made from inside the container — distinct from the execution role, which is the ECS agent's identity for launch operations. The task starts successfully (the execution role handles launch); the application code begins running. But the moment the application calls any AWS API using its task role credentials, the call fails with InvalidIdentityToken or AccessDeniedException because the assumed role doesn't exist. The failure mode resembles CTL.EC2.LT.GHOST.PROFILE.001: the resource starts, the workload appears healthy, and every AWS API call from inside fails. Distinct from CTL.ECS.TASKROLE.SHARED.001 (which checks reuse) and CTL.ECS.TASKROLE.ADMIN.001 (which checks privilege) — the role's existence is orthogonal to both.
+
+**Remediation:** Re-create the task role with the appropriate trust policy (ecs-tasks.amazonaws.com) and the application-specific permission boundaries, or update the task definition to point at a task role that exists. Add a deletion guard on IAM roles that cross-references active task definitions before allowing the role to be deleted.
+
+---
+
 ### CTL.ECS.IMAGE.001
 
 **ECS Container Images Must Not Use the latest Tag**
@@ -8259,6 +8319,51 @@ Container definition specifies neither memory (hard limit) nor memoryReservation
 Container definition has readonlyRootFilesystem set to false or not specified (the AWS default is false). A writable root filesystem lets a compromised container drop new binaries, modify shipped application files, and persist changes — if the filesystem is backed by a volume, the persistence survives container restarts. Read-only root forces the container to use explicitly mounted tmpfs or volumes for everything that must be writable, which both narrows the attack surface for malware drop and makes attacker-introduced state easy to spot. Severity is medium because many applications legitimately need scratch write space (caches, temp files, logs); the operational remediation is readonlyRootFilesystem: true with explicit tmpfs mounts for those needs, not a blanket "never write to disk."
 
 **Remediation:** Set readonlyRootFilesystem: true on the container definition. Identify the directories the application legitimately needs to write to (typically /tmp, /var/log, the app's cache directory) and add explicit tmpfs mounts for each. Re-test the container's startup and main paths to confirm nothing breaks; some images write to /tmp during process startup and need the tmpfs mount before the read-only flag is safe to enable.
+
+---
+
+### CTL.ECS.TASKDEF.REVISION.STALE.SECRETS.001
+
+**ECS Task Definition Old Revisions Contain Plaintext Credentials**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-5; hipaa: 164.312(d); nist_800_53_r5: IA-5; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
+
+Task definition has one or more inactive (older) revisions whose container env vars include plaintext credentials. The current active revision may have been migrated to valueFrom — credentials moved out of env into Secrets Manager or SSM — but ECS task definition revisions are immutable. The plaintext credentials that were in the earlier revisions are still there, visible to anyone with ecs:DescribeTaskDefinition on the older revision ARNs, and preserved in CloudTrail history of past UpdateTaskDefinition events. Migration is incomplete until the credentials are rotated and the affected revisions are deregistered (or treated as compromised). Distinct from CTL.ECS.SECRETS.001 — that control fires on the current state of any revision; this one fires when the *current* state is clean but the *history* is not.
+
+**Remediation:** Treat the credentials in stale revisions as compromised and rotate them — change the database password, regenerate the API token, rotate the access key. Once the old values no longer work, deregister the affected task definition revisions so they cannot be referenced. Update IAM policy on the task definition family to deny ecs:DescribeTaskDefinition on the deregistered revisions if your IAM model allows revision-level granularity.
+
+---
+
+### CTL.ECS.TASKDEF.SECRET.BROKEN.REF.001
+
+**ECS Task Definition Secret Reference Inaccessible to Execution Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Container definition uses valueFrom to reference a Secrets Manager secret or SSM parameter, but the task execution role does not have IAM permission to retrieve that specific resource. The task definition is correctly structured (the operator chose valueFrom over plaintext, the right intent), but the policy attached to the execution role doesn't grant secretsmanager:GetSecretValue or ssm:GetParameter against the named ARN. The task fails at launch with AccessDeniedException. Same cross-resource shape as CTL.LAMBDA.SECRETS.BROKEN.REF.001 — the reference exists, the resource exists, the permission to bridge them does not. Distinct from CTL.ECS.SECRET.GHOST.001 (secret deleted) and CTL.ECS.GHOST.SSMPARAMETER.001 (parameter deleted) — here the resource is fine, the permission is the gap.
+
+**Remediation:** Add the appropriate Get permission to the execution role's policy, scoped to the specific resource ARN(s) referenced by valueFrom — secretsmanager:GetSecretValue for Secrets Manager, ssm:GetParameter (and kms:Decrypt against the parameter's KMS key for SecureString) for SSM. Avoid blanket "*" grants; the cost of scoping the permission to the ARN is small and matches the cost of having created the valueFrom in the first place.
+
+---
+
+### CTL.ECS.TASKDEF.SSM.INSECURE.001
+
+**ECS Task Definition References SSM Parameter as String Type**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+Container definition uses valueFrom to inject an SSM Parameter Store parameter that is stored as String type rather than SecureString. String parameters are stored in plaintext and retrieved in plaintext — no KMS encryption, no audit trail for decrypts, no separation between "who can read the parameter" and "who can read the secret it contains." For parameters carrying credentials, tokens, or any sensitive configuration, SecureString is the correct type. Same detection pattern as CTL.LAMBDA.SECRETS.SSM.INSECURE.001 on a different surface. The task definition's valueFrom is correct in shape; the type of the underlying parameter is the problem.
+
+**Remediation:** Re-create the parameter as SecureString with a customer-managed KMS key (preferred) or the AWS-managed alias/aws/ssm key. Update the execution role's policy to add kms:Decrypt against the parameter's KMS key. Verify the task launches and retrieves the value correctly. Then delete the original String parameter and update the valueFrom reference if the name changed.
 
 ---
 

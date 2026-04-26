@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.GHOST.SUBNET.001
+name: ECS Service References Deleted Subnet
+description: >
+  ECS service running in awsvpc network mode references one or
+  more subnets that have been deleted. New task launches require
+  an ENI placement in one of the configured subnets; if the
+  subnet is gone the placement fails and the task never starts.
+  Existing running tasks that already received an ENI in the
+  deleted subnet keep operating until the underlying ENI is
+  reclaimed by other VPC operations or the task is replaced.
+  Same delayed-failure shape as
+  CTL.LAMBDA.GHOST.VPC.001 — the configuration shows the
+  subnets that were configured, the VPC console shows those
+  subnets are gone, and the failure surfaces only when ECS
+  tries to place a new task. Different from
+  CTL.ECS.NETWORK.PUBLIC.001 (which checks public-subnet
+  placement) — the subnet may be intentionally private, the
+  problem is just that it doesn't exist anymore.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "IVS-04"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    ECS service references one or more subnets that have been
+    deleted. New task launches fail at ENI placement.
+  action: >
+    Update the service's network configuration to use subnets
+    that exist. If the original VPC layout was intentionally
+    decommissioned, redeploy the service into the replacement
+    subnets and verify ENI placement succeeds. Add a deletion
+    guard on subnets that cross-references active ECS services
+    and Lambda VPC configurations before allowing the subnet
+    to be deleted.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_service",
+        "network": {
+          "subnets_exist": true,
+          "has_ghost_subnet": false,
+          "ghost_subnet_ids": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_service
+    - field: properties.container.network.has_ghost_subnet
+      op: eq
+      value: true

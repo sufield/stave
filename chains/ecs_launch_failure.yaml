@@ -1,0 +1,27 @@
+id: ecs_launch_failure
+description: >
+  Any ghost reference that prevents an ECS task from launching.
+  Deleted execution role (CTL.ECS.GHOST.EXECROLE.001) — the ECS
+  agent can't pull images, write logs, or retrieve secrets.
+  Deleted Secrets Manager secret (CTL.ECS.SECRET.GHOST.001) —
+  valueFrom retrieval fails. Deleted subnet
+  (CTL.ECS.GHOST.SUBNET.001) — ENI placement fails in awsvpc
+  mode. Threshold of 1 reflects that any single one of these
+  prevents new tasks from starting; the chain surfaces "task
+  launches will fail on next deployment or scale event" as a
+  family-level finding. Distinct from
+  ecs_ghost_cascade — that chain requires two ghost references
+  (systematic teardown); this one fires on any single launch-
+  blocking ghost reference because the operational impact
+  (next-launch failure) is the same regardless of which
+  specific dependency is missing.
+controls:
+  - CTL.ECS.GHOST.EXECROLE.001
+  - CTL.ECS.SECRET.GHOST.001
+  - CTL.ECS.GHOST.SUBNET.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - data_destruction

@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.GHOST.TASKROLE.001
+name: ECS Task Definition References Deleted Task Role
+description: >
+  Task definition's taskRoleArn references an IAM role that has
+  been deleted. The task role is the application's identity for
+  AWS API calls made from inside the container — distinct from
+  the execution role, which is the ECS agent's identity for
+  launch operations. The task starts successfully (the execution
+  role handles launch); the application code begins running. But
+  the moment the application calls any AWS API using its task
+  role credentials, the call fails with InvalidIdentityToken or
+  AccessDeniedException because the assumed role doesn't exist.
+  The failure mode resembles
+  CTL.EC2.LT.GHOST.PROFILE.001: the resource starts, the
+  workload appears healthy, and every AWS API call from inside
+  fails. Distinct from CTL.ECS.TASKROLE.SHARED.001
+  (which checks reuse) and CTL.ECS.TASKROLE.ADMIN.001 (which
+  checks privilege) — the role's existence is orthogonal to
+  both.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-03", "IAM-04"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Task definition references a task role that has been
+    deleted. Container starts successfully but every AWS API
+    call from inside the application fails.
+  action: >
+    Re-create the task role with the appropriate trust policy
+    (ecs-tasks.amazonaws.com) and the application-specific
+    permission boundaries, or update the task definition to
+    point at a task role that exists. Add a deletion guard on
+    IAM roles that cross-references active task definitions
+    before allowing the role to be deleted.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "task_role": {
+          "exists": true,
+          "is_ghost": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.task_role.is_ghost
+      op: eq
+      value: true
