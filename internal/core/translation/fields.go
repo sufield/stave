@@ -150,6 +150,13 @@ var DefaultFieldRegistry = FieldRegistry{
 	"container.deployment.min_healthy_percent":                    "the service deployment minimum healthy percent",
 	"container.scaling.configured":                                "Application Auto-Scaling is configured on the service",
 	"container.scaling.min_capacity":                              "the auto-scaling minimum task count",
+	"container.logging.log_group_retention_set":                   "the container's log group has a retention policy set to >= 365 days",
+	"container.logging.log_group_encrypted_cmk":                   "the container's log group is encrypted with a customer-managed KMS key",
+	"container.logging.all_containers_logged":                     "every container in the task definition has logConfiguration",
+	"container.monitoring.container_insights_enabled":             "Container Insights is enabled on the cluster",
+	"container.alarms.running_task_count_alarm":                   "a CloudWatch alarm watches the service's RunningTaskCount",
+	"container.alarms.failed_launch_alarm":                        "a CloudWatch alarm watches ECS task launch failures",
+	"container.cluster_config.allows_docker_socket_mount":         "the cluster configuration permits Docker socket mounts from tasks",
 
 	// --- network ---
 	"network.flow_log.enabled": "VPC Flow Logs are enabled",

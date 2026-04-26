@@ -1,0 +1,37 @@
+control: CTL.ECS.LOG.RETENTION.001
+defect: >
+  Container's CloudWatch log group has no
+  retention policy or retention shorter than 365
+  days.
+infection: >
+  Two failure modes hide behind "no retention
+  policy." First: logs retained forever, with
+  unbounded cost — many AWS environments have
+  multi-year-old log groups quietly billing
+  GB-months of storage no one is reading.
+  Second, more important for security: when
+  retention IS set but set short (the typical
+  default-out-of-fear "30 days for cost"), the
+  forensic horizon is short. Incidents
+  routinely surface weeks or months after the
+  original compromise — credentials get
+  exfiltrated, stay quiet, and only show up
+  when they're used in anger. A 30-day
+  retention means investigators have nothing
+  to look at by the time the alert fires. The
+  365-day floor matches the typical
+  audit-and-compliance horizon and gives the
+  investigation team a reasonable working
+  window. Same baseline as Lambda and RDS log
+  retention controls — the consistency across
+  compute services is intentional. Distinct
+  from CTL.ECS.LOG.001 (logs reach a
+  destination at all) and
+  CTL.ECS.TASKDEF.LOG.GHOST.001 (the
+  destination still exists); this control
+  checks that the destination keeps them.
+failure: >
+  Forensic horizon collapses. Investigations
+  start with no useful log history; cost
+  optimisation done at log-group level
+  inadvertently shortens the audit window.

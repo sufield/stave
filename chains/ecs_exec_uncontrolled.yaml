@@ -1,0 +1,29 @@
+id: ecs_exec_uncontrolled
+description: >
+  ECS Execute Command — interactive shell access into
+  running containers — combined with multiple control
+  weaknesses. Audit logging not configured
+  (CTL.ECS.EXEC.AUDIT.001) — sessions and commands aren't
+  recorded. Combined with either Exec enabled on
+  production (CTL.ECS.EXEC.001) — interactive shell into
+  production containers — or broad IAM access to
+  ecs:ExecuteCommand (CTL.IAM.ESCALATE.EXECUTECOMMAND.001)
+  — many principals can use the permission. Threshold of 2
+  reflects that interactive shell access alone (gated to a
+  break-glass role, used in dev only) is acceptable and
+  expected; combined with any one of "no audit," "in
+  production," or "broadly available," it becomes a
+  significant control gap. Two together describe an
+  environment where shell access into containers is
+  available, possibly anonymous, and possibly into
+  production.
+controls:
+  - CTL.ECS.EXEC.AUDIT.001
+  - CTL.ECS.EXEC.001
+  - CTL.IAM.ESCALATE.EXECUTECOMMAND.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - data_access

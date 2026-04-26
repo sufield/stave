@@ -1,0 +1,35 @@
+control: CTL.ECS.CLUSTER.DOCKERSOCKET.001
+defect: >
+  ECS cluster's EC2 launch configuration
+  permits tasks to mount the Docker socket.
+infection: >
+  The Docker socket is the most direct path
+  from inside a container to full host control.
+  A task with /var/run/docker.sock mounted
+  inside it can call the Docker API: create
+  new containers including privileged ones
+  with pid=host and arbitrary mounts, inspect
+  every other container's filesystem and
+  environment, exfiltrate secrets from any
+  neighbor, stop critical workloads. The
+  attack ladder from "I have application code
+  execution inside this container" to "I own
+  the host" via /var/run/docker.sock is one
+  Docker API call long. Two distinct controls
+  exist for this attack surface: the
+  task-definition-side check
+  (CTL.ECS.TASKDEF.HOSTMOUNT.001) flags any
+  task that mounts the socket, while this
+  control flags clusters whose ECS agent
+  configuration permits the mount in the
+  first place. They're complementary: the
+  task-def check catches active misuse, the
+  cluster check catches the cluster
+  configuration that allows future misuse to
+  succeed. Tightening the cluster is the
+  prevention; finding mounted task defs is
+  the detection.
+failure: >
+  Container escape one Docker API call away.
+  Any compromised task on the cluster can take
+  the host.

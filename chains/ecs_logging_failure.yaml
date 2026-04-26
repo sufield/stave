@@ -1,0 +1,25 @@
+id: ecs_logging_failure
+description: >
+  Any single container-logging failure compromises the
+  forensic and operational visibility of the workload. No
+  log driver configured (CTL.ECS.LOG.001) — stdout and
+  stderr discarded entirely. Insufficient retention
+  (CTL.ECS.LOG.RETENTION.001) — logs reach the destination
+  but the audit horizon is too short for incident response.
+  Ghost log group (CTL.ECS.TASKDEF.LOG.GHOST.001) — driver
+  is configured, group ARN is intact, the group itself was
+  deleted and the writes silently fail. Threshold of 1
+  reflects that each failure independently produces the
+  same operational consequence — container output isn't
+  available when the team needs it — even though the
+  underlying causes are very different.
+controls:
+  - CTL.ECS.LOG.001
+  - CTL.ECS.LOG.RETENTION.001
+  - CTL.ECS.TASKDEF.LOG.GHOST.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - audit_trail_destroyed

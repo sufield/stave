@@ -1,0 +1,39 @@
+control: CTL.ECS.ALARM.FAILEDLAUNCH.001
+defect: >
+  No CloudWatch alarm watches ECS task launch
+  failures.
+infection: >
+  Task launch failures sit upstream of every
+  other ECS service problem. When the
+  underlying cause is a ghost reference — image
+  deleted from ECR, secret deleted from Secrets
+  Manager, execution role deleted from IAM,
+  subnet deleted from the VPC, all covered by
+  the ECS-2 ghost-reference family — the
+  service-level metrics show degradation
+  without saying why. RunningTaskCount drops
+  (the alarm in CTL.ECS.ALARM.TASKCOUNT.001
+  catches that), but the operator still has to
+  trace the cause back through the deployment
+  events log to find the launch failure. A
+  dedicated launch-failure alarm gives the
+  cause-level signal directly: a
+  SERVICE_TASK_START_IMPAIRED event fires on
+  the ECS event bus when ECS gives up trying to
+  start a task, and a metric filter or
+  EventBridge rule converts that into an alarm.
+  The two alarms — running count and launch
+  failures — together let triage distinguish
+  "tasks are running but failing health checks"
+  from "ECS can't start any tasks at all,"
+  which are very different incidents with very
+  different first-step responses. The medium
+  severity reflects that this is a refinement
+  of the high-severity TASKCOUNT alarm rather
+  than its own primary signal.
+failure: >
+  Launch failures invisible at cause level.
+  Triage starts at the symptom (running count
+  dropped) and works backward to the cause
+  (something can't start) instead of starting
+  at the cause directly.

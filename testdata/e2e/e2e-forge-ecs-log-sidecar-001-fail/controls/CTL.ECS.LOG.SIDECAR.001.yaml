@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.LOG.SIDECAR.001
+name: ECS Task Definition Has Containers Without Logging
+description: >
+  Task definition has multiple containers but at least one
+  container — typically a sidecar (envoy proxy, monitoring
+  agent, init container, log forwarder) — has no
+  logConfiguration. The main application container has
+  logging configured, so the existing CTL.ECS.LOG.001
+  driver-configured boolean reports green; the sidecars'
+  stdout and stderr are silently discarded. Sidecar output
+  carries security-relevant signal — proxy access logs
+  showing every request hitting the application, init
+  container logs showing config rendering and
+  secret-fetching steps, monitoring agent logs revealing
+  health-check decisions and capacity events. Distinct from
+  CTL.ECS.LOG.001 — that control answers "does at least
+  one container in the task have a log driver?"; this one
+  answers "do all containers in the task have a log
+  driver?". The two together describe the full coverage
+  surface.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.1"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-12"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Task definition has multiple containers but at least one
+    has no logConfiguration. Sidecar output is discarded.
+  action: >
+    Add logConfiguration to every container in the task
+    definition, not just the primary. Use a shared awslogs
+    log group with distinct stream prefixes per container
+    (`awslogs-stream-prefix`) so the streams are
+    distinguishable in CloudWatch. Verify by inspecting
+    each container's stream after a deployment and
+    confirming output appears.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "logging": {
+          "all_containers_logged": true,
+          "containers_without_logging": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.logging.all_containers_logged
+      op: eq
+      value: false

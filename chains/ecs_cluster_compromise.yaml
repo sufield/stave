@@ -1,0 +1,26 @@
+id: ecs_cluster_compromise
+description: >
+  Any single container-to-host escape vector at the cluster
+  level. Cluster permits Docker socket mounts
+  (CTL.ECS.CLUSTER.DOCKERSOCKET.001) — any task on the
+  cluster can take the host. Privileged mode allowed on
+  the cluster's task definitions (CTL.ECS.PRIV.001) — the
+  container runs as root with the full kernel capability
+  set. Dangerous host mounts on a task definition
+  (CTL.ECS.TASKDEF.HOSTMOUNT.001) — a task mounts
+  /var/run/docker.sock, /proc, /sys, /dev, or the host
+  root, providing direct access to host control plane or
+  kernel interfaces. Threshold of 1 reflects that any one
+  of these independently provides container-to-host
+  compromise; the chain surfaces "this cluster has an
+  escape path open" as a single posture finding.
+controls:
+  - CTL.ECS.CLUSTER.DOCKERSOCKET.001
+  - CTL.ECS.PRIV.001
+  - CTL.ECS.TASKDEF.HOSTMOUNT.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - container_code_execution
+postconditions:
+  - ec2_code_execution

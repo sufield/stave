@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1551
-**Pack hash:** `7e6cd55da547c37ed93a0f9cc2d2850bab7586453b4c0d052931619e52d37731`
+**Total controls:** 1558
+**Pack hash:** `925cdfaa88aa5ba636c0f26ac644e4da86ffdeccdcab98aec63e9b6630229fb0`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 178 |
-| high | 685 |
+| critical | 179 |
+| high | 686 |
 | info | 16 |
 | low | 113 |
-| medium | 559 |
+| medium | 564 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,9 +23,9 @@
 | availability | 2 |
 | cryptography | 3 |
 | detection | 49 |
-| encryption | 88 |
-| exposure | 884 |
-| governance | 78 |
+| encryption | 89 |
+| exposure | 886 |
+| governance | 82 |
 | hygiene | 16 |
 | identity | 332 |
 | network | 28 |
@@ -7933,6 +7933,51 @@ ECR repositories must enforce image tag immutability to prevent supply chain att
 
 ---
 
+### CTL.ECS.ALARM.FAILEDLAUNCH.001
+
+**No CloudWatch Alarm for ECS Failed Task Launches**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No CloudWatch alarm watches ECS task launch failures (DesiredTaskCount above RunningTaskCount sustained, or the SERVICE_TASK_PLACEMENT_FAILURE_NO_VALID_CAPACITY_PROVIDER event-bus signal). Repeated launch failures indicate ghost-reference issues (deleted image, secret, role, subnet — see ECS-2 controls), capacity exhaustion (no EC2 instances or insufficient Fargate capacity), or configuration errors (invalid task definition revision promoted to active). Without an alarm, tasks fail to launch silently; the service stays at reduced capacity and the operator's first signal arrives downstream. Distinct from CTL.ECS.ALARM.TASKCOUNT.001 — that catches running count drops below desired (general degradation); this catches the launch-failure signal specifically, so triage can distinguish "tasks are running but unhealthy" from "tasks won't start at all."
+
+**Remediation:** Create a CloudWatch alarm on the SERVICE_DEPLOYMENT or SERVICE_TASK_START_IMPAIRED event from the ECS event bus, or on a derived metric counting SERVICE_TASK_PLACEMENT_FAILURE events. Wire the alarm to the on-call SNS topic alongside the RunningTaskCount alarm so the two signals together distinguish "running but unhealthy" from "will not launch."
+
+---
+
+### CTL.ECS.ALARM.TASKCOUNT.001
+
+**No CloudWatch Alarm for ECS Service Running Task Count**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.7.2; soc2: CC7.2;
+
+No CloudWatch alarm watches the service's RunningTaskCount metric. RunningTaskCount is the most direct signal of ECS service health: when tasks fail (crash loop, health-check failure, OOM kill), are reclaimed (spot termination, capacity-provider scaling), or fail to launch (ghost references, capacity exhaustion), the running count drops below the desired count. A service with desired=4 running at 1 is at 25% capacity, and the gap may persist until the underlying cause clears or someone notices. An alarm on RunningTaskCount < DesiredTaskCount turns "the service is degraded" into a paged signal at the moment of degradation rather than after users complain. The metric is published by ECS automatically; the alarm has to be configured explicitly per service.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/ECS namespace metric RunningTaskCount with dimensions ClusterName=<cluster>, ServiceName=<service>. Threshold typically Less Than DesiredCount; route the alarm to the service's on-call SNS topic. For services with auto-scaling, also alarm on RunningTaskCount falling below the configured minCapacity to catch policy failures rather than legitimate scale-in events.
+
+---
+
+### CTL.ECS.CLUSTER.DOCKERSOCKET.001
+
+**ECS EC2 Cluster Configuration Permits Docker Socket Mount**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 2.2.5; soc2: CC6.6;
+
+ECS cluster's EC2 launch type configuration permits tasks to mount the Docker socket via hostPath volumes — the ECS agent's volume restrictions are not enabled, or the underlying instance configuration allows the mount. A task with /var/run/docker.sock has full control over the Docker daemon on the host: it can create new containers (including privileged ones with pid=host), inspect every other container's filesystem and environment variables, and stop or delete any container on the host. This is container escape with extra steps. Distinct from CTL.ECS.TASKDEF.HOSTMOUNT.001 — that control checks whether a SPECIFIC task definition mounts the socket; this control checks whether the CLUSTER configuration allows any task to mount it. Both findings can fire on the same workload: the cluster permits the mount, AND some task definition exercises that permission.
+
+**Remediation:** Configure the ECS agent to refuse Docker socket mounts: add the path /var/run/docker.sock to the agent's DOCKER_VOLUME_PATH_DENYLIST (or equivalent instance-level configuration). For workloads that genuinely need Docker API access (CI runners, build agents), move them to a dedicated cluster whose purpose is documented and whose access is restricted, rather than allowing the mount on the general-purpose cluster.
+
+---
+
 ### CTL.ECS.EXEC.001
 
 **ECS Exec Must Be Disabled on Production Services**
@@ -8157,6 +8202,51 @@ ECS essential containers must have a log driver configured. Without logging, con
 
 ---
 
+### CTL.ECS.LOG.ENCRYPT.001
+
+**ECS Container Log Group Not Encrypted with CMK**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+Container's CloudWatch log group is not encrypted with a customer-managed KMS key. CloudWatch encrypts log groups by default with an AWS-owned key — the data is encrypted at rest, but the account has no key policy control, no decrypt audit trail, and no revocation lever. For workloads whose containers emit application logs that may contain PII, error messages with embedded secrets, debug output, or compliance-relevant audit records, the CMK upgrade is the typical baseline. Same architectural pattern as CTL.LAMBDA.LOG.ENCRYPT.001 and the broader family of CMK controls (S3, EBS, RDS, ECR, Lambda env). For ephemeral test workloads or intentionally low- sensitivity logs the default may be acceptable and the finding can be acknowledged in a triage override.
+
+**Remediation:** Associate a customer-managed KMS key with the log group via aws logs associate-kms-key. Update the KMS key policy to grant logs.<region>.amazonaws.com use of the key on behalf of the account. The log group must be re-associated for new log events; existing events remain under the previous encryption.
+
+---
+
+### CTL.ECS.LOG.RETENTION.001
+
+**ECS Container Log Group Has Insufficient Retention**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-11; hipaa: 164.312(b); nist_800_53_r5: AU-11; pci_dss_v4.0: 10.5.1; soc2: CC7.2;
+
+Container's CloudWatch log group has no retention policy (logs retained forever — costly) or retention shorter than 365 days (forensic horizon insufficient). Same baseline pattern as CTL.LAMBDA.LOG.RETENTION.001 and CTL.RDS.LOG.RETENTION.001 — consistent retention floor across compute services. The 365-day floor is the typical audit-and-compliance horizon: incidents discovered late often require reviewing months of activity, and short retention windows force the team to choose between cost and forensic depth at the moment they have the least time to make a good choice. Distinct from CTL.ECS.LOG.001 (driver configured) and CTL.ECS.TASKDEF.LOG.GHOST.001 (group exists) — both of those check that logs reach a destination; this control checks that the destination keeps them long enough.
+
+**Remediation:** Set retentionInDays on the CloudWatch log group to 365 or higher (3653 = 10 years for long-retention compliance workloads). Use put-retention-policy or set the retention via the log group's CloudFormation/Terraform resource. Verify the change applies to historical streams; existing log events retain the stream's creation-time policy until the group setting is updated.
+
+---
+
+### CTL.ECS.LOG.SIDECAR.001
+
+**ECS Task Definition Has Containers Without Logging**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-2; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.1;
+
+Task definition has multiple containers but at least one container — typically a sidecar (envoy proxy, monitoring agent, init container, log forwarder) — has no logConfiguration. The main application container has logging configured, so the existing CTL.ECS.LOG.001 driver-configured boolean reports green; the sidecars' stdout and stderr are silently discarded. Sidecar output carries security-relevant signal — proxy access logs showing every request hitting the application, init container logs showing config rendering and secret-fetching steps, monitoring agent logs revealing health-check decisions and capacity events. Distinct from CTL.ECS.LOG.001 — that control answers "does at least one container in the task have a log driver?"; this one answers "do all containers in the task have a log driver?". The two together describe the full coverage surface.
+
+**Remediation:** Add logConfiguration to every container in the task definition, not just the primary. Use a shared awslogs log group with distinct stream prefixes per container (`awslogs-stream-prefix`) so the streams are distinguishable in CloudWatch. Verify by inspecting each container's stream after a deployment and confirming output appears.
+
+---
+
 ### CTL.ECS.METADATA.CREDENTIAL.001
 
 **ECS Tasks Must Restrict Credential Endpoint Access to Required Containers**
@@ -8169,6 +8259,21 @@ ECS essential containers must have a log driver configured. Without logging, con
 ECS task definitions must restrict task metadata credential endpoint access (169.254.170.2) to only the containers that require AWS API access. Sidecar containers, init containers, and utility containers that do not call AWS APIs should not have credential endpoint access. Without scoping, every container in the task — including those vulnerable to SSRF — can retrieve the task role's IAM credentials from the metadata endpoint. This is the same attack class as EC2 IMDSv1 credential theft (Capital One) but on containers. Unlike EC2 IMDS which has IMDSv2 token requirements, ECS task metadata has no equivalent token mechanism — the mitigation is restricting which containers can reach the endpoint.
 
 **Remediation:** Configure container-level credential scoping in the task definition. Set credentialSpecs or use task role credential isolation to restrict which containers can access the credential endpoint. Sidecar and utility containers that do not require AWS API access should not have credential endpoint access.
+
+---
+
+### CTL.ECS.MONITORING.INSIGHTS.001
+
+**ECS Cluster Does Not Have Container Insights Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.7.1; soc2: CC7.2;
+
+ECS cluster does not have Container Insights enabled at the cluster level. Container Insights is the AWS-supplied monitoring tier that provides aggregated cluster-level, service-level, and task-level metrics: CPU and memory utilization, network and storage I/O, running task count, pending task count, and per-instance metrics on EC2 launch type. Without it, the cluster has no aggregated monitoring — individual tasks may emit application metrics, but the cluster as a whole is a blind spot for capacity, saturation, and health questions. Container Insights also feeds the Application Auto-Scaling target metrics that ECS-4 SCALING.MISSING.001 expects to be available.
+
+**Remediation:** Enable Container Insights on the cluster: aws ecs put-account-setting --name containerInsights --value enabled (account-level default), or aws ecs update-cluster-settings --cluster <name> --settings name=containerInsights,value=enabled (per-cluster). Container Insights publishes to the /aws/ecs/containerinsights/<cluster> log group; verify metrics arrive in CloudWatch within a few minutes of enabling.
 
 ---
 

@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.LOG.ENCRYPT.001
+name: ECS Container Log Group Not Encrypted with CMK
+description: >
+  Container's CloudWatch log group is not encrypted with a
+  customer-managed KMS key. CloudWatch encrypts log groups
+  by default with an AWS-owned key — the data is encrypted
+  at rest, but the account has no key policy control, no
+  decrypt audit trail, and no revocation lever. For
+  workloads whose containers emit application logs that may
+  contain PII, error messages with embedded secrets, debug
+  output, or compliance-relevant audit records, the CMK
+  upgrade is the typical baseline. Same architectural
+  pattern as CTL.LAMBDA.LOG.ENCRYPT.001 and the broader
+  family of CMK controls (S3, EBS, RDS, ECR, Lambda env).
+  For ephemeral test workloads or intentionally low-
+  sensitivity logs the default may be acceptable and the
+  finding can be acknowledged in a triage override.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+  pci_dss_v4.0: "3.5.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Container log group uses the default CloudWatch
+    encryption rather than a customer-managed KMS key.
+  action: >
+    Associate a customer-managed KMS key with the log group
+    via aws logs associate-kms-key. Update the KMS key
+    policy to grant logs.<region>.amazonaws.com use of the
+    key on behalf of the account. The log group must be
+    re-associated for new log events; existing events
+    remain under the previous encryption.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "logging": {
+          "log_group_kms_key": "arn:aws:kms:us-east-1:123456789012:key/...",
+          "log_group_encrypted_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.logging.log_group_encrypted_cmk
+      op: eq
+      value: false

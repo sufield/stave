@@ -1,0 +1,40 @@
+control: CTL.ECS.LOG.SIDECAR.001
+defect: >
+  Task definition has multiple containers but
+  at least one — typically a sidecar — has no
+  logConfiguration.
+infection: >
+  Sidecar containers are easy to miss when the
+  primary application container has logging
+  configured: the existing
+  CTL.ECS.LOG.001 boolean reports green
+  ("driver configured" is true), the
+  application logs flow correctly to
+  CloudWatch, and the sidecars' stdout/stderr
+  is silently discarded. The output that gets
+  thrown away is operationally and
+  security-relevant: an envoy proxy sidecar
+  knows every request that reached the
+  application and every response code it
+  emitted; an init container's output records
+  the configuration-rendering and
+  secret-fetching steps that determine the
+  task's startup state; a monitoring agent
+  sidecar's log shows health-check decisions
+  and capacity events. When any of those
+  containers fails or behaves unexpectedly, the
+  troubleshooter discovers there's no log to
+  read. Same architectural mistake as the
+  Lambda env-secret pattern — operators
+  configure the obvious surface (the app
+  container) and forget the auxiliary
+  containers attached to the same workload.
+  Distinct from LOG.001's existing scope: that
+  control's `driver_configured` boolean is
+  green when ANY container has logging; this
+  control checks that ALL containers do.
+failure: >
+  Sidecar output discarded. Auxiliary
+  containers' security-relevant signals
+  (proxy access logs, init steps, agent
+  decisions) are not captured.

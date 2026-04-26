@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.MONITORING.INSIGHTS.001
+name: ECS Cluster Does Not Have Container Insights Enabled
+description: >
+  ECS cluster does not have Container Insights enabled at the
+  cluster level. Container Insights is the AWS-supplied
+  monitoring tier that provides aggregated cluster-level,
+  service-level, and task-level metrics: CPU and memory
+  utilization, network and storage I/O, running task count,
+  pending task count, and per-instance metrics on EC2 launch
+  type. Without it, the cluster has no aggregated
+  monitoring — individual tasks may emit application
+  metrics, but the cluster as a whole is a blind spot for
+  capacity, saturation, and health questions. Container
+  Insights also feeds the Application Auto-Scaling target
+  metrics that ECS-4 SCALING.MISSING.001 expects to be
+  available.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.7.1"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-01", "LOG-12"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Cluster has no Container Insights. No aggregated
+    cluster, service, or task metrics are available.
+  action: >
+    Enable Container Insights on the cluster:
+    aws ecs put-account-setting --name containerInsights
+    --value enabled (account-level default), or
+    aws ecs update-cluster-settings --cluster <name>
+    --settings name=containerInsights,value=enabled
+    (per-cluster). Container Insights publishes to the
+    /aws/ecs/containerinsights/<cluster> log group; verify
+    metrics arrive in CloudWatch within a few minutes of
+    enabling.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_cluster",
+        "monitoring": {
+          "container_insights_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_cluster
+    - field: properties.container.monitoring.container_insights_enabled
+      op: eq
+      value: false

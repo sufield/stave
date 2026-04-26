@@ -1,0 +1,37 @@
+control: CTL.ECS.LOG.ENCRYPT.001
+defect: >
+  Container's CloudWatch log group uses the
+  default AWS-owned encryption rather than a
+  customer-managed KMS key.
+infection: >
+  CloudWatch encrypts log groups by default —
+  the underlying data is encrypted at rest, the
+  AWS-owned key is rotated, and unauthorized
+  callers cannot decrypt. What's missing on the
+  default key is operational control: no key
+  policy attached so the granular permission
+  surface that distinguishes "may use the key"
+  from "may administer the key" doesn't exist;
+  no CloudTrail kms:Decrypt audit so reads
+  against the encrypted data aren't traceable
+  to a principal; no revocation lever (denying
+  use of the key on demand is the emergency
+  response when data has to become unreadable;
+  the AWS-owned key cannot be denied). Same
+  pattern that recurs across S3, EBS, RDS, ECR
+  Lambda env, and Lambda log group encryption
+  controls. The CMK upgrade matters most for
+  containers whose logs may carry PII, error
+  messages with embedded secrets, debug output
+  of business-sensitive operations, or
+  compliance-relevant audit records — all of
+  which benefit from key-policy control and
+  decrypt audit trails. Test/dev log groups can
+  acknowledge in triage override rather than
+  carry noise.
+failure: >
+  No key-policy control, no decrypt audit, no
+  revocation lever for log-encryption keys.
+  Encryption protects the data from disk theft
+  but doesn't give the account operational
+  control over who decrypts.

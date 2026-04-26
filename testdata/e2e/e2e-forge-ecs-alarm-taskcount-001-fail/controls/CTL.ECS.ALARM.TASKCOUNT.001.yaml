@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.ALARM.TASKCOUNT.001
+name: No CloudWatch Alarm for ECS Service Running Task Count
+description: >
+  No CloudWatch alarm watches the service's RunningTaskCount
+  metric. RunningTaskCount is the most direct signal of ECS
+  service health: when tasks fail (crash loop, health-check
+  failure, OOM kill), are reclaimed (spot termination,
+  capacity-provider scaling), or fail to launch (ghost
+  references, capacity exhaustion), the running count drops
+  below the desired count. A service with desired=4 running
+  at 1 is at 25% capacity, and the gap may persist until the
+  underlying cause clears or someone notices. An alarm on
+  RunningTaskCount < DesiredTaskCount turns "the service is
+  degraded" into a paged signal at the moment of degradation
+  rather than after users complain. The metric is published
+  by ECS automatically; the alarm has to be configured
+  explicitly per service.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  pci_dss_v4.0: "10.7.2"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-01", "LOG-12"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No CloudWatch alarm on the service's RunningTaskCount.
+    Service degradation surfaces only via metrics or
+    user-visible failure.
+  action: >
+    Create a CloudWatch alarm on the AWS/ECS namespace
+    metric RunningTaskCount with dimensions
+    ClusterName=<cluster>, ServiceName=<service>. Threshold
+    typically Less Than DesiredCount; route the alarm to
+    the service's on-call SNS topic. For services with
+    auto-scaling, also alarm on RunningTaskCount falling
+    below the configured minCapacity to catch policy
+    failures rather than legitimate scale-in events.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_service",
+        "alarms": {
+          "running_task_count_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_service
+    - field: properties.container.alarms.running_task_count_alarm
+      op: eq
+      value: false

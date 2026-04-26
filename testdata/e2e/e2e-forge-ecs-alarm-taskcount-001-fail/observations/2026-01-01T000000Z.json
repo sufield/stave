@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:service/cluster/orders-fail",
+      "type": "aws_ecs_service",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "ecs_service",
+          "alarms": {
+            "running_task_count_alarm": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+control: CTL.ECS.MONITORING.INSIGHTS.001
+defect: >
+  ECS cluster does not have Container Insights
+  enabled.
+infection: >
+  Container Insights provides the layer of
+  aggregated metrics ECS doesn't otherwise
+  emit. Without it the cluster has individual
+  task metrics if the application code happens
+  to publish them, individual log streams if
+  the task definitions configure logging, and
+  no aggregated answer to questions like "is
+  the cluster saturated," "which service is
+  consuming the most CPU," "how many tasks are
+  pending right now," or "is the cluster
+  capacity provider keeping up with demand."
+  Operators frequently discover the gap during
+  an incident — a service is degrading, the
+  team wants to know if it's a capacity problem
+  or a downstream dependency problem, and the
+  cluster has no aggregated view either way.
+  Container Insights also feeds the per-service
+  metrics that Application Auto-Scaling
+  policies depend on: the
+  ECSServiceAverageCPUUtilization and similar
+  named metrics ECS-4 SCALING.MISSING.001
+  remediation suggests are populated by
+  Container Insights. The cost is real
+  (CloudWatch charges per metric) but small
+  relative to the operational visibility
+  gained; clusters that explicitly accept the
+  cost-vs-coverage tradeoff record the
+  rationale in a triage override.
+failure: >
+  Cluster monitoring blind spot. No aggregated
+  metrics for cluster health, service
+  performance, or capacity utilisation.

@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.LOG.RETENTION.001
+name: ECS Container Log Group Has Insufficient Retention
+description: >
+  Container's CloudWatch log group has no retention policy
+  (logs retained forever — costly) or retention shorter than
+  365 days (forensic horizon insufficient). Same baseline
+  pattern as CTL.LAMBDA.LOG.RETENTION.001 and
+  CTL.RDS.LOG.RETENTION.001 — consistent retention floor
+  across compute services. The 365-day floor is the typical
+  audit-and-compliance horizon: incidents discovered late
+  often require reviewing months of activity, and short
+  retention windows force the team to choose between cost
+  and forensic depth at the moment they have the least
+  time to make a good choice. Distinct from
+  CTL.ECS.LOG.001 (driver configured) and
+  CTL.ECS.TASKDEF.LOG.GHOST.001 (group exists) — both of
+  those check that logs reach a destination; this control
+  checks that the destination keeps them long enough.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-11"
+  fedramp_moderate: "AU-11"
+  pci_dss_v4.0: "10.5.1"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Container log group either has no retention policy (logs
+    retained forever) or retention is shorter than 365 days.
+  action: >
+    Set retentionInDays on the CloudWatch log group to 365
+    or higher (3653 = 10 years for long-retention compliance
+    workloads). Use put-retention-policy or set the
+    retention via the log group's CloudFormation/Terraform
+    resource. Verify the change applies to historical
+    streams; existing log events retain the stream's
+    creation-time policy until the group setting is updated.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "logging": {
+          "log_group_retention_days": 365,
+          "log_group_retention_set": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.logging.log_group_retention_set
+      op: eq
+      value: false

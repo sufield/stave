@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.ALARM.FAILEDLAUNCH.001
+name: No CloudWatch Alarm for ECS Failed Task Launches
+description: >
+  No CloudWatch alarm watches ECS task launch failures
+  (DesiredTaskCount above RunningTaskCount sustained, or
+  the SERVICE_TASK_PLACEMENT_FAILURE_NO_VALID_CAPACITY_PROVIDER
+  event-bus signal). Repeated launch failures indicate
+  ghost-reference issues (deleted image, secret, role,
+  subnet — see ECS-2 controls), capacity exhaustion (no
+  EC2 instances or insufficient Fargate capacity), or
+  configuration errors (invalid task definition revision
+  promoted to active). Without an alarm, tasks fail to
+  launch silently; the service stays at reduced capacity
+  and the operator's first signal arrives downstream.
+  Distinct from CTL.ECS.ALARM.TASKCOUNT.001 — that catches
+  running count drops below desired (general degradation);
+  this catches the launch-failure signal specifically, so
+  triage can distinguish "tasks are running but
+  unhealthy" from "tasks won't start at all."
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-01", "LOG-12"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No alarm watches task launch failures. Ghost references
+    or capacity exhaustion silently degrade the service.
+  action: >
+    Create a CloudWatch alarm on the SERVICE_DEPLOYMENT or
+    SERVICE_TASK_START_IMPAIRED event from the ECS event
+    bus, or on a derived metric counting
+    SERVICE_TASK_PLACEMENT_FAILURE events. Wire the alarm
+    to the on-call SNS topic alongside the
+    RunningTaskCount alarm so the two signals together
+    distinguish "running but unhealthy" from "will not
+    launch."
+  example: |
+    {
+      "container": {
+        "kind": "ecs_service",
+        "alarms": {
+          "failed_launch_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_service
+    - field: properties.container.alarms.failed_launch_alarm
+      op: eq
+      value: false

@@ -82,10 +82,31 @@ represented as one asset of type `aws_ecs_task_definition_container`
 | `container.scaling.configured` | bool | Application Auto-Scaling is configured |
 | `container.scaling.min_capacity` | int | Auto-scaling minimum task count |
 | `container.scaling.max_capacity` | int | Auto-scaling maximum task count |
+| `container.alarms.running_task_count_alarm` | bool | A CloudWatch alarm watches the service's RunningTaskCount |
+| `container.alarms.failed_launch_alarm` | bool | A CloudWatch alarm watches ECS task launch failures |
 
 The bridge-vs-awsvpc network mode lives on the task definition asset
 under `container.network.uses_bridge_network` (see the task
 definition section above).
+
+Logging-related fields on the task definition asset add:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `container.logging.log_group_retention_set` | bool | Log group has a retention policy >= 365 days |
+| `container.logging.log_group_retention_days` | int | Configured retention in days (0 if unset) |
+| `container.logging.log_group_encrypted_cmk` | bool | Log group is encrypted with a customer-managed KMS key |
+| `container.logging.log_group_kms_key` | string | Log group's KMS key ARN (when CMK-encrypted) |
+| `container.logging.all_containers_logged` | bool | Every container in the task definition has logConfiguration |
+| `container.logging.containers_without_logging` | []string | Names of containers in the task that lack logConfiguration |
+
+### ECS Cluster (`aws_ecs_cluster`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `container.kind` | string | `"ecs_cluster"` — discriminator |
+| `container.monitoring.container_insights_enabled` | bool | Container Insights enabled on the cluster |
+| `container.cluster_config.allows_docker_socket_mount` | bool | Cluster's EC2 launch configuration permits Docker socket mounts |
 
 ### ECS Task Definition Family (`aws_ecs_task_definition_family`)
 

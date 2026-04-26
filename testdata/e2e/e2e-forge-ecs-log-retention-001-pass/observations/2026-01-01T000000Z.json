@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:task-definition/api:5/log-retention-pass",
+      "type": "aws_ecs_task_definition_container",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "logging": {
+            "log_group": "/ecs/orders-prod",
+            "log_group_retention_days": 365,
+            "log_group_retention_set": true
+          }
+        }
+      }
+    }
+  ]
+}

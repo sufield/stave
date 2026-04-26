@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.CLUSTER.DOCKERSOCKET.001
+name: ECS EC2 Cluster Configuration Permits Docker Socket Mount
+description: >
+  ECS cluster's EC2 launch type configuration permits tasks
+  to mount the Docker socket via hostPath volumes — the ECS
+  agent's volume restrictions are not enabled, or the
+  underlying instance configuration allows the mount. A
+  task with /var/run/docker.sock has full control over the
+  Docker daemon on the host: it can create new containers
+  (including privileged ones with pid=host), inspect every
+  other container's filesystem and environment variables,
+  and stop or delete any container on the host. This is
+  container escape with extra steps. Distinct from
+  CTL.ECS.TASKDEF.HOSTMOUNT.001 — that control checks
+  whether a SPECIFIC task definition mounts the socket;
+  this control checks whether the CLUSTER configuration
+  allows any task to mount it. Both findings can fire on
+  the same workload: the cluster permits the mount, AND
+  some task definition exercises that permission.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "2.2.5"
+  soc2: "CC6.6"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IVS-04", "IVS-06"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Cluster's EC2 launch configuration permits Docker socket
+    mounts from tasks. Any task can take full control of
+    the host's container runtime.
+  action: >
+    Configure the ECS agent to refuse Docker socket mounts:
+    add the path /var/run/docker.sock to the agent's
+    DOCKER_VOLUME_PATH_DENYLIST (or equivalent
+    instance-level configuration). For workloads that
+    genuinely need Docker API access (CI runners, build
+    agents), move them to a dedicated cluster whose
+    purpose is documented and whose access is restricted,
+    rather than allowing the mount on the general-purpose
+    cluster.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_cluster",
+        "cluster_config": {
+          "allows_docker_socket_mount": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_cluster
+    - field: properties.container.cluster_config.allows_docker_socket_mount
+      op: eq
+      value: true

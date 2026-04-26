@@ -1,0 +1,35 @@
+control: CTL.ECS.ALARM.TASKCOUNT.001
+defect: >
+  No CloudWatch alarm watches the service's
+  RunningTaskCount metric.
+infection: >
+  RunningTaskCount is the highest-signal metric
+  ECS publishes about service health. It says
+  "this many tasks are currently running" and
+  ECS pairs it with DesiredTaskCount, the
+  operator's intent. A service with desired=4
+  running at 1 is at 25% capacity; depending on
+  the workload that may be a major incident
+  (stateless API serving 25% of requests), an
+  imminent outage (queue worker that can't
+  drain), or transient (spot termination
+  recovering). Without an alarm, the gap is
+  visible in the CloudWatch metric but nothing
+  pages anyone — the operator's first signal
+  is downstream: rising latency, error rates,
+  user reports, paging from a dependency. By
+  then the team is debugging the symptom
+  instead of the cause. The alarm is cheap to
+  configure (one CloudWatch alarm per service)
+  and turns service degradation into a
+  cause-level signal at the moment it happens.
+  Severity is high because the metric is the
+  primary health indicator and the absence of
+  the alarm is the difference between "we
+  knew within seconds" and "we found out
+  during the post-mortem."
+failure: >
+  Undetected service degradation. Running task
+  count drops without real-time notification;
+  recovery starts only after downstream
+  failure surfaces.
