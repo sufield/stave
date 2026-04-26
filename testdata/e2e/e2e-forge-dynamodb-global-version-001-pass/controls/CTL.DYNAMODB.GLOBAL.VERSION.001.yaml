@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.GLOBAL.VERSION.001
+name: Global Table Uses Legacy 2017 Version
+description: >
+  DynamoDB global table uses the 2017.11.29 legacy version
+  instead of the current 2019.11.21 version. Version 2017 has
+  documented limitations: global secondary indexes lack eventual
+  consistency guarantees across replicas, transactional writes
+  (TransactWriteItems) are not supported, replication latency
+  is higher than version 2019, and replica capacity must be
+  managed independently per region rather than automatically.
+  AWS recommends migrating all 2017 global tables to 2019.
+  Migration cannot be done in-place — it requires recreating
+  the table with 2019 global table configuration.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-6"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Global table is using the 2017.11.29 legacy version.
+    Transactional writes, GSI consistency, and automatic
+    replica capacity management are not available.
+  action: >
+    Migrate to version 2019.11.21. This requires creating
+    a new table with the same schema and global table
+    configuration using the current API (which defaults to
+    2019), migrating data, and cutting over traffic.
+    AWS provides a migration guide at
+    https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.tutorial.html
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "is_global_table": true,
+          "global_table_version": "2019"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.is_global_table
+      op: eq
+      value: true
+    - field: properties.database.dynamodb.global_table_version
+      op: eq
+      value: "2017"

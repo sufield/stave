@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1574
-**Pack hash:** `6dbb21f6d7154c9706cd9b800af45cc49d4a8197b406f30f9735ec30905d258d`
+**Total controls:** 1581
+**Pack hash:** `8c5f318463efa4817ce16e71f43b3ca22464be406356edc29658a54885a53bb0`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 180 |
-| high | 692 |
+| high | 695 |
 | info | 16 |
 | low | 113 |
-| medium | 573 |
+| medium | 577 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 92 |
-| exposure | 890 |
-| governance | 89 |
+| exposure | 894 |
+| governance | 92 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -6843,6 +6843,21 @@ DynamoDB table is paired with a DAX cluster, and the two layers have inconsisten
 
 ---
 
+### CTL.DYNAMODB.EXPORT.UNENCRYPTED.001
+
+**DynamoDB Export Targets Unencrypted S3 Bucket**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+DynamoDB table export is configured to write to an S3 bucket that does not use a customer-managed KMS key for default encryption. A DynamoDB export writes a full or partial copy of the table data — all items, all attributes — to S3 in DynamoDB JSON or Amazon Ion format. If the destination bucket uses SSE-S3 or no default encryption rather than SSE-KMS with a CMK, the export data is protected only by S3 bucket policies and IAM, without the key-policy control, audit, or revocation capability of a CMK. A table encrypted with CMK should export to a bucket with equivalent encryption — the export is the same data as the table, and weaker protection on the export undermines the CMK investment on the table.
+
+**Remediation:** Configure the destination S3 bucket's default encryption to use SSE-KMS with a customer-managed key. Existing export files must be re-encrypted or deleted and re-exported. Update the bucket's default encryption via aws s3api put-bucket-encryption --bucket BUCKET --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm":"aws:kms","KMSMasterKeyID":"KEY_ARN"}}]}'.
+
+---
+
 ### CTL.DYNAMODB.GHOST.DAXROLE.001
 
 **DAX Cluster References Deleted IAM Role**
@@ -6888,6 +6903,66 @@ DAX cluster's subnet group references one or more subnets that have been deleted
 
 ---
 
+### CTL.DYNAMODB.GLOBAL.ENCRYPT.MISMATCH.001
+
+**Global Table Replicas Have Inconsistent Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+DynamoDB global table has replicas with different encryption configurations — the primary uses a customer-managed KMS key while one or more replicas use the AWS-owned key or a different CMK. Global table replication copies every item write to every replica. If the primary is CMK-encrypted and a replica is not, the same data has different protection levels across regions: the CMK-protected region has key-policy control, CloudTrail audit of every decrypt, and key revocation capability; the AWS-owned-key region has none of these. The weakest replica's encryption level is the effective encryption protection for the data set. Encryption settings must be consistent across all replicas.
+
+**Remediation:** Update each replica's encryption to use the same CMK as the primary. Each replica must be updated independently via aws dynamodb update-table --table-name TABLE --replica-updates '[{"Update":{"RegionName":"REGION", "KMSMasterKeyId":"arn:aws:kms:REGION:ACCOUNT:key/KEY_ID"}}]'. KMS keys are region-specific — the replica CMK must exist in the replica's region.
+
+---
+
+### CTL.DYNAMODB.GLOBAL.PITR.MISMATCH.001
+
+**Global Table Replica Missing Point-in-Time Recovery**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CP-9; hipaa: 164.308(a)(7); nist_800_53_r5: CP-9; pci_dss_v4.0: 10.7; soc2: A1.2;
+
+DynamoDB global table has one or more replicas without point-in-time recovery enabled while the primary has PITR. PITR settings are per-region — enabling PITR on the primary does not propagate to replicas. If the replica region becomes the primary (failover) or is the region closest to the incident (replicated corruption or accidental bulk delete), the replica without PITR cannot be recovered within the 35-day window. PITR must be enabled on every replica independently.
+
+**Remediation:** Enable PITR on each replica independently using aws dynamodb update-continuous-backups --table-name TABLE --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true executed in each replica's region. The default AWS region for the CLI must be set to the replica's region when running this command.
+
+---
+
+### CTL.DYNAMODB.GLOBAL.SINGLEREGION.001
+
+**Global Table Has Only One Region**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CP-7; soc2: A1.2;
+
+DynamoDB global table has replicas in only one region. A global table with a single region carries the overhead of global table infrastructure — service-linked role, mandatory DynamoDB Streams, and replication plumbing — without the geographic redundancy that justifies it. If the single region experiences an outage the table is unavailable, the same as a standard table. Either add replicas in additional regions to realise the DR benefit, or convert to a standard table to eliminate the overhead.
+
+**Remediation:** Add at least one replica in another region with aws dynamodb create-global-table-replica --table-name TABLE --replica-updates '[{"Create":{"RegionName":"eu-west-1"}}]' Or remove the global table configuration and operate as a standard table if multi-region is not needed.
+
+---
+
+### CTL.DYNAMODB.GLOBAL.VERSION.001
+
+**Global Table Uses Legacy 2017 Version**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-6; soc2: CC8.1;
+
+DynamoDB global table uses the 2017.11.29 legacy version instead of the current 2019.11.21 version. Version 2017 has documented limitations: global secondary indexes lack eventual consistency guarantees across replicas, transactional writes (TransactWriteItems) are not supported, replication latency is higher than version 2019, and replica capacity must be managed independently per region rather than automatically. AWS recommends migrating all 2017 global tables to 2019. Migration cannot be done in-place — it requires recreating the table with 2019 global table configuration.
+
+**Remediation:** Migrate to version 2019.11.21. This requires creating a new table with the same schema and global table configuration using the current API (which defaults to 2019), migrating data, and cutting over traffic. AWS provides a migration guide at https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.tutorial.html
+
+---
+
 ### CTL.DYNAMODB.INCOMPLETE.001
 
 **Complete Data Required for DynamoDB Assessment**
@@ -6929,6 +7004,36 @@ DynamoDB Contributor Insights is not enabled for the table. Contributor Insights
 DynamoDB tables must have point-in-time recovery (PITR) enabled. Without PITR, accidental deletes, application bugs, or ransomware that corrupts table data cannot be recovered. PITR provides continuous backups with per-second granularity for the last 35 days.
 
 **Remediation:** Enable PITR using aws dynamodb update-continuous-backups --table-name TABLE --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true.
+
+---
+
+### CTL.DYNAMODB.STREAM.MAXEXPOSURE.001
+
+**DynamoDB Stream Exposes Full Item History**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.1;
+
+DynamoDB Stream is configured with StreamViewType NEW_AND_OLD_IMAGES — every stream record includes both the complete previous state and the complete current state of the modified item. This is the maximum data exposure the stream can produce: a single update exposes all attributes before and after the change. Stream consumers — Lambda event source mappings, Kinesis Data Streams — have access to the full change history for every item in the table. If a consumer is overprivileged, cross-account, or compromised, it can reconstruct the complete modification history of every item. NEW_AND_OLD_IMAGES is appropriate when the consumer genuinely needs both states (audit trail, CDC replication). Verify the consumer's actual requirement before accepting this configuration.
+
+**Remediation:** If the consumer does not need the old item state, reduce to NEW_IMAGE (current state only) or KEYS_ONLY (partition and sort keys only). Update via aws dynamodb update-table --table-name TABLE --stream-specification StreamEnabled=true, StreamViewType=NEW_IMAGE. Note that changing the stream view type creates a new stream — consumers must be updated to the new stream ARN.
+
+---
+
+### CTL.DYNAMODB.STREAM.NOCONSUMER.001
+
+**DynamoDB Stream Has No Consumer**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AU-11; soc2: CC6.1;
+
+DynamoDB Stream is enabled but no consumer is configured — no Lambda event source mapping and no Kinesis Data Streams shard-level consumer. Stream records are written for every item modification, accumulate for 24 hours, and then expire unprocessed. The stream is consuming DynamoDB capacity (stream reads are billed) and retaining a 24-hour window of change records that nobody processes. An unconsumed stream with NEW_AND_OLD_IMAGES or NEW_IMAGE view type is a data retention concern: change data for every item modification persists for 24 hours accessible to any principal with dynamodb:GetShardIterator and dynamodb:GetRecords on the stream ARN, regardless of application intent.
+
+**Remediation:** Either configure a consumer for the stream (Lambda event source mapping via aws lambda create-event-source-mapping --event-source-arn STREAM_ARN --function-name FUNCTION) or disable the stream if it is not needed (aws dynamodb update-table --table-name TABLE --stream-specification StreamEnabled=false).
 
 ---
 

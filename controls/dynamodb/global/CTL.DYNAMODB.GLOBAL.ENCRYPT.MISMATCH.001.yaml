@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.GLOBAL.ENCRYPT.MISMATCH.001
+name: Global Table Replicas Have Inconsistent Encryption
+description: >
+  DynamoDB global table has replicas with different encryption
+  configurations — the primary uses a customer-managed KMS key
+  while one or more replicas use the AWS-owned key or a different
+  CMK. Global table replication copies every item write to every
+  replica. If the primary is CMK-encrypted and a replica is not,
+  the same data has different protection levels across regions:
+  the CMK-protected region has key-policy control, CloudTrail
+  audit of every decrypt, and key revocation capability; the
+  AWS-owned-key region has none of these. The weakest replica's
+  encryption level is the effective encryption protection for
+  the data set. Encryption settings must be consistent across
+  all replicas.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4.0: "3.5.1"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17", "BCR-09"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    One or more global table replicas use a different encryption
+    key than the primary. The weakest encryption level applies
+    to the full data set.
+  action: >
+    Update each replica's encryption to use the same CMK as the
+    primary. Each replica must be updated independently via
+    aws dynamodb update-table --table-name TABLE
+    --replica-updates '[{"Update":{"RegionName":"REGION",
+    "KMSMasterKeyId":"arn:aws:kms:REGION:ACCOUNT:key/KEY_ID"}}]'.
+    KMS keys are region-specific — the replica CMK must exist
+    in the replica's region.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "is_global_table": true,
+          "global_encrypt_consistent": true,
+          "global_encrypt_mismatches": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.is_global_table
+      op: eq
+      value: true
+    - field: properties.database.dynamodb.global_encrypt_consistent
+      op: eq
+      value: false

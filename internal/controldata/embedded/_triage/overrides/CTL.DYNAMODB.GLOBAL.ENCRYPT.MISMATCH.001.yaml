@@ -1,0 +1,33 @@
+control: CTL.DYNAMODB.GLOBAL.ENCRYPT.MISMATCH.001
+defect: >
+  Global table replicas have inconsistent
+  encryption — one or more replicas use a
+  weaker encryption key than the primary.
+infection: >
+  Global table replication copies every
+  item write to every replica region.
+  The data in every replica is identical
+  to the primary. If the primary uses a
+  customer-managed KMS key with key-policy
+  controls and CloudTrail audit of every
+  decrypt operation, but a replica uses
+  the AWS-owned key, the same data has
+  different protection levels in different
+  regions. The AWS-owned-key replica cannot
+  restrict which principals can decrypt,
+  cannot audit individual decrypt operations
+  in CloudTrail (only KMS API calls appear,
+  not the decrypts S3 performs internally),
+  and cannot revoke access by disabling or
+  deleting the key. An attacker or insider
+  who cannot access the CMK-protected primary
+  targets the AWS-owned replica instead —
+  the data is identical, the controls are
+  absent. Encryption consistency must hold
+  across all replica regions for the CMK
+  investment to be meaningful.
+failure: >
+  The weakest replica's encryption is the
+  effective protection for the data set.
+  CMK controls on the primary do not protect
+  data in the weakly-encrypted replica.

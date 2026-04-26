@@ -1,0 +1,26 @@
+id: ddb_backup_gap
+description: >
+  Multiple backup failures across the DynamoDB table and its
+  replicas. The table is not covered by an AWS Backup plan
+  (CTL.DYNAMODB.BACKUP.001) — recovery beyond 35 days is
+  impossible without manual snapshots — AND either global table
+  replicas have inconsistent PITR coverage
+  (CTL.DYNAMODB.GLOBAL.PITR.MISMATCH.001), leaving some replica
+  regions unrecoverable even within the 35-day window, or the
+  table itself does not have PITR enabled
+  (CTL.DYNAMODB.PITR.001), eliminating the 35-day recovery
+  window entirely. Threshold of 2 reflects that a single backup
+  gap is a known posture concern; two together describe a workload
+  with no long-term backup AND compromised short-term recovery
+  capability — either no continuous backup at all or replicas
+  with uneven backup coverage.
+controls:
+  - CTL.DYNAMODB.BACKUP.001
+  - CTL.DYNAMODB.GLOBAL.PITR.MISMATCH.001
+  - CTL.DYNAMODB.PITR.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - data_access
+postconditions:
+  - data_destruction

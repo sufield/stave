@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.STREAM.NOCONSUMER.001
+name: DynamoDB Stream Has No Consumer
+description: >
+  DynamoDB Stream is enabled but no consumer is configured —
+  no Lambda event source mapping and no Kinesis Data Streams
+  shard-level consumer. Stream records are written for every
+  item modification, accumulate for 24 hours, and then expire
+  unprocessed. The stream is consuming DynamoDB capacity (stream
+  reads are billed) and retaining a 24-hour window of change
+  records that nobody processes. An unconsumed stream with
+  NEW_AND_OLD_IMAGES or NEW_IMAGE view type is a data retention
+  concern: change data for every item modification persists for
+  24 hours accessible to any principal with
+  dynamodb:GetShardIterator and dynamodb:GetRecords on the
+  stream ARN, regardless of application intent.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-11"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-07", "LOG-03"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    DynamoDB Stream is enabled but no Lambda event source
+    mapping or Kinesis consumer is configured. Change records
+    accumulate and expire unprocessed.
+  action: >
+    Either configure a consumer for the stream (Lambda event
+    source mapping via aws lambda create-event-source-mapping
+    --event-source-arn STREAM_ARN --function-name FUNCTION)
+    or disable the stream if it is not needed
+    (aws dynamodb update-table --table-name TABLE
+    --stream-specification StreamEnabled=false).
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "stream_enabled": true,
+          "stream_has_consumer": true,
+          "stream_consumer_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.stream_enabled
+      op: eq
+      value: true
+    - field: properties.database.dynamodb.stream_has_consumer
+      op: eq
+      value: false

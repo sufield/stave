@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.GLOBAL.PITR.MISMATCH.001
+name: Global Table Replica Missing Point-in-Time Recovery
+description: >
+  DynamoDB global table has one or more replicas without
+  point-in-time recovery enabled while the primary has PITR.
+  PITR settings are per-region — enabling PITR on the primary
+  does not propagate to replicas. If the replica region becomes
+  the primary (failover) or is the region closest to the incident
+  (replicated corruption or accidental bulk delete), the replica
+  without PITR cannot be recovered within the 35-day window.
+  PITR must be enabled on every replica independently.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-9"
+  hipaa: "164.308(a)(7)"
+  pci_dss_v4.0: "10.7"
+  soc2: "A1.2"
+  fedramp_moderate: "CP-9"
+  ccm_v4: ["BCR-08", "BCR-09"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    One or more global table replicas do not have PITR enabled.
+    Recovery is impossible in those regions if data is corrupted
+    or deleted and the replica becomes primary.
+  action: >
+    Enable PITR on each replica independently using
+    aws dynamodb update-continuous-backups
+    --table-name TABLE
+    --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true
+    executed in each replica's region. The default AWS region
+    for the CLI must be set to the replica's region when running
+    this command.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "is_global_table": true,
+          "global_pitr_consistent": true,
+          "global_pitr_mismatches": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.is_global_table
+      op: eq
+      value: true
+    - field: properties.database.dynamodb.global_pitr_consistent
+      op: eq
+      value: false

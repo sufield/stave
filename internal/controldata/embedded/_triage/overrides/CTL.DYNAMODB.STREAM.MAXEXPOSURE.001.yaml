@@ -1,0 +1,38 @@
+control: CTL.DYNAMODB.STREAM.MAXEXPOSURE.001
+defect: >
+  DynamoDB Stream is configured with
+  NEW_AND_OLD_IMAGES — every stream record
+  includes the complete before and after
+  state of each modified item.
+infection: >
+  NEW_AND_OLD_IMAGES is the highest-exposure
+  stream view type. Every PutItem, UpdateItem,
+  and DeleteItem generates a stream record
+  containing two full item snapshots: the old
+  item state (all attributes, all values before
+  the change) and the new item state (all
+  attributes, all values after the change).
+  Stream consumers — Lambda event source
+  mappings, Kinesis Data Streams consumers —
+  receive the complete historical record of
+  every item modification. If a table stores
+  PII, PHI, financial data, or credentials,
+  every attribute change for every record is
+  accessible to the consumer. An overprivileged
+  consumer role, a cross-account consumer, or
+  a compromised consumer function can
+  reconstruct the complete modification history
+  of every item from stream records before
+  they expire. NEW_AND_OLD_IMAGES is
+  appropriate for CDC replication pipelines
+  and audit systems that genuinely require
+  both states. For consumers that only need
+  the current state, NEW_IMAGE is sufficient.
+  For consumers that only need to know which
+  keys changed, KEYS_ONLY eliminates item
+  content from the stream entirely.
+failure: >
+  Complete item change history accessible
+  in the stream. Old and new values for
+  every attribute of every modified item
+  are exposed to stream consumers.

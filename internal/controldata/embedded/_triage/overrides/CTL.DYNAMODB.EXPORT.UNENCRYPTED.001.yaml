@@ -1,0 +1,31 @@
+control: CTL.DYNAMODB.EXPORT.UNENCRYPTED.001
+defect: >
+  DynamoDB export writes to an S3 bucket
+  without customer-managed KMS encryption.
+  The export is a full copy of the table data.
+infection: >
+  A DynamoDB export to S3 produces a complete
+  snapshot of the table — all items, all
+  attributes — in DynamoDB JSON or Amazon Ion
+  format. The export is a second copy of the
+  same data as the table, stored in S3 with
+  whatever encryption the destination bucket
+  applies. If the table uses a CMK with key-
+  policy controls and CloudTrail audit, but
+  the destination bucket uses SSE-S3 or no
+  default encryption, the export has none of
+  those controls: no key-policy restriction
+  on who can decrypt, no CloudTrail record
+  of decrypt operations, no ability to revoke
+  access by disabling the key. The export is
+  typically long-lived (retained for compliance,
+  analytics, migration) and may outlast the
+  operational controls on the source table.
+  For tables containing PII, PHI, or financial
+  data, the export must have at least as strong
+  encryption as the table.
+failure: >
+  Full table snapshot in S3 without CMK
+  encryption. Key-policy, audit, and
+  revocation controls on the table do not
+  extend to the export copy.

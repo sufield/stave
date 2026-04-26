@@ -1,0 +1,33 @@
+control: CTL.DYNAMODB.STREAM.NOCONSUMER.001
+defect: >
+  DynamoDB Stream is enabled but no
+  Lambda event source mapping or Kinesis
+  consumer is configured.
+infection: >
+  A DynamoDB Stream writes a record for
+  every item modification — PutItem,
+  UpdateItem, DeleteItem, and BatchWriteItem
+  operations all generate stream events.
+  Without a configured consumer, these
+  records accumulate in the stream shard
+  and expire after 24 hours. During those
+  24 hours, the stream is a rolling window
+  of change data accessible to any principal
+  with dynamodb:GetShardIterator and
+  dynamodb:GetRecords on the stream ARN —
+  independent of the table's own resource
+  policy or IAM controls. If the stream
+  uses NEW_IMAGE or NEW_AND_OLD_IMAGES
+  view type, 24 hours of item content
+  accumulates unprocessed. An orphaned
+  stream is also a cost concern: DynamoDB
+  bills for stream read capacity consumed
+  and for the storage of stream records.
+  A stream with no consumer should be
+  disabled unless configuration is
+  temporarily in progress.
+failure: >
+  24 hours of item change data accumulates
+  in an unconsumed stream. Potential
+  unauthorized access via stream APIs
+  bypassing table-level controls.

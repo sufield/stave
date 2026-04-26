@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.GLOBAL.SINGLEREGION.001
+name: Global Table Has Only One Region
+description: >
+  DynamoDB global table has replicas in only one region. A global
+  table with a single region carries the overhead of global table
+  infrastructure — service-linked role, mandatory DynamoDB Streams,
+  and replication plumbing — without the geographic redundancy
+  that justifies it. If the single region experiences an outage
+  the table is unavailable, the same as a standard table. Either
+  add replicas in additional regions to realise the DR benefit,
+  or convert to a standard table to eliminate the overhead.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-7"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-09"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Global table is configured in only one region. The
+    cross-region redundancy benefit is not realised.
+  action: >
+    Add at least one replica in another region with
+    aws dynamodb create-global-table-replica --table-name
+    TABLE --replica-updates '[{"Create":{"RegionName":"eu-west-1"}}]'
+    Or remove the global table configuration and operate
+    as a standard table if multi-region is not needed.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "is_global_table": true,
+          "global_replica_count": 3,
+          "global_replica_regions": ["us-east-1", "eu-west-1", "ap-southeast-1"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.is_global_table
+      op: eq
+      value: true
+    - field: properties.database.dynamodb.global_replica_count
+      op: lte
+      value: 1

@@ -1,0 +1,30 @@
+control: CTL.DYNAMODB.GLOBAL.SINGLEREGION.001
+defect: >
+  DynamoDB global table has replicas in only
+  one region — geographic redundancy is not
+  realised.
+infection: >
+  A global table with a single region carries
+  all the operational complexity of global
+  table infrastructure — a service-linked
+  replication role, mandatory DynamoDB
+  Streams, and cross-region plumbing — without
+  the benefit that justifies the complexity:
+  geographic redundancy. If the single region
+  experiences an outage, the table is
+  unavailable regardless of the global table
+  configuration. The table behaves like a
+  standard table for availability purposes
+  while incurring global table overhead for
+  every write (stream event, replication
+  bookkeeping). The intent of a global table
+  is active-active multi-region: reads from
+  the nearest region, automatic failover if
+  a region fails, data durability across
+  geographies. None of these apply with one
+  replica region.
+failure: >
+  No geographic redundancy. Global table
+  overhead without multi-region benefit.
+  Regional outage causes full table
+  unavailability.

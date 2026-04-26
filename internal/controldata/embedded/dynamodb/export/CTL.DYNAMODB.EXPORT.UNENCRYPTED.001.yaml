@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.EXPORT.UNENCRYPTED.001
+name: DynamoDB Export Targets Unencrypted S3 Bucket
+description: >
+  DynamoDB table export is configured to write to an S3 bucket
+  that does not use a customer-managed KMS key for default
+  encryption. A DynamoDB export writes a full or partial copy
+  of the table data — all items, all attributes — to S3 in
+  DynamoDB JSON or Amazon Ion format. If the destination bucket
+  uses SSE-S3 or no default encryption rather than SSE-KMS
+  with a CMK, the export data is protected only by S3 bucket
+  policies and IAM, without the key-policy control, audit, or
+  revocation capability of a CMK. A table encrypted with CMK
+  should export to a bucket with equivalent encryption — the
+  export is the same data as the table, and weaker protection
+  on the export undermines the CMK investment on the table.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4.0: "3.5.1"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    DynamoDB export writes table data to an S3 bucket without
+    CMK encryption. The export copy has weaker protection than
+    the table itself.
+  action: >
+    Configure the destination S3 bucket's default encryption to
+    use SSE-KMS with a customer-managed key. Existing export
+    files must be re-encrypted or deleted and re-exported.
+    Update the bucket's default encryption via
+    aws s3api put-bucket-encryption --bucket BUCKET
+    --server-side-encryption-configuration
+    '{"Rules":[{"ApplyServerSideEncryptionByDefault":
+    {"SSEAlgorithm":"aws:kms","KMSMasterKeyID":"KEY_ARN"}}]}'.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "has_export": true,
+          "export_bucket": "arn:aws:s3:::phi-exports",
+          "export_bucket_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.has_export
+      op: eq
+      value: true
+    - field: properties.database.dynamodb.export_bucket_cmk
+      op: eq
+      value: false

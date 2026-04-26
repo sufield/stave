@@ -1,0 +1,31 @@
+control: CTL.DYNAMODB.GLOBAL.PITR.MISMATCH.001
+defect: >
+  One or more global table replicas are
+  missing point-in-time recovery while the
+  primary has it enabled.
+infection: >
+  PITR is a per-region, per-table setting.
+  Enabling PITR on the primary table does
+  not automatically enable it on replicas —
+  each must be configured independently
+  using the replica region's endpoint. If
+  a replica without PITR receives corrupted
+  data (application bug that writes bad
+  values, ransomware that modifies items,
+  accidental bulk delete), that data cannot
+  be recovered from within the 35-day PITR
+  window because no continuous backup was
+  taken. If the primary region fails and the
+  replica becomes the active table, the new
+  primary has no PITR — the same corruption
+  scenario in that region is also
+  unrecoverable. PITR provides per-second
+  restoration granularity across the 35-day
+  window. Its absence on any replica leaves
+  that region's data permanently unrecoverable
+  after an incident.
+failure: >
+  Data in replica regions without PITR
+  is unrecoverable after corruption or
+  deletion. Failover to a non-PITR replica
+  loses continuous backup protection.

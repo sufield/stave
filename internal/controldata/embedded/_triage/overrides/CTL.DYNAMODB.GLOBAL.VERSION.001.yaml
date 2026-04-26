@@ -1,0 +1,33 @@
+control: CTL.DYNAMODB.GLOBAL.VERSION.001
+defect: >
+  Global table is using the legacy
+  2017.11.29 version instead of the
+  current 2019.11.21 version.
+infection: >
+  The 2017 global table version predates
+  AWS's architectural revamp of the
+  replication engine. Key limitations that
+  version 2019 resolved: transactional
+  writes (TransactWriteItems) are not
+  replicated across regions in version
+  2017 — a transaction on the primary is
+  not atomic in replicas; global secondary
+  indexes may return inconsistent results
+  across regions during replication lag;
+  replica capacity must be monitored and
+  scaled per-region manually rather than
+  being automatically matched to the
+  primary's consumption; replication
+  conflicts are resolved differently,
+  with a last-writer-wins rule that may
+  discard writes differently from version
+  2019's approach. AWS no longer creates
+  new 2017 global tables and recommends
+  migrating existing ones. Migration
+  requires recreating the table — there
+  is no in-place upgrade.
+failure: >
+  Transactional writes, GSI consistency,
+  and automatic replica capacity management
+  are not available. Risk of inconsistent
+  data across regions during replication.
