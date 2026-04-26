@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:dynamodb:us-east-1:123456789012:table/users-pii",
+      "type": "aws_dynamodb_table",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "table",
+          "tags": {
+            "data_classification": "PII"
+          },
+          "dynamodb": {
+            "table_name": "users-pii",
+            "cloudtrail_data_events": false
+          }
+        }
+      }
+    }
+  ]
+}

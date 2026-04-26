@@ -1,0 +1,26 @@
+control: CTL.DYNAMODB.ALARM.THROTTLE.001
+defect: >
+  DynamoDB table has no CloudWatch alarm for the
+  ThrottledRequests metric. Throttling, when it
+  occurs, is invisible to operations.
+infection: >
+  Throttled requests are rejected requests — the
+  application receives a
+  ProvisionedThroughputExceededException. If the
+  application doesn't retry with backoff, data is
+  lost (writes) or stale (reads). If the application
+  does retry, latency increases as backoff
+  accumulates. Throttling can indicate: legitimate
+  traffic spike (capacity needs to scale), hot
+  partition (uneven data distribution), DDoS attack
+  (intentional capacity exhaustion), or
+  misconfigured auto-scaling (scaling too slow for
+  the traffic ramp). Without an alarm, throttling
+  escalates from occasional rejected requests to
+  sustained data loss or latency degradation
+  without notification. The first signal becomes a
+  customer-reported error rather than a paged
+  on-call engineer.
+failure: >
+  Undetected capacity exhaustion. Requests are
+  rejected without real-time notification.

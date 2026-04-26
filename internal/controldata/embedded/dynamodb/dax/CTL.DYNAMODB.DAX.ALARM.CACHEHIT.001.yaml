@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.DAX.ALARM.CACHEHIT.001
+name: No CloudWatch Alarm for DAX Cache Hit Rate
+description: >
+  No CloudWatch alarm monitors the DAX CacheHitRate
+  metric for the cluster. A low cache hit rate means
+  most requests are cache misses — DAX forwards them to
+  DynamoDB and the cluster is consuming resources
+  (network, compute, memory) without providing the
+  cache benefit it was sized for. A sudden hit rate drop
+  may indicate cache flush, TTL expiration, key pattern
+  change, or progressive cache failure (for example, a
+  deleted DAX service role failing on each miss).
+  Without an alarm, the degradation is invisible until
+  DynamoDB capacity itself shows pressure.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No CloudWatch alarm exists for the DAX cluster's
+    CacheHitRate metric.
+  action: >
+    Create a CloudWatch alarm on the AWS/DAX
+    CacheHitRate metric scoped to this cluster,
+    threshold below the cluster's expected steady-state
+    hit rate (typically 0.8 for read-heavy workloads),
+    with SNS notification to the operations team.
+    Sustained low hit rates warrant a review of the
+    table's access pattern — DAX may not be the right
+    tool for write-heavy or scan-heavy access.
+  example: |
+    {
+      "database": {
+        "kind": "dynamodb_dax_cluster",
+        "dynamodb": {
+          "dax": {
+            "alarm_cache_hit": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dynamodb_dax_cluster
+    - field: properties.database.dynamodb.dax.alarm_cache_hit
+      op: eq
+      value: false

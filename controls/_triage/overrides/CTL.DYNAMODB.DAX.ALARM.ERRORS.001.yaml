@@ -1,0 +1,29 @@
+control: CTL.DYNAMODB.DAX.ALARM.ERRORS.001
+defect: >
+  DAX cluster has no CloudWatch alarm for the
+  cluster's error metrics.
+infection: >
+  DAX errors are not application errors — they
+  are cache-layer failures: connection errors
+  reaching the cluster, request timeouts,
+  internal cluster faults, or downstream errors
+  DAX surfaces from DynamoDB. Applications using
+  DAX through the DAX client SDK fail or fall
+  back to direct DynamoDB depending on how they
+  handle these errors. Without an alarm, the
+  cluster can degrade without notification: a
+  node may be unhealthy and dropping requests,
+  the security group may have changed and broken
+  client connectivity, or the service role may
+  be failing on cache fills. The combination of
+  a missing error alarm and any DAX ghost
+  reference (CTL.DYNAMODB.GHOST.DAXROLE.001,
+  CTL.DYNAMODB.GHOST.DAXSG.001,
+  CTL.DYNAMODB.GHOST.DAXSUBNET.001) is the
+  difference between catching a progressive
+  failure early and discovering it during a
+  customer-visible incident.
+failure: >
+  Cache-layer failures are invisible. Progressive
+  degradation is discovered only when
+  application-side metrics show the impact.

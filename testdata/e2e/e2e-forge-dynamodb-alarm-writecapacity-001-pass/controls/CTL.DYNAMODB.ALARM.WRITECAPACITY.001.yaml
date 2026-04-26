@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.ALARM.WRITECAPACITY.001
+name: No CloudWatch Alarm for DynamoDB Write Capacity Approaching Limit
+description: >
+  Provisioned-capacity DynamoDB table has no CloudWatch
+  alarm monitoring ConsumedWriteCapacityUnits approaching
+  the provisioned limit. Write throttling without retry
+  logic causes data loss — the application receives a
+  ProvisionedThroughputExceededException and the write
+  is dropped. An 80%-capacity alarm provides lead time
+  to scale before throttling begins. This control fires
+  only on PROVISIONED tables; on-demand tables have no
+  provisioned limit to approach.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Provisioned table has no CloudWatch alarm for
+    ConsumedWriteCapacityUnits approaching the
+    provisioned limit.
+  action: >
+    Create a CloudWatch alarm on the AWS/DynamoDB
+    ConsumedWriteCapacityUnits metric scoped to this
+    table at 80% of provisioned write capacity, with
+    SNS notification to the operations team. Pair with
+    auto-scaling so capacity is added before throttling
+    begins. For tables with on-demand capacity mode,
+    this alarm does not apply — switch to the
+    ThrottledRequests alarm instead.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "capacity_mode": "PROVISIONED",
+          "alarm_write_capacity": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.capacity_mode
+      op: eq
+      value: PROVISIONED
+    - field: properties.database.dynamodb.alarm_write_capacity
+      op: eq
+      value: false

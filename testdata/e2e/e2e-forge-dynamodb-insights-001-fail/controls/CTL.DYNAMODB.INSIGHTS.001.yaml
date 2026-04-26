@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.INSIGHTS.001
+name: DynamoDB Contributor Insights Not Enabled
+description: >
+  DynamoDB Contributor Insights is not enabled for the
+  table. Contributor Insights provides real-time
+  identification of the most accessed and most throttled
+  partition keys. Without it, hot key analysis requires
+  enabling CloudTrail data events (high volume, high
+  cost) and correlating raw logs by partition key. Hot
+  keys are the most common cause of partition-level
+  throttling that auto-scaling cannot fix — auto-scaling
+  adjusts table capacity, not partition capacity.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Contributor Insights is not enabled on the table.
+    Hot key analysis requires manual log correlation.
+  action: >
+    Enable Contributor Insights on the table:
+    aws dynamodb update-contributor-insights
+    --table-name xxx --contributor-insights-action ENABLE.
+    Repeat for each global secondary index that carries
+    significant traffic. Review the resulting reports
+    weekly to identify hot partitions and adjust the
+    schema (write sharding, distributed counters)
+    before throttling materializes.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "contributor_insights": true,
+          "contributor_insights_status": "ENABLED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.contributor_insights
+      op: eq
+      value: false

@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.ALARM.SYSTEMERRORS.001
+name: No CloudWatch Alarm for DynamoDB System Errors
+description: >
+  No CloudWatch alarm monitors the SystemErrors metric
+  for this DynamoDB table. SystemErrors are HTTP 5xx
+  responses from DynamoDB itself — infrastructure-level
+  failures the application cannot resolve through retry
+  alone. Without an alarm, internal DynamoDB failures
+  are invisible until application error rates spike.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No CloudWatch alarm exists for the table's
+    SystemErrors metric.
+  action: >
+    Create a CloudWatch alarm on the AWS/DynamoDB
+    SystemErrors metric scoped to this table, threshold
+    > 0 over a short evaluation window, with SNS
+    notification to the operations team. SystemErrors
+    that persist warrant an AWS Support case — the
+    application cannot fix infrastructure-level
+    failures.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "alarm_system_errors": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.alarm_system_errors
+      op: eq
+      value: false

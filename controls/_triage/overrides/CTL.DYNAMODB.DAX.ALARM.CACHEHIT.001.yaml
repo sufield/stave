@@ -1,0 +1,28 @@
+control: CTL.DYNAMODB.DAX.ALARM.CACHEHIT.001
+defect: >
+  DAX cluster has no CloudWatch alarm for the
+  CacheHitRate metric.
+infection: >
+  The cache hit rate is the headline measure of
+  whether DAX is doing its job. A high hit rate
+  means most requests are absorbed by the cache
+  and never reach DynamoDB; a low hit rate means
+  DAX is sitting in the request path adding
+  latency without absorbing load. A sudden drop
+  in hit rate has several possible causes: an
+  application change that altered the access
+  pattern (the new workload doesn't fit the
+  cache), TTL expiration on a hot key whose
+  refresh storm overwhelmed the cache, a cache
+  flush event, or progressive cache failure (for
+  example, a deleted DAX service role failing on
+  each cache miss — the misses succeed against
+  cached data but cannot fill new entries). A
+  drop without an alarm is invisible until
+  DynamoDB's own capacity metrics show the
+  pressure, by which point the cache layer has
+  effectively been bypassed for some time.
+failure: >
+  Cache effectiveness is unmonitored. Drops in
+  hit rate are invisible until DynamoDB capacity
+  itself shows pressure.

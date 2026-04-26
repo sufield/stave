@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.DAX.ALARM.ERRORS.001
+name: No CloudWatch Alarm for DAX Error Rate
+description: >
+  No CloudWatch alarm monitors the DAX cluster's error
+  metrics (ErrorRequestCount, FaultRequestCount,
+  ConnectionErrors). DAX errors indicate cache-layer
+  failures — connection errors, timeout errors, or
+  internal DAX errors. If DAX is in the critical path,
+  applications fail or degrade without notification.
+  Combined with a deleted DAX service role
+  (CTL.DYNAMODB.GHOST.DAXROLE.001), this blind spot is
+  the difference between catching a progressive
+  failure early and discovering it during a customer
+  incident.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No CloudWatch alarm exists for the DAX cluster's
+    error metrics.
+  action: >
+    Create CloudWatch alarms on the AWS/DAX
+    ErrorRequestCount and FaultRequestCount metrics
+    scoped to this cluster, threshold > 0 over a short
+    evaluation window, with SNS notification to the
+    operations team. Add a separate alarm on
+    ClientConnectionCount dropping below the expected
+    application baseline — that pattern catches DAX
+    connectivity loss that the error metrics miss.
+  example: |
+    {
+      "database": {
+        "kind": "dynamodb_dax_cluster",
+        "dynamodb": {
+          "dax": {
+            "alarm_errors": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dynamodb_dax_cluster
+    - field: properties.database.dynamodb.dax.alarm_errors
+      op: eq
+      value: false

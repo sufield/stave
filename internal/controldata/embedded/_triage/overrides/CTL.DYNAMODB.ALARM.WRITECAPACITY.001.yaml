@@ -1,0 +1,28 @@
+control: CTL.DYNAMODB.ALARM.WRITECAPACITY.001
+defect: >
+  Provisioned-capacity DynamoDB table has no
+  CloudWatch alarm for ConsumedWriteCapacityUnits
+  approaching the provisioned limit.
+infection: >
+  Write throttling is more dangerous than read
+  throttling. A throttled read can be retried
+  cheaply; a throttled write, if not retried,
+  loses data. Many applications retry reads
+  automatically (the SDK does it by default) but
+  treat write failures as terminal — particularly
+  for fire-and-forget writes from background
+  workers or stream consumers. An alarm at 80% of
+  provisioned write capacity provides lead time
+  to add capacity before throttling begins.
+  Without the alarm, the first signal is dropped
+  writes — which may not surface as an error
+  metric at all if the application doesn't
+  inspect the SDK response. The control does not
+  fire on on-demand tables because they have no
+  provisioned limit to approach — for those,
+  CTL.DYNAMODB.ALARM.THROTTLE.001 is the
+  appropriate detection.
+failure: >
+  No lead time before write throttling begins.
+  Writes that are not retried become silent data
+  loss.

@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.ALARM.THROTTLE.001
+name: No CloudWatch Alarm for DynamoDB Throttled Requests
+description: >
+  No CloudWatch alarm monitors the DynamoDB
+  ThrottledRequests metric for this table. Throttled
+  requests mean reads or writes are being rejected by the
+  service. For provisioned tables this indicates capacity
+  exhaustion; for on-demand tables it indicates exceeding
+  the per-partition limit. Without an alarm, throttling
+  escalates from occasional rejected requests to sustained
+  data loss (writes without retry) or latency degradation
+  without notification.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - dynamodb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No CloudWatch alarm exists for the table's
+    ThrottledRequests metric.
+  action: >
+    Create a CloudWatch alarm on the AWS/DynamoDB
+    ThrottledRequests metric scoped to this table,
+    threshold > 0 over a short evaluation window (1-5
+    minutes), with SNS notification to the operations
+    team. Pair the alarm with application-level retry
+    with exponential backoff so transient throttling
+    does not become data loss.
+  example: |
+    {
+      "database": {
+        "kind": "table",
+        "dynamodb": {
+          "alarm_throttle": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: table
+    - field: properties.database.dynamodb.alarm_throttle
+      op: eq
+      value: false

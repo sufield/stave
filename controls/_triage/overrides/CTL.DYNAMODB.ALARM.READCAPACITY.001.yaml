@@ -1,0 +1,27 @@
+control: CTL.DYNAMODB.ALARM.READCAPACITY.001
+defect: >
+  Provisioned-capacity DynamoDB table has no
+  CloudWatch alarm for ConsumedReadCapacityUnits
+  approaching the provisioned limit.
+infection: >
+  Provisioned read capacity is a fixed budget. The
+  table can absorb reads up to that budget; beyond
+  it, reads are throttled. The transition is
+  abrupt: at 99% of capacity reads succeed, at
+  101% reads return
+  ProvisionedThroughputExceededException. An alarm
+  at 80% provides 20% of the budget as runway —
+  enough time for auto-scaling to add capacity, or
+  for an operator to provision manually, before
+  throttling materializes. Without the alarm, the
+  first signal is throttling itself, by which
+  point reads are already failing or being
+  retried with backoff. The control does not fire
+  on on-demand tables because they have no
+  provisioned limit to approach — for those,
+  CTL.DYNAMODB.ALARM.THROTTLE.001 is the
+  appropriate detection.
+failure: >
+  No lead time before throttling begins. The
+  first signal of capacity exhaustion is rejected
+  reads.

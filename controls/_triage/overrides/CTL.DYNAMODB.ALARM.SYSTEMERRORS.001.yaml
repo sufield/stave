@@ -1,0 +1,25 @@
+control: CTL.DYNAMODB.ALARM.SYSTEMERRORS.001
+defect: >
+  DynamoDB table has no CloudWatch alarm for the
+  SystemErrors metric. Internal DynamoDB failures
+  are invisible.
+infection: >
+  SystemErrors are HTTP 5xx responses returned by
+  DynamoDB itself — the request reached DynamoDB
+  but the service couldn't complete it due to an
+  infrastructure-level fault. These are not
+  application errors and cannot be resolved by
+  application retry alone. They indicate one of:
+  AWS regional incidents, partition-level issues
+  the service is working around, or service-side
+  configuration problems. Without an alarm, the
+  application sees elevated error rates and the
+  operations team has no early signal that the
+  cause is service-side rather than application-
+  side. Time spent debugging the application is
+  time wasted while DynamoDB itself is the
+  problem.
+failure: >
+  Service-side infrastructure failures are
+  diagnosed as application bugs. Mean time to
+  recognize cause increases.

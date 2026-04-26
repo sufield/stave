@@ -18,219 +18,12 @@
     "evaluated_state": "deployed"
   },
   "summary": {
-    "total_assets": 1,
-    "exposed_resources": 1,
-    "violations": 1
+    "total_assets": 0,
+    "exposed_resources": 0,
+    "violations": 0
   },
-  "status": "NON_COMPLIANT",
-  "risk_signals": [
-    {
-      "control_id": "CTL.DNS.DANGLING.001",
-      "asset_id": "a2.bime.io-cname",
-      "asset_type": "dns_record",
-      "status": "OVERDUE",
-      "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
-      "first_unsafe_at": "2026-01-01T00:00:00Z",
-      "threshold_hours": 168
-    }
-  ],
-  "findings": [
-    {
-      "finding_id": "sha256:3cbe0e3478b4c1c8",
-      "control_id": "CTL.DNS.DANGLING.001",
-      "control_name": "DNS Records Must Not Point to Unclaimed Resources",
-      "control_description": "DNS records (CNAME, ALIAS, A) that reference external cloud resources must resolve to resources that exist and are owned by the organization. A dangling DNS record pointing to a deleted or unclaimed resource enables subdomain takeover — the attacker claims the resource and serves content under the organization's domain.\n",
-      "asset_id": "a2.bime.io-cname",
-      "asset_type": "dns_record",
-      "asset_vendor": "cloudflare",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "misconfigurations": [
-          {
-            "property": "dns.target_exists",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "dns.target_owned",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "control_severity": "critical",
-      "control_compliance_ccm_v4": [
-        "CCC-04"
-      ],
-      "exposure": {
-        "type": "subdomain_takeover",
-        "principal_scope": "public"
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "A DNS record points to a cloud resource that does not exist or is not owned by the organization. An attacker can claim the resource and serve content under your domain — phishing, malware, or credential harvesting that appears to originate from a trusted hostname.",
-        "action": "Either claim the target resource in your cloud account to block takeover, or delete the DNS record that points to the unclaimed resource. Audit all DNS zones for records pointing to decommissioned infrastructure.",
-        "example": "{\n  \"dns\": {\n    \"record_type\": \"CNAME\",\n    \"target_exists\": true,\n    \"target_owned\": true\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-1800741e78332132",
-        "target": {
-          "asset_id": "a2.bime.io-cname",
-          "asset_type": "dns_record"
-        },
-        "action": "Either claim the target resource in your cloud account to block takeover, or delete the DNS record that points to the unclaimed resource. Audit all DNS zones for records pointing to decommissioned infrastructure."
-      },
-      "exposure_score": 205.47945205479454,
-      "score_breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "dns.target_exists eq false",
-          "observation_key": "dns.target_exists",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        },
-        {
-          "predicate_expr": "dns.target_owned eq false",
-          "observation_key": "dns.target_owned",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "a2.bime.io-cname",
-          "type": "dns_record",
-          "vendor": "cloudflare"
-        },
-        "violation": {
-          "control_id": "CTL.DNS.DANGLING.001",
-          "control_name": "DNS Records Must Not Point to Unclaimed Resources",
-          "severity": "critical",
-          "reasoning": [
-            {
-              "clause": "the DNS record's target exists = false",
-              "observation_key": "dns.target_exists",
-              "observed_value": false
-            },
-            {
-              "clause": "the DNS record's target is owned by the account = false",
-              "observation_key": "dns.target_owned",
-              "observed_value": false
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "dns.target_exists",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set dns.target_exists to true"
-          },
-          {
-            "path": "dns.target_owned",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set dns.target_owned to true"
-          }
-        ],
-        "action": "Either claim the target resource in your cloud account to block takeover, or delete the DNS record that points to the unclaimed resource. Audit all DNS zones for records pointing to decommissioned infrastructure."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "dns"
-      ],
-      "delta": [
-        {
-          "property_label": "target exists",
-          "property_path": "dns.target_exists",
-          "current_value": "false",
-          "fix_action": "set to true (enable)"
-        },
-        {
-          "property_label": "target owned",
-          "property_path": "dns.target_owned",
-          "current_value": "false",
-          "fix_action": "set to true (enable)"
-        }
-      ]
-    }
-  ],
-  "issues": [
-    {
-      "issue_id": "sha256:de9d90648ffb0aa5",
-      "asset_id": "a2.bime.io-cname",
-      "shared_keys": [
-        "dns.target_exists",
-        "dns.target_owned"
-      ],
-      "headline_finding_id": "sha256:3cbe0e3478b4c1c8",
-      "member_finding_ids": [
-        "sha256:3cbe0e3478b4c1c8"
-      ],
-      "consolidated_score": 205.47945205479454,
-      "consolidated_blast_radius": 1
-    }
-  ],
-  "remediation_groups": [
-    {
-      "asset_id": "a2.bime.io-cname",
-      "asset_type": "dns_record",
-      "fix_plan": {
-        "id": "fix-1800741e78332132",
-        "target": {
-          "asset_id": "a2.bime.io-cname",
-          "asset_type": "dns_record"
-        },
-        "action": "Either claim the target resource in your cloud account to block takeover, or delete the DNS record that points to the unclaimed resource. Audit all DNS zones for records pointing to decommissioned infrastructure."
-      },
-      "contributing_controls": [
-        "CTL.DNS.DANGLING.001"
-      ],
-      "finding_count": 1
-    }
-  ],
-  "top_exposures": [
-    {
-      "finding_index": 0,
-      "control_id": "CTL.DNS.DANGLING.001",
-      "asset_id": "a2.bime.io-cname",
-      "exposure_score": 205.47945205479454,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "silent_killer": false
-    }
-  ],
+  "status": "COMPLIANT",
+  "findings": [],
   "coverage_posture": {
     "prowler": {
       "iam": {
@@ -319,12 +112,12 @@
     "selected_controls_source": "dir",
     "context_name": "stave",
     "resolved_paths": {
-      "controls": "testdata/e2e/e2e-dns-bucket-takeover/controls",
-      "observations": "testdata/e2e/e2e-dns-bucket-takeover/observations"
+      "controls": "controls",
+      "observations": "observations"
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "80a7ef56bf70a504c39fd3e9f7ca40a53d1f3f16",
+      "head_commit": "24ee7a3113b4a2887be17ceb46bd937ea9ae9d76",
       "dirty": false
     }
   }

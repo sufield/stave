@@ -52,12 +52,18 @@ func TestE2E(t *testing.T) {
 
 func buildBinary(t *testing.T) string {
 	t.Helper()
-	bin := filepath.Join(t.TempDir(), "stave")
-	cmd := exec.Command("go", "build", "-o", bin, "./cmd/stave")
-	cmd.Dir = findRepoRoot(t)
+	repoRoot := findRepoRoot(t)
+
+	cmd := exec.Command("make", "build")
+	cmd.Dir = repoRoot
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("build stave binary: %v\n%s", err, out)
+		t.Fatalf("make build: %v\n%s", err, out)
+	}
+
+	bin := filepath.Join(repoRoot, "stave")
+	if _, err := os.Stat(bin); err != nil {
+		t.Fatalf("built binary not found at %s: %v", bin, err)
 	}
 	return bin
 }

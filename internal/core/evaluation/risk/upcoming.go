@@ -173,6 +173,15 @@ type assetState struct {
 }
 
 // ComputeItems returns deterministic upcoming threshold items for currently-unsafe assets.
+//
+// TODO(risk-vs-acknowledgment): Risk signals are generated from
+// control applicability, not from active findings. Exception and
+// acknowledgment filters are not applied here. This means risk
+// signals may appear for controls whose findings have been
+// excepted or acknowledged. This is intentional: risk exists
+// regardless of acceptance — accepting risk does not erase it.
+// If this causes user confusion, consider generating risk signals
+// from post-filter active findings instead.
 func ComputeItems(req ThresholdRequest) ThresholdItems {
 	if len(req.Snapshots) == 0 || len(req.Controls) == 0 {
 		return nil

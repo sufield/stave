@@ -1,0 +1,30 @@
+control: CTL.DYNAMODB.INSIGHTS.001
+defect: >
+  DynamoDB table does not have Contributor
+  Insights enabled. Hot key analysis requires
+  manual log correlation.
+infection: >
+  Contributor Insights provides real-time
+  analysis of the most accessed and most
+  throttled partition keys. Without it,
+  identifying hot keys requires: enabling
+  CloudTrail data events (high volume, high
+  cost), analyzing the raw CloudTrail logs, and
+  correlating by partition key. Contributor
+  Insights provides this analysis automatically
+  and continuously, with the partition key value
+  visible in CloudWatch. Hot keys are the most
+  common cause of DynamoDB throttling that
+  auto-scaling cannot fix — auto-scaling adjusts
+  table-wide capacity, but a single hot
+  partition is constrained by per-partition
+  throughput limits regardless of overall table
+  capacity. The security relevance is indirect
+  but real: a hot key may indicate an attacker
+  enumerating a specific user's data, scraping
+  records by sequential ID, or targeting a known
+  high-value partition.
+failure: >
+  Hot key blind spot. Partition-level throttling
+  from hot keys is undiagnosable without
+  Contributor Insights.

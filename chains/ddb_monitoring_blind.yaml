@@ -1,0 +1,27 @@
+id: ddb_monitoring_blind
+description: >
+  Multiple DynamoDB monitoring gaps stacked on the same
+  table. The table has no throttle alarm
+  (CTL.DYNAMODB.ALARM.THROTTLE.001) AND either no
+  system error alarm
+  (CTL.DYNAMODB.ALARM.SYSTEMERRORS.001) or no
+  Contributor Insights enabled
+  (CTL.DYNAMODB.INSIGHTS.001). Threshold of 2 reflects
+  that any one missing detection is a known posture
+  concern; two together describe a table whose
+  operational visibility is broken at multiple points —
+  capacity exhaustion is unmonitored AND either
+  infrastructure errors are unmonitored or hot key
+  analysis is impossible. The first signal of trouble
+  becomes a customer report rather than an internal
+  alarm.
+controls:
+  - CTL.DYNAMODB.ALARM.THROTTLE.001
+  - CTL.DYNAMODB.ALARM.SYSTEMERRORS.001
+  - CTL.DYNAMODB.INSIGHTS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - data_access
+postconditions:
+  - invisible_data_exfiltration

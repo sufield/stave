@@ -1,0 +1,28 @@
+control: CTL.DYNAMODB.AUDIT.DATAEVENTS.001
+defect: >
+  DynamoDB table is not covered by any CloudTrail
+  trail with data events enabled. The table has no
+  item-level audit trail.
+infection: >
+  DynamoDB management events (CreateTable,
+  DeleteTable, UpdateTable) are logged in CloudTrail
+  by default. But data events — the actual reads and
+  writes to items — are not logged unless explicitly
+  enabled. Without data events, there is no record
+  of: who read a specific item (GetItem, Query), who
+  modified an item (PutItem, UpdateItem), who
+  deleted an item (DeleteItem), or who performed a
+  bulk operation (Scan, BatchGetItem,
+  BatchWriteItem). For tables containing PII, PHI,
+  financial data, or credentials, data events are
+  the only item-level audit trail. DynamoDB has no
+  built-in database audit log. RDS has its own
+  audit log; S3 has server access logs as a
+  fallback; DynamoDB has only CloudTrail. Without
+  data events, unauthorized data access is invisible
+  — to the security team, to the auditor, to the
+  application owner.
+failure: >
+  No item-level audit trail. Data reads, writes, and
+  deletes are unrecorded. Unauthorized access is
+  invisible.

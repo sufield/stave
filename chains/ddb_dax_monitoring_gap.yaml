@@ -1,0 +1,28 @@
+id: ddb_dax_monitoring_gap
+description: >
+  DAX cluster has compounded monitoring or integrity
+  failures. The cache hit rate is unmonitored
+  (CTL.DYNAMODB.DAX.ALARM.CACHEHIT.001) AND either
+  cluster errors are unmonitored
+  (CTL.DYNAMODB.DAX.ALARM.ERRORS.001) or the cluster
+  references a deleted service role
+  (CTL.DYNAMODB.GHOST.DAXROLE.001). Threshold of 2
+  reflects that the combination describes a cache
+  layer that is degrading or actively failing without
+  any signal: cache effectiveness is invisible AND
+  either errors are invisible or the cluster has a
+  guaranteed-future-failure that nobody will notice
+  until application metrics show the impact. The
+  cache fronts every read of the table — its
+  observability should match the table's, not fall
+  below it.
+controls:
+  - CTL.DYNAMODB.DAX.ALARM.CACHEHIT.001
+  - CTL.DYNAMODB.DAX.ALARM.ERRORS.001
+  - CTL.DYNAMODB.GHOST.DAXROLE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - data_access
+postconditions:
+  - data_destruction
