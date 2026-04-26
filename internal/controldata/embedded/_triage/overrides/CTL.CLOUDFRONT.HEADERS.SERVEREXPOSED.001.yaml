@@ -1,0 +1,31 @@
+control: CTL.CLOUDFRONT.HEADERS.SERVEREXPOSED.001
+defect: >
+  CloudFront responses include Server or
+  X-Powered-By headers disclosing the
+  backend technology stack.
+infection: >
+  Server and X-Powered-By headers reveal the
+  exact technology stack: the HTTP server
+  (Apache 2.4.58, nginx 1.24.0, IIS 10.0),
+  the runtime (PHP/8.2.3, Python/3.12), and
+  the framework (Express, ASP.NET MVC). This
+  information feeds targeted reconnaissance:
+  a scanner that sees "Server: Apache/2.4.51"
+  can immediately enumerate every CVE for
+  that Apache version and test the two or
+  three most impactful ones. Without the
+  version header, the scanner must probe
+  for vulnerabilities without knowing which
+  apply — slower, noisier, and easier to
+  detect. CloudFront response headers policies
+  can remove arbitrary origin response headers
+  before forwarding to viewers — this is a
+  zero-cost remediation that requires no origin
+  changes. The removed headers are transparent
+  to legitimate users (browsers don't need
+  them) and invisible to attackers (they
+  never appear in the response).
+failure: >
+  Technology stack exposed to all viewers.
+  Targeted CVE enumeration is trivial with
+  known server and version information.

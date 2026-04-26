@@ -1,0 +1,29 @@
+id: cf_content_unprotected
+description: >
+  Potentially restricted content is served without CDN-layer access
+  control AND without adequate perimeter defenses. A cache behavior
+  path matching a restricted-looking prefix (/premium/*, /member/*,
+  /protected/*) has no signed URL enforcement
+  (CTL.CLOUDFRONT.ACCESS.NOSIGNING.001) — CDN-layer access control
+  is absent for content that appears to require it — AND either
+  no WAF is associated (CTL.CLOUDFRONT.WAF.001), meaning no
+  application-layer filtering protects the distribution, or the
+  distribution allows HTTP viewer connections
+  (CTL.CLOUDFRONT.HTTPS.ONLY.001), meaning content is served
+  over plaintext. Threshold of 2 requires both the unsigned content
+  and a perimeter failure. Neither condition alone triggers the
+  chain: unsigned restricted content may be intentional for genuinely
+  public content behind a suspicious path; no WAF or HTTP alone is
+  a known concern. Together they describe a distribution where
+  potentially restricted content is unprotected by signing AND
+  the CDN perimeter itself has deficiencies.
+controls:
+  - CTL.CLOUDFRONT.ACCESS.NOSIGNING.001
+  - CTL.CLOUDFRONT.WAF.001
+  - CTL.CLOUDFRONT.HTTPS.ONLY.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access

@@ -1,0 +1,33 @@
+control: CTL.CLOUDFRONT.WAF.RATELIMIT.001
+defect: >
+  CloudFront WAF has no rate-based rules.
+  HTTP floods and automated attacks run
+  without throttling at the edge.
+infection: >
+  WAF managed rules filter known bad payloads —
+  SQL injection signatures, known exploit paths,
+  XSS patterns. But they don't limit how fast
+  any IP can send those payloads. A rate-based
+  rule adds the temporal dimension: an IP that
+  sends 5,000 requests in 5 minutes gets blocked,
+  regardless of whether any individual request
+  matches a managed rule signature. Without rate
+  rules: credential stuffing can try a different
+  password every second from the same IP —
+  10,000 attempts per day per IP, unblocked as
+  long as each individual request looks like a
+  valid login attempt. Content scrapers can
+  download the full content catalog at network
+  speed — there is nothing in WAF to slow them
+  down. API abuse (excessive calls to metered
+  endpoints, pagination walking, report
+  generation spam) runs unchecked. Application-
+  layer DDoS floods a specific endpoint (checkout,
+  search, autocomplete) with no rate limit. Rate
+  rules auto-expire blocked IPs after a
+  configurable window — they are self-cleaning
+  and don't require manual IP management.
+failure: >
+  No rate limiting at the edge. Credential
+  stuffing, scraping, and HTTP flood attacks
+  proceed unthrottled through WAF.

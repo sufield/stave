@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.WAF.RATELIMIT.001
+name: CloudFront WAF Has No Rate-Based Rules
+description: >
+  CloudFront distribution has a WAF web ACL but the ACL contains
+  no rate-based rules. Rate-based rules limit the number of requests
+  from a single IP within a 5-minute window and automatically block
+  IPs that exceed the threshold. Without rate limiting: application-
+  layer DDoS (HTTP floods targeting specific endpoints) can saturate
+  origin resources without triggering WAF block actions, credential
+  stuffing attacks can attempt thousands of password combinations per
+  minute unimpeded, content scrapers can walk the entire distribution
+  at full network speed, and API abuse has no throttling mechanism
+  at the CDN layer. Rate-based rules are the WAF's primary defense
+  against volumetric application-layer attacks that bypass Shield
+  Standard's L3/L4 protections. This control gates on has_waf to
+  avoid false positives on distributions without WAF (covered by
+  CTL.CLOUDFRONT.WAF.001).
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  pci_dss_v4.0: "6.4.3"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront WAF has no rate-based rules. HTTP floods, credential
+    stuffing, and content scraping are not rate-limited at the edge.
+  action: >
+    Add a rate-based rule to the WAF web ACL associated with the
+    distribution. In the WAF console, add a rule of type
+    "Rate-based rule" with a threshold appropriate for your traffic
+    baseline (e.g., 2,000 requests per 5 minutes for consumer apps,
+    lower for internal APIs). Set the action to BLOCK. Consider
+    adding separate rate rules for specific sensitive paths
+    (login, registration, password-reset) with lower thresholds.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "has_waf": true,
+          "waf_has_rate_rules": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_waf
+      op: eq
+      value: true
+    - field: properties.cdn.cloudfront.waf_has_rate_rules
+      op: eq
+      value: false

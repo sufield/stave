@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1606
-**Pack hash:** `938f44b17f1917745038cba048ce8ac312d1e93e791c6953425b0d942213bd13`
+**Total controls:** 1612
+**Pack hash:** `54914f9ee6af8a99cc800e841fb6c9c34143eacc4314621cf1942e8f332c9ce0`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 181 |
-| high | 706 |
+| high | 707 |
 | info | 16 |
-| low | 114 |
-| medium | 589 |
+| low | 115 |
+| medium | 593 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 49 |
 | encryption | 92 |
-| exposure | 899 |
-| governance | 112 |
+| exposure | 903 |
+| governance | 114 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -4891,6 +4891,51 @@ CloudFormation root stacks must enable termination protection to prevent acciden
 
 ---
 
+### CTL.CLOUDFRONT.ACCESS.GEORESTRICTION.BLOCKLIST.001
+
+**CloudFront Geo-Restriction Uses Blocklist Instead of Allowlist**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-4; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+CloudFront geographic restriction uses a blocklist (specific countries blocked, all others allowed by default) rather than an allowlist (specific countries permitted, all others blocked by default). A blocklist is weaker than an allowlist as a security control: it explicitly enumerates threats while unknowns are allowed. New threat origins (recently sanctioned countries, newly observed attack sources, typosquatted country codes) are not blocked until explicitly added to the list. An allowlist applies the principle of least privilege to geography: only explicitly permitted countries can access the distribution. For organizations that serve known geographic markets, an allowlist is both more restrictive and easier to maintain — adding a new market is an intentional change rather than a gap in the blocklist. Complements CTL.CLOUDFRONT.GEO.001 (geo restriction required but not configured at all) — this control fires when restriction is configured but uses the weaker approach.
+
+**Remediation:** Replace the CloudFront blocklist with an allowlist if the distribution serves a known set of geographic markets. Identify the countries where legitimate users are located, then change the restriction type to whitelist with those countries. This blocks all others including future threat origins automatically. If the distribution must serve global audiences, maintain the blocklist but review and update it regularly as new sanctions and threat sources emerge.
+
+---
+
+### CTL.CLOUDFRONT.ACCESS.LEGACYKEY.001
+
+**CloudFront Signed URLs Use Legacy Root Account Key Pair**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.4; soc2: CC6.1;
+
+CloudFront distribution uses legacy CloudFront key pairs associated with the root account for signed URL or signed cookie verification, rather than trusted key groups with IAM-managed public keys. Legacy key pairs have fundamental limitations: they can only be created, rotated, and deleted by the root account — there is no IAM delegation for key management, no CloudTrail audit of key operations, and no separation of duties between the root account and signing key management. Key rotation requires root account login. Trusted key groups use IAM-managed public keys — created through IAM, audited in CloudTrail, manageable without root access, and supporting multiple keys simultaneously for graceful rotation. This control gates on has_signed_content to avoid firing on distributions that don't use signed URLs or cookies.
+
+**Remediation:** Create an RSA key pair and upload the public key to CloudFront via CreatePublicKey. Create a key group via CreateKeyGroup containing the new public key. Update each cache behavior that uses signed URLs to reference the new key group via UpdateDistribution, replacing TrustedSigners with TrustedKeyGroups. Update application signing code to use the new private key. After traffic shifts to the new key, disable and delete the legacy root account key pair.
+
+---
+
+### CTL.CLOUDFRONT.ACCESS.NOSIGNING.001
+
+**CloudFront Behavior Serving Restricted-Looking Path Has No Signing**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+CloudFront cache behavior path pattern matches a restricted-looking prefix (/premium/*, /member/*, /protected/*, /api/*, /secure/*, /private/*) but does not require signed URLs or signed cookies for access. This control uses a path-pattern heuristic — it does not know from observation data whether the content actually needs access control, only that the path pattern appears to indicate restricted content. The finding should be treated as "verify whether access control is needed here." If the path genuinely serves public content (a public API, static assets in a /protected/ prefix for historical reasons), this is a false positive. If the path serves content that should be user-specific or subscription-restricted, the absence of signed URL enforcement means anyone with a CloudFront URL for that path can access the content without authentication at the CDN layer.
+
+**Remediation:** If this path serves content that requires user authentication or subscription verification: enable signed URL enforcement on the cache behavior (set TrustedKeyGroups to a key group), update the application to generate signed URLs for all links to this path, and set the URL expiration appropriately for the content type (short-lived for premium streams, longer for download links). If this path serves public content that happened to match the path heuristic, no action is needed — but consider renaming the path prefix to avoid confusing future security reviews.
+
+---
+
 ### CTL.CLOUDFRONT.ALARM.4XX.001
 
 **No CloudWatch Alarm for CloudFront 4xx Error Rate**
@@ -5083,6 +5128,36 @@ CloudFront distribution references a WAF web ACL that has been deleted. The dist
 CloudFront distributions must have a response headers policy attached that includes Strict-Transport-Security (HSTS) with max-age >= 31536000, X-Frame-Options set to DENY or SAMEORIGIN, X-Content-Type-Options set to nosniff, and Referrer-Policy set to a restrictive value. Without these headers, browsers do not enforce transport security, framing protection, MIME type enforcement, or referrer leakage prevention. Content-Security-Policy (CSP) is not required — it requires application-specific source definitions outside Stave's scope. This pairs with CTL.CLOUDFRONT.TLS.001: TLS enforces encrypted transport, response headers enforce browser-layer security.
 
 **Remediation:** Create or update a response headers policy with the four required headers: Strict-Transport-Security (max-age=31536000; includeSubDomains), X-Frame-Options (DENY or SAMEORIGIN), X-Content-Type-Options (nosniff), and Referrer-Policy (strict-origin-when-cross-origin or no-referrer). Attach the policy to the distribution via the CloudFront console or UpdateDistribution API.
+
+---
+
+### CTL.CLOUDFRONT.HEADERS.NOCSP.001
+
+**CloudFront Response Headers Policy Missing Content-Security-Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-10; soc2: CC6.6;
+
+CloudFront response headers policy does not include a Content-Security-Policy (CSP) header. CSP is the primary browser- enforced defense against Cross-Site Scripting (XSS) — it restricts which origins the browser can load scripts, stylesheets, images, fonts, and other resources from. Without CSP, an XSS vulnerability allows the attacker to inject and execute arbitrary scripts, load external resources from attacker-controlled origins, and exfiltrate data. CTL.CLOUDFRONT.HEADERS.001 requires HSTS, X-Frame-Options, X-Content-Type-Options, and Referrer-Policy, but explicitly excludes CSP because it requires application-specific source definitions. This control fills that gap — it checks for CSP presence without validating the value, because any CSP (even a permissive initial policy) is better than none and indicates intentional deployment.
+
+**Remediation:** Add a Content-Security-Policy header to the CloudFront response headers policy. Start with a report-only policy to gather violation data before enforcing: Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self'; report-uri /csp-report. Once you've tuned the policy using violation reports, switch to enforcement mode. Avoid unsafe-inline and unsafe-eval in the script-src directive — these negate most XSS protection.
+
+---
+
+### CTL.CLOUDFRONT.HEADERS.SERVEREXPOSED.001
+
+**CloudFront Responses Expose Server Technology Stack Headers**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+CloudFront response headers policy does not remove the Server or X-Powered-By response headers from origin responses. These headers disclose the backend technology stack: Server: Apache/2.4.58, Server: nginx/1.24.0, X-Powered-By: Express, X-Powered-By: ASP.NET. Technology disclosure aids reconnaissance — an attacker who knows the exact server version and framework can search targeted CVE databases, use version-specific exploit payloads, and skip techniques that don't apply to the detected stack. CloudFront response headers policies can remove arbitrary response headers before delivering the response to the viewer. A Remove header action on Server and X-Powered-By eliminates this disclosure at the CDN layer without requiring any origin changes.
+
+**Remediation:** Add Remove header actions to the CloudFront response headers policy for the Server and X-Powered-By headers. In the CloudFront response headers policy, under "Remove headers," add Server and X-Powered-By. CloudFront will strip these headers from all origin responses before delivering to viewers. This eliminates technology disclosure without modifying the origin.
 
 ---
 
@@ -5338,6 +5413,21 @@ CloudFront distribution uses the default *.cloudfront.net wildcard certificate i
 CloudFront distributions must have an AWS WAF Web ACL associated for layer-7 protection against web application attacks. Without WAF, requests reach the origin without inspection for SQL injection, XSS, known exploit signatures, rate limiting, or IP reputation blocking.
 
 **Remediation:** Create a WAF Web ACL in us-east-1 (required for CloudFront) with AWSManagedRulesCommonRuleSet and associate it with the distribution via UpdateDistribution API.
+
+---
+
+### CTL.CLOUDFRONT.WAF.RATELIMIT.001
+
+**CloudFront WAF Has No Rate-Based Rules**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-5; pci_dss_v4.0: 6.4.3; soc2: CC6.6;
+
+CloudFront distribution has a WAF web ACL but the ACL contains no rate-based rules. Rate-based rules limit the number of requests from a single IP within a 5-minute window and automatically block IPs that exceed the threshold. Without rate limiting: application- layer DDoS (HTTP floods targeting specific endpoints) can saturate origin resources without triggering WAF block actions, credential stuffing attacks can attempt thousands of password combinations per minute unimpeded, content scrapers can walk the entire distribution at full network speed, and API abuse has no throttling mechanism at the CDN layer. Rate-based rules are the WAF's primary defense against volumetric application-layer attacks that bypass Shield Standard's L3/L4 protections. This control gates on has_waf to avoid false positives on distributions without WAF (covered by CTL.CLOUDFRONT.WAF.001).
+
+**Remediation:** Add a rate-based rule to the WAF web ACL associated with the distribution. In the WAF console, add a rule of type "Rate-based rule" with a threshold appropriate for your traffic baseline (e.g., 2,000 requests per 5 minutes for consumer apps, lower for internal APIs). Set the action to BLOCK. Consider adding separate rate rules for specific sensitive paths (login, registration, password-reset) with lower thresholds.
 
 ---
 

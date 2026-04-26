@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ACCESS.GEORESTRICTION.BLOCKLIST.001
+name: CloudFront Geo-Restriction Uses Blocklist Instead of Allowlist
+description: >
+  CloudFront geographic restriction uses a blocklist (specific
+  countries blocked, all others allowed by default) rather than an
+  allowlist (specific countries permitted, all others blocked by
+  default). A blocklist is weaker than an allowlist as a security
+  control: it explicitly enumerates threats while unknowns are
+  allowed. New threat origins (recently sanctioned countries, newly
+  observed attack sources, typosquatted country codes) are not
+  blocked until explicitly added to the list. An allowlist applies
+  the principle of least privilege to geography: only explicitly
+  permitted countries can access the distribution. For organizations
+  that serve known geographic markets, an allowlist is both more
+  restrictive and easier to maintain — adding a new market is an
+  intentional change rather than a gap in the blocklist. Complements
+  CTL.CLOUDFRONT.GEO.001 (geo restriction required but not configured
+  at all) — this control fires when restriction is configured but
+  uses the weaker approach.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront geo-restriction uses a blocklist. Unknown countries
+    are allowed by default; the blocklist must enumerate all threats.
+  action: >
+    Replace the CloudFront blocklist with an allowlist if the
+    distribution serves a known set of geographic markets. Identify
+    the countries where legitimate users are located, then change
+    the restriction type to whitelist with those countries. This
+    blocks all others including future threat origins automatically.
+    If the distribution must serve global audiences, maintain the
+    blocklist but review and update it regularly as new sanctions
+    and threat sources emerge.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "geo_restriction_type": "whitelist",
+          "geo_restriction_uses_blocklist": false,
+          "geo_restriction_locations": ["US", "GB", "CA", "AU"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.geo_restriction_uses_blocklist
+      op: eq
+      value: true

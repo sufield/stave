@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.HEADERS.SERVEREXPOSED.001
+name: CloudFront Responses Expose Server Technology Stack Headers
+description: >
+  CloudFront response headers policy does not remove the Server or
+  X-Powered-By response headers from origin responses. These headers
+  disclose the backend technology stack: Server: Apache/2.4.58,
+  Server: nginx/1.24.0, X-Powered-By: Express, X-Powered-By: ASP.NET.
+  Technology disclosure aids reconnaissance — an attacker who knows
+  the exact server version and framework can search targeted CVE
+  databases, use version-specific exploit payloads, and skip
+  techniques that don't apply to the detected stack. CloudFront
+  response headers policies can remove arbitrary response headers
+  before delivering the response to the viewer. A Remove header
+  action on Server and X-Powered-By eliminates this disclosure at
+  the CDN layer without requiring any origin changes.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront responses expose Server or X-Powered-By headers,
+    disclosing the backend technology stack.
+  action: >
+    Add Remove header actions to the CloudFront response headers policy
+    for the Server and X-Powered-By headers. In the CloudFront response
+    headers policy, under "Remove headers," add Server and X-Powered-By.
+    CloudFront will strip these headers from all origin responses before
+    delivering to viewers. This eliminates technology disclosure without
+    modifying the origin.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "headers_removes_server": true,
+          "headers_removes_powered_by": true,
+          "server_header_exposed": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.server_header_exposed
+      op: eq
+      value: true

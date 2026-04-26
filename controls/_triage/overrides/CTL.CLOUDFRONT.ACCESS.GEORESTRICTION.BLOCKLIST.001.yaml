@@ -1,0 +1,34 @@
+control: CTL.CLOUDFRONT.ACCESS.GEORESTRICTION.BLOCKLIST.001
+defect: >
+  CloudFront geo-restriction uses a blocklist.
+  Countries not on the list can access the
+  distribution by default.
+infection: >
+  A geographic blocklist implements a default-
+  allow policy: every country can access the
+  distribution unless explicitly listed as
+  blocked. The blocklist must be comprehensive
+  and continuously maintained — new threat
+  origins (recently sanctioned countries,
+  newly discovered attack infrastructure
+  geographically associated with specific
+  countries) require explicit additions.
+  An allowlist implements default-deny: only
+  explicitly permitted countries can access,
+  and the list typically changes rarely.
+  For organizations with a defined service
+  territory (US and EU customers, domestic
+  only, specific regional markets), an
+  allowlist is both more secure and easier
+  to operate — adding a new market is an
+  intentional expansion, and the list naturally
+  excludes all countries where attacks tend
+  to originate that aren't in the service
+  territory. The blocklist requires operators
+  to enumerate threats; the allowlist requires
+  them to enumerate permitted markets, which
+  is the information they already have.
+failure: >
+  Default-allow geo policy. Unknown or new
+  threat origins bypass geo-restriction
+  until explicitly added to the blocklist.

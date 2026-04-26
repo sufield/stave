@@ -1,0 +1,34 @@
+control: CTL.CLOUDFRONT.ACCESS.NOSIGNING.001
+defect: >
+  CloudFront behavior path matches a
+  restricted-looking prefix but has no
+  signed URL or cookie enforcement.
+infection: >
+  This control uses a path-pattern heuristic —
+  it does not have access to application
+  business logic. Paths prefixed /premium/,
+  /member/, /protected/, /api/, /secure/, or
+  /private/ are identified as POTENTIALLY
+  serving restricted content. If the content
+  behind these paths is subscription-locked,
+  user-specific, or API-authenticated, the
+  absence of CloudFront signed URL enforcement
+  means the CDN layer provides no access
+  control. Any viewer who can construct or
+  guess a valid path URL can access the content
+  directly through CloudFront without
+  authentication. The application may have
+  server-side authentication — this control
+  does not verify that. It identifies the gap
+  where CDN-level access control appears
+  absent for paths that may warrant it. If
+  the application relies on server-side auth
+  with every request validated at the origin,
+  the CDN layer provides no defense-in-depth.
+  Verify: does this path serve publicly
+  accessible content? If not, signed URLs
+  provide CDN-layer enforcement.
+failure: >
+  Heuristic finding. Path appears to serve
+  restricted content without CDN-layer access
+  enforcement. Verify intent.

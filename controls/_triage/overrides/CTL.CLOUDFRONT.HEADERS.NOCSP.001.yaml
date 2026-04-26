@@ -1,0 +1,30 @@
+control: CTL.CLOUDFRONT.HEADERS.NOCSP.001
+defect: >
+  CloudFront response headers policy does not
+  include a Content-Security-Policy header.
+infection: >
+  CSP is the browser's XSS mitigation mechanism.
+  When a CSP header is present, the browser
+  enforces it — scripts can only be loaded from
+  explicitly permitted origins, inline scripts
+  are blocked unless explicitly permitted,
+  eval() is blocked unless explicitly permitted,
+  and violations are reported. When CSP is
+  absent, any XSS vulnerability becomes a full
+  script injection: the attacker's payload can
+  load any external JavaScript from any domain,
+  exfiltrate cookies and session tokens to an
+  attacker-controlled server, modify page
+  content (phishing form injection, button
+  hijacking), and initiate requests to other
+  origins (CSRF via JavaScript). The absence
+  of CSP doesn't create XSS vulnerabilities —
+  but it removes the one mechanism that limits
+  what a successful XSS can do. A permissive
+  initial CSP (default-src 'self') is better
+  than no CSP — it provides measurable
+  protection even if not perfect.
+failure: >
+  No browser-enforced XSS containment.
+  Successful XSS can load arbitrary scripts
+  and exfiltrate data to any external origin.

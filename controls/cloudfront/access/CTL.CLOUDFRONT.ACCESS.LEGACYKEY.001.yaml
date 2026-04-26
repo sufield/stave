@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ACCESS.LEGACYKEY.001
+name: CloudFront Signed URLs Use Legacy Root Account Key Pair
+description: >
+  CloudFront distribution uses legacy CloudFront key pairs associated
+  with the root account for signed URL or signed cookie verification,
+  rather than trusted key groups with IAM-managed public keys. Legacy
+  key pairs have fundamental limitations: they can only be created,
+  rotated, and deleted by the root account — there is no IAM
+  delegation for key management, no CloudTrail audit of key
+  operations, and no separation of duties between the root account
+  and signing key management. Key rotation requires root account
+  login. Trusted key groups use IAM-managed public keys — created
+  through IAM, audited in CloudTrail, manageable without root
+  access, and supporting multiple keys simultaneously for graceful
+  rotation. This control gates on has_signed_content to avoid firing
+  on distributions that don't use signed URLs or cookies.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "7.2.4"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-03", "IAM-05"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront signed URL verification uses legacy root account key
+    pairs. Key management requires root account access.
+  action: >
+    Create an RSA key pair and upload the public key to CloudFront via
+    CreatePublicKey. Create a key group via CreateKeyGroup containing
+    the new public key. Update each cache behavior that uses signed
+    URLs to reference the new key group via UpdateDistribution,
+    replacing TrustedSigners with TrustedKeyGroups. Update application
+    signing code to use the new private key. After traffic shifts to
+    the new key, disable and delete the legacy root account key pair.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "has_signed_content": true,
+          "uses_legacy_signer": false,
+          "trusted_key_groups": ["KGP1ABCDEF"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_signed_content
+      op: eq
+      value: true
+    - field: properties.cdn.cloudfront.uses_legacy_signer
+      op: eq
+      value: true

@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ACCESS.NOSIGNING.001
+name: CloudFront Behavior Serving Restricted-Looking Path Has No Signing
+description: >
+  CloudFront cache behavior path pattern matches a restricted-looking
+  prefix (/premium/*, /member/*, /protected/*, /api/*, /secure/*,
+  /private/*) but does not require signed URLs or signed cookies
+  for access. This control uses a path-pattern heuristic — it does
+  not know from observation data whether the content actually needs
+  access control, only that the path pattern appears to indicate
+  restricted content. The finding should be treated as "verify
+  whether access control is needed here." If the path genuinely
+  serves public content (a public API, static assets in a
+  /protected/ prefix for historical reasons), this is a false
+  positive. If the path serves content that should be user-specific
+  or subscription-restricted, the absence of signed URL enforcement
+  means anyone with a CloudFront URL for that path can access the
+  content without authentication at the CDN layer.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-07"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront behavior serving a restricted-looking path does not
+    require signed URLs or cookies. Heuristic finding — verify
+    whether access control is needed for this path.
+  action: >
+    If this path serves content that requires user authentication or
+    subscription verification: enable signed URL enforcement on the
+    cache behavior (set TrustedKeyGroups to a key group), update the
+    application to generate signed URLs for all links to this path,
+    and set the URL expiration appropriately for the content type
+    (short-lived for premium streams, longer for download links).
+    If this path serves public content that happened to match the
+    path heuristic, no action is needed — but consider renaming the
+    path prefix to avoid confusing future security reviews.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "behavior_path": "/premium/*",
+          "behavior_requires_signing": true,
+          "behavior_path_appears_restricted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.behavior_path_appears_restricted
+      op: eq
+      value: true
+    - field: properties.cdn.cloudfront.behavior_requires_signing
+      op: eq
+      value: false

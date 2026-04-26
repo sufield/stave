@@ -1,0 +1,35 @@
+control: CTL.CLOUDFRONT.ACCESS.LEGACYKEY.001
+defect: >
+  CloudFront signed URL verification uses
+  legacy root account key pairs instead of
+  trusted key groups.
+infection: >
+  Legacy CloudFront key pairs live in the
+  root account's AWS Management Console under
+  Security Credentials — not in IAM. The
+  consequences: key creation, rotation, and
+  deletion require root account login. No
+  IAM user or role can manage the signing
+  keys without root credentials, violating
+  the principle of least privilege for key
+  management. There is no CloudTrail record
+  for key creation or deletion (root account
+  operations in Security Credentials have
+  limited CloudTrail coverage). Key rotation
+  is operationally difficult — it requires
+  coordinating a root account login, updating
+  the CloudFront distribution, and updating
+  application signing code simultaneously,
+  which discourages rotation in practice.
+  Trusted key groups solve all of these:
+  the public key is uploaded via IAM (fully
+  audited), an IAM policy controls who can
+  manage the key, multiple keys in a group
+  enable graceful rotation without downtime,
+  and the application can use any key in
+  the group without coordinating a cutover.
+failure: >
+  Signing key management requires root account
+  access. No IAM delegation, no CloudTrail
+  audit, and rotation requires coordinated
+  root login.

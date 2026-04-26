@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.HEADERS.NOCSP.001
+name: CloudFront Response Headers Policy Missing Content-Security-Policy
+description: >
+  CloudFront response headers policy does not include a
+  Content-Security-Policy (CSP) header. CSP is the primary browser-
+  enforced defense against Cross-Site Scripting (XSS) — it restricts
+  which origins the browser can load scripts, stylesheets, images,
+  fonts, and other resources from. Without CSP, an XSS vulnerability
+  allows the attacker to inject and execute arbitrary scripts, load
+  external resources from attacker-controlled origins, and exfiltrate
+  data. CTL.CLOUDFRONT.HEADERS.001 requires HSTS, X-Frame-Options,
+  X-Content-Type-Options, and Referrer-Policy, but explicitly excludes
+  CSP because it requires application-specific source definitions.
+  This control fills that gap — it checks for CSP presence without
+  validating the value, because any CSP (even a permissive initial
+  policy) is better than none and indicates intentional deployment.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-10"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    CloudFront response headers policy does not include CSP.
+    XSS attacks can load and execute arbitrary external scripts.
+  action: >
+    Add a Content-Security-Policy header to the CloudFront response
+    headers policy. Start with a report-only policy to gather
+    violation data before enforcing:
+    Content-Security-Policy-Report-Only: default-src 'self'; script-src
+    'self'; report-uri /csp-report. Once you've tuned the policy using
+    violation reports, switch to enforcement mode. Avoid unsafe-inline
+    and unsafe-eval in the script-src directive — these negate most
+    XSS protection.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "headers_has_csp": true,
+          "has_response_headers_policy": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_response_headers_policy
+      op: eq
+      value: true
+    - field: properties.cdn.cloudfront.headers_has_csp
+      op: eq
+      value: false
