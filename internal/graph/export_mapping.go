@@ -10,19 +10,22 @@ import (
 // serializers.
 //
 // Three things happen here:
+//
 //  1. Each Node ID is rewritten to an IRI under urn:stave:* using the
 //     URI templates the user requested (bucket/{account}/{name},
 //     finding/{hash}, invariant/{category}.{number}). Original IDs are
 //     preserved as datatype properties so callers can join back.
+//
 //  2. Each Edge type string is mapped to a predicate IRI via
 //     wireToPredicate. Edges with no mapping are dropped with a slog
 //     warning rather than emitted as fall-through "related-to" — the
 //     export honors the same fail-loud-but-visible policy used by the
 //     STIX marshaler for dangling edges.
+//
 //  3. Two algorithm-ready shortcut edges are materialized:
 //
-//       Resource --stave:violates--> Control            (1 hop)
-//       (alongside) Resource --hasFinding--> Finding --violatesInvariant--> Control
+//     Resource --stave:violates--> Control            (1 hop)
+//     (alongside) Resource --hasFinding--> Finding --violatesInvariant--> Control
 //
 //     This lets graph-data-science workloads run centrality and
 //     community detection over the shortcut subgraph without first

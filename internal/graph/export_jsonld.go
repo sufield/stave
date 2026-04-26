@@ -5,7 +5,7 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"sort"
 )
@@ -32,7 +32,7 @@ func Ontology() []byte { return embeddedOntology }
 // large graphs.
 func MarshalJSONLD(w io.Writer, g *GraphData) error {
 	if g == nil {
-		return fmt.Errorf("MarshalJSONLD: nil GraphData")
+		return errors.New("MarshalJSONLD: nil GraphData")
 	}
 	rdf := mapToRDFGraph(g)
 

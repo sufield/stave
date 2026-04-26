@@ -517,4 +517,3 @@ func TestExperiment03_STIXExport(t *testing.T) {
 		}
 	}
 }
-

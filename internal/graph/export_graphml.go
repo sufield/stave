@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -31,43 +32,64 @@ import (
 // element, not with the whole graph.
 func MarshalGraphML(w io.Writer, g *GraphData) error {
 	if g == nil {
-		return fmt.Errorf("MarshalGraphML: nil GraphData")
+		return errors.New("MarshalGraphML: nil GraphData")
 	}
 	rdf := mapToRDFGraph(g)
 
 	keys := collectGraphMLKeys(rdf)
 
-	bw := bufio.NewWriter(w)
-	if _, err := bw.WriteString(xml.Header); err != nil {
-		return err
-	}
-	if _, err := bw.WriteString(graphmlOpen); err != nil {
-		return err
-	}
+	xw := &graphmlWriter{w: bufio.NewWriter(w)}
+	xw.writeString(xml.Header)
+	xw.writeString(graphmlOpen)
 
 	// Key declarations come first per GraphML spec: schema before data.
 	for _, k := range keys {
-		if _, err := bw.WriteString(keyElement(k)); err != nil {
-			return err
-		}
+		xw.writeString(keyElement(k))
 	}
-	if _, err := bw.WriteString(graphmlGraphOpen); err != nil {
-		return err
-	}
+	xw.writeString(graphmlGraphOpen)
 
 	scratch := &bytes.Buffer{}
 
 	for i := range rdf.Nodes {
-		writeGraphMLNode(bw, scratch, &rdf.Nodes[i], keys)
+		writeGraphMLNode(xw, scratch, &rdf.Nodes[i], keys)
 	}
 	for i := range rdf.Edges {
-		writeGraphMLEdge(bw, scratch, &rdf.Edges[i], keys, i)
+		writeGraphMLEdge(xw, scratch, &rdf.Edges[i], keys, i)
 	}
 
-	if _, err := bw.WriteString(graphmlClose); err != nil {
-		return err
+	xw.writeString(graphmlClose)
+	if xw.err != nil {
+		return xw.err
 	}
-	return bw.Flush()
+	return xw.w.Flush()
+}
+
+// graphmlWriter wraps a *bufio.Writer with a sticky first error so each
+// per-element write site stays a single statement. Keeping the error on
+// the wrapper lets MarshalGraphML check once at the end without every
+// Write/WriteString call site polluting the output with `if _, err :=`
+// boilerplate that errcheck legitimately flags as discarded errors.
+type graphmlWriter struct {
+	w   *bufio.Writer
+	err error
+}
+
+func (x *graphmlWriter) writeString(s string) {
+	if x.err != nil {
+		return
+	}
+	if _, err := x.w.WriteString(s); err != nil {
+		x.err = err
+	}
+}
+
+func (x *graphmlWriter) write(b []byte) {
+	if x.err != nil {
+		return
+	}
+	if _, err := x.w.Write(b); err != nil {
+		x.err = err
+	}
 }
 
 const graphmlOpen = `<graphml xmlns="http://graphml.graphdrawing.org/xmlns"
@@ -186,18 +208,18 @@ func indexKeys(keys []graphmlKey) keyIndex {
 	return out
 }
 
-func writeGraphMLNode(bw *bufio.Writer, scratch *bytes.Buffer, n *RDFNode, keys []graphmlKey) {
+func writeGraphMLNode(xw *graphmlWriter, scratch *bytes.Buffer, n *RDFNode, keys []graphmlKey) {
 	idx := indexKeys(keys)
-	bw.WriteString("  <node id=\"")
-	bw.WriteString(xmlEscape(n.ID))
-	bw.WriteString("\">\n")
+	xw.writeString("  <node id=\"")
+	xw.writeString(xmlEscape(n.ID))
+	xw.writeString("\">\n")
 
 	if id, ok := idx["node:type"]; ok {
-		bw.WriteString("    <data key=\"")
-		bw.WriteString(id)
-		bw.WriteString("\">")
-		bw.WriteString(xmlEscape(n.Type))
-		bw.WriteString("</data>\n")
+		xw.writeString("    <data key=\"")
+		xw.writeString(id)
+		xw.writeString("\">")
+		xw.writeString(xmlEscape(n.Type))
+		xw.writeString("</data>\n")
 	}
 
 	propKeys := make([]string, 0, len(n.Properties))
@@ -210,37 +232,37 @@ func writeGraphMLNode(bw *bufio.Writer, scratch *bytes.Buffer, n *RDFNode, keys 
 		if !ok {
 			continue
 		}
-		writeGraphMLData(bw, scratch, id, n.Properties[k])
+		writeGraphMLData(xw, scratch, id, n.Properties[k])
 	}
-	bw.WriteString("  </node>\n")
+	xw.writeString("  </node>\n")
 }
 
-func writeGraphMLEdge(bw *bufio.Writer, scratch *bytes.Buffer, e *RDFEdge, keys []graphmlKey, idx int) {
+func writeGraphMLEdge(xw *graphmlWriter, scratch *bytes.Buffer, e *RDFEdge, keys []graphmlKey, idx int) {
 	keyIdx := indexKeys(keys)
-	bw.WriteString("  <edge id=\"e")
-	bw.WriteString(strconv.Itoa(idx))
-	bw.WriteString("\" source=\"")
-	bw.WriteString(xmlEscape(e.From))
-	bw.WriteString("\" target=\"")
-	bw.WriteString(xmlEscape(e.To))
-	bw.WriteString("\">\n")
+	xw.writeString("  <edge id=\"e")
+	xw.writeString(strconv.Itoa(idx))
+	xw.writeString("\" source=\"")
+	xw.writeString(xmlEscape(e.From))
+	xw.writeString("\" target=\"")
+	xw.writeString(xmlEscape(e.To))
+	xw.writeString("\">\n")
 
 	// Edge label — short predicate name so consumers reading the
 	// GraphML in Gephi or Cytoscape see "violates" rather than the
 	// full IRI on edge labels.
 	if id, ok := keyIdx["edge:label"]; ok {
-		bw.WriteString("    <data key=\"")
-		bw.WriteString(id)
-		bw.WriteString("\">")
-		bw.WriteString(xmlEscape(shortPredicate(e.Predicate)))
-		bw.WriteString("</data>\n")
+		xw.writeString("    <data key=\"")
+		xw.writeString(id)
+		xw.writeString("\">")
+		xw.writeString(xmlEscape(shortPredicate(e.Predicate)))
+		xw.writeString("</data>\n")
 	}
 
 	if e.Shortcut {
 		if id, ok := keyIdx["edge:isAlgorithmShortcut"]; ok {
-			bw.WriteString("    <data key=\"")
-			bw.WriteString(id)
-			bw.WriteString("\">true</data>\n")
+			xw.writeString("    <data key=\"")
+			xw.writeString(id)
+			xw.writeString("\">true</data>\n")
 		}
 	}
 
@@ -254,9 +276,9 @@ func writeGraphMLEdge(bw *bufio.Writer, scratch *bytes.Buffer, e *RDFEdge, keys 
 		if !ok {
 			continue
 		}
-		writeGraphMLData(bw, scratch, id, e.Properties[k])
+		writeGraphMLData(xw, scratch, id, e.Properties[k])
 	}
-	bw.WriteString("  </edge>\n")
+	xw.writeString("  </edge>\n")
 }
 
 // writeGraphMLData emits one <data key="..."> element with a value
@@ -264,10 +286,10 @@ func writeGraphMLEdge(bw *bufio.Writer, scratch *bytes.Buffer, e *RDFEdge, keys 
 // canonical Go formatting which produces XSD-compliant double
 // representations; bools produce "true"/"false"; strings are XML-
 // escaped via xmlEscape.
-func writeGraphMLData(bw *bufio.Writer, scratch *bytes.Buffer, keyID string, v any) {
-	bw.WriteString("    <data key=\"")
-	bw.WriteString(keyID)
-	bw.WriteString("\">")
+func writeGraphMLData(xw *graphmlWriter, scratch *bytes.Buffer, keyID string, v any) {
+	xw.writeString("    <data key=\"")
+	xw.writeString(keyID)
+	xw.writeString("\">")
 	scratch.Reset()
 	switch val := v.(type) {
 	case nil:
@@ -295,8 +317,8 @@ func writeGraphMLData(bw *bufio.Writer, scratch *bytes.Buffer, keyID string, v a
 		// — GraphML doesn't natively represent maps or arrays.
 		scratch.WriteString(xmlEscape(fmt.Sprintf("%v", v)))
 	}
-	bw.Write(scratch.Bytes())
-	bw.WriteString("</data>\n")
+	xw.write(scratch.Bytes())
+	xw.writeString("</data>\n")
 }
 
 // xmlEscape XML-escapes the five reserved characters. Hand-rolled

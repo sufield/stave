@@ -22,9 +22,16 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 // TestApply_LordofheavenBuiltinControls runs the library against
 // the lordofheaven snapshot using the embedded builtin catalog
 // (Config.ControlsDir empty). The expected shape is load-bearing
-// for both prototypes: 54 findings after asset-type gating, 18
-// Issues after consolidation, NON_COMPLIANT status.
+// for both prototypes: 62 findings after asset-type gating, 23
+// Issues after consolidation, NON_COMPLIANT status. Counts grow
+// when new controls are added to the embedded catalog; the
+// historic 54/18 numbers reflected an earlier catalog snapshot
+// and were rebased after CTL.S3.PUBLIC.004 and
+// CTL.S3.INCOMPLETE.001 began firing on this fixture.
 func TestApply_LordofheavenBuiltinControls(t *testing.T) {
+	const wantFindings = 62
+	const wantIssues = 23
+
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
 		Now:          frozenNow,
@@ -33,17 +40,17 @@ func TestApply_LordofheavenBuiltinControls(t *testing.T) {
 		t.Fatalf("Apply: %v", err)
 	}
 
-	if got := len(a.Findings); got != 54 {
-		t.Errorf("findings: got %d, want 54", got)
+	if got := len(a.Findings); got != wantFindings {
+		t.Errorf("findings: got %d, want %d", got, wantFindings)
 	}
-	if got := len(a.Issues); got != 18 {
-		t.Errorf("issues: got %d, want 18", got)
+	if got := len(a.Issues); got != wantIssues {
+		t.Errorf("issues: got %d, want %d", got, wantIssues)
 	}
 	if a.Status != stave.StatusNonCompliant {
 		t.Errorf("status: got %q, want %q", a.Status, stave.StatusNonCompliant)
 	}
-	if a.Summary.Violations != 54 {
-		t.Errorf("summary.violations: got %d, want 54", a.Summary.Violations)
+	if a.Summary.Violations != wantFindings {
+		t.Errorf("summary.violations: got %d, want %d", a.Summary.Violations, wantFindings)
 	}
 
 	// Bucket-intent's exit condition: CTL.S3.PUBLIC.001 must be

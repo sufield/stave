@@ -11,8 +11,8 @@ import (
 
 // loadSnapshotCapturedAt opens a snapshot file and returns its CapturedAt timestamp.
 func loadSnapshotCapturedAt(ctx context.Context, loader appcontracts.SnapshotReader, path, name string) (capturedAt time.Time, err error) {
-	if err := ctx.Err(); err != nil {
-		return time.Time{}, err
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		return time.Time{}, ctxErr
 	}
 	// #nosec G304 -- path is discovered from directory entries.
 	f, openErr := os.Open(path)
