@@ -41,11 +41,13 @@ jobs:
             attempts=$((attempts+1))
             echo "Attempt ${attempts}/${max_attempts}"
 
+            # Scorecard v5.x emits SARIF on stdout when --format sarif is
+            # set; redirect to the file the upload steps expect. Earlier
+            # versions had a --sarif-file flag that v5.x removed.
             if ./scorecard \
               --repo "https://github.com/${{ github.repository }}" \
               --format sarif \
-              --show-details \
-              --sarif-file results.sarif
+              --show-details > results.sarif
             then
               exit 0
             fi

@@ -33,6 +33,7 @@ import (
 	"github.com/sufield/stave/cmd/enforce/gate"
 	staveenrich "github.com/sufield/stave/cmd/enrich"
 	staveexempt "github.com/sufield/stave/cmd/exempt"
+	"github.com/sufield/stave/cmd/expand"
 	staveexport "github.com/sufield/stave/cmd/export"
 	staveforensics "github.com/sufield/stave/cmd/forensics"
 	staveforge "github.com/sufield/stave/cmd/forge"
@@ -125,6 +126,7 @@ func WireCommands(app *App) {
 	diagnoseCmd.AddCommand(diagnose.NewExplainNarrativeCmd())
 	root.AddCommand(diagnoseCmd)
 	root.AddCommand(diagnose.NewExplainCmd(f.NewCtlRepo))
+	root.AddCommand(expand.NewCmd(f.NewCtlRepo))
 
 	// Workflow & CI
 	root.AddCommand(enforce.NewStatusCmd())

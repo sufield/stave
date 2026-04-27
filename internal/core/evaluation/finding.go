@@ -86,6 +86,10 @@ type Finding struct {
 	Infection string `json:"infection,omitempty"`
 	Failure   string `json:"failure,omitempty"`
 
+	// Archetype is the structural defect classification copied from the
+	// control's archetype field. Empty when the control has no archetype.
+	Archetype string `json:"archetype,omitempty"`
+
 	// Delta is the mechanically-derived set of fix paths. Each
 	// DeltaPath is an independent change that eliminates this finding.
 	Delta []policy.DeltaPath `json:"delta,omitempty"`
@@ -241,6 +245,7 @@ func NewFindingFromMetadata(m policy.ControlMetadata) Finding {
 		Defect:             m.Defect,
 		Infection:          m.Infection,
 		Failure:            m.Failure,
+		Archetype:          m.Archetype,
 	}
 }
 

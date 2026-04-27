@@ -38,6 +38,11 @@ type yamlControlDefinition struct {
 	Defect    string `yaml:"defect,omitempty"`
 	Infection string `yaml:"infection,omitempty"`
 	Failure   string `yaml:"failure,omitempty"`
+
+	// Archetype is the structural defect classification (e.g.
+	// "ghost-reference"). Optional; controls without an archetype are
+	// excluded from `stave expand` results. See internal/archetype.
+	Archetype string `yaml:"archetype,omitempty"`
 }
 
 // yamlAlternative is the YAML wire-format for policy.Alternative.

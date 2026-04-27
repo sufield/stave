@@ -58,6 +58,11 @@ type ControlDefinition struct {
 	Infection string
 	Failure   string
 
+	// Archetype is the structural defect classification (e.g.
+	// "ghost-reference"). Optional; controls without an archetype are
+	// excluded from `stave expand` results. See internal/archetype.
+	Archetype string
+
 	// Prepared holds pre-calculated values to optimize the evaluation hot path.
 	Prepared PreparedParams `json:"-"`
 }
@@ -446,6 +451,7 @@ type ControlMetadata struct {
 	Defect         string
 	Infection      string
 	Failure        string
+	Archetype      string
 }
 
 // Fingerprint computes a stable hash of the control's identity and logic
@@ -482,5 +488,6 @@ func (ctl *ControlDefinition) Metadata() ControlMetadata {
 		Defect:         ctl.Defect,
 		Infection:      ctl.Infection,
 		Failure:        ctl.Failure,
+		Archetype:      ctl.Archetype,
 	}
 }

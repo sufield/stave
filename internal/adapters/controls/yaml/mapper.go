@@ -38,6 +38,7 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		Defect:               y.Defect,
 		Infection:            y.Infection,
 		Failure:              y.Failure,
+		Archetype:            y.Archetype,
 	}
 }
 

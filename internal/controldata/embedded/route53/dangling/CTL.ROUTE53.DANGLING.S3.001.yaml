@@ -19,6 +19,7 @@ description: >
   → S3) — this control checks Route 53 records → S3 directly.
 domain: exposure
 severity: critical
+archetype: ghost-reference
 compliance:
   nist_800_53_r5: "CM-3"
   pci_dss_v4.0: "6.5.6"

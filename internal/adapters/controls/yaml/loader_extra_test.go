@@ -51,6 +51,51 @@ unsafe_predicate:
 	}
 }
 
+func TestUnmarshalControlDefinition_Archetype(t *testing.T) {
+	data := []byte(`
+dsl_version: ctrl.v1
+id: CTL.TEST.002
+name: Test with archetype
+description: Test control
+type: unsafe_state
+archetype: ghost-reference
+unsafe_predicate:
+  any:
+    - field: "properties.x"
+      op: "eq"
+      value: true
+`)
+	ctl, err := UnmarshalControlDefinition(data)
+	if err != nil {
+		t.Fatalf("UnmarshalControlDefinition: %v", err)
+	}
+	if ctl.Archetype != "ghost-reference" {
+		t.Errorf("Archetype = %q, want %q", ctl.Archetype, "ghost-reference")
+	}
+}
+
+func TestUnmarshalControlDefinition_ArchetypeAbsent(t *testing.T) {
+	data := []byte(`
+dsl_version: ctrl.v1
+id: CTL.TEST.003
+name: Test without archetype
+description: Test control
+type: unsafe_state
+unsafe_predicate:
+  any:
+    - field: "properties.x"
+      op: "eq"
+      value: true
+`)
+	ctl, err := UnmarshalControlDefinition(data)
+	if err != nil {
+		t.Fatalf("UnmarshalControlDefinition: %v", err)
+	}
+	if ctl.Archetype != "" {
+		t.Errorf("Archetype = %q, want empty", ctl.Archetype)
+	}
+}
+
 func TestUnmarshalControlDefinition_InvalidYAML(t *testing.T) {
 	data := []byte(": [bad yaml")
 	_, err := UnmarshalControlDefinition(data)

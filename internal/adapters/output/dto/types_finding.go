@@ -43,6 +43,7 @@ type FindingDTO struct {
 	Defect               string                    `json:"defect,omitempty"`
 	Infection            string                    `json:"infection,omitempty"`
 	Failure              string                    `json:"failure,omitempty"`
+	Archetype            string                    `json:"archetype,omitempty"`
 	Delta                []DeltaPathDTO            `json:"delta,omitempty"`
 }
 

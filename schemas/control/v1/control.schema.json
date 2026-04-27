@@ -172,6 +172,11 @@
           "title": "Failure (authored)",
           "description": "Authored prose describing the worst-case outcome if the infection is exploited. Adopter-meaningful terms (data exposure, credential-boundary collapse, cluster compromise), not abstract CVSS categories."
         },
+        "archetype": {
+          "type": "string",
+          "title": "Archetype",
+          "description": "Structural defect classification (e.g. 'ghost-reference', 'confused-deputy'). Optional; consumed by `stave expand` to surface every control sharing the same defect shape across services."
+        },
         "version": {
           "type": "string",
           "title": "Control Version",

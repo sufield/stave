@@ -32,6 +32,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		Defect:             f.Defect,
 		Infection:          f.Infection,
 		Failure:            f.Failure,
+		Archetype:          f.Archetype,
 		Delta:              fromDeltaPaths(f.Delta),
 	}
 

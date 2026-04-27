@@ -15,6 +15,7 @@ description: >
   domains.
 domain: governance
 severity: medium
+archetype: dormant-resource
 compliance:
   soc2: "CC6.1, CC8.1"
   nist_800_53_r5: "CM-2, CM-3, SA-22"

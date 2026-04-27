@@ -13,6 +13,7 @@ description: >
   on the S3 event-notification surface.
 domain: exposure
 severity: high
+archetype: confused-deputy
 compliance:
   cis_aws_v3.0: "1.20"
   soc2: "CC6.1, CC6.6"
