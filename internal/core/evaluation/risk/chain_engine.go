@@ -118,6 +118,19 @@ func DetectChains(
 		}
 	}
 
+	// Sort by (chain id, asset id) so the output is deterministic across
+	// runs. The inner loop above iterates a map keyed by asset.ID, and Go
+	// randomizes map iteration order — without a final sort, two runs on
+	// identical input produce different chain_findings orderings, which
+	// surfaces as fixture flakes (e.g. etcd-dev-01 vs etcd-staging-01
+	// swapping positions in k8s-cis-level1's golden).
+	slices.SortFunc(findings, func(a, b CompoundFinding) int {
+		if c := strings.Compare(a.ChainID, b.ChainID); c != 0 {
+			return c
+		}
+		return strings.Compare(string(a.AssetID), string(b.AssetID))
+	})
+
 	return findings
 }
 
