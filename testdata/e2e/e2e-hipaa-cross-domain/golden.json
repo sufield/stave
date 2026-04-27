@@ -7,7 +7,7 @@
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "b4572b8e64c122cce9b1a3eea7aad2ec80354721c7c4667a45a7cf6bde044a2e",
+    "policy_fingerprint": "4a98e2bfddeb1eaca8f7769613458014ce02046c6680aecf9dfbc8e6e808b6e7",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -3585,7 +3585,7 @@
               "observed_value": false
             },
             {
-              "clause": "secret.kind = \"secret\"",
+              "clause": "the Secrets Manager resource kind (secret) = \"secret\"",
               "observation_key": "secret.kind",
               "observed_value": "secret"
             }
@@ -4946,7 +4946,7 @@
               "observed_value": false
             },
             {
-              "clause": "secret.kind = \"secret\"",
+              "clause": "the Secrets Manager resource kind (secret) = \"secret\"",
               "observation_key": "secret.kind",
               "observed_value": "secret"
             }
