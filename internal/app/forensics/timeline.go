@@ -58,6 +58,11 @@ type Input struct {
 	Controls  []policy.ControlDefinition
 	CELEval   policy.PredicateEval
 	Clock     ports.Clock
+	// Hasher is injected from the cmd/ composition root because the
+	// forensics app layer cannot import platform/crypto under the
+	// hexagonal-architecture rules. May be nil — FingerprintPolicy()
+	// degrades to "" when no hasher is supplied.
+	Hasher ports.Digester
 }
 
 // BuildTimeline reconstructs the forensic timeline for a single asset
@@ -130,7 +135,11 @@ func BuildTimeline(input Input) (*Timeline, error) {
 			a := engine.NewAssessor()
 			a.Controls = input.Controls
 			a.Clock = input.Clock
+			a.Hasher = input.Hasher
 			a.PredicateEval = input.CELEval
+			a.PredicateParser = func(_ any) (*policy.UnsafePredicate, error) {
+				return &policy.UnsafePredicate{}, nil
+			}
 			report, err := a.Assess([]asset.Snapshot{snap})
 			if err == nil {
 				currentVerdicts := make(map[kernel.ControlID]bool)

@@ -1,0 +1,18 @@
+id: sqs_dlq_broken
+description: >
+  Ghost DLQ plus either retention mismatch or maxReceiveCount =
+  1. The DLQ either doesn't exist AND/OR its configuration is
+  wrong — messages expire faster in the DLQ than in the source,
+  or are sent to the DLQ on the first failure with no retry.
+  Threshold of 2 fires when the queue has at least two distinct
+  DLQ-handling defects compounding on the same workload.
+controls:
+  - CTL.SQS.GHOST.DLQ.001
+  - CTL.SQS.DLQ.RETENTION.MISMATCH.001
+  - CTL.SQS.DLQ.MAXRECEIVE.LOW.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

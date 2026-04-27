@@ -17,6 +17,7 @@ import (
 	appbisect "github.com/sufield/stave/internal/app/bisect"
 	appforensics "github.com/sufield/stave/internal/app/forensics"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -103,6 +104,7 @@ func runForensics(stdout io.Writer, opts *options) error {
 		Controls:  controls,
 		CELEval:   celEval,
 		Clock:     ports.RealClock{},
+		Hasher:    crypto.NewHasher(),
 	})
 	if tlErr != nil {
 		return tlErr

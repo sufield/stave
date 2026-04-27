@@ -2,11 +2,27 @@ dsl_version: ctrl.v1
 id: CTL.SQS.DLQ.001
 name: SQS Queues Must Have Dead-Letter Queue Configured
 description: >
-  SQS queues processing critical workloads must have a dead-letter queue configured. Without a DLQ, messages that fail processing are silently lost.
-domain: exposure
-severity: medium
+  SQS queue has no redrive policy and therefore no dead-letter
+  queue. When a consumer fails to process a message — crash,
+  unhandled exception, missed Delete — the message becomes
+  visible again after the visibility timeout and is reprocessed
+  by another consumer. Without a DLQ and maxReceiveCount, the
+  message retries until the retention period expires (default
+  4 days, max 14) and is then silently deleted. There is no
+  failure record, no investigation surface, and no
+  reprocessing capability. For event-driven architectures,
+  silent message loss means lost transactions, inconsistent
+  state, and missing data. Pair with
+  CTL.SQS.DLQ.NOCONSUMER.001 (DLQ exists but is unconsumed)
+  and CTL.SQS.DLQ.MAXRECEIVE.LOW.001 (DLQ exists but
+  maxReceiveCount = 1).
+domain: governance
+severity: high
 compliance:
-  soc2: "PI1.1"
+  soc2: "PI1.1, A1.2, CC7.4"
+  nist_800_53_r5: "SI-11, CP-10, AU-2"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.5.30, A.8.32"
   ccm_v4: ["BCR-08"]
 scope_tags:
   - aws
@@ -18,18 +34,24 @@ params:
 remediation:
   description: >
     SQS queue does not have a dead-letter queue configured.
+    Failed messages retry indefinitely until retention expires.
   action: >
-    Configure a DLQ: aws sqs set-queue-attributes --queue-url <url> --attributes RedrivePolicy='{"deadLetterTargetArn":"<dlq-arn>","maxReceiveCount":"3"}'
+    Configure a redrive policy targeting a dedicated DLQ:
+    aws sqs set-queue-attributes --queue-url <url>
+    --attributes RedrivePolicy='{"deadLetterTargetArn":"<dlq>",
+    "maxReceiveCount":"5"}'. Set maxReceiveCount to 3-5 (see
+    CTL.SQS.DLQ.MAXRECEIVE.LOW.001) and ensure the DLQ has a
+    consumer (see CTL.SQS.DLQ.NOCONSUMER.001). FIFO queues
+    require an FIFO DLQ; standard queues require a standard
+    DLQ.
   example: |
     {
-      {
       "messaging": {
         "kind": "queue",
         "dead_letter_queue": {
           "enabled": true
         }
       }
-    }
     }
 unsafe_predicate:
   all:

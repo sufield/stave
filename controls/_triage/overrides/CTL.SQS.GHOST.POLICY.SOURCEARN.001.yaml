@@ -1,0 +1,22 @@
+control: CTL.SQS.GHOST.POLICY.SOURCEARN.001
+defect: >
+  SQS queue policy references one or more sourceArn conditions
+  whose target resource no longer exists.
+infection: >
+  The queue policy uses sourceArn conditions to restrict which
+  upstream resources can send messages — typically SNS topics,
+  S3 buckets, or EventBridge rules. When the source resource is
+  deleted, the condition references a non-existent ARN. The
+  queue is still alive; the source it expected messages from is
+  gone. Two outcomes follow: (1) the queue receives no messages
+  because its only authorized sender is deleted — dead
+  pipeline, silent loss of business signal; (2) the queue is
+  repurposed with a new sender but the policy is not updated —
+  the new sender's messages are rejected because its ARN does
+  not match the stale condition. In either case, the policy
+  claim ("only this resource may send") is misaligned with
+  reality.
+failure: >
+  Dead pipeline. The queue expects messages from a deleted
+  source; either no messages arrive or new senders are
+  rejected by the stale sourceArn condition.

@@ -49,6 +49,12 @@ func Evaluate(input EvaluateInput) (evaluation.ComplianceReport, error) {
 	runner.Controls = catalog.List()
 	runner.SLAThreshold = input.MaxUnsafeDuration
 	runner.Clock = input.Clock
+	// Hasher must be injected from the cmd/ composition root because
+	// neither core/ nor app/ can import internal/platform/crypto under
+	// the hexagonal-architecture rules (TestHexagonalDependencyDirection).
+	// FingerprintPolicy() returns "" when Hasher is nil, so omitting it
+	// is a soft degradation — the assessment still runs, only the
+	// policy fingerprint is empty.
 	runner.Hasher = input.Hasher
 	runner.Exemptions = input.ExemptionConfig
 	runner.Exceptions = input.ExceptionConfig

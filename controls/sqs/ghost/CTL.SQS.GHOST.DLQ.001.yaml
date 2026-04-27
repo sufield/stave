@@ -1,0 +1,140 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.GHOST.DLQ.001
+name: SQS Queue Dead-Letter Queue Target Does Not Exist
+description: >
+  SQS queue has a redrive policy specifying a dead-letter queue
+  ARN that no longer exists. The DLQ was deleted but the source
+  queue's redrive policy still names it. When a message exceeds
+  maxReceiveCount, SQS attempts to move it to the DLQ — the DLQ
+  doesn't exist, so the message is either silently discarded or
+  retries indefinitely until retention expires. Either way, the
+  DLQ safety net is broken. Same silent-failure pattern as
+  CTL.LAMBDA.GHOST.DLQ.001 (Lambda-side DLQ ghost) but checked at
+  the SQS source-queue surface — the two controls fire on
+  different resources for the same underlying DLQ deletion. Same
+  ghost-reference family as CTL.SQS.POLICY.GHOSTREF.001 (deleted
+  principal) and CTL.SQS.GHOST.POLICY.SOURCEARN.001 (deleted
+  sender resource).
+domain: governance
+severity: critical
+compliance:
+  soc2: "CC6.1, CC8.1, A1.2"
+  nist_800_53_r5: "CM-2, CM-3, SI-11"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    SQS queue's redrive policy points to a DLQ that has been
+    deleted. Failed messages have no preservation surface.
+  action: >
+    Identify the offending queue (aws sqs get-queue-attributes
+    --queue-url <url> --attribute-names RedrivePolicy) and either
+    recreate the DLQ at the original ARN, repoint the redrive
+    policy to a live DLQ
+    (aws sqs set-queue-attributes --attributes
+    RedrivePolicy='{"deadLetterTargetArn":"<live-dlq>",
+    "maxReceiveCount":"5"}'), or remove the redrive policy
+    entirely if the workload no longer needs DLQ semantics. Pair
+    with a CloudWatch alarm on
+    ApproximateNumberOfMessagesNotVisible so a future deletion
+    surfaces immediately.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "has_redrive_policy": true,
+          "dlq_exists": true,
+          "has_ghost_dlq": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.has_ghost_dlq
+      op: eq
+      value: true
+defect: >
+  SQS queue's redrive policy references a dead-letter queue ARN
+  that does not exist.
+infection: >
+  The redrive policy specifies a DLQ ARN — when a message exceeds
+  maxReceiveCount processing attempts, SQS moves it to the DLQ
+  for investigation and reprocessing. When the DLQ is deleted,
+  SQS cannot move the message: depending on the implementation,
+  the message is either silently discarded or remains in the
+  source queue and continues retrying until retention expires
+  (then is deleted). Either way, the DLQ safety net is broken.
+  The queue appears to have DLQ configuration — the console
+  shows the ARN, the redrive policy is present — yet failed
+  messages reach no failure destination. This is the SQS
+  instance of the "appears to work" ghost-reference pattern.
+failure: >
+  Silent message loss on failure. Failed messages are discarded
+  because the DLQ was deleted. The DLQ configuration looks
+  valid; the target does not exist.
+tests:
+  - name: source queue with ghost DLQ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            queue_arn: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+            queue_url: "https://sqs.us-east-1.amazonaws.com/111122223333/orders-queue"
+            has_redrive_policy: true
+            dlq_arn: "arn:aws:sqs:us-east-1:111122223333:orders-dlq-deleted"
+            dlq_exists: false
+            has_ghost_dlq: true
+  - name: source queue with live DLQ passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            queue_arn: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+            has_redrive_policy: true
+            dlq_arn: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+            dlq_exists: true
+            has_ghost_dlq: false
+  - name: high-traffic source with ghost DLQ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:transactions-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            queue_arn: "arn:aws:sqs:us-east-1:111122223333:transactions-queue"
+            has_redrive_policy: true
+            dlq_arn: "arn:aws:sqs:us-east-1:111122223333:transactions-dlq-deleted"
+            dlq_exists: false
+            has_ghost_dlq: true
+            approximate_messages_per_minute: 5000

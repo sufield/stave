@@ -1,0 +1,22 @@
+control: CTL.SQS.GHOST.DLQ.001
+defect: >
+  SQS queue's redrive policy references a dead-letter queue ARN
+  that does not exist.
+infection: >
+  The redrive policy specifies a DLQ ARN — when a message
+  exceeds maxReceiveCount processing attempts, SQS moves it to
+  the DLQ for investigation and reprocessing. When the DLQ is
+  deleted, SQS cannot move the message: depending on the
+  implementation, the message is either silently discarded or
+  remains in the source queue and continues retrying until
+  retention expires (then is deleted). Either way, the DLQ
+  safety net is broken. The queue appears to have DLQ
+  configuration — the console shows the ARN, the redrive policy
+  is present — yet failed messages reach no failure
+  destination. This is the SQS instance of the "appears to
+  work" ghost-reference pattern: invisible (the ARN looks
+  valid) plus harmful (data loss on every processing failure).
+failure: >
+  Silent message loss on failure. Failed messages are
+  discarded because the DLQ was deleted. The DLQ configuration
+  looks valid; the target does not exist.

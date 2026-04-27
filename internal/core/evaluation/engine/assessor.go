@@ -16,7 +16,6 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/platform/crypto"
 )
 
 // Assessor orchestrates the evaluation of security controls against cloud resource states.
@@ -47,11 +46,16 @@ type Assessor struct {
 	ContinuityLimit time.Duration
 }
 
-// NewAssessor creates an engine with sensible defaults for security evaluation.
+// NewAssessor creates an engine with sensible defaults for security
+// evaluation. The Hasher field is intentionally left nil — the domain
+// layer cannot import platform/crypto, so callers that need a non-empty
+// PolicyFingerprint must inject a hasher explicitly. The composition
+// roots in app/eval and cmd/* (which are allowed to depend on platform
+// packages) wire crypto.NewHasher() onto the returned Assessor before
+// calling Assess().
 func NewAssessor() *Assessor {
 	return &Assessor{
 		Logger:          slog.Default(),
-		Hasher:          crypto.NewHasher(),
 		ContinuityLimit: DefaultContinuityLimit,
 		Confidence:      evaluation.DefaultConfidenceCalculator(),
 	}

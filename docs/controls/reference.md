@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1691
-**Pack hash:** `5e0f832ee5ef3576f8bf2d59fdb64f7e7d6dbc9ee8fe3ed23c07617b1ffcc857`
+**Total controls:** 1699
+**Pack hash:** `24acbc9ba3dfb134d6941ec6f1c15626206676701df5521072628bf72255e17c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 188 |
-| high | 741 |
+| critical | 189 |
+| high | 745 |
 | info | 16 |
 | low | 122 |
-| medium | 624 |
+| medium | 627 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 59 |
 | encryption | 92 |
-| exposure | 943 |
-| governance | 143 |
+| exposure | 945 |
+| governance | 149 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -23370,14 +23370,59 @@ SNS topic resource policies must not grant sns:Subscribe, sns:Publish, or sns:* 
 
 **SQS Queues Must Have Dead-Letter Queue Configured**
 
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.5.30, A.8.32; nist_800_53_r5: SI-11, CP-10, AU-2; soc2: PI1.1, A1.2, CC7.4;
+
+SQS queue has no redrive policy and therefore no dead-letter queue. When a consumer fails to process a message — crash, unhandled exception, missed Delete — the message becomes visible again after the visibility timeout and is reprocessed by another consumer. Without a DLQ and maxReceiveCount, the message retries until the retention period expires (default 4 days, max 14) and is then silently deleted. There is no failure record, no investigation surface, and no reprocessing capability. For event-driven architectures, silent message loss means lost transactions, inconsistent state, and missing data. Pair with CTL.SQS.DLQ.NOCONSUMER.001 (DLQ exists but is unconsumed) and CTL.SQS.DLQ.MAXRECEIVE.LOW.001 (DLQ exists but maxReceiveCount = 1).
+
+**Remediation:** Configure a redrive policy targeting a dedicated DLQ: aws sqs set-queue-attributes --queue-url <url> --attributes RedrivePolicy='{"deadLetterTargetArn":"<dlq>", "maxReceiveCount":"5"}'. Set maxReceiveCount to 3-5 (see CTL.SQS.DLQ.MAXRECEIVE.LOW.001) and ensure the DLQ has a consumer (see CTL.SQS.DLQ.NOCONSUMER.001). FIFO queues require an FIFO DLQ; standard queues require a standard DLQ.
+
+---
+
+### CTL.SQS.DLQ.MAXRECEIVE.LOW.001
+
+**SQS Queue maxReceiveCount Set to 1 — No Retry Before DLQ**
+
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** soc2: PI1.1;
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.5.30, A.8.32; nist_800_53_r5: SI-11, CP-10; soc2: A1.2, CC7.4;
 
-SQS queues processing critical workloads must have a dead-letter queue configured. Without a DLQ, messages that fail processing are silently lost.
+SQS queue has a redrive policy whose maxReceiveCount is set to 1. The first processing failure routes the message to the dead-letter queue with no retry. Transient failures — downstream service timeouts, temporary network errors, Lambda cold starts that exceed the visibility timeout — immediately ship messages to the DLQ even though a single retry would have succeeded. The recommended floor is 3-5 retries so transient failures get a chance to resolve without filling the DLQ. maxReceiveCount = 1 is rarely intentional; when it is (strict idempotency boundaries, ordering-sensitive workloads where a retry could violate semantics) the choice should be documented on the queue.
 
-**Remediation:** Configure a DLQ: aws sqs set-queue-attributes --queue-url <url> --attributes RedrivePolicy='{"deadLetterTargetArn":"<dlq-arn>","maxReceiveCount":"3"}'
+**Remediation:** Raise maxReceiveCount to 3-5 unless there is a documented reason to keep it at 1 (aws sqs set-queue-attributes --queue-url <url> --attributes RedrivePolicy='{"deadLetterTargetArn":"<dlq>", "maxReceiveCount":"5"}'). Pair with an alarm on the DLQ's ApproximateNumberOfMessagesVisible so a sudden DLQ surge surfaces quickly regardless of the threshold.
+
+---
+
+### CTL.SQS.DLQ.NOCONSUMER.001
+
+**SQS Dead-Letter Queue Has No Consumer**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-2, SI-11, IR-4; soc2: A1.2, CC7.4, CC7.2;
+
+SQS queue is the target of another queue's redrive policy (so it functions as a dead-letter queue) but has no consumer — no Lambda event-source mapping, no application polling, no redrive-back pipeline. Failed messages arrive in the DLQ and sit there until the retention period expires. Nobody investigates why messages failed. Nobody reprocesses them. The DLQ exists but serves only as a delayed-deletion mechanism, not as a failure-handling surface. Same "appears-to-work" pattern as ghost-DLQ: the organization believes they have DLQ coverage, the console shows DLQ configuration, but the failure-handling chain is broken at the consumer step.
+
+**Remediation:** Attach a consumer that processes or alerts on failed messages — typically a Lambda event-source mapping that ships each message to an incident-management system, re-enqueues it after operator review, or writes it to S3 for forensic analysis. Pair with a CloudWatch alarm on ApproximateNumberOfMessagesVisible so a sudden surge of failures triggers an immediate page even before the consumer gets to them. If the DLQ is intentionally write- only (cold storage), document the choice with a queue tag and exempt explicitly.
+
+---
+
+### CTL.SQS.DLQ.RETENTION.MISMATCH.001
+
+**SQS Dead-Letter Queue Retention Shorter Than Source Queue**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-11; iso_27001_2022: A.8.15; nist_800_53_r5: AU-11, SI-11; soc2: A1.2, CC7.4;
+
+SQS dead-letter queue's MessageRetentionPeriod is shorter than its source queue's. Messages that fail processing land in the DLQ but expire there before they expire in the source — a message that fails on day 1 of a 14-day source-queue retention has only the DLQ's retention to be investigated, which can be as short as 4 days (the SQS default) or even 1 minute (the configurable floor). The DLQ should retain failed messages at least as long as the source would have retained them: the failure path must not have a shorter visibility window than the success path. AWS does not enforce this relationship; it is purely a configuration choice.
+
+**Remediation:** Raise the DLQ's MessageRetentionPeriod to match or exceed the source queue's (aws sqs set-queue-attributes --queue-url <dlq> --attributes MessageRetentionPeriod=1209600 for 14 days). Verify against every queue using the DLQ as a target; the DLQ must satisfy the longest source-side retention among its sources.
 
 ---
 
@@ -23396,6 +23441,36 @@ SQS queues must use server-side encryption with a KMS key. Unencrypted queues ex
 
 ---
 
+### CTL.SQS.ENCRYPT.CMK.001
+
+**SQS Queue Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1.1; fedramp_moderate: SC-12; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+SQS queue is encrypted but not with a customer-managed KMS key. Stave's encryption hierarchy for SQS: no encryption (worst) → SSE-SQS (SQS-managed keys, free, no key control) → SSE-KMS with the AWS-managed alias/aws/sqs (good — KMS audit trail, but no key policy or revocation control) → SSE-KMS with a CMK (best — full key policy control, audit, revocation). This control fires when the queue is using SSE-SQS or alias/aws/sqs but not a CMK. Same pattern as CTL.S3.ENCRYPT.CMK.001, CTL.RDS.ENCRYPT.CMK.001, CTL.LAMBDA.ENVIRONMENT.CMK.001.
+
+**Remediation:** Create or select a CMK and assign it to the queue (aws sqs set-queue-attributes --queue-url <url> --attributes KmsMasterKeyId=arn:aws:kms:...:key/...). Verify the CMK's key policy allows SQS to decrypt (kms:Decrypt for the SQS service principal). The CMK gives the organization key-policy control, audit visibility via CloudTrail KMS events, and the ability to revoke access by disabling the key — none of which are available with SSE-SQS or alias/aws/sqs.
+
+---
+
+### CTL.SQS.ENCRYPT.TRANSPORT.001
+
+**SQS Queue Policy Does Not Enforce HTTPS (aws:SecureTransport)**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1.2; fedramp_moderate: SC-8; hipaa: 164.312(e)(1); iso_27001_2022: A.8.20; nist_800_53_r5: SC-8, SC-13; pci_dss_v4.0: 4.1, 4.2; soc2: CC6.1, CC6.7;
+
+SQS queue policy does not include a Deny statement gated on aws:SecureTransport: false. Without that deny, producers and consumers can send and receive messages over HTTP — message bodies (which often carry application data, customer identifiers, and credentials), message attributes, and SQS API parameters traverse the network unencrypted. SQS at-rest encryption (CTL.SQS.ENCRYPT.001 / .CMK.001) protects the message after it lands; this control protects the message while it is on the wire. Same enforcement pattern as CTL.S3.TLS.001 — a Deny statement with aws:SecureTransport: false is the canonical SQS HTTPS enforcement.
+
+**Remediation:** Add a Deny statement to the queue policy: {"Effect":"Deny","Principal":"*","Action":"sqs:*", "Resource":"<queue-arn>","Condition": {"Bool":{"aws:SecureTransport":"false"}}}. Apply via aws sqs set-queue-attributes --queue-url <url> --attributes Policy=<file://policy.json>. Verify all producers and consumers use the HTTPS endpoint (sqs.<region>.amazonaws.com, not the legacy HTTP sqs-fips-... or vpce HTTP endpoints).
+
+---
+
 ### CTL.SQS.ENCRYPTION.001
 
 **SQS Queues Must Use Server-Side Encryption**
@@ -23408,6 +23483,51 @@ SQS queues must use server-side encryption with a KMS key. Unencrypted queues ex
 SQS queues without server-side encryption store messages in plaintext. An attacker with sqs:ReceiveMessage access can read message contents directly — messages often contain application data, event payloads, and inter-service communication that may include sensitive information. SSE-KMS encryption ensures messages are encrypted at rest and requires kms:Decrypt permission to read.
 
 **Remediation:** Enable SSE-KMS on the queue: aws sqs set-queue-attributes --queue-url <url> --attributes KmsMasterKeyId=alias/aws/sqs
+
+---
+
+### CTL.SQS.GHOST.ALARM.001
+
+**CloudWatch Alarm References Deleted SQS Queue**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: CM-2, SI-4; soc2: CC6.1, CC7.2;
+
+CloudWatch alarm is configured to watch SQS metrics (ApproximateNumberOfMessagesVisible, ApproximateNumberOfMessagesNotVisible, ApproximateAgeOfOldestMessage) for a queue that has been deleted. The alarm definition still exists — metric, threshold, and notification destination — but the queue is gone, so CloudWatch publishes no metrics for it. The alarm will never trigger; it monitors nothing. Operators reading the alarm inventory believe the queue is being watched. It is not.
+
+**Remediation:** Identify the alarm (aws cloudwatch describe-alarms --alarm-names <name>) and either delete the alarm (aws cloudwatch delete-alarms --alarm-names <name>) or repoint it to a live queue if the workload is still running against a replacement. Audit the broader monitoring inventory at the same time — a deleted queue often correlates with stale dashboards and stale runbook entries.
+
+---
+
+### CTL.SQS.GHOST.DLQ.001
+
+**SQS Queue Dead-Letter Queue Target Does Not Exist**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, CM-3, SI-11; soc2: CC6.1, CC8.1, A1.2;
+
+SQS queue has a redrive policy specifying a dead-letter queue ARN that no longer exists. The DLQ was deleted but the source queue's redrive policy still names it. When a message exceeds maxReceiveCount, SQS attempts to move it to the DLQ — the DLQ doesn't exist, so the message is either silently discarded or retries indefinitely until retention expires. Either way, the DLQ safety net is broken. Same silent-failure pattern as CTL.LAMBDA.GHOST.DLQ.001 (Lambda-side DLQ ghost) but checked at the SQS source-queue surface — the two controls fire on different resources for the same underlying DLQ deletion. Same ghost-reference family as CTL.SQS.POLICY.GHOSTREF.001 (deleted principal) and CTL.SQS.GHOST.POLICY.SOURCEARN.001 (deleted sender resource).
+
+**Remediation:** Identify the offending queue (aws sqs get-queue-attributes --queue-url <url> --attribute-names RedrivePolicy) and either recreate the DLQ at the original ARN, repoint the redrive policy to a live DLQ (aws sqs set-queue-attributes --attributes RedrivePolicy='{"deadLetterTargetArn":"<live-dlq>", "maxReceiveCount":"5"}'), or remove the redrive policy entirely if the workload no longer needs DLQ semantics. Pair with a CloudWatch alarm on ApproximateNumberOfMessagesNotVisible so a future deletion surfaces immediately.
+
+---
+
+### CTL.SQS.GHOST.POLICY.SOURCEARN.001
+
+**SQS Queue Policy SourceArn References Deleted Resource**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.9; nist_800_53_r5: CM-2, CM-3, AC-3; soc2: CC6.1, CC8.1;
+
+SQS queue policy has a condition restricting SendMessage to a specific aws:SourceArn (an SNS topic, S3 bucket, EventBridge rule, or other producer) that has been deleted. The queue is still alive; the producer it expected messages from is gone. The queue policy condition references a non-existent ARN. The queue receives no traffic from the deleted source, and any new source attempting to send is rejected by the stale sourceArn match — dead pipeline. Distinct from CTL.SQS.POLICY.GHOSTREF.001 (deleted IAM principal in the policy's Principal element): this control checks the Condition.aws:SourceArn keys, which name resources, not IAM identities.
+
+**Remediation:** Inspect the queue policy (aws sqs get-queue-attributes --queue-url <url> --attribute-names Policy) and either remove the stale sourceArn condition, repoint it to the actual sender that replaced the deleted resource, or delete the queue if it is no longer in use. If the sender was intentionally migrated, the policy must be updated atomically with the migration so no message-loss window exists.
 
 ---
 

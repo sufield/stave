@@ -190,16 +190,23 @@ func (l *ExposureLifecycle) ExposureDuration(now time.Time) (time.Duration, erro
 	return now.Sub(l.activeWindow.OpenedAt()), nil
 }
 
-// ExceedsSLA reports whether the asset has been exposed for at least the
-// allowed threshold. The comparison is inclusive: an exposure of exactly
-// `threshold` is treated as exceeding it, so a zero threshold (the most
-// strict configuration) flags any non-zero exposure.
+// ExceedsSLA reports whether the asset has been exposed strictly longer
+// than the allowed threshold. Two reasons for strict-greater:
+//
+//  1. Without an active exposure window, ExposureDuration returns 0; an
+//     inclusive comparison ('d >= threshold') would treat every safe
+//     asset as a violation when threshold is zero (the strictest
+//     configuration). Strict comparison preserves the property that an
+//     asset which has never been exposed cannot exceed any SLA.
+//  2. Tests in internal/core/enginetest assert exposure of exactly the
+//     threshold is within bounds (e.g. 48h with a 48h SLA must not
+//     violate). Strict-greater is the documented behavior.
 func (l *ExposureLifecycle) ExceedsSLA(now time.Time, threshold time.Duration) (bool, error) {
 	d, err := l.ExposureDuration(now)
 	if err != nil {
 		return false, err
 	}
-	return d >= threshold, nil
+	return d > threshold, nil
 }
 
 // FormatExposureSummary provides a human-readable string for CLI output.

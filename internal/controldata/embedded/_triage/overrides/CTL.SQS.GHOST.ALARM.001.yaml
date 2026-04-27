@@ -1,0 +1,22 @@
+control: CTL.SQS.GHOST.ALARM.001
+defect: >
+  CloudWatch alarm watches metrics for an SQS queue that has
+  been deleted.
+infection: >
+  CloudWatch alarms publish metrics from named resources. When
+  the named resource is deleted, the alarm's metric source
+  stops emitting — there is nothing for the alarm to evaluate
+  against, so its state stays in INSUFFICIENT_DATA forever (or
+  in OK if the alarm is configured to treat missing data as
+  not-breaching). The alarm definition is not removed
+  automatically: it persists in the account, in the alarm
+  list, in any monitoring dashboards that include it, and in
+  runbooks that mention it. Operators reading the inventory
+  believe the queue is being watched. The alarm provides
+  documentation of monitoring intent without any actual
+  monitoring. The risk is not active harm — it is the false
+  confidence that something is being monitored when it is not.
+failure: >
+  False monitoring confidence. The alarm appears to cover an
+  SQS queue but the queue is deleted; the alarm will never
+  fire and contributes only governance clutter.

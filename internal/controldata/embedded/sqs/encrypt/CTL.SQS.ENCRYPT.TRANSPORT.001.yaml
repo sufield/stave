@@ -1,0 +1,129 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.ENCRYPT.TRANSPORT.001
+name: SQS Queue Policy Does Not Enforce HTTPS (aws:SecureTransport)
+description: >
+  SQS queue policy does not include a Deny statement gated on
+  aws:SecureTransport: false. Without that deny, producers and
+  consumers can send and receive messages over HTTP — message
+  bodies (which often carry application data, customer
+  identifiers, and credentials), message attributes, and SQS
+  API parameters traverse the network unencrypted. SQS at-rest
+  encryption (CTL.SQS.ENCRYPT.001 / .CMK.001) protects the
+  message after it lands; this control protects the message
+  while it is on the wire. Same enforcement pattern as
+  CTL.S3.TLS.001 — a Deny statement with
+  aws:SecureTransport: false is the canonical SQS HTTPS
+  enforcement.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "2.1.2"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-8, SC-13"
+  pci_dss_v4.0: "4.1, 4.2"
+  fedramp_moderate: "SC-8"
+  hipaa: "164.312(e)(1)"
+  iso_27001_2022: "A.8.20"
+  ccm_v4: ["CEK-03", "IVS-09"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    SQS queue policy permits HTTP requests because no condition
+    rejects aws:SecureTransport = false.
+  action: >
+    Add a Deny statement to the queue policy:
+    {"Effect":"Deny","Principal":"*","Action":"sqs:*",
+    "Resource":"<queue-arn>","Condition":
+    {"Bool":{"aws:SecureTransport":"false"}}}.
+    Apply via aws sqs set-queue-attributes --queue-url <url>
+    --attributes Policy=<file://policy.json>. Verify all
+    producers and consumers use the HTTPS endpoint
+    (sqs.<region>.amazonaws.com, not the legacy HTTP
+    sqs-fips-... or vpce HTTP endpoints).
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "policy_enforces_ssl": true,
+          "has_secure_transport_condition": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.policy_enforces_ssl
+      op: eq
+      value: false
+defect: >
+  SQS queue policy does not include an aws:SecureTransport
+  condition denying HTTP requests.
+infection: >
+  SQS exposes both HTTP and HTTPS endpoints. Without a queue
+  policy condition that denies requests where
+  aws:SecureTransport = false, producers and consumers can use
+  the HTTP endpoint — plaintext. Message bodies (customer
+  data, application events, credentials), message attributes,
+  and the SQS API parameters themselves (queue URL, message
+  IDs, receipt handles, queue attributes) traverse the network
+  unencrypted. A network adversary with passive observation
+  can read every message, every queue URL, and every receipt
+  handle — and an active adversary can replay or modify
+  messages in flight. A Deny statement gated on
+  aws:SecureTransport: false rejects the entire HTTP surface,
+  forcing every queue operation onto the HTTPS endpoint. This
+  is the SQS analogue of S3's bucket-policy HTTPS
+  enforcement.
+failure: >
+  Plaintext message transport. Messages, message attributes,
+  and SQS API parameters can travel over HTTP and are
+  observable to any network adversary on the path.
+tests:
+  - name: queue policy without SecureTransport condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            policy_enforces_ssl: false
+            has_secure_transport_condition: false
+  - name: queue policy with SecureTransport Deny passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            policy_enforces_ssl: true
+            has_secure_transport_condition: true
+  - name: queue with both Allow-on-HTTPS and Deny-on-HTTP passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            policy_enforces_ssl: true
+            has_secure_transport_condition: true
+            policy_has_https_allow: true

@@ -1,0 +1,18 @@
+id: sqs_encryption_incomplete
+description: >
+  No CMK encryption plus either no transport enforcement or no
+  encryption at all. Messages are either unencrypted at rest
+  AND in transit, or encrypted with a key the organization
+  cannot control AND transportable over plaintext HTTP.
+  Threshold of 2 fires when at least two of the three SQS
+  encryption gaps coexist on the same queue.
+controls:
+  - CTL.SQS.ENCRYPT.CMK.001
+  - CTL.SQS.ENCRYPT.TRANSPORT.001
+  - CTL.SQS.ENCRYPT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - data_in_transit_exposure
+postconditions:
+  - encryption_bypass

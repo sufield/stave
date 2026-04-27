@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.DLQ.MAXRECEIVE.LOW.001
+name: SQS Queue maxReceiveCount Set to 1 — No Retry Before DLQ
+description: >
+  SQS queue has a redrive policy whose maxReceiveCount is set to
+  1. The first processing failure routes the message to the
+  dead-letter queue with no retry. Transient failures —
+  downstream service timeouts, temporary network errors, Lambda
+  cold starts that exceed the visibility timeout — immediately
+  ship messages to the DLQ even though a single retry would
+  have succeeded. The recommended floor is 3-5 retries so
+  transient failures get a chance to resolve without filling the
+  DLQ. maxReceiveCount = 1 is rarely intentional; when it is
+  (strict idempotency boundaries, ordering-sensitive workloads
+  where a retry could violate semantics) the choice should be
+  documented on the queue.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "A1.2, CC7.4"
+  nist_800_53_r5: "SI-11, CP-10"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.5.30, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    SQS queue's redrive policy sends messages to the DLQ on the
+    first processing failure. Transient errors immediately
+    populate the DLQ instead of retrying.
+  action: >
+    Raise maxReceiveCount to 3-5 unless there is a documented
+    reason to keep it at 1
+    (aws sqs set-queue-attributes --queue-url <url>
+    --attributes RedrivePolicy='{"deadLetterTargetArn":"<dlq>",
+    "maxReceiveCount":"5"}'). Pair with an alarm on the DLQ's
+    ApproximateNumberOfMessagesVisible so a sudden DLQ surge
+    surfaces quickly regardless of the threshold.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "has_redrive_policy": true,
+          "max_receive_count": 5,
+          "max_receive_low": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.has_redrive_policy
+      op: eq
+      value: true
+    - field: properties.messaging.sqs.max_receive_low
+      op: eq
+      value: true
+defect: >
+  SQS queue's redrive policy has maxReceiveCount = 1; messages
+  reach the DLQ on the first processing failure.
+infection: >
+  maxReceiveCount governs how many times SQS will redeliver a
+  message before sending it to the DLQ. A value of 1 means the
+  first processing failure — for any reason, including a
+  transient network glitch or a consumer cold-start that
+  exceeded the visibility timeout — moves the message to the
+  DLQ permanently. Most production workloads have transient
+  failures often enough that a maxReceiveCount of 1 produces a
+  steady stream of false-positive DLQ entries that consumes
+  operator attention and obscures real, sustained failures.
+  The recommended floor is 3-5 retries: enough to absorb
+  transient errors, not so many that a poison message ties up
+  consumers indefinitely. maxReceiveCount = 1 is rarely
+  intentional — but when it is (strict idempotency boundary,
+  ordering-sensitive workload), the queue should carry a tag
+  documenting the choice.
+failure: >
+  Transient failures populate the DLQ. Operators chase
+  recoverable errors as if they were permanent failures; real
+  sustained failures are lost in the noise.
+tests:
+  - name: queue with maxReceiveCount 1 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            has_redrive_policy: true
+            max_receive_count: 1
+            max_receive_low: true
+  - name: queue with maxReceiveCount 5 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            has_redrive_policy: true
+            max_receive_count: 5
+            max_receive_low: false

@@ -22,15 +22,15 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 // TestApply_LordofheavenBuiltinControls runs the library against
 // the lordofheaven snapshot using the embedded builtin catalog
 // (Config.ControlsDir empty). The expected shape is load-bearing
-// for both prototypes: 62 findings after asset-type gating, 23
-// Issues after consolidation, NON_COMPLIANT status. Counts grow
-// when new controls are added to the embedded catalog; the
-// historic 54/18 numbers reflected an earlier catalog snapshot
-// and were rebased after CTL.S3.PUBLIC.004 and
-// CTL.S3.INCOMPLETE.001 began firing on this fixture.
+// for both prototypes: 54 findings after asset-type gating, 18
+// Issues after consolidation, NON_COMPLIANT status. The numbers
+// dropped back from 62/23 to 54/18 once ExceedsSLA was changed
+// to strict-greater, which stopped 0h-threshold controls from
+// flagging assets with zero exposure (CTL.S3.PUBLIC.004 and
+// CTL.S3.INCOMPLETE.001 firing on safe buckets was the symptom).
 func TestApply_LordofheavenBuiltinControls(t *testing.T) {
-	const wantFindings = 62
-	const wantIssues = 23
+	const wantFindings = 54
+	const wantIssues = 18
 
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,

@@ -1,0 +1,139 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.ENCRYPT.CMK.001
+name: SQS Queue Not Encrypted with Customer-Managed KMS Key
+description: >
+  SQS queue is encrypted but not with a customer-managed KMS
+  key. Stave's encryption hierarchy for SQS:
+  no encryption (worst) → SSE-SQS (SQS-managed keys, free, no
+  key control) → SSE-KMS with the AWS-managed alias/aws/sqs
+  (good — KMS audit trail, but no key policy or revocation
+  control) → SSE-KMS with a CMK (best — full key policy
+  control, audit, revocation). This control fires when the
+  queue is using SSE-SQS or alias/aws/sqs but not a CMK. Same
+  pattern as CTL.S3.ENCRYPT.CMK.001, CTL.RDS.ENCRYPT.CMK.001,
+  CTL.LAMBDA.ENVIRONMENT.CMK.001.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.1.1"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  fedramp_moderate: "SC-12"
+  hipaa: "164.312(a)(2)(iv)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    SQS queue encryption is not backed by a customer-managed
+    KMS key.
+  action: >
+    Create or select a CMK and assign it to the queue
+    (aws sqs set-queue-attributes --queue-url <url>
+    --attributes KmsMasterKeyId=arn:aws:kms:...:key/...).
+    Verify the CMK's key policy allows SQS to decrypt
+    (kms:Decrypt for the SQS service principal). The CMK gives
+    the organization key-policy control, audit visibility via
+    CloudTrail KMS events, and the ability to revoke access by
+    disabling the key — none of which are available with
+    SSE-SQS or alias/aws/sqs.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "encrypted": true,
+          "encryption_type": "SSE_KMS_CMK",
+          "uses_cmk": true,
+          "uses_aws_managed_key": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.encrypted
+      op: eq
+      value: true
+    - field: properties.messaging.sqs.uses_cmk
+      op: eq
+      value: false
+defect: >
+  SQS queue encryption is not backed by a customer-managed KMS
+  key.
+infection: >
+  SQS supports three encryption modes: SSE-SQS (free, SQS
+  manages the key, no audit trail or revocation), SSE-KMS with
+  alias/aws/sqs (AWS-managed CMK, KMS audit trail but no key
+  policy control), and SSE-KMS with a customer CMK (full
+  control). The first two protect message bodies from
+  filesystem-level theft but provide no defense against
+  authorized SQS service operations: an operator with
+  sqs:ReceiveMessage can read every encrypted message, no
+  matter the encryption mode. The CMK adds a second
+  authorization layer (kms:Decrypt against the key policy)
+  and gives the organization the ability to revoke access by
+  disabling the key — neither of which is available with
+  SSE-SQS or alias/aws/sqs. The lack of CMK does not break
+  encryption at rest; it limits the operator's leverage when
+  responding to a potential compromise.
+failure: >
+  No key-policy control over SQS message decryption. The
+  organization cannot revoke access by disabling a key and
+  cannot audit Decrypt operations against a key it controls.
+tests:
+  - name: queue with SSE-SQS fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            encrypted: true
+            encryption_type: "SSE_SQS"
+            uses_cmk: false
+            uses_aws_managed_key: false
+  - name: queue with alias/aws/sqs fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            encrypted: true
+            encryption_type: "SSE_KMS_MANAGED"
+            kms_key_arn: "alias/aws/sqs"
+            uses_cmk: false
+            uses_aws_managed_key: true
+  - name: queue with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            encrypted: true
+            encryption_type: "SSE_KMS_CMK"
+            kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/abc"
+            uses_cmk: true
+            uses_aws_managed_key: false

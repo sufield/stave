@@ -1,0 +1,24 @@
+control: CTL.SQS.ENCRYPT.CMK.001
+defect: >
+  SQS queue encryption is not backed by a customer-managed KMS
+  key.
+infection: >
+  SQS supports three encryption modes: SSE-SQS (free, SQS
+  manages the key, no audit trail or revocation), SSE-KMS with
+  alias/aws/sqs (AWS-managed CMK, KMS audit trail but no key
+  policy control), and SSE-KMS with a customer CMK (full
+  control). The first two protect message bodies from
+  filesystem-level theft but provide no defense against
+  authorized SQS service operations: an operator with
+  sqs:ReceiveMessage can read every encrypted message, no
+  matter the encryption mode. The CMK adds a second
+  authorization layer (kms:Decrypt against the key policy)
+  and gives the organization the ability to revoke access by
+  disabling the key — neither of which is available with
+  SSE-SQS or alias/aws/sqs. The lack of CMK does not break
+  encryption at rest; it limits the operator's leverage when
+  responding to a potential compromise.
+failure: >
+  No key-policy control over SQS message decryption. The
+  organization cannot revoke access by disabling a key and
+  cannot audit Decrypt operations against a key it controls.

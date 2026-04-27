@@ -1,0 +1,19 @@
+id: sqs_ghost_cascade
+description: >
+  Ghost DLQ plus either ghost sourceArn or ghost principal in
+  the queue policy. Multiple SQS infrastructure references are
+  broken — the DLQ doesn't exist AND either the message source
+  or the access principal is deleted. Systematic
+  decommissioning failure in the queue's supporting
+  infrastructure: cleanup landed on the queue's neighbours
+  without landing on the queue itself.
+controls:
+  - CTL.SQS.GHOST.DLQ.001
+  - CTL.SQS.GHOST.POLICY.SOURCEARN.001
+  - CTL.SQS.POLICY.GHOSTREF.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - ungoverned_operation

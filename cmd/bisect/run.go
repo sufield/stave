@@ -11,6 +11,7 @@ import (
 	appbisect "github.com/sufield/stave/internal/app/bisect"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/engine"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -84,7 +85,11 @@ func runBisect(ctx context.Context, in Input) error {
 			a := engine.NewAssessor()
 			a.Controls = []policy.ControlDefinition{target}
 			a.Clock = clock
+			a.Hasher = crypto.NewHasher()
 			a.PredicateEval = celEval
+			a.PredicateParser = func(_ any) (*policy.UnsafePredicate, error) {
+				return &policy.UnsafePredicate{}, nil
+			}
 			return a.Assess(snaps)
 		},
 		targetID,

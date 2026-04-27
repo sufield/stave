@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.GHOST.POLICY.SOURCEARN.001
+name: SQS Queue Policy SourceArn References Deleted Resource
+description: >
+  SQS queue policy has a condition restricting SendMessage to a
+  specific aws:SourceArn (an SNS topic, S3 bucket, EventBridge
+  rule, or other producer) that has been deleted. The queue is
+  still alive; the producer it expected messages from is gone.
+  The queue policy condition references a non-existent ARN. The
+  queue receives no traffic from the deleted source, and any new
+  source attempting to send is rejected by the stale sourceArn
+  match — dead pipeline. Distinct from
+  CTL.SQS.POLICY.GHOSTREF.001 (deleted IAM principal in the
+  policy's Principal element): this control checks the
+  Condition.aws:SourceArn keys, which name resources, not IAM
+  identities.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, AC-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.9"
+  ccm_v4: ["IAM-16", "DSP-17"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    SQS queue policy contains a sourceArn condition pointing at a
+    deleted resource. The pipeline expecting messages from that
+    source is broken.
+  action: >
+    Inspect the queue policy
+    (aws sqs get-queue-attributes --queue-url <url>
+    --attribute-names Policy) and either remove the stale
+    sourceArn condition, repoint it to the actual sender that
+    replaced the deleted resource, or delete the queue if it is
+    no longer in use. If the sender was intentionally migrated,
+    the policy must be updated atomically with the migration so
+    no message-loss window exists.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "policy_source_arns": ["arn:aws:sns:us-east-1:111122223333:orders-topic"],
+          "has_ghost_source_arn": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.has_ghost_source_arn
+      op: eq
+      value: true
+defect: >
+  SQS queue policy references one or more sourceArn conditions
+  whose target resource no longer exists.
+infection: >
+  The queue policy uses sourceArn conditions to restrict which
+  upstream resources can send messages — typically SNS topics,
+  S3 buckets, or EventBridge rules. When the source resource is
+  deleted, the condition references a non-existent ARN. The
+  queue is still alive; the source it expected messages from is
+  gone. Two outcomes follow: (1) the queue receives no messages
+  because its only authorized sender is deleted — dead pipeline,
+  silent loss of business signal; (2) the queue is repurposed
+  with a new sender but the policy is not updated — the new
+  sender's messages are rejected because its ARN does not match
+  the stale condition. In either case, the policy claim ("only
+  this resource may send") is misaligned with reality.
+failure: >
+  Dead pipeline. The queue expects messages from a deleted
+  source; either no messages arrive or new senders are rejected
+  by the stale sourceArn condition.
+tests:
+  - name: queue policy with ghost SNS source fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:fanout-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            queue_arn: "arn:aws:sqs:us-east-1:111122223333:fanout-queue"
+            policy_source_arns:
+              - "arn:aws:sns:us-east-1:111122223333:topic-deleted"
+            ghost_source_arns:
+              - "arn:aws:sns:us-east-1:111122223333:topic-deleted"
+            ghost_source_types:
+              - "sns_topic"
+            has_ghost_source_arn: true
+  - name: queue policy with live SNS source passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:fanout-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            policy_source_arns:
+              - "arn:aws:sns:us-east-1:111122223333:orders-topic"
+            ghost_source_arns: []
+            has_ghost_source_arn: false
+  - name: queue policy with ghost S3 source fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:upload-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            policy_source_arns:
+              - "arn:aws:s3:::uploads-bucket-deleted"
+            ghost_source_arns:
+              - "arn:aws:s3:::uploads-bucket-deleted"
+            ghost_source_types:
+              - "s3_bucket"
+            has_ghost_source_arn: true

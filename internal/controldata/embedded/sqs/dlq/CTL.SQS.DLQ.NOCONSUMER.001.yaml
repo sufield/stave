@@ -1,0 +1,136 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.DLQ.NOCONSUMER.001
+name: SQS Dead-Letter Queue Has No Consumer
+description: >
+  SQS queue is the target of another queue's redrive policy (so
+  it functions as a dead-letter queue) but has no consumer — no
+  Lambda event-source mapping, no application polling, no
+  redrive-back pipeline. Failed messages arrive in the DLQ and
+  sit there until the retention period expires. Nobody
+  investigates why messages failed. Nobody reprocesses them.
+  The DLQ exists but serves only as a delayed-deletion
+  mechanism, not as a failure-handling surface. Same
+  "appears-to-work" pattern as ghost-DLQ: the organization
+  believes they have DLQ coverage, the console shows DLQ
+  configuration, but the failure-handling chain is broken at
+  the consumer step.
+domain: governance
+severity: high
+compliance:
+  soc2: "A1.2, CC7.4, CC7.2"
+  nist_800_53_r5: "AU-2, SI-11, IR-4"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["BCR-08", "SEF-04"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    SQS DLQ has no consumer. Failed messages accumulate
+    uninvestigated until they expire.
+  action: >
+    Attach a consumer that processes or alerts on failed
+    messages — typically a Lambda event-source mapping that
+    ships each message to an incident-management system,
+    re-enqueues it after operator review, or writes it to S3
+    for forensic analysis. Pair with a CloudWatch alarm on
+    ApproximateNumberOfMessagesVisible so a sudden surge of
+    failures triggers an immediate page even before the
+    consumer gets to them. If the DLQ is intentionally write-
+    only (cold storage), document the choice with a queue tag
+    and exempt explicitly.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "is_dlq": true,
+          "dlq_has_consumer": true,
+          "dlq_consumer_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.is_dlq
+      op: eq
+      value: true
+    - field: properties.messaging.sqs.dlq_has_consumer
+      op: eq
+      value: false
+defect: >
+  SQS dead-letter queue has no consumer; failed messages
+  accumulate until retention expires.
+infection: >
+  A DLQ without a consumer is a delayed-deletion mechanism —
+  messages arrive, sit for the retention period (default 4
+  days, max 14), and are deleted. Nobody investigates why the
+  messages failed. Nobody reprocesses them after fixing the
+  bug. Nobody is notified that messages are accumulating. The
+  DLQ provides the appearance of failure handling ("we have a
+  DLQ") without any actual handling. For the DLQ to serve its
+  purpose, it needs a consumer that processes or alerts on
+  failed messages, a CloudWatch alarm for message count, and
+  ideally a redrive-back pipeline for moving messages back to
+  the source queue once the underlying defect is resolved.
+failure: >
+  DLQ as delayed deletion. Failed messages accumulate
+  uninvestigated and expire after the retention window.
+tests:
+  - name: DLQ with no consumer fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            queue_arn: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+            is_dlq: true
+            dlq_has_consumer: false
+            dlq_consumer_count: 0
+            dlq_approximate_messages: 50
+  - name: DLQ with a Lambda ESM consumer passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            dlq_has_consumer: true
+            dlq_consumer_count: 1
+  - name: long-standing DLQ accumulation fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:transactions-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            dlq_has_consumer: false
+            dlq_consumer_count: 0
+            dlq_approximate_messages: 500
+            oldest_message_age_days: 30

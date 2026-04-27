@@ -1,0 +1,23 @@
+control: CTL.SQS.DLQ.RETENTION.MISMATCH.001
+defect: >
+  SQS dead-letter queue retention is shorter than the source
+  queue's, so failed messages expire faster than the source
+  queue's success-path retention.
+infection: >
+  Source queue retention bounds how long a message has to be
+  successfully processed before SQS deletes it. The DLQ
+  retention bounds how long a failed message has to be
+  investigated. When the DLQ retention is shorter than the
+  source's, the failure path has a shorter visibility window
+  than the success path: a message that failed on day 1 of a
+  14-day source retention has only the DLQ retention to be
+  investigated. Operators looking at the DLQ a week after a
+  spike of failures find an empty queue — not because the
+  failures were resolved, but because the retention window
+  closed. The post-mortem then has to rely on whatever
+  consumer logs survived, which often less than the queue
+  itself would have preserved.
+failure: >
+  Failed messages expire faster than the source queue would
+  have kept them. The DLQ becomes a delayed deletion queue,
+  not an investigation queue.

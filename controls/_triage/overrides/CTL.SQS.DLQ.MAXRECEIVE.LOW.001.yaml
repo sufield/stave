@@ -1,0 +1,24 @@
+control: CTL.SQS.DLQ.MAXRECEIVE.LOW.001
+defect: >
+  SQS queue's redrive policy has maxReceiveCount = 1; messages
+  reach the DLQ on the first processing failure.
+infection: >
+  maxReceiveCount governs how many times SQS will redeliver a
+  message before sending it to the DLQ. A value of 1 means the
+  first processing failure — for any reason, including a
+  transient network glitch or a consumer cold-start that
+  exceeded the visibility timeout — moves the message to the
+  DLQ permanently. Most production workloads have transient
+  failures often enough that a maxReceiveCount of 1 produces a
+  steady stream of false-positive DLQ entries that consumes
+  operator attention and obscures real, sustained failures.
+  The recommended floor is 3-5 retries: enough to absorb
+  transient errors, not so many that a poison message ties up
+  consumers indefinitely. maxReceiveCount = 1 is rarely
+  intentional — but when it is (strict idempotency boundary,
+  ordering-sensitive workload), the queue should carry a tag
+  documenting the choice.
+failure: >
+  Transient failures populate the DLQ. Operators chase
+  recoverable errors as if they were permanent failures; real
+  sustained failures are lost in the noise.

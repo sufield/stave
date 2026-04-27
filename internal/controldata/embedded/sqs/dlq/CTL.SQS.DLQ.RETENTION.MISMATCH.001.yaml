@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.DLQ.RETENTION.MISMATCH.001
+name: SQS Dead-Letter Queue Retention Shorter Than Source Queue
+description: >
+  SQS dead-letter queue's MessageRetentionPeriod is shorter than
+  its source queue's. Messages that fail processing land in the
+  DLQ but expire there before they expire in the source — a
+  message that fails on day 1 of a 14-day source-queue retention
+  has only the DLQ's retention to be investigated, which can be
+  as short as 4 days (the SQS default) or even 1 minute (the
+  configurable floor). The DLQ should retain failed messages at
+  least as long as the source would have retained them: the
+  failure path must not have a shorter visibility window than
+  the success path. AWS does not enforce this relationship; it
+  is purely a configuration choice.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.2, CC7.4"
+  nist_800_53_r5: "AU-11, SI-11"
+  fedramp_moderate: "AU-11"
+  iso_27001_2022: "A.8.15"
+  ccm_v4: ["BCR-08", "LOG-13"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    SQS dead-letter queue retention is shorter than its source
+    queue's. Failed messages may expire before they can be
+    investigated.
+  action: >
+    Raise the DLQ's MessageRetentionPeriod to match or exceed
+    the source queue's
+    (aws sqs set-queue-attributes --queue-url <dlq>
+    --attributes MessageRetentionPeriod=1209600 for 14 days).
+    Verify against every queue using the DLQ as a target; the
+    DLQ must satisfy the longest source-side retention among
+    its sources.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "is_dlq": true,
+          "dlq_retention_days": 14,
+          "source_retention_days": 14,
+          "dlq_retention_shorter": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.dlq_retention_shorter
+      op: eq
+      value: true
+defect: >
+  SQS dead-letter queue retention is shorter than the source
+  queue's, so failed messages expire faster than the source
+  queue's success-path retention.
+infection: >
+  Source queue retention bounds how long a message has to be
+  successfully processed before SQS deletes it. The DLQ
+  retention bounds how long a failed message has to be
+  investigated. When the DLQ retention is shorter than the
+  source's, the failure path has a shorter visibility window
+  than the success path: a message that failed on day 1 of a
+  14-day source retention has only the DLQ retention to be
+  investigated. Operators looking at the DLQ a week after a
+  spike of failures find an empty queue — not because the
+  failures were resolved, but because the retention window
+  closed. The post-mortem then has to rely on whatever
+  consumer logs survived, which often less than the queue
+  itself would have preserved.
+failure: >
+  Failed messages expire faster than the source queue would
+  have kept them. The DLQ becomes a delayed deletion queue,
+  not an investigation queue.
+tests:
+  - name: DLQ with 4d retention vs 14d source fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            dlq_retention_days: 4
+            source_retention_days: 14
+            dlq_retention_shorter: true
+  - name: DLQ with matching retention passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            dlq_retention_days: 14
+            source_retention_days: 14
+            dlq_retention_shorter: false

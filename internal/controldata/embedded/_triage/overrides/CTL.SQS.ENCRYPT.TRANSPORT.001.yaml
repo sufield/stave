@@ -1,0 +1,24 @@
+control: CTL.SQS.ENCRYPT.TRANSPORT.001
+defect: >
+  SQS queue policy does not include an aws:SecureTransport
+  condition denying HTTP requests.
+infection: >
+  SQS exposes both HTTP and HTTPS endpoints. Without a queue
+  policy condition that denies requests where
+  aws:SecureTransport = false, producers and consumers can use
+  the HTTP endpoint — plaintext. Message bodies (customer
+  data, application events, credentials), message attributes,
+  and the SQS API parameters themselves (queue URL, message
+  IDs, receipt handles, queue attributes) traverse the network
+  unencrypted. A network adversary with passive observation
+  can read every message, every queue URL, and every receipt
+  handle — and an active adversary can replay or modify
+  messages in flight. A Deny statement gated on
+  aws:SecureTransport: false rejects the entire HTTP surface,
+  forcing every queue operation onto the HTTPS endpoint. This
+  is the SQS analogue of S3's bucket-policy HTTPS
+  enforcement.
+failure: >
+  Plaintext message transport. Messages, message attributes,
+  and SQS API parameters can travel over HTTP and are
+  observable to any network adversary on the path.

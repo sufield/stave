@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.GHOST.ALARM.001
+name: CloudWatch Alarm References Deleted SQS Queue
+description: >
+  CloudWatch alarm is configured to watch SQS metrics
+  (ApproximateNumberOfMessagesVisible,
+  ApproximateNumberOfMessagesNotVisible,
+  ApproximateAgeOfOldestMessage) for a queue that has been
+  deleted. The alarm definition still exists — metric, threshold,
+  and notification destination — but the queue is gone, so
+  CloudWatch publishes no metrics for it. The alarm will never
+  trigger; it monitors nothing. Operators reading the alarm
+  inventory believe the queue is being watched. It is not.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC7.2"
+  nist_800_53_r5: "CM-2, SI-4"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cloudwatch_alarm
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudWatch alarm references a deleted SQS queue and will
+    never trigger.
+  action: >
+    Identify the alarm
+    (aws cloudwatch describe-alarms --alarm-names <name>) and
+    either delete the alarm
+    (aws cloudwatch delete-alarms --alarm-names <name>) or
+    repoint it to a live queue if the workload is still running
+    against a replacement. Audit the broader monitoring
+    inventory at the same time — a deleted queue often
+    correlates with stale dashboards and stale runbook entries.
+  example: |
+    {
+      "messaging": {
+        "kind": "cloudwatch_alarm",
+        "sqs": {
+          "alarm_queue_arn": "arn:aws:sqs:us-east-1:111122223333:orders-queue",
+          "alarm_queue_exists": true,
+          "has_ghost_alarm": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: cloudwatch_alarm
+    - field: properties.messaging.sqs.has_ghost_alarm
+      op: eq
+      value: true
+defect: >
+  CloudWatch alarm watches metrics for an SQS queue that has
+  been deleted.
+infection: >
+  CloudWatch alarms publish metrics from named resources. When
+  the named resource is deleted, the alarm's metric source
+  stops emitting — there is nothing for the alarm to evaluate
+  against, so its state stays in INSUFFICIENT_DATA forever (or
+  in OK if the alarm is configured to treat missing data as
+  not-breaching). The alarm definition is not removed
+  automatically: it persists in the account, in the alarm
+  list, in any monitoring dashboards that include it, and in
+  runbooks that mention it. Operators reading the inventory
+  believe the queue is being watched. The alarm provides
+  documentation of monitoring intent without any actual
+  monitoring. The risk is not active harm — it is the false
+  confidence that something is being monitored when it is not.
+failure: >
+  False monitoring confidence. The alarm appears to cover an
+  SQS queue but the queue is deleted; the alarm will never
+  fire and contributes only governance clutter.
+tests:
+  - name: alarm referencing deleted queue fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:OrdersDLQDepth"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        messaging:
+          kind: cloudwatch_alarm
+          sqs:
+            alarm_queue_arn: "arn:aws:sqs:us-east-1:111122223333:orders-deleted"
+            alarm_queue_exists: false
+            has_ghost_alarm: true
+  - name: alarm referencing live queue passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:OrdersDLQDepth"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        messaging:
+          kind: cloudwatch_alarm
+          sqs:
+            alarm_queue_arn: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+            alarm_queue_exists: true
+            has_ghost_alarm: false

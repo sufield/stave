@@ -1,0 +1,19 @@
+control: CTL.SQS.DLQ.NOCONSUMER.001
+defect: >
+  SQS dead-letter queue has no consumer; failed messages
+  accumulate until retention expires.
+infection: >
+  A DLQ without a consumer is a delayed-deletion mechanism —
+  messages arrive, sit for the retention period (default 4
+  days, max 14), and are deleted. Nobody investigates why the
+  messages failed. Nobody reprocesses them after fixing the
+  bug. Nobody is notified that messages are accumulating. The
+  DLQ provides the appearance of failure handling ("we have a
+  DLQ") without any actual handling. For the DLQ to serve its
+  purpose, it needs a consumer that processes or alerts on
+  failed messages, a CloudWatch alarm for message count, and
+  ideally a redrive-back pipeline for moving messages back to
+  the source queue once the underlying defect is resolved.
+failure: >
+  DLQ as delayed deletion. Failed messages accumulate
+  uninvestigated and expire after the retention window.
