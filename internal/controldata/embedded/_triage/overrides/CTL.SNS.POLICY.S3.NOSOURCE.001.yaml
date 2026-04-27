@@ -1,0 +1,21 @@
+control: CTL.SNS.POLICY.S3.NOSOURCE.001
+defect: >
+  SNS topic policy authorizes S3 service principal Publish
+  without aws:SourceArn or aws:SourceAccount.
+infection: >
+  The topic policy grants sns:Publish to s3.amazonaws.com
+  without restricting which bucket can publish. Any S3
+  bucket — in any AWS account — can configure event
+  notifications targeting the topic. An attacker creates a
+  bucket in their own account, configures a PutObject event
+  notification pointed at the topic ARN, and uploads an
+  object. The topic accepts the attacker's S3 event payload
+  and fans it out to every subscriber. Each subscriber —
+  every SQS queue, Lambda function, and HTTP endpoint —
+  processes the attacker-controlled message as legitimate.
+  aws:SourceArn restricts to a specific bucket ARN;
+  aws:SourceAccount restricts to the bucket-owning account.
+failure: >
+  Cross-account injection via fan-out. Any S3 bucket in any
+  account can publish to the topic, and the payload reaches
+  every subscriber.

@@ -1,0 +1,133 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.POLICY.DELETETOPIC.BROAD.001
+name: SNS Topic Policy Grants DeleteTopic to Non-Admin Principals
+description: >
+  SNS topic policy grants sns:DeleteTopic to non-administrative
+  principals. DeleteTopic permanently removes the topic and
+  every subscription attached to it. Cascading impact: every
+  CloudWatch alarm referencing the topic instantly becomes a
+  ghost reference (CTL.SNS.GHOST.ALARM.001), so a single
+  DeleteTopic call breaks alerting for every alarm that
+  routed through it. This is the SNS analogue of
+  CTL.SQS.POLICY.PURGE.001 — but worse, because it also
+  destroys the subscription topology, not just the queued
+  data. Only topic administrators (or the SDK-default
+  account root) should hold DeleteTopic.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC6.1, CC6.6, A1.2"
+  nist_800_53_r5: "AC-6, SI-11, SI-13, IR-4"
+  pci_dss_v4.0: "1.2, 7.1, 7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    SNS topic policy grants DeleteTopic to a broad principal
+    class. A single API call can wipe the topic and break
+    every referencing alarm.
+  action: >
+    Restrict sns:DeleteTopic to a named topic-admin role or
+    the account root. Audit the policy
+    (aws sns get-topic-attributes --topic-arn <arn>
+    --query 'Attributes.Policy') and remove DeleteTopic from
+    consumer roles, integration roles, and cross-account
+    principals. If automation needs DeleteTopic (e.g., an
+    environment-teardown pipeline), grant it to a specific
+    service role rather than to an entire account or
+    wildcard pattern.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "delete_broadly_granted": false,
+          "policy_delete_principals": ["arn:aws:iam::111122223333:role/topic-admin"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.delete_broadly_granted
+      op: eq
+      value: true
+defect: >
+  SNS topic policy grants sns:DeleteTopic to a broad
+  principal class.
+infection: >
+  DeleteTopic permanently removes the topic and every
+  subscription attached to it. Cascading impact: every
+  CloudWatch alarm that referenced the topic instantly
+  becomes a ghost reference (the topic ARN no longer
+  resolves), so the alarms still fire but their notification
+  actions silently fail. A single DeleteTopic call can break
+  alerting for the entire account when the deleted topic
+  was a shared notification target. Subscribers — Lambda
+  functions, SQS queues, HTTP webhooks — also stop
+  receiving messages, but at least their failure is visible
+  on the publish side. The alarm-side failure is the more
+  dangerous: detection still works, notification is gone,
+  nobody knows.
+failure: >
+  Topic deletion capability. A single API call wipes the
+  topic, removes every subscription, and breaks the
+  notification chain for every CloudWatch alarm that
+  referenced it.
+tests:
+  - name: DeleteTopic to broad principal fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            delete_broadly_granted: true
+            policy_delete_principals:
+              - "arn:aws:iam::111122223333:role/*"
+  - name: DeleteTopic to topic-admin role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            delete_broadly_granted: false
+            policy_delete_principals:
+              - "arn:aws:iam::111122223333:role/topic-admin"
+  - name: DeleteTopic only to root passes (default)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            delete_broadly_granted: false
+            policy_delete_principals:
+              - "arn:aws:iam::111122223333:root"

@@ -1,0 +1,130 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.GHOST.SUBSCRIPTION.DLQ.001
+name: SNS Subscription Dead-Letter Queue Does Not Exist
+description: >
+  SNS subscription has a redrive policy specifying a dead-
+  letter queue ARN that does not exist. When delivery to the
+  subscription endpoint fails, SNS attempts to send the
+  failed message to the DLQ; the DLQ is gone, so the failed
+  message is silently discarded. Same silent-failure pattern
+  as CTL.SQS.GHOST.DLQ.001 but for SNS subscription delivery
+  failures rather than SQS source-queue failures. This is a
+  double-failure setup: the primary subscription path may
+  fail, and the safety-net DLQ is also broken.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC7.4, A1.2"
+  nist_800_53_r5: "CM-2, CM-3, SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_subscription
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    SNS subscription's DLQ has been deleted. Delivery
+    failures bypass the safety net and are discarded.
+  action: >
+    Recreate the DLQ at the original ARN, repoint the
+    subscription's redrive policy to a live DLQ
+    (aws sns set-subscription-attributes --subscription-arn
+    <sub> --attribute-name RedrivePolicy
+    --attribute-value '{"deadLetterTargetArn":"<live-dlq>"}'),
+    or remove the redrive policy entirely if the workload
+    accepts permanent loss on delivery failure (rare —
+    document the choice).
+  example: |
+    {
+      "messaging": {
+        "kind": "sns_subscription",
+        "sns": {
+          "subscription_dlq_arn": "arn:aws:sqs:us-east-1:111122223333:notifications-dlq",
+          "subscription_dlq_exists": true,
+          "has_ghost_subscription_dlq": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: sns_subscription
+    - field: properties.messaging.sns.has_ghost_subscription_dlq
+      op: eq
+      value: true
+defect: >
+  SNS subscription's redrive policy points at a deleted DLQ.
+infection: >
+  The redrive policy specifies a DLQ ARN — when delivery to
+  the subscription endpoint fails (endpoint down, Lambda
+  error, SQS queue full), SNS attempts to send the failed
+  message to the DLQ for investigation and reprocessing.
+  When the DLQ is deleted, SNS cannot move the failed
+  message: it is silently discarded. The subscription
+  appears to have a safety net (the redrive policy is
+  present, the console shows the ARN) but failed deliveries
+  vanish. The most dangerous scenario is the compound case:
+  the primary endpoint is also failing and so is the DLQ
+  fallback — every published message that targets this
+  subscription is lost. Same pattern as
+  CTL.SQS.GHOST.DLQ.001 but on the SNS subscription side.
+failure: >
+  Silent message loss on delivery failure. The DLQ that was
+  supposed to preserve failed deliveries has been deleted;
+  failed deliveries are discarded without record.
+tests:
+  - name: subscription with ghost DLQ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic:dlq001"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            subscription_arn: "arn:aws:sns:us-east-1:111122223333:orders-topic:dlq001"
+            subscription_dlq_arn: "arn:aws:sqs:us-east-1:111122223333:orders-dlq-deleted"
+            subscription_dlq_exists: false
+            has_ghost_subscription_dlq: true
+  - name: subscription with live DLQ passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic:dlq001"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            subscription_dlq_arn: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+            subscription_dlq_exists: true
+            has_ghost_subscription_dlq: false
+  - name: ghost DLQ AND failing primary endpoint fires (double failure)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic:dlq002"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            subscription_protocol: "lambda"
+            subscription_endpoint_exists: false
+            has_ghost_subscription: true
+            subscription_dlq_arn: "arn:aws:sqs:us-east-1:111122223333:orders-dlq-deleted"
+            subscription_dlq_exists: false
+            has_ghost_subscription_dlq: true

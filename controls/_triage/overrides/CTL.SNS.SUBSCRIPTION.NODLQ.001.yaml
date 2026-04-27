@@ -1,0 +1,21 @@
+control: CTL.SNS.SUBSCRIPTION.NODLQ.001
+defect: >
+  SNS subscription has no DLQ; failed deliveries are
+  discarded permanently after retries.
+infection: >
+  SNS retries failed deliveries according to the protocol's
+  delivery policy: HTTP/HTTPS gets three phases over 23
+  hours; SQS and Lambda get three retries over 20 seconds.
+  After all retries exhaust, the message is discarded —
+  permanently lost. Without a DLQ, there is no record of
+  which messages failed, no ability to reprocess after the
+  underlying defect is fixed, and the failure is invisible
+  unless delivery-status logging is enabled. The DLQ
+  captures failed messages for investigation and
+  reprocessing; it is the safety net that turns "delivery
+  attempted and failed" into "delivery attempted, failed,
+  preserved, retryable".
+failure: >
+  Silent message loss on delivery failure. Failed messages
+  are discarded after retries with no preservation; the
+  business signal embedded in the message is lost.

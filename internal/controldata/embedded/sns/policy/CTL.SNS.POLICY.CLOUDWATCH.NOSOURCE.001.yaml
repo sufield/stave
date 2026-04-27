@@ -1,0 +1,155 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.POLICY.CLOUDWATCH.NOSOURCE.001
+name: SNS Topic Policy Allows CloudWatch / EventBridge Publish Without SourceArn
+description: >
+  SNS topic policy grants sns:Publish to the CloudWatch
+  service principal (cloudwatch.amazonaws.com) or the
+  EventBridge service principal (events.amazonaws.com)
+  without aws:SourceArn or aws:SourceAccount conditions.
+  Any CloudWatch alarm or EventBridge rule in any account
+  can publish to the topic. Particularly dangerous for
+  alarm-notification topics: an attacker can inject fake
+  alarm notifications — fake ALARM states (causing alert
+  fatigue), fake OK states (suppressing real alarm
+  responses), or crafted payloads that trigger automated
+  remediation. Counterpart to CTL.SNS.POLICY.S3.NOSOURCE.001
+  on the alarm/event surface.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC6.1, CC6.6, CC7.2"
+  nist_800_53_r5: "AC-3, AC-4, SI-4"
+  pci_dss_v4.0: "1.2, 7.1, 10.6"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IAM-16", "LOG-08"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    SNS topic policy authorizes CloudWatch / EventBridge
+    without a source restriction. Any alarm or rule in any
+    account can publish to the topic.
+  action: >
+    Add aws:SourceArn (each legitimate alarm or rule ARN) or
+    aws:SourceAccount (the publisher account) to every
+    Statement granting cloudwatch.amazonaws.com or
+    events.amazonaws.com Publish. For alarm-notification
+    topics, the ARN allowlist is preferred — the publisher
+    set is small and stable, and the explicit list rejects
+    any alarm not on it.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "policy_allows_cloudwatch": true,
+          "policy_cloudwatch_has_source": true
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - all:
+        - field: properties.messaging.kind
+          op: eq
+          value: topic
+        - field: properties.messaging.sns.policy_allows_cloudwatch
+          op: eq
+          value: true
+        - field: properties.messaging.sns.policy_cloudwatch_has_source
+          op: eq
+          value: false
+    - all:
+        - field: properties.messaging.kind
+          op: eq
+          value: topic
+        - field: properties.messaging.sns.policy_allows_events
+          op: eq
+          value: true
+        - field: properties.messaging.sns.policy_events_has_source
+          op: eq
+          value: false
+defect: >
+  SNS topic policy authorizes CloudWatch or EventBridge
+  Publish without aws:SourceArn or aws:SourceAccount.
+infection: >
+  Alarm-notification topics receive CloudWatch alarm state
+  changes and EventBridge event deliveries. Without source
+  restriction, any CloudWatch alarm or EventBridge rule in
+  any account can publish to the topic. An attacker sends
+  fake alarm notifications: fake ALARM state for a critical
+  metric (alert fatigue, on-call burnout), fake OK state to
+  suppress response to a real alarm, or crafted payloads
+  that trigger automated remediation. If the topic fans out
+  to PagerDuty, Slack, or a Lambda that auto-remediates, the
+  attacker can drive the response system with chosen inputs.
+  Source restriction ensures only specific alarms or rules
+  in specific accounts can publish.
+failure: >
+  Fake alarm injection. Any CloudWatch alarm or EventBridge
+  rule in any account can publish to the alarm-notification
+  topic; subscribers cannot distinguish injected from
+  legitimate.
+tests:
+  - name: CloudWatch principal without source condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_allows_cloudwatch: true
+            policy_cloudwatch_has_source: false
+  - name: EventBridge principal without source condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:events-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_allows_events: true
+            policy_events_has_source: false
+  - name: CloudWatch principal with sourceArn passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_allows_cloudwatch: true
+            policy_cloudwatch_has_source: true
+  - name: alarm-notification topic with unguarded CloudWatch fires (severe)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:critical-alarms"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_allows_cloudwatch: true
+            policy_cloudwatch_has_source: false
+            is_alarm_target: true

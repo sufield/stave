@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.POLICY.LAMBDA.NOSOURCE.001
+name: SNS Topic Policy Allows Lambda Publish Without SourceArn
+description: >
+  SNS topic policy grants sns:Publish to the Lambda service
+  principal (lambda.amazonaws.com) without aws:SourceArn or
+  aws:SourceAccount conditions. Any Lambda function in any
+  account can publish to the topic. Less common than
+  S3/CloudWatch integration patterns — Lambda functions
+  usually publish via the SDK using their execution role's
+  credentials, not as the service principal — so this
+  control is rated medium severity. Where it does occur, the
+  exposure is the same: cross-account confused deputy on the
+  publish path.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4"
+  pci_dss_v4.0: "1.2, 7.1"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.9"
+  ccm_v4: ["IAM-16"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    SNS topic policy authorizes the Lambda service principal
+    without a source restriction.
+  action: >
+    Add aws:SourceArn (the legitimate function ARN) or
+    aws:SourceAccount (the function-owning account) to every
+    Statement granting lambda.amazonaws.com Publish. If the
+    topic should not accept Lambda service-principal
+    publishes at all (i.e., Lambdas in your account use
+    their execution role's identity to publish), remove the
+    Lambda principal entirely.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "policy_allows_lambda": true,
+          "policy_lambda_has_source": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.policy_allows_lambda
+      op: eq
+      value: true
+    - field: properties.messaging.sns.policy_lambda_has_source
+      op: eq
+      value: false
+defect: >
+  SNS topic policy authorizes Lambda service principal
+  Publish without aws:SourceArn or aws:SourceAccount.
+infection: >
+  The topic policy grants sns:Publish to lambda.amazonaws.com
+  without restricting which function can publish. Any Lambda
+  function in any AWS account that operates as the lambda
+  service principal can publish to the topic — and the topic
+  fans the message out to every subscriber. This is the
+  Lambda-side variant of the confused-deputy pattern: less
+  common than S3 or CloudWatch (Lambda functions usually
+  publish via SDK with their execution-role credentials)
+  but the exposure shape is identical when it does occur.
+failure: >
+  Cross-account injection from Lambda. Any function in any
+  account can publish to the topic and reach all
+  subscribers.
+tests:
+  - name: Lambda principal without source condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:events-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_allows_lambda: true
+            policy_lambda_has_source: false
+  - name: Lambda principal with sourceArn passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:events-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_allows_lambda: true
+            policy_lambda_has_source: true

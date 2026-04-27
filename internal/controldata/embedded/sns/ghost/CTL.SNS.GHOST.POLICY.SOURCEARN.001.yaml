@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.GHOST.POLICY.SOURCEARN.001
+name: SNS Topic Policy SourceArn References Deleted Resource
+description: >
+  SNS topic policy has a condition restricting Publish to a
+  specific aws:SourceArn (S3 bucket, CloudWatch alarm,
+  EventBridge rule, or other publisher) that has been
+  deleted. The policy still names the deleted resource. The
+  topic is alive and authorized to receive messages from a
+  publisher that no longer exists. Distinct from
+  CTL.SNS.POLICY.GHOSTREF.001 (which checks the policy's
+  Principal element for deleted IAM principals); this
+  control checks the Condition.aws:SourceArn keys, which
+  name resources, not identities. Same pattern as
+  CTL.SQS.GHOST.POLICY.SOURCEARN.001 on the SQS side.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, AC-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.9"
+  ccm_v4: ["IAM-16", "DSP-17"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    SNS topic policy contains sourceArn condition(s) pointing
+    at a deleted resource.
+  action: >
+    Inspect the topic policy
+    (aws sns get-topic-attributes --topic-arn <arn>
+    --query 'Attributes.Policy') and either remove the stale
+    sourceArn condition, repoint it to the actual sender that
+    replaced the deleted resource, or delete the topic if it
+    is no longer in use.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "policy_source_arns": ["arn:aws:s3:::events-bucket"],
+          "has_ghost_source_arn": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.has_ghost_source_arn
+      op: eq
+      value: true
+defect: >
+  SNS topic policy references one or more sourceArn
+  conditions whose target resource no longer exists.
+infection: >
+  The topic policy uses sourceArn conditions to restrict
+  which upstream resources can publish messages — typically
+  S3 buckets, CloudWatch alarms, or EventBridge rules. When
+  the source resource is deleted, the condition references a
+  non-existent ARN. The topic is still alive; the source
+  it expected publications from is gone. Two outcomes
+  follow: the topic receives no messages because its only
+  authorized publisher is deleted (silent business signal
+  loss), or the topic is repurposed with a new publisher
+  but the policy is not updated (the new publisher's
+  messages are rejected because its ARN does not match the
+  stale condition). In either case, the policy claim
+  ("only this resource may publish") is misaligned with
+  reality.
+failure: >
+  Dead pipeline. The topic expects messages from a deleted
+  source; either no messages arrive or new senders are
+  rejected by the stale sourceArn condition.
+tests:
+  - name: topic policy with ghost S3 source fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:upload-events"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:upload-events"
+            policy_source_arns:
+              - "arn:aws:s3:::events-bucket-deleted"
+            ghost_source_arns:
+              - "arn:aws:s3:::events-bucket-deleted"
+            has_ghost_source_arn: true
+  - name: topic policy with live source passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:upload-events"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_source_arns:
+              - "arn:aws:s3:::events-bucket"
+            ghost_source_arns: []
+            has_ghost_source_arn: false

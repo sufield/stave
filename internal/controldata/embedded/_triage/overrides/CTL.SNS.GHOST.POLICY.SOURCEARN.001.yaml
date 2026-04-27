@@ -1,0 +1,23 @@
+control: CTL.SNS.GHOST.POLICY.SOURCEARN.001
+defect: >
+  SNS topic policy references one or more sourceArn
+  conditions whose target resource no longer exists.
+infection: >
+  The topic policy uses sourceArn conditions to restrict
+  which upstream resources can publish messages — typically
+  S3 buckets, CloudWatch alarms, or EventBridge rules.
+  When the source resource is deleted, the condition
+  references a non-existent ARN. The topic is still alive;
+  the source it expected publications from is gone. Two
+  outcomes follow: the topic receives no messages because
+  its only authorized publisher is deleted (silent business
+  signal loss), or the topic is repurposed with a new
+  publisher but the policy is not updated (the new
+  publisher's messages are rejected because its ARN does
+  not match the stale condition). In either case, the
+  policy claim ("only this resource may publish") is
+  misaligned with reality.
+failure: >
+  Dead pipeline. The topic expects messages from a deleted
+  source; either no messages arrive or new senders are
+  rejected by the stale sourceArn condition.

@@ -1,0 +1,137 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.GHOST.SUBSCRIPTION.SQS.001
+name: SNS Subscription Delivers to Deleted SQS Queue
+description: >
+  SNS topic has a subscription whose endpoint is an SQS queue
+  ARN that no longer exists in the inventory. The subscription
+  persists; SNS attempts delivery on every publish; every
+  delivery fails because the queue is gone. After the
+  protocol's retry policy exhausts (three retries over 20
+  seconds for SQS), the message is either redirected to the
+  subscription's DLQ (if one is configured) or discarded
+  permanently. The topic appears to have a healthy subscriber.
+  Messages are silently undelivered. Same ghost-reference
+  pattern as CTL.SQS.GHOST.DLQ.001 but on the SNS side of
+  the SNS-to-SQS fan-out.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, IR-4"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_subscription
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SNS subscription delivers to a deleted SQS queue. Every
+    publish silently fails delivery to this subscriber.
+  action: >
+    Either recreate the SQS queue at the original ARN, or
+    repoint the subscription to a live queue
+    (aws sns subscribe --topic-arn <topic>
+    --protocol sqs --notification-endpoint <live-queue-arn>),
+    or unsubscribe (aws sns unsubscribe
+    --subscription-arn <subscription>) if the workload no
+    longer needs the integration. Pair with a delivery-status-
+    failure alarm on the topic so future endpoint deletions
+    surface immediately.
+  example: |
+    {
+      "messaging": {
+        "kind": "sns_subscription",
+        "sns": {
+          "subscription_protocol": "sqs",
+          "subscription_endpoint": "arn:aws:sqs:us-east-1:111122223333:orders-queue",
+          "subscription_endpoint_exists": true,
+          "has_ghost_subscription": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: sns_subscription
+    - field: properties.messaging.sns.subscription_protocol
+      op: eq
+      value: sqs
+    - field: properties.messaging.sns.has_ghost_subscription
+      op: eq
+      value: true
+defect: >
+  SNS subscription endpoint is an SQS queue ARN that has been
+  deleted.
+infection: >
+  The subscription specifies an SQS queue endpoint. The queue
+  was deleted. SNS attempts delivery on every publish — the
+  delivery fails because the queue does not exist. SNS
+  retries according to the SQS delivery policy (three retries
+  over 20 seconds). After retries exhaust, the message is
+  either sent to the subscription's DLQ (if configured) or
+  discarded permanently. The topic appears to have N
+  subscribers; one of them is a deleted queue. Every
+  message published to the topic fails delivery to this
+  subscriber silently. If this was the only or primary
+  subscriber, every published message goes unprocessed —
+  and no error surfaces unless delivery-status logging is
+  enabled.
+failure: >
+  Silent delivery failure. Messages published to the topic
+  fail delivery to a deleted SQS queue.
+tests:
+  - name: subscription to deleted SQS queue fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic:abc123"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+            subscription_arn: "arn:aws:sns:us-east-1:111122223333:orders-topic:abc123"
+            subscription_protocol: "sqs"
+            subscription_endpoint: "arn:aws:sqs:us-east-1:111122223333:orders-queue-deleted"
+            subscription_endpoint_exists: false
+            has_ghost_subscription: true
+  - name: subscription to live SQS queue passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic:abc123"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+            subscription_protocol: "sqs"
+            subscription_endpoint: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+            subscription_endpoint_exists: true
+            has_ghost_subscription: false
+  - name: partial fan-out with one ghost subscriber fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:fanout-topic:def456"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:fanout-topic"
+            subscription_protocol: "sqs"
+            subscription_endpoint: "arn:aws:sqs:us-east-1:111122223333:legacy-queue-deleted"
+            subscription_endpoint_exists: false
+            has_ghost_subscription: true
+            sibling_subscription_count: 3

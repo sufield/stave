@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.SUBSCRIPTION.HTTP.001
+name: SNS Subscription Uses HTTP (Not HTTPS) for Message Delivery
+description: >
+  SNS subscription delivers messages to an HTTP endpoint —
+  not HTTPS. Message body, message attributes, and SNS
+  metadata are transmitted in plaintext from SNS to the
+  endpoint. If messages contain PII, credentials, application
+  events, or system alerts, the content is readable by anyone
+  on the network path between AWS's SNS infrastructure and
+  the endpoint. The topic itself may be encrypted at rest;
+  delivery to HTTP defeats the at-rest protection. Same
+  false-encryption pattern as CTL.S3.CDN.TRANSPORT,
+  CTL.APIGATEWAY.INTEGRATION.HTTP, and
+  CTL.CLOUDFRONT.ORIGIN.HTTP — at-rest encryption without
+  in-transit encryption protects only the resting state.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-8, SC-13"
+  pci_dss_v4.0: "4.1, 4.2"
+  fedramp_moderate: "SC-8"
+  hipaa: "164.312(e)(1)"
+  iso_27001_2022: "A.8.20"
+  ccm_v4: ["CEK-03", "IVS-09"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_subscription
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    SNS subscription endpoint uses HTTP. Messages are
+    transmitted plaintext between SNS and the receiver.
+  action: >
+    Re-create the subscription against the HTTPS form of the
+    endpoint
+    (aws sns subscribe --topic-arn <topic> --protocol https
+    --notification-endpoint https://...) and unsubscribe the
+    HTTP form. If the receiver only supports HTTP, terminate
+    TLS on a fronting load balancer or API gateway and target
+    the TLS endpoint from SNS. Pair with
+    CTL.SNS.ENCRYPT.TRANSPORT.001 so the topic policy also
+    rejects plaintext publish operations end-to-end.
+  example: |
+    {
+      "messaging": {
+        "kind": "sns_subscription",
+        "sns": {
+          "subscription_protocol": "https",
+          "subscription_uses_http": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: sns_subscription
+    - field: properties.messaging.sns.subscription_uses_http
+      op: eq
+      value: true
+defect: >
+  SNS subscription delivers messages over HTTP instead of
+  HTTPS.
+infection: >
+  SNS delivers messages to the subscription endpoint via
+  HTTP — no TLS, no encryption. The message body (which may
+  contain notification content, application events, alarm
+  details, or sensitive data), message attributes, and SNS
+  metadata are transmitted in plaintext. An attacker on the
+  network path (between AWS's SNS infrastructure and the
+  HTTP endpoint) can read and modify the message. HTTPS
+  endpoints encrypt the delivery channel; HTTP endpoints do
+  not. For webhook endpoints, API callbacks, and event
+  receivers, HTTPS is the baseline expectation.
+failure: >
+  Plaintext notification delivery. Message content is
+  transmitted unencrypted between SNS and the endpoint;
+  any network observer can read or alter it.
+tests:
+  - name: HTTP subscription fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts-topic:http001"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            subscription_protocol: "http"
+            subscription_uses_http: true
+            subscription_endpoint: "http://webhook.example.com/ingest"
+  - name: HTTPS subscription passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts-topic:http001"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            subscription_protocol: "https"
+            subscription_uses_http: false
+            subscription_endpoint: "https://webhook.example.com/ingest"

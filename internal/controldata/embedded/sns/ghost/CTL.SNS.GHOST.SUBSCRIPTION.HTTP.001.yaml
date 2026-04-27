@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.GHOST.SUBSCRIPTION.HTTP.001
+name: SNS Subscription Delivers to Unreachable HTTP/HTTPS Endpoint
+description: >
+  SNS topic has a subscription delivering to an HTTP or HTTPS
+  endpoint that is persistently unreachable — the server was
+  decommissioned, the URL changed, the certificate expired,
+  or the endpoint returns errors on every delivery attempt.
+  Unlike SQS and Lambda ghosts (where the AWS resource is
+  gone), HTTP ghosts are usually partial: the endpoint may
+  exist but never respond, or respond with errors. The
+  control fires on PERSISTENT failure (sustained low success
+  rate), not on transient outages — observers should
+  threshold delivery_success_rate below a workload-specific
+  level (e.g., 50% over the past 24h).
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC7.4, CC8.1"
+  nist_800_53_r5: "CM-2, IR-4"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_subscription
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SNS subscription's HTTP endpoint is persistently
+    unreachable. Most published messages are not being
+    delivered.
+  action: >
+    Inspect the subscription's delivery-status logs in
+    CloudWatch (the AWS/SNS NumberOfNotificationsFailed
+    metric scoped to the subscription) to confirm the
+    failure pattern. If the endpoint was decommissioned,
+    unsubscribe; if the URL changed, repoint the
+    subscription. Add a CloudWatch alarm on the failure
+    metric so future endpoint regressions surface within
+    minutes rather than days.
+  example: |
+    {
+      "messaging": {
+        "kind": "sns_subscription",
+        "sns": {
+          "subscription_protocol": "https",
+          "subscription_endpoint_reachable": true,
+          "subscription_delivery_success_rate": 0.99,
+          "has_ghost_http_subscription": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: sns_subscription
+    - field: properties.messaging.sns.has_ghost_http_subscription
+      op: eq
+      value: true
+defect: >
+  SNS subscription's HTTP/HTTPS endpoint is persistently
+  unreachable.
+infection: >
+  Unlike the SQS and Lambda ghost subscriptions (binary —
+  the AWS resource exists or it does not), HTTP ghosts are
+  partial. The endpoint may resolve but never respond, may
+  respond with errors on every request, or may have a
+  certificate that no longer validates. The pattern is
+  important: a single failed delivery is normal (transient
+  outage); a sustained low success rate is a ghost. SNS
+  retries failed HTTP/S deliveries across three phases over
+  23 hours; if the endpoint stays down throughout, the
+  message is discarded or sent to the subscription DLQ.
+  Without delivery-status logging, the failure is invisible.
+failure: >
+  Persistent delivery failure. Messages published to the
+  topic mostly do not reach the HTTP subscriber; the
+  webhook receiver is silently broken.
+tests:
+  - name: persistently failing HTTPS endpoint fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:notifications-topic:http001"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            subscription_protocol: "https"
+            subscription_endpoint: "https://webhook.example.com/ingest-deleted"
+            subscription_endpoint_reachable: false
+            subscription_delivery_success_rate: 0.05
+            has_ghost_http_subscription: true
+  - name: healthy HTTPS endpoint passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:notifications-topic:http001"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            subscription_protocol: "https"
+            subscription_endpoint: "https://webhook.example.com/ingest"
+            subscription_endpoint_reachable: true
+            subscription_delivery_success_rate: 0.99
+            has_ghost_http_subscription: false

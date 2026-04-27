@@ -1,0 +1,21 @@
+control: CTL.SNS.GHOST.SUBSCRIPTION.LAMBDA.001
+defect: >
+  SNS subscription endpoint is a Lambda function ARN that
+  has been deleted.
+infection: >
+  The subscription specifies a Lambda function endpoint.
+  The function was deleted. SNS attempts delivery on every
+  publish — the invocation returns a
+  ResourceNotFoundException. SNS retries three times over
+  20 seconds. After retries exhaust, the message is either
+  sent to the subscription's DLQ (if configured) or
+  discarded. The topic appears to have a healthy Lambda
+  subscriber. Every message published fails invocation
+  silently. If this Lambda implemented business logic
+  (order processing, notification routing, data
+  enrichment), every event the topic delivered is now
+  unprocessed.
+failure: >
+  Silent invocation failure. Messages published to the
+  topic fail Lambda invocation; the business logic the
+  function carried is bypassed for every event.

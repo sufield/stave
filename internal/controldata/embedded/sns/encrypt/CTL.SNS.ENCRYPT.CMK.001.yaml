@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.ENCRYPT.CMK.001
+name: SNS Topic Not Encrypted with Customer-Managed KMS Key
+description: >
+  SNS topic is encrypted, but with the AWS-managed alias
+  alias/aws/sns instead of a customer-managed KMS key. The
+  AWS-managed alias gives KMS audit visibility and at-rest
+  encryption but no key-policy control, no audit visibility
+  against an account-owned key, and no ability to revoke
+  access by disabling the key. Stave's encryption hierarchy
+  for SNS: no encryption (worst) → SSE with alias/aws/sns
+  (good) → SSE with a CMK (best). Same pattern as
+  CTL.S3.ENCRYPT.CMK.001, CTL.RDS.ENCRYPT.CMK.001,
+  CTL.LAMBDA.ENVIRONMENT.CMK.001, CTL.SQS.ENCRYPT.CMK.001.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.1.1"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  fedramp_moderate: "SC-12"
+  hipaa: "164.312(a)(2)(iv)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    SNS topic encryption is not backed by a customer-managed
+    KMS key.
+  action: >
+    Create or select a CMK and assign it to the topic
+    (aws sns set-topic-attributes --topic-arn <arn>
+    --attribute-name KmsMasterKeyId --attribute-value
+    arn:aws:kms:...:key/...). Verify the CMK's key policy
+    allows SNS to decrypt for the publisher and subscribers
+    that need the message content.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "encrypted": true,
+          "encryption_type": "SSE_KMS_CMK",
+          "uses_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.encrypted
+      op: eq
+      value: true
+    - field: properties.messaging.sns.uses_cmk
+      op: eq
+      value: false
+defect: >
+  SNS topic encryption is not backed by a customer-managed
+  KMS key.
+infection: >
+  SNS supports two encryption modes once SSE is enabled:
+  alias/aws/sns (AWS-managed CMK — KMS audit trail but no
+  key-policy control) and a customer CMK (full control).
+  alias/aws/sns protects the topic from filesystem-level
+  theft but provides no defense against authorized SNS
+  service operations: an operator with sns:Subscribe and
+  the ability to receive can read every message, no matter
+  the encryption mode. The CMK adds a second authorization
+  layer (kms:Decrypt against the key policy) and gives the
+  organization the ability to revoke access by disabling
+  the key — neither of which is available with
+  alias/aws/sns. The lack of CMK does not break encryption
+  at rest; it limits the operator's leverage during
+  incident response.
+failure: >
+  No key-policy control over SNS message decryption. The
+  organization cannot revoke access by disabling a key and
+  cannot audit Decrypt operations against a key it controls.
+tests:
+  - name: topic with alias/aws/sns fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            encrypted: true
+            encryption_type: "SSE_KMS_MANAGED"
+            kms_key_arn: "alias/aws/sns"
+            uses_cmk: false
+  - name: topic with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            encrypted: true
+            encryption_type: "SSE_KMS_CMK"
+            kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/abc"
+            uses_cmk: true

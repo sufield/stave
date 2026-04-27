@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.POLICY.SPRAWL.001
+name: SNS Topic Policy Has Excessive Permission Statements
+description: >
+  SNS topic policy has more than ten permission statements.
+  Each service integration adds a Statement: the S3 bucket
+  notification, the CloudWatch alarm action, the EventBridge
+  rule target, the cross-account subscription. Statements
+  are rarely removed. The policy accumulates until the
+  access surface is unauditable — too many entries to review
+  with confidence, each granting Publish or Subscribe from a
+  different surface. Same accumulation pattern as
+  CTL.SQS.POLICY.SPRAWL.001 and
+  CTL.LAMBDA.POLICY.ACCUMULATED.001; threshold of ten is
+  consistent across the three resource-policy sprawl
+  controls.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-6, CM-2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.5.19"
+  ccm_v4: ["IAM-16"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SNS topic policy carries an excessive number of
+    permission statements. Auditing the access surface in
+    this state is impractical and stale entries accumulate.
+  action: >
+    Inspect the policy
+    (aws sns get-topic-attributes --topic-arn <arn>
+    --query 'Attributes.Policy') and remove statements for
+    sources that no longer exist or no longer need to
+    publish/subscribe. Pair with
+    CTL.SNS.GHOST.POLICY.SOURCEARN.001 to identify deleted
+    sources still referenced. After cleanup, gate future
+    additions through an automated policy review so the
+    count stays under the threshold.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "policy_statement_count": 4,
+          "policy_excessive": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.policy_excessive
+      op: eq
+      value: true
+defect: >
+  SNS topic policy carries more permission statements than
+  the configured threshold.
+infection: >
+  Each service integration adds a policy statement: the S3
+  bucket notification, the CloudWatch alarm action, the
+  EventBridge rule target, the cross-account subscription
+  configured for a partner. Statements are rarely removed.
+  Over time the policy accumulates Publish and Subscribe
+  grants from many sources — some of which may no longer
+  exist (ghost sourceArns, deleted principals). The policy
+  becomes unauditable: too many statements to review with
+  confidence, each granting access from a different surface.
+  The risk is not a single broken grant; it is the loss of
+  the operator's ability to know what the topic is exposed
+  to.
+failure: >
+  Unauditable topic access surface. The topic accepts
+  messages from and delivers messages to many distinct
+  surfaces, some of which may no longer be legitimate, and
+  no operator can review them all with confidence.
+tests:
+  - name: 15 statements fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_statement_count: 15
+            policy_excessive: true
+  - name: 3 statements passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_statement_count: 3
+            policy_excessive: false

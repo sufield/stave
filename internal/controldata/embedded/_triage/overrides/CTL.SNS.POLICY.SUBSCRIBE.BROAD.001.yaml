@@ -1,0 +1,23 @@
+control: CTL.SNS.POLICY.SUBSCRIBE.BROAD.001
+defect: >
+  SNS topic policy grants sns:Subscribe to a broad principal
+  class.
+infection: >
+  sns:Subscribe creates a subscription that receives every
+  message published to the topic. A principal with broad
+  Subscribe access can create a subscription to any endpoint
+  they control — an SQS queue in their account, a Lambda
+  function they own, or an HTTP endpoint they operate.
+  Every message published to the topic — alarm
+  notifications, application events, customer data — is
+  delivered to the attacker's endpoint. This is data
+  exfiltration via subscription: the attacker does not need
+  to read existing messages, they receive every future
+  message until the subscription is removed. Detection is
+  hard because the subscription itself is a normal SNS
+  configuration; the endpoint may be in a different account,
+  hidden behind a service principal.
+failure: >
+  Data exfiltration via subscription. Any matching principal
+  can subscribe and continuously receive every future
+  message from the topic.

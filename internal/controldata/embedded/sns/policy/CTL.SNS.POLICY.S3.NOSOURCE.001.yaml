@@ -1,0 +1,131 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.POLICY.S3.NOSOURCE.001
+name: SNS Topic Policy Allows S3 Publish Without SourceArn
+description: >
+  SNS topic policy grants sns:Publish to the S3 service
+  principal (s3.amazonaws.com) without an aws:SourceArn or
+  aws:SourceAccount condition. Any S3 bucket in any AWS
+  account can configure event notifications targeting the
+  topic and have them accepted. Same confused-deputy pattern
+  as CTL.SQS.POLICY.S3.NOSOURCE.001 — but the SNS version
+  is more dangerous because the topic fans out: the
+  attacker's payload reaches every subscribed SQS queue,
+  Lambda function, and HTTP endpoint.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, SC-7"
+  pci_dss_v4.0: "1.2, 7.1"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.9"
+  ccm_v4: ["IAM-16", "IVS-09"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    SNS topic policy authorizes the S3 service principal
+    without a source restriction. Any S3 bucket in any
+    account can publish event notifications to the topic.
+  action: >
+    Add aws:SourceArn (the legitimate bucket ARN) or
+    aws:SourceAccount (the bucket-owning account) to every
+    Statement granting s3.amazonaws.com Publish. Both
+    conditions can be combined for defense in depth — sourceArn
+    pins the specific bucket; sourceAccount blocks any bucket
+    in foreign accounts.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "policy_allows_s3": true,
+          "policy_s3_has_source": true,
+          "policy_s3_source_arns": ["arn:aws:s3:::events-bucket"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.policy_allows_s3
+      op: eq
+      value: true
+    - field: properties.messaging.sns.policy_s3_has_source
+      op: eq
+      value: false
+defect: >
+  SNS topic policy authorizes S3 service principal Publish
+  without aws:SourceArn or aws:SourceAccount.
+infection: >
+  The topic policy grants sns:Publish to s3.amazonaws.com
+  without restricting which bucket can publish. Any S3
+  bucket — in any AWS account — can configure event
+  notifications targeting the topic. An attacker creates a
+  bucket in their own account, configures a PutObject event
+  notification pointed at the topic ARN, and uploads an
+  object. The topic accepts the attacker's S3 event payload
+  and fans it out to every subscriber. Each subscriber —
+  every SQS queue, Lambda function, and HTTP endpoint —
+  processes the attacker-controlled message as legitimate.
+  aws:SourceArn restricts to a specific bucket ARN;
+  aws:SourceAccount restricts to the bucket-owning account.
+failure: >
+  Cross-account injection via fan-out. Any S3 bucket in any
+  account can publish to the topic, and the payload reaches
+  every subscriber.
+tests:
+  - name: S3 principal without source condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:upload-events"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_allows_s3: true
+            policy_s3_has_source: false
+  - name: S3 principal with sourceArn passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:upload-events"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_allows_s3: true
+            policy_s3_has_source: true
+            policy_s3_source_arns:
+              - "arn:aws:s3:::events-bucket"
+  - name: S3 + CloudWatch both unguarded fires (compound)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:fanout-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_allows_s3: true
+            policy_s3_has_source: false
+            policy_allows_cloudwatch: true
+            policy_cloudwatch_has_source: false

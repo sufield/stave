@@ -1,0 +1,23 @@
+control: CTL.SNS.GHOST.ALARM.001
+defect: >
+  CloudWatch alarm action references an SNS topic that has
+  been deleted.
+infection: >
+  CloudWatch alarms are the detection mechanism — they fire
+  when metrics cross thresholds. Alarm actions are the
+  notification mechanism — they publish to SNS topics that
+  deliver to Slack, PagerDuty, email, or automation. When
+  the SNS topic is deleted, the alarm fires but the
+  notification goes nowhere. The alarm WORKS — it detects
+  the problem. The notification FAILS — nobody knows. Every
+  alarm control in the catalog depends on this notification
+  chain: RDS 5xx errors, Lambda throttles, ECS task count
+  drops, API Gateway failures, CloudFront origin errors,
+  DynamoDB throttling, SQS queue depth, Route 53 health
+  check failures, KMS key deletion. All of them fire. None
+  of them notify. The detection is perfect. The
+  notification is silently broken.
+failure: >
+  Notification chain broken. Alarms fire but nobody is
+  notified because the SNS topic was deleted. Detection
+  works. Response doesn't.

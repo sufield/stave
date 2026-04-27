@@ -1,0 +1,23 @@
+control: CTL.SNS.POLICY.CROSSACCOUNT.001
+defect: >
+  SNS topic policy grants actions to external account
+  principals without aws:PrincipalOrgID.
+infection: >
+  Cross-account topic access without organizational boundary
+  means the external account can interact with the topic
+  regardless of current org membership. If the account
+  leaves the organization, access persists. For sns:Publish,
+  the external account can inject messages into the
+  notification pipeline — fan-out amplifies the impact
+  because every subscriber processes the injected message.
+  For sns:Subscribe, the external account can create a
+  subscription and receive every future message — including
+  notifications intended only for internal subscribers.
+  PrincipalOrgID ensures only accounts currently in the
+  organization can access the topic; departures are
+  enforced automatically.
+failure: >
+  Topic access outside organizational boundary. External-
+  account principals can publish or subscribe without
+  org-membership verification, and access persists across
+  org changes.

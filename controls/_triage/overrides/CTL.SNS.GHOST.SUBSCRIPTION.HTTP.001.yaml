@@ -1,0 +1,21 @@
+control: CTL.SNS.GHOST.SUBSCRIPTION.HTTP.001
+defect: >
+  SNS subscription's HTTP/HTTPS endpoint is persistently
+  unreachable.
+infection: >
+  Unlike the SQS and Lambda ghost subscriptions (binary —
+  the AWS resource exists or it does not), HTTP ghosts are
+  partial. The endpoint may resolve but never respond, may
+  respond with errors on every request, or may have a
+  certificate that no longer validates. The pattern is
+  important: a single failed delivery is normal (transient
+  outage); a sustained low success rate is a ghost. SNS
+  retries failed HTTP/S deliveries across three phases
+  over 23 hours; if the endpoint stays down throughout, the
+  message is discarded or sent to the subscription DLQ.
+  Without delivery-status logging, the failure is
+  invisible.
+failure: >
+  Persistent delivery failure. Messages published to the
+  topic mostly do not reach the HTTP subscriber; the
+  webhook receiver is silently broken.

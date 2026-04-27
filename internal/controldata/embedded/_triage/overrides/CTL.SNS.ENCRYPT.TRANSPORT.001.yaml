@@ -1,0 +1,23 @@
+control: CTL.SNS.ENCRYPT.TRANSPORT.001
+defect: >
+  SNS topic policy does not include an aws:SecureTransport
+  condition denying HTTP publish requests.
+infection: >
+  SNS exposes both HTTP and HTTPS endpoints for the Publish
+  API. Without a topic policy condition that denies
+  requests where aws:SecureTransport = false, publishers
+  can call Publish over HTTP — plaintext. The message body
+  (notification content, alarm details, application
+  events), message attributes, and SNS API parameters
+  traverse the network unencrypted. A network adversary
+  with passive observation can read every published
+  message; an active adversary can replay or modify
+  messages in flight. A Deny statement gated on
+  aws:SecureTransport: false rejects the entire HTTP
+  publish surface. This is the SNS analogue of S3's
+  bucket-policy HTTPS enforcement.
+failure: >
+  Plaintext message publish path. Messages and SNS API
+  parameters can travel over HTTP and are observable to
+  any network adversary on the path between publisher and
+  SNS.

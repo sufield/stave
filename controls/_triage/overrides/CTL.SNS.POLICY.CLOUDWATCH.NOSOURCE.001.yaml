@@ -1,0 +1,22 @@
+control: CTL.SNS.POLICY.CLOUDWATCH.NOSOURCE.001
+defect: >
+  SNS topic policy authorizes CloudWatch or EventBridge
+  Publish without aws:SourceArn or aws:SourceAccount.
+infection: >
+  Alarm-notification topics receive CloudWatch alarm state
+  changes and EventBridge event deliveries. Without source
+  restriction, any CloudWatch alarm or EventBridge rule in
+  any account can publish to the topic. An attacker sends
+  fake alarm notifications: fake ALARM state for a critical
+  metric (alert fatigue, on-call burnout), fake OK state to
+  suppress response to a real alarm, or crafted payloads
+  that trigger automated remediation. If the topic fans out
+  to PagerDuty, Slack, or a Lambda that auto-remediates, the
+  attacker can drive the response system with chosen inputs.
+  Source restriction ensures only specific alarms or rules
+  in specific accounts can publish.
+failure: >
+  Fake alarm injection. Any CloudWatch alarm or EventBridge
+  rule in any account can publish to the alarm-notification
+  topic; subscribers cannot distinguish injected from
+  legitimate.

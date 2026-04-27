@@ -7,7 +7,7 @@
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "70b057a0436e04e05f4fd5957f4ea41dca34594322749405e2f428eb26ffdaad",
+    "policy_fingerprint": "b4572b8e64c122cce9b1a3eea7aad2ec80354721c7c4667a45a7cf6bde044a2e",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -3725,7 +3725,7 @@
               "observed_value": false
             },
             {
-              "clause": "the messaging resource kind (queue, cloudwatch_alarm) = \"topic\"",
+              "clause": "the messaging resource kind (queue, cloudwatch_alarm, topic, sns_subscription) = \"topic\"",
               "observation_key": "messaging.kind",
               "observed_value": "topic"
             }
@@ -3865,7 +3865,7 @@
               "observed_value": false
             },
             {
-              "clause": "the messaging resource kind (queue, cloudwatch_alarm) = \"queue\"",
+              "clause": "the messaging resource kind (queue, cloudwatch_alarm, topic, sns_subscription) = \"queue\"",
               "observation_key": "messaging.kind",
               "observed_value": "queue"
             }

@@ -1,0 +1,20 @@
+id: sns_data_exposure
+description: >
+  Any single SNS data-exposure path fires this chain — broad
+  Subscribe, cross-account access without org boundary, or
+  fully-public topic policy. Each independently lets message
+  content reach unintended principals. Subscribe is data
+  exfiltration via subscription: one Subscribe call reads
+  every future message published to the topic. Threshold of
+  1 fires whenever the topic's read surface is wider than
+  the intended subscriber set.
+controls:
+  - CTL.SNS.POLICY.SUBSCRIBE.BROAD.001
+  - CTL.SNS.POLICY.CROSSACCOUNT.001
+  - CTL.SNS.POLICY.PUBLIC.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - resource_policy_escalation
+postconditions:
+  - data_access

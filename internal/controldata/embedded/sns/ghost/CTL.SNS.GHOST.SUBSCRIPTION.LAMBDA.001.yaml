@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.GHOST.SUBSCRIPTION.LAMBDA.001
+name: SNS Subscription Delivers to Deleted Lambda Function
+description: >
+  SNS topic has a subscription whose endpoint is a Lambda
+  function ARN that no longer exists. Every publish triggers
+  a delivery attempt to the deleted function; every delivery
+  fails. After the protocol's retry policy exhausts (three
+  retries over 20 seconds for Lambda), the message is either
+  redirected to the subscription's DLQ or discarded. Same
+  silent-failure pattern as CTL.SNS.GHOST.SUBSCRIPTION.SQS.001
+  but on the SNS-to-Lambda fan-out path.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, IR-4"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_subscription
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SNS subscription delivers to a deleted Lambda function.
+    Every publish silently fails invocation.
+  action: >
+    Recreate the Lambda function at the original ARN, repoint
+    the subscription to a live function, or unsubscribe. If
+    the function was decommissioned intentionally, also
+    remove the related Lambda resource policy entry that
+    authorized SNS invocation.
+  example: |
+    {
+      "messaging": {
+        "kind": "sns_subscription",
+        "sns": {
+          "subscription_protocol": "lambda",
+          "subscription_endpoint": "arn:aws:lambda:us-east-1:111122223333:function:processor",
+          "subscription_endpoint_exists": true,
+          "has_ghost_subscription": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: sns_subscription
+    - field: properties.messaging.sns.subscription_protocol
+      op: eq
+      value: lambda
+    - field: properties.messaging.sns.has_ghost_subscription
+      op: eq
+      value: true
+defect: >
+  SNS subscription endpoint is a Lambda function ARN that
+  has been deleted.
+infection: >
+  The subscription specifies a Lambda function endpoint. The
+  function was deleted. SNS attempts delivery on every
+  publish — the invocation returns a ResourceNotFoundException.
+  SNS retries three times over 20 seconds. After retries
+  exhaust, the message is either sent to the subscription's
+  DLQ (if configured) or discarded. The topic appears to
+  have a healthy Lambda subscriber. Every message published
+  fails invocation silently. If this Lambda implemented
+  business logic (order processing, notification routing,
+  data enrichment), every event the topic delivered is now
+  unprocessed.
+failure: >
+  Silent invocation failure. Messages published to the topic
+  fail Lambda invocation; the business logic the function
+  carried is bypassed for every event.
+tests:
+  - name: subscription to deleted Lambda fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic:lmb789"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+            subscription_protocol: "lambda"
+            subscription_endpoint: "arn:aws:lambda:us-east-1:111122223333:function:processor-deleted"
+            subscription_endpoint_exists: false
+            has_ghost_subscription: true
+  - name: subscription to live Lambda passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic:lmb789"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+            subscription_protocol: "lambda"
+            subscription_endpoint: "arn:aws:lambda:us-east-1:111122223333:function:processor"
+            subscription_endpoint_exists: true
+            has_ghost_subscription: false

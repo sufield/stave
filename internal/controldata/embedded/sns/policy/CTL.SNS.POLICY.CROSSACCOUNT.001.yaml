@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.POLICY.CROSSACCOUNT.001
+name: SNS Topic Policy Grants Cross-Account Access Without Organizational Boundary
+description: >
+  SNS topic policy grants actions to principals in external
+  AWS accounts without an aws:PrincipalOrgID condition. Any
+  principal in the external account can perform the granted
+  actions; if the account leaves the organization, access
+  persists. For sns:Publish, the external account can inject
+  messages into the notification pipeline. For sns:Subscribe,
+  the external account can subscribe and receive every
+  future message. Distinct from CTL.SNS.POLICY.PUBLIC.001
+  (Principal: "*") — this control fires on policies that
+  name specific external accounts but lack an org boundary.
+  Same shape as CTL.SQS.POLICY.CROSSACCOUNT.001 on the
+  notification side.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, AC-6"
+  pci_dss_v4.0: "1.2, 7.1, 7.2"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.5.19"
+  ccm_v4: ["IAM-16", "IVS-09"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: organization
+    multiplier: 2.0
+remediation:
+  description: >
+    SNS topic policy grants cross-account access without an
+    aws:PrincipalOrgID condition.
+  action: >
+    Add aws:PrincipalOrgID restricting access to the
+    organization's ID. For the rare legitimate cross-org
+    grant, use aws:PrincipalAccount with the explicit account
+    ID and document the trust relationship.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "policy_cross_account": true,
+          "policy_has_org_condition": true,
+          "policy_external_accounts": ["222233334444"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.policy_cross_account
+      op: eq
+      value: true
+    - field: properties.messaging.sns.policy_has_org_condition
+      op: eq
+      value: false
+defect: >
+  SNS topic policy grants actions to external account
+  principals without aws:PrincipalOrgID.
+infection: >
+  Cross-account topic access without organizational boundary
+  means the external account can interact with the topic
+  regardless of current org membership. If the account
+  leaves the organization, access persists. For sns:Publish,
+  the external account can inject messages into the
+  notification pipeline — fan-out amplifies the impact
+  because every subscriber processes the injected message.
+  For sns:Subscribe, the external account can create a
+  subscription and receive every future message — including
+  notifications intended only for internal subscribers.
+  PrincipalOrgID ensures only accounts currently in the
+  organization can access the topic; departures are
+  enforced automatically.
+failure: >
+  Topic access outside organizational boundary. External-
+  account principals can publish or subscribe without
+  org-membership verification, and access persists across
+  org changes.
+tests:
+  - name: cross-account without org condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:shared-events"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_cross_account: true
+            policy_has_org_condition: false
+            policy_external_accounts:
+              - "222233334444"
+            policy_cross_account_actions:
+              - "sns:Publish"
+              - "sns:Subscribe"
+  - name: cross-account with org condition passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:shared-events"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_cross_account: true
+            policy_has_org_condition: true
+            policy_external_accounts:
+              - "222233334444"
+  - name: same-account topic passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:internal-events"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            policy_cross_account: false

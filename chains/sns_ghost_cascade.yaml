@@ -1,0 +1,25 @@
+id: sns_ghost_cascade
+description: >
+  Two or more SNS ghost references on the same notification
+  surface. Multiple notification-infrastructure dependencies
+  have been deleted — systematic decommissioning failure in
+  the messaging backbone. Members span the alarm action
+  surface, three subscription protocols (SQS, Lambda, HTTP),
+  the subscription DLQ, and the topic policy's sourceArn
+  conditions; any two of these together signal that an
+  upstream cleanup landed on neighbours of the topic without
+  landing on the topic itself. Threshold of 2 fires when at
+  least two ghost references coexist.
+controls:
+  - CTL.SNS.GHOST.ALARM.001
+  - CTL.SNS.GHOST.SUBSCRIPTION.SQS.001
+  - CTL.SNS.GHOST.SUBSCRIPTION.LAMBDA.001
+  - CTL.SNS.GHOST.SUBSCRIPTION.HTTP.001
+  - CTL.SNS.GHOST.SUBSCRIPTION.DLQ.001
+  - CTL.SNS.GHOST.POLICY.SOURCEARN.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - ungoverned_operation

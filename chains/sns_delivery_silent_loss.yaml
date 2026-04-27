@@ -1,0 +1,21 @@
+id: sns_delivery_silent_loss
+description: >
+  Any single delivery-loss path activates this chain — no
+  DLQ on subscription, ghost subscription DLQ, or
+  persistently unreachable HTTP endpoint. Each independently
+  means failed deliveries are silently discarded. Messages
+  that fail delivery have no safety net; the topic
+  acknowledges the publish, the subscription accepts the
+  message, and then the message vanishes during fan-out.
+  Threshold of 1 fires whenever the subscription has any
+  single delivery-loss surface.
+controls:
+  - CTL.SNS.SUBSCRIPTION.NODLQ.001
+  - CTL.SNS.GHOST.SUBSCRIPTION.DLQ.001
+  - CTL.SNS.GHOST.SUBSCRIPTION.HTTP.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - data_destruction

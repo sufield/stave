@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.SUBSCRIPTION.NODLQ.001
+name: SNS Subscription Has No Dead-Letter Queue for Failed Deliveries
+description: >
+  SNS subscription does not have a redrive policy
+  (dead-letter queue) configured. When delivery fails —
+  endpoint down, Lambda error, SQS queue full, HTTP timeout —
+  SNS retries according to the protocol's delivery policy.
+  After all retries exhaust the message is permanently
+  discarded; there is no DLQ, no preservation, no
+  investigation. Same severity rationale as
+  CTL.SQS.DLQ.001 (no DLQ on the source queue): without a
+  failure-preservation surface, every delivery failure
+  becomes silent message loss.
+domain: governance
+severity: high
+compliance:
+  soc2: "PI1.1, A1.2, CC7.4"
+  nist_800_53_r5: "SI-11, CP-10, AU-2"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.5.30, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_subscription
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    SNS subscription has no DLQ. Failed deliveries vanish
+    after the protocol's retry budget exhausts.
+  action: >
+    Attach a redrive policy targeting a dedicated DLQ
+    (aws sns set-subscription-attributes --subscription-arn
+    <sub> --attribute-name RedrivePolicy --attribute-value
+    '{"deadLetterTargetArn":"<dlq-arn>"}'). The DLQ should
+    have a consumer (so failed messages are investigated, not
+    just stored — see CTL.SQS.DLQ.NOCONSUMER.001) and a
+    depth alarm (CTL.SQS.ALARM.DLQ.DEPTH.001) so accumulation
+    surfaces immediately.
+  example: |
+    {
+      "messaging": {
+        "kind": "sns_subscription",
+        "sns": {
+          "subscription_has_dlq": true,
+          "subscription_dlq_arn": "arn:aws:sqs:us-east-1:111122223333:notifications-dlq"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: sns_subscription
+    - field: properties.messaging.sns.subscription_has_dlq
+      op: eq
+      value: false
+defect: >
+  SNS subscription has no DLQ; failed deliveries are
+  discarded permanently after retries.
+infection: >
+  SNS retries failed deliveries according to the protocol's
+  delivery policy: HTTP/HTTPS gets three phases over 23
+  hours; SQS and Lambda get three retries over 20 seconds.
+  After all retries exhaust, the message is discarded —
+  permanently lost. Without a DLQ, there is no record of
+  which messages failed, no ability to reprocess after the
+  underlying defect is fixed, and the failure is invisible
+  unless delivery-status logging is enabled. The DLQ
+  captures failed messages for investigation and
+  reprocessing; it is the safety net that turns "delivery
+  attempted and failed" into "delivery attempted, failed,
+  preserved, retryable".
+failure: >
+  Silent message loss on delivery failure. Failed messages
+  are discarded after retries with no preservation; the
+  business signal embedded in the message is lost.
+tests:
+  - name: subscription without DLQ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts-topic:nod001"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            subscription_protocol: "http"
+            subscription_has_dlq: false
+  - name: subscription with DLQ passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts-topic:nod001"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            subscription_protocol: "lambda"
+            subscription_has_dlq: true
+            subscription_dlq_arn: "arn:aws:sqs:us-east-1:111122223333:notifications-dlq"
+  - name: Lambda subscription without DLQ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts-topic:nod002"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            subscription_protocol: "lambda"
+            subscription_has_dlq: false

@@ -1,0 +1,21 @@
+control: CTL.SNS.GHOST.SUBSCRIPTION.SQS.001
+defect: >
+  SNS subscription endpoint is an SQS queue ARN that has
+  been deleted.
+infection: >
+  The subscription specifies an SQS queue endpoint. The
+  queue was deleted. SNS attempts delivery on every
+  publish — the delivery fails because the queue does not
+  exist. SNS retries according to the SQS delivery policy
+  (three retries over 20 seconds). After retries exhaust,
+  the message is either sent to the subscription's DLQ (if
+  configured) or discarded permanently. The topic appears
+  to have N subscribers; one of them is a deleted queue.
+  Every message published to the topic fails delivery to
+  this subscriber silently. If this was the only or
+  primary subscriber, every published message goes
+  unprocessed — and no error surfaces unless delivery-
+  status logging is enabled.
+failure: >
+  Silent delivery failure. Messages published to the topic
+  fail delivery to a deleted SQS queue.

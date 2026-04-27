@@ -1,0 +1,23 @@
+control: CTL.SNS.ENCRYPT.CMK.001
+defect: >
+  SNS topic encryption is not backed by a customer-managed
+  KMS key.
+infection: >
+  SNS supports two encryption modes once SSE is enabled:
+  alias/aws/sns (AWS-managed CMK — KMS audit trail but no
+  key-policy control) and a customer CMK (full control).
+  alias/aws/sns protects the topic from filesystem-level
+  theft but provides no defense against authorized SNS
+  service operations: an operator with sns:Subscribe and
+  the ability to receive can read every message, no matter
+  the encryption mode. The CMK adds a second authorization
+  layer (kms:Decrypt against the key policy) and gives the
+  organization the ability to revoke access by disabling
+  the key — neither of which is available with
+  alias/aws/sns. The lack of CMK does not break encryption
+  at rest; it limits the operator's leverage during
+  incident response.
+failure: >
+  No key-policy control over SNS message decryption. The
+  organization cannot revoke access by disabling a key and
+  cannot audit Decrypt operations against a key it controls.

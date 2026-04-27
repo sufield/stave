@@ -1,0 +1,23 @@
+control: CTL.SNS.POLICY.DELETETOPIC.BROAD.001
+defect: >
+  SNS topic policy grants sns:DeleteTopic to a broad
+  principal class.
+infection: >
+  DeleteTopic permanently removes the topic and every
+  subscription attached to it. Cascading impact: every
+  CloudWatch alarm that referenced the topic instantly
+  becomes a ghost reference (the topic ARN no longer
+  resolves), so the alarms still fire but their notification
+  actions silently fail. A single DeleteTopic call can break
+  alerting for the entire account when the deleted topic
+  was a shared notification target. Subscribers — Lambda
+  functions, SQS queues, HTTP webhooks — also stop
+  receiving messages, but at least their failure is visible
+  on the publish side. The alarm-side failure is the more
+  dangerous: detection still works, notification is gone,
+  nobody knows.
+failure: >
+  Topic deletion capability. A single API call wipes the
+  topic, removes every subscription, and breaks the
+  notification chain for every CloudWatch alarm that
+  referenced it.

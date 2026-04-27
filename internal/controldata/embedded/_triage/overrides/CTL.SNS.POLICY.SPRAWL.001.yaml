@@ -1,0 +1,22 @@
+control: CTL.SNS.POLICY.SPRAWL.001
+defect: >
+  SNS topic policy carries more permission statements than
+  the configured threshold.
+infection: >
+  Each service integration adds a policy statement: the S3
+  bucket notification, the CloudWatch alarm action, the
+  EventBridge rule target, the cross-account subscription
+  configured for a partner. Statements are rarely removed.
+  Over time the policy accumulates Publish and Subscribe
+  grants from many sources — some of which may no longer
+  exist (ghost sourceArns, deleted principals). The policy
+  becomes unauditable: too many statements to review with
+  confidence, each granting access from a different surface.
+  The risk is not a single broken grant; it is the loss of
+  the operator's ability to know what the topic is exposed
+  to.
+failure: >
+  Unauditable topic access surface. The topic accepts
+  messages from and delivers messages to many distinct
+  surfaces, some of which may no longer be legitimate, and
+  no operator can review them all with confidence.

@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.POLICY.SETTOPICATTRS.BROAD.001
+name: SNS Topic Policy Grants SetTopicAttributes to Non-Admin Principals
+description: >
+  SNS topic policy grants sns:SetTopicAttributes to non-
+  administrative principals. SetTopicAttributes can modify
+  the topic's access policy (grant arbitrary principals
+  Publish or Subscribe), encryption settings (disable SSE),
+  delivery policy (change retry behavior), and display name.
+  A principal with SetTopicAttributes can effectively take
+  over the topic by editing its policy to grant themselves
+  any action — a privilege-escalation primitive on the
+  notification surface. Only topic administrators should
+  hold this permission.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-6, AC-3, CM-3"
+  pci_dss_v4.0: "1.2, 7.1, 7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    SNS topic policy grants SetTopicAttributes to a broad
+    principal class. The principal can modify the topic's
+    own policy.
+  action: >
+    Restrict sns:SetTopicAttributes to a named topic-admin
+    role or the account root. Audit the policy
+    (aws sns get-topic-attributes --topic-arn <arn>
+    --query 'Attributes.Policy') and remove
+    SetTopicAttributes from any non-admin principal. Add
+    CloudTrail metric-filter monitoring on the
+    SetTopicAttributes API event so unexpected modifications
+    surface in real time.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "setattr_broadly_granted": false,
+          "policy_setattr_principals": ["arn:aws:iam::111122223333:role/topic-admin"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.setattr_broadly_granted
+      op: eq
+      value: true
+defect: >
+  SNS topic policy grants sns:SetTopicAttributes to a broad
+  principal class.
+infection: >
+  SetTopicAttributes can modify the topic's access policy,
+  encryption settings, delivery policy, and display name.
+  A principal with SetTopicAttributes can grant themselves
+  any other SNS action by editing the policy — adding
+  themselves as Subscribe principal (data exfiltration),
+  adding Publish access for a service principal without
+  source restriction (confused deputy), or disabling
+  encryption (data exposure). It is a privilege-escalation
+  primitive on the topic. Combined with policy sprawl
+  (CTL.SNS.POLICY.SPRAWL.001), the attacker's modification
+  blends into the existing noise. SetTopicAttributes should
+  be administrative-only.
+failure: >
+  Topic-policy self-modification. Any matching principal
+  can edit the topic policy to grant themselves additional
+  access; SetTopicAttributes is a one-step privilege
+  escalation.
+tests:
+  - name: SetTopicAttributes to broad principal fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            setattr_broadly_granted: true
+            policy_setattr_principals:
+              - "arn:aws:iam::111122223333:role/*"
+  - name: SetTopicAttributes to admin role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            setattr_broadly_granted: false
+            policy_setattr_principals:
+              - "arn:aws:iam::111122223333:role/topic-admin"

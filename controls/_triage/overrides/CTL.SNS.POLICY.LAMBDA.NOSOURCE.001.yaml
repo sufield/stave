@@ -1,0 +1,18 @@
+control: CTL.SNS.POLICY.LAMBDA.NOSOURCE.001
+defect: >
+  SNS topic policy authorizes Lambda service principal
+  Publish without aws:SourceArn or aws:SourceAccount.
+infection: >
+  The topic policy grants sns:Publish to lambda.amazonaws.com
+  without restricting which function can publish. Any Lambda
+  function in any AWS account that operates as the lambda
+  service principal can publish to the topic — and the topic
+  fans the message out to every subscriber. This is the
+  Lambda-side variant of the confused-deputy pattern: less
+  common than S3 or CloudWatch (Lambda functions usually
+  publish via SDK with their execution-role credentials)
+  but the exposure shape is identical when it does occur.
+failure: >
+  Cross-account injection from Lambda. Any function in any
+  account can publish to the topic and reach all
+  subscribers.

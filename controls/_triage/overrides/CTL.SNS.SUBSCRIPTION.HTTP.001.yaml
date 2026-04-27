@@ -1,0 +1,19 @@
+control: CTL.SNS.SUBSCRIPTION.HTTP.001
+defect: >
+  SNS subscription delivers messages over HTTP instead of
+  HTTPS.
+infection: >
+  SNS delivers messages to the subscription endpoint via
+  HTTP — no TLS, no encryption. The message body (which may
+  contain notification content, application events, alarm
+  details, or sensitive data), message attributes, and SNS
+  metadata are transmitted in plaintext. An attacker on the
+  network path (between AWS's SNS infrastructure and the
+  HTTP endpoint) can read and modify the message. HTTPS
+  endpoints encrypt the delivery channel; HTTP endpoints do
+  not. For webhook endpoints, API callbacks, and event
+  receivers, HTTPS is the baseline expectation.
+failure: >
+  Plaintext notification delivery. Message content is
+  transmitted unencrypted between SNS and the endpoint;
+  any network observer can read or alter it.

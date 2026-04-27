@@ -1,0 +1,144 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.GHOST.ALARM.001
+name: CloudWatch Alarm Action References Deleted SNS Topic
+description: >
+  CloudWatch alarm has an action (AlarmActions, OKActions, or
+  InsufficientDataActions) that references an SNS topic which
+  has been deleted. The alarm fires; the action attempts to
+  publish to the deleted topic; the publish fails; nobody is
+  notified. This is the notification-chain ghost — the most
+  impactful ghost reference after KMS pending-deletion. It
+  doesn't break a single service: it breaks the detection-to-
+  response chain for every alarm in the account that routes
+  through this topic. Every other alarm control across the
+  catalog (RDS, Lambda, ECS, API Gateway, CloudFront,
+  DynamoDB, SQS, Route 53, KMS) depends on a working SNS
+  topic to deliver. When the topic is gone, the alarms fire
+  and the notifications go nowhere. The detection works
+  perfectly. The notification is silently broken.
+domain: governance
+severity: critical
+compliance:
+  cis_aws_v3.0: "4.1, 4.13"
+  soc2: "CC7.2, CC7.3, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, IR-4, SI-4"
+  pci_dss_v4.0: "10.6, 10.7"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08", "DSP-17"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cloudwatch_alarm
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    CloudWatch alarm action targets an SNS topic that has been
+    deleted. The alarm fires but the notification disappears.
+  action: >
+    Identify the alarm
+    (aws cloudwatch describe-alarms --alarm-names <name>) and
+    repoint the action to a live SNS topic
+    (aws cloudwatch put-metric-alarm --alarm-name <name>
+    --alarm-actions <live-topic-arn>). Audit every alarm in
+    the account against the topic inventory at the same time
+    — a deleted topic typically had multiple alarms pointing
+    at it. Add a CloudWatch metric on
+    AWS/SNS NumberOfMessagesPublished == 0 for every
+    notification topic so accidental deletions surface
+    immediately.
+  example: |
+    {
+      "messaging": {
+        "kind": "cloudwatch_alarm",
+        "sns": {
+          "alarm_action_topic_arn": "arn:aws:sns:us-east-1:111122223333:alerts",
+          "alarm_action_topic_exists": true,
+          "has_ghost_alarm_action": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: cloudwatch_alarm
+    - field: properties.messaging.sns.has_ghost_alarm_action
+      op: eq
+      value: true
+defect: >
+  CloudWatch alarm action references an SNS topic that has
+  been deleted.
+infection: >
+  CloudWatch alarms are the detection mechanism — they fire
+  when metrics cross thresholds. Alarm actions are the
+  notification mechanism — they publish to SNS topics that
+  deliver to Slack, PagerDuty, email, or automation. When
+  the SNS topic is deleted, the alarm fires but the
+  notification goes nowhere. The alarm WORKS — it detects
+  the problem. The notification FAILS — nobody knows. Every
+  alarm control in the catalog depends on this notification
+  chain: RDS 5xx errors, Lambda throttles, ECS task count
+  drops, API Gateway failures, CloudFront origin errors,
+  DynamoDB throttling, SQS queue depth, Route 53 health
+  check failures, KMS key deletion. All of them fire. None
+  of them notify. The detection is perfect. The
+  notification is silently broken.
+failure: >
+  Notification chain broken. Alarms fire but nobody is
+  notified because the SNS topic was deleted. Detection
+  works. Response doesn't.
+tests:
+  - name: alarm referencing deleted topic fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:RDSHighCPU"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        messaging:
+          kind: cloudwatch_alarm
+          sns:
+            alarm_name: "RDSHighCPU"
+            alarm_action_topic_arn: "arn:aws:sns:us-east-1:111122223333:alerts-deleted"
+            alarm_action_topic_exists: false
+            has_ghost_alarm_action: true
+            alarm_action_type: "alarm"
+  - name: alarm referencing live topic passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:RDSHighCPU"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        messaging:
+          kind: cloudwatch_alarm
+          sns:
+            alarm_name: "RDSHighCPU"
+            alarm_action_topic_arn: "arn:aws:sns:us-east-1:111122223333:alerts"
+            alarm_action_topic_exists: true
+            has_ghost_alarm_action: false
+            alarm_action_type: "alarm"
+  - name: KMS deletion alarm with ghost SNS — recursive failure (severe)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:KMSScheduleKeyDeletion"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        messaging:
+          kind: cloudwatch_alarm
+          sns:
+            alarm_name: "KMSScheduleKeyDeletion"
+            alarm_action_topic_arn: "arn:aws:sns:us-east-1:111122223333:critical-alerts-deleted"
+            alarm_action_topic_exists: false
+            has_ghost_alarm_action: true
+            alarm_action_type: "alarm"
