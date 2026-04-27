@@ -1,0 +1,20 @@
+id: sqs_confused_deputy
+description: >
+  Any single SQS service-integration confused deputy fires this
+  chain — SNS, S3, or EventBridge can send to the queue without
+  source restriction. Each independently allows message
+  injection from any resource of that service type in any
+  account. Threshold of 1 fires whenever the queue authorizes
+  a service principal without a corresponding aws:SourceArn or
+  aws:SourceAccount condition; combinations escalate
+  proportionally.
+controls:
+  - CTL.SQS.POLICY.SNS.NOSOURCE.001
+  - CTL.SQS.POLICY.S3.NOSOURCE.001
+  - CTL.SQS.POLICY.EVENTS.NOSOURCE.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - resource_policy_escalation
+postconditions:
+  - data_destruction

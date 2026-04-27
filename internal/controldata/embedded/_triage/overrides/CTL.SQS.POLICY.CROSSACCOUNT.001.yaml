@@ -1,0 +1,21 @@
+control: CTL.SQS.POLICY.CROSSACCOUNT.001
+defect: >
+  SQS queue policy grants actions to external account
+  principals without aws:PrincipalOrgID.
+infection: >
+  Cross-account queue access without organizational boundary
+  means the external account has queue access regardless of
+  whether it is in the organization. If the account was once
+  in the organization but later left, the queue policy still
+  trusts it. If the account is a partner or vendor, the queue
+  policy trusts the partner's IAM controls — any principal in
+  the partner's account with the matching IAM permissions can
+  interact with the queue. PrincipalOrgID ensures only accounts
+  currently in the organization can access the queue; accounts
+  that leave lose access automatically. The condition is
+  cheaper than maintaining an account allowlist.
+failure: >
+  Queue access outside organizational boundary. External-
+  account principals can interact with the queue without
+  org-membership verification, and access persists across org
+  membership changes.

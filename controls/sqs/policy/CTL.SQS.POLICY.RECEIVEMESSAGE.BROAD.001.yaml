@@ -1,0 +1,134 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.POLICY.RECEIVEMESSAGE.BROAD.001
+name: SQS Queue Policy Grants ReceiveMessage to Broad Principals
+description: >
+  SQS queue policy grants sqs:ReceiveMessage to overly broad
+  principals — Principal: "*", account root, wildcard role
+  patterns, or cross-account principals without conditions.
+  ReceiveMessage reads message content; broad ReceiveMessage
+  access is broad data access. The queue is a data store —
+  every message holds whatever the producer wrote (customer
+  data, application events, credentials when the application
+  passes them through). A principal with ReceiveMessage can
+  drain the queue, reading every message until the queue is
+  empty. Distinct from CTL.SQS.POLICY.PUBLIC.001 which fires
+  on Principal: "*"; this control fires when the principal is
+  named but the principal class is too broad (account root,
+  wildcard role pattern).
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "1.2, 7.1"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-16"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: collection
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    SQS queue policy grants sqs:ReceiveMessage to a broad
+    principal class. Any principal matching the pattern can
+    read every message in the queue.
+  action: >
+    Replace broad principals (account root, wildcard role
+    patterns) with the specific consumer roles or service
+    accounts that legitimately need to read messages
+    (typically a Lambda execution role or an EC2 instance
+    profile). Apply via aws sqs set-queue-attributes
+    --attributes Policy=<file://policy.json>. Audit consumers
+    against the principal allowlist on a periodic cadence so
+    decommissioned roles drop off.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "receive_broadly_granted": false,
+          "policy_receive_principals": ["arn:aws:iam::111122223333:role/orders-consumer"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.receive_broadly_granted
+      op: eq
+      value: true
+defect: >
+  SQS queue policy grants sqs:ReceiveMessage to a broad
+  principal class.
+infection: >
+  sqs:ReceiveMessage reads messages from the queue. A principal
+  with ReceiveMessage can read EVERY message in the queue —
+  customer data, application events, credentials when the
+  producer passes them through, and all message attributes.
+  Broad ReceiveMessage access is data access. Unlike S3 (where
+  objects are individually addressable), SQS messages are
+  consumed sequentially — a single ReceiveMessage call returns
+  up to 10 messages from the queue. An attacker with
+  ReceiveMessage can drain the queue: read messages, delete
+  them, repeat. The legitimate consumer never sees them.
+failure: >
+  Broad message read access. Any principal matching the broad
+  pattern can read every message in the queue and, if combined
+  with DeleteMessage, drain the queue without leaving traces
+  for the legitimate consumer.
+tests:
+  - name: ReceiveMessage to account root fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            receive_broadly_granted: true
+            policy_receive_principals:
+              - "arn:aws:iam::111122223333:root"
+            receive_principal_count: 1
+  - name: ReceiveMessage to specific role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            receive_broadly_granted: false
+            policy_receive_principals:
+              - "arn:aws:iam::111122223333:role/orders-consumer"
+            receive_principal_count: 1
+  - name: ReceiveMessage to Principal "*" fires (severe)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:public-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            receive_broadly_granted: true
+            policy_receive_principals:
+              - "*"
+            receive_principal_count: 1

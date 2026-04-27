@@ -1,0 +1,19 @@
+control: CTL.SQS.POLICY.SNS.NOSOURCE.001
+defect: >
+  SQS queue policy authorizes SNS service principal SendMessage
+  without aws:SourceArn or aws:SourceAccount.
+infection: >
+  The queue policy grants sqs:SendMessage to sns.amazonaws.com
+  without restricting which SNS topic can send. Any SNS topic —
+  in any AWS account — can publish messages to the queue. An
+  attacker creates an SNS topic in their own account, subscribes
+  the queue (the subscription succeeds because the policy
+  authorizes any SNS topic), and publishes attacker-controlled
+  payloads. If the queue consumer trusts message content without
+  validation, the attacker's payload is processed as legitimate.
+  aws:SourceArn restricts to a specific SNS topic ARN;
+  aws:SourceAccount restricts to a publisher account. Either
+  condition closes the confused-deputy gap.
+failure: >
+  Cross-account message injection. Any SNS topic in any account
+  can write messages to the queue.

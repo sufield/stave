@@ -1,0 +1,20 @@
+control: CTL.SQS.POLICY.RECEIVEMESSAGE.BROAD.001
+defect: >
+  SQS queue policy grants sqs:ReceiveMessage to a broad
+  principal class.
+infection: >
+  sqs:ReceiveMessage reads messages from the queue. A principal
+  with ReceiveMessage can read EVERY message in the queue —
+  customer data, application events, credentials when the
+  producer passes them through, and all message attributes.
+  Broad ReceiveMessage access is data access. Unlike S3 (where
+  objects are individually addressable), SQS messages are
+  consumed sequentially — a single ReceiveMessage call returns
+  up to 10 messages from the queue. An attacker with
+  ReceiveMessage can drain the queue: read messages, delete
+  them, repeat. The legitimate consumer never sees them.
+failure: >
+  Broad message read access. Any principal matching the broad
+  pattern can read every message in the queue and, if combined
+  with DeleteMessage, drain the queue without leaving traces
+  for the legitimate consumer.

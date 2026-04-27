@@ -1,0 +1,22 @@
+control: CTL.SQS.POLICY.SPRAWL.001
+defect: >
+  SQS queue policy carries more permission statements than the
+  configured threshold.
+infection: >
+  Each service integration adds a policy statement: the SNS
+  topic from initial setup, the S3 bucket notification from a
+  migration project, the EventBridge rule from a monitoring
+  pipeline, the Lambda DLQ configuration from a decommissioned
+  function. Statements are rarely removed. Over time the policy
+  accumulates SendMessage grants from many sources — some of
+  which may no longer exist (ghost sourceArns, deleted
+  principals). The policy becomes unauditable: too many
+  statements to review with confidence, each granting access
+  from a different surface. The risk is not a single broken
+  grant; it is the loss of the operator's ability to know what
+  the queue is exposed to.
+failure: >
+  Unauditable queue access surface. The queue accepts messages
+  from many distinct sources, some of which may no longer be
+  legitimate, and no operator can review them all with
+  confidence.

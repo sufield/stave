@@ -1,0 +1,20 @@
+control: CTL.SQS.POLICY.EVENTS.NOSOURCE.001
+defect: >
+  SQS queue policy authorizes EventBridge service principal
+  SendMessage without aws:SourceAccount or aws:SourceArn.
+infection: >
+  The queue policy grants sqs:SendMessage to
+  events.amazonaws.com without restricting which rule or account
+  can deliver events. EventBridge rules can match arbitrary
+  event patterns — an attacker with permission to create rules
+  in any AWS account can author a rule that matches high-volume
+  patterns (every PutObject, every CloudTrail event) and routes
+  them at the target queue. The queue floods with attacker-
+  selected events. Even if the consumer validates event content,
+  the volume alone is a denial-of-service vector. SourceAccount
+  rejects rules from foreign accounts; SourceArn pins specific
+  rules.
+failure: >
+  Cross-account event delivery. Any EventBridge rule in any
+  account can route arbitrary events to the queue, with the
+  obvious DoS and message-injection consequences.

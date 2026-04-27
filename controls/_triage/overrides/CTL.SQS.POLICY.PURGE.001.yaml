@@ -1,0 +1,20 @@
+control: CTL.SQS.POLICY.PURGE.001
+defect: >
+  SQS queue policy grants sqs:PurgeQueue to non-administrative
+  principals.
+infection: >
+  PurgeQueue deletes every message in the queue — instantly,
+  irreversibly. Unlike DeleteMessage (which deletes one message
+  at a time), PurgeQueue is a mass-deletion operation. A single
+  API call eliminates the entire queue's content. There is no
+  undo, no recovery, no DLQ for purged messages — purged
+  messages bypass the DLQ entirely; they are not "failed,"
+  they are deleted. An attacker, a misconfigured automation
+  script, or an accidental CLI command with PurgeQueue
+  permission destroys all in-flight data in the queue. Treat
+  PurgeQueue with the same care as DROP TABLE — only queue
+  administrators should hold it.
+failure: >
+  Mass message deletion capability. Any principal matching the
+  broad PurgeQueue grant can delete every queued message in a
+  single API call with no recovery and no DLQ preservation.

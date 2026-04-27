@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1699
-**Pack hash:** `24acbc9ba3dfb134d6941ec6f1c15626206676701df5521072628bf72255e17c`
+**Total controls:** 1707
+**Pack hash:** `653ed70b898c73a7dc4226ce509103672624ccae5dff9f1e55241aa39939477f`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 189 |
-| high | 745 |
+| high | 751 |
 | info | 16 |
 | low | 122 |
-| medium | 627 |
+| medium | 629 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 59 |
 | encryption | 92 |
-| exposure | 945 |
-| governance | 149 |
+| exposure | 952 |
+| governance | 150 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -23545,6 +23545,51 @@ The observation snapshot is missing required SQS queue properties.
 
 ---
 
+### CTL.SQS.POLICY.CROSSACCOUNT.001
+
+**SQS Queue Policy Grants Cross-Account Access Without Organizational Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.5.19; nist_800_53_r5: AC-3, AC-4, AC-6; pci_dss_v4.0: 1.2, 7.1, 7.2; soc2: CC6.1, CC6.6;
+
+SQS queue policy grants actions to principals in external AWS accounts without an aws:PrincipalOrgID condition (or an equivalent SourceAccount restriction limited to the organization's account list). Any principal in the external account can perform the granted actions — if the external account is compromised, or leaves the organization, the queue policy still trusts it. PrincipalOrgID ensures only accounts currently in the organization can access the queue. Distinct from CTL.SQS.POLICY.PUBLIC.001 (Principal: "*") — this control fires on policies that name specific external accounts but lack an org boundary.
+
+**Remediation:** Add aws:PrincipalOrgID restricting access to the organization's ID (o-xxxxxxxxxx). For the rare legitimate cross-org grant, use aws:PrincipalAccount with the explicit account ID and document the trust relationship. Apply via aws sqs set-queue-attributes --attributes Policy=<file://policy.json>. Companion controls: CTL.SQS.POLICY.PUBLIC.001 covers Principal: "*"; CTL.SQS.POLICY.SNS/S3/EVENTS.NOSOURCE.001 cover service principals; this control covers specific external account principals.
+
+---
+
+### CTL.SQS.POLICY.DELETEBROADLY.001
+
+**SQS Queue Policy Grants DeleteMessage to Broad Principals**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, SI-11; pci_dss_v4.0: 1.2, 7.1; soc2: CC6.1, CC6.6, A1.2;
+
+SQS queue policy grants sqs:DeleteMessage to a broad principal class — Principal: "*", account root, wildcard role pattern, or cross-account principals without conditions. DeleteMessage removes individual messages from the queue. Broad DeleteMessage access enables message destruction without reading: a principal that can delete but not receive can destroy messages out from under the legitimate consumer, causing silent message loss. Similar pattern to CTL.SQS.POLICY.RECEIVEMESSAGE.BROAD.001 but on the destruction axis rather than the read axis. Less severe than CTL.SQS.POLICY.PURGE.001 (which mass-deletes the entire queue in a single call) — DeleteMessage is one-message-at-a- time but still allows targeted destruction.
+
+**Remediation:** Restrict DeleteMessage to the consumer roles that legitimately process messages — typically the same role that holds ReceiveMessage, since the standard consume-and-delete pattern requires both. Avoid granting DeleteMessage to producer roles, monitoring roles, or cross-account principals unless there is a documented redrive-back workflow. Apply via aws sqs set-queue-attributes --attributes Policy=<file://policy.json>.
+
+---
+
+### CTL.SQS.POLICY.EVENTS.NOSOURCE.001
+
+**SQS Queue Policy Allows EventBridge Without SourceAccount**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.9; nist_800_53_r5: AC-3, AC-4, SC-7; pci_dss_v4.0: 1.2, 7.1; soc2: CC6.1, CC6.6;
+
+SQS queue policy grants sqs:SendMessage to the EventBridge service principal (events.amazonaws.com) without aws:SourceAccount or aws:SourceArn condition. Any EventBridge rule in any account can deliver events to the queue. EventBridge is particularly dangerous without source restriction because rules can match arbitrary event patterns — an attacker creates a rule in their own account that matches high-volume events (CloudTrail API calls, custom events) and routes them to the target queue, flooding it. Counterpart to CTL.SQS.POLICY.SNS.NOSOURCE.001 and CTL.SQS.POLICY.S3.NOSOURCE.001 on the EventBridge surface.
+
+**Remediation:** Add aws:SourceAccount (the account owning the legitimate rules) and ideally aws:SourceArn (each rule's ARN) to every Statement granting events.amazonaws.com SendMessage. If the queue receives events from many rules in the same account, SourceAccount alone is sufficient; if only specific rules should be authorized, list each in SourceArn. Apply via aws sqs set-queue-attributes --attributes Policy=<file://policy.json>.
+
+---
+
 ### CTL.SQS.POLICY.GHOSTREF.001
 
 **SQS Queue Policy Must Not Reference Deleted Principals**
@@ -23572,6 +23617,81 @@ SQS queue policies must not grant access to principal ARNs that don't exist in t
 SQS queue resource policies must not grant sqs:SendMessage, sqs:ReceiveMessage, sqs:DeleteMessage, or sqs:* to Principal "*" or to unauthenticated principals without restricting via aws:SourceArn, aws:SourceAccount, or aws:PrincipalOrgID conditions. Public queue access allows unauthorized message injection (sending malicious payloads to downstream consumers) or message interception (reading messages meant for internal services).
 
 **Remediation:** Restrict the queue policy to specific account IDs, source ARNs, or add an aws:PrincipalOrgID condition. For cross-service integration (e.g., SNS → SQS), restrict via aws:SourceArn to the specific topic ARN.
+
+---
+
+### CTL.SQS.POLICY.PURGE.001
+
+**SQS Queue Policy Grants PurgeQueue to Non-Admin Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-6, SI-11, SI-13; pci_dss_v4.0: 1.2, 7.1, 7.2; soc2: CC6.1, CC6.6, A1.2;
+
+SQS queue policy grants sqs:PurgeQueue to non-administrative principals. PurgeQueue is mass deletion — a single API call removes EVERY message from the queue, instantly, irreversibly. Purged messages bypass the DLQ. There is no recovery surface. Only queue administrators (or the SDK-default account root) should hold PurgeQueue. The control fires when PurgeQueue is granted beyond a small allowlist — to broad principal classes (account root, role-pattern wildcards), to cross-account principals, or to consumer roles that have no legitimate reason to wipe the queue.
+
+**Remediation:** Remove sqs:PurgeQueue from non-administrative principals (consumers, producers, monitoring roles). Restrict it to a named queue-admin role or the account root. Apply via aws sqs set-queue-attributes --attributes Policy=<file://policy.json>. If automation needs PurgeQueue (e.g. a test-environment cleanup pipeline), grant it to a specific service role rather than to an entire account or a wildcard pattern.
+
+---
+
+### CTL.SQS.POLICY.RECEIVEMESSAGE.BROAD.001
+
+**SQS Queue Policy Grants ReceiveMessage to Broad Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 1.2, 7.1; soc2: CC6.1, CC6.6;
+
+SQS queue policy grants sqs:ReceiveMessage to overly broad principals — Principal: "*", account root, wildcard role patterns, or cross-account principals without conditions. ReceiveMessage reads message content; broad ReceiveMessage access is broad data access. The queue is a data store — every message holds whatever the producer wrote (customer data, application events, credentials when the application passes them through). A principal with ReceiveMessage can drain the queue, reading every message until the queue is empty. Distinct from CTL.SQS.POLICY.PUBLIC.001 which fires on Principal: "*"; this control fires when the principal is named but the principal class is too broad (account root, wildcard role pattern).
+
+**Remediation:** Replace broad principals (account root, wildcard role patterns) with the specific consumer roles or service accounts that legitimately need to read messages (typically a Lambda execution role or an EC2 instance profile). Apply via aws sqs set-queue-attributes --attributes Policy=<file://policy.json>. Audit consumers against the principal allowlist on a periodic cadence so decommissioned roles drop off.
+
+---
+
+### CTL.SQS.POLICY.S3.NOSOURCE.001
+
+**SQS Queue Policy Allows S3 SendMessage Without SourceArn**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.9; nist_800_53_r5: AC-3, AC-4, SC-7; pci_dss_v4.0: 1.2, 7.1; soc2: CC6.1, CC6.6;
+
+SQS queue policy grants sqs:SendMessage to the S3 service principal (s3.amazonaws.com) without aws:SourceArn or aws:SourceAccount condition. Any S3 bucket in any account can configure event notifications targeting the queue and have them accepted. An attacker creates a bucket, sets up a PutObject event notification pointing at the queue ARN, and generates events — the queue receives attacker-controlled S3 event payloads. Counterpart to CTL.SQS.POLICY.SNS.NOSOURCE.001 on the S3 event-notification surface.
+
+**Remediation:** Add aws:SourceArn (the legitimate bucket ARN) or aws:SourceAccount (the bucket-owning account) to every Statement granting s3.amazonaws.com SendMessage. Both conditions can be combined for defense in depth — sourceArn pins the specific bucket; sourceAccount blocks any bucket in foreign accounts. Apply via aws sqs set-queue-attributes --attributes Policy=<file://policy.json>.
+
+---
+
+### CTL.SQS.POLICY.SNS.NOSOURCE.001
+
+**SQS Queue Policy Allows SNS SendMessage Without SourceArn**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.9; nist_800_53_r5: AC-3, AC-4, SC-7; pci_dss_v4.0: 1.2, 7.1; soc2: CC6.1, CC6.6;
+
+SQS queue policy grants sqs:SendMessage to the SNS service principal (sns.amazonaws.com) without an aws:SourceArn or aws:SourceAccount condition. Any SNS topic in any AWS account can publish to the queue. An attacker creates an SNS topic in their own account, subscribes the queue (the subscription succeeds because the queue's policy authorizes any SNS topic), and publishes attacker-controlled payloads. Same confused- deputy pattern as CTL.LAMBDA.TRIGGER.CONFUSEDDEPUTY.001 but on the SQS receive surface.
+
+**Remediation:** Add an aws:SourceArn condition naming the legitimate SNS topic ARN, or aws:SourceAccount restricting to the publisher account. Apply via aws sqs set-queue-attributes --attributes Policy=<file://policy.json>. Verify that every Statement granting sns.amazonaws.com SendMessage carries one of the two conditions.
+
+---
+
+### CTL.SQS.POLICY.SPRAWL.001
+
+**SQS Queue Policy Has Excessive Permission Statements**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.5.19; nist_800_53_r5: AC-6, CM-2; soc2: CC6.1, CC8.1;
+
+SQS queue policy has more than ten permission statements. Each service integration adds a Statement: the SNS topic from initial setup, the S3 bucket notification from a migration project, the EventBridge rule from a monitoring pipeline, the Lambda DLQ configuration from a decommissioned function. Statements are rarely removed. The policy accumulates until it is unauditable — too many entries to review, each granting SendMessage from a different source. Same accumulation pattern as CTL.LAMBDA.POLICY.ACCUMULATED.001. The threshold of ten is a heuristic; configurable per workload.
+
+**Remediation:** Audit the policy (aws sqs get-queue-attributes --queue-url <url> --attribute-names Policy) and remove statements for sources that no longer exist or no longer need to write to the queue. Pair the cleanup with an inventory check against CTL.SQS.GHOST.POLICY.SOURCEARN.001 to identify deleted sources still referenced. After cleanup, gate future additions through an automated policy review so the count stays under the threshold.
 
 ---
 

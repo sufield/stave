@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.POLICY.PURGE.001
+name: SQS Queue Policy Grants PurgeQueue to Non-Admin Principals
+description: >
+  SQS queue policy grants sqs:PurgeQueue to non-administrative
+  principals. PurgeQueue is mass deletion — a single API call
+  removes EVERY message from the queue, instantly, irreversibly.
+  Purged messages bypass the DLQ. There is no recovery surface.
+  Only queue administrators (or the SDK-default account root)
+  should hold PurgeQueue. The control fires when PurgeQueue is
+  granted beyond a small allowlist — to broad principal classes
+  (account root, role-pattern wildcards), to cross-account
+  principals, or to consumer roles that have no legitimate
+  reason to wipe the queue.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC6.1, CC6.6, A1.2"
+  nist_800_53_r5: "AC-6, SI-11, SI-13"
+  pci_dss_v4.0: "1.2, 7.1, 7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    SQS queue policy grants PurgeQueue to one or more broad
+    principals. Any of them can wipe the queue with a single
+    API call.
+  action: >
+    Remove sqs:PurgeQueue from non-administrative principals
+    (consumers, producers, monitoring roles). Restrict it to a
+    named queue-admin role or the account root. Apply via
+    aws sqs set-queue-attributes --attributes
+    Policy=<file://policy.json>. If automation needs PurgeQueue
+    (e.g. a test-environment cleanup pipeline), grant it to a
+    specific service role rather than to an entire account or
+    a wildcard pattern.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "purge_broadly_granted": false,
+          "policy_purge_principals": ["arn:aws:iam::111122223333:role/queue-admin"],
+          "purge_principal_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.purge_broadly_granted
+      op: eq
+      value: true
+defect: >
+  SQS queue policy grants sqs:PurgeQueue to non-administrative
+  principals.
+infection: >
+  PurgeQueue deletes every message in the queue — instantly,
+  irreversibly. Unlike DeleteMessage (which deletes one message
+  at a time), PurgeQueue is a mass-deletion operation. A single
+  API call eliminates the entire queue's content. There is no
+  undo, no recovery, no DLQ for purged messages — purged
+  messages bypass the DLQ entirely; they are not "failed,"
+  they are deleted. An attacker, a misconfigured automation
+  script, or an accidental CLI command with PurgeQueue
+  permission destroys all in-flight data in the queue. Treat
+  PurgeQueue with the same care as DROP TABLE — only queue
+  administrators should hold it.
+failure: >
+  Mass message deletion capability. Any principal matching the
+  broad PurgeQueue grant can delete every queued message in a
+  single API call with no recovery and no DLQ preservation.
+tests:
+  - name: PurgeQueue to broad principal pattern fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            purge_broadly_granted: true
+            policy_purge_principals:
+              - "arn:aws:iam::111122223333:role/*"
+            purge_principal_count: 1
+  - name: PurgeQueue to dedicated admin role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            purge_broadly_granted: false
+            policy_purge_principals:
+              - "arn:aws:iam::111122223333:role/queue-admin"
+            purge_principal_count: 1
+  - name: PurgeQueue only to account root passes (default)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            purge_broadly_granted: false
+            policy_purge_principals:
+              - "arn:aws:iam::111122223333:root"
+            purge_principal_count: 1

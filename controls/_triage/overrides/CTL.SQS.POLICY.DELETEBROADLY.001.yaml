@@ -1,0 +1,19 @@
+control: CTL.SQS.POLICY.DELETEBROADLY.001
+defect: >
+  SQS queue policy grants sqs:DeleteMessage to a broad
+  principal class.
+infection: >
+  DeleteMessage removes individual messages from the queue.
+  Broad DeleteMessage access lets a principal destroy messages
+  one by one, even without ReceiveMessage permission. An
+  attacker with DeleteMessage but not ReceiveMessage can drop
+  messages out from under the legitimate consumer — silent
+  message loss without reading the content. Combined with
+  ReceiveMessage, the attacker can drain the queue;
+  alone, DeleteMessage is targeted destruction. Less severe
+  than PurgeQueue (one-at-a-time vs. queue-wide) but still
+  data-destruction capability.
+failure: >
+  Targeted message destruction. Any principal matching the
+  broad pattern can delete individual messages; combined with
+  ReceiveMessage it drains the queue.

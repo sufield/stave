@@ -1,0 +1,19 @@
+control: CTL.SQS.POLICY.S3.NOSOURCE.001
+defect: >
+  SQS queue policy authorizes S3 service principal SendMessage
+  without aws:SourceArn or aws:SourceAccount.
+infection: >
+  The queue policy grants sqs:SendMessage to s3.amazonaws.com
+  without restricting which bucket can send. Any S3 bucket — in
+  any AWS account — can configure event notifications targeting
+  the queue. An attacker creates a bucket in their own account,
+  configures a PutObject event notification pointed at the queue
+  ARN, and generates events; the queue accepts the attacker's
+  S3 event payloads as legitimate. The consumer often trusts
+  S3 event records (bucket name, object key, ETag) and proceeds
+  to fetch the named object — under the attacker's control.
+  aws:SourceArn restricts to a specific bucket ARN;
+  aws:SourceAccount restricts to the bucket-owning account.
+failure: >
+  Cross-account event injection. Any S3 bucket in any account
+  can deliver attacker-controlled event records to the queue.

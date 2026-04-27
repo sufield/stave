@@ -1,0 +1,136 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.POLICY.SNS.NOSOURCE.001
+name: SQS Queue Policy Allows SNS SendMessage Without SourceArn
+description: >
+  SQS queue policy grants sqs:SendMessage to the SNS service
+  principal (sns.amazonaws.com) without an aws:SourceArn or
+  aws:SourceAccount condition. Any SNS topic in any AWS account
+  can publish to the queue. An attacker creates an SNS topic in
+  their own account, subscribes the queue (the subscription
+  succeeds because the queue's policy authorizes any SNS topic),
+  and publishes attacker-controlled payloads. Same confused-
+  deputy pattern as CTL.LAMBDA.TRIGGER.CONFUSEDDEPUTY.001 but
+  on the SQS receive surface.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, SC-7"
+  pci_dss_v4.0: "1.2, 7.1"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.9"
+  ccm_v4: ["IAM-16", "IVS-09"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    SQS queue policy authorizes the SNS service principal without
+    a source restriction. Any SNS topic in any account can write
+    to the queue.
+  action: >
+    Add an aws:SourceArn condition naming the legitimate SNS
+    topic ARN, or aws:SourceAccount restricting to the publisher
+    account. Apply via aws sqs set-queue-attributes
+    --attributes Policy=<file://policy.json>. Verify that every
+    Statement granting sns.amazonaws.com SendMessage carries one
+    of the two conditions.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "policy_allows_sns": true,
+          "policy_sns_has_source": true,
+          "policy_sns_source_arns": ["arn:aws:sns:us-east-1:111122223333:orders-topic"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.policy_allows_sns
+      op: eq
+      value: true
+    - field: properties.messaging.sqs.policy_sns_has_source
+      op: eq
+      value: false
+defect: >
+  SQS queue policy authorizes SNS service principal SendMessage
+  without aws:SourceArn or aws:SourceAccount.
+infection: >
+  The queue policy grants sqs:SendMessage to sns.amazonaws.com
+  without restricting which SNS topic can send. Any SNS topic —
+  in any AWS account — can publish messages to the queue. An
+  attacker creates an SNS topic in their own account, subscribes
+  the queue (the subscription succeeds because the policy
+  authorizes any SNS topic), and publishes attacker-controlled
+  payloads. If the queue consumer trusts message content without
+  validation, the attacker's payload is processed as legitimate.
+  aws:SourceArn restricts to a specific SNS topic ARN;
+  aws:SourceAccount restricts to a publisher account. Either
+  condition closes the confused-deputy gap.
+failure: >
+  Cross-account message injection. Any SNS topic in any account
+  can write messages to the queue.
+tests:
+  - name: SNS principal without source condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            policy_allows_sns: true
+            policy_sns_has_source: false
+  - name: SNS principal with sourceArn condition passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            policy_allows_sns: true
+            policy_sns_has_source: true
+            policy_sns_source_arns:
+              - "arn:aws:sns:us-east-1:111122223333:orders-topic"
+  - name: queue with no SNS authorization passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:internal-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            policy_allows_sns: false
+  - name: SNS + S3 both without source conditions fires (compound)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:fanout-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            policy_allows_sns: true
+            policy_sns_has_source: false
+            policy_allows_s3: true
+            policy_s3_has_source: false
