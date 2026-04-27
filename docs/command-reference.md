@@ -30,7 +30,6 @@ All commands ship in the standard `stave` binary. No build tags are required.
 | `explain` | Show how a specific control evaluates | `--controls` dir | Control description, fields needed, evaluation logic | When understanding why a control matched |
 | `trace` | Step-by-step predicate evaluation | `--controls` dir, `--control` ID, `--observation` file, `--asset-id` | Clause-by-clause PASS/FAIL tree | When a control produces unexpected results for one asset |
 | `verify` | Confirm a remediation resolved findings | `--before` eval JSON, `--after` eval JSON | Resolved/new/unchanged summary | After fixing infrastructure and re-running `apply` |
-| `prompt from-finding` | Generate LLM prompt from evaluation results | Evaluation inputs | Markdown prompt with context | When using LLMs to analyze findings |
 
 ## CI/CD
 

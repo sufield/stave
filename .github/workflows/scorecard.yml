@@ -23,12 +23,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Run analysis
-        uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a # v2.4.3
-        with:
-          results_file: results.sarif
-          results_format: sarif
-          publish_results: true
+      - name: Run Scorecard (retry on transient GitHub API errors)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SCORECARD_VERSION: v5.1.1
+        run: |
+          set -euo pipefail
+
+          curl -sSL -o scorecard.tar.gz \
+            "https://github.com/ossf/scorecard/releases/download/${SCORECARD_VERSION}/scorecard_${SCORECARD_VERSION#v}_linux_amd64.tar.gz"
+          tar -xzf scorecard.tar.gz scorecard
+          chmod +x ./scorecard
+
+          attempts=0
+          max_attempts=3
+          until [ "$attempts" -ge "$max_attempts" ]; do
+            attempts=$((attempts+1))
+            echo "Attempt ${attempts}/${max_attempts}"
+
+            if ./scorecard \
+              --repo "https://github.com/${{ github.repository }}" \
+              --format sarif \
+              --show-details \
+              --sarif-file results.sarif
+            then
+              exit 0
+            fi
+
+            echo "Scorecard failed (likely transient GitHub API issue). Waiting before retry..."
+            sleep 30
+          done
+
+          echo "Scorecard failed after ${max_attempts} attempts."
+          exit 1
 
       - name: Upload artifact
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v7.0.1

@@ -1,5 +1,5 @@
 // Package diagnose implements the diagnose command and its subcommands:
-// trace, prompt, and docs search/open.
+// trace, explain-narrative.
 package diagnose
 
 import (

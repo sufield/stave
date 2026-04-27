@@ -25,8 +25,8 @@ func TestPromotedCommandsRegistered(t *testing.T) {
 		}
 	}
 
-	// trace and prompt are subcommands of diagnose.
-	for _, sub := range []string{"trace", "prompt"} {
+	// trace is a subcommand of diagnose.
+	for _, sub := range []string{"trace"} {
 		cmd, _, err := root.Find([]string{"diagnose", sub})
 		if err != nil || cmd == nil {
 			t.Fatalf("expected command %q to be registered under diagnose", sub)

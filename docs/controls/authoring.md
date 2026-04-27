@@ -360,13 +360,6 @@ stave apply \
   --now 2026-01-02T00:00:00Z \
   --allow-unknown-input \
   --trace trace.json
-
-# Generate LLM prompt from findings with trace context
-stave prompt from-finding \
-  --evaluation-file eval.json \
-  --asset-id my-bucket \
-  --controls controls/s3/example/ \
-  --trace-file trace.json
 ```
 
 ## Review Checklist

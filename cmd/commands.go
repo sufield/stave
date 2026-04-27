@@ -122,7 +122,6 @@ func WireCommands(app *App) {
 	root.AddCommand(applyverify.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime()))
 	diagnoseCmd := diagnose.NewDiagnoseCmd(f.NewObsRepo, f.NewCtlRepo)
 	diagnoseCmd.AddCommand(diagnose.NewTraceCmd(f.NewCtlRepo, f.NewSnapshotRepo))
-	diagnoseCmd.AddCommand(diagnose.NewPromptCmd(f.NewCtlRepo, loadSnapshots))
 	diagnoseCmd.AddCommand(diagnose.NewExplainNarrativeCmd())
 	root.AddCommand(diagnoseCmd)
 	root.AddCommand(diagnose.NewExplainCmd(f.NewCtlRepo))

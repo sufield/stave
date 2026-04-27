@@ -1,4 +1,4 @@
-# Exercise report and prompt commands
+# Exercise report command
 
 # Generate evaluation output
 ! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json
@@ -7,10 +7,6 @@ cp stdout evaluation.json
 # Report from evaluation
 exec stave report --in evaluation.json
 stdout 'CTL.S3.PUBLIC.001'
-
-# Prompt from finding (subcommand of diagnose)
-exec stave diagnose prompt from-finding --evaluation-file evaluation.json --asset-id public-bucket --controls controls --observations observations
-stdout 'public-bucket'
 
 -- controls/CTL.S3.PUBLIC.001.yaml --
 dsl_version: ctrl.v1

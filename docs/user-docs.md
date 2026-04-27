@@ -243,7 +243,6 @@ For snapshot operations, use the lifecycle command set:
 | `packs list\|show` | Pack discovery | Browse available control packs |
 | `fix` | Remediation guidance | Show fix guidance for a specific finding |
 | `bug-report` | Diagnostic bundle | Collect environment info for bug reports |
-| `prompt from-finding` | LLM prompt generation | Generate LLM prompt from findings |
 | `env list` | Environment variables | List supported STAVE_* variables |
 | `schemas` | Schema listing | List wire-format contract schemas |
 | `version` | Version info | Print version (also `--version` flag) |
@@ -1414,22 +1413,6 @@ stave bug-report [flags]
 ```bash
 stave bug-report
 stave bug-report --out my-bug.zip --include-config
-```
-
----
-
-### prompt from-finding
-
-Generates an LLM prompt from evaluation findings.
-
-```bash
-stave prompt from-finding [flags]
-```
-
-**Examples:**
-
-```bash
-stave prompt from-finding --input output/evaluation.json
 ```
 
 ---

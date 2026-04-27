@@ -7,8 +7,6 @@
 //
 // Control Engine: validate, apply (--dry-run), diagnose, explain, trace, verify
 //
-// Remediation: prompt from-finding
-//
 // Workflow & CI: ci (baseline/gate/fix-loop/diff/fix), snapshot, status
 //
 // Data & Artifacts: enforce, report, controls, packs, lint, fmt

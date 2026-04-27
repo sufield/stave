@@ -29,7 +29,6 @@ trees are nested under their parents.
 | `stave apply verify` | `cmd/apply/verify/` | Verify apply-output byte-determinism |
 | `stave diagnose` (parent) | `cmd/diagnose/commands.go` | Explain why a control fired / didn't fire |
 | &nbsp;&nbsp;`diagnose trace` | `cmd/diagnose/trace_run.go` | Emit per-clause evaluation trace |
-| &nbsp;&nbsp;`diagnose prompt` | `cmd/diagnose/prompt.go` | Render remediation prompt for AI consumers |
 | &nbsp;&nbsp;`diagnose explain-narrative` | `cmd/diagnose/explain_narrative.go` | Plain-language narrative for a finding |
 | `stave explain` | `cmd/diagnose/explain.go` | Standalone explain (top-level) |
 

@@ -523,7 +523,7 @@ There are 21 scripts covering the full CLI surface:
 | `lint_fmt_graph.txtar` | `lint`, `fmt`, and `graph` commands |
 | `profile_builtin.txtar` | `apply --profile` with built-in controls |
 | `quiet_verbose.txtar` | `--quiet` suppresses output, `-v` adds diagnostics |
-| `report_prompt.txtar` | `report` and `prompt` commands |
+| `report.txtar` | `report` command |
 | `sanitize.txtar` | `--sanitize` redacts infrastructure identifiers |
 | `sarif_output.txtar` | `--format sarif` produces valid SARIF v2.1.0 |
 | `snapshot_commands.txtar` | `snapshot plan/prune/archive` commands |
@@ -559,23 +559,18 @@ step-by-step decisions for every control × asset pair. It answers: *"Why did
 the engine reach this verdict?"* It produces a `trace.v0.1` JSON with exemption
 checks, predicate evaluations, threshold checks, and verdict decisions.
 
-**`stave prompt from-finding --trace-file`** takes that trace and wraps it in
-an LLM-ready prompt for offline explainability. It answers: *"How do I fix
-this?"*
-
-| | `security-audit` | `apply --trace` | `prompt --trace-file` |
-|---|---|---|---|
-| **Subject** | The Stave binary | Infrastructure findings | Finding explanation |
-| **Question** | "Is this tool secure?" | "Why did this fire?" | "How do I fix this?" |
-| **Output** | SBOM, vuln report, build info | trace.v0.1 JSON | Markdown LLM prompt |
-| **Audience** | Auditors, compliance | Security engineers | Operators, AI assistants |
-| **Layer** | Meta (tool about itself) | Engine internals | User-facing guidance |
+| | `security-audit` | `apply --trace` |
+|---|---|---|
+| **Subject** | The Stave binary | Infrastructure findings |
+| **Question** | "Is this tool secure?" | "Why did this fire?" |
+| **Output** | SBOM, vuln report, build info | trace.v0.1 JSON |
+| **Audience** | Auditors, compliance | Security engineers |
+| **Layer** | Meta (tool about itself) | Engine internals |
 
 They are complementary:
 
 - `security-audit` builds trust in the **tool**.
 - `--trace` builds trust in the **verdict**.
-- `--trace-file` bridges the verdict to **remediation**.
 
 Example workflow:
 
@@ -586,11 +581,8 @@ stave security-audit --sbom cyclonedx --format json
 # 2. Evaluate infrastructure and record reasoning
 stave apply --controls controls/s3 --observations obs/ \
   --max-unsafe 168h --trace audit_trace.json --format json > eval.json
-
-# 3. Generate explainable remediation prompt from trace
-stave prompt from-finding \
-  --evaluation-file eval.json \
-  --asset-id my-bucket \
-  --controls controls/s3 \
-  --trace-file audit_trace.json
 ```
+
+For LLM-driven remediation, consume `eval.json` directly:
+controls carry triage terms (defect, infection, failure) so the
+findings are already self-explanatory.
