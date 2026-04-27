@@ -1,0 +1,21 @@
+control: CTL.SNS.DELIVERY.LOG.RETENTION.001
+defect: >
+  SNS delivery status log group has no retention policy or
+  retention shorter than 365 days.
+infection: >
+  Delivery status logs are the SNS-side audit trail of who
+  received what. Incidents discovered late often require
+  reviewing months of delivery activity — was that webhook
+  failing for a day, a week, a month? Was the Lambda
+  subscription erroring before the recent code deploy or
+  after? With no retention policy, logs retain forever (high
+  storage cost — typically the reason teams disable logging
+  later). With short retention, the forensic horizon collapses
+  and old enough events are simply gone. The 365-day floor
+  matches the typical compliance audit horizon and aligns
+  with every other CloudWatch log retention control in the
+  catalog.
+failure: >
+  Truncated delivery audit horizon. Delivery status events
+  older than the retention window are gone. Forensic
+  investigation into past delivery patterns is impossible.

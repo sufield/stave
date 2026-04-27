@@ -1,0 +1,21 @@
+control: CTL.SNS.ALARM.PUBLISHED.001
+defect: >
+  SNS topic has no CloudWatch alarm for
+  NumberOfMessagesPublished anomalies.
+infection: >
+  Publish-volume spikes have multiple legitimate and
+  malicious causes. Upstream system in error loop: a
+  misconfigured caller publishes the same alarm event
+  thousands of times per minute. Confused deputy exploitation:
+  an attacker leveraging a topic policy that grants Publish
+  to a service principal without aws:SourceArn fan-outs
+  payloads to every subscriber. Application bug: a feature
+  flag flip causes a publish on every request instead of
+  every error. Legitimate traffic burst: a marketing campaign
+  sends real notifications. Without an alarm, the team learns
+  about the spike from downstream effects — subscriber
+  overload, AWS bill, throttling — by which point the volume
+  has already cost money and pushed bad data to subscribers.
+failure: >
+  Undetected publish anomalies. Spikes (legitimate or
+  malicious) are invisible until downstream effects surface.

@@ -1,0 +1,20 @@
+control: CTL.SNS.ALARM.SMSSPEND.001
+defect: >
+  SNS topic with SMS subscriptions has no SMS spend alarm.
+infection: >
+  SNS SMS costs are uniquely high among SNS protocols and
+  vary by destination country (US: ~$0.0075/msg; some
+  international destinations >$0.10/msg). Without an alarm:
+  a misconfigured application that publishes SMS on every
+  request instead of every error generates rapid spend; a
+  confused-deputy gap that lets an attacker publish to the
+  topic with attacker-controlled phone-number subscribers
+  generates spend on attacker-chosen destinations. The
+  monthly SMS spend limit hard-stops delivery — but it stops
+  delivery, not spend visibility, and there is no early
+  signal between "spend is normal" and "delivery is blocked
+  because the limit was hit".
+failure: >
+  Unmonitored SMS spend. Cost spikes (legitimate or
+  malicious) are invisible until the monthly spend limit is
+  hit and SMS delivery is hard-stopped.

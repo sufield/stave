@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.ALARM.DELETETOPIC.001
+name: No CloudWatch Alarm for SNS DeleteTopic
+description: >
+  No CloudWatch alarm is wired to a CloudTrail metric filter
+  on the DeleteTopic API call. DeleteTopic permanently
+  removes the topic and all its subscriptions; if the topic
+  is an alarm notification target, every CloudWatch alarm
+  that references it becomes a ghost reference. Without an
+  alarm, topic deletion is invisible until alarms fail to
+  notify — which may be hours or days later. Companion to
+  CTL.SNS.GHOST.ALARM.001 (SNS-1): the ghost-alarm control
+  detects the STATE (topic already deleted, alarms reference
+  it); this control detects the EVENT (deletion happening
+  now), enabling immediate response before the notification
+  chain breaks.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3, A1.2"
+  nist_800_53_r5: "AU-6, IR-4, SI-4, CP-10"
+  pci_dss_v4.0: "10.6, 10.7"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16, A.5.30"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    SNS topic has no alarm on the DeleteTopic API call. Topic
+    deletion can occur without real-time notification.
+  action: >
+    Create a CloudTrail metric filter on
+    eventName = DeleteTopic scoped to the topic's ARN, then a
+    CloudWatch alarm with threshold 1 and a 60-second period
+    so the deletion call pages on-call within seconds:
+    aws logs put-metric-filter
+    --filter-pattern '{ $.eventName = "DeleteTopic" &&
+    $.requestParameters.topicArn = "*<topic-name>*" }'
+    followed by aws cloudwatch put-metric-alarm. Deletion
+    cannot be undone, but a fast notification lets the team
+    capture context for forensics, recreate the topic, and
+    repoint alarm actions before the next alarm fires into a
+    ghost reference.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "topic_arn": "arn:aws:sns:us-east-1:111122223333:alerts",
+          "alarm_delete_topic": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.alarm_delete_topic
+      op: eq
+      value: false
+defect: >
+  SNS topic has no alarm wired to CloudTrail DeleteTopic
+  events.
+infection: >
+  DeleteTopic permanently removes the topic and all its
+  subscriptions. For alarm notification topics, this creates
+  a ghost reference on every CloudWatch alarm that references
+  the topic. The alarms continue firing — but their
+  notification actions fail silently because the topic no
+  longer exists. A DeleteTopic alarm provides seconds-to-
+  minutes notification: the team can verify the deletion was
+  intentional, recreate the topic if accidental, update
+  alarm actions to a new topic. Without the alarm, the
+  deletion is discovered when the next alarm fires and
+  nobody is notified — which may be hours or days later.
+failure: >
+  Undetected topic deletion. Topic and all subscriptions
+  deleted without notification. Every referencing alarm
+  becomes a ghost.
+tests:
+  - name: topic without delete alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:alerts"
+            alarm_delete_topic: false
+  - name: topic with delete alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:alerts"
+            alarm_delete_topic: true
+  - name: alarm-notification target topic without delete alarm fires (highest severity)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:critical-alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:critical-alerts"
+            alarm_delete_topic: false
+            is_alarm_notification_target: true
+            referencing_alarm_count: 12

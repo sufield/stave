@@ -1,0 +1,134 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.DELIVERY.STATUS.PARTIAL.001
+name: SNS Topic Has Delivery Status Logging for Some Protocols But Not All
+description: >
+  SNS topic has delivery status logging enabled for some
+  subscription protocols but not all. For example: delivery
+  logging is configured for SQS subscriptions but not for
+  HTTP/HTTPS subscriptions, or for Lambda but not for SQS.
+  Delivery failures on the unlogged protocols are invisible
+  while the logged protocols have full visibility — the gap is
+  systematically uneven across protocols, not absent. Distinct
+  from CTL.SNS.DELIVERY.STATUS.DISABLED.001 (no logging at
+  all): this control fires when at least one protocol IS
+  logged but at least one protocol used by the topic is NOT.
+domain: detection
+severity: medium
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-2, AU-3, AU-6"
+  pci_dss_v4.0: "10.1, 10.7"
+  fedramp_moderate: "AU-2"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-02", "LOG-08"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SNS topic has delivery status logging enabled for some
+    protocols but not all subscription protocols on the topic.
+    Unlogged protocols have no delivery visibility.
+  action: >
+    For each subscription_protocol used by the topic, configure
+    the matching SuccessFeedbackRoleArn and
+    FailureFeedbackRoleArn on the topic. Aim for parity:
+    every protocol the topic delivers to should record
+    delivery outcomes. Inspect properties.messaging.sns.unlogged_protocols
+    to identify which protocols are missing coverage.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "subscription_protocols": ["sqs", "http"],
+          "delivery_status_protocols": ["sqs", "http"],
+          "delivery_status_complete": true,
+          "has_any_delivery_logging": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.has_any_delivery_logging
+      op: eq
+      value: true
+    - field: properties.messaging.sns.delivery_status_complete
+      op: eq
+      value: false
+defect: >
+  SNS topic has delivery status logging for some subscription
+  protocols but not all.
+infection: >
+  Partial delivery logging produces an uneven failure surface.
+  The topic might log SQS deliveries (because SQS is the
+  primary subscriber pattern and the team enabled SQS feedback)
+  but not HTTP/HTTPS deliveries. An HTTP webhook fails — no
+  record. A Lambda subscription errors — no record. The team
+  trusts the delivery logs because some protocols ARE logged,
+  and silently assumes the unlogged protocols are working
+  (they wouldn't, after all, be unlogged if they were
+  important). The result is that the most failure-prone
+  protocols (HTTP/HTTPS, which depend on external availability)
+  often go uninstrumented, producing the worst kind of
+  observability gap: present-looking but selectively blind.
+failure: >
+  Uneven delivery visibility. Some protocols are logged, others
+  aren't. The unlogged protocols' delivery failures are
+  invisible while the logged protocols give a false sense of
+  comprehensive coverage.
+tests:
+  - name: topic with SQS logged but HTTP unlogged fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:mixed-fanout"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            subscription_protocols: ["sqs", "http"]
+            delivery_status_protocols: ["sqs"]
+            unlogged_protocols: ["http"]
+            has_any_delivery_logging: true
+            delivery_status_complete: false
+  - name: topic with all protocols logged passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:mixed-fanout"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            subscription_protocols: ["sqs", "http", "lambda"]
+            delivery_status_protocols: ["sqs", "http", "lambda"]
+            unlogged_protocols: []
+            has_any_delivery_logging: true
+            delivery_status_complete: true
+  - name: topic with only SQS subscriptions and SQS logging passes (complete coverage)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:queue-only-fanout"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            subscription_protocols: ["sqs"]
+            delivery_status_protocols: ["sqs"]
+            unlogged_protocols: []
+            has_any_delivery_logging: true
+            delivery_status_complete: true

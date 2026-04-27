@@ -1,0 +1,133 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.ALARM.DELIVERYFAILURE.001
+name: No CloudWatch Alarm for SNS Delivery Failures
+description: >
+  No CloudWatch alarm is wired to the SNS metric
+  NumberOfNotificationsFailed for this topic. Delivery
+  failures indicate that subscribers are not receiving messages
+  — the publish API returned success (SNS accepted the
+  message) but delivery to one or more subscribers failed:
+  HTTP endpoint down, Lambda erroring, SQS permission denied,
+  endpoint throttled. Without an alarm, delivery failures
+  accumulate without notification. Companion to the per-
+  subscription DLQ control (CTL.SNS.SUBSCRIPTION.NODLQ.001)
+  and the delivery status logging control
+  (CTL.SNS.DELIVERY.STATUS.DISABLED.001): the alarm provides
+  real-time signal; the DLQ preserves the failed messages;
+  the logging records the per-attempt detail.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "4.4"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "SI-4, IR-4, IR-5"
+  pci_dss_v4.0: "10.6, 10.7"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    SNS topic has no CloudWatch alarm on the
+    NumberOfNotificationsFailed metric. Delivery failures are
+    invisible.
+  action: >
+    Create a CloudWatch alarm on AWS/SNS
+    NumberOfNotificationsFailed dimensioned by the topic ARN
+    with a non-zero threshold and a short evaluation period
+    (5 minutes is a reasonable starting point):
+    aws cloudwatch put-metric-alarm --alarm-name
+    sns-<topic>-delivery-failures --metric-name
+    NumberOfNotificationsFailed --namespace AWS/SNS
+    --dimensions Name=TopicName,Value=<name> --statistic Sum
+    --threshold 1 --period 300 --evaluation-periods 1
+    --comparison-operator GreaterThanOrEqualToThreshold.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "topic_arn": "arn:aws:sns:us-east-1:111122223333:alerts",
+          "alarm_delivery_failure": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.alarm_delivery_failure
+      op: eq
+      value: false
+defect: >
+  SNS topic has no CloudWatch alarm for
+  NumberOfNotificationsFailed metric.
+infection: >
+  NumberOfNotificationsFailed counts delivery attempts that
+  failed — the message was published to the topic but didn't
+  reach the subscriber. The publish API returns success (the
+  message was accepted by SNS) but delivery to one or more
+  subscribers failed. Without an alarm: a subscription to a
+  dead HTTP endpoint fails on every delivery — hundreds of
+  failures accumulate without notification. A Lambda
+  subscription that errors due to a code bug fails repeatedly.
+  An SQS subscription that fails due to a removed queue
+  policy produces delivery failures. The publisher has no
+  indication — their Publish call succeeded. The subscriber
+  has no indication — they never receive the message. Only
+  the delivery failure alarm detects the gap.
+failure: >
+  Undetected delivery failures. Messages published successfully
+  but not delivered to subscribers. Neither publisher nor
+  subscriber is aware.
+tests:
+  - name: topic without delivery failure alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:alerts"
+            alarm_delivery_failure: false
+  - name: topic with delivery failure alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:alerts"
+            alarm_delivery_failure: true
+  - name: topic with ghost subscription and no delivery alarm fires (compound)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:webhook-fanout"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:webhook-fanout"
+            alarm_delivery_failure: false
+            has_ghost_subscription: true

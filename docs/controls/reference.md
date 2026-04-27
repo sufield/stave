@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1740
-**Pack hash:** `8e4f6f9eb910792cf03a8590f41ed205f83517cf1678626cb3f3ebcdd9b498b8`
+**Total controls:** 1748
+**Pack hash:** `bd7070536f153d567029734ceaebc2f64ca1f77da0aec60ba2d7f086c8c12cde`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 191 |
-| high | 768 |
+| high | 771 |
 | info | 16 |
 | low | 123 |
-| medium | 642 |
+| medium | 647 |
 
 | Domain | Count |
 |--------|-------|
@@ -22,10 +22,10 @@
 | audit | 33 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 67 |
+| detection | 73 |
 | encryption | 92 |
 | exposure | 962 |
-| governance | 165 |
+| governance | 167 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -23289,6 +23289,126 @@ Safety mechanism integrity control. Checks that security guardrails are actively
 AWS accounts with internet-facing resources must have Shield Advanced enabled with all internet-facing resources registered as protected. Shield Standard provides basic DDoS protection automatically. Shield Advanced provides volumetric DDoS mitigation at the network edge, 24/7 DDoS Response Team (DRT) access, cost protection against scaling charges during attacks, and attack diagnostics. WAF controls protect against application-layer attacks but do not protect against volumetric network-layer DDoS that exhausts bandwidth or connection capacity before WAF can evaluate requests. A 100 Gbps UDP flood cannot be mitigated by WAF rules — it requires scrubbing at the network edge. For PHI and financial services, unmitigated DDoS is both an operational and compliance risk — HIPAA and PCI-DSS require availability of regulated systems.
 
 **Remediation:** Subscribe to AWS Shield Advanced via the Shield console or API. Register all internet-facing resources (ALBs, NLBs, CloudFront distributions, Route 53 hosted zones, Elastic IPs) as protected resources. Configure Route 53 health checks for protected resources to enable proactive engagement by the DDoS Response Team.
+
+---
+
+### CTL.SNS.ALARM.DELETETOPIC.001
+
+**No CloudWatch Alarm for SNS DeleteTopic**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: SI-4; iso_27001_2022: A.8.16, A.5.30; nist_800_53_r5: AU-6, IR-4, SI-4, CP-10; pci_dss_v4.0: 10.6, 10.7; soc2: CC7.2, CC7.3, A1.2;
+
+No CloudWatch alarm is wired to a CloudTrail metric filter on the DeleteTopic API call. DeleteTopic permanently removes the topic and all its subscriptions; if the topic is an alarm notification target, every CloudWatch alarm that references it becomes a ghost reference. Without an alarm, topic deletion is invisible until alarms fail to notify — which may be hours or days later. Companion to CTL.SNS.GHOST.ALARM.001 (SNS-1): the ghost-alarm control detects the STATE (topic already deleted, alarms reference it); this control detects the EVENT (deletion happening now), enabling immediate response before the notification chain breaks.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = DeleteTopic scoped to the topic's ARN, then a CloudWatch alarm with threshold 1 and a 60-second period so the deletion call pages on-call within seconds: aws logs put-metric-filter --filter-pattern '{ $.eventName = "DeleteTopic" && $.requestParameters.topicArn = "*<topic-name>*" }' followed by aws cloudwatch put-metric-alarm. Deletion cannot be undone, but a fast notification lets the team capture context for forensics, recreate the topic, and repoint alarm actions before the next alarm fires into a ghost reference.
+
+---
+
+### CTL.SNS.ALARM.DELIVERYFAILURE.001
+
+**No CloudWatch Alarm for SNS Delivery Failures**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.4; fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: SI-4, IR-4, IR-5; pci_dss_v4.0: 10.6, 10.7; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm is wired to the SNS metric NumberOfNotificationsFailed for this topic. Delivery failures indicate that subscribers are not receiving messages — the publish API returned success (SNS accepted the message) but delivery to one or more subscribers failed: HTTP endpoint down, Lambda erroring, SQS permission denied, endpoint throttled. Without an alarm, delivery failures accumulate without notification. Companion to the per- subscription DLQ control (CTL.SNS.SUBSCRIPTION.NODLQ.001) and the delivery status logging control (CTL.SNS.DELIVERY.STATUS.DISABLED.001): the alarm provides real-time signal; the DLQ preserves the failed messages; the logging records the per-attempt detail.
+
+**Remediation:** Create a CloudWatch alarm on AWS/SNS NumberOfNotificationsFailed dimensioned by the topic ARN with a non-zero threshold and a short evaluation period (5 minutes is a reasonable starting point): aws cloudwatch put-metric-alarm --alarm-name sns-<topic>-delivery-failures --metric-name NumberOfNotificationsFailed --namespace AWS/SNS --dimensions Name=TopicName,Value=<name> --statistic Sum --threshold 1 --period 300 --evaluation-periods 1 --comparison-operator GreaterThanOrEqualToThreshold.
+
+---
+
+### CTL.SNS.ALARM.PUBLISHED.001
+
+**No CloudWatch Alarm for SNS Messages Published Spike**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: SI-4, IR-4; pci_dss_v4.0: 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm monitors the SNS NumberOfMessagesPublished metric for anomalous spikes. A sudden spike may indicate upstream system failure (error events flooding the topic), confused deputy exploitation (an attacker injecting messages through an over-permissive topic policy), application bug (an infinite loop publishing notifications), or a legitimate traffic burst. Without an alarm the anomaly is invisible — by the time the team notices through downstream effects (subscriber overload, cost, throttling) the volume has already done its damage. Same anomaly-detection pattern as CTL.SQS.ALARM.SENT.001 for queues.
+
+**Remediation:** Create a CloudWatch anomaly-detection alarm on AWS/SNS NumberOfMessagesPublished dimensioned by topic ARN. Anomaly detection adapts to the topic's normal traffic pattern; static thresholds are inappropriate because legitimate publish volume varies widely between low-traffic alarm notification topics and high-traffic event fan-out topics. Use aws cloudwatch put-metric-alarm with --threshold-metric-id pointing to an anomaly detection band.
+
+---
+
+### CTL.SNS.ALARM.SMSSPEND.001
+
+**No CloudWatch Alarm for SNS SMS Spending**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: SI-4, AU-12; pci_dss_v4.0: 10.6; soc2: CC7.2, A1.2;
+
+No CloudWatch alarm monitors the SNS SMSMonthToDateSpentUSD metric. SNS SMS delivery incurs per-message cost that varies by destination country and can be substantially higher than the cost of any other SNS protocol. Without a spend alarm: a misconfigured application can publish thousands of SMS notifications, an attacker exploiting a confused-deputy gap can trigger SMS to every E.164 they control, a traffic burst into an SMS topic incurs proportional cost. AWS provides a monthly SMS spend limit but without an alarm the limit is hit without warning. Fires only on topics with SMS subscriptions or accounts using SNS SMS — most topics use SQS/Lambda/HTTP and SMS spend is irrelevant.
+
+**Remediation:** Create a CloudWatch alarm on AWS/SNS SMSMonthToDateSpentUSD with a threshold below the monthly SMS spend limit (so the alarm fires before the limit is reached): aws cloudwatch put-metric-alarm --alarm-name sns-sms-spend --metric-name SMSMonthToDateSpentUSD --namespace AWS/SNS --statistic Maximum --threshold <budget-fraction> --period 3600 --evaluation-periods 1 --comparison-operator GreaterThanThreshold. Pair with the account-level monthly SMS spend limit (aws sns set-sms-attributes MonthlySpendLimit) so the alarm gives advance warning before delivery is hard-stopped.
+
+---
+
+### CTL.SNS.AUDIT.DATAEVENTS.001
+
+**CloudTrail Data Events Not Enabled for SNS**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 3.2; fedramp_moderate: AU-2; hipaa: 164.312(b); iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-3, AU-12; pci_dss_v4.0: 10.1, 10.2; soc2: CC7.1, CC7.2;
+
+CloudTrail is not configured to log SNS data events (Publish). Management events (CreateTopic, DeleteTopic, SetTopicAttributes, Subscribe) are recorded by default but Publish operations are not. For alarm notification topics, data events answer the legitimacy question: was that notification published by a real CloudWatch alarm or by an attacker leveraging an over-permissive topic policy? For topics carrying business events, data events provide the per-message audit trail required for compliance regimes that require knowing who sent what. Cost note: SNS Publish data events generate moderate log volume — lower than SQS (which has both Send and Receive per message) but still significant for high-traffic topics; the control is medium severity because the cost tradeoff is real.
+
+**Remediation:** Add an SNS data-event selector to a CloudTrail trail covering this topic: aws cloudtrail put-event-selectors --trail-name <trail> --advanced-event-selectors '[{"Name":"SNS data events","FieldSelectors": [{"Field":"eventCategory","Equals":["Data"]}, {"Field":"resources.type","Equals":["AWS::SNS::Topic"]}, {"Field":"resources.ARN","Equals":["<topic-arn>"]}]}]'. Restrict the resource ARN selector to security-sensitive topics (alarm-notification, financial-event, compliance-event topics) so the data-event volume cost stays bounded. Verify the trail's S3 destination is in the same organization with appropriate access controls.
+
+---
+
+### CTL.SNS.DELIVERY.LOG.RETENTION.001
+
+**SNS Delivery Status Log Group Has Insufficient Retention**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-11; hipaa: 164.312(b); nist_800_53_r5: AU-11; pci_dss_v4.0: 10.5.1; soc2: CC7.2;
+
+SNS delivery status CloudWatch log group has no retention policy (logs retained forever — costly) or retention shorter than 365 days (forensic horizon insufficient). Same baseline pattern as CTL.LAMBDA.LOG.RETENTION.001 and CTL.RDS.LOG.RETENTION.001 — consistent retention floor for every CloudWatch log group across the catalog. Fires only when delivery status logging is enabled (otherwise CTL.SNS.DELIVERY.STATUS.DISABLED.001 covers the wider failure of having no logs at all).
+
+**Remediation:** Set retentionInDays on the delivery status log group to 365 or higher (3653 = 10 years for long-retention compliance workloads). Use put-retention-policy on the log group, or set retention via the CloudFormation/ Terraform resource that owns it. The 365-day floor matches the catalog-wide retention baseline used by Lambda, RDS, ECS, API Gateway, and Route 53 query logs.
+
+---
+
+### CTL.SNS.DELIVERY.STATUS.DISABLED.001
+
+**SNS Topic Has No Delivery Status Logging**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: AU-2; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-3, AU-6, AU-11; pci_dss_v4.0: 10.1, 10.7; soc2: CC7.1, CC7.2;
+
+SNS topic does not have delivery status logging enabled for any subscription protocol (HTTP/HTTPS, SQS, Lambda, application/mobile push). Without delivery status logging there is no SNS-side record of whether messages reached subscribers — delivery successes and failures are invisible. A subscription to a failing endpoint (HTTP timeout, Lambda error, SQS permission denied) fails silently; the publish API returned success, the subscriber never received the message, and nothing was logged in between. The publisher has no signal of delivery failure; the only way to know whether messages reached subscribers is to inspect the subscriber side, which is impossible if the subscriber is itself failing.
+
+**Remediation:** Enable delivery status logging per protocol on the topic: aws sns set-topic-attributes --topic-arn <arn> --attribute-name HTTPSuccessFeedbackRoleArn --attribute-value <role-arn> (and FailureFeedbackRoleArn, SuccessFeedbackSampleRate). Repeat for SQS, Lambda, and Application protocols by setting SQSSuccessFeedbackRoleArn, LambdaSuccessFeedbackRoleArn, etc. Each protocol is configured independently; enable logging for every protocol that the topic uses. Delivery status logs go to CloudWatch Logs and record outcome, error code, and delivery time.
+
+---
+
+### CTL.SNS.DELIVERY.STATUS.PARTIAL.001
+
+**SNS Topic Has Delivery Status Logging for Some Protocols But Not All**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: AU-2; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-3, AU-6; pci_dss_v4.0: 10.1, 10.7; soc2: CC7.1, CC7.2;
+
+SNS topic has delivery status logging enabled for some subscription protocols but not all. For example: delivery logging is configured for SQS subscriptions but not for HTTP/HTTPS subscriptions, or for Lambda but not for SQS. Delivery failures on the unlogged protocols are invisible while the logged protocols have full visibility — the gap is systematically uneven across protocols, not absent. Distinct from CTL.SNS.DELIVERY.STATUS.DISABLED.001 (no logging at all): this control fires when at least one protocol IS logged but at least one protocol used by the topic is NOT.
+
+**Remediation:** For each subscription_protocol used by the topic, configure the matching SuccessFeedbackRoleArn and FailureFeedbackRoleArn on the topic. Aim for parity: every protocol the topic delivers to should record delivery outcomes. Inspect properties.messaging.sns.unlogged_protocols to identify which protocols are missing coverage.
 
 ---
 

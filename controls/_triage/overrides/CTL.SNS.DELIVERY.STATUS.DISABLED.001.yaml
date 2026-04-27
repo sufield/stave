@@ -1,0 +1,21 @@
+control: CTL.SNS.DELIVERY.STATUS.DISABLED.001
+defect: >
+  SNS topic has no delivery status logging enabled for any
+  protocol.
+infection: >
+  SNS delivery status logging records the outcome of every
+  message delivery attempt: success, failure, error code,
+  delivery time, and subscriber endpoint. Without delivery
+  status logging: a subscription to a failing HTTP endpoint
+  retries and discards messages without any record. A Lambda
+  subscription that errors on every invocation produces no
+  delivery log. An SQS subscription that fails due to
+  permission changes generates no delivery record. The only
+  way to know whether messages reached subscribers is to check
+  the subscriber side — if the subscriber is down, there's no
+  record anywhere. Delivery status logging provides the
+  SNS-side delivery outcome independent of subscriber health.
+failure: >
+  No delivery outcome visibility. Message delivery successes
+  and failures are unrecorded. Failing subscriptions are
+  invisible.

@@ -1,0 +1,22 @@
+id: sns_notification_integrity
+description: >
+  No DeleteTopic alarm plus either a ghost alarm action or no
+  delivery failure alarm. Topic deletion is undetected AND
+  either alarms already reference a deleted topic or
+  delivery failures are invisible. The notification
+  infrastructure is both vulnerable to disruption (deletion
+  goes unnoticed) and unmonitored (failures or already-broken
+  ghost actions persist). The detection-to-response chain
+  for every alarm routing through the topic is silently
+  broken. Threshold of 2 fires when the topic-governance
+  failure compounds with another notification-chain gap.
+controls:
+  - CTL.SNS.ALARM.DELETETOPIC.001
+  - CTL.SNS.GHOST.ALARM.001
+  - CTL.SNS.ALARM.DELIVERYFAILURE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

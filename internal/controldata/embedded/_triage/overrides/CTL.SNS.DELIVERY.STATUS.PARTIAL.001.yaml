@@ -1,0 +1,23 @@
+control: CTL.SNS.DELIVERY.STATUS.PARTIAL.001
+defect: >
+  SNS topic has delivery status logging for some subscription
+  protocols but not all.
+infection: >
+  Partial delivery logging produces an uneven failure surface.
+  The topic might log SQS deliveries (because SQS is the
+  primary subscriber pattern and the team enabled SQS
+  feedback) but not HTTP/HTTPS deliveries. An HTTP webhook
+  fails — no record. A Lambda subscription errors — no
+  record. The team trusts the delivery logs because some
+  protocols ARE logged, and silently assumes the unlogged
+  protocols are working (they wouldn't, after all, be unlogged
+  if they were important). The result is that the most
+  failure-prone protocols (HTTP/HTTPS, which depend on
+  external availability) often go uninstrumented, producing
+  the worst kind of observability gap: present-looking but
+  selectively blind.
+failure: >
+  Uneven delivery visibility. Some protocols are logged,
+  others aren't. The unlogged protocols' delivery failures
+  are invisible while the logged protocols give a false sense
+  of comprehensive coverage.

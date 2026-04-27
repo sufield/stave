@@ -1,0 +1,22 @@
+control: CTL.SNS.ALARM.DELIVERYFAILURE.001
+defect: >
+  SNS topic has no CloudWatch alarm for
+  NumberOfNotificationsFailed metric.
+infection: >
+  NumberOfNotificationsFailed counts delivery attempts that
+  failed — the message was published to the topic but didn't
+  reach the subscriber. The publish API returns success (the
+  message was accepted by SNS) but delivery to one or more
+  subscribers failed. Without an alarm: a subscription to a
+  dead HTTP endpoint fails on every delivery — hundreds of
+  failures accumulate without notification. A Lambda
+  subscription that errors due to a code bug fails repeatedly.
+  An SQS subscription that fails due to a removed queue
+  policy produces delivery failures. The publisher has no
+  indication — their Publish call succeeded. The subscriber
+  has no indication — they never receive the message. Only
+  the delivery failure alarm detects the gap.
+failure: >
+  Undetected delivery failures. Messages published successfully
+  but not delivered to subscribers. Neither publisher nor
+  subscriber is aware.

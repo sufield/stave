@@ -1,0 +1,20 @@
+control: CTL.SNS.ALARM.DELETETOPIC.001
+defect: >
+  SNS topic has no alarm wired to CloudTrail DeleteTopic
+  events.
+infection: >
+  DeleteTopic permanently removes the topic and all its
+  subscriptions. For alarm notification topics, this creates
+  a ghost reference on every CloudWatch alarm that references
+  the topic. The alarms continue firing — but their
+  notification actions fail silently because the topic no
+  longer exists. A DeleteTopic alarm provides seconds-to-
+  minutes notification: the team can verify the deletion was
+  intentional, recreate the topic if accidental, update
+  alarm actions to a new topic. Without the alarm, the
+  deletion is discovered when the next alarm fires and
+  nobody is notified — which may be hours or days later.
+failure: >
+  Undetected topic deletion. Topic and all subscriptions
+  deleted without notification. Every referencing alarm
+  becomes a ghost.

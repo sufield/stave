@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.ALARM.PUBLISHED.001
+name: No CloudWatch Alarm for SNS Messages Published Spike
+description: >
+  No CloudWatch alarm monitors the SNS
+  NumberOfMessagesPublished metric for anomalous spikes. A
+  sudden spike may indicate upstream system failure (error
+  events flooding the topic), confused deputy exploitation
+  (an attacker injecting messages through an over-permissive
+  topic policy), application bug (an infinite loop publishing
+  notifications), or a legitimate traffic burst. Without an
+  alarm the anomaly is invisible — by the time the team
+  notices through downstream effects (subscriber overload,
+  cost, throttling) the volume has already done its damage.
+  Same anomaly-detection pattern as CTL.SQS.ALARM.SENT.001
+  for queues.
+domain: detection
+severity: medium
+compliance:
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "SI-4, IR-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SNS topic has no CloudWatch alarm on the
+    NumberOfMessagesPublished metric. Anomalous publish
+    spikes are invisible.
+  action: >
+    Create a CloudWatch anomaly-detection alarm on AWS/SNS
+    NumberOfMessagesPublished dimensioned by topic ARN. Anomaly
+    detection adapts to the topic's normal traffic pattern;
+    static thresholds are inappropriate because legitimate
+    publish volume varies widely between low-traffic alarm
+    notification topics and high-traffic event fan-out topics.
+    Use aws cloudwatch put-metric-alarm with
+    --threshold-metric-id pointing to an anomaly detection
+    band.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "topic_arn": "arn:aws:sns:us-east-1:111122223333:alerts",
+          "alarm_published": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.alarm_published
+      op: eq
+      value: false
+defect: >
+  SNS topic has no CloudWatch alarm for
+  NumberOfMessagesPublished anomalies.
+infection: >
+  Publish-volume spikes have multiple legitimate and
+  malicious causes. Upstream system in error loop: a
+  misconfigured caller publishes the same alarm event
+  thousands of times per minute. Confused deputy exploitation:
+  an attacker leveraging a topic policy that grants Publish
+  to a service principal without aws:SourceArn fan-outs
+  payloads to every subscriber. Application bug: a feature
+  flag flip causes a publish on every request instead of
+  every error. Legitimate traffic burst: a marketing campaign
+  sends real notifications. Without an alarm, the team
+  learns about the spike from downstream effects — subscriber
+  overload, AWS bill, throttling — by which point the volume
+  has already cost money and pushed bad data to subscribers.
+failure: >
+  Undetected publish anomalies. Spikes (legitimate or
+  malicious) are invisible until downstream effects surface.
+tests:
+  - name: topic without published alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:alerts"
+            alarm_published: false
+  - name: topic with published alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:alerts"
+            alarm_published: true

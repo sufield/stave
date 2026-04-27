@@ -1,0 +1,23 @@
+id: sns_delivery_invisible
+description: >
+  No delivery status logging plus either no delivery failure
+  alarm or a known ghost SQS subscription. Delivery outcomes
+  are unrecorded AND either failures aren't alerted in real
+  time or a known-broken subscription target exists. Messages
+  fail delivery with zero visibility — the publisher's
+  Publish call returns success, the subscribers never receive
+  anything, and nothing is logged or alarmed in between.
+  Threshold of 2 fires when the topic is missing both an
+  audit surface (delivery status logs) and a real-time
+  signal (delivery failure alarm) or has a known broken
+  subscription target compounding the gap.
+controls:
+  - CTL.SNS.DELIVERY.STATUS.DISABLED.001
+  - CTL.SNS.ALARM.DELIVERYFAILURE.001
+  - CTL.SNS.GHOST.SUBSCRIPTION.SQS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

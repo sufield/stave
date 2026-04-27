@@ -1,0 +1,22 @@
+control: CTL.SNS.AUDIT.DATAEVENTS.001
+defect: >
+  SNS topic is not covered by a CloudTrail data-event
+  selector; Publish operations are unrecorded.
+infection: >
+  Management events (CreateTopic, DeleteTopic,
+  SetTopicAttributes) are logged in CloudTrail by default.
+  Data events — the Publish operations — are not. Without
+  data events, who published which message to which topic is
+  unknown. For an alarm notification topic, this is the
+  legitimacy question: when an alarm notification was
+  published, was it published by the legitimate CloudWatch
+  alarm or by an attacker leveraging a confused-deputy gap
+  in the topic policy? Without data events the records are
+  indistinguishable: both produce a notification at the
+  subscriber. Data events provide the per-Publish principal,
+  source IP, and request parameters that distinguish
+  legitimate from injected events.
+failure: >
+  No message-level audit trail. Publish operations are
+  unrecorded; legitimate and injected notifications are
+  indistinguishable in post-incident review.

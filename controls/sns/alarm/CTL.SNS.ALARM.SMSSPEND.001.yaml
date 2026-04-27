@@ -1,0 +1,134 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.ALARM.SMSSPEND.001
+name: No CloudWatch Alarm for SNS SMS Spending
+description: >
+  No CloudWatch alarm monitors the SNS SMSMonthToDateSpentUSD
+  metric. SNS SMS delivery incurs per-message cost that
+  varies by destination country and can be substantially
+  higher than the cost of any other SNS protocol. Without a
+  spend alarm: a misconfigured application can publish
+  thousands of SMS notifications, an attacker exploiting a
+  confused-deputy gap can trigger SMS to every E.164 they
+  control, a traffic burst into an SMS topic incurs
+  proportional cost. AWS provides a monthly SMS spend limit
+  but without an alarm the limit is hit without warning.
+  Fires only on topics with SMS subscriptions or accounts
+  using SNS SMS — most topics use SQS/Lambda/HTTP and SMS
+  spend is irrelevant.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.2"
+  nist_800_53_r5: "SI-4, AU-12"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    SNS account/topic with SMS subscriptions has no alarm on
+    SMSMonthToDateSpentUSD. SMS costs can spike unbounded
+    until the monthly limit is hit.
+  action: >
+    Create a CloudWatch alarm on AWS/SNS
+    SMSMonthToDateSpentUSD with a threshold below the
+    monthly SMS spend limit (so the alarm fires before the
+    limit is reached): aws cloudwatch put-metric-alarm
+    --alarm-name sns-sms-spend --metric-name
+    SMSMonthToDateSpentUSD --namespace AWS/SNS --statistic
+    Maximum --threshold <budget-fraction> --period 3600
+    --evaluation-periods 1 --comparison-operator
+    GreaterThanThreshold. Pair with the account-level monthly
+    SMS spend limit (aws sns set-sms-attributes
+    MonthlySpendLimit) so the alarm gives advance warning
+    before delivery is hard-stopped.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "topic_arn": "arn:aws:sns:us-east-1:111122223333:sms-alerts",
+          "has_sms_subscriptions": true,
+          "alarm_sms_spend": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.has_sms_subscriptions
+      op: eq
+      value: true
+    - field: properties.messaging.sns.alarm_sms_spend
+      op: eq
+      value: false
+defect: >
+  SNS topic with SMS subscriptions has no SMS spend alarm.
+infection: >
+  SNS SMS costs are uniquely high among SNS protocols and
+  vary by destination country (US: ~$0.0075/msg; some
+  international destinations >$0.10/msg). Without an alarm:
+  a misconfigured application that publishes SMS on every
+  request instead of every error generates rapid spend; a
+  confused-deputy gap that lets an attacker publish to the
+  topic with attacker-controlled phone-number subscribers
+  generates spend on attacker-chosen destinations. The
+  monthly SMS spend limit hard-stops delivery — but it stops
+  delivery, not spend visibility, and there is no early
+  signal between "spend is normal" and "delivery is blocked
+  because the limit was hit".
+failure: >
+  Unmonitored SMS spend. Cost spikes (legitimate or
+  malicious) are invisible until the monthly spend limit is
+  hit and SMS delivery is hard-stopped.
+tests:
+  - name: topic with SMS subscriptions and no spend alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:sms-alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:sms-alerts"
+            has_sms_subscriptions: true
+            alarm_sms_spend: false
+  - name: topic with SMS subscriptions and spend alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:sms-alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:sms-alerts"
+            has_sms_subscriptions: true
+            alarm_sms_spend: true
+  - name: topic with no SMS subscriptions does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:webhooks"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:webhooks"
+            has_sms_subscriptions: false
+            alarm_sms_spend: false
