@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.ALARM.PURGE.001
+name: No CloudWatch Alarm for SQS PurgeQueue
+description: >
+  No CloudWatch alarm is wired to a CloudTrail metric filter
+  on the PurgeQueue API call. PurgeQueue is mass deletion —
+  a single API call removes every message from the queue
+  immediately, irreversibly, with no DLQ preservation. Without
+  an alarm a queue can be purged accidentally, maliciously, or
+  by automation with no real-time notification; the team
+  discovers the loss only when downstream systems report
+  missing data. Pairs with CTL.SQS.POLICY.PURGE.001 (SQS-2)
+  which checks who can issue PurgeQueue; this control checks
+  whether the issuance is monitored. The dangerous combination
+  is "permitted broadly AND undetected", caught by the
+  sqs_destructive_undetected chain.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3, A1.2"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.6, 10.7"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16, A.5.30"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    SQS queue has no alarm on the PurgeQueue API call. Mass
+    deletion can occur without real-time notification.
+  action: >
+    Create a CloudTrail metric filter on
+    eventName = PurgeQueue scoped to the queue's ARN, then a
+    CloudWatch alarm with threshold 1 and a 60-second period
+    so a single PurgeQueue call pages on-call within seconds:
+    aws logs put-metric-filter
+    --filter-pattern '{ $.eventName = "PurgeQueue" &&
+    $.requestParameters.queueUrl = "*<queue-name>*" }'
+    followed by aws cloudwatch put-metric-alarm.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "alarm_purge": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.alarm_purge
+      op: eq
+      value: false
+defect: >
+  SQS queue has no alarm wired to CloudTrail PurgeQueue events.
+infection: >
+  PurgeQueue is the most destructive SQS operation — a single
+  API call deletes every message in the queue. Unlike
+  DeleteMessage (one message at a time), PurgeQueue is mass
+  deletion. Without an alarm, an attacker with sqs:PurgeQueue
+  can wipe the production queue at 2 a.m. and nobody is paged.
+  At 8 a.m., the team discovers six hours of messages are
+  missing. Downstream systems have six hours of unprocessed
+  events. Financial reconciliation is broken; customer orders
+  are lost. A PurgeQueue alarm with a 60-second period
+  provides seconds-to-minutes notification — enough for the
+  team to investigate while the operation is still recent.
+failure: >
+  Undetected mass message deletion. The queue can be wiped
+  without real-time notification; recovery is impossible
+  because purged messages bypass the DLQ.
+tests:
+  - name: queue without purge alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            alarm_purge: false
+  - name: queue with purge alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            alarm_purge: true
+  - name: broad purge AND no alarm fires (compound with SQS-2)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            alarm_purge: false
+            purge_broadly_granted: true
+            policy_purge_principals:
+              - "arn:aws:iam::111122223333:role/*"

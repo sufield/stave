@@ -1,0 +1,22 @@
+control: CTL.SQS.AUDIT.DATAEVENTS.001
+defect: >
+  SQS queue is not covered by a CloudTrail data-event
+  selector; message operations are unrecorded.
+infection: >
+  Management events (CreateQueue, DeleteQueue,
+  SetQueueAttributes) are logged in CloudTrail by default.
+  Data events — the message operations — are not. Without
+  data events, who sent a message to the queue is unknown
+  (was it the legitimate SNS topic or an attacker?), who
+  received a message is unknown (was it the authorized
+  consumer or an unauthorized reader?), and who deleted
+  messages is unknown (was it the consumer after processing
+  or a PurgeQueue from an attacker?). For queues processing
+  sensitive data — PII, financial transactions, healthcare
+  events — data events are the only message-level audit trail
+  available; without them, post-incident investigation cannot
+  determine whether messages were exfiltrated.
+failure: >
+  No message-level audit trail. Send, receive, and delete
+  operations are unrecorded; post-incident attribution is
+  impossible.

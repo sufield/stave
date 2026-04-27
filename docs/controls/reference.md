@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1707
-**Pack hash:** `653ed70b898c73a7dc4226ce509103672624ccae5dff9f1e55241aa39939477f`
+**Total controls:** 1715
+**Pack hash:** `0b4426a00625ff5155412a35a0d7f884b72069faddfbaf9e299c9505bc7ab4f9`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 189 |
-| high | 751 |
+| critical | 190 |
+| high | 755 |
 | info | 16 |
 | low | 122 |
-| medium | 629 |
+| medium | 632 |
 
 | Domain | Count |
 |--------|-------|
@@ -22,7 +22,7 @@
 | audit | 33 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 59 |
+| detection | 67 |
 | encryption | 92 |
 | exposure | 952 |
 | governance | 150 |
@@ -23363,6 +23363,126 @@ SNS topic policies must not grant access to principal ARNs that don't exist in t
 SNS topic resource policies must not grant sns:Subscribe, sns:Publish, or sns:* to Principal "*" or to unauthenticated principals without restricting via aws:SourceArn, aws:SourceAccount, or aws:PrincipalOrgID conditions. Public topic access allows unauthorized subscription (receiving all published messages) or publishing (injecting messages that reach all subscribers, potentially triggering downstream Lambda functions, SQS queues, or HTTP endpoints).
 
 **Remediation:** Restrict the topic policy to specific account IDs, source ARNs, or add an aws:PrincipalOrgID condition. For cross-service integration (e.g., S3 event → SNS), restrict via aws:SourceArn to the specific source ARN.
+
+---
+
+### CTL.SQS.ALARM.AGE.001
+
+**No CloudWatch Alarm for SQS Queue Oldest Message Age**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16, A.5.30; nist_800_53_r5: SI-4, AU-11; pci_dss_v4.0: 10.6; soc2: CC7.2, A1.2;
+
+No CloudWatch alarm watches the ApproximateAgeOfOldestMessage metric on the SQS source queue. Message age measures processing latency: a 5-second- old message is normal; a 3-hour-old message means consumers are far behind; a 3-day-old message is approaching the default 4-day retention and will expire if not consumed. For time-sensitive workloads (payment processing, order fulfillment, real-time notifications), age directly measures the delay customers experience. Companion to CTL.SQS.ALARM.DEPTH.001 — depth catches accumulation, age catches stalled processing even when arrival and consumption rates are roughly balanced.
+
+**Remediation:** Set the threshold to the longest acceptable processing-latency budget for the workload (e.g., 1 hour for real-time, 24 hours for batch). The alarm should fire well before the queue retention period: aws cloudwatch put-metric-alarm --alarm-name SQS-Age-<queue-name> --metric-name ApproximateAgeOfOldestMessage --namespace AWS/SQS --statistic Maximum --period 300 --evaluation-periods 2 --threshold 3600 --comparison-operator GreaterThanThreshold --dimensions Name=QueueName,Value=<queue-name> --alarm-actions <sns-topic-arn>.
+
+---
+
+### CTL.SQS.ALARM.DELETEQUEUE.001
+
+**No CloudWatch Alarm for SQS DeleteQueue**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: SI-4; iso_27001_2022: A.8.16, A.5.30; nist_800_53_r5: AU-6, IR-4, SI-4, CP-10; pci_dss_v4.0: 10.6, 10.7; soc2: CC7.2, CC7.3, A1.2;
+
+No CloudWatch alarm is wired to a CloudTrail metric filter on the DeleteQueue API call. DeleteQueue is permanent — the queue and all its messages are gone in a single call, every producer and consumer starts erroring, and the messages are unrecoverable. Unlike PurgeQueue (which keeps the queue alive), DeleteQueue removes the resource itself. Without an alarm a queue can be deleted accidentally or maliciously without real-time notification; the team discovers the loss only when downstream traffic surfaces errors. Companion to CTL.SQS.ALARM.PURGE.001 — both monitor catastrophic destructive operations.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = DeleteQueue scoped to the queue's ARN, then a CloudWatch alarm with threshold 1 and a 60-second period so the deletion call pages on-call within seconds: aws logs put-metric-filter --filter-pattern '{ $.eventName = "DeleteQueue" && $.requestParameters.queueUrl = "*<queue-name>*" }' followed by aws cloudwatch put-metric-alarm. Deletion cannot be undone, but a fast notification lets the team capture context for forensics and accelerate downstream recovery.
+
+---
+
+### CTL.SQS.ALARM.DEPTH.001
+
+**No CloudWatch Alarm for SQS Queue Depth**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: SI-4; iso_27001_2022: A.8.16, A.5.30; nist_800_53_r5: SI-4, IR-4; pci_dss_v4.0: 10.6; soc2: CC7.2, CC7.3, A1.2;
+
+No CloudWatch alarm watches the ApproximateNumberOfMessagesVisible metric on the SQS source queue. Queue depth is the primary indicator of consumer health: a healthy consumer drains the queue as fast as messages arrive, so depth stays near zero. A growing depth means consumers stopped (Lambda throttled, ECS task crashed, application error) or traffic spiked beyond consumer capacity. Without an alarm, the queue fills silently until retention expires and messages are permanently deleted. Companion to CTL.SQS.ALARM.DLQ.DEPTH.001 — that fires on dead-letter queues; this fires on source queues. The is_dlq guard prevents double-firing.
+
+**Remediation:** Set the threshold to a value the consumer should never legitimately see — for low-traffic queues that's a few hundred messages; for high-traffic queues, a multiple of expected steady-state depth. Use: aws cloudwatch put-metric-alarm --alarm-name SQS-Depth-<queue-name> --metric-name ApproximateNumberOfMessagesVisible --namespace AWS/SQS --statistic Average --period 300 --evaluation-periods 2 --threshold <choose-per-queue> --comparison-operator GreaterThanThreshold --dimensions Name=QueueName,Value=<queue-name> --alarm-actions <sns-topic-arn>.
+
+---
+
+### CTL.SQS.ALARM.DLQ.AGE.001
+
+**No CloudWatch Alarm for SQS Dead-Letter Queue Message Age**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16, A.8.15; nist_800_53_r5: SI-4, AU-11; pci_dss_v4.0: 10.6; soc2: CC7.2, A1.2;
+
+No CloudWatch alarm watches the ApproximateAgeOfOldestMessage metric on the SQS dead-letter queue. An aging DLQ message means one of three things: messages arrived but were never investigated (abandoned DLQ), the investigation is stuck (team saw the messages but the underlying issue is unresolved), or the DLQ consumer is failing itself (recursive failure). If the oldest message approaches the queue retention period (default 4 days, max 14), it expires and is permanently deleted — the failure evidence is lost. Pairs with CTL.SQS.ALARM.DLQ.DEPTH.001 — depth catches accumulation, age catches stalled investigation. Fires only on dead-letter queues.
+
+**Remediation:** Create the alarm with a threshold one day below the queue's retention period (e.g., 3 days for the default 4-day retention) so an investigator has at least a day's notice before messages expire: aws cloudwatch put-metric-alarm --alarm-name SQS-DLQ-Age-<queue-name> --metric-name ApproximateAgeOfOldestMessage --namespace AWS/SQS --statistic Maximum --period 300 --evaluation-periods 1 --threshold 259200 --comparison-operator GreaterThanThreshold --dimensions Name=QueueName,Value=<dlq-name> --alarm-actions <sns-topic-arn>.
+
+---
+
+### CTL.SQS.ALARM.DLQ.DEPTH.001
+
+**No CloudWatch Alarm for SQS Dead-Letter Queue Depth**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: SI-4; iso_27001_2022: A.8.16, A.5.30; nist_800_53_r5: SI-4, IR-4, IR-5; pci_dss_v4.0: 10.6, 10.7; soc2: CC7.2, CC7.3, A1.2;
+
+No CloudWatch alarm watches the ApproximateNumberOfMessagesVisible metric on the SQS dead- letter queue. Failed messages accumulate in the DLQ without notification — the queue may have 10 messages or 10,000 messages and nobody learns until somebody opens the SQS console. This is the single most important SQS alarm: DLQ depth growing means messages are failing processing, the cause is unresolved, and the failure path is collecting data with no investigation. Same pattern as CTL.KMS.ALARM.DELETION.001 — the metric exists in CloudWatch by default, but nobody is paged on it without an explicit alarm. Fires only on queues that ARE dead-letter queues (is_dlq = true); source-queue depth is covered by CTL.SQS.ALARM.DEPTH.001.
+
+**Remediation:** Create the alarm with a threshold of 1 (any message in the DLQ pages on-call): aws cloudwatch put-metric-alarm --alarm-name SQS-DLQ-Depth-<queue-name> --metric-name ApproximateNumberOfMessagesVisible --namespace AWS/SQS --statistic Sum --period 60 --evaluation-periods 1 --threshold 1 --comparison-operator GreaterThanOrEqualToThreshold --dimensions Name=QueueName,Value=<dlq-name> --alarm-actions <sns-topic-arn>. Pair with CTL.SQS.DLQ.NOCONSUMER.001 — an alarm without a consumer is just a delayed-deletion notification. Do both.
+
+---
+
+### CTL.SQS.ALARM.PURGE.001
+
+**No CloudWatch Alarm for SQS PurgeQueue**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: SI-4; iso_27001_2022: A.8.16, A.5.30; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.6, 10.7; soc2: CC7.2, CC7.3, A1.2;
+
+No CloudWatch alarm is wired to a CloudTrail metric filter on the PurgeQueue API call. PurgeQueue is mass deletion — a single API call removes every message from the queue immediately, irreversibly, with no DLQ preservation. Without an alarm a queue can be purged accidentally, maliciously, or by automation with no real-time notification; the team discovers the loss only when downstream systems report missing data. Pairs with CTL.SQS.POLICY.PURGE.001 (SQS-2) which checks who can issue PurgeQueue; this control checks whether the issuance is monitored. The dangerous combination is "permitted broadly AND undetected", caught by the sqs_destructive_undetected chain.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = PurgeQueue scoped to the queue's ARN, then a CloudWatch alarm with threshold 1 and a 60-second period so a single PurgeQueue call pages on-call within seconds: aws logs put-metric-filter --filter-pattern '{ $.eventName = "PurgeQueue" && $.requestParameters.queueUrl = "*<queue-name>*" }' followed by aws cloudwatch put-metric-alarm.
+
+---
+
+### CTL.SQS.ALARM.SENT.001
+
+**No CloudWatch Alarm for SQS Messages Sent Spike**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm watches the NumberOfMessagesSent metric for anomalous spikes. A sudden producer-side spike usually signals one of: an upstream system failure flooding the queue with error events, a denial-of-service attempt sending messages to the queue, an application bug producing messages in a loop, or a legitimate traffic surge (flash sale, marketing event). All four warrant operator attention; an alarm distinguishes them. Use anomaly-detection or percentage-deviation thresholds rather than static counts — the right "spike" depends on the queue's baseline volume.
+
+**Remediation:** Use CloudWatch anomaly detection rather than a static threshold so the alarm adapts to the queue's baseline: aws cloudwatch put-metric-alarm --alarm-name SQS-Sent-Anomaly-<queue-name> --metric-name NumberOfMessagesSent --namespace AWS/SQS --statistic Sum --period 300 --evaluation-periods 2 --comparison-operator GreaterThanUpperThreshold --thresholds-metric-id e1 --metrics ... --dimensions Name=QueueName,Value=<queue-name> --alarm-actions <sns-topic-arn>. Alternatively, set a percentage-deviation alarm against the same metric's prior-week baseline.
+
+---
+
+### CTL.SQS.AUDIT.DATAEVENTS.001
+
+**CloudTrail Data Events Not Enabled for SQS**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 3.2; fedramp_moderate: AU-2; hipaa: 164.312(b); iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-3, AU-12; pci_dss_v4.0: 10.1, 10.2, 10.3; soc2: CC7.1, CC7.2;
+
+CloudTrail is not configured to log SQS data events (SendMessage, ReceiveMessage, DeleteMessage, PurgeQueue). Management events (CreateQueue, DeleteQueue, SetQueueAttributes) are recorded by default — but the message-level operations are not. Without data events there is no audit trail for who sent which message, who received which message, or who deleted messages. For queues carrying PII, financial transactions, or healthcare events, the data-event record is the only message-level audit surface that exists. Cost note: SQS data events generate high log volume; the control is intentionally medium severity because the cost tradeoff is real and the right answer for low-sensitivity queues may be "no data events".
+
+**Remediation:** Add an SQS data-event selector to a CloudTrail trail covering this queue: aws cloudtrail put-event-selectors --trail-name <trail> --advanced-event-selectors '[{"Name":"SQS data events","FieldSelectors": [{"Field":"eventCategory","Equals":["Data"]}, {"Field":"resources.type","Equals":["AWS::SQS::Queue"]}, {"Field":"resources.ARN","Equals":["<queue-arn>"]}]}]'. Restrict the resource ARN selector to security-sensitive queues so the data-event volume cost stays bounded. Verify the trail's S3 destination is in the same organization with appropriate access controls.
 
 ---
 

@@ -1,0 +1,21 @@
+id: sqs_destructive_undetected
+description: >
+  No PurgeQueue alarm plus either no DeleteQueue alarm or
+  broad PurgeQueue permission. Mass-deletion operations
+  (PurgeQueue and DeleteQueue) are undetected AND either
+  queue-deletion is also undetected or PurgeQueue is broadly
+  permitted. The dangerous combination is "permitted broadly
+  AND undetected" — an attacker (or a misconfigured automation
+  script) can wipe the queue without anyone being paged.
+  Threshold of 2 fires when the destructive surface is both
+  open and silent.
+controls:
+  - CTL.SQS.ALARM.PURGE.001
+  - CTL.SQS.ALARM.DELETEQUEUE.001
+  - CTL.SQS.POLICY.PURGE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - resource_policy_escalation
+postconditions:
+  - data_destruction

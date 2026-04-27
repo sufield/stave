@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.AUDIT.DATAEVENTS.001
+name: CloudTrail Data Events Not Enabled for SQS
+description: >
+  CloudTrail is not configured to log SQS data events
+  (SendMessage, ReceiveMessage, DeleteMessage, PurgeQueue).
+  Management events (CreateQueue, DeleteQueue,
+  SetQueueAttributes) are recorded by default — but the
+  message-level operations are not. Without data events
+  there is no audit trail for who sent which message, who
+  received which message, or who deleted messages. For queues
+  carrying PII, financial transactions, or healthcare events,
+  the data-event record is the only message-level audit
+  surface that exists. Cost note: SQS data events generate
+  high log volume; the control is intentionally medium
+  severity because the cost tradeoff is real and the right
+  answer for low-sensitivity queues may be "no data events".
+domain: detection
+severity: medium
+compliance:
+  cis_aws_v3.0: "3.2"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-2, AU-3, AU-12"
+  pci_dss_v4.0: "10.1, 10.2, 10.3"
+  fedramp_moderate: "AU-2"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-02", "LOG-13"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SQS queue has no CloudTrail data-event coverage. Message-
+    level operations are unrecorded.
+  action: >
+    Add an SQS data-event selector to a CloudTrail trail
+    covering this queue:
+    aws cloudtrail put-event-selectors --trail-name <trail>
+    --advanced-event-selectors
+    '[{"Name":"SQS data events","FieldSelectors":
+    [{"Field":"eventCategory","Equals":["Data"]},
+    {"Field":"resources.type","Equals":["AWS::SQS::Queue"]},
+    {"Field":"resources.ARN","Equals":["<queue-arn>"]}]}]'.
+    Restrict the resource ARN selector to security-sensitive
+    queues so the data-event volume cost stays bounded.
+    Verify the trail's S3 destination is in the same
+    organization with appropriate access controls.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "cloudtrail_data_events": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.cloudtrail_data_events
+      op: eq
+      value: false
+defect: >
+  SQS queue is not covered by a CloudTrail data-event
+  selector; message operations are unrecorded.
+infection: >
+  Management events (CreateQueue, DeleteQueue,
+  SetQueueAttributes) are logged in CloudTrail by default.
+  Data events — the message operations — are not. Without
+  data events, who sent a message to the queue is unknown
+  (was it the legitimate SNS topic or an attacker?), who
+  received a message is unknown (was it the authorized
+  consumer or an unauthorized reader?), and who deleted
+  messages is unknown (was it the consumer after processing
+  or a PurgeQueue from an attacker?). For queues processing
+  sensitive data — PII, financial transactions, healthcare
+  events — data events are the only message-level audit trail
+  available; without them, post-incident investigation cannot
+  determine whether messages were exfiltrated.
+failure: >
+  No message-level audit trail. Send, receive, and delete
+  operations are unrecorded; post-incident attribution is
+  impossible.
+tests:
+  - name: queue without data events fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            cloudtrail_data_events: false
+  - name: queue with data events passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            cloudtrail_data_events: true

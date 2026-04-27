@@ -1,0 +1,20 @@
+control: CTL.SQS.ALARM.SENT.001
+defect: >
+  SQS queue has no CloudWatch alarm on NumberOfMessagesSent
+  spikes.
+infection: >
+  A sudden NumberOfMessagesSent spike has four common causes
+  and all four are operator events: upstream failure flooding
+  the queue with error events, denial-of-service from an
+  attacker sending messages, application bug looping on
+  message production, or a legitimate traffic surge that may
+  exceed downstream capacity. Without an anomaly alarm, the
+  spike is invisible until it manifests as queue depth
+  growing (CTL.SQS.ALARM.DEPTH.001) or downstream pressure.
+  Catching it at the producer side is faster: the team can
+  investigate the upstream cause rather than the downstream
+  symptom.
+failure: >
+  Undetected producer anomaly. Traffic spikes — whether
+  legitimate, accidental, or hostile — are visible only as
+  downstream effects.

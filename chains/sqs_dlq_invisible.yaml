@@ -1,0 +1,19 @@
+id: sqs_dlq_invisible
+description: >
+  No DLQ depth alarm plus either no DLQ age alarm or no DLQ
+  consumer. The DLQ is unmonitored AND either aging without
+  detection or has no processing pipeline at all. Failed
+  messages accumulate invisibly and uninvestigated; the DLQ
+  becomes a silent deletion mechanism. Threshold of 2 fires
+  when the operator has no surface for noticing or acting on
+  failures.
+controls:
+  - CTL.SQS.ALARM.DLQ.DEPTH.001
+  - CTL.SQS.ALARM.DLQ.AGE.001
+  - CTL.SQS.DLQ.NOCONSUMER.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - data_destruction

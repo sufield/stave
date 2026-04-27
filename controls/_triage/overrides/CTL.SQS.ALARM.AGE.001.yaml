@@ -1,0 +1,21 @@
+control: CTL.SQS.ALARM.AGE.001
+defect: >
+  SQS source queue has no CloudWatch alarm on
+  ApproximateAgeOfOldestMessage.
+infection: >
+  Message age measures processing latency. A 5-second-old
+  message is normal — sent 5 seconds ago and waiting for the
+  next consumer poll. A 3-hour-old message means consumers
+  are severely behind. A 3-day-old message is one day from
+  permanent deletion under the default 4-day retention.
+  Without an age alarm, processing delays are detected only
+  when downstream systems experience them — by which point
+  the latency budget has already been blown for every message
+  in the queue. Age and depth alarms catch different failure
+  modes: depth catches "consumers stopped"; age catches
+  "consumers are slower than the SLA permits even at steady
+  state".
+failure: >
+  Undetected processing delay. Messages age toward retention
+  expiry without notification; downstream SLAs are missed
+  before anyone is paged.

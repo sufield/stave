@@ -1,0 +1,154 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.ALARM.DLQ.DEPTH.001
+name: No CloudWatch Alarm for SQS Dead-Letter Queue Depth
+description: >
+  No CloudWatch alarm watches the
+  ApproximateNumberOfMessagesVisible metric on the SQS dead-
+  letter queue. Failed messages accumulate in the DLQ without
+  notification — the queue may have 10 messages or 10,000
+  messages and nobody learns until somebody opens the SQS
+  console. This is the single most important SQS alarm: DLQ
+  depth growing means messages are failing processing, the
+  cause is unresolved, and the failure path is collecting data
+  with no investigation. Same pattern as
+  CTL.KMS.ALARM.DELETION.001 — the metric exists in CloudWatch
+  by default, but nobody is paged on it without an explicit
+  alarm. Fires only on queues that ARE dead-letter queues
+  (is_dlq = true); source-queue depth is covered by
+  CTL.SQS.ALARM.DEPTH.001.
+domain: detection
+severity: critical
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3, A1.2"
+  nist_800_53_r5: "SI-4, IR-4, IR-5"
+  pci_dss_v4.0: "10.6, 10.7"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16, A.5.30"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    SQS dead-letter queue has no CloudWatch alarm on
+    ApproximateNumberOfMessagesVisible. Failed messages
+    accumulate undetected.
+  action: >
+    Create the alarm with a threshold of 1 (any message in the
+    DLQ pages on-call):
+    aws cloudwatch put-metric-alarm
+    --alarm-name SQS-DLQ-Depth-<queue-name>
+    --metric-name ApproximateNumberOfMessagesVisible
+    --namespace AWS/SQS --statistic Sum --period 60
+    --evaluation-periods 1 --threshold 1
+    --comparison-operator GreaterThanOrEqualToThreshold
+    --dimensions Name=QueueName,Value=<dlq-name>
+    --alarm-actions <sns-topic-arn>.
+    Pair with CTL.SQS.DLQ.NOCONSUMER.001 — an alarm without a
+    consumer is just a delayed-deletion notification. Do both.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "is_dlq": true,
+          "alarm_dlq_depth": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.is_dlq
+      op: eq
+      value: true
+    - field: properties.messaging.sqs.alarm_dlq_depth
+      op: eq
+      value: false
+defect: >
+  SQS dead-letter queue has no CloudWatch alarm on
+  ApproximateNumberOfMessagesVisible.
+infection: >
+  The DLQ is the failure destination — every message that
+  exhausts its retries lands here. Without an alarm, 100
+  messages accumulate and nobody knows; 1,000 messages
+  accumulate and nobody knows. The DLQ's message count is
+  visible in CloudWatch metrics and the SQS console — but
+  nobody watches either in real time. A DLQ-depth alarm with
+  threshold 1 fires the moment the first message arrives,
+  enabling investigation before the failure compounds. Without
+  the alarm, the team discovers DLQ accumulation when
+  downstream systems produce stale data, customers report
+  missing data, or someone coincidentally checks the SQS
+  console — by which point the issue has been live for hours
+  or days.
+failure: >
+  Undetected message failures. Messages accumulate in the DLQ
+  without notification; the failure cause persists; data in
+  the failure path remains uninvestigated until someone notices.
+tests:
+  - name: DLQ without depth alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            alarm_dlq_depth: false
+            dlq_approximate_messages: 50
+  - name: DLQ with depth alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            alarm_dlq_depth: true
+  - name: source queue (not DLQ) passes — control is DLQ-only
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: false
+            alarm_dlq_depth: false
+  - name: DLQ + 500 msgs + no consumer + no alarm fires (compound)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            alarm_dlq_depth: false
+            dlq_has_consumer: false
+            dlq_approximate_messages: 500
+            oldest_message_age_days: 30

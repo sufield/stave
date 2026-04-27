@@ -1,0 +1,23 @@
+control: CTL.SQS.ALARM.DLQ.DEPTH.001
+defect: >
+  SQS dead-letter queue has no CloudWatch alarm on
+  ApproximateNumberOfMessagesVisible.
+infection: >
+  The DLQ is the failure destination — every message that
+  exhausts its retries lands here. Without an alarm, 100
+  messages accumulate and nobody knows; 1,000 messages
+  accumulate and nobody knows. The DLQ's message count is
+  visible in CloudWatch metrics and the SQS console — but
+  nobody watches either in real time. A DLQ-depth alarm with
+  threshold 1 fires the moment the first message arrives,
+  enabling investigation before the failure compounds. Without
+  the alarm, the team discovers DLQ accumulation when
+  downstream systems produce stale data, customers report
+  missing data, or someone coincidentally checks the SQS
+  console — by which point the issue has been live for hours
+  or days.
+failure: >
+  Undetected message failures. Messages accumulate in the DLQ
+  without notification; the failure cause persists; data in
+  the failure path remains uninvestigated until someone
+  notices.

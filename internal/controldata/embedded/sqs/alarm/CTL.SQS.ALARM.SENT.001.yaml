@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.ALARM.SENT.001
+name: No CloudWatch Alarm for SQS Messages Sent Spike
+description: >
+  No CloudWatch alarm watches the NumberOfMessagesSent metric
+  for anomalous spikes. A sudden producer-side spike usually
+  signals one of: an upstream system failure flooding the
+  queue with error events, a denial-of-service attempt sending
+  messages to the queue, an application bug producing messages
+  in a loop, or a legitimate traffic surge (flash sale,
+  marketing event). All four warrant operator attention; an
+  alarm distinguishes them. Use anomaly-detection or
+  percentage-deviation thresholds rather than static counts —
+  the right "spike" depends on the queue's baseline volume.
+domain: detection
+severity: medium
+compliance:
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SQS queue has no CloudWatch alarm on NumberOfMessagesSent
+    spikes. Producer-side anomalies are invisible.
+  action: >
+    Use CloudWatch anomaly detection rather than a static
+    threshold so the alarm adapts to the queue's baseline:
+    aws cloudwatch put-metric-alarm
+    --alarm-name SQS-Sent-Anomaly-<queue-name>
+    --metric-name NumberOfMessagesSent
+    --namespace AWS/SQS --statistic Sum --period 300
+    --evaluation-periods 2
+    --comparison-operator GreaterThanUpperThreshold
+    --thresholds-metric-id e1
+    --metrics ...
+    --dimensions Name=QueueName,Value=<queue-name>
+    --alarm-actions <sns-topic-arn>.
+    Alternatively, set a percentage-deviation alarm against
+    the same metric's prior-week baseline.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "alarm_sent": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.alarm_sent
+      op: eq
+      value: false
+defect: >
+  SQS queue has no CloudWatch alarm on NumberOfMessagesSent
+  spikes.
+infection: >
+  A sudden NumberOfMessagesSent spike has four common causes
+  and all four are operator events: upstream failure flooding
+  the queue with error events, denial-of-service from an
+  attacker sending messages, application bug looping on
+  message production, or a legitimate traffic surge that may
+  exceed downstream capacity. Without an anomaly alarm, the
+  spike is invisible until it manifests as queue depth
+  growing (CTL.SQS.ALARM.DEPTH.001) or downstream pressure.
+  Catching it at the producer side is faster: the team can
+  investigate the upstream cause rather than the
+  downstream symptom.
+failure: >
+  Undetected producer anomaly. Traffic spikes — whether
+  legitimate, accidental, or hostile — are visible only as
+  downstream effects.
+tests:
+  - name: queue without sent alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            alarm_sent: false
+  - name: queue with sent alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            alarm_sent: true

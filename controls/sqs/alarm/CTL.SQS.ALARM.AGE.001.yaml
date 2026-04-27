@@ -1,0 +1,130 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.ALARM.AGE.001
+name: No CloudWatch Alarm for SQS Queue Oldest Message Age
+description: >
+  No CloudWatch alarm watches the
+  ApproximateAgeOfOldestMessage metric on the SQS source
+  queue. Message age measures processing latency: a 5-second-
+  old message is normal; a 3-hour-old message means consumers
+  are far behind; a 3-day-old message is approaching the
+  default 4-day retention and will expire if not consumed.
+  For time-sensitive workloads (payment processing, order
+  fulfillment, real-time notifications), age directly
+  measures the delay customers experience. Companion to
+  CTL.SQS.ALARM.DEPTH.001 — depth catches accumulation, age
+  catches stalled processing even when arrival and consumption
+  rates are roughly balanced.
+domain: detection
+severity: high
+compliance:
+  soc2: "CC7.2, A1.2"
+  nist_800_53_r5: "SI-4, AU-11"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16, A.5.30"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SQS source queue has no CloudWatch alarm on
+    ApproximateAgeOfOldestMessage. Processing delays go
+    undetected until messages expire.
+  action: >
+    Set the threshold to the longest acceptable
+    processing-latency budget for the workload (e.g., 1 hour
+    for real-time, 24 hours for batch). The alarm should fire
+    well before the queue retention period:
+    aws cloudwatch put-metric-alarm
+    --alarm-name SQS-Age-<queue-name>
+    --metric-name ApproximateAgeOfOldestMessage
+    --namespace AWS/SQS --statistic Maximum --period 300
+    --evaluation-periods 2 --threshold 3600
+    --comparison-operator GreaterThanThreshold
+    --dimensions Name=QueueName,Value=<queue-name>
+    --alarm-actions <sns-topic-arn>.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "is_dlq": false,
+          "alarm_age": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.is_dlq
+      op: eq
+      value: false
+    - field: properties.messaging.sqs.alarm_age
+      op: eq
+      value: false
+defect: >
+  SQS source queue has no CloudWatch alarm on
+  ApproximateAgeOfOldestMessage.
+infection: >
+  Message age measures processing latency. A 5-second-old
+  message is normal — sent 5 seconds ago and waiting for the
+  next consumer poll. A 3-hour-old message means consumers
+  are severely behind. A 3-day-old message is one day from
+  permanent deletion under the default 4-day retention.
+  Without an age alarm, processing delays are detected only
+  when downstream systems experience them — by which point
+  the latency budget has already been blown for every message
+  in the queue. Age and depth alarms catch different failure
+  modes: depth catches "consumers stopped"; age catches
+  "consumers are slower than the SLA permits even at steady
+  state".
+failure: >
+  Undetected processing delay. Messages age toward retention
+  expiry without notification; downstream SLAs are missed
+  before anyone is paged.
+tests:
+  - name: source queue without age alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: false
+            alarm_age: false
+  - name: source queue with age alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: false
+            alarm_age: true
+  - name: DLQ passes — DLQ age is a separate control
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            alarm_age: false

@@ -1,0 +1,19 @@
+control: CTL.SQS.ALARM.DELETEQUEUE.001
+defect: >
+  SQS queue has no alarm wired to CloudTrail DeleteQueue
+  events.
+infection: >
+  DeleteQueue removes the queue itself. Every producer
+  attempting to send and every consumer attempting to receive
+  starts getting QueueDoesNotExist errors. The messages that
+  were in flight are gone — there is no DLQ for a deleted
+  queue. Without an alarm, the team discovers the deletion
+  only by chasing downstream error reports, by which point
+  in-flight messages are unrecoverable and the workload is
+  partially broken. An alarm with a 60-second period turns
+  the detection latency into seconds: the team can recreate
+  the queue and notify producers to retry while the issue is
+  still tractable.
+failure: >
+  Undetected queue deletion. The queue and all its in-flight
+  messages disappear without real-time notification.

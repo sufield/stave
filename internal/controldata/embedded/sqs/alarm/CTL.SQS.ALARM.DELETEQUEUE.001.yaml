@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.ALARM.DELETEQUEUE.001
+name: No CloudWatch Alarm for SQS DeleteQueue
+description: >
+  No CloudWatch alarm is wired to a CloudTrail metric filter
+  on the DeleteQueue API call. DeleteQueue is permanent — the
+  queue and all its messages are gone in a single call, every
+  producer and consumer starts erroring, and the messages are
+  unrecoverable. Unlike PurgeQueue (which keeps the queue
+  alive), DeleteQueue removes the resource itself. Without an
+  alarm a queue can be deleted accidentally or maliciously
+  without real-time notification; the team discovers the loss
+  only when downstream traffic surfaces errors. Companion to
+  CTL.SQS.ALARM.PURGE.001 — both monitor catastrophic
+  destructive operations.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3, A1.2"
+  nist_800_53_r5: "AU-6, IR-4, SI-4, CP-10"
+  pci_dss_v4.0: "10.6, 10.7"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16, A.5.30"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    SQS queue has no alarm on the DeleteQueue API call. Queue
+    deletion can occur without real-time notification.
+  action: >
+    Create a CloudTrail metric filter on
+    eventName = DeleteQueue scoped to the queue's ARN, then a
+    CloudWatch alarm with threshold 1 and a 60-second period
+    so the deletion call pages on-call within seconds:
+    aws logs put-metric-filter
+    --filter-pattern '{ $.eventName = "DeleteQueue" &&
+    $.requestParameters.queueUrl = "*<queue-name>*" }'
+    followed by aws cloudwatch put-metric-alarm. Deletion
+    cannot be undone, but a fast notification lets the team
+    capture context for forensics and accelerate downstream
+    recovery.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "alarm_delete_queue": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.alarm_delete_queue
+      op: eq
+      value: false
+defect: >
+  SQS queue has no alarm wired to CloudTrail DeleteQueue
+  events.
+infection: >
+  DeleteQueue removes the queue itself. Every producer
+  attempting to send and every consumer attempting to receive
+  starts getting QueueDoesNotExist errors. The messages that
+  were in flight are gone — there is no DLQ for a deleted
+  queue. Without an alarm, the team discovers the deletion
+  only by chasing downstream error reports, by which point
+  in-flight messages are unrecoverable and the workload is
+  partially broken. An alarm with a 60-second period turns the
+  detection latency into seconds: the team can recreate the
+  queue and notify producers to retry while the issue is
+  still tractable.
+failure: >
+  Undetected queue deletion. The queue and all its in-flight
+  messages disappear without real-time notification.
+tests:
+  - name: queue without delete alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            alarm_delete_queue: false
+  - name: queue with delete alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            alarm_delete_queue: true

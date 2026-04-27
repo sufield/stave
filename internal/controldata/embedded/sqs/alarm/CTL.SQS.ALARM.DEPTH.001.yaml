@@ -1,0 +1,144 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.ALARM.DEPTH.001
+name: No CloudWatch Alarm for SQS Queue Depth
+description: >
+  No CloudWatch alarm watches the
+  ApproximateNumberOfMessagesVisible metric on the SQS source
+  queue. Queue depth is the primary indicator of consumer
+  health: a healthy consumer drains the queue as fast as
+  messages arrive, so depth stays near zero. A growing depth
+  means consumers stopped (Lambda throttled, ECS task crashed,
+  application error) or traffic spiked beyond consumer
+  capacity. Without an alarm, the queue fills silently until
+  retention expires and messages are permanently deleted.
+  Companion to CTL.SQS.ALARM.DLQ.DEPTH.001 — that fires on
+  dead-letter queues; this fires on source queues. The
+  is_dlq guard prevents double-firing.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3, A1.2"
+  nist_800_53_r5: "SI-4, IR-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16, A.5.30"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SQS source queue has no CloudWatch alarm on
+    ApproximateNumberOfMessagesVisible. Consumer failures and
+    traffic spikes are invisible.
+  action: >
+    Set the threshold to a value the consumer should never
+    legitimately see — for low-traffic queues that's a few
+    hundred messages; for high-traffic queues, a multiple of
+    expected steady-state depth. Use:
+    aws cloudwatch put-metric-alarm
+    --alarm-name SQS-Depth-<queue-name>
+    --metric-name ApproximateNumberOfMessagesVisible
+    --namespace AWS/SQS --statistic Average --period 300
+    --evaluation-periods 2 --threshold <choose-per-queue>
+    --comparison-operator GreaterThanThreshold
+    --dimensions Name=QueueName,Value=<queue-name>
+    --alarm-actions <sns-topic-arn>.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "is_dlq": false,
+          "alarm_depth": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.is_dlq
+      op: eq
+      value: false
+    - field: properties.messaging.sqs.alarm_depth
+      op: eq
+      value: false
+defect: >
+  SQS source queue has no CloudWatch alarm on
+  ApproximateNumberOfMessagesVisible.
+infection: >
+  Queue depth is the primary indicator of consumer health. If
+  consumers are running and healthy, queue depth stays low —
+  messages are consumed shortly after arrival. If consumers
+  stop (Lambda throttled, ECS task crashed, application
+  error), messages accumulate. If traffic spikes (DDoS,
+  upstream burst, flash sale), messages accumulate faster
+  than consumers can process. Without a depth alarm the queue
+  fills from 0 to 100,000 messages without notification;
+  messages start expiring (default 4-day retention); expired
+  messages are permanently deleted. The team discovers the
+  outage when downstream systems report missing data — at
+  which point the loss is unrecoverable.
+failure: >
+  Undetected consumer failure or traffic spike. Messages
+  accumulate, age toward retention expiry, and are deleted
+  without anyone being paged.
+tests:
+  - name: source queue without depth alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: false
+            alarm_depth: false
+  - name: source queue with depth alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: false
+            alarm_depth: true
+  - name: DLQ passes — DLQ depth is a separate control
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            alarm_depth: false
+  - name: high-traffic source backing up without alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:transactions-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: false
+            alarm_depth: false
+            approximate_messages: 10000

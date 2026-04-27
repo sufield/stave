@@ -1,0 +1,21 @@
+control: CTL.SQS.ALARM.DEPTH.001
+defect: >
+  SQS source queue has no CloudWatch alarm on
+  ApproximateNumberOfMessagesVisible.
+infection: >
+  Queue depth is the primary indicator of consumer health. If
+  consumers are running and healthy, queue depth stays low —
+  messages are consumed shortly after arrival. If consumers
+  stop (Lambda throttled, ECS task crashed, application
+  error), messages accumulate. If traffic spikes (DDoS,
+  upstream burst, flash sale), messages accumulate faster
+  than consumers can process. Without a depth alarm the queue
+  fills from 0 to 100,000 messages without notification;
+  messages start expiring (default 4-day retention); expired
+  messages are permanently deleted. The team discovers the
+  outage when downstream systems report missing data — at
+  which point the loss is unrecoverable.
+failure: >
+  Undetected consumer failure or traffic spike. Messages
+  accumulate, age toward retention expiry, and are deleted
+  without anyone being paged.

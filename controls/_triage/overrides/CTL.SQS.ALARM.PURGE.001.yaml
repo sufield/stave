@@ -1,0 +1,19 @@
+control: CTL.SQS.ALARM.PURGE.001
+defect: >
+  SQS queue has no alarm wired to CloudTrail PurgeQueue events.
+infection: >
+  PurgeQueue is the most destructive SQS operation — a single
+  API call deletes every message in the queue. Unlike
+  DeleteMessage (one message at a time), PurgeQueue is mass
+  deletion. Without an alarm, an attacker with sqs:PurgeQueue
+  can wipe the production queue at 2 a.m. and nobody is paged.
+  At 8 a.m., the team discovers six hours of messages are
+  missing. Downstream systems have six hours of unprocessed
+  events. Financial reconciliation is broken; customer orders
+  are lost. A PurgeQueue alarm with a 60-second period
+  provides seconds-to-minutes notification — enough for the
+  team to investigate while the operation is still recent.
+failure: >
+  Undetected mass message deletion. The queue can be wiped
+  without real-time notification; recovery is impossible
+  because purged messages bypass the DLQ.

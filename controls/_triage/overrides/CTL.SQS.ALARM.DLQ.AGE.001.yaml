@@ -1,0 +1,22 @@
+control: CTL.SQS.ALARM.DLQ.AGE.001
+defect: >
+  SQS dead-letter queue has no CloudWatch alarm on
+  ApproximateAgeOfOldestMessage.
+infection: >
+  Message age in the DLQ measures stalled investigation. A
+  fresh DLQ message means a new failure that an on-call
+  responder can investigate while context is hot. A 3-day-old
+  DLQ message means the failure has been pending for 3 days
+  with no progress — and the message is one day from
+  permanent deletion. Without an age alarm, the team learns
+  about the staleness only when the message expires (and is
+  gone) or when a downstream system reports missing data.
+  Age also catches the recursive-failure case: if the DLQ has
+  its own consumer that is itself failing (or has stopped),
+  age increases steadily even while depth stays roughly
+  constant.
+failure: >
+  Undetected investigation stall. Failed messages age toward
+  retention expiry without notification; expired messages are
+  permanently deleted along with the failure evidence they
+  carried.

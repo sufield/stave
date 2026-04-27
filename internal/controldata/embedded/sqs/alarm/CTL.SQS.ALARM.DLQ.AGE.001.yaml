@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.ALARM.DLQ.AGE.001
+name: No CloudWatch Alarm for SQS Dead-Letter Queue Message Age
+description: >
+  No CloudWatch alarm watches the
+  ApproximateAgeOfOldestMessage metric on the SQS dead-letter
+  queue. An aging DLQ message means one of three things:
+  messages arrived but were never investigated (abandoned DLQ),
+  the investigation is stuck (team saw the messages but the
+  underlying issue is unresolved), or the DLQ consumer is
+  failing itself (recursive failure). If the oldest message
+  approaches the queue retention period (default 4 days, max
+  14), it expires and is permanently deleted — the failure
+  evidence is lost. Pairs with CTL.SQS.ALARM.DLQ.DEPTH.001 —
+  depth catches accumulation, age catches stalled
+  investigation. Fires only on dead-letter queues.
+domain: detection
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.2"
+  nist_800_53_r5: "SI-4, AU-11"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16, A.8.15"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SQS dead-letter queue has no CloudWatch alarm on
+    ApproximateAgeOfOldestMessage. Aging DLQ messages risk
+    expiring before investigation.
+  action: >
+    Create the alarm with a threshold one day below the
+    queue's retention period (e.g., 3 days for the default
+    4-day retention) so an investigator has at least a day's
+    notice before messages expire:
+    aws cloudwatch put-metric-alarm
+    --alarm-name SQS-DLQ-Age-<queue-name>
+    --metric-name ApproximateAgeOfOldestMessage
+    --namespace AWS/SQS --statistic Maximum --period 300
+    --evaluation-periods 1 --threshold 259200
+    --comparison-operator GreaterThanThreshold
+    --dimensions Name=QueueName,Value=<dlq-name>
+    --alarm-actions <sns-topic-arn>.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "is_dlq": true,
+          "alarm_dlq_age": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.is_dlq
+      op: eq
+      value: true
+    - field: properties.messaging.sqs.alarm_dlq_age
+      op: eq
+      value: false
+defect: >
+  SQS dead-letter queue has no CloudWatch alarm on
+  ApproximateAgeOfOldestMessage.
+infection: >
+  Message age in the DLQ measures stalled investigation. A
+  fresh DLQ message means a new failure that an on-call
+  responder can investigate while context is hot. A 3-day-old
+  DLQ message means the failure has been pending for 3 days
+  with no progress — and the message is one day from
+  permanent deletion. Without an age alarm, the team learns
+  about the staleness only when the message expires (and is
+  gone) or when a downstream system reports missing data.
+  Age also catches the recursive-failure case: if the DLQ has
+  its own consumer that is itself failing (or has stopped),
+  age increases steadily even while depth stays roughly
+  constant.
+failure: >
+  Undetected investigation stall. Failed messages age toward
+  retention expiry without notification; expired messages are
+  permanently deleted along with the failure evidence they
+  carried.
+tests:
+  - name: DLQ without age alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            alarm_dlq_age: false
+            dlq_oldest_message_age: 259200
+  - name: DLQ with age alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            alarm_dlq_age: true
+  - name: source queue (not DLQ) passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: false
+            alarm_dlq_age: false
