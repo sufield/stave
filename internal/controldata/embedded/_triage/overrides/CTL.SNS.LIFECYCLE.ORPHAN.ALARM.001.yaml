@@ -1,0 +1,19 @@
+control: CTL.SNS.LIFECYCLE.ORPHAN.ALARM.001
+defect: >
+  SNS topic was an alarm notification target but the
+  referencing alarm has been deleted.
+infection: >
+  CloudWatch alarms are typically created together with their
+  notification topic — the alarm fires, the topic publishes,
+  the subscribers (Slack, PagerDuty, email) deliver the
+  notification. When an alarm is deleted but the topic is not,
+  the topic and its subscription chain persist with no
+  triggering alarm. The topic accepts publishes (any other
+  caller can still publish), the subscriptions still exist
+  (and may have stale endpoint references — ghost
+  subscriptions), and nobody monitors the orphan topic. This
+  is decommissioning incomplete: the alarm was removed but
+  its notification infrastructure was left behind.
+failure: >
+  Orphan notification infrastructure. Topic and subscriptions
+  persist after the alarm that triggered them was deleted.

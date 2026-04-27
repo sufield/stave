@@ -1,0 +1,134 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.FIFO.NONFIFO.SUBSCRIPTION.001
+name: FIFO SNS Topic Has Subscription to Non-FIFO SQS Queue
+description: >
+  FIFO SNS topic has a subscription delivering to a standard
+  (non-FIFO) SQS queue. FIFO topics guarantee message
+  ordering and deduplication; standard SQS queues guarantee
+  neither. The FIFO ordering guarantee is broken at the
+  subscription boundary — messages arrive at the standard
+  queue in publish order but the queue may deliver them out
+  of order to consumers. Applications that rely on FIFO
+  semantics (event sourcing, state-machine transitions,
+  transaction sequencing) silently lose ordering at this
+  hop. Fires only on FIFO topics; standard topic →
+  standard queue is fine.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, PI1.1"
+  nist_800_53_r5: "SI-10"
+  pci_dss_v4.0: "10.2"
+  fedramp_moderate: "SI-10"
+  iso_27001_2022: "A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_subscription
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    FIFO SNS topic delivers to a non-FIFO SQS queue. Ordering
+    guarantee is broken at the subscription boundary.
+  action: >
+    Either: (a) replace the standard SQS queue with a FIFO
+    SQS queue (queue name must end in .fifo, FifoQueue=true,
+    ContentBasedDeduplication or per-message group ID
+    configured) and resubscribe the topic; or (b) if FIFO
+    ordering is not actually required, change the SNS topic
+    from FIFO to standard, accepting that ordering is not
+    preserved end-to-end. Mixed topologies (FIFO topic +
+    standard queue) have no correct semantics — the FIFO
+    promise is unenforced past the topic.
+  example: |
+    {
+      "messaging": {
+        "kind": "sns_subscription",
+        "sns": {
+          "is_fifo": true,
+          "subscription_endpoint": "arn:aws:sqs:us-east-1:111122223333:orders.fifo",
+          "subscription_is_fifo_sqs": true,
+          "has_nonfifo_subscription": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: sns_subscription
+    - field: properties.messaging.sns.is_fifo
+      op: eq
+      value: true
+    - field: properties.messaging.sns.has_nonfifo_subscription
+      op: eq
+      value: true
+defect: >
+  FIFO SNS topic has subscription to a standard (non-FIFO)
+  SQS queue; ordering guarantee is broken at delivery.
+infection: >
+  FIFO topics guarantee strict ordering — messages with the
+  same message group ID are delivered in the order they were
+  published. When a FIFO topic delivers to a standard SQS
+  queue, the ordering guarantee is broken. The standard
+  queue may deliver messages to consumers in any order — the
+  consumer processes message 3 before message 1. If the
+  application depends on ordering (event sourcing,
+  transaction sequencing, state machine transitions),
+  out-of-order processing causes data corruption or
+  application errors. The publisher believes ordering is
+  guaranteed end-to-end; the consumer receives messages in a
+  random order. The mismatch is the worst failure mode for
+  ordered messaging — it is silent.
+failure: >
+  FIFO ordering broken at subscription. Messages arrive in
+  order but the standard SQS queue delivers them out of
+  order to consumers.
+tests:
+  - name: FIFO topic with standard SQS subscription fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders.fifo:sub-1"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            is_fifo: true
+            subscription_endpoint: "arn:aws:sqs:us-east-1:111122223333:standard-orders"
+            subscription_is_fifo_sqs: false
+            has_nonfifo_subscription: true
+  - name: FIFO topic with FIFO SQS subscription passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:orders.fifo:sub-2"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            is_fifo: true
+            subscription_endpoint: "arn:aws:sqs:us-east-1:111122223333:orders.fifo"
+            subscription_is_fifo_sqs: true
+            has_nonfifo_subscription: false
+  - name: standard topic with standard SQS subscription does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts:sub-3"
+      asset_type: aws_sns_subscription
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_subscription
+          sns:
+            is_fifo: false
+            subscription_endpoint: "arn:aws:sqs:us-east-1:111122223333:alerts"
+            subscription_is_fifo_sqs: false
+            has_nonfifo_subscription: false

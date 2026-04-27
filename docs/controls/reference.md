@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1748
-**Pack hash:** `bd7070536f153d567029734ceaebc2f64ca1f77da0aec60ba2d7f086c8c12cde`
+**Total controls:** 1754
+**Pack hash:** `780ffea16851f55296b84aca053eee0100a61f1e065baa6bd5b788619a8cdc07`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 191 |
-| high | 771 |
+| high | 773 |
 | info | 16 |
 | low | 123 |
-| medium | 647 |
+| medium | 651 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 73 |
 | encryption | 92 |
-| exposure | 962 |
-| governance | 167 |
+| exposure | 963 |
+| governance | 172 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -23367,6 +23367,21 @@ CloudTrail is not configured to log SNS data events (Publish). Management events
 
 ---
 
+### CTL.SNS.CROSSACCOUNT.SUBSCRIPTION.001
+
+**SNS Topic Has Subscription Delivering to External Account**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.9; nist_800_53_r5: AC-3, AC-4, SC-7; pci_dss_v4.0: 1.2, 7.1; soc2: CC6.1, CC6.6;
+
+SNS topic has a subscription that delivers messages to an endpoint in an external account — SQS queue in another account, Lambda function in another account, or HTTP endpoint controlled by another party. Message content crosses the account boundary on every publish. If the receiving account has different security controls (less monitoring, broader access), messages are less protected after delivery than they were inside the publishing account. Distinct from CTL.SNS.POLICY.CROSSACCOUNT.001 (SNS-2): the policy control checks who can ACT on the topic (Subscribe / Publish from external accounts); this control checks where messages are DELIVERED.
+
+**Remediation:** Audit the cross-account subscriptions. If the delivery is intentional (centralized logging account, shared notification pipeline), confirm: (a) the receiving account has equivalent or stronger encryption / IAM / monitoring controls, (b) the messages do not contain data that violates the publishing account's data-residency or compartmentalization requirements, and (c) the cross-account subscription is documented and authorized. If the delivery is unintentional, unsubscribe the external endpoint and route through an account-internal relay if cross-account delivery is needed.
+
+---
+
 ### CTL.SNS.DELIVERY.LOG.RETENTION.001
 
 **SNS Delivery Status Log Group Has Insufficient Retention**
@@ -23472,6 +23487,21 @@ SNS topics without server-side encryption transmit and store messages in plainte
 
 ---
 
+### CTL.SNS.FIFO.NONFIFO.SUBSCRIPTION.001
+
+**FIFO SNS Topic Has Subscription to Non-FIFO SQS Queue**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-10; iso_27001_2022: A.8.32; nist_800_53_r5: SI-10; pci_dss_v4.0: 10.2; soc2: CC6.1, PI1.1;
+
+FIFO SNS topic has a subscription delivering to a standard (non-FIFO) SQS queue. FIFO topics guarantee message ordering and deduplication; standard SQS queues guarantee neither. The FIFO ordering guarantee is broken at the subscription boundary — messages arrive at the standard queue in publish order but the queue may deliver them out of order to consumers. Applications that rely on FIFO semantics (event sourcing, state-machine transitions, transaction sequencing) silently lose ordering at this hop. Fires only on FIFO topics; standard topic → standard queue is fine.
+
+**Remediation:** Either: (a) replace the standard SQS queue with a FIFO SQS queue (queue name must end in .fifo, FifoQueue=true, ContentBasedDeduplication or per-message group ID configured) and resubscribe the topic; or (b) if FIFO ordering is not actually required, change the SNS topic from FIFO to standard, accepting that ordering is not preserved end-to-end. Mixed topologies (FIFO topic + standard queue) have no correct semantics — the FIFO promise is unenforced past the topic.
+
+---
+
 ### CTL.SNS.GHOST.ALARM.001
 
 **CloudWatch Alarm Action References Deleted SNS Topic**
@@ -23573,6 +23603,66 @@ SNS topic has a subscription whose endpoint is an SQS queue ARN that no longer e
 The observation snapshot is missing required SNS topic properties.
 
 **Remediation:** Ensure the extractor calls aws sns get-topic-attributes and maps the KmsMasterKeyId to the messaging.encryption observation properties.
+
+---
+
+### CTL.SNS.LIFECYCLE.DORMANT.001
+
+**SNS Topic Has No Publish Activity in 90+ Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, CM-3, SA-22; pci_dss_v4.0: 1.2, 7.2; soc2: CC6.1, CC8.1;
+
+SNS topic has no messages published in more than 90 days. The topic exists with its policy, subscriptions, encryption, and delivery configuration — but receives no messages. Dormant topics are latent infrastructure: the topic policy still permits publishing, the subscriptions still exist (and may reference deleted endpoints — ghost subscriptions), and nobody monitors for anomalous publishes. Same 90-day dormancy threshold used across Lambda, IAM, DynamoDB, CloudFront, Route 53, KMS, and SQS controls — uniform across domains.
+
+**Remediation:** Audit the topic's CloudTrail history (Publish events) to confirm true dormancy. If the topic is truly unused, delete it (aws sns delete-topic --topic-arn <arn>) along with all its subscriptions. If the topic is held for future use, restrict the policy to a minimal principal set, remove stale subscriptions, attach a CloudWatch alarm on NumberOfMessagesPublished so any publish activity surfaces immediately, and document the planned reactivation date.
+
+---
+
+### CTL.SNS.LIFECYCLE.NOSUBSCRIBERS.001
+
+**SNS Topic Has No Subscriptions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16; nist_800_53_r5: CM-2, CM-3, SA-22; pci_dss_v4.0: 1.2; soc2: CC6.1, CC8.1;
+
+SNS topic exists but has zero subscriptions. Messages published to the topic go nowhere — no SQS queue, no Lambda function, no HTTP endpoint, no email, no SMS. The topic accepts messages (Publish succeeds) but doesn't deliver them. This typically indicates: the topic was created but subscriptions were never added (deployment incomplete), all subscriptions were removed (decommissioning incomplete — topic left behind), or the topic is used only for its policy (unusual). If the topic is referenced by a CloudWatch alarm action, alarms publish to a topic with no delivery — the same effect as a ghost alarm action, but the topic still exists.
+
+**Remediation:** Determine the topic's intended purpose. If the topic was created for a deployment that never completed, finish the deployment by adding the intended subscriptions. If the topic was decommissioned but left behind, delete it and update any CloudWatch alarm actions that reference it. If the topic is referenced by alarm actions, repoint those alarms to a topic with subscribers immediately — alarms that publish here today are silently lost.
+
+---
+
+### CTL.SNS.LIFECYCLE.ORPHAN.ALARM.001
+
+**SNS Topic Used for CloudWatch Alarm Notifications But Referenced Alarm Deleted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16; nist_800_53_r5: CM-2, CM-3, SA-22; pci_dss_v4.0: 1.2; soc2: CC6.1, CC8.1;
+
+SNS topic was the notification target for a CloudWatch alarm that has been deleted. The topic still exists with its subscriptions (Slack webhook, PagerDuty endpoint, email distribution list) but the alarm that published to it no longer exists. The topic serves no notification purpose — it exists only because the alarm was deleted without cleaning up the notification chain. Inverse perspective of CTL.SNS.GHOST.ALARM.001 (SNS-1): GHOST.ALARM checks the alarm side (alarm action references a deleted topic); ORPHAN.ALARM checks the topic side (topic was an alarm target, alarm has been deleted). Both can exist simultaneously because they check different resources.
+
+**Remediation:** Audit the topic's referencing alarms; if all referencing alarms have been deleted and no new alarms are planned to use the topic, delete the topic (aws sns delete-topic --topic-arn <arn>) and clean up its subscriptions. If a replacement alarm is planned, document the dependency so the topic isn't deleted before the new alarm is wired. Pair this control with CTL.SNS.GHOST.ALARM.001 — together they identify both sides of the broken notification-chain pattern.
+
+---
+
+### CTL.SNS.LIFECYCLE.UNCONFIRMED.001
+
+**SNS Topic Has Only Unconfirmed Subscriptions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: CM-2, CM-3, SI-4; pci_dss_v4.0: 1.2, 10.6; soc2: CC6.1, CC7.2, CC8.1;
+
+SNS topic has subscriptions but ALL of them are in PendingConfirmation state — none are confirmed. For HTTP/HTTPS and email subscriptions, the endpoint owner must confirm the subscription before SNS delivers messages. If every subscription is pending, the topic accepts messages but delivers to nobody — same delivery effect as having no subscriptions, but with the appearance of having subscribers (subscription count > 0). This is the worst observability failure on the notification chain: the topic appears configured (auditor sees "5 subscribers") yet delivers zero messages.
+
+**Remediation:** For each pending subscription, contact the endpoint owner to confirm the subscription request. HTTP/HTTPS endpoints confirm by sending a request to the SubscribeURL provided in the SubscriptionConfirmation message; email endpoints confirm by clicking the confirmation link. If the endpoint owner cannot or will not confirm, delete the pending subscription (aws sns unsubscribe --subscription-arn <arn>) so the topic accurately reflects its actual subscriber count. Audit alarm actions and other consumers of this topic — they are silently failing.
 
 ---
 

@@ -1,0 +1,138 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.LIFECYCLE.UNCONFIRMED.001
+name: SNS Topic Has Only Unconfirmed Subscriptions
+description: >
+  SNS topic has subscriptions but ALL of them are in
+  PendingConfirmation state — none are confirmed. For
+  HTTP/HTTPS and email subscriptions, the endpoint owner must
+  confirm the subscription before SNS delivers messages. If
+  every subscription is pending, the topic accepts messages
+  but delivers to nobody — same delivery effect as having no
+  subscriptions, but with the appearance of having
+  subscribers (subscription count > 0). This is the worst
+  observability failure on the notification chain: the topic
+  appears configured (auditor sees "5 subscribers") yet
+  delivers zero messages.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC7.2, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, SI-4"
+  pci_dss_v4.0: "1.2, 10.6"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["IAM-08", "LOG-08"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    SNS topic has only unconfirmed (PendingConfirmation)
+    subscriptions. Subscriptions appear configured but
+    deliver no messages.
+  action: >
+    For each pending subscription, contact the endpoint owner
+    to confirm the subscription request. HTTP/HTTPS endpoints
+    confirm by sending a request to the SubscribeURL provided
+    in the SubscriptionConfirmation message; email endpoints
+    confirm by clicking the confirmation link. If the
+    endpoint owner cannot or will not confirm, delete the
+    pending subscription
+    (aws sns unsubscribe --subscription-arn <arn>) so the
+    topic accurately reflects its actual subscriber count.
+    Audit alarm actions and other consumers of this topic —
+    they are silently failing.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "subscription_count": 3,
+          "confirmed_subscription_count": 3,
+          "all_unconfirmed": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.all_unconfirmed
+      op: eq
+      value: true
+defect: >
+  SNS topic has subscriptions but all are PendingConfirmation;
+  zero confirmed subscribers.
+infection: >
+  HTTP/HTTPS and email subscriptions require confirmation —
+  the endpoint must acknowledge the subscription request
+  before SNS delivers messages. If all subscriptions are
+  pending, the topic appears to have subscribers (the
+  subscription count is > 0) but delivers to nobody. A topic
+  used for alarm notifications with all-pending subscriptions
+  is silently broken — alarms fire, the topic accepts the
+  notification, and zero subscribers receive it. Unlike a
+  topic with no subscriptions (which is obviously empty), a
+  topic with pending subscriptions APPEARS to have
+  subscribers and creates false confidence in the
+  notification chain.
+failure: >
+  False subscriber count. Topic appears to have subscribers
+  but none are confirmed. Messages accepted but not delivered.
+tests:
+  - name: topic with all-unconfirmed subscriptions fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:webhook-alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            subscription_count: 3
+            confirmed_subscription_count: 0
+            all_unconfirmed: true
+            pending_subscriptions:
+              - "https://hooks.slack.com/services/T0/B0/X"
+              - "https://events.pagerduty.com/integration/abcd/enqueue"
+              - "ops@example.invalid"
+  - name: topic with two confirmed subscriptions passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            subscription_count: 2
+            confirmed_subscription_count: 2
+            all_unconfirmed: false
+  - name: topic with mix of confirmed and pending passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:rollout-alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            subscription_count: 4
+            confirmed_subscription_count: 3
+            all_unconfirmed: false
+            pending_subscriptions:
+              - "https://newendpoint.example.com/sns"

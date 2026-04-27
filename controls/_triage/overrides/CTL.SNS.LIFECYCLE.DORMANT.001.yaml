@@ -1,0 +1,21 @@
+control: CTL.SNS.LIFECYCLE.DORMANT.001
+defect: >
+  SNS topic has had no publish activity in 90+ days while its
+  policy continues to authorize publish.
+infection: >
+  A dormant topic retains its full configuration: topic policy
+  (who can publish and subscribe), subscriptions (endpoints
+  that would receive messages if any were published),
+  encryption settings, and delivery configuration. Nobody
+  monitors a dormant topic for anomalous activity. If the
+  topic policy allows broad publishing (confused deputy,
+  cross-account without conditions), an attacker can publish
+  to the dormant topic. If subscriptions still exist (Lambda
+  functions, SQS queues, HTTP endpoints), the attacker's
+  message fans out to every subscriber. Dormant topics should
+  be reviewed: if truly unused, delete. If needed for future
+  use, restrict the policy and remove stale subscriptions.
+failure: >
+  Latent notification surface. A dormant topic with active
+  policy and subscriptions accepts messages and fans out to
+  subscribers without monitoring.

@@ -1,0 +1,18 @@
+id: sns_fifo_broken
+description: >
+  FIFO topic to non-FIFO queue OR subscription to deleted
+  SQS queue. Either ordering is broken (FIFO guarantee lost
+  at delivery) or delivery is broken (queue doesn't exist).
+  Each independently means the FIFO messaging pipeline is
+  non-functional for its intended purpose. Threshold of 1
+  fires whenever the FIFO promise breaks at either
+  semantics or delivery layer.
+controls:
+  - CTL.SNS.FIFO.NONFIFO.SUBSCRIPTION.001
+  - CTL.SNS.GHOST.SUBSCRIPTION.SQS.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

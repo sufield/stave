@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.LIFECYCLE.ORPHAN.ALARM.001
+name: SNS Topic Used for CloudWatch Alarm Notifications But Referenced Alarm Deleted
+description: >
+  SNS topic was the notification target for a CloudWatch alarm
+  that has been deleted. The topic still exists with its
+  subscriptions (Slack webhook, PagerDuty endpoint, email
+  distribution list) but the alarm that published to it no
+  longer exists. The topic serves no notification purpose —
+  it exists only because the alarm was deleted without
+  cleaning up the notification chain. Inverse perspective of
+  CTL.SNS.GHOST.ALARM.001 (SNS-1): GHOST.ALARM checks the
+  alarm side (alarm action references a deleted topic);
+  ORPHAN.ALARM checks the topic side (topic was an alarm
+  target, alarm has been deleted). Both can exist
+  simultaneously because they check different resources.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, SA-22"
+  pci_dss_v4.0: "1.2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16"
+  ccm_v4: ["IAM-08", "LOG-08"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SNS topic was the notification target of a CloudWatch
+    alarm that has been deleted. The topic and its
+    subscriptions persist with no triggering alarm.
+  action: >
+    Audit the topic's referencing alarms; if all referencing
+    alarms have been deleted and no new alarms are planned to
+    use the topic, delete the topic
+    (aws sns delete-topic --topic-arn <arn>) and clean up its
+    subscriptions. If a replacement alarm is planned, document
+    the dependency so the topic isn't deleted before the
+    new alarm is wired. Pair this control with
+    CTL.SNS.GHOST.ALARM.001 — together they identify both
+    sides of the broken notification-chain pattern.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "is_alarm_target": true,
+          "referencing_alarm_count": 2,
+          "referencing_alarms_exist": true,
+          "has_orphan_alarm_ref": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.has_orphan_alarm_ref
+      op: eq
+      value: true
+defect: >
+  SNS topic was an alarm notification target but the
+  referencing alarm has been deleted.
+infection: >
+  CloudWatch alarms are typically created together with their
+  notification topic — the alarm fires, the topic publishes,
+  the subscribers (Slack, PagerDuty, email) deliver the
+  notification. When an alarm is deleted but the topic is not,
+  the topic and its subscription chain persist with no
+  triggering alarm. The topic accepts publishes (any other
+  caller can still publish), the subscriptions still exist
+  (and may have stale endpoint references — ghost
+  subscriptions), and nobody monitors the orphan topic. This
+  is decommissioning incomplete: the alarm was removed but
+  its notification infrastructure was left behind.
+failure: >
+  Orphan notification infrastructure. Topic and subscriptions
+  persist after the alarm that triggered them was deleted.
+tests:
+  - name: topic with orphan alarm reference fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:rds-alarms"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            is_alarm_target: true
+            referencing_alarm_count: 1
+            referencing_alarms_exist: false
+            has_orphan_alarm_ref: true
+  - name: topic with active referencing alarms passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:active-alarms"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            is_alarm_target: true
+            referencing_alarm_count: 4
+            referencing_alarms_exist: true
+            has_orphan_alarm_ref: false
+  - name: orphan topic with PagerDuty/Slack subscriptions fires (notification infrastructure with no trigger)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:legacy-pager"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            is_alarm_target: true
+            referencing_alarm_count: 0
+            referencing_alarms_exist: false
+            has_orphan_alarm_ref: true
+            subscription_count: 3
+            subscription_protocols: ["https", "email"]

@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.LIFECYCLE.DORMANT.001
+name: SNS Topic Has No Publish Activity in 90+ Days
+description: >
+  SNS topic has no messages published in more than 90 days.
+  The topic exists with its policy, subscriptions, encryption,
+  and delivery configuration — but receives no messages.
+  Dormant topics are latent infrastructure: the topic policy
+  still permits publishing, the subscriptions still exist (and
+  may reference deleted endpoints — ghost subscriptions), and
+  nobody monitors for anomalous publishes. Same 90-day
+  dormancy threshold used across Lambda, IAM, DynamoDB,
+  CloudFront, Route 53, KMS, and SQS controls — uniform across
+  domains.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, SA-22"
+  pci_dss_v4.0: "1.2, 7.2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["IAM-08", "DSP-17"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    SNS topic has been dormant for 90+ days while its policy
+    continues to authorize publish. The topic is a latent
+    surface — accepts messages from permitted publishers
+    without any monitoring.
+  action: >
+    Audit the topic's CloudTrail history (Publish events) to
+    confirm true dormancy. If the topic is truly unused, delete
+    it (aws sns delete-topic --topic-arn <arn>) along with all
+    its subscriptions. If the topic is held for future use,
+    restrict the policy to a minimal principal set, remove
+    stale subscriptions, attach a CloudWatch alarm on
+    NumberOfMessagesPublished so any publish activity surfaces
+    immediately, and document the planned reactivation date.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "is_dormant": false,
+          "last_publish_days": 7
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.is_dormant
+      op: eq
+      value: true
+defect: >
+  SNS topic has had no publish activity in 90+ days while its
+  policy continues to authorize publish.
+infection: >
+  A dormant topic retains its full configuration: topic policy
+  (who can publish and subscribe), subscriptions (endpoints
+  that would receive messages if any were published),
+  encryption settings, and delivery configuration. Nobody
+  monitors a dormant topic for anomalous activity. If the
+  topic policy allows broad publishing (confused deputy,
+  cross-account without conditions), an attacker can publish
+  to the dormant topic. If subscriptions still exist (Lambda
+  functions, SQS queues, HTTP endpoints), the attacker's
+  message fans out to every subscriber. Dormant topics should
+  be reviewed: if truly unused, delete. If needed for future
+  use, restrict the policy and remove stale subscriptions.
+failure: >
+  Latent notification surface. A dormant topic with active
+  policy and subscriptions accepts messages and fans out to
+  subscribers without monitoring.
+tests:
+  - name: 120-day dormant topic fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:legacy-events"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            is_dormant: true
+            last_publish_days: 120
+            subscription_count: 3
+  - name: 5-day-active topic passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            is_dormant: false
+            last_publish_days: 5
+  - name: 365-day dormant topic with broad publish policy fires (severe)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:abandoned-fanout"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            is_dormant: true
+            last_publish_days: 365
+            subscription_count: 5
+            policy_allows_s3: true
+            policy_s3_has_source: false

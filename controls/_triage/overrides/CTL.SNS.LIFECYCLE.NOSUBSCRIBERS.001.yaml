@@ -1,0 +1,20 @@
+control: CTL.SNS.LIFECYCLE.NOSUBSCRIBERS.001
+defect: >
+  SNS topic has zero subscriptions; published messages are
+  accepted but not delivered.
+infection: >
+  A topic with no subscriptions is a message sink — Publish
+  calls succeed (the message is accepted by SNS) but the
+  message is not delivered anywhere. If the topic is an alarm
+  notification target (CloudWatch alarm action → this topic),
+  alarms fire, notifications are published to the topic, and
+  the notifications go nowhere because there are no
+  subscribers. This is functionally equivalent to a ghost
+  alarm action — the alarm works, the notification is
+  silently lost. Unlike GHOST.ALARM.001 (where the topic
+  doesn't exist), here the topic exists but has no
+  subscribers — the failure mode is identical from the
+  alarm's perspective.
+failure: >
+  Notification black hole. Messages published to the topic
+  are accepted but not delivered to anyone.

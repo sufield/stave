@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.LIFECYCLE.NOSUBSCRIBERS.001
+name: SNS Topic Has No Subscriptions
+description: >
+  SNS topic exists but has zero subscriptions. Messages
+  published to the topic go nowhere — no SQS queue, no Lambda
+  function, no HTTP endpoint, no email, no SMS. The topic
+  accepts messages (Publish succeeds) but doesn't deliver
+  them. This typically indicates: the topic was created but
+  subscriptions were never added (deployment incomplete), all
+  subscriptions were removed (decommissioning incomplete —
+  topic left behind), or the topic is used only for its
+  policy (unusual). If the topic is referenced by a
+  CloudWatch alarm action, alarms publish to a topic with no
+  delivery — the same effect as a ghost alarm action, but
+  the topic still exists.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, SA-22"
+  pci_dss_v4.0: "1.2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16"
+  ccm_v4: ["IAM-08"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SNS topic has zero subscriptions. Published messages are
+    accepted by SNS but not delivered to any endpoint.
+  action: >
+    Determine the topic's intended purpose. If the topic was
+    created for a deployment that never completed, finish the
+    deployment by adding the intended subscriptions. If the
+    topic was decommissioned but left behind, delete it and
+    update any CloudWatch alarm actions that reference it. If
+    the topic is referenced by alarm actions, repoint those
+    alarms to a topic with subscribers immediately — alarms
+    that publish here today are silently lost.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "subscription_count": 3,
+          "has_subscriptions": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.has_subscriptions
+      op: eq
+      value: false
+defect: >
+  SNS topic has zero subscriptions; published messages are
+  accepted but not delivered.
+infection: >
+  A topic with no subscriptions is a message sink — Publish
+  calls succeed (the message is accepted by SNS) but the
+  message is not delivered anywhere. If the topic is an alarm
+  notification target (CloudWatch alarm action → this topic),
+  alarms fire, notifications are published to the topic, and
+  the notifications go nowhere because there are no
+  subscribers. This is functionally equivalent to a ghost
+  alarm action — the alarm works, the notification is
+  silently lost. Unlike GHOST.ALARM.001 (where the topic
+  doesn't exist), here the topic exists but has no
+  subscribers — the failure mode is identical from the
+  alarm's perspective.
+failure: >
+  Notification black hole. Messages published to the topic
+  are accepted but not delivered to anyone.
+tests:
+  - name: topic with zero subscriptions fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:abandoned-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            subscription_count: 0
+            has_subscriptions: false
+  - name: topic with three subscriptions passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            subscription_count: 3
+            has_subscriptions: true
+  - name: alarm-notification target topic with no subscribers fires (severe)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:critical-alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            subscription_count: 0
+            has_subscriptions: false
+            is_alarm_notification_target: true
+            referencing_alarm_count: 8

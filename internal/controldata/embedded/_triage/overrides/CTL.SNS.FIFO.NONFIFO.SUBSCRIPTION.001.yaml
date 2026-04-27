@@ -1,0 +1,22 @@
+control: CTL.SNS.FIFO.NONFIFO.SUBSCRIPTION.001
+defect: >
+  FIFO SNS topic has subscription to a standard (non-FIFO)
+  SQS queue; ordering guarantee is broken at delivery.
+infection: >
+  FIFO topics guarantee strict ordering — messages with the
+  same message group ID are delivered in the order they were
+  published. When a FIFO topic delivers to a standard SQS
+  queue, the ordering guarantee is broken. The standard
+  queue may deliver messages to consumers in any order — the
+  consumer processes message 3 before message 1. If the
+  application depends on ordering (event sourcing,
+  transaction sequencing, state machine transitions),
+  out-of-order processing causes data corruption or
+  application errors. The publisher believes ordering is
+  guaranteed end-to-end; the consumer receives messages in a
+  random order. The mismatch is the worst failure mode for
+  ordered messaging — it is silent.
+failure: >
+  FIFO ordering broken at subscription. Messages arrive in
+  order but the standard SQS queue delivers them out of
+  order to consumers.

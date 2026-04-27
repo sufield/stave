@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.CROSSACCOUNT.SUBSCRIPTION.001
+name: SNS Topic Has Subscription Delivering to External Account
+description: >
+  SNS topic has a subscription that delivers messages to an
+  endpoint in an external account — SQS queue in another
+  account, Lambda function in another account, or HTTP
+  endpoint controlled by another party. Message content
+  crosses the account boundary on every publish. If the
+  receiving account has different security controls (less
+  monitoring, broader access), messages are less protected
+  after delivery than they were inside the publishing
+  account. Distinct from CTL.SNS.POLICY.CROSSACCOUNT.001
+  (SNS-2): the policy control checks who can ACT on the
+  topic (Subscribe / Publish from external accounts);
+  this control checks where messages are DELIVERED.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, SC-7"
+  pci_dss_v4.0: "1.2, 7.1"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.9"
+  ccm_v4: ["IAM-16", "DSP-13"]
+scope_tags:
+  - aws
+  - sns
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sns_topic
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    SNS topic delivers messages to subscribers in external
+    accounts. Message content crosses the account boundary on
+    every publish.
+  action: >
+    Audit the cross-account subscriptions. If the delivery is
+    intentional (centralized logging account, shared
+    notification pipeline), confirm: (a) the receiving
+    account has equivalent or stronger encryption / IAM /
+    monitoring controls, (b) the messages do not contain
+    data that violates the publishing account's data-residency
+    or compartmentalization requirements, and (c) the
+    cross-account subscription is documented and authorized.
+    If the delivery is unintentional, unsubscribe the
+    external endpoint and route through an account-internal
+    relay if cross-account delivery is needed.
+  example: |
+    {
+      "messaging": {
+        "kind": "topic",
+        "sns": {
+          "topic_arn": "arn:aws:sns:us-east-1:111122223333:alerts",
+          "has_cross_account_subscription": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: topic
+    - field: properties.messaging.sns.has_cross_account_subscription
+      op: eq
+      value: true
+defect: >
+  SNS topic has subscription(s) delivering to external
+  accounts.
+infection: >
+  Every message published to this topic is delivered to the
+  external account's endpoint. The message content —
+  notification body, attributes, metadata — crosses the
+  account boundary. If the messages contain PII, system
+  alerts, application events, or internal data, that content
+  is now in the external account. The external account's
+  security controls determine how the message is protected
+  after delivery. If the external account has: broader IAM
+  access (more principals can read the SQS queue), less
+  monitoring (no CloudTrail data events), or weaker encryption
+  (SQS queue not encrypted), the message is less protected
+  after delivery than before. Cross-account subscriptions are
+  sometimes intentional (centralized logging, shared
+  notification pipeline) — verify the boundary crossing is
+  authorized and the receiving account meets equivalent
+  controls.
+failure: >
+  Message data crosses account boundary. Every published
+  message is delivered to an external account with potentially
+  different security controls.
+tests:
+  - name: topic with cross-account SQS subscription fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:events"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:events"
+            has_cross_account_subscription: true
+            cross_account_protocols: ["sqs"]
+            cross_account_endpoints:
+              - "arn:aws:sqs:us-east-1:444455556666:central-events"
+  - name: topic with same-account subscriptions passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: topic
+          sns:
+            topic_arn: "arn:aws:sns:us-east-1:111122223333:alerts"
+            has_cross_account_subscription: false
+            cross_account_protocols: []
+            cross_account_endpoints: []

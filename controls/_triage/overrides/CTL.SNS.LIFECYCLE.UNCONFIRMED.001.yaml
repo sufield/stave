@@ -1,0 +1,20 @@
+control: CTL.SNS.LIFECYCLE.UNCONFIRMED.001
+defect: >
+  SNS topic has subscriptions but all are PendingConfirmation;
+  zero confirmed subscribers.
+infection: >
+  HTTP/HTTPS and email subscriptions require confirmation —
+  the endpoint must acknowledge the subscription request
+  before SNS delivers messages. If all subscriptions are
+  pending, the topic appears to have subscribers (the
+  subscription count is > 0) but delivers to nobody. A topic
+  used for alarm notifications with all-pending subscriptions
+  is silently broken — alarms fire, the topic accepts the
+  notification, and zero subscribers receive it. Unlike a
+  topic with no subscriptions (which is obviously empty), a
+  topic with pending subscriptions APPEARS to have
+  subscribers and creates false confidence in the
+  notification chain.
+failure: >
+  False subscriber count. Topic appears to have subscribers
+  but none are confirmed. Messages accepted but not delivered.

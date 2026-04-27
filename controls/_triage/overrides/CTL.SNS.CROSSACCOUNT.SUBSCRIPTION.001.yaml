@@ -1,0 +1,25 @@
+control: CTL.SNS.CROSSACCOUNT.SUBSCRIPTION.001
+defect: >
+  SNS topic has subscription(s) delivering to external
+  accounts.
+infection: >
+  Every message published to this topic is delivered to the
+  external account's endpoint. The message content —
+  notification body, attributes, metadata — crosses the
+  account boundary. If the messages contain PII, system
+  alerts, application events, or internal data, that content
+  is now in the external account. The external account's
+  security controls determine how the message is protected
+  after delivery. If the external account has: broader IAM
+  access (more principals can read the SQS queue), less
+  monitoring (no CloudTrail data events), or weaker encryption
+  (SQS queue not encrypted), the message is less protected
+  after delivery than before. Cross-account subscriptions are
+  sometimes intentional (centralized logging, shared
+  notification pipeline) — verify the boundary crossing is
+  authorized and the receiving account meets equivalent
+  controls.
+failure: >
+  Message data crosses account boundary. Every published
+  message is delivered to an external account with potentially
+  different security controls.
