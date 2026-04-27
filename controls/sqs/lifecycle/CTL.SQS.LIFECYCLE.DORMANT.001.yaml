@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.LIFECYCLE.DORMANT.001
+name: SQS Queue Has No Activity in 90+ Days
+description: >
+  SQS queue has had neither send nor receive activity in more
+  than 90 days. The queue still carries its policy,
+  encryption, DLQ configuration, and consumer permissions —
+  but processes no traffic. Dormant queues are latent
+  infrastructure: the policy still authorizes producers and
+  consumers, the consumer's IAM role still holds queue
+  permissions, and nobody monitors the queue for anomalous
+  messages because it is assumed to be unused. Same 90-day
+  dormancy threshold used across Lambda, IAM, DynamoDB,
+  CloudFront, Route 53, and KMS controls — uniform across
+  domains.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, SA-22"
+  pci_dss_v4.0: "1.2, 7.2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["IAM-08", "DSP-17"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    SQS queue has been dormant for 90+ days while its policy
+    continues to authorize access. The queue is a latent
+    surface — accepts messages from permitted senders without
+    any monitoring.
+  action: >
+    Audit the queue's CloudTrail history (SendMessage /
+    ReceiveMessage events) to confirm true dormancy. If the
+    queue is truly unused, delete it
+    (aws sqs delete-queue --queue-url <url>). If the queue is
+    held for future use, restrict the policy to a minimal
+    principal set, attach a CloudWatch alarm on
+    NumberOfMessagesSent so any traffic surfaces immediately,
+    and document the planned reactivation date.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "is_dormant": false,
+          "last_activity_days": 7
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.is_dormant
+      op: eq
+      value: true
+defect: >
+  SQS queue has had no send or receive activity in 90+ days
+  while its policy continues to authorize access.
+infection: >
+  A dormant queue retains its full configuration: queue policy
+  (who can send and receive), encryption settings, DLQ
+  configuration, and consumer IAM permissions. Nobody monitors
+  a dormant queue for anomalous messages because it is assumed
+  to be unused. But the queue policy still grants SendMessage
+  — if the policy allows broad access (SNS without sourceArn,
+  cross-account without conditions), an attacker can send
+  messages to the dormant queue. If a consumer is still
+  configured (Lambda ESM, ECS poller), the consumer processes
+  the attacker's messages. Dormant queues should be reviewed:
+  if truly unused, delete; if needed for future use, restrict
+  the policy and attach a sent-spike alarm.
+failure: >
+  Latent message-injection surface. A dormant queue with an
+  active policy accepts messages from permitted senders
+  without monitoring; the consumer (if any) processes them.
+tests:
+  - name: 120-day dormant queue fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:legacy-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dormant: true
+            last_activity_days: 120
+            approximate_messages: 0
+  - name: 5-day-active queue passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dormant: false
+            last_activity_days: 5
+  - name: 365-day dormant queue with broad policy fires (severe)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:abandoned-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dormant: true
+            last_activity_days: 365
+            policy_allows_sns: true
+            policy_sns_has_source: false

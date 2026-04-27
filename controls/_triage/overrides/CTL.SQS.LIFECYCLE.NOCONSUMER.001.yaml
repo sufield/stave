@@ -1,0 +1,22 @@
+control: CTL.SQS.LIFECYCLE.NOCONSUMER.001
+defect: >
+  SQS source queue is receiving messages (has send activity)
+  but has no consumer.
+infection: >
+  A queue with producers but no consumers is a data sink —
+  messages arrive, sit for the retention period, and are
+  deleted. Every message represents an event, transaction, or
+  notification that was intended to be processed but was not.
+  If the queue is part of an event-driven architecture
+  (SNS → SQS → Lambda), a missing consumer means events are
+  not processed (orders unfilled, notifications unsent, data
+  unsynced); messages accumulate until retention expires
+  (4-14 days of unprocessed events); the upstream producer
+  has no indication that messages went unprocessed because
+  SendMessage succeeds — the queue accepts the message and
+  acknowledges receipt. The fault is invisible at every
+  layer until the downstream consequence surfaces.
+failure: >
+  Data sink. Messages arrive but are never processed — they
+  expire and are permanently deleted; the upstream producer
+  receives no error.

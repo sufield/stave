@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.CONFIG.RETENTION.SHORT.001
+name: SQS Queue Retention Period Below 24 Hours
+description: >
+  SQS queue MessageRetentionPeriod is below 24 hours (86,400
+  seconds). Short retention means messages that are not
+  consumed quickly are permanently deleted. For workloads
+  with intermittent consumers (batch processing, scheduled
+  Lambda, on-call queues that fire only during incidents), a
+  retention shorter than the longest expected gap between
+  consumer runs leads to message loss. The minimum allowed
+  value is 60 seconds; the SQS default is 4 days. Short
+  retention is sometimes intentional — real-time pipelines
+  where stale messages have no value should drop them — but
+  for any pipeline where a message can become useful after
+  a delay, the retention must accommodate the delay.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, A1.2"
+  nist_800_53_r5: "CM-6, AU-11, SI-11"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "AU-11"
+  iso_27001_2022: "A.8.15, A.8.32"
+  ccm_v4: ["BCR-08", "LOG-13"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SQS queue retention period is below 24 hours. Messages
+    may be deleted before intermittent consumers run.
+  action: >
+    Decide whether short retention is intentional. If the
+    workload is real-time (stale messages have no value),
+    document the choice with a queue tag so the finding is
+    explicitly exempted. Otherwise raise the retention to at
+    least 24 hours, ideally 4 days (the SQS default), so
+    intermittent consumers, replays, and incident-driven
+    processing have a longer recovery window. Apply via aws
+    sqs set-queue-attributes --queue-url <url> --attributes
+    MessageRetentionPeriod=345600.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "retention_period": 345600,
+          "retention_short": false,
+          "retention_hours": 96
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.retention_short
+      op: eq
+      value: true
+defect: >
+  SQS queue retention period is below 24 hours.
+infection: >
+  Short retention means messages that are not consumed quickly
+  are permanently deleted. For a real-time pipeline that
+  expects sub-second processing, a short retention is fine —
+  stale messages have no value. For a batch pipeline where
+  the consumer runs on a schedule (hourly, daily) or a
+  recovery pipeline where the consumer activates only during
+  an incident, retention must outlast the longest expected
+  gap between consumer runs. A 1-hour retention with a
+  4-hour batch cadence will lose every message that arrives
+  more than 1 hour before the next batch — silently, with
+  no error log. The fault is invisible until downstream
+  systems experience missing data.
+failure: >
+  Premature message expiry. Messages arriving outside the
+  consumer's tight processing window are deleted before they
+  can be read.
+tests:
+  - name: 1-hour retention fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:batch-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            retention_period: 3600
+            retention_short: true
+            retention_hours: 1.0
+  - name: 4-day retention passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            retention_period: 345600
+            retention_short: false
+            retention_hours: 96.0

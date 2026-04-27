@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.CROSSACCOUNT.DLQ.001
+name: SQS Queue Dead-Letter Queue Is in a Different Account
+description: >
+  SQS source queue's dead-letter queue is in a different AWS
+  account. Failed messages cross an account boundary when
+  they are sent to the DLQ — message content (potentially
+  PII, transaction data, application secrets) traverses from
+  the source account to the DLQ account. The two accounts
+  may have different security controls: different IAM
+  baselines, different monitoring, different access patterns,
+  different audit-logging coverage. If the DLQ account is
+  weaker than the source account, failed messages are less
+  protected in the failure path than in the success path.
+  Cross-account DLQs are sometimes intentional (centralized
+  failure handling in a shared-services account) — when so,
+  the DLQ account must apply equivalent or stronger controls.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, SC-7"
+  pci_dss_v4.0: "1.2, 3.5"
+  fedramp_moderate: "AC-4"
+  iso_27001_2022: "A.5.14, A.5.15"
+  ccm_v4: ["IAM-16", "DSP-17"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    SQS source queue's DLQ is in a different account. Failure-
+    path messages traverse an account boundary.
+  action: >
+    Decide whether the cross-account DLQ is intentional. If
+    centralized failure handling is the design, document the
+    account relationship and verify the DLQ account applies
+    equivalent or stronger controls than the source account
+    (encryption, policy restrictions, audit logging,
+    monitoring alarms). If the DLQ is in the wrong account
+    by mistake (e.g., copied from a template), repoint the
+    redrive policy to a same-account DLQ
+    (aws sqs set-queue-attributes --queue-url <source>
+    --attributes RedrivePolicy='{"deadLetterTargetArn":
+    "<same-account-dlq-arn>","maxReceiveCount":"5"}').
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "queue_account": "111122223333",
+          "dlq_account": "111122223333",
+          "dlq_cross_account": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.dlq_cross_account
+      op: eq
+      value: true
+defect: >
+  SQS source queue's DLQ is in a different AWS account.
+infection: >
+  Failed messages cross an account boundary when they are
+  sent to the DLQ — message content (potentially PII,
+  transaction data, application secrets) traverses from the
+  source account into the DLQ account. The source account's
+  security baseline is one set of controls; the DLQ account's
+  is another. Common drift between the two: the DLQ account
+  has lower CloudTrail coverage (data events disabled),
+  weaker monitoring (no DLQ depth alarm), or broader IAM
+  permissions (a centralized-failure-handling role used by
+  many teams). The result is that failed messages — often
+  the ones containing the most diagnostic detail — sit in a
+  weaker security posture than the messages that succeeded.
+failure: >
+  Failure-path security weaker than success path. Failed
+  messages cross an account boundary into a possibly weaker
+  control surface, with audit-trail and monitoring gaps the
+  source account does not have.
+tests:
+  - name: DLQ in different account fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            queue_account: "111122223333"
+            dlq_account: "999988887777"
+            dlq_cross_account: true
+            dlq_arn: "arn:aws:sqs:us-east-1:999988887777:central-dlq"
+  - name: same-account DLQ passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            queue_account: "111122223333"
+            dlq_account: "111122223333"
+            dlq_cross_account: false

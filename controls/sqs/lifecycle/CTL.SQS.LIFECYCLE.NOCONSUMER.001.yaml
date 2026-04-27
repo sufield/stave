@@ -1,0 +1,161 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.LIFECYCLE.NOCONSUMER.001
+name: SQS Source Queue Has No Consumer
+description: >
+  SQS source queue has send activity (NumberOfMessagesSent >
+  0) but no receive activity — no Lambda event-source mapping,
+  no application polling, no ECS task processing. Producers
+  send messages; nobody reads them. Messages age until the
+  retention period expires (default 4 days) and are
+  permanently deleted. The queue accepts messages but cannot
+  process them. Distinct from CTL.SQS.DLQ.NOCONSUMER.001
+  (SQS-1) which fires on dead-letter queues; this control
+  fires on source queues (is_dlq = false) so the two never
+  overlap. The combination "queue is producing AND has no
+  consumer" is the data-sink shape — every message is an
+  event/transaction/notification that the architecture
+  intended to be processed but cannot be.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, A1.2"
+  nist_800_53_r5: "CM-2, CM-3, SI-11"
+  pci_dss_v4.0: "1.2, 7.2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.5.30"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    SQS source queue is receiving messages but has no
+    consumer. Messages will expire and be deleted without
+    processing.
+  action: >
+    Identify the original consumer for the queue (CloudTrail
+    history of ReceiveMessage callers). If the consumer was
+    decommissioned, decide whether the queue should also be
+    decommissioned: producers will need to be repointed to a
+    live queue. If the queue is the right destination,
+    restore the consumer — typically a Lambda event-source
+    mapping (aws lambda create-event-source-mapping
+    --function-name <fn> --event-source-arn <queue-arn>) or
+    an ECS task running a polling loop. Pair with
+    CTL.SQS.ALARM.DEPTH.001 so future consumer outages
+    surface within minutes.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "is_dlq": false,
+          "has_consumer": true,
+          "has_lambda_esm": true,
+          "has_send_activity": true,
+          "has_receive_activity": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.is_dlq
+      op: eq
+      value: false
+    - field: properties.messaging.sqs.has_send_activity
+      op: eq
+      value: true
+    - field: properties.messaging.sqs.has_consumer
+      op: eq
+      value: false
+defect: >
+  SQS source queue is receiving messages (has send activity)
+  but has no consumer.
+infection: >
+  A queue with producers but no consumers is a data sink —
+  messages arrive, sit for the retention period, and are
+  deleted. Every message represents an event, transaction, or
+  notification that was intended to be processed but was not.
+  If the queue is part of an event-driven architecture
+  (SNS → SQS → Lambda), a missing consumer means events are
+  not processed (orders unfilled, notifications unsent, data
+  unsynced); messages accumulate until retention expires
+  (4-14 days of unprocessed events); the upstream producer
+  has no indication that messages went unprocessed because
+  SendMessage succeeds — the queue accepts the message and
+  acknowledges receipt. The fault is invisible at every
+  layer until the downstream consequence surfaces.
+failure: >
+  Data sink. Messages arrive but are never processed — they
+  expire and are permanently deleted; the upstream producer
+  receives no error.
+tests:
+  - name: source queue with sends but no consumer fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: false
+            has_send_activity: true
+            has_consumer: false
+            has_receive_activity: false
+            approximate_messages: 500
+  - name: source queue with Lambda ESM passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: false
+            has_send_activity: true
+            has_consumer: true
+            has_lambda_esm: true
+            has_receive_activity: true
+  - name: DLQ queue passes — DLQ-side control covers DLQs
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            has_send_activity: true
+            has_consumer: false
+  - name: idle source queue (no sends) passes — no data sink yet
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:standby-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: false
+            has_send_activity: false
+            has_consumer: false

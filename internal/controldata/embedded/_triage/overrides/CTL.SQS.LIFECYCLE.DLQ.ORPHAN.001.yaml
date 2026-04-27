@@ -1,0 +1,22 @@
+control: CTL.SQS.LIFECYCLE.DLQ.ORPHAN.001
+defect: >
+  SQS dead-letter queue's source queue has been deleted; the
+  DLQ persists without an active source.
+infection: >
+  A DLQ exists to receive failed messages from one or more
+  source queues. When the source is deleted, the DLQ stops
+  receiving new messages — but it continues to hold whatever
+  failure data accumulated before the deletion. The DLQ is no
+  longer in the active failure path: nobody is paged when its
+  metrics change (no new arrivals), the consumer (if any) has
+  nothing fresh to process, and the historical contents
+  decay. Two risks: the historical messages may contain
+  unprocessed failures whose investigation was abandoned along
+  with the source decommission; and the DLQ keeps consuming
+  inventory budget (queue count, monitoring noise, policy
+  audits) without serving any current workload.
+failure: >
+  Decommission debris in the failure path. The DLQ persists
+  with historical data that is neither investigated nor
+  preserved deliberately, and it adds noise to inventory and
+  compliance reports.

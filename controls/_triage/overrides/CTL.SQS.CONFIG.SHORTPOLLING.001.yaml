@@ -1,0 +1,22 @@
+control: CTL.SQS.CONFIG.SHORTPOLLING.001
+defect: >
+  SQS queue's ReceiveMessageWaitTimeSeconds is 0 (short
+  polling).
+infection: >
+  Short polling returns immediately even when no messages
+  are available, producing a stream of empty
+  ReceiveMessage responses on idle queues. Each response is
+  an API call billed against the SQS request quota — the
+  cost scales with consumer poll frequency, not with actual
+  message volume. Long polling
+  (ReceiveMessageWaitTimeSeconds 1-20) blocks the call
+  until a message arrives or the wait expires, eliminating
+  most empty responses. The operational cost is bounded
+  but real; for high-poll-frequency consumers, the
+  difference can be material. Long polling also reduces
+  message-arrival latency because consumers no longer
+  need a tight poll loop to stay current.
+failure: >
+  Inefficient polling. The queue produces empty responses
+  on every consumer call when no messages are available;
+  cost rises and arrival latency widens.

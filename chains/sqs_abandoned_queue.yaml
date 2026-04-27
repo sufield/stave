@@ -1,0 +1,22 @@
+id: sqs_abandoned_queue
+description: >
+  Dormant queue plus either no consumer or orphaned DLQ
+  source. Multiple lifecycle indicators converge: the queue
+  is unused AND either messages aren't being processed or the
+  queue's purpose (as a DLQ) no longer exists. Abandoned
+  messaging infrastructure — the team built it, used it
+  once, and walked away. The policy still authorizes
+  producers, the encryption still protects an empty queue,
+  and inventory cost continues to accrue. Threshold of 2
+  fires when at least two lifecycle-degradation signals are
+  present on the same queue.
+controls:
+  - CTL.SQS.LIFECYCLE.DORMANT.001
+  - CTL.SQS.LIFECYCLE.NOCONSUMER.001
+  - CTL.SQS.LIFECYCLE.DLQ.ORPHAN.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - ungoverned_operation

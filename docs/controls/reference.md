@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1715
-**Pack hash:** `0b4426a00625ff5155412a35a0d7f884b72069faddfbaf9e299c9505bc7ab4f9`
+**Total controls:** 1722
+**Pack hash:** `139d02afe6bd2aedc1add2f552f0e2d87c8c28ab4675805ea34bee8305e88415`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 190 |
-| high | 755 |
+| high | 757 |
 | info | 16 |
-| low | 122 |
-| medium | 632 |
+| low | 123 |
+| medium | 636 |
 
 | Domain | Count |
 |--------|-------|
@@ -25,7 +25,7 @@
 | detection | 67 |
 | encryption | 92 |
 | exposure | 952 |
-| governance | 150 |
+| governance | 157 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -23486,6 +23486,66 @@ CloudTrail is not configured to log SQS data events (SendMessage, ReceiveMessage
 
 ---
 
+### CTL.SQS.CONFIG.RETENTION.SHORT.001
+
+**SQS Queue Retention Period Below 24 Hours**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-11; iso_27001_2022: A.8.15, A.8.32; nist_800_53_r5: CM-6, AU-11, SI-11; pci_dss_v4.0: 10.6; soc2: CC6.1, A1.2;
+
+SQS queue MessageRetentionPeriod is below 24 hours (86,400 seconds). Short retention means messages that are not consumed quickly are permanently deleted. For workloads with intermittent consumers (batch processing, scheduled Lambda, on-call queues that fire only during incidents), a retention shorter than the longest expected gap between consumer runs leads to message loss. The minimum allowed value is 60 seconds; the SQS default is 4 days. Short retention is sometimes intentional — real-time pipelines where stale messages have no value should drop them — but for any pipeline where a message can become useful after a delay, the retention must accommodate the delay.
+
+**Remediation:** Decide whether short retention is intentional. If the workload is real-time (stale messages have no value), document the choice with a queue tag so the finding is explicitly exempted. Otherwise raise the retention to at least 24 hours, ideally 4 days (the SQS default), so intermittent consumers, replays, and incident-driven processing have a longer recovery window. Apply via aws sqs set-queue-attributes --queue-url <url> --attributes MessageRetentionPeriod=345600.
+
+---
+
+### CTL.SQS.CONFIG.SHORTPOLLING.001
+
+**SQS Queue Uses Short Polling**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-6; iso_27001_2022: A.8.32; nist_800_53_r5: CM-6, SA-22; soc2: CC6.1, A1.2;
+
+SQS queue has ReceiveMessageWaitTimeSeconds set to 0 (short polling). Short polling returns immediately, even when no messages are available. Each ReceiveMessage call is an API request and is billed; short-polled queues with no pending messages produce a steady stream of empty responses, which inflates cost and adds latency (consumers must poll more frequently to detect new messages). Long polling (WaitTimeSeconds 1-20, max 20s) waits for messages to arrive — reducing empty responses, reducing cost, and improving responsiveness. This is an operational/cost control rather than a security control; severity is low because short polling is functionally correct, just inefficient.
+
+**Remediation:** Set ReceiveMessageWaitTimeSeconds to 20 (the maximum) so polls block until a message arrives or the timeout elapses: aws sqs set-queue-attributes --queue-url <url> --attributes ReceiveMessageWaitTimeSeconds=20. The consumer's ReceiveMessage calls should pass WaitTimeSeconds=20 as well to honor long-polling semantics end-to-end.
+
+---
+
+### CTL.SQS.CONFIG.VISIBILITYTIMEOUT.RETENTION.001
+
+**SQS Queue Visibility Timeout Exceeds Message Retention**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-6; iso_27001_2022: A.8.32, A.5.30; nist_800_53_r5: CM-6, SI-11, CP-10; pci_dss_v4.0: 10.6; soc2: CC6.1, A1.2, CC7.4;
+
+SQS queue VisibilityTimeout is greater than its MessageRetentionPeriod. When a consumer calls ReceiveMessage, the message becomes invisible for the visibility-timeout duration; if that duration is longer than the retention period, the message can expire (be deleted by SQS) while the consumer is still processing it. The processing completes against a message that no longer exists; a DeleteMessage call on the receipt handle returns ReceiptHandleIsInvalid. Worse, if the consumer retries (assuming the delete failed transiently), it has nothing to retry against — the message is silently lost. This is a configuration contradiction: visibility must always be shorter than retention so a message is recoverable for at least one visibility cycle.
+
+**Remediation:** Reduce VisibilityTimeout below MessageRetentionPeriod so every in-flight message is recoverable for at least one full visibility cycle. The standard guidance is visibility = max-expected-processing-time + buffer, while retention = visibility * retries (matching the redrive policy's maxReceiveCount). Apply via aws sqs set-queue-attributes --queue-url <url> --attributes VisibilityTimeout=300,MessageRetentionPeriod=345600.
+
+---
+
+### CTL.SQS.CROSSACCOUNT.DLQ.001
+
+**SQS Queue Dead-Letter Queue Is in a Different Account**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-4; iso_27001_2022: A.5.14, A.5.15; nist_800_53_r5: AC-3, AC-4, SC-7; pci_dss_v4.0: 1.2, 3.5; soc2: CC6.1, CC6.6;
+
+SQS source queue's dead-letter queue is in a different AWS account. Failed messages cross an account boundary when they are sent to the DLQ — message content (potentially PII, transaction data, application secrets) traverses from the source account to the DLQ account. The two accounts may have different security controls: different IAM baselines, different monitoring, different access patterns, different audit-logging coverage. If the DLQ account is weaker than the source account, failed messages are less protected in the failure path than in the success path. Cross-account DLQs are sometimes intentional (centralized failure handling in a shared-services account) — when so, the DLQ account must apply equivalent or stronger controls.
+
+**Remediation:** Decide whether the cross-account DLQ is intentional. If centralized failure handling is the design, document the account relationship and verify the DLQ account applies equivalent or stronger controls than the source account (encryption, policy restrictions, audit logging, monitoring alarms). If the DLQ is in the wrong account by mistake (e.g., copied from a template), repoint the redrive policy to a same-account DLQ (aws sqs set-queue-attributes --queue-url <source> --attributes RedrivePolicy='{"deadLetterTargetArn": "<same-account-dlq-arn>","maxReceiveCount":"5"}').
+
+---
+
 ### CTL.SQS.DLQ.001
 
 **SQS Queues Must Have Dead-Letter Queue Configured**
@@ -23662,6 +23722,51 @@ SQS queue policy has a condition restricting SendMessage to a specific aws:Sourc
 The observation snapshot is missing required SQS queue properties.
 
 **Remediation:** Ensure the extractor calls aws sqs get-queue-attributes and maps the KmsMasterKeyId to the messaging.encryption observation properties.
+
+---
+
+### CTL.SQS.LIFECYCLE.DLQ.ORPHAN.001
+
+**SQS Dead-Letter Queue's Source Queue Was Deleted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, CM-3; soc2: CC6.1, CC8.1;
+
+SQS queue is configured as a dead-letter queue (it was the target of a source queue's redrive policy) but the source queue has been deleted. The DLQ persists with its policy, encryption, and any messages already accumulated from the deleted source — but will never receive new messages because nothing redrives to it. This is the DLQ-side mirror of CTL.SQS.GHOST.DLQ.001 (which detects the source queue's redrive pointing at a deleted DLQ); this control catches the inverse — the DLQ outlived its source. The orphaned DLQ often holds historical failure data that needs investigation or cleanup before deletion.
+
+**Remediation:** Inspect the DLQ contents (aws sqs receive-message --queue-url <dlq-url> --max-number-of-messages 10) to determine whether any accumulated messages still need investigation or reprocessing. After triage — replay, archive, or accept loss — delete the DLQ (aws sqs delete-queue --queue-url <dlq-url>). If the decommission of the source was unintentional and the pipeline should be restored, recreate the source queue and re-attach the redrive policy.
+
+---
+
+### CTL.SQS.LIFECYCLE.DORMANT.001
+
+**SQS Queue Has No Activity in 90+ Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, CM-3, SA-22; pci_dss_v4.0: 1.2, 7.2; soc2: CC6.1, CC8.1;
+
+SQS queue has had neither send nor receive activity in more than 90 days. The queue still carries its policy, encryption, DLQ configuration, and consumer permissions — but processes no traffic. Dormant queues are latent infrastructure: the policy still authorizes producers and consumers, the consumer's IAM role still holds queue permissions, and nobody monitors the queue for anomalous messages because it is assumed to be unused. Same 90-day dormancy threshold used across Lambda, IAM, DynamoDB, CloudFront, Route 53, and KMS controls — uniform across domains.
+
+**Remediation:** Audit the queue's CloudTrail history (SendMessage / ReceiveMessage events) to confirm true dormancy. If the queue is truly unused, delete it (aws sqs delete-queue --queue-url <url>). If the queue is held for future use, restrict the policy to a minimal principal set, attach a CloudWatch alarm on NumberOfMessagesSent so any traffic surfaces immediately, and document the planned reactivation date.
+
+---
+
+### CTL.SQS.LIFECYCLE.NOCONSUMER.001
+
+**SQS Source Queue Has No Consumer**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.5.30; nist_800_53_r5: CM-2, CM-3, SI-11; pci_dss_v4.0: 1.2, 7.2; soc2: CC6.1, CC8.1, A1.2;
+
+SQS source queue has send activity (NumberOfMessagesSent > 0) but no receive activity — no Lambda event-source mapping, no application polling, no ECS task processing. Producers send messages; nobody reads them. Messages age until the retention period expires (default 4 days) and are permanently deleted. The queue accepts messages but cannot process them. Distinct from CTL.SQS.DLQ.NOCONSUMER.001 (SQS-1) which fires on dead-letter queues; this control fires on source queues (is_dlq = false) so the two never overlap. The combination "queue is producing AND has no consumer" is the data-sink shape — every message is an event/transaction/notification that the architecture intended to be processed but cannot be.
+
+**Remediation:** Identify the original consumer for the queue (CloudTrail history of ReceiveMessage callers). If the consumer was decommissioned, decide whether the queue should also be decommissioned: producers will need to be repointed to a live queue. If the queue is the right destination, restore the consumer — typically a Lambda event-source mapping (aws lambda create-event-source-mapping --function-name <fn> --event-source-arn <queue-arn>) or an ECS task running a polling loop. Pair with CTL.SQS.ALARM.DEPTH.001 so future consumer outages surface within minutes.
 
 ---
 

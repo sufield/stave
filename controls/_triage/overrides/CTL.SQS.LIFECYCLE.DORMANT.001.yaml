@@ -1,0 +1,21 @@
+control: CTL.SQS.LIFECYCLE.DORMANT.001
+defect: >
+  SQS queue has had no send or receive activity in 90+ days
+  while its policy continues to authorize access.
+infection: >
+  A dormant queue retains its full configuration: queue policy
+  (who can send and receive), encryption settings, DLQ
+  configuration, and consumer IAM permissions. Nobody monitors
+  a dormant queue for anomalous messages because it is assumed
+  to be unused. But the queue policy still grants SendMessage
+  — if the policy allows broad access (SNS without sourceArn,
+  cross-account without conditions), an attacker can send
+  messages to the dormant queue. If a consumer is still
+  configured (Lambda ESM, ECS poller), the consumer processes
+  the attacker's messages. Dormant queues should be reviewed:
+  if truly unused, delete; if needed for future use, restrict
+  the policy and attach a sent-spike alarm.
+failure: >
+  Latent message-injection surface. A dormant queue with an
+  active policy accepts messages from permitted senders
+  without monitoring; the consumer (if any) processes them.

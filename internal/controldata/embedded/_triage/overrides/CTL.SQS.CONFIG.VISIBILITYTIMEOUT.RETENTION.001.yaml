@@ -1,0 +1,24 @@
+control: CTL.SQS.CONFIG.VISIBILITYTIMEOUT.RETENTION.001
+defect: >
+  SQS queue's VisibilityTimeout is greater than its
+  MessageRetentionPeriod.
+infection: >
+  When a consumer calls ReceiveMessage the message becomes
+  invisible for the visibility-timeout duration, preventing
+  other consumers from processing it. If the visibility
+  timeout exceeds the retention period, a message received
+  near the end of its retention can expire while invisible —
+  the consumer is processing a message that no longer exists
+  in the queue. If the consumer tries to delete the message
+  after processing, the delete fails with
+  ReceiptHandleIsInvalid; the processing completed but the
+  message was already removed by retention. Processing output
+  may be duplicated if the consumer retries, or the message
+  is silently lost. The misconfiguration is invisible at
+  steady state — no error log surfaces until an actual
+  message hits the boundary, by which point the loss has
+  occurred.
+failure: >
+  Silent message loss during normal processing. Messages can
+  expire while being processed; retention deletes the message
+  before the consumer finishes.

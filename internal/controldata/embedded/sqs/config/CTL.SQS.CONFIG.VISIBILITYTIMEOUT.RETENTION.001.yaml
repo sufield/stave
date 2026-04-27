@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.CONFIG.VISIBILITYTIMEOUT.RETENTION.001
+name: SQS Queue Visibility Timeout Exceeds Message Retention
+description: >
+  SQS queue VisibilityTimeout is greater than its
+  MessageRetentionPeriod. When a consumer calls
+  ReceiveMessage, the message becomes invisible for the
+  visibility-timeout duration; if that duration is longer
+  than the retention period, the message can expire (be
+  deleted by SQS) while the consumer is still processing it.
+  The processing completes against a message that no longer
+  exists; a DeleteMessage call on the receipt handle returns
+  ReceiptHandleIsInvalid. Worse, if the consumer retries
+  (assuming the delete failed transiently), it has nothing
+  to retry against — the message is silently lost. This is a
+  configuration contradiction: visibility must always be
+  shorter than retention so a message is recoverable for at
+  least one visibility cycle.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, A1.2, CC7.4"
+  nist_800_53_r5: "CM-6, SI-11, CP-10"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "CM-6"
+  iso_27001_2022: "A.8.32, A.5.30"
+  ccm_v4: ["BCR-08", "CCC-04"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SQS queue's VisibilityTimeout is longer than its
+    MessageRetentionPeriod. Messages can expire while a
+    consumer is processing them.
+  action: >
+    Reduce VisibilityTimeout below MessageRetentionPeriod so
+    every in-flight message is recoverable for at least one
+    full visibility cycle. The standard guidance is
+    visibility = max-expected-processing-time + buffer, while
+    retention = visibility * retries (matching the redrive
+    policy's maxReceiveCount). Apply via aws sqs
+    set-queue-attributes --queue-url <url> --attributes
+    VisibilityTimeout=300,MessageRetentionPeriod=345600.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "visibility_timeout": 300,
+          "retention_period": 345600,
+          "visibility_exceeds_retention": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.visibility_exceeds_retention
+      op: eq
+      value: true
+defect: >
+  SQS queue's VisibilityTimeout is greater than its
+  MessageRetentionPeriod.
+infection: >
+  When a consumer calls ReceiveMessage the message becomes
+  invisible for the visibility-timeout duration, preventing
+  other consumers from processing it. If the visibility
+  timeout exceeds the retention period, a message received
+  near the end of its retention can expire while invisible —
+  the consumer is processing a message that no longer exists
+  in the queue. If the consumer tries to delete the message
+  after processing, the delete fails with
+  ReceiptHandleIsInvalid; the processing completed but the
+  message was already removed by retention. Processing output
+  may be duplicated if the consumer retries, or the message
+  is silently lost. The misconfiguration is invisible at
+  steady state — no error log surfaces until an actual
+  message hits the boundary, by which point the loss has
+  occurred.
+failure: >
+  Silent message loss during normal processing. Messages can
+  expire while being processed; retention deletes the message
+  before the consumer finishes.
+tests:
+  - name: visibility 12h vs retention 1h fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            visibility_timeout: 43200
+            retention_period: 3600
+            visibility_exceeds_retention: true
+  - name: visibility 30s vs retention 4d passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            visibility_timeout: 30
+            retention_period: 345600
+            visibility_exceeds_retention: false
+  - name: visibility equals retention fires (boundary case)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:edge-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            visibility_timeout: 3600
+            retention_period: 3600
+            visibility_exceeds_retention: true

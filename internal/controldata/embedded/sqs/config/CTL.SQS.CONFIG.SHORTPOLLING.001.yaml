@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.CONFIG.SHORTPOLLING.001
+name: SQS Queue Uses Short Polling
+description: >
+  SQS queue has ReceiveMessageWaitTimeSeconds set to 0 (short
+  polling). Short polling returns immediately, even when no
+  messages are available. Each ReceiveMessage call is an API
+  request and is billed; short-polled queues with no pending
+  messages produce a steady stream of empty responses, which
+  inflates cost and adds latency (consumers must poll more
+  frequently to detect new messages). Long polling
+  (WaitTimeSeconds 1-20, max 20s) waits for messages to
+  arrive — reducing empty responses, reducing cost, and
+  improving responsiveness. This is an operational/cost
+  control rather than a security control; severity is low
+  because short polling is functionally correct, just
+  inefficient.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC6.1, A1.2"
+  nist_800_53_r5: "CM-6, SA-22"
+  fedramp_moderate: "CM-6"
+  iso_27001_2022: "A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SQS queue is configured for short polling. The consumer
+    pays for empty responses and observes higher latency.
+  action: >
+    Set ReceiveMessageWaitTimeSeconds to 20 (the maximum) so
+    polls block until a message arrives or the timeout
+    elapses:
+    aws sqs set-queue-attributes --queue-url <url>
+    --attributes ReceiveMessageWaitTimeSeconds=20.
+    The consumer's ReceiveMessage calls should pass
+    WaitTimeSeconds=20 as well to honor long-polling
+    semantics end-to-end.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "receive_wait_time": 20,
+          "uses_short_polling": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.uses_short_polling
+      op: eq
+      value: true
+defect: >
+  SQS queue's ReceiveMessageWaitTimeSeconds is 0 (short
+  polling).
+infection: >
+  Short polling returns immediately even when no messages
+  are available, producing a stream of empty
+  ReceiveMessage responses on idle queues. Each response is
+  an API call billed against the SQS request quota — the
+  cost scales with consumer poll frequency, not with actual
+  message volume. Long polling
+  (ReceiveMessageWaitTimeSeconds 1-20) blocks the call
+  until a message arrives or the wait expires, eliminating
+  most empty responses. The operational cost is bounded
+  but real; for high-poll-frequency consumers, the
+  difference can be material. Long polling also reduces
+  message-arrival latency because consumers no longer
+  need a tight poll loop to stay current.
+failure: >
+  Inefficient polling. The queue produces empty responses
+  on every consumer call when no messages are available;
+  cost rises and arrival latency widens.
+tests:
+  - name: short polling (wait time 0) fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            receive_wait_time: 0
+            uses_short_polling: true
+  - name: long polling (wait time 20) passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            receive_wait_time: 20
+            uses_short_polling: false

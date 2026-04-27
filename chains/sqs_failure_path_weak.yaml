@@ -1,0 +1,21 @@
+id: sqs_failure_path_weak
+description: >
+  Cross-account DLQ plus either retention mismatch or no DLQ
+  consumer. The failure path crosses an account boundary AND
+  either messages expire faster in the DLQ than in the
+  source, or failed messages are uninvestigated. The failure
+  handling is both weaker than the success path
+  (cross-account, possibly weaker controls) and operationally
+  degraded (premature expiry or no investigation). Threshold
+  of 2 fires when the DLQ pipeline accumulates at least two
+  weakness signals.
+controls:
+  - CTL.SQS.CROSSACCOUNT.DLQ.001
+  - CTL.SQS.DLQ.RETENTION.MISMATCH.001
+  - CTL.SQS.DLQ.NOCONSUMER.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - data_destruction

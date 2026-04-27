@@ -1,0 +1,134 @@
+dsl_version: ctrl.v1
+id: CTL.SQS.LIFECYCLE.DLQ.ORPHAN.001
+name: SQS Dead-Letter Queue's Source Queue Was Deleted
+description: >
+  SQS queue is configured as a dead-letter queue (it was the
+  target of a source queue's redrive policy) but the source
+  queue has been deleted. The DLQ persists with its policy,
+  encryption, and any messages already accumulated from the
+  deleted source — but will never receive new messages
+  because nothing redrives to it. This is the DLQ-side mirror
+  of CTL.SQS.GHOST.DLQ.001 (which detects the source queue's
+  redrive pointing at a deleted DLQ); this control catches the
+  inverse — the DLQ outlived its source. The orphaned DLQ
+  often holds historical failure data that needs investigation
+  or cleanup before deletion.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - sqs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sqs_queue
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    SQS dead-letter queue's source queue has been deleted.
+    The DLQ persists as decommission debris, possibly holding
+    historical failure data.
+  action: >
+    Inspect the DLQ contents
+    (aws sqs receive-message --queue-url <dlq-url>
+    --max-number-of-messages 10) to determine whether any
+    accumulated messages still need investigation or
+    reprocessing. After triage — replay, archive, or accept
+    loss — delete the DLQ
+    (aws sqs delete-queue --queue-url <dlq-url>). If the
+    decommission of the source was unintentional and the
+    pipeline should be restored, recreate the source queue
+    and re-attach the redrive policy.
+  example: |
+    {
+      "messaging": {
+        "kind": "queue",
+        "sqs": {
+          "is_dlq": true,
+          "dlq_source_exists": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: queue
+    - field: properties.messaging.sqs.is_dlq
+      op: eq
+      value: true
+    - field: properties.messaging.sqs.has_orphan_dlq_source
+      op: eq
+      value: true
+defect: >
+  SQS dead-letter queue's source queue has been deleted; the
+  DLQ persists without an active source.
+infection: >
+  A DLQ exists to receive failed messages from one or more
+  source queues. When the source is deleted, the DLQ stops
+  receiving new messages — but it continues to hold whatever
+  failure data accumulated before the deletion. The DLQ is no
+  longer in the active failure path: nobody is paged when its
+  metrics change (no new arrivals), the consumer (if any) has
+  nothing fresh to process, and the historical contents
+  decay. Two risks: the historical messages may contain
+  unprocessed failures whose investigation was abandoned along
+  with the source decommission; and the DLQ keeps consuming
+  inventory budget (queue count, monitoring noise, policy
+  audits) without serving any current workload.
+failure: >
+  Decommission debris in the failure path. The DLQ persists
+  with historical data that is neither investigated nor
+  preserved deliberately, and it adds noise to inventory and
+  compliance reports.
+tests:
+  - name: DLQ with deleted source fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            dlq_source_exists: false
+            has_orphan_dlq_source: true
+            dlq_message_count: 30
+            dlq_source_arn: "arn:aws:sqs:us-east-1:111122223333:orders-queue-deleted"
+  - name: DLQ with live source passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:orders-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            dlq_source_exists: true
+            has_orphan_dlq_source: false
+            dlq_source_arn: "arn:aws:sqs:us-east-1:111122223333:orders-queue"
+  - name: empty orphan DLQ still fires (less urgent but flagged)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:legacy-dlq"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        messaging:
+          kind: queue
+          sqs:
+            is_dlq: true
+            dlq_source_exists: false
+            has_orphan_dlq_source: true
+            dlq_message_count: 0

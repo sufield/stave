@@ -1,0 +1,21 @@
+control: CTL.SQS.CROSSACCOUNT.DLQ.001
+defect: >
+  SQS source queue's DLQ is in a different AWS account.
+infection: >
+  Failed messages cross an account boundary when they are
+  sent to the DLQ — message content (potentially PII,
+  transaction data, application secrets) traverses from the
+  source account into the DLQ account. The source account's
+  security baseline is one set of controls; the DLQ account's
+  is another. Common drift between the two: the DLQ account
+  has lower CloudTrail coverage (data events disabled),
+  weaker monitoring (no DLQ depth alarm), or broader IAM
+  permissions (a centralized-failure-handling role used by
+  many teams). The result is that failed messages — often
+  the ones containing the most diagnostic detail — sit in a
+  weaker security posture than the messages that succeeded.
+failure: >
+  Failure-path security weaker than success path. Failed
+  messages cross an account boundary into a possibly weaker
+  control surface, with audit-trail and monitoring gaps the
+  source account does not have.

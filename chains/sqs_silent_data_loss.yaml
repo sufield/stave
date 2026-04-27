@@ -1,0 +1,21 @@
+id: sqs_silent_data_loss
+description: >
+  Visibility timeout exceeds retention plus either no DLQ
+  or no consumer on the source queue. Messages can expire
+  during processing AND either failed messages have no
+  safety net or messages aren't consumed at all. Multiple
+  data-loss paths compound: messages are lost while being
+  processed (visibility/retention contradiction) and either
+  dropped on failure (no DLQ) or never read in the first
+  place (no consumer). Threshold of 2 fires when the queue
+  has at least two distinct silent-loss surfaces.
+controls:
+  - CTL.SQS.CONFIG.VISIBILITYTIMEOUT.RETENTION.001
+  - CTL.SQS.DLQ.001
+  - CTL.SQS.LIFECYCLE.NOCONSUMER.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - data_destruction
