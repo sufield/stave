@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1770
-**Pack hash:** `146d7811cdce6cd885024e9414a49b17affca8e0feac549572cf15e7f484df58`
+**Total controls:** 1784
+**Pack hash:** `60a82207cbd4d8dfd0af0de273165eb6a448b28e301693fcfeb803758f5c30d3`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 193 |
-| high | 779 |
+| critical | 194 |
+| high | 786 |
 | info | 16 |
 | low | 123 |
-| medium | 659 |
+| medium | 665 |
 
 | Domain | Count |
 |--------|-------|
@@ -22,10 +22,10 @@
 | audit | 33 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 73 |
+| detection | 80 |
 | encryption | 92 |
 | exposure | 965 |
-| governance | 186 |
+| governance | 193 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -23159,6 +23159,141 @@ Secret blast radius assessment requires the target_sensitivity field. The extrac
 
 ---
 
+### CTL.SECRETS.ALARM.ACCESS.FAILURE.001
+
+**No CloudWatch Alarm for GetSecretValue Failures**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.4; fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: AU-6, SI-4; pci_dss_v4.0: 10.6; soc2: CC6.1, CC7.2;
+
+No CloudWatch alarm monitors GetSecretValue API calls that return errors (AccessDeniedException, ResourceNotFoundException, DecryptionFailureException). Access failure spikes indicate either active security events (credential scraping — an attacker testing which secrets they can read), operational failures (secret deleted or KMS key disabled — services breaking), or permission changes (IAM policy modified — legitimate services losing access). The alarm targets spikes, not individual failures, since transient denials happen during normal IAM deployments.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = GetSecretValue with errorCode present: '{ $.eventName = "GetSecretValue" && $.errorCode = "*" }' and a CloudWatch alarm with a threshold tuned to typical baseline noise (start at 5 errors per 5 minutes; tune by environment). Route to ops/security on-call. Optionally split the alarm by errorCode so AccessDeniedException (security signal), ResourceNotFoundException (operational signal), and DecryptionFailureException (KMS signal) page distinct teams.
+
+---
+
+### CTL.SECRETS.ALARM.ACCESS.VOLUME.001
+
+**No CloudWatch Alarm for High-Frequency GetSecretValue Calls**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: AU-6, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.2;
+
+No CloudWatch alarm monitors for high-frequency GetSecretValue API calls. Sudden spikes may indicate credential scraping (attacker enumerating and reading secrets), caching failure (an application retrieving the secret on every request instead of caching), or bulk credential retrieval (automation reading many secrets simultaneously). Anomaly detection or environment-tuned thresholds reduce false positives from legitimate causes (deployment rolling out, application restart).
+
+**Remediation:** Create a CloudWatch anomaly-detection alarm on AWS/SecretsManager metric (or a CloudTrail metric filter counting GetSecretValue events). Anomaly detection adapts to the baseline call volume per environment so it avoids false positives during deployment ramps. Pair with the access-failure alarm so spikes in either dimension trigger investigation.
+
+---
+
+### CTL.SECRETS.ALARM.DELETE.001
+
+**No CloudWatch Alarm for Secrets Manager DeleteSecret**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4, CP-10; pci_dss_v4.0: 10.6, 10.7; soc2: CC7.2, CC7.3, A1.2;
+
+No CloudWatch alarm monitors CloudTrail for DeleteSecret API calls. DeleteSecret schedules the secret for permanent deletion with a recovery window (7-30 days). Without an alarm, deletion is invisible until dependent services start failing. Companion to CTL.SECRETS.GHOST.DELETION.REFERENCED.001 (SM-1): GHOST detects state (already pending deletion); this alarm detects the event (deletion happening now), enabling immediate restore-or-confirm response.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = DeleteSecret scoped to the account, then a CloudWatch alarm with threshold 1 and a 60-second period: aws logs put-metric-filter --filter-pattern '{ $.eventName = "DeleteSecret" }' followed by aws cloudwatch put-metric-alarm. Route the alarm to an SNS topic with confirmed subscribers (ops on-call, PagerDuty) so deletions surface within minutes — enough time to RestoreSecret if the deletion was accidental.
+
+---
+
+### CTL.SECRETS.ALARM.POLICYCHANGE.001
+
+**No CloudWatch Alarm for Secret Policy Changes**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: AU-6, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.2;
+
+No CloudWatch alarm monitors CloudTrail for PutResourcePolicy or DeleteResourcePolicy API calls on secrets. Policy changes modify who can access the credential — adding new principals, adding cross-account access, removing scoping conditions. Without an alarm, secret access-control modifications are invisible until audited. Same pattern as KMS.ALARM.POLICYCHANGE and SNS.ALARM.DELETETOPIC: the access posture changes and nobody is told.
+
+**Remediation:** Create CloudTrail metric filters on eventName = PutResourcePolicy and eventName = DeleteResourcePolicy scoped to Secrets Manager, then a CloudWatch alarm with threshold 1 over a 5-minute period. Route to security on-call so policy changes trigger immediate review against a recent snapshot of the policy. Pair with CTL.SECRETS.AUDIT.DATAEVENTS.001 so the modification event AND any subsequent reads of the affected secret are correlated in the audit trail.
+
+---
+
+### CTL.SECRETS.ALARM.PUTVALUE.001
+
+**No CloudWatch Alarm for Secrets Manager PutSecretValue**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: SI-4; hipaa: 164.312(a)(1); iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, AU-6, SI-4, IR-4; pci_dss_v4.0: 8.2.4, 10.6; soc2: CC6.1, CC7.2, CC7.3;
+
+No CloudWatch alarm monitors CloudTrail for PutSecretValue API calls. PutSecretValue replaces the secret's credential value — the database password, API key, or token changes. Without an alarm, credential modification is invisible. An attacker with PutSecretValue permission can replace a production database password with one they control, and every service that retrieves the secret then authenticates with the attacker's password. The alarm should ideally filter rotation-initiated PutSecretValue calls (userIdentity = rotation Lambda ARN) and alert only on manual or non-rotation modifications.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = PutSecretValue. To reduce noise from rotation-initiated calls, exclude events where userIdentity.arn matches a known rotation Lambda pattern: '{ $.eventName = "PutSecretValue" && $.userIdentity.arn != "*lambda*rotation*" }'. Wire to a CloudWatch alarm with threshold >= 1 over a 5-minute period. Route to ops on-call so manual modifications surface immediately and trigger investigation.
+
+---
+
+### CTL.SECRETS.ALARM.ROTATION.APPROACHING.001
+
+**No Monitoring for Secrets Approaching Rotation Deadline**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: IA-5, SI-4; pci_dss_v4.0: 8.2.4; soc2: CC7.2;
+
+No monitoring tracks secrets approaching their rotation deadline — secrets where (LastRotatedDate + interval) falls within the next 7 days. Proactive control (vs. reactive ROTATION.STALE.001 which fires after rotation is already overdue): early warning lets the team verify the rotation pipeline before failure.
+
+**Remediation:** Run a periodic Lambda or scheduled query that flags secrets where (LastRotatedDate + RotationRules.AutomaticallyAfterDays) is within 7 days of now. Publish the list to an SNS topic, ticket queue, or dashboard so the team can verify the rotation pipeline (Lambda exists, network path works, target service reachable) before rotation actually runs. Pair with CTL.SECRETS.ALARM.ROTATION.FAILURE.001 so when rotation does run, failures are caught in real time.
+
+---
+
+### CTL.SECRETS.ALARM.ROTATION.FAILURE.001
+
+**No CloudWatch Alarm for Secrets Manager Rotation Failure**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: SI-4; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: IA-5, SI-4, IR-4; pci_dss_v4.0: 8.2.4, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm monitors the RotationFailed event (Secrets Manager → CloudWatch Events / EventBridge) or CloudTrail RotateSecret error events. When rotation fails the credential doesn't change, the next rotation attempt may also fail, and the credential becomes static while rotation appears configured. Companion to CTL.SECRETS.GHOST.ROTATIONLAMBDA.001 and CTL.SECRETS.ROTATION.STALE.001 (SM-1): the SM-1 controls detect rotation already broken (state); this alarm detects rotation failing now (event), enabling minutes-level response.
+
+**Remediation:** Either: (a) configure an EventBridge rule on aws.secretsmanager source with detail-type "AWS API Call via CloudTrail" and event names containing rotation failure / lambda invocation errors, then route to a CloudWatch alarm via SNS notification; or (b) create a CloudTrail metric filter on eventName = RotateSecret AND errorCode is present, then a CloudWatch alarm with threshold >= 1 over a 5-minute period. Either path provides minutes-level detection. Verify the alarm action publishes to a topic with at least one confirmed subscriber (see CTL.SNS.LIFECYCLE.UNCONFIRMED.001).
+
+---
+
+### CTL.SECRETS.AUDIT.DATAEVENTS.001
+
+**CloudTrail Data Events Not Enabled for Secrets Manager**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 3.2; fedramp_moderate: AU-2; hipaa: 164.312(b); iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-3, AU-12; pci_dss_v4.0: 10.1, 10.2; soc2: CC7.1, CC7.2;
+
+CloudTrail is not configured to log Secrets Manager data events (GetSecretValue, PutSecretValue, DeleteSecret). Management events (CreateSecret, DescribeSecret, UpdateSecret) are logged by default but the most sensitive operation — GetSecretValue, the credential read — is not. For secrets containing database passwords, API keys, and service credentials, data events are the only credential-access audit trail. Higher severity than SQS/SNS data-event controls (medium): credential access is the most sensitive data access operation in AWS.
+
+**Remediation:** Add a Secrets Manager data-event selector to a CloudTrail trail covering the account or the relevant secret ARNs: aws cloudtrail put-event-selectors --trail-name <trail> --advanced-event-selectors '[{"Name":"Secrets Manager data events","FieldSelectors": [{"Field":"eventCategory","Equals":["Data"]}, {"Field":"resources.type","Equals":["AWS::SecretsManager::Secret"]}]}]'. For high-volume environments, restrict the resource ARN selector to security-sensitive secrets to bound log-volume cost. Verify the trail's S3 destination has appropriate access controls and retention.
+
+---
+
+### CTL.SECRETS.CROSSACCOUNT.BLASTRADIUS.001
+
+**Secret Shared with Excessive Number of Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, SC-12; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.6;
+
+Secret resource policy grants GetSecretValue to more than 5 external accounts. Same blast-radius pattern as CTL.KMS.CROSSACCOUNT.BLASTRADIUS.001 — each sharing account increases risk in both directions: credential compromise affects all accounts, and account compromise in any one of them provides credential access. Threshold of 5 is consistent across cross-account blast radius controls.
+
+**Remediation:** Audit the cross-account list and remove accounts that no longer require access. For accounts that genuinely need the credential, prefer architecture changes that avoid sharing: each consuming account uses a separate secret with its own rotation, or each account authenticates through a shared service that brokers access. If broad sharing is unavoidable (a true enterprise-wide credential), pair with strict aws:PrincipalOrgID conditions (CTL.SECRETS.POLICY.CROSSACCOUNT.001), high-frequency access alarms (CTL.SECRETS.ALARM.ACCESS.VOLUME.001), and CloudTrail data events in every consuming account (CTL.SECRETS.AUDIT.DATAEVENTS.001).
+
+---
+
 ### CTL.SECRETS.CROSSACCOUNT.NOKMS.001
 
 **Secret Shared Cross-Account Without KMS Key Sharing**
@@ -23171,6 +23306,21 @@ Secret blast radius assessment requires the target_sensitivity field. The extrac
 Secret resource policy grants GetSecretValue to an external account but the secret's KMS key policy doesn't grant kms:Decrypt to that account. The external account has Secrets Manager permission to read the secret but can't decrypt it — the KMS key blocks the decryption. The access appears granted; the decryption fails. This is a cross-service permission mismatch where one service grants access and the other blocks it. Note: secrets encrypted with the AWS-managed key (aws/secretsmanager) cannot be shared cross-account at all — this control applies to CMK-encrypted secrets where cross-account access is intended.
 
 **Remediation:** Either: (a) update the KMS key policy to grant kms:Decrypt to the external account principal that the secret policy authorizes (aws kms put-key-policy --key-id <id> --policy <policy>); or (b) if cross-account access was unintended, remove the cross-account grant from the secret resource policy. Both sides — Secrets Manager AND KMS — must consistently authorize the external account for cross- account secret reads to function.
+
+---
+
+### CTL.SECRETS.CROSSACCOUNT.VALUECOPIED.001
+
+**Secret Value Duplicated in Another Account**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12, CM-2; pci_dss_v4.0: 3.5, 8.2.4; soc2: CC6.1, CC6.7;
+
+The same credential value exists in secrets in multiple accounts — the credential was copied between accounts instead of using cross-account access via resource policy. When the credential rotates in the source account, the copy is stale; authentication may fail or destination accounts may continue using the old value. Stave detects duplication via observation metadata (matching credential fingerprints, tag patterns, or scanner-flagged duplicates) rather than reading the credential value itself.
+
+**Remediation:** Replace duplication with cross-account access. Pick one secret as authoritative, configure its resource policy to grant GetSecretValue to consuming-account principals (with aws:PrincipalOrgID — see CTL.SECRETS.POLICY.CROSSACCOUNT.001), point all consumers at the authoritative secret ARN, then delete the duplicate secrets. Audit the duplicates' rotation history before deletion to identify the rotation pipeline that needs to take over.
 
 ---
 
@@ -23216,6 +23366,21 @@ Secret resource policy grants access to an IAM principal (role or user ARN) that
 Secret has rotation enabled but the rotation Lambda function has been deleted. The console shows rotation enabled, the rotation schedule is set, the rotation ARN is present — but the Lambda function doesn't exist. When the next rotation is triggered, the invocation fails silently. The credential never rotates. The secret appears to have active rotation; it doesn't. This is the credential rotation ghost — the most dangerous ghost reference in the Secrets Manager domain because the gap is INVISIBLE to audits: the rotation configuration shows "Enabled, 30-day interval" while the credential has been static since the Lambda was deleted.
 
 **Remediation:** Restore the rotation Lambda by redeploying the function (the same SAR template that was originally used for the credential type — RDS-PostgreSQL-Rotation, RDS-MySQL-Rotation, etc.), then update the secret's rotation configuration to point at the new function ARN (aws secretsmanager rotate-secret --secret-id <id> --rotation-lambda-arn <arn>). Force an immediate rotation so the static credential is replaced (aws secretsmanager rotate-secret --secret-id <id> --rotate-immediately). Audit the secret's LastRotatedDate to determine how long rotation has been silently broken; rotate any other secrets that share the same rotation Lambda template.
+
+---
+
+### CTL.SECRETS.INTEGRATION.RDS.NOSECRET.001
+
+**RDS Instance Master Credential Not Managed by Secrets Manager**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: IA-5; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12, SC-28; pci_dss_v4.0: 3.5, 8.2.4; soc2: CC6.1, CC6.7;
+
+RDS instance has a master user password that is not managed by Secrets Manager. The password was set at instance creation (CloudFormation parameter, CLI, or console) and is stored somewhere outside Secrets Manager — in a CloudFormation template, deployment script, environment variable, developer's notes, or nowhere (forgotten). The password can't be rotated via Secrets Manager, can't be audited via CloudTrail data events, and can't be restricted via resource policy. Does not fire on RDS instances that use IAM database authentication (no master password in use).
+
+**Remediation:** Migrate the master credential to Secrets Manager. Preferred: enable RDS-managed password (aws rds modify-db-instance --db-instance-identifier <id> --manage-master-user-password --master-user-secret-kms-key-id <cmk>) — RDS creates and rotates the secret automatically. Alternative: create a Secrets Manager secret manually, attach a rotation Lambda, point applications at the secret ARN, then run a one-time password reset through the new rotation pipeline. After migration, verify the secret has rotation enabled (CTL.SECRETS.ROTATION.001) and is encrypted with a customer-managed key (CTL.SECRETSMANAGER.ENCRYPT.001).
 
 ---
 
@@ -23336,6 +23501,51 @@ Secret resource policy grants both secretsmanager:GetSecretValue (read the crede
 Secret resource policy has more than 10 permission statements. Same threshold and pattern as CTL.SQS.POLICY.SPRAWL.001, CTL.SNS.POLICY.SPRAWL.001, and CTL.LAMBDA.POLICY.ACCUMULATED.001 — accumulated permission statements make the credential's access surface unauditable. Sprawled secret policies often hide effectively-public access in a Statement that the team forgot was added.
 
 **Remediation:** Audit every Statement: for each, identify the principal, actions, and conditions. Consolidate redundant Statements (multiple Statements granting the same actions to similar principals can be merged). Remove Statements for decommissioned consumers. The target is a policy where every Statement is reviewable in a single sitting and the team can articulate why each grant exists.
+
+---
+
+### CTL.SECRETS.REPLICA.NONCOMPLIANT.REGION.001
+
+**Secret Replicated to Non-Compliant Region**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-4; hipaa: 164.312(a)(1); iso_27001_2022: A.5.31, A.8.20; nist_800_53_r5: AC-4, SC-12, SC-28; pci_dss_v4.0: 1.2; soc2: CC6.1, CC6.7;
+
+Secrets Manager secret is replicated to a region that doesn't comply with data residency requirements. The credential value — which may be a database password, API key, or service token — exists in a region where data processing is not authorized. Same pattern as CTL.KMS.MULTIREGION.NONCOMPLIANT.REGION.001.
+
+**Remediation:** Remove the non-compliant replica (aws secretsmanager remove-regions-from-replication --secret-id <id> --remove-replica-regions <region>). Audit the secret's CloudTrail data events in the non-compliant region to understand whether the credential was retrieved while the replica existed — if so, treat as a data-residency incident and rotate the credential. Configure SCPs to deny secretsmanager:ReplicateSecretToRegions for non-compliant regions to prevent re-introduction.
+
+---
+
+### CTL.SECRETS.REPLICA.ORPHAN.001
+
+**Secret Primary Deleted But Replicas Remain**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, CM-3, SC-12; pci_dss_v4.0: 1.2, 8.2.4; soc2: CC6.1, CC8.1;
+
+Secrets Manager secret primary was deleted but replica secrets in other regions still exist. Replicas retain the credential value (frozen at the last value before deletion), the resource policy, and the encryption configuration — but no longer receive rotation updates from the primary. The replicas are orphaned credential caches with no lifecycle management.
+
+**Remediation:** Decide intent: (a) if the deletion was intentional and no consumers in the replica region depend on the secret, schedule the replica for deletion (aws secretsmanager delete-secret --secret-id <replica-arn> --recovery-window-in-days 30); (b) if the replica region has consumers that still need the credential, promote the replica to a standalone primary and re-establish rotation (aws secretsmanager remove-regions-from-replication on the original primary first if a primary still exists). Audit the target service to confirm the credential held in the replica is still valid; if not, the orphan replica is misleading consumers with a stale value.
+
+---
+
+### CTL.SECRETS.REPLICA.POLICY.MISMATCH.001
+
+**Secret Replicas Have Different Access Policies**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-4, SC-12; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.6;
+
+Secrets Manager secret is replicated to other regions but the replicas have different resource policies. The same credential value exists in multiple regions with inconsistent access control. The weakest replica policy is the effective access control for the credential — same pattern as CTL.KMS.MULTIREGION.POLICY.MISMATCH.001.
+
+**Remediation:** Synchronize the resource policy across the primary and every replica. Either: (a) rebuild the replicas after aligning the primary's policy (aws secretsmanager replicate-secret-to-regions or delete-replica + replicate); or (b) update each replica's resource policy individually (aws secretsmanager put-resource-policy --secret-id <replica-arn> --resource-policy <policy>) so all regions enforce the same rules. Pair with CloudTrail data events (CTL.SECRETS.AUDIT.DATAEVENTS.001) in every region — a less-monitored replica region weakens the audit surface as well as the access surface.
 
 ---
 
