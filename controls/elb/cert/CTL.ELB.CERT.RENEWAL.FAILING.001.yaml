@@ -1,0 +1,137 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CERT.RENEWAL.FAILING.001
+name: ACM Certificate Auto-Renewal Is Failing
+description: >
+  ACM certificate used by the load balancer has
+  auto-renewal failing. ACM attempted to renew the
+  certificate but the DNS validation record is missing
+  or the email validation wasn't completed. The
+  certificate will expire on its expiration date if
+  not resolved. Precursor to expiration — fires while
+  there's still time to fix the validation record
+  before the certificate stops working.
+domain: governance
+severity: critical
+compliance:
+  soc2: "CC6.7, A1.1"
+  nist_800_53_r5: "SC-12, SC-17"
+  pci_dss_v4.0: "4.1, 4.2.1"
+  fedramp_moderate: "SC-17"
+  iso_27001_2022: "A.5.16, A.8.24"
+  ccm_v4: ["CEK-10"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    ACM auto-renewal is not succeeding. The certificate
+    will expire if renewal is not resolved.
+  action: >
+    Inspect the certificate's renewal status via
+    aws acm describe-certificate. For DNS-validated
+    certificates, recreate the missing CNAME validation
+    record in the domain's DNS zone. For email-validated
+    certificates, request a new validation email and
+    have a domain admin click the validation link. After
+    fixing, ACM retries renewal automatically; status
+    moves to SUCCESS within a day or two. Track
+    certificate_expiry_days — if it drops below 14 the
+    risk of expiration becomes immediate.
+  example: |
+    {
+      "network": {
+        "kind": "listener",
+        "elb": {
+          "is_acm_certificate": true,
+          "acm_renewal_status": "SUCCESS",
+          "acm_renewal_failing": false,
+          "certificate_expiry_days": 60
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: listener
+    - field: properties.network.elb.is_acm_certificate
+      op: eq
+      value: true
+    - field: properties.network.elb.acm_renewal_failing
+      op: eq
+      value: true
+defect: >
+  ACM certificate auto-renewal is failing — the
+  certificate will expire on its expiration date.
+infection: >
+  ACM auto-renewal attempts to renew the certificate
+  60 days before expiration. For DNS-validated
+  certificates, ACM checks for the CNAME validation
+  record in the domain's DNS. If the validation record
+  was removed (Route 53 record deleted, DNS zone
+  changed, domain transferred), ACM can't validate
+  ownership and renewal fails. For email-validated
+  certificates, ACM sends renewal emails to the domain
+  admin contacts — if nobody responds, renewal stays
+  pending. Common failure modes: the DNS validation
+  CNAME was deleted during a DNS cleanup, the domain
+  was transferred to a different DNS provider, or the
+  email contacts are no longer valid. If renewal isn't
+  resolved before expiration, the certificate expires
+  and the listener serves an expired certificate —
+  browsers show security warnings and may block access.
+failure: >
+  Certificate renewal failing. Certificate will expire
+  if renewal is not resolved. HTTPS service
+  interruption imminent.
+tests:
+  - name: ACM renewal FAILED with 30 days to expiry fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/prod-alb/abc/def"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            is_acm_certificate: true
+            acm_renewal_status: "FAILED"
+            acm_renewal_failing: true
+            certificate_expiry_days: 30
+  - name: ACM renewal SUCCESS passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/prod-alb/abc/def"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            is_acm_certificate: true
+            acm_renewal_status: "SUCCESS"
+            acm_renewal_failing: false
+            certificate_expiry_days: 60
+  - name: imminent expiry with renewal failing fires (severe)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/prod-alb/abc/def"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            is_acm_certificate: true
+            acm_renewal_status: "PENDING_VALIDATION"
+            acm_renewal_failing: true
+            certificate_expiry_days: 7

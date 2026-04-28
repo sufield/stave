@@ -1,0 +1,20 @@
+control: CTL.ELB.NETWORK.INTERNAL.PUBLICSUBNET.001
+defect: >
+  Internal-scheme load balancer is deployed in public
+  subnets.
+infection: >
+  Internal load balancers shouldn't sit in subnets that
+  carry an internet gateway route. The internal scheme
+  prevents the LB from receiving public IPs, so
+  internet reachability isn't directly created — but
+  the placement signals that the network design is
+  inconsistent. If someone later flips the scheme to
+  internet-facing for a single-line config change, the
+  LB suddenly becomes internet-reachable in subnets
+  that were chosen for an internal workload. The
+  topology should match the intent: internal scheme,
+  private subnets.
+failure: >
+  Network topology mismatch. Internal LB sits in public
+  subnets, signalling design confusion and creating a
+  trapdoor if the scheme is later flipped.

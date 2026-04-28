@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CERT.NOTACM.001
+name: Load Balancer Certificate Not Managed by ACM
+description: >
+  Load balancer listener uses an SSL/TLS certificate
+  that is not managed by AWS Certificate Manager (ACM).
+  The certificate was uploaded to IAM (legacy) or is
+  self-signed. Non-ACM certificates don't auto-renew
+  (manual renewal — risk of expiration), require manual
+  rotation (download new cert, upload, update listener),
+  and may not be validated by a trusted CA (self-signed
+  certificates trigger browser warnings).
+domain: governance
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.6"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-17"
+  pci_dss_v4.0: "4.1, 4.2.1"
+  fedramp_moderate: "SC-17"
+  iso_27001_2022: "A.5.16, A.8.24"
+  ccm_v4: ["CEK-09", "CEK-10"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Load balancer listener uses a non-ACM certificate.
+    Renewal requires manual lifecycle management.
+  action: >
+    Issue a replacement certificate via ACM
+    (aws acm request-certificate or import-certificate),
+    validate via DNS, then update the listener to
+    reference the new ACM certificate:
+    aws elbv2 modify-listener --listener-arn <arn>
+    --certificates CertificateArn=<acm-arn>. Test the
+    new certificate before deleting the old IAM
+    certificate so a rollback path remains. ACM's
+    DNS-validated certificates auto-renew — once
+    migrated, the manual renewal risk disappears.
+  example: |
+    {
+      "network": {
+        "kind": "listener",
+        "elb": {
+          "certificate_arn": "arn:aws:acm:us-east-1:111122223333:certificate/abc",
+          "certificate_source": "acm",
+          "is_acm_certificate": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: listener
+    - field: properties.network.elb.is_acm_certificate
+      op: eq
+      value: false
+defect: >
+  Load balancer listener uses a certificate that is not
+  managed by ACM.
+infection: >
+  Non-ACM certificates require manual lifecycle
+  management: the certificate must be manually renewed
+  before expiration, the renewed certificate must be
+  manually uploaded to IAM, and the listener must be
+  manually updated to reference the new certificate.
+  Any step missed = certificate expires = HTTPS breaks
+  = service unreachable via HTTPS. ACM eliminates this
+  entire manual process — DNS-validated ACM
+  certificates auto-renew before expiration with no
+  manual intervention. IAM-uploaded certificates also
+  can't leverage ACM's integration with ALB for SNI
+  multi-domain serving.
+failure: >
+  Manual certificate management. Certificate requires
+  manual renewal — risk of expiration if renewal
+  process fails.
+tests:
+  - name: IAM-uploaded certificate fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/legacy-alb/abc/def"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            certificate_arn: "arn:aws:iam::111122223333:server-certificate/legacy-cert"
+            certificate_source: "iam"
+            is_acm_certificate: false
+  - name: ACM certificate passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/prod-alb/abc/def"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            certificate_arn: "arn:aws:acm:us-east-1:111122223333:certificate/abc"
+            certificate_source: "acm"
+            is_acm_certificate: true

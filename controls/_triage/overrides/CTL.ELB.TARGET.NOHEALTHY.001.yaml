@@ -1,0 +1,21 @@
+control: CTL.ELB.TARGET.NOHEALTHY.001
+defect: >
+  Target group has registered targets but every target
+  is unhealthy. Zero healthy targets.
+infection: >
+  When all targets are unhealthy, the ALB has no backend
+  to forward requests to. Depending on the ALB
+  configuration: if the target group is the only target
+  group for a listener, every request returns 503. If
+  the target group is part of a weighted routing rule,
+  the ALB may route to other target groups (if they
+  exist and are healthy). The target group has
+  registered targets — they exist as EC2 instances,
+  IPs, or Lambda functions. But all fail health checks.
+  Common causes: the application is down on all
+  instances, the health check path is wrong (returns
+  404/500 when the app is healthy), or the security
+  group doesn't allow health check traffic from the ALB.
+failure: >
+  Complete service failure. All targets unhealthy —
+  every request to this target group returns 503.

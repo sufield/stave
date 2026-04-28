@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.TARGET.NOHEALTHY.001
+name: Target Group Has Zero Healthy Targets
+description: >
+  ELB target group has registered targets but zero are
+  passing health checks. Every request the load balancer
+  forwards to this target group fails with 503. The
+  target group exists. Targets are registered. None are
+  healthy. Distinct from CTL.ELB.LISTENER.GHOST.001
+  (target group deleted) — here the group is intact but
+  the backend is non-functional.
+domain: governance
+severity: critical
+compliance:
+  soc2: "CC7.1, A1.1, A1.2"
+  nist_800_53_r5: "CP-7, CP-10, SI-4"
+  pci_dss_v4.0: "11.5.1"
+  fedramp_moderate: "CP-7"
+  iso_27001_2022: "A.8.16, A.8.32"
+  ccm_v4: ["BCR-08", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Target group has zero healthy targets. All forwarded
+    requests return 503.
+  action: >
+    Investigate the unhealthy targets via
+    aws elbv2 describe-target-health — each unhealthy
+    target carries a Reason code (Target.FailedHealthChecks,
+    Target.NotInService, Target.NotRegistered). Common
+    fixes: restart the application on instances, correct
+    the health check path so the load balancer hits a
+    route that returns 200, or open the security group
+    so health-check traffic from the load balancer can
+    reach the target port.
+  example: |
+    {
+      "network": {
+        "kind": "target_group",
+        "elb": {
+          "target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc",
+          "healthy_target_count": 3,
+          "unhealthy_target_count": 0,
+          "total_target_count": 3,
+          "has_zero_healthy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: target_group
+    - field: properties.network.elb.has_zero_healthy
+      op: eq
+      value: true
+    - field: properties.network.elb.total_target_count
+      op: gt
+      value: 0
+defect: >
+  Target group has registered targets but every target
+  is unhealthy. Zero healthy targets.
+infection: >
+  When all targets are unhealthy, the ALB has no backend
+  to forward requests to. Depending on the ALB
+  configuration: if the target group is the only target
+  group for a listener, every request returns 503. If
+  the target group is part of a weighted routing rule,
+  the ALB may route to other target groups (if they
+  exist and are healthy). The target group has
+  registered targets — they exist as EC2 instances,
+  IPs, or Lambda functions. But all fail health checks.
+  Common causes: the application is down on all
+  instances, the health check path is wrong (returns
+  404/500 when the app is healthy), or the security
+  group doesn't allow health check traffic from the ALB.
+failure: >
+  Complete service failure. All targets unhealthy —
+  every request to this target group returns 503.
+tests:
+  - name: target group with all targets unhealthy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            healthy_target_count: 0
+            unhealthy_target_count: 3
+            total_target_count: 3
+            has_zero_healthy: true
+  - name: target group with all targets healthy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            healthy_target_count: 3
+            unhealthy_target_count: 0
+            total_target_count: 3
+            has_zero_healthy: false
+  - name: empty target group does not fire (separate concern)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/empty-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            healthy_target_count: 0
+            unhealthy_target_count: 0
+            total_target_count: 0
+            has_zero_healthy: false

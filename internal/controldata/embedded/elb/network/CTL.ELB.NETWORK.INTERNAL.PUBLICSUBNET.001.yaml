@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.NETWORK.INTERNAL.PUBLICSUBNET.001
+name: Internal Load Balancer Is in Public Subnets
+description: >
+  Internal-scheme ALB or NLB is deployed in public
+  subnets (subnets with a route to an internet
+  gateway). Internal load balancers should be in
+  private subnets — they're not intended to receive
+  internet traffic. The internal scheme prevents
+  internet reachability regardless of subnet type, so
+  the control flags a topology misconfiguration rather
+  than an exposure: it indicates confusion about
+  network design and may be a precursor to a future
+  scheme flip that would inadvertently expose the LB.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "SC-7, AC-3"
+  pci_dss_v4.0: "1.2, 1.3"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.8.20, A.8.22"
+  ccm_v4: ["IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Internal load balancer is in public subnets.
+    Topology mismatch between scheme and subnet type.
+  action: >
+    Move the load balancer to private subnets:
+    aws elbv2 set-subnets --load-balancer-arn <arn>
+    --subnets <private-subnet-a> <private-subnet-b>.
+    Verify the subnets have no route to an internet
+    gateway. If the LB legitimately needs internet
+    reachability, change the scheme to internet-facing
+    instead of leaving it in mismatched public subnets.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "scheme": "internal",
+          "is_internal": true,
+          "subnets_are_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.is_internal
+      op: eq
+      value: true
+    - field: properties.network.elb.subnets_are_public
+      op: eq
+      value: true
+defect: >
+  Internal-scheme load balancer is deployed in public
+  subnets.
+infection: >
+  Internal load balancers shouldn't sit in subnets that
+  carry an internet gateway route. The internal scheme
+  prevents the LB from receiving public IPs, so
+  internet reachability isn't directly created — but
+  the placement signals that the network design is
+  inconsistent. If someone later flips the scheme to
+  internet-facing for a single-line config change, the
+  LB suddenly becomes internet-reachable in subnets
+  that were chosen for an internal workload. The
+  topology should match the intent: internal scheme,
+  private subnets.
+failure: >
+  Network topology mismatch. Internal LB sits in public
+  subnets, signalling design confusion and creating a
+  trapdoor if the scheme is later flipped.
+tests:
+  - name: internal LB in public subnets fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/internal-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            scheme: "internal"
+            is_internal: true
+            subnets_are_public: true
+            subnet_ids: ["subnet-public-a", "subnet-public-b"]
+  - name: internal LB in private subnets passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/internal-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            scheme: "internal"
+            is_internal: true
+            subnets_are_public: false
+            subnet_ids: ["subnet-private-a", "subnet-private-b"]

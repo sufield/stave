@@ -1,0 +1,20 @@
+control: CTL.ELB.NETWORK.SINGLEAZ.001
+defect: >
+  Load balancer has subnets in only one Availability
+  Zone.
+infection: >
+  A load balancer with subnets in a single AZ has no
+  AZ redundancy. The load balancer appears to be
+  configured — it has subnets, listeners, and target
+  groups. But all subnets are in one AZ. If the AZ
+  fails: the ALB has no ENIs in any other AZ, the load
+  balancer becomes unreachable, and every service
+  behind it goes down. ALB requires a minimum of two
+  subnets but doesn't require they be in different AZs
+  — two subnets in us-east-1a satisfy the requirement
+  but provide no redundancy. The check should verify
+  UNIQUE AZ count, not subnet count.
+failure: >
+  Load balancer single AZ failure point. AZ outage
+  takes the load balancer offline — all services
+  behind it are unreachable.

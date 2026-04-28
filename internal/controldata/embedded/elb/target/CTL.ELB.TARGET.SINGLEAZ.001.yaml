@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.TARGET.SINGLEAZ.001
+name: Target Group Has All Targets in Single Availability Zone
+description: >
+  ELB target group has all registered targets in a
+  single Availability Zone. AZ failure (hardware,
+  network, power) takes every target offline
+  simultaneously — the target group has zero healthy
+  targets and every request returns 503. The load
+  balancer itself may span multiple AZs but has nothing
+  to route to once the AZ holding all targets fails.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "2.5"
+  soc2: "A1.1, A1.2"
+  nist_800_53_r5: "CP-7, CP-10"
+  pci_dss_v4.0: "11.5.1"
+  fedramp_moderate: "CP-7"
+  iso_27001_2022: "A.5.30, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Target group's targets are concentrated in one AZ.
+    AZ failure removes the entire backend.
+  action: >
+    Distribute targets across at least two AZs aligned
+    with the load balancer's subnet AZs. For Auto
+    Scaling Group-backed target groups, set the ASG to
+    span multiple AZs and the appropriate
+    HealthCheckGracePeriod. For manually registered
+    targets, deregister and re-register from instances
+    in additional AZs. Verify via
+    aws elbv2 describe-target-health that targets
+    appear in distinct AvailabilityZone values.
+  example: |
+    {
+      "network": {
+        "kind": "target_group",
+        "elb": {
+          "target_az_count": 2,
+          "target_azs": ["us-east-1a", "us-east-1b"],
+          "targets_single_az": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: target_group
+    - field: properties.network.elb.targets_single_az
+      op: eq
+      value: true
+    - field: properties.network.elb.healthy_target_count
+      op: gt
+      value: 0
+defect: >
+  Target group has all targets in a single Availability
+  Zone.
+infection: >
+  AWS Availability Zones are designed to fail
+  independently — an AZ failure shouldn't affect other
+  AZs. But when all targets are in one AZ, the
+  redundancy model breaks. AZ failure = all targets
+  fail = zero healthy targets = service outage. The
+  ALB itself spans multiple AZs (if configured
+  correctly). But the backend targets are all in one
+  AZ. The ALB survives the AZ failure. The targets
+  don't. The load balancer has nothing to route to.
+  Targets should be distributed across at least 2 AZs —
+  preferably matching the ALB's subnet configuration.
+failure: >
+  Single point of AZ failure. AZ outage takes all
+  targets offline — the target group has zero healthy
+  targets.
+tests:
+  - name: targets all in single AZ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            target_az_count: 1
+            target_azs: ["us-east-1a"]
+            targets_single_az: true
+            healthy_target_count: 3
+  - name: targets across 2 AZs passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            target_az_count: 2
+            target_azs: ["us-east-1a", "us-east-1b"]
+            targets_single_az: false
+            healthy_target_count: 4

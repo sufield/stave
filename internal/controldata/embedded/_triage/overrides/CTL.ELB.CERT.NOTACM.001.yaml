@@ -1,0 +1,21 @@
+control: CTL.ELB.CERT.NOTACM.001
+defect: >
+  Load balancer listener uses a certificate that is not
+  managed by ACM.
+infection: >
+  Non-ACM certificates require manual lifecycle
+  management: the certificate must be manually renewed
+  before expiration, the renewed certificate must be
+  manually uploaded to IAM, and the listener must be
+  manually updated to reference the new certificate.
+  Any step missed = certificate expires = HTTPS breaks
+  = service unreachable via HTTPS. ACM eliminates this
+  entire manual process — DNS-validated ACM
+  certificates auto-renew before expiration with no
+  manual intervention. IAM-uploaded certificates also
+  can't leverage ACM's integration with ALB for SNI
+  multi-domain serving.
+failure: >
+  Manual certificate management. Certificate requires
+  manual renewal — risk of expiration if renewal
+  process fails.

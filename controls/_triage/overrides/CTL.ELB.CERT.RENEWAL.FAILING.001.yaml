@@ -1,0 +1,25 @@
+control: CTL.ELB.CERT.RENEWAL.FAILING.001
+defect: >
+  ACM certificate auto-renewal is failing — the
+  certificate will expire on its expiration date.
+infection: >
+  ACM auto-renewal attempts to renew the certificate
+  60 days before expiration. For DNS-validated
+  certificates, ACM checks for the CNAME validation
+  record in the domain's DNS. If the validation record
+  was removed (Route 53 record deleted, DNS zone
+  changed, domain transferred), ACM can't validate
+  ownership and renewal fails. For email-validated
+  certificates, ACM sends renewal emails to the domain
+  admin contacts — if nobody responds, renewal stays
+  pending. Common failure modes: the DNS validation
+  CNAME was deleted during a DNS cleanup, the domain
+  was transferred to a different DNS provider, or the
+  email contacts are no longer valid. If renewal isn't
+  resolved before expiration, the certificate expires
+  and the listener serves an expired certificate —
+  browsers show security warnings and may block access.
+failure: >
+  Certificate renewal failing. Certificate will expire
+  if renewal is not resolved. HTTPS service
+  interruption imminent.

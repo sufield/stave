@@ -1,0 +1,20 @@
+id: elb_network_misconfigured
+description: >
+  Any network topology misconfiguration — internal LB
+  in public subnets, internet-facing LB in private
+  subnets, or single-AZ deployment. Each indicates
+  fundamental network placement confusion: the load
+  balancer is either in the wrong subnet type for its
+  scheme or has no AZ redundancy. Threshold of 1 fires
+  whenever the load balancer's network shape is
+  inconsistent with its operational intent.
+controls:
+  - CTL.ELB.NETWORK.INTERNAL.PUBLICSUBNET.001
+  - CTL.ELB.NETWORK.INTERNETFACING.PRIVATESUBNET.001
+  - CTL.ELB.NETWORK.SINGLEAZ.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

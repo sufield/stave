@@ -1,0 +1,128 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.NETWORK.SINGLEAZ.001
+name: Load Balancer Subnets Are in a Single Availability Zone
+description: >
+  ALB or NLB has subnets configured in only one
+  Availability Zone. The load balancer itself has a
+  single point of AZ failure — if the AZ goes down,
+  the LB has no ENIs in any other AZ and the load
+  balancer becomes unreachable. ALB requires a minimum
+  of two subnets but doesn't require they be in
+  different AZs; two subnets in the same AZ satisfy
+  the API requirement but provide no redundancy. The
+  control checks UNIQUE AZ count, not subnet count.
+domain: governance
+severity: critical
+compliance:
+  cis_aws_v3.0: "2.5"
+  soc2: "A1.1, A1.2"
+  nist_800_53_r5: "CP-7, CP-10, SC-7"
+  pci_dss_v4.0: "11.5.1"
+  fedramp_moderate: "CP-7"
+  iso_27001_2022: "A.5.30, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    Load balancer is bound to subnets in a single AZ.
+    The load balancer itself has no AZ redundancy.
+  action: >
+    Add subnets in additional AZs to the load balancer:
+    aws elbv2 set-subnets --load-balancer-arn <arn>
+    --subnets <subnet-az-a> <subnet-az-b>. Verify the
+    subnets resolve to distinct AvailabilityZone values.
+    Pair with CTL.ELB.TARGET.SINGLEAZ.001 — distributing
+    the load balancer across AZs is necessary but not
+    sufficient; targets must also span AZs.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "subnet_count": 2,
+          "subnet_azs": ["us-east-1a", "us-east-1b"],
+          "unique_az_count": 2,
+          "is_single_az": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.is_single_az
+      op: eq
+      value: true
+defect: >
+  Load balancer has subnets in only one Availability
+  Zone.
+infection: >
+  A load balancer with subnets in a single AZ has no
+  AZ redundancy. The load balancer appears to be
+  configured — it has subnets, listeners, and target
+  groups. But all subnets are in one AZ. If the AZ
+  fails: the ALB has no ENIs in any other AZ, the load
+  balancer becomes unreachable, and every service
+  behind it goes down. ALB requires a minimum of two
+  subnets but doesn't require they be in different AZs
+  — two subnets in us-east-1a satisfy the requirement
+  but provide no redundancy. The check should verify
+  UNIQUE AZ count, not subnet count.
+failure: >
+  Load balancer single AZ failure point. AZ outage
+  takes the load balancer offline — all services
+  behind it are unreachable.
+tests:
+  - name: 2 subnets both in us-east-1a fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/single-az-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            subnet_count: 2
+            subnet_azs: ["us-east-1a", "us-east-1a"]
+            unique_az_count: 1
+            is_single_az: true
+  - name: subnets in 2 unique AZs passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/multi-az-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            subnet_count: 2
+            subnet_azs: ["us-east-1a", "us-east-1b"]
+            unique_az_count: 2
+            is_single_az: false
+  - name: 3 subnets all in same AZ fires (count doesn't help)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/over-provisioned-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            subnet_count: 3
+            subnet_azs: ["us-east-1a", "us-east-1a", "us-east-1a"]
+            unique_az_count: 1
+            is_single_az: true

@@ -1,0 +1,20 @@
+id: elb_backend_broken
+description: >
+  Any backend routing failure — zero healthy targets,
+  empty target group (associated to a listener but no
+  targets registered), or listener rule forwarding to
+  a deleted target group. Each independently means the
+  load balancer can't route requests to any backend.
+  Service outage at the routing layer. Threshold of 1
+  fires whenever any one of the three failure modes is
+  present.
+controls:
+  - CTL.ELB.TARGET.NOHEALTHY.001
+  - CTL.ELB.TARGET.EMPTY.001
+  - CTL.ELB.LISTENER.GHOST.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

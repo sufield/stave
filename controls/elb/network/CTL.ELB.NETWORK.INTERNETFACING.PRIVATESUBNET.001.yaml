@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.NETWORK.INTERNETFACING.PRIVATESUBNET.001
+name: Internet-Facing Load Balancer Is in Private Subnets
+description: >
+  Internet-facing ALB or NLB is deployed in private
+  subnets (subnets without a route to an internet
+  gateway). The load balancer can't receive internet
+  traffic — it has no public IP route. The scheme says
+  internet-facing. The network says private. The load
+  balancer is unreachable from the internet despite
+  being configured as internet-facing.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.1, A1.1"
+  nist_800_53_r5: "SC-7, CP-7"
+  pci_dss_v4.0: "11.5.1"
+  fedramp_moderate: "CP-7"
+  iso_27001_2022: "A.8.20, A.8.32"
+  ccm_v4: ["IVS-04", "BCR-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Internet-facing load balancer is in private subnets;
+    external traffic can't reach it.
+  action: >
+    Move the load balancer to public subnets (subnets
+    with a route to the internet gateway):
+    aws elbv2 set-subnets --load-balancer-arn <arn>
+    --subnets <public-subnet-a> <public-subnet-b>.
+    Verify subnets have an IGW route. If the workload
+    is internal-only, change the scheme to internal
+    instead of fixing the subnet placement.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "scheme": "internet-facing",
+          "is_internet_facing": true,
+          "subnets_are_private": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.is_internet_facing
+      op: eq
+      value: true
+    - field: properties.network.elb.subnets_are_private
+      op: eq
+      value: true
+defect: >
+  Internet-facing load balancer is deployed in private
+  subnets without an internet gateway route.
+infection: >
+  An internet-facing load balancer needs public subnets
+  — subnets with a route to an internet gateway — so
+  the ALB's ENIs receive public IPs and are reachable
+  from the internet. In private subnets: the ALB has
+  no public IP, there's no route from the internet to
+  the ALB, the ALB is unreachable despite the
+  internet-facing scheme, and DNS resolves to private
+  IPs that internet clients can't reach. This is a
+  complete service failure for any application that
+  expects internet traffic through this load balancer.
+failure: >
+  Internet-facing load balancer unreachable. Load
+  balancer in private subnets has no internet route —
+  external traffic can't reach it.
+tests:
+  - name: internet-facing LB in private subnets fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/public-api/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            scheme: "internet-facing"
+            is_internet_facing: true
+            subnets_are_private: true
+  - name: internet-facing LB in public subnets passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/public-api/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            scheme: "internet-facing"
+            is_internet_facing: true
+            subnets_are_private: false

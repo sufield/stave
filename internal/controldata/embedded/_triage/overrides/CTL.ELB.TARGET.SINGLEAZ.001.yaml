@@ -1,0 +1,20 @@
+control: CTL.ELB.TARGET.SINGLEAZ.001
+defect: >
+  Target group has all targets in a single Availability
+  Zone.
+infection: >
+  AWS Availability Zones are designed to fail
+  independently — an AZ failure shouldn't affect other
+  AZs. But when all targets are in one AZ, the
+  redundancy model breaks. AZ failure = all targets
+  fail = zero healthy targets = service outage. The
+  ALB itself spans multiple AZs (if configured
+  correctly). But the backend targets are all in one
+  AZ. The ALB survives the AZ failure. The targets
+  don't. The load balancer has nothing to route to.
+  Targets should be distributed across at least 2 AZs —
+  preferably matching the ALB's subnet configuration.
+failure: >
+  Single point of AZ failure. AZ outage takes all
+  targets offline — the target group has zero healthy
+  targets.

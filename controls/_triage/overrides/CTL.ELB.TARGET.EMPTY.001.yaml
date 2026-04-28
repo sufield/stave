@@ -1,0 +1,20 @@
+control: CTL.ELB.TARGET.EMPTY.001
+defect: >
+  Target group is associated with a listener but has
+  zero registered targets.
+infection: >
+  A target group associated with a listener is on the
+  routing path — requests matching the listener's rule
+  conditions arrive at this group. With zero registered
+  targets the load balancer has nothing to forward to;
+  every request returns 503 immediately. The target
+  group's configuration looks complete (health checks,
+  attributes, attached listener) but the data plane is
+  empty. Common causes: Auto Scaling Group detached
+  during a refactor, target deregistration script ran
+  too aggressively, deployment pipeline failed to
+  register the new instances after launching them.
+failure: >
+  Routing to an empty backend. Every request matching
+  this target group returns 503 because no targets are
+  registered.

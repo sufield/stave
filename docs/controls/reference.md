@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1820
-**Pack hash:** `e5f1ea73a885d8f45d1c3a4309b7759d12606e66c963bf908eb0b9fa7a883dfe`
+**Total controls:** 1828
+**Pack hash:** `c6726511cdfc8eec71e07603fa4bd7dcc785fc824186a74b0342063cba5111fd`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 200 |
-| high | 809 |
+| critical | 203 |
+| high | 812 |
 | info | 16 |
 | low | 123 |
-| medium | 672 |
+| medium | 674 |
 
 | Domain | Count |
 |--------|-------|
@@ -25,7 +25,7 @@
 | detection | 91 |
 | encryption | 92 |
 | exposure | 976 |
-| governance | 207 |
+| governance | 215 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -10550,6 +10550,36 @@ Load balancer HTTPS listener references an ACM certificate that has been deleted
 
 ---
 
+### CTL.ELB.CERT.NOTACM.001
+
+**Load Balancer Certificate Not Managed by ACM**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 2.6; fedramp_moderate: SC-17; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: SC-12, SC-17; pci_dss_v4.0: 4.1, 4.2.1; soc2: CC6.1, CC6.7;
+
+Load balancer listener uses an SSL/TLS certificate that is not managed by AWS Certificate Manager (ACM). The certificate was uploaded to IAM (legacy) or is self-signed. Non-ACM certificates don't auto-renew (manual renewal — risk of expiration), require manual rotation (download new cert, upload, update listener), and may not be validated by a trusted CA (self-signed certificates trigger browser warnings).
+
+**Remediation:** Issue a replacement certificate via ACM (aws acm request-certificate or import-certificate), validate via DNS, then update the listener to reference the new ACM certificate: aws elbv2 modify-listener --listener-arn <arn> --certificates CertificateArn=<acm-arn>. Test the new certificate before deleting the old IAM certificate so a rollback path remains. ACM's DNS-validated certificates auto-renew — once migrated, the manual renewal risk disappears.
+
+---
+
+### CTL.ELB.CERT.RENEWAL.FAILING.001
+
+**ACM Certificate Auto-Renewal Is Failing**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-17; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: SC-12, SC-17; pci_dss_v4.0: 4.1, 4.2.1; soc2: CC6.7, A1.1;
+
+ACM certificate used by the load balancer has auto-renewal failing. ACM attempted to renew the certificate but the DNS validation record is missing or the email validation wasn't completed. The certificate will expire on its expiration date if not resolved. Precursor to expiration — fires while there's still time to fix the validation record before the certificate stops working.
+
+**Remediation:** Inspect the certificate's renewal status via aws acm describe-certificate. For DNS-validated certificates, recreate the missing CNAME validation record in the domain's DNS zone. For email-validated certificates, request a new validation email and have a domain admin click the validation link. After fixing, ACM retries renewal automatically; status moves to SUCCESS within a day or two. Track certificate_expiry_days — if it drops below 14 the risk of expiration becomes immediate.
+
+---
+
 ### CTL.ELB.CROSSZONE.001
 
 **Load Balancer Must Have Cross-Zone Load Balancing Enabled**
@@ -10684,6 +10714,51 @@ Load balancer access logging must be enabled for audit and forensic analysis. Wi
 
 ---
 
+### CTL.ELB.NETWORK.INTERNAL.PUBLICSUBNET.001
+
+**Internal Load Balancer Is in Public Subnets**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-7; iso_27001_2022: A.8.20, A.8.22; nist_800_53_r5: SC-7, AC-3; pci_dss_v4.0: 1.2, 1.3; soc2: CC6.1, CC6.6;
+
+Internal-scheme ALB or NLB is deployed in public subnets (subnets with a route to an internet gateway). Internal load balancers should be in private subnets — they're not intended to receive internet traffic. The internal scheme prevents internet reachability regardless of subnet type, so the control flags a topology misconfiguration rather than an exposure: it indicates confusion about network design and may be a precursor to a future scheme flip that would inadvertently expose the LB.
+
+**Remediation:** Move the load balancer to private subnets: aws elbv2 set-subnets --load-balancer-arn <arn> --subnets <private-subnet-a> <private-subnet-b>. Verify the subnets have no route to an internet gateway. If the LB legitimately needs internet reachability, change the scheme to internet-facing instead of leaving it in mismatched public subnets.
+
+---
+
+### CTL.ELB.NETWORK.INTERNETFACING.PRIVATESUBNET.001
+
+**Internet-Facing Load Balancer Is in Private Subnets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-7; iso_27001_2022: A.8.20, A.8.32; nist_800_53_r5: SC-7, CP-7; pci_dss_v4.0: 11.5.1; soc2: CC7.1, A1.1;
+
+Internet-facing ALB or NLB is deployed in private subnets (subnets without a route to an internet gateway). The load balancer can't receive internet traffic — it has no public IP route. The scheme says internet-facing. The network says private. The load balancer is unreachable from the internet despite being configured as internet-facing.
+
+**Remediation:** Move the load balancer to public subnets (subnets with a route to the internet gateway): aws elbv2 set-subnets --load-balancer-arn <arn> --subnets <public-subnet-a> <public-subnet-b>. Verify subnets have an IGW route. If the workload is internal-only, change the scheme to internal instead of fixing the subnet placement.
+
+---
+
+### CTL.ELB.NETWORK.SINGLEAZ.001
+
+**Load Balancer Subnets Are in a Single Availability Zone**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 2.5; fedramp_moderate: CP-7; iso_27001_2022: A.5.30, A.8.32; nist_800_53_r5: CP-7, CP-10, SC-7; pci_dss_v4.0: 11.5.1; soc2: A1.1, A1.2;
+
+ALB or NLB has subnets configured in only one Availability Zone. The load balancer itself has a single point of AZ failure — if the AZ goes down, the LB has no ENIs in any other AZ and the load balancer becomes unreachable. ALB requires a minimum of two subnets but doesn't require they be in different AZs; two subnets in the same AZ satisfy the API requirement but provide no redundancy. The control checks UNIQUE AZ count, not subnet count.
+
+**Remediation:** Add subnets in additional AZs to the load balancer: aws elbv2 set-subnets --load-balancer-arn <arn> --subnets <subnet-az-a> <subnet-az-b>. Verify the subnets resolve to distinct AvailabilityZone values. Pair with CTL.ELB.TARGET.SINGLEAZ.001 — distributing the load balancer across AZs is necessary but not sufficient; targets must also span AZs.
+
+---
+
 ### CTL.ELB.SG.GHOST.001
 
 **Load Balancer References Deleted Security Group**
@@ -10699,6 +10774,21 @@ Load balancer is associated with one or more security groups that have been dele
 
 ---
 
+### CTL.ELB.TARGET.EMPTY.001
+
+**Target Group Associated with Listener Has No Registered Targets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-7; iso_27001_2022: A.8.32; nist_800_53_r5: CP-7, CP-10, SI-4; pci_dss_v4.0: 11.5.1; soc2: CC7.1, A1.1, A1.2;
+
+ELB target group is associated with a listener (or listener rule) but has zero registered targets. The target group exists with health-check configuration and attributes but no instances, IPs, or Lambda functions are registered. Every request the load balancer forwards to this group returns 503 immediately. Distinct from orphan target groups (no listener at all — separate lifecycle concern).
+
+**Remediation:** Either register targets via aws elbv2 register-targets — or, if the target group is no longer in use, remove the listener-rule association and delete the group (CTL.ELB.GHOST.* catches lingering orphans). For Auto Scaling Group-backed target groups, attach the ASG and let it register targets automatically.
+
+---
+
 ### CTL.ELB.TARGET.GHOST.001
 
 **Target Group References Deregistered or Terminated Instances**
@@ -10711,6 +10801,36 @@ Load balancer is associated with one or more security groups that have been dele
 ALB or NLB target group contains registered targets that are deregistered or reference terminated EC2 instances. Health checks continue to fire against non-existent targets, wasting health-check capacity and producing persistent unhealthy- target alerts that operators learn to ignore. If every target in the group is a ghost, listener rules that forward to it return 502/503 for every matching request.
 
 **Remediation:** Deregister the ghost targets from the target group. If the target group has only ghost targets, delete the target group (and any listener rules that forward to it) or register fresh targets. Add target-group cleanup to the instance-termination runbook so deregistration happens alongside termination.
+
+---
+
+### CTL.ELB.TARGET.NOHEALTHY.001
+
+**Target Group Has Zero Healthy Targets**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-7; iso_27001_2022: A.8.16, A.8.32; nist_800_53_r5: CP-7, CP-10, SI-4; pci_dss_v4.0: 11.5.1; soc2: CC7.1, A1.1, A1.2;
+
+ELB target group has registered targets but zero are passing health checks. Every request the load balancer forwards to this target group fails with 503. The target group exists. Targets are registered. None are healthy. Distinct from CTL.ELB.LISTENER.GHOST.001 (target group deleted) — here the group is intact but the backend is non-functional.
+
+**Remediation:** Investigate the unhealthy targets via aws elbv2 describe-target-health — each unhealthy target carries a Reason code (Target.FailedHealthChecks, Target.NotInService, Target.NotRegistered). Common fixes: restart the application on instances, correct the health check path so the load balancer hits a route that returns 200, or open the security group so health-check traffic from the load balancer can reach the target port.
+
+---
+
+### CTL.ELB.TARGET.SINGLEAZ.001
+
+**Target Group Has All Targets in Single Availability Zone**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 2.5; fedramp_moderate: CP-7; iso_27001_2022: A.5.30, A.8.32; nist_800_53_r5: CP-7, CP-10; pci_dss_v4.0: 11.5.1; soc2: A1.1, A1.2;
+
+ELB target group has all registered targets in a single Availability Zone. AZ failure (hardware, network, power) takes every target offline simultaneously — the target group has zero healthy targets and every request returns 503. The load balancer itself may span multiple AZs but has nothing to route to once the AZ holding all targets fails.
+
+**Remediation:** Distribute targets across at least two AZs aligned with the load balancer's subnet AZs. For Auto Scaling Group-backed target groups, set the ASG to span multiple AZs and the appropriate HealthCheckGracePeriod. For manually registered targets, deregister and re-register from instances in additional AZs. Verify via aws elbv2 describe-target-health that targets appear in distinct AvailabilityZone values.
 
 ---
 

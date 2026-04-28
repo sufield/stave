@@ -1,0 +1,125 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.TARGET.EMPTY.001
+name: Target Group Associated with Listener Has No Registered Targets
+description: >
+  ELB target group is associated with a listener (or
+  listener rule) but has zero registered targets. The
+  target group exists with health-check configuration
+  and attributes but no instances, IPs, or Lambda
+  functions are registered. Every request the load
+  balancer forwards to this group returns 503
+  immediately. Distinct from orphan target groups (no
+  listener at all — separate lifecycle concern).
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.1, A1.1, A1.2"
+  nist_800_53_r5: "CP-7, CP-10, SI-4"
+  pci_dss_v4.0: "11.5.1"
+  fedramp_moderate: "CP-7"
+  iso_27001_2022: "A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Target group routes traffic but has no targets to
+    receive it.
+  action: >
+    Either register targets via
+    aws elbv2 register-targets — or, if the target group
+    is no longer in use, remove the listener-rule
+    association and delete the group (CTL.ELB.GHOST.*
+    catches lingering orphans). For Auto Scaling
+    Group-backed target groups, attach the ASG and let
+    it register targets automatically.
+  example: |
+    {
+      "network": {
+        "kind": "target_group",
+        "elb": {
+          "associated_with_listener": true,
+          "total_target_count": 3,
+          "has_no_targets": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: target_group
+    - field: properties.network.elb.associated_with_listener
+      op: eq
+      value: true
+    - field: properties.network.elb.has_no_targets
+      op: eq
+      value: true
+defect: >
+  Target group is associated with a listener but has
+  zero registered targets.
+infection: >
+  A target group associated with a listener is on the
+  routing path — requests matching the listener's rule
+  conditions arrive at this group. With zero registered
+  targets the load balancer has nothing to forward to;
+  every request returns 503 immediately. The target
+  group's configuration looks complete (health checks,
+  attributes, attached listener) but the data plane is
+  empty. Common causes: Auto Scaling Group detached
+  during a refactor, target deregistration script ran
+  too aggressively, deployment pipeline failed to
+  register the new instances after launching them.
+failure: >
+  Routing to an empty backend. Every request matching
+  this target group returns 503 because no targets are
+  registered.
+tests:
+  - name: associated target group with zero targets fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            associated_with_listener: true
+            total_target_count: 0
+            has_no_targets: true
+  - name: target group with 3 targets passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            associated_with_listener: true
+            total_target_count: 3
+            has_no_targets: false
+  - name: orphan target group (no listener) does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/orphan-tg/xyz"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            associated_with_listener: false
+            total_target_count: 0
+            has_no_targets: true
