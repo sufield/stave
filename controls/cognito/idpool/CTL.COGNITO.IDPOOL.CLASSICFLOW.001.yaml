@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDPOOL.CLASSICFLOW.001
+name: Cognito Identity Pool Allows Classic Authentication Flow
+description: >
+  Cognito identity pool has allow_classic_flow
+  set to true. The classic flow returns the
+  raw OpenID token in the GetCredentialsForIdentity
+  response — exposing a token format Cognito
+  no longer recommends. Enhanced (basic) flow
+  does not return a token; the recommended
+  default is enhanced.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-2, SC-8"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "IA-2, SC-8"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Classic flow exposes raw tokens. Switch to
+    enhanced flow.
+  action: >
+    Set allow_classic_flow to false on the
+    identity pool: aws cognito-identity
+    update-identity-pool with
+    --allow-classic-flow false. Verify
+    that the application uses
+    GetCredentialsForIdentity (enhanced flow,
+    no raw token) rather than the classic
+    GetOpenIdTokenForDeveloperIdentity →
+    AssumeRoleWithWebIdentity sequence.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "cognito": {
+          "allow_classic_flow": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.cognito.allow_classic_flow
+      op: eq
+      value: true
+defect: >
+  Cognito identity pool allows the classic
+  authentication flow.
+infection: >
+  Classic flow returns the OpenID Connect
+  token in the GetCredentialsForIdentity
+  response, exposing a credential-equivalent
+  artifact in transit. Enhanced flow keeps
+  the token internal to the
+  GetCredentialsForIdentity exchange and
+  returns only short-lived AWS credentials
+  to the client. The classic flow exists for
+  backwards compatibility with older SDKs;
+  modern clients have no need for it. Pools
+  with classic flow enabled inherit the
+  exposure for any client that opts into it,
+  even if the primary code path uses
+  enhanced flow.
+failure: >
+  OpenID token in transit. Classic-flow
+  responses include a credential-equivalent
+  token unnecessarily.
+tests:
+  - name: classic flow enabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            allow_classic_flow: true
+  - name: enhanced-only flow passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            allow_classic_flow: false

@@ -1,0 +1,26 @@
+control: CTL.COGNITO.IDPOOL.AUTHROLE.BROAD.001
+defect: >
+  Cognito identity pool authenticated role has
+  broad permissions.
+infection: >
+  The authenticated role is what Cognito hands
+  out to any signed-in user via
+  GetCredentialsForIdentity. With wildcard
+  actions or a 20+ action list, the role
+  collapses any meaningful least-privilege —
+  every authenticated user has the same
+  permission ceiling, regardless of their
+  organizational role, group membership, or
+  application-level authorization. Compromised
+  user credentials yield broad blast radius;
+  legitimate users have far more access than
+  they need; auditing 'who can do what'
+  reduces to 'every signed-in user.' The fix
+  is to scope the role narrowly and use role
+  mapping when capabilities differ between
+  user populations.
+failure: >
+  Wide blast radius from any compromised user
+  account. Authenticated role gives every
+  signed-in user the same broad permission
+  set.

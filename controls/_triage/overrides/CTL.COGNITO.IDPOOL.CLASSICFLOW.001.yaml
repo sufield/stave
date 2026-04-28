@@ -1,0 +1,23 @@
+control: CTL.COGNITO.IDPOOL.CLASSICFLOW.001
+defect: >
+  Cognito identity pool allows the classic
+  authentication flow.
+infection: >
+  Classic flow returns the OpenID Connect
+  token in the GetCredentialsForIdentity
+  response, exposing a credential-equivalent
+  artifact in transit. Enhanced flow keeps
+  the token internal to the
+  GetCredentialsForIdentity exchange and
+  returns only short-lived AWS credentials
+  to the client. The classic flow exists for
+  backwards compatibility with older SDKs;
+  modern clients have no need for it. Pools
+  with classic flow enabled inherit the
+  exposure for any client that opts into it,
+  even if the primary code path uses
+  enhanced flow.
+failure: >
+  OpenID token in transit. Classic-flow
+  responses include a credential-equivalent
+  token unnecessarily.

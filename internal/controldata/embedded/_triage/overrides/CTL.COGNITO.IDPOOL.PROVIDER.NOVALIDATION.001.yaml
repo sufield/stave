@@ -1,0 +1,27 @@
+control: CTL.COGNITO.IDPOOL.PROVIDER.NOVALIDATION.001
+defect: >
+  Cognito identity pool provider doesn't
+  validate token audience.
+infection: >
+  Identity providers issue tokens scoped to
+  an audience — typically the relying party
+  that requested the authentication. Without
+  audience validation, Cognito accepts any
+  token signed by the provider, regardless
+  of who that token was issued for. An
+  attacker who obtains a token issued for a
+  completely unrelated service (a different
+  app, a partner service, a developer
+  sandbox) can present it to Cognito and
+  receive AWS credentials. The exchange
+  succeeds because the token is
+  cryptographically valid; the audience
+  mismatch isn't checked. This is the OAuth
+  cross-audience confusion attack —
+  documented but frequently overlooked
+  during identity-pool configuration.
+failure: >
+  Cross-audience token confusion. Tokens
+  issued for any service by the same
+  provider exchange successfully for
+  Cognito credentials.

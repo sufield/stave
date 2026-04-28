@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDPOOL.AUTHROLE.BROAD.001
+name: Cognito Identity Pool Authenticated Role Has Broad Permissions
+description: >
+  Cognito identity pool's authenticated IAM
+  role has broad permissions — more than 20
+  allowed actions or wildcard actions. Every
+  signed-in user receives credentials with
+  the role's full action surface; broad roles
+  collapse least-privilege at the
+  authentication boundary.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  hipaa: "164.308(a)(4)(ii)(B)"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.5
+remediation:
+  description: >
+    Authenticated role grants too many actions.
+    Every signed-in user inherits the surface.
+  action: >
+    Replace wildcard actions with explicit
+    action lists. Split capabilities across
+    role mappings (admin users get role A,
+    standard users get role B) rather than
+    one wide role for everyone. Remove
+    actions the application doesn't use; for
+    actions used by a subset of users, gate
+    them with role mapping based on Cognito
+    group membership.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "cognito": {
+          "auth_role_action_count": 5,
+          "auth_role_has_wildcard_action": false,
+          "auth_role_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.cognito.auth_role_broad
+      op: eq
+      value: true
+defect: >
+  Cognito identity pool authenticated role has
+  broad permissions.
+infection: >
+  The authenticated role is what Cognito hands
+  out to any signed-in user via
+  GetCredentialsForIdentity. With wildcard
+  actions or a 20+ action list, the role
+  collapses any meaningful least-privilege —
+  every authenticated user has the same
+  permission ceiling, regardless of their
+  organizational role, group membership, or
+  application-level authorization. Compromised
+  user credentials yield broad blast radius;
+  legitimate users have far more access than
+  they need; auditing 'who can do what'
+  reduces to 'every signed-in user.' The fix
+  is to scope the role narrowly and use role
+  mapping when capabilities differ between
+  user populations.
+failure: >
+  Wide blast radius from any compromised user
+  account. Authenticated role gives every
+  signed-in user the same broad permission
+  set.
+tests:
+  - name: broad authenticated role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            auth_role_action_count: 35
+            auth_role_has_wildcard_action: true
+            auth_role_broad: true
+  - name: scoped authenticated role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            auth_role_action_count: 5
+            auth_role_has_wildcard_action: false
+            auth_role_broad: false

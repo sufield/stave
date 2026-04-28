@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDPOOL.PROVIDER.NOVALIDATION.001
+name: Cognito Identity Pool Provider Has No Audience Validation
+description: >
+  Cognito identity pool has an OIDC or SAML
+  identity provider configured without
+  audience restriction. Tokens issued for
+  any audience by that provider are accepted
+  for credential exchange — including tokens
+  issued for completely unrelated services.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-2, IA-8, SC-8"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "IA-2, IA-8"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.5
+remediation:
+  description: >
+    Identity provider has no audience
+    validation. Cross-audience token
+    confusion possible.
+  action: >
+    Configure aud (audience) restriction on
+    OIDC providers and SAML providers
+    attached to the identity pool. The
+    audience should be the specific app
+    client ID or service identifier that
+    issued the token. Tokens whose aud
+    claim doesn't match should be rejected.
+    Without this, Cognito accepts tokens
+    from any consumer of the same provider.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "cognito": {
+          "provider_audiences": ["app-client-abc123"],
+          "provider_validates_audience": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.cognito.provider_validates_audience
+      op: eq
+      value: false
+defect: >
+  Cognito identity pool provider doesn't
+  validate token audience.
+infection: >
+  Identity providers issue tokens scoped to
+  an audience — typically the relying party
+  that requested the authentication. Without
+  audience validation, Cognito accepts any
+  token signed by the provider, regardless
+  of who that token was issued for. An
+  attacker who obtains a token issued for a
+  completely unrelated service (a different
+  app, a partner service, a developer
+  sandbox) can present it to Cognito and
+  receive AWS credentials. The exchange
+  succeeds because the token is
+  cryptographically valid; the audience
+  mismatch isn't checked. This is the OAuth
+  cross-audience confusion attack —
+  documented but frequently overlooked
+  during identity-pool configuration.
+failure: >
+  Cross-audience token confusion. Tokens
+  issued for any service by the same
+  provider exchange successfully for
+  Cognito credentials.
+tests:
+  - name: provider without audience validation fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            provider_audiences: []
+            provider_validates_audience: false
+  - name: provider with audience restriction passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            provider_audiences: ["app-client-abc123"]
+            provider_validates_audience: true

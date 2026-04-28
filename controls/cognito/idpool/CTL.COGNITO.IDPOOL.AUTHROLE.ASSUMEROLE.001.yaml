@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDPOOL.AUTHROLE.ASSUMEROLE.001
+name: Cognito Identity Pool Authenticated Role Can Assume Admin Roles
+description: >
+  Cognito identity pool's authenticated role
+  has sts:AssumeRole permission targeting
+  roles with administrative privileges. Any
+  signed-in user can call AssumeRole, get
+  short-lived credentials for the admin role,
+  and operate as that role — lateral
+  escalation through Cognito.
+domain: identity
+severity: critical
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  hipaa: "164.308(a)(4)(ii)(B)"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    Authenticated role can assume admin roles.
+    Lateral escalation via STS.
+  action: >
+    Remove sts:AssumeRole permissions from the
+    authenticated role unless there is a
+    specific legitimate workflow (rare for
+    end-user-facing apps). If needed, scope
+    Resource to a single non-admin role and
+    add a sts:ExternalId condition to prevent
+    confused-deputy attacks. Verify the trust
+    policy on the target role explicitly
+    allows the Cognito authenticated role's
+    ARN (not just 'any role from this account').
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "cognito": {
+          "auth_role_assumable_admin_roles": [],
+          "auth_role_can_escalate_via_assume": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.cognito.auth_role_can_escalate_via_assume
+      op: eq
+      value: true
+defect: >
+  Cognito authenticated role can assume
+  administrative roles via STS.
+infection: >
+  Two paths converge here. Path one: the
+  authenticated role's policy includes
+  sts:AssumeRole on Resource: * or on
+  resource ARNs of administrative roles. Path
+  two: an admin role's trust policy allows
+  assumption by the Cognito authenticated
+  role (a misconfigured trust). Either way,
+  a signed-in user calls
+  sts:AssumeRole --role-arn arn:aws:iam::...:role/Admin
+  and receives admin credentials. The Cognito
+  session was the foothold; the assumed role
+  is the identity that operates. Detection of
+  the escalation requires correlating Cognito
+  identity with subsequent CloudTrail STS
+  events — which most SIEMs don't do by
+  default.
+failure: >
+  Lateral escalation surface. Authenticated
+  role can assume admin roles in the account
+  via STS.
+tests:
+  - name: auth role assuming admin fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            auth_role_assumable_admin_roles:
+              - "arn:aws:iam::111122223333:role/Admin"
+            auth_role_can_escalate_via_assume: true
+  - name: scoped auth role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            auth_role_assumable_admin_roles: []
+            auth_role_can_escalate_via_assume: false

@@ -1,0 +1,29 @@
+control: CTL.COGNITO.IDPOOL.AUTHROLE.CROSSACCT.001
+defect: >
+  Cognito authenticated role grants cross-
+  account resource access.
+infection: >
+  Cognito identity pools usually live within
+  one account; the authenticated role grants
+  access to that account's resources. When
+  the role's policy lists Resource ARNs in
+  another account, signed-in users get
+  credentials authorized to act on those
+  foreign resources — provided the foreign
+  account's resource policy or trust accepts
+  the source. The attack scenario: a Cognito
+  user in account A receives credentials
+  with s3:GetObject on a bucket in account
+  B; the bucket's policy allows account A,
+  so the GetObject call succeeds. The
+  end-user in account A's app reads data in
+  account B — possibly without account B
+  knowing the access flows through Cognito.
+  For tightly-coupled multi-account
+  workflows this can be intentional, but it
+  warrants explicit documentation rather
+  than ambient configuration.
+failure: >
+  Foreign-account reach via Cognito. Signed-in
+  users obtain credentials authorized to
+  access resources in another account.

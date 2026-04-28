@@ -1,0 +1,25 @@
+control: CTL.COGNITO.IDPOOL.AUTHROLE.ASSUMEROLE.001
+defect: >
+  Cognito authenticated role can assume
+  administrative roles via STS.
+infection: >
+  Two paths converge here. Path one: the
+  authenticated role's policy includes
+  sts:AssumeRole on Resource: * or on
+  resource ARNs of administrative roles. Path
+  two: an admin role's trust policy allows
+  assumption by the Cognito authenticated
+  role (a misconfigured trust). Either way,
+  a signed-in user calls
+  sts:AssumeRole --role-arn arn:aws:iam::...:role/Admin
+  and receives admin credentials. The Cognito
+  session was the foothold; the assumed role
+  is the identity that operates. Detection of
+  the escalation requires correlating Cognito
+  identity with subsequent CloudTrail STS
+  events — which most SIEMs don't do by
+  default.
+failure: >
+  Lateral escalation surface. Authenticated
+  role can assume admin roles in the account
+  via STS.

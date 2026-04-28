@@ -1,0 +1,25 @@
+control: CTL.COGNITO.IDPOOL.AUTHROLE.PASSROLE.001
+defect: >
+  Cognito authenticated role has iam:PassRole.
+infection: >
+  iam:PassRole on the Cognito authenticated
+  role is one API call away from arbitrary
+  privilege escalation. A signed-in user
+  obtains AWS credentials, calls
+  ec2:RunInstances with --iam-instance-profile
+  pointing at an admin role (which the user
+  can pass because PassRole is permitted),
+  and SSHes into the new instance — they're
+  now running on AWS infrastructure with the
+  admin role's credentials, completely
+  outside the Cognito session lifecycle. The
+  same pattern works with lambda:CreateFunction,
+  ecs:RegisterTaskDefinition, and many other
+  services that accept a role parameter. The
+  Cognito session is the entry point; the
+  IAM role attached to the new resource is
+  the escalated identity.
+failure: >
+  One-call privilege escalation. Any signed-in
+  user can launch services with privileged
+  roles attached.

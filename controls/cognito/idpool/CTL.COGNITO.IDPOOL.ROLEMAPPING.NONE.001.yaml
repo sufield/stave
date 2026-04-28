@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDPOOL.ROLEMAPPING.NONE.001
+name: Cognito Identity Pool Has No Role Mapping
+description: >
+  Cognito identity pool has no role mapping
+  configured — every authenticated user
+  receives the default authenticated role
+  regardless of their attributes, group
+  membership, or token claims. There is no
+  differentiation between admin users and
+  standard users at the AWS-credentials
+  layer.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.1"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    No role mapping. Every signed-in user gets
+    the same role.
+  action: >
+    Configure role mapping rules using
+    cognito-identity:role_mapping based on
+    Cognito user-pool group membership or
+    custom token claims. A typical pattern:
+    map cognito:groups=admin to an admin
+    role with elevated permissions, and a
+    default 'authenticated' role for everyone
+    else. Without role mapping, the pool
+    cannot express least privilege between
+    user populations even if the IAM role
+    policies are perfectly written.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "cognito": {
+          "role_mapping_count": 2,
+          "has_role_mapping": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.cognito.has_role_mapping
+      op: eq
+      value: false
+defect: >
+  Cognito identity pool has no role mapping
+  configured.
+infection: >
+  Without role mapping, Cognito hands out the
+  default authenticated role to every
+  authenticated user — admin and standard
+  users receive the same AWS-credentials
+  surface. To compensate, teams either
+  over-permission the default role (covering
+  admin needs at the cost of standard users
+  getting too much) or under-permission it
+  (admins can't do what they need). The
+  application-level authorization may
+  enforce admin-only operations correctly,
+  but the AWS-credentials layer doesn't
+  reflect the distinction. A user who can
+  bypass the application's authorization
+  check (XSS, IDOR, direct SDK call with
+  the issued credentials) gets whatever
+  the default role permits — which, if the
+  role was over-permissioned to cover
+  admin needs, is admin access.
+failure: >
+  No least-privilege at the credentials
+  layer. Every authenticated user inherits
+  the same role regardless of their
+  application-level role.
+tests:
+  - name: no role mapping fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            role_mapping_count: 0
+            has_role_mapping: false
+  - name: role mapping configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            role_mapping_count: 3
+            has_role_mapping: true

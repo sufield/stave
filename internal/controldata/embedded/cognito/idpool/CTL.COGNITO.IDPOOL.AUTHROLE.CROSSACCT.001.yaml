@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDPOOL.AUTHROLE.CROSSACCT.001
+name: Cognito Identity Pool Authenticated Role Permits Cross-Account Access
+description: >
+  Cognito identity pool's authenticated role
+  policy grants actions on resources in
+  another AWS account. Signed-in users obtain
+  credentials authorized to act across the
+  account boundary — data and operations in
+  the foreign account are reachable through
+  Cognito.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, AC-6"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-4, AC-6"
+  hipaa: "164.308(a)(4)(ii)(B)"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+  blast_radius:
+    type: data
+    scope: cross_account
+    multiplier: 4.0
+remediation:
+  description: >
+    Authenticated role grants access in another
+    account. Cognito users reach foreign-
+    account resources.
+  action: >
+    Cross-account Cognito access is rare for
+    legitimate end-user apps. If the
+    cross-account permission is intentional
+    (centralized resource accessed by
+    multiple-account consumers), document the
+    trust relationship and ensure the
+    foreign-account resource policy or trust
+    policy validates aws:PrincipalOrgID
+    rather than blanket account allow. If
+    unintentional, remove the cross-account
+    Resource ARNs from the authenticated
+    role's policy.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "cognito": {
+          "auth_role_cross_account_resources": [],
+          "auth_role_has_cross_account": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.cognito.auth_role_has_cross_account
+      op: eq
+      value: true
+defect: >
+  Cognito authenticated role grants cross-
+  account resource access.
+infection: >
+  Cognito identity pools usually live within
+  one account; the authenticated role grants
+  access to that account's resources. When
+  the role's policy lists Resource ARNs in
+  another account, signed-in users get
+  credentials authorized to act on those
+  foreign resources — provided the foreign
+  account's resource policy or trust accepts
+  the source. The attack scenario: a Cognito
+  user in account A receives credentials
+  with s3:GetObject on a bucket in account
+  B; the bucket's policy allows account A,
+  so the GetObject call succeeds. The
+  end-user in account A's app reads data in
+  account B — possibly without account B
+  knowing the access flows through Cognito.
+  For tightly-coupled multi-account
+  workflows this can be intentional, but it
+  warrants explicit documentation rather
+  than ambient configuration.
+failure: >
+  Foreign-account reach via Cognito. Signed-in
+  users obtain credentials authorized to
+  access resources in another account.
+tests:
+  - name: cross-account auth role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            auth_role_cross_account_resources:
+              - "arn:aws:s3:::central-data-444455556666/*"
+            auth_role_has_cross_account: true
+  - name: same-account auth role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            auth_role_cross_account_resources: []
+            auth_role_has_cross_account: false

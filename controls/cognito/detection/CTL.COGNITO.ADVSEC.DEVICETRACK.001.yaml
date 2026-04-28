@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ADVSEC.DEVICETRACK.001
+name: Cognito User Pool Has No Device Tracking Enabled
+description: >
+  Cognito user pool has no device tracking
+  configured. The pool can't recognize when a
+  user signs in from a new device versus a
+  known device, can't apply step-up auth on
+  new devices, and can't issue device-bound
+  refresh tokens. Adaptive auth's
+  device-aware risk decisions don't function.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.5"
+  soc2: "CC6.1, CC7.2"
+  nist_800_53_r5: "IA-2, SI-4"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "IA-2, SI-4"
+  iso_27001_2022: "A.5.17, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Device tracking not configured. Adaptive
+    auth can't distinguish new devices from
+    known ones.
+  action: >
+    Configure device_configuration on the user
+    pool: aws cognito-idp update-user-pool
+    --device-configuration
+    ChallengeRequiredOnNewDevice=true,DeviceOnlyRememberedOnUserPrompt=true.
+    Combined with advanced security features,
+    this enables device-aware risk scoring —
+    sign-ins from a new device trigger
+    step-up auth or block decisions
+    automatically.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "device_tracking_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.device_tracking_enabled
+      op: eq
+      value: false
+defect: >
+  Cognito user pool has no device tracking.
+infection: >
+  Device tracking lets Cognito remember which
+  devices a user has signed in from. Without
+  it, every sign-in looks identical to the
+  pool — there is no 'new device' signal,
+  so adaptive auth can't apply higher
+  scrutiny to logins from devices the user
+  has never used. The most common detection
+  signal for account takeover (login from a
+  device the user has never used, especially
+  from a new geography) becomes unavailable.
+  The pool may have advanced security
+  features enabled, but without device
+  tracking the risk decisions degrade to
+  weaker IP-based heuristics.
+failure: >
+  No device-aware risk decisions. Adaptive
+  auth can't tell a new device from a known
+  one — the strongest takeover signal is
+  unavailable.
+tests:
+  - name: pool without device tracking fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            device_tracking_enabled: false
+  - name: pool with device tracking passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            device_tracking_enabled: true

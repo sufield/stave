@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1966
-**Pack hash:** `4173f393777307bd40d3d1af8ce25b5ff163c28f6acedcc9757d15c82d8c5fd2`
+**Total controls:** 1973
+**Pack hash:** `29899aa7d336f963f506b12ee0cd4fcf482559238d29f7741a10fe364599c192`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 226 |
-| high | 876 |
+| critical | 228 |
+| high | 879 |
 | info | 16 |
 | low | 130 |
-| medium | 718 |
+| medium | 720 |
 
 | Domain | Count |
 |--------|-------|
@@ -25,9 +25,9 @@
 | detection | 96 |
 | encryption | 92 |
 | exposure | 1047 |
-| governance | 256 |
+| governance | 257 |
 | hygiene | 16 |
-| identity | 337 |
+| identity | 343 |
 | network | 28 |
 | resilience | 18 |
 | secrets | 4 |
@@ -7992,6 +7992,111 @@ Cognito verify-auth-challenge-response Lambda has been deleted. Even when define
 Cognito identity pools must disable unauthenticated (guest) identities. When enabled, any client can obtain temporary AWS credentials without signing in. The unauthenticated IAM role's permissions become effectively public.
 
 **Remediation:** Disable unauthenticated identities on the identity pool. If guest access is required, scope the unauthenticated role to minimal permissions.
+
+---
+
+### CTL.COGNITO.IDPOOL.AUTHROLE.ASSUMEROLE.001
+
+**Cognito Identity Pool Authenticated Role Can Assume Admin Roles**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6; hipaa: 164.308(a)(4)(ii)(B); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+Cognito identity pool's authenticated role has sts:AssumeRole permission targeting roles with administrative privileges. Any signed-in user can call AssumeRole, get short-lived credentials for the admin role, and operate as that role — lateral escalation through Cognito.
+
+**Remediation:** Remove sts:AssumeRole permissions from the authenticated role unless there is a specific legitimate workflow (rare for end-user-facing apps). If needed, scope Resource to a single non-admin role and add a sts:ExternalId condition to prevent confused-deputy attacks. Verify the trust policy on the target role explicitly allows the Cognito authenticated role's ARN (not just 'any role from this account').
+
+---
+
+### CTL.COGNITO.IDPOOL.AUTHROLE.BROAD.001
+
+**Cognito Identity Pool Authenticated Role Has Broad Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6; hipaa: 164.308(a)(4)(ii)(B); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+Cognito identity pool's authenticated IAM role has broad permissions — more than 20 allowed actions or wildcard actions. Every signed-in user receives credentials with the role's full action surface; broad roles collapse least-privilege at the authentication boundary.
+
+**Remediation:** Replace wildcard actions with explicit action lists. Split capabilities across role mappings (admin users get role A, standard users get role B) rather than one wide role for everyone. Remove actions the application doesn't use; for actions used by a subset of users, gate them with role mapping based on Cognito group membership.
+
+---
+
+### CTL.COGNITO.IDPOOL.AUTHROLE.CROSSACCT.001
+
+**Cognito Identity Pool Authenticated Role Permits Cross-Account Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-4, AC-6; hipaa: 164.308(a)(4)(ii)(B); iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-3, AC-4, AC-6; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3, CC6.6;
+
+Cognito identity pool's authenticated role policy grants actions on resources in another AWS account. Signed-in users obtain credentials authorized to act across the account boundary — data and operations in the foreign account are reachable through Cognito.
+
+**Remediation:** Cross-account Cognito access is rare for legitimate end-user apps. If the cross-account permission is intentional (centralized resource accessed by multiple-account consumers), document the trust relationship and ensure the foreign-account resource policy or trust policy validates aws:PrincipalOrgID rather than blanket account allow. If unintentional, remove the cross-account Resource ARNs from the authenticated role's policy.
+
+---
+
+### CTL.COGNITO.IDPOOL.AUTHROLE.PASSROLE.001
+
+**Cognito Identity Pool Authenticated Role Has iam:PassRole**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6; hipaa: 164.308(a)(4)(ii)(B); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+Cognito identity pool's authenticated role policy contains iam:PassRole. Any signed-in user can launch services (EC2, Lambda, ECS) with a different role attached — escalating to whatever permissions the passed role carries. Cognito turns into a privilege- escalation primitive.
+
+**Remediation:** Remove iam:PassRole from the authenticated role. If the application genuinely needs PassRole (rare for end-user-facing apps — PassRole is typically a deployment-time permission), scope the action to a single specific role ARN with iam:PassedToService conditions matching the legitimate consumer service. The existing CTL.IAM.POLICY.PASSROLE.001 catches PassRole broadly; this control flags the case where Cognito's authenticated role is one of the holders.
+
+---
+
+### CTL.COGNITO.IDPOOL.CLASSICFLOW.001
+
+**Cognito Identity Pool Allows Classic Authentication Flow**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-2, SC-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, SC-8; pci_dss_v4.0: 8.3; soc2: CC6.1;
+
+Cognito identity pool has allow_classic_flow set to true. The classic flow returns the raw OpenID token in the GetCredentialsForIdentity response — exposing a token format Cognito no longer recommends. Enhanced (basic) flow does not return a token; the recommended default is enhanced.
+
+**Remediation:** Set allow_classic_flow to false on the identity pool: aws cognito-identity update-identity-pool with --allow-classic-flow false. Verify that the application uses GetCredentialsForIdentity (enhanced flow, no raw token) rather than the classic GetOpenIdTokenForDeveloperIdentity → AssumeRoleWithWebIdentity sequence.
+
+---
+
+### CTL.COGNITO.IDPOOL.PROVIDER.NOVALIDATION.001
+
+**Cognito Identity Pool Provider Has No Audience Validation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, IA-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-8, SC-8; pci_dss_v4.0: 8.3; soc2: CC6.1;
+
+Cognito identity pool has an OIDC or SAML identity provider configured without audience restriction. Tokens issued for any audience by that provider are accepted for credential exchange — including tokens issued for completely unrelated services.
+
+**Remediation:** Configure aud (audience) restriction on OIDC providers and SAML providers attached to the identity pool. The audience should be the specific app client ID or service identifier that issued the token. Tokens whose aud claim doesn't match should be rejected. Without this, Cognito accepts tokens from any consumer of the same provider.
+
+---
+
+### CTL.COGNITO.IDPOOL.ROLEMAPPING.NONE.001
+
+**Cognito Identity Pool Has No Role Mapping**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3, AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.1; soc2: CC6.1, CC6.3;
+
+Cognito identity pool has no role mapping configured — every authenticated user receives the default authenticated role regardless of their attributes, group membership, or token claims. There is no differentiation between admin users and standard users at the AWS-credentials layer.
+
+**Remediation:** Configure role mapping rules using cognito-identity:role_mapping based on Cognito user-pool group membership or custom token claims. A typical pattern: map cognito:groups=admin to an admin role with elevated permissions, and a default 'authenticated' role for everyone else. Without role mapping, the pool cannot express least privilege between user populations even if the IAM role policies are perfectly written.
 
 ---
 
