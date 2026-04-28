@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.GATEWAYRESPONSE.SERVERHEADER.001
+defect: >
+  Gateway responses include a Server response header that
+  identifies the API Gateway service and version.
+infection: >
+  Gateway responses are the templated error responses API
+  Gateway returns directly without invoking a backend — 401,
+  403, 404, 429, 5xx, etc. The default response set includes
+  a Server header that fingerprints the API Gateway service.
+  Server headers are a small but standard reconnaissance
+  source: scanners catalog them, attack tools bucket targets
+  by stack, vulnerability databases match on version. The
+  header by itself doesn't enable a specific exploit (API
+  Gateway is a managed service AWS patches centrally), but
+  the disclosure is unnecessary; removing the Server header
+  narrows what passive reconnaissance learns from the API.
+  Custom gateway responses can override or remove headers
+  applied to specific response types.
+failure: >
+  Stack disclosure. Reconnaissance sees the API Gateway
+  service identifier without sending application traffic.

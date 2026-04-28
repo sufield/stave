@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ORPHAN.NODEPLOYMENT.001
+name: REST API Has No Deployment Records — Defined But Never Deployed
+description: >
+  REST API resource exists with method definitions, integrations,
+  and authorizers configured, but has no deployment records.
+  No stage references this API; no traffic ever reaches the
+  configuration. The API is a definition-only artifact —
+  partial work an operator started and didn't complete, a
+  template that was provisioned but not pushed to production,
+  or a resource left over from a delete-by-stage cleanup.
+  The risk is configuration drift: the API has IAM, network,
+  and integration coupling that other resources may still
+  honor (Lambda permission grants, VPC Link references,
+  authorizer dependencies), but no operational traffic to
+  surface bugs. When an operator later deploys it, the
+  configuration is whatever it has drifted to — possibly
+  outdated, possibly never reviewed in the current state.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2, CM-8"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.10, A.8.9"
+  ccm_v4: ["GRC-04", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    REST API has no deployment records; the API definition
+    exists but no stage is bound to it.
+  action: >
+    Either deploy the API to a stage if it's intended to be
+    live (aws apigateway create-deployment --rest-api-id
+    --stage-name <name>), or delete the API if it's leftover:
+    aws apigateway delete-rest-api --rest-api-id <id>. Audit
+    Lambda resource-based policies, VPC Links, and any
+    cross-resource references to confirm the cleanup is
+    complete.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_rest_api",
+        "deployment": {
+          "count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_rest_api
+    - field: properties.api.deployment.count
+      op: eq
+      value: 0

@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.METHOD.ANY.001
+defect: >
+  REST API method is configured with httpMethod ANY — every
+  HTTP verb at the resource path routes to the backend.
+infection: >
+  ANY is a convenience type that matches any HTTP verb at the
+  configured resource path. It's tempting for proxy
+  integrations: define ANY once, let the backend handle the
+  verb dispatch. The exposure is that every verb the backend
+  responds to is reachable through the API — DELETE on a
+  read-only resource, PUT on a list endpoint, TRACE / CONNECT
+  on any resource, OPTIONS handled by the backend rather than
+  by API Gateway's CORS layer. The backend is expected to
+  handle each verb appropriately; frequently it doesn't, and
+  unintended verbs return 200 or produce surprising behavior.
+  Explicit per-verb declarations (GET, POST, etc.) constrain
+  the surface to what the API author intended; ANY is
+  appropriate only when the backend is genuinely a verb-
+  agnostic dispatcher.
+failure: >
+  Verb surface area exceeds intent. Operations the API author
+  didn't think about reach the backend; the backend's per-
+  verb behavior becomes the security boundary instead of the
+  API definition.

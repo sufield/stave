@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ORPHAN.USAGEPLAN.001
+name: Usage Plan Not Associated With Any API Stage
+description: >
+  Usage plan exists with rate, burst, and quota settings, but
+  it is not associated with any API stage. The plan is inert
+  — no API consumes its limits, no API key tied to the plan
+  enforces anything against any traffic. Common cause:
+  development experiment that never got cleaned up; a stage
+  that was migrated and the old plan wasn't retired; a usage
+  plan provisioned ahead of an API that never launched.
+  Orphan usage plans clutter the operational view, complicate
+  audits ("which plan governs which API?"), and accumulate
+  configuration drift — when an operator later associates the
+  plan with a stage, its limits are whatever they drifted to,
+  often without recent review.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2, CM-8"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.10, A.8.9"
+  ccm_v4: ["GRC-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Usage plan is not associated with any API stage; the plan
+    is inert configuration.
+  action: >
+    Either associate the plan with the API stage that should
+    use it (aws apigateway create-usage-plan-key followed by
+    update-usage-plan adding apiStages) or delete the plan if
+    it's leftover: aws apigateway delete-usage-plan
+    --usage-plan-id <id>. Inspect any API keys associated
+    with the plan first — they may need re-association with
+    a different plan or independent cleanup.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_usage_plan",
+        "usage_plan": {
+          "stage_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_usage_plan
+    - field: properties.api.usage_plan.stage_count
+      op: eq
+      value: 0

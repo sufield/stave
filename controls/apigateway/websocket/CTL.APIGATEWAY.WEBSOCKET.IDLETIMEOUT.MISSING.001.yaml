@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.WEBSOCKET.IDLETIMEOUT.MISSING.001
+name: WebSocket API Has No Connection Idle Timeout Configured
+description: >
+  WebSocket API stage has no idle timeout configured below
+  the AWS service maximum (10 minutes). Idle WebSocket
+  connections persist until the timeout fires; with the
+  service maximum every idle connection holds backend state
+  (DynamoDB connection records, in-memory routing state, any
+  per-connection resources) for the full 10 minutes after
+  the client falls silent. Attackers exploit this by opening
+  many connections and going silent — exhausting connection
+  state without sending any actual traffic. A shorter idle
+  timeout (60-300 seconds depending on application) reaps
+  silent connections faster, freeing state and bounding the
+  resource cost per connection.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5, AC-12"
+  fedramp_moderate: "SC-5, AC-12"
+  pci_dss_v4.0: "6.4.1, 8.2"
+  soc2: "A1.1, CC6.6"
+  iso_27001_2022: "A.5.30, A.8.6"
+  ccm_v4: ["AIS-01", "BCR-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    WebSocket idle timeout is at the service maximum or not
+    explicitly configured.
+  action: >
+    Configure a per-route idle timeout on the WebSocket API
+    appropriate for the application: aws apigatewayv2
+    update-stage with default route settings or per-route
+    settings. Most chat-style WebSocket workloads tolerate a
+    30-60 second idle timeout (clients send keepalives during
+    legitimate activity); pure server-push notification
+    workloads may need longer. Pair with the existing
+    WebSocket throttle and $default-route validation
+    controls.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_websocket_api",
+        "websocket": {
+          "idle_timeout_seconds": 60
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_websocket_api
+    - field: properties.api.websocket.idle_timeout_seconds
+      op: gt
+      value: 300

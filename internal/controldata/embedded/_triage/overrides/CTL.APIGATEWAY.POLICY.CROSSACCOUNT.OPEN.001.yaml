@@ -1,0 +1,23 @@
+control: CTL.APIGATEWAY.POLICY.CROSSACCOUNT.OPEN.001
+defect: >
+  REST API resource policy includes an aws:SourceVpc condition
+  without an account or organization restriction alongside it.
+infection: >
+  An aws:SourceVpc condition in a resource policy expresses
+  "callers from this VPC are allowed." Without a paired
+  aws:SourceAccount or aws:PrincipalOrgID restriction, the
+  policy effectively says "callers from any VPC in any AWS
+  account in the AWS partition." Cross-account VPC peering or
+  VPC sharing reaches the policy condition; what was intended
+  as "internal-only via VPC" becomes "any AWS-internal caller
+  anywhere." The shape is subtle because VPC and account
+  feel like the same thing in single-account setups; in
+  multi-account organizations they diverge sharply. Every
+  cross-account / VPC-scoped resource policy needs both the
+  VPC clause and an account or organization restriction; for
+  PRIVATE APIs prefer aws:SourceVpce with specific VPC
+  endpoint IDs as the most restrictive shape.
+failure: >
+  Cross-account reach. Callers from VPCs in other AWS accounts
+  satisfy the policy and reach the API; the boundary the
+  operator believed they had configured doesn't hold.

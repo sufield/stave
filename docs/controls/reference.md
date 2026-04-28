@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2084
-**Pack hash:** `b8444b56ff4aadfe4783a1e243990de26b9c27fdecf2c9fe80d87566b245587a`
+**Total controls:** 2092
+**Pack hash:** `0ccd3a2425466e7e9ae93173a0f99cd38e348d85ccb033785114758901d30f37`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 231 |
-| high | 921 |
+| high | 923 |
 | info | 16 |
-| low | 141 |
-| medium | 775 |
+| low | 144 |
+| medium | 778 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,12 +24,12 @@
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1085 |
-| governance | 284 |
+| exposure | 1086 |
+| governance | 287 |
 | hygiene | 16 |
-| identity | 368 |
+| identity | 371 |
 | network | 28 |
-| resilience | 19 |
+| resilience | 20 |
 | secrets | 4 |
 | storage | 8 |
 
@@ -1100,6 +1100,21 @@ Execution logging is enabled with data trace on — every request and response b
 
 ---
 
+### CTL.APIGATEWAY.GATEWAYRESPONSE.SERVERHEADER.001
+
+**Gateway Responses Include Server Header That Discloses API Gateway Version**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: SC-7, SI-10; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+REST API gateway responses (the templated error responses that API Gateway returns directly without invoking a backend — 401, 403, 404, 429, 5xx, etc.) include a Server response header that identifies the API Gateway service and version. Server headers are a small but standard fingerprinting source: scanners catalog them, attack tools bucket targets by stack, vulnerability databases match on version. The header doesn't enable a specific exploit on its own — API Gateway is a managed service AWS patches centrally — but the disclosure is unnecessary; removing the Server header narrows what reconnaissance learns passively from the API.
+
+**Remediation:** Customize the gateway responses to override or remove the Server header: aws apigateway update-gateway-response with --patch-operations op=remove,path=/responseParameters/gatewayresponse.header.Server for each response type that should be overridden, or op=replace setting Server to an opaque value. The default set of gateway responses (DEFAULT_4XX, DEFAULT_5XX, UNAUTHORIZED, ACCESS_DENIED, etc.) all share the same header behavior; customize the parents to apply universally.
+
+---
+
 ### CTL.APIGATEWAY.GHOST.AUTHORIZER.001
 
 **API Gateway Authorizer References Deleted Provider**
@@ -1339,6 +1354,21 @@ API Gateway REST API stages must have execution or access logging enabled to Clo
 
 ---
 
+### CTL.APIGATEWAY.METHOD.ANY.001
+
+**REST API Method Configured As ANY (Matches All HTTP Verbs)**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3, CM-2, SC-7; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, CM-2, SC-7; pci_dss_v4.0: 1.2, 6.4.2; soc2: CC6.1, CC8.1;
+
+REST API method is configured with httpMethod ANY, which matches any HTTP verb (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS) at that resource path. ANY is convenient for proxying everything to a single backend handler, but it exposes operations the API author may not have considered: DELETE on a read-only resource, PUT on a list endpoint, TRACE / CONNECT on any resource. The backend receives the full set of verbs and is expected to handle each one appropriately — frequently it doesn't, returning 200 for unintended operations or producing unexpected behavior. Explicit method declarations (GET, POST individually) are the safer pattern; ANY should be reserved for cases where the backend is genuinely a verb-agnostic dispatcher.
+
+**Remediation:** Replace the ANY method with explicit declarations for the verbs the API actually supports: aws apigateway delete-method --http-method ANY, then put-method for each intended verb. For backends that genuinely dispatch on verb (Lambda proxy integration handling all verbs in one handler), keep ANY but document the rationale; the control's triage-override layer accepts that case explicitly.
+
+---
+
 ### CTL.APIGATEWAY.METHOD.THROTTLE.MISSING.001
 
 **REST API Method Lacks Per-Method Throttle Override**
@@ -1429,6 +1459,36 @@ API Gateway has an authorizer configured but no route or method references it. T
 
 ---
 
+### CTL.APIGATEWAY.ORPHAN.NODEPLOYMENT.001
+
+**REST API Has No Deployment Records — Defined But Never Deployed**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, CM-8; iso_27001_2022: A.5.10, A.8.9; nist_800_53_r5: CM-2, CM-8; soc2: CC6.1, CC8.1;
+
+REST API resource exists with method definitions, integrations, and authorizers configured, but has no deployment records. No stage references this API; no traffic ever reaches the configuration. The API is a definition-only artifact — partial work an operator started and didn't complete, a template that was provisioned but not pushed to production, or a resource left over from a delete-by-stage cleanup. The risk is configuration drift: the API has IAM, network, and integration coupling that other resources may still honor (Lambda permission grants, VPC Link references, authorizer dependencies), but no operational traffic to surface bugs. When an operator later deploys it, the configuration is whatever it has drifted to — possibly outdated, possibly never reviewed in the current state.
+
+**Remediation:** Either deploy the API to a stage if it's intended to be live (aws apigateway create-deployment --rest-api-id --stage-name <name>), or delete the API if it's leftover: aws apigateway delete-rest-api --rest-api-id <id>. Audit Lambda resource-based policies, VPC Links, and any cross-resource references to confirm the cleanup is complete.
+
+---
+
+### CTL.APIGATEWAY.ORPHAN.USAGEPLAN.001
+
+**Usage Plan Not Associated With Any API Stage**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, CM-8; iso_27001_2022: A.5.10, A.8.9; nist_800_53_r5: CM-2, CM-8; soc2: CC6.1, CC8.1;
+
+Usage plan exists with rate, burst, and quota settings, but it is not associated with any API stage. The plan is inert — no API consumes its limits, no API key tied to the plan enforces anything against any traffic. Common cause: development experiment that never got cleaned up; a stage that was migrated and the old plan wasn't retired; a usage plan provisioned ahead of an API that never launched. Orphan usage plans clutter the operational view, complicate audits ("which plan governs which API?"), and accumulate configuration drift — when an operator later associates the plan with a stage, its limits are whatever they drifted to, often without recent review.
+
+**Remediation:** Either associate the plan with the API stage that should use it (aws apigateway create-usage-plan-key followed by update-usage-plan adding apiStages) or delete the plan if it's leftover: aws apigateway delete-usage-plan --usage-plan-id <id>. Inspect any API keys associated with the plan first — they may need re-association with a different plan or independent cleanup.
+
+---
+
 ### CTL.APIGATEWAY.PAYLOAD.SIZE.UNLIMITED.001
 
 **API Gateway Method Has No Request Validator Body Size Constraint**
@@ -1444,6 +1504,21 @@ REST API method does not declare an explicit maximum body size constraint via th
 
 ---
 
+### CTL.APIGATEWAY.POLICY.CROSSACCOUNT.OPEN.001
+
+**REST API Resource Policy Allows Any VPC In Any Account**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3, AC-6, SC-7; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, SC-7; pci_dss_v4.0: 1.2, 7.1; soc2: CC6.1, CC6.3;
+
+REST API resource policy grants invocation rights to a source-VPC condition without restricting to specific VPCs or specific accounts (e.g., aws:SourceVpc condition with no specific VPC IDs, or no aws:SourceAccount / aws:PrincipalOrgID restriction alongside the VPC clause). The policy effectively allows any VPC in any AWS account in the AWS partition to invoke the API. Cross-account access through VPC peering or VPC sharing reaches the policy condition; what was intended as "internal-only via VPC" becomes "any AWS-internal caller anywhere." Pair every cross-account / VPC-scoped resource policy with an account or organization restriction.
+
+**Remediation:** Add an aws:SourceAccount or aws:PrincipalOrgID condition to the resource policy alongside the VPC clause: aws apigateway update-rest-api with --patch-operations op=replace,path=/policy,value=<json> where the policy document has both the source-VPC clause and an Account/Org restriction. For private APIs, prefer aws:SourceVpce listing specific VPC endpoint IDs — that's the most restrictive shape and avoids the cross-account VPC ambiguity entirely.
+
+---
+
 ### CTL.APIGATEWAY.POLICY.METHODAUTH.CONFLICT.001
 
 **Resource Policy Conflicts With Method-Level Authorization**
@@ -1456,6 +1531,21 @@ REST API method does not declare an explicit maximum body size constraint via th
 REST API resource policy and method-level authorization are inconsistent — one is permissive while the other is restrictive. Common shapes: resource policy allows Principal "*" while methods require AWS_IAM (the resource policy effectively grants public access regardless of the method's IAM requirement); or method is open (NONE) while the resource policy denies external principals (callers see Forbidden even though the method is intentionally public). The resource policy is evaluated together with method auth — discrepancies produce surprising auth outcomes that pass one review and fail another.
 
 **Remediation:** Reconcile the two layers: decide whether authorization is enforced at the resource-policy layer (Principal allowlist), the method layer (AWS_IAM / Cognito / Lambda authorizer), or both layered consistently. The common safe pattern is method authorization as the per-route check, with the resource policy as a coarse-grained enforcement layer (org-scoped, VPC- scoped). If the method is intentionally NONE (e.g., a public health endpoint), the resource policy should explicitly allow that route from the expected source set rather than implicitly relying on the method being open.
+
+---
+
+### CTL.APIGATEWAY.PRIVATE.EXTERNAL.VPCE.001
+
+**PRIVATE API Resource Policy Allows VPC Endpoints In External Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3, AC-6, SC-7; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, SC-7; pci_dss_v4.0: 1.2, 7.1; soc2: CC6.1, CC6.3;
+
+PRIVATE-endpoint REST API has a resource policy whose aws:SourceVpce condition lists VPC endpoint IDs from accounts other than the API's home account. PRIVATE APIs are typically intended for in-account or in-organization reach; allowing VPC endpoints from external accounts widens the reachable principal set to whoever in the external account holds permissions to use that VPC endpoint. The cross-account-private pattern is occasionally legitimate (a partner whose workload is in their own AWS account reaches the API through a shared VPC endpoint), but it warrants explicit operator review because the discovery story for "who in the external account can actually invoke" is often unclear without an audit of the external account's IAM.
+
+**Remediation:** Audit each VPCE ID in the resource policy to confirm it belongs to an account where the operator has visibility into who can use the endpoint. Remove external-account VPCEs that don't represent an explicit cross-account integration: aws apigateway update-rest-api with --patch-operations op=replace,path=/policy,value=<json>. For legitimate cross-account integrations, document the arrangement in the triage override and pair with audit visibility into the external account's IAM (organization- wide CloudTrail, central audit role).
 
 ---
 
@@ -1816,6 +1906,36 @@ REST API stage is associated with a WAF web ACL, but the web ACL contains no rat
 WebSocket API has a $default route configured but the route's request validator is not enabled. The $default route is the catch-all: every message that does not match a named route selector flows through it. Without validation, any payload — oversized binary frames, malformed JSON, application-protocol messages from a different version, deliberate fuzzing input — reaches the route's backend (Lambda function or HTTP integration) unchecked. Some WebSocket APIs are designed to route everything through $default and validate at the application layer; the triage override should record that decision when it applies. For WebSocket APIs that route by named selector and use $default only as a safety net, the safety net should reject anything it catches.
 
 **Remediation:** Attach a route response selection expression and a model to the $default route, or remove the $default route entirely and let unmatched messages return a Bad Request to the client. For APIs that intentionally route everything through $default with application-layer validation, document that decision in a triage override on this control rather than leaving it as an unacknowledged finding.
+
+---
+
+### CTL.APIGATEWAY.WEBSOCKET.IDLETIMEOUT.MISSING.001
+
+**WebSocket API Has No Connection Idle Timeout Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** fedramp_moderate: SC-5, AC-12; iso_27001_2022: A.5.30, A.8.6; nist_800_53_r5: SC-5, AC-12; pci_dss_v4.0: 6.4.1, 8.2; soc2: A1.1, CC6.6;
+
+WebSocket API stage has no idle timeout configured below the AWS service maximum (10 minutes). Idle WebSocket connections persist until the timeout fires; with the service maximum every idle connection holds backend state (DynamoDB connection records, in-memory routing state, any per-connection resources) for the full 10 minutes after the client falls silent. Attackers exploit this by opening many connections and going silent — exhausting connection state without sending any actual traffic. A shorter idle timeout (60-300 seconds depending on application) reaps silent connections faster, freeing state and bounding the resource cost per connection.
+
+**Remediation:** Configure a per-route idle timeout on the WebSocket API appropriate for the application: aws apigatewayv2 update-stage with default route settings or per-route settings. Most chat-style WebSocket workloads tolerate a 30-60 second idle timeout (clients send keepalives during legitimate activity); pure server-push notification workloads may need longer. Pair with the existing WebSocket throttle and $default-route validation controls.
+
+---
+
+### CTL.APIGATEWAY.WEBSOCKET.ORIGIN.UNVALIDATED.001
+
+**WebSocket $connect Route Doesn't Validate the Origin Header**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3, IA-2, SC-7; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, IA-2, SC-7; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+WebSocket API $connect route has no Origin-header validation. Browsers attach an Origin header to WebSocket upgrade requests; the value identifies the page that initiated the connection. Without server-side validation, any web origin can establish a WebSocket connection — a malicious site that gets a victim to visit can open a WebSocket against the API on the victim's behalf, leveraging cookie-based auth to act as the victim. WebSocket connections aren't subject to the Same-Origin Policy unilaterally; the server has to enforce it. The $connect-route Lambda authorizer (or a Lambda integration on $connect) is the layer that should inspect the Origin header and reject connections from origins not in the allowlist.
+
+**Remediation:** Implement Origin-header validation in the $connect Lambda authorizer (or in the $connect Lambda integration if no authorizer is configured). The handler reads the Origin header from the request context, compares against an operator-maintained allowlist, and rejects (returns deny / 403) for unrecognized origins. Document the allowlist explicitly in code or configuration; trusting the Origin header server-side requires the server-side check, since the client controls what it sends.
 
 ---
 

@@ -1,0 +1,23 @@
+control: CTL.APIGATEWAY.ORPHAN.USAGEPLAN.001
+defect: >
+  Usage plan exists with rate / burst / quota settings but is
+  not associated with any API stage.
+infection: >
+  Usage plans must be associated with an API stage to enforce
+  anything. An orphan plan is inert — no API consumes its
+  limits, no API key tied to the plan enforces against any
+  traffic. Common causes: development experiment that never
+  got cleaned up, stage migration where the old plan wasn't
+  retired, plan provisioned ahead of an API that never
+  launched. Orphans clutter the operational view, complicate
+  audits ("which plan governs which API?"), and accumulate
+  configuration drift — when an operator later associates
+  the plan with a stage, its limits are whatever they
+  drifted to, often without recent review. Either associate
+  the plan with the stage that should use it, or delete
+  the plan; inspect any API keys associated with the plan
+  first since they may need re-association.
+failure: >
+  Inert configuration plus drift. Orphan plan adds clutter,
+  complicates audits, and when later put into use carries
+  whatever drifted limits without a fresh review.

@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.PRIVATE.EXTERNAL.VPCE.001
+defect: >
+  PRIVATE-endpoint REST API resource policy lists VPC endpoint
+  IDs from accounts other than the API's home account.
+infection: >
+  PRIVATE APIs are typically intended for in-account or in-
+  organization reach. Allowing VPC endpoints from external
+  accounts widens the reachable principal set to whoever in
+  the external account holds permissions to use that VPC
+  endpoint. The cross-account-private pattern is occasionally
+  legitimate — a partner whose workload is in their own AWS
+  account reaches the API through a shared VPC endpoint —
+  but the discovery story for "who in the external account
+  can actually invoke" is often unclear without an audit of
+  the external account's IAM. The control flags the shape
+  for explicit operator review; legitimate cross-account
+  arrangements should document the partner relationship,
+  the IAM that gates use of the external VPC endpoint, and
+  the audit visibility into the external account.
+failure: >
+  Reachability extends beyond the home account. Principals
+  in external accounts who can use the listed VPC endpoint
+  invoke the PRIVATE API; the reach surface isn't bounded
+  by the home-account IAM.

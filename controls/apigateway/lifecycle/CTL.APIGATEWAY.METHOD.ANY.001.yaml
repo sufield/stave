@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.METHOD.ANY.001
+name: REST API Method Configured As ANY (Matches All HTTP Verbs)
+description: >
+  REST API method is configured with httpMethod ANY, which
+  matches any HTTP verb (GET, POST, PUT, PATCH, DELETE,
+  HEAD, OPTIONS) at that resource path. ANY is convenient for
+  proxying everything to a single backend handler, but it
+  exposes operations the API author may not have considered:
+  DELETE on a read-only resource, PUT on a list endpoint,
+  TRACE / CONNECT on any resource. The backend receives the
+  full set of verbs and is expected to handle each one
+  appropriately — frequently it doesn't, returning 200 for
+  unintended operations or producing unexpected behavior.
+  Explicit method declarations (GET, POST individually) are
+  the safer pattern; ANY should be reserved for cases where
+  the backend is genuinely a verb-agnostic dispatcher.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, CM-2, SC-7"
+  fedramp_moderate: "AC-3, CM-2, SC-7"
+  pci_dss_v4.0: "1.2, 6.4.2"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Method is configured as ANY; every HTTP verb at the path
+    routes to the backend.
+  action: >
+    Replace the ANY method with explicit declarations for the
+    verbs the API actually supports: aws apigateway delete-method
+    --http-method ANY, then put-method for each intended verb.
+    For backends that genuinely dispatch on verb (Lambda proxy
+    integration handling all verbs in one handler), keep ANY
+    but document the rationale; the control's triage-override
+    layer accepts that case explicitly.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_method",
+        "method": {
+          "http_method": "POST"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_method
+    - field: properties.api.method.http_method
+      op: eq
+      value: ANY

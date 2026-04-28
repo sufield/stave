@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.WEBSOCKET.ORIGIN.UNVALIDATED.001
+defect: >
+  WebSocket $connect route accepts upgrade requests from any
+  origin — no Origin-header validation.
+infection: >
+  Browsers attach an Origin header to WebSocket upgrade
+  requests; the value identifies the page that initiated the
+  connection. WebSocket connections aren't subject to the
+  Same-Origin Policy unilaterally — the server has to enforce
+  the origin restriction. Without server-side validation, any
+  web origin can establish a WebSocket connection: a malicious
+  site that gets a victim to visit can open a WebSocket
+  against the API on the victim's behalf, leveraging cookie-
+  based auth (or any auth that flows automatically from the
+  victim's browser) to act as the victim. The fix is to
+  validate the Origin header in the $connect Lambda
+  authorizer or in the $connect Lambda integration: read the
+  header from the request context, compare against an
+  operator-maintained allowlist, reject (deny / 403) for
+  unrecognized origins.
+failure: >
+  Cross-origin connection hijacking. A malicious site
+  establishes WebSocket connections in victim browsers
+  without the API server detecting the foreign origin.

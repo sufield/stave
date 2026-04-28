@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.WEBSOCKET.ORIGIN.UNVALIDATED.001
+name: WebSocket $connect Route Doesn't Validate the Origin Header
+description: >
+  WebSocket API $connect route has no Origin-header
+  validation. Browsers attach an Origin header to WebSocket
+  upgrade requests; the value identifies the page that
+  initiated the connection. Without server-side validation,
+  any web origin can establish a WebSocket connection — a
+  malicious site that gets a victim to visit can open a
+  WebSocket against the API on the victim's behalf, leveraging
+  cookie-based auth to act as the victim. WebSocket
+  connections aren't subject to the Same-Origin Policy
+  unilaterally; the server has to enforce it. The
+  $connect-route Lambda authorizer (or a Lambda integration
+  on $connect) is the layer that should inspect the Origin
+  header and reject connections from origins not in the
+  allowlist.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, IA-2, SC-7"
+  fedramp_moderate: "AC-3, IA-2, SC-7"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IAM-04", "IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    $connect route accepts WebSocket upgrade requests from
+    any origin.
+  action: >
+    Implement Origin-header validation in the $connect Lambda
+    authorizer (or in the $connect Lambda integration if no
+    authorizer is configured). The handler reads the Origin
+    header from the request context, compares against an
+    operator-maintained allowlist, and rejects (returns
+    deny / 403) for unrecognized origins. Document the
+    allowlist explicitly in code or configuration; trusting
+    the Origin header server-side requires the server-side
+    check, since the client controls what it sends.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_websocket_api",
+        "websocket": {
+          "origin_validated": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_websocket_api
+    - field: properties.api.websocket.origin_validated
+      op: eq
+      value: false

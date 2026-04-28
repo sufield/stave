@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.PRIVATE.EXTERNAL.VPCE.001
+name: PRIVATE API Resource Policy Allows VPC Endpoints In External Accounts
+description: >
+  PRIVATE-endpoint REST API has a resource policy whose
+  aws:SourceVpce condition lists VPC endpoint IDs from
+  accounts other than the API's home account. PRIVATE APIs
+  are typically intended for in-account or in-organization
+  reach; allowing VPC endpoints from external accounts widens
+  the reachable principal set to whoever in the external
+  account holds permissions to use that VPC endpoint. The
+  cross-account-private pattern is occasionally legitimate
+  (a partner whose workload is in their own AWS account
+  reaches the API through a shared VPC endpoint), but it
+  warrants explicit operator review because the discovery
+  story for "who in the external account can actually
+  invoke" is often unclear without an audit of the external
+  account's IAM.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, AC-6, SC-7"
+  fedramp_moderate: "AC-3, AC-6, SC-7"
+  pci_dss_v4.0: "1.2, 7.1"
+  soc2: "CC6.1, CC6.3"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    PRIVATE API resource policy lists VPC endpoints in external
+    accounts; reachability extends beyond the home account.
+  action: >
+    Audit each VPCE ID in the resource policy to confirm it
+    belongs to an account where the operator has visibility
+    into who can use the endpoint. Remove external-account
+    VPCEs that don't represent an explicit cross-account
+    integration: aws apigateway update-rest-api with
+    --patch-operations op=replace,path=/policy,value=<json>.
+    For legitimate cross-account integrations, document the
+    arrangement in the triage override and pair with audit
+    visibility into the external account's IAM (organization-
+    wide CloudTrail, central audit role).
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_rest_api",
+        "endpoint": {
+          "type": "PRIVATE"
+        },
+        "policy": {
+          "vpce_external_account": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_rest_api
+    - field: properties.api.endpoint.type
+      op: eq
+      value: PRIVATE
+    - field: properties.api.policy.vpce_external_account
+      op: eq
+      value: true

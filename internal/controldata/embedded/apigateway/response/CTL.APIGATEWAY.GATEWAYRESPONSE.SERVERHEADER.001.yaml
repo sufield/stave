@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.GATEWAYRESPONSE.SERVERHEADER.001
+name: Gateway Responses Include Server Header That Discloses API Gateway Version
+description: >
+  REST API gateway responses (the templated error responses
+  that API Gateway returns directly without invoking a
+  backend — 401, 403, 404, 429, 5xx, etc.) include a Server
+  response header that identifies the API Gateway service
+  and version. Server headers are a small but standard
+  fingerprinting source: scanners catalog them, attack tools
+  bucket targets by stack, vulnerability databases match
+  on version. The header doesn't enable a specific exploit
+  on its own — API Gateway is a managed service AWS patches
+  centrally — but the disclosure is unnecessary; removing
+  the Server header narrows what reconnaissance learns
+  passively from the API.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SC-7, SI-10"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Gateway responses include a Server header that fingerprints
+    the API Gateway version.
+  action: >
+    Customize the gateway responses to override or remove the
+    Server header: aws apigateway update-gateway-response with
+    --patch-operations
+    op=remove,path=/responseParameters/gatewayresponse.header.Server
+    for each response type that should be overridden, or
+    op=replace setting Server to an opaque value. The default
+    set of gateway responses (DEFAULT_4XX, DEFAULT_5XX,
+    UNAUTHORIZED, ACCESS_DENIED, etc.) all share the same
+    header behavior; customize the parents to apply
+    universally.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_rest_api",
+        "responses": {
+          "server_header_disclosed": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_rest_api
+    - field: properties.api.responses.server_header_disclosed
+      op: eq
+      value: true

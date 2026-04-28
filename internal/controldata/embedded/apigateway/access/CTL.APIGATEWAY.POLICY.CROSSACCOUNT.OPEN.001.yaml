@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.POLICY.CROSSACCOUNT.OPEN.001
+name: REST API Resource Policy Allows Any VPC In Any Account
+description: >
+  REST API resource policy grants invocation rights to a
+  source-VPC condition without restricting to specific VPCs
+  or specific accounts (e.g., aws:SourceVpc condition with
+  no specific VPC IDs, or no aws:SourceAccount /
+  aws:PrincipalOrgID restriction alongside the VPC clause).
+  The policy effectively allows any VPC in any AWS account
+  in the AWS partition to invoke the API. Cross-account
+  access through VPC peering or VPC sharing reaches the
+  policy condition; what was intended as "internal-only via
+  VPC" becomes "any AWS-internal caller anywhere." Pair
+  every cross-account / VPC-scoped resource policy with an
+  account or organization restriction.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, AC-6, SC-7"
+  fedramp_moderate: "AC-3, AC-6, SC-7"
+  pci_dss_v4.0: "1.2, 7.1"
+  soc2: "CC6.1, CC6.3"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Resource policy allows any VPC in any account; cross-
+    account VPC peering or sharing reaches the policy.
+  action: >
+    Add an aws:SourceAccount or aws:PrincipalOrgID condition
+    to the resource policy alongside the VPC clause: aws
+    apigateway update-rest-api with --patch-operations
+    op=replace,path=/policy,value=<json> where the policy
+    document has both the source-VPC clause and an
+    Account/Org restriction. For private APIs, prefer
+    aws:SourceVpce listing specific VPC endpoint IDs — that's
+    the most restrictive shape and avoids the cross-account
+    VPC ambiguity entirely.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_rest_api",
+        "policy": {
+          "vpc_scoped": true,
+          "account_or_org_restricted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_rest_api
+    - field: properties.api.policy.vpc_scoped
+      op: eq
+      value: true
+    - field: properties.api.policy.account_or_org_restricted
+      op: eq
+      value: false

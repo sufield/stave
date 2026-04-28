@@ -1,0 +1,25 @@
+control: CTL.APIGATEWAY.ORPHAN.NODEPLOYMENT.001
+defect: >
+  REST API resource exists with method definitions, integrations,
+  and authorizers configured, but has no deployment records.
+infection: >
+  No stage references the API; no traffic ever reaches the
+  configuration. The API is a definition-only artifact —
+  partial work an operator started and didn't complete, a
+  template that was provisioned but not pushed, or a
+  resource left over from a delete-by-stage cleanup. The
+  configuration drift risk is real: the API has IAM,
+  network, and integration coupling that other resources
+  may still honor (Lambda resource-based policy grants, VPC
+  Link references, authorizer dependencies), but no
+  operational traffic to surface bugs. When an operator
+  later deploys the API, the configuration is whatever it
+  has drifted to — possibly outdated, possibly never
+  reviewed in the current state. Either deploy if intended
+  to be live, or delete if leftover; auditing the cross-
+  resource references during cleanup avoids leaving
+  dangling permissions.
+failure: >
+  Drift hazard. Definition-only artifact without deployment
+  validation; cleanup is incomplete and a future deploy
+  pushes whatever the configuration has drifted to.

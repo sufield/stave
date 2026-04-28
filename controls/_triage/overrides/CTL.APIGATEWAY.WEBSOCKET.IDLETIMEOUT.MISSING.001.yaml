@@ -1,0 +1,25 @@
+control: CTL.APIGATEWAY.WEBSOCKET.IDLETIMEOUT.MISSING.001
+defect: >
+  WebSocket API idle timeout is at the AWS service maximum
+  (10 minutes) or not explicitly configured.
+infection: >
+  WebSocket connections persist until either party closes
+  them or the idle timeout fires. With the service maximum,
+  every silent connection holds backend state — DynamoDB
+  connection records, in-memory routing state, any per-
+  connection resources — for the full 10 minutes after the
+  client falls silent. Attackers exploit this by opening
+  many connections and going silent; each connection
+  consumes state without sending real traffic, multiplying
+  the resource cost per attacker request. A shorter idle
+  timeout (60-300 seconds for most chat-style or push-
+  notification workloads) reaps silent connections faster
+  and bounds the per-connection resource cost. Most
+  legitimate clients send keepalives during real activity,
+  so the shorter timeout has near-zero impact on real
+  users.
+failure: >
+  Connection-state amplification. Silent connections
+  monopolize backend state; attacker open-and-go-silent
+  scales the cost per request by 10 minutes of state
+  retention.
