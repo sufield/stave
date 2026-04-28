@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.DELIVERY.NOTCHANNEL.001
+name: No Config Delivery Channel Configured
+description: >
+  AWS Config recorder exists but no delivery
+  channel is configured. Configuration data is
+  recorded in Config's internal buffer but not
+  persisted to S3 (no long-term history) and
+  not published to SNS (no real-time
+  notifications). Any audit trail beyond
+  Config's internal retention is lost.
+domain: exposure
+severity: critical
+archetype: false-protection
+compliance:
+  cis_aws_v3.0: "3.5, 3.6"
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "AU-9, CM-3, CM-8"
+  pci_dss_v4.0: "10.1, 10.5"
+  fedramp_moderate: "AU-9, CM-8"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    Recorder runs without delivery; data is not
+    persisted.
+  action: >
+    Create a delivery channel with at minimum an
+    S3 bucket: aws configservice
+    put-delivery-channel --delivery-channel
+    name=default,s3BucketName=<bucket>. Add an
+    SNS topic if real-time notifications are
+    needed. Verify the next configuration
+    history file lands in the bucket and
+    confirm Config rules begin evaluating.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "has_recorder": true,
+          "has_delivery_channel": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.has_recorder
+      op: eq
+      value: true
+    - field: properties.compliance.config.has_delivery_channel
+      op: eq
+      value: false
+defect: >
+  Config recorder is configured but no delivery
+  channel is set; configuration data is not
+  persisted.
+infection: >
+  The delivery channel is how Config exports
+  configuration data — to S3 for persistence
+  and to SNS for real-time notification.
+  Without a delivery channel, Config records
+  configurations internally (recent items
+  queryable via API) but doesn't persist them
+  to S3 (no long-term history), doesn't send
+  change notifications via SNS (no real-time
+  awareness), and configuration history beyond
+  Config's internal retention window is lost.
+  The recorder appears to be running.
+  Compliance rules may evaluate using internal
+  data. But no durable configuration audit
+  trail exists. For compliance frameworks
+  requiring multi-year history (PCI-DSS,
+  HIPAA), this is a complete failure.
+failure: >
+  Configuration data not persisted. Config
+  records but doesn't deliver — no durable
+  audit trail, no change notifications.
+tests:
+  - name: recorder without delivery channel fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            has_recorder: true
+            has_delivery_channel: false
+  - name: recorder with delivery channel passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            has_recorder: true
+            has_delivery_channel: true

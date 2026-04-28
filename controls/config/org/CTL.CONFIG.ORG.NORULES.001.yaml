@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ORG.NORULES.001
+name: No Organization Config Rules Deployed
+description: >
+  AWS Organizations is in use but no
+  organization-level Config rules are deployed.
+  Each member account configures rules
+  independently — or doesn't configure them at
+  all. Without organization rules, compliance
+  evaluation is inconsistent across the
+  organization: some accounts evaluate
+  encryption, others don't; some accounts
+  evaluate IAM MFA, others don't.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "CA-7, CM-2, CM-6"
+  pci_dss_v4.0: "11.5"
+  fedramp_moderate: "CA-7, CM-6"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 2.0
+remediation:
+  description: >
+    Organizations active without org-level
+    Config rules.
+  action: >
+    Deploy organization Config rules from the
+    management or delegated admin account: aws
+    configservice put-organization-config-rule
+    --organization-config-rule-name <name>
+    --organization-managed-rule-metadata
+    RuleIdentifier=<id>. Start with a baseline
+    set covering the most common security
+    rules (S3 encryption, IAM MFA, CloudTrail
+    enabled, security group rules) and expand
+    as compliance requirements grow. Member-
+    account admins cannot delete or modify
+    organization rules locally.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_org",
+        "config": {
+          "is_org_account": true,
+          "has_org_rules": true,
+          "org_rule_count": 15,
+          "member_account_count": 12
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_org
+    - field: properties.compliance.config.is_org_account
+      op: eq
+      value: true
+    - field: properties.compliance.config.has_org_rules
+      op: eq
+      value: false
+defect: >
+  Organizations active with zero organization
+  Config rules.
+infection: >
+  Organization Config rules deploy the same
+  rules to all member accounts from the
+  management or delegated admin account.
+  Without them, each account's compliance
+  posture depends on that account's admin
+  configuring rules correctly. Common failures:
+  new accounts have no rules (nobody sets them
+  up), existing accounts have different rule
+  sets (inconsistent compliance), and account
+  admins disable rules (no organizational
+  enforcement). Organization rules ensure
+  every account evaluates the same compliance
+  baseline regardless of individual account
+  configuration. Rules deployed organization-
+  wide can also be protected by SCPs that
+  prevent member-account override.
+failure: >
+  Inconsistent compliance evaluation. Each
+  member account manages its own rules — no
+  organizational compliance baseline.
+tests:
+  - name: org without org rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_config_org
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_org
+          config:
+            is_org_account: true
+            has_org_rules: false
+            org_rule_count: 0
+            member_account_count: 12
+  - name: org with org rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_config_org
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_org
+          config:
+            is_org_account: true
+            has_org_rules: true
+            org_rule_count: 15
+            member_account_count: 12

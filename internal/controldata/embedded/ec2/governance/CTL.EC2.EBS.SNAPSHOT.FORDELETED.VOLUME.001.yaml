@@ -1,0 +1,128 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.SNAPSHOT.FORDELETED.VOLUME.001
+name: EBS Snapshot Exists for Deleted Volume
+description: >
+  EBS snapshot exists for a volume that has been
+  deleted. Retaining snapshots after volume
+  deletion is correct backup behavior — the
+  snapshot is the recovery point — but for a
+  decommissioned volume whose data should also
+  be deleted, the snapshot retains data that
+  should be gone. Governance signal rather than
+  defect: review whether the snapshot is still
+  needed.
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, MP-6, SA-22"
+  pci_dss_v4.0: "9.4"
+  fedramp_moderate: "CM-2, MP-6"
+  hipaa: "164.310(d)(2)(i)"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Snapshot's source volume is gone. Verify
+    whether the snapshot is still needed.
+  action: >
+    Determine why the source volume was deleted.
+    If decommissioning (data should be deleted),
+    delete the snapshot: aws ec2 delete-snapshot
+    --snapshot-id <id>. If the volume was
+    replaced and the snapshot is part of a
+    backup retention plan, leave the snapshot
+    and tag it with the retention reason. If
+    the snapshot is DLM-managed, this control
+    should not fire — DLM-retained snapshots
+    of deleted volumes are intentional backup
+    behavior.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_snapshot",
+        "ebs": {
+          "snapshot_id": "snap-0123456789abcdef",
+          "snapshot_volume_id": "vol-0deletedabc123",
+          "snapshot_volume_exists": false,
+          "has_orphan_volume_snapshot": true,
+          "snapshot_age_days": 400
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_snapshot
+    - field: properties.compute.ebs.has_orphan_volume_snapshot
+      op: eq
+      value: true
+defect: >
+  EBS snapshot's source volume has been deleted;
+  snapshot persists with potentially-decommissioned
+  data.
+infection: >
+  EBS snapshots persist independently from their
+  source volumes. When a volume is deleted, the
+  snapshot is not auto-removed — which is correct
+  backup behavior: deleting a volume should not
+  destroy its backups. But two scenarios produce
+  governance issues: (1) the volume was
+  intentionally decommissioned (data should be
+  deleted) and the snapshot retains data that
+  was supposed to be gone; (2) the snapshot is
+  not part of a managed retention plan and is
+  simply an orphan from a past volume deletion.
+  This control surfaces the relationship for
+  review rather than asserting the snapshot
+  must be deleted.
+failure: >
+  Snapshot retains data from a deleted volume.
+  Review whether the snapshot is still needed
+  for recovery or whether decommissioning
+  intent extends to the snapshot.
+tests:
+  - name: snapshot for deleted volume fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:snapshot/snap-0123456789abcdef"
+      asset_type: aws_ebs_snapshot
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_snapshot
+          ebs:
+            snapshot_id: "snap-0123456789abcdef"
+            snapshot_volume_id: "vol-0deletedabc123"
+            snapshot_volume_exists: false
+            has_orphan_volume_snapshot: true
+            snapshot_age_days: 400
+  - name: snapshot for live volume passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:snapshot/snap-0123456789abcdef"
+      asset_type: aws_ebs_snapshot
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_snapshot
+          ebs:
+            snapshot_id: "snap-0123456789abcdef"
+            snapshot_volume_id: "vol-0livevolabc123"
+            snapshot_volume_exists: true
+            has_orphan_volume_snapshot: false
+            snapshot_age_days: 5

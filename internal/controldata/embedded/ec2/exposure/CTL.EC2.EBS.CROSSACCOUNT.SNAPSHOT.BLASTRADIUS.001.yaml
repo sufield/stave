@@ -1,0 +1,131 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.BLASTRADIUS.001
+name: EBS Snapshot Shared with Excessive External Accounts
+description: >
+  EBS snapshot is shared with more than five
+  external accounts. Each account with
+  createVolumePermission can create a volume
+  from the snapshot and read the entire disk
+  contents. Same blast-radius threshold as KMS
+  and Secrets Manager cross-account controls.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6, SC-28"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: data
+    scope: cross_account
+    multiplier: 2.5
+remediation:
+  description: >
+    Snapshot shared with too many external
+    accounts; data exposure scales with the
+    recipient list.
+  action: >
+    Audit the snapshot's createVolumePermission
+    and remove unneeded recipients: aws ec2
+    modify-snapshot-attribute --snapshot-id
+    <id> --create-volume-permission
+    'Remove=[{UserId=<acct1>},{UserId=<acct2>}]'.
+    For data that genuinely needs broad sharing,
+    consider creating a copy in a designated
+    sharing account whose IAM and KMS posture
+    is scoped to that purpose, rather than
+    sharing source-account snapshots widely.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_snapshot",
+        "ebs": {
+          "snapshot_id": "snap-0123456789abcdef",
+          "snapshot_shared_count": 2,
+          "snapshot_shared_accounts": ["444455556666", "777788889999"],
+          "snapshot_shared_excessive": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_snapshot
+    - field: properties.compute.ebs.snapshot_shared_excessive
+      op: eq
+      value: true
+defect: >
+  EBS snapshot is shared with more than five
+  external accounts.
+infection: >
+  Each external account with
+  createVolumePermission can independently
+  create a volume from the snapshot and mount
+  it. The probability that at least one
+  recipient account is compromised, has an
+  insider risk, or no longer has a legitimate
+  need for the data scales with the recipient
+  count. At one or two recipients, the sharing
+  is auditable and intentional. Past five, the
+  sharing list typically reflects historical
+  accumulation rather than current need —
+  partner integrations that ended, accounts
+  that were intended as one-time copies and
+  never cleaned up, and broad team-share
+  patterns that were never narrowed. The
+  threshold matches the blast-radius framing
+  used for KMS and Secrets Manager cross-
+  account access.
+failure: >
+  Excessive snapshot recipient list. Disk image
+  data is accessible to many external accounts;
+  exposure surface scales linearly with the
+  recipient count.
+tests:
+  - name: snapshot shared with 8 accounts fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:snapshot/snap-0123456789abcdef"
+      asset_type: aws_ebs_snapshot
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_snapshot
+          ebs:
+            snapshot_id: "snap-0123456789abcdef"
+            snapshot_shared_count: 8
+            snapshot_shared_accounts:
+              - "444455556666"
+              - "777788889999"
+              - "111133335555"
+              - "222244446666"
+              - "333355557777"
+              - "444466668888"
+              - "555577779999"
+              - "666688880000"
+            snapshot_shared_excessive: true
+  - name: snapshot shared with 2 accounts passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:snapshot/snap-0123456789abcdef"
+      asset_type: aws_ebs_snapshot
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_snapshot
+          ebs:
+            snapshot_id: "snap-0123456789abcdef"
+            snapshot_shared_count: 2
+            snapshot_shared_accounts: ["444455556666", "777788889999"]
+            snapshot_shared_excessive: false

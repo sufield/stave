@@ -1,0 +1,24 @@
+control: CTL.CONFIG.AGGREGATOR.INCOMPLETE.ACCOUNTS.001
+defect: >
+  Config aggregator does not include all member
+  accounts.
+infection: >
+  An incomplete aggregator creates a false
+  sense of completeness. The compliance
+  dashboard shows results for the included
+  accounts — the security team assumes this
+  is the entire organization. The missing
+  accounts have no visibility in the aggregator.
+  If a missing account has non-compliant
+  resources (public S3 buckets, unencrypted
+  volumes, overprivileged IAM roles), the
+  centralized dashboard doesn't show them.
+  Common cause: new member accounts added to
+  the organization after the aggregator was
+  configured — the aggregator doesn't auto-
+  include new accounts unless it uses
+  organization-wide collection.
+failure: >
+  Incomplete compliance aggregation. Member
+  accounts not included — their compliance
+  status is invisible in the centralized view.

@@ -1,0 +1,21 @@
+id: config_recording_incomplete
+description: >
+  Recorder is running but coverage is
+  incomplete: not all resource types are in
+  scope, IAM (global) is excluded, or recording
+  is periodic instead of continuous. Two or
+  more together describe a recorder with
+  multiple coverage gaps — resource types
+  missing AND either IAM invisible or sub-day
+  changes lost. Partial configuration blindness
+  presented as configured compliance.
+controls:
+  - CTL.CONFIG.RECORDER.NOTALLRESOURCES.001
+  - CTL.CONFIG.RECORDER.NOGLOBAL.001
+  - CTL.CONFIG.RECORDER.PERIODIC.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

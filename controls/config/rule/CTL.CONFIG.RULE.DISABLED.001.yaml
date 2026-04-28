@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.RULE.DISABLED.001
+name: Config Rule Is Disabled
+description: >
+  AWS Config rule exists but is in disabled
+  state. The rule has a name, scope, parameters,
+  and evaluation logic — but it doesn't
+  evaluate. The rule appears to exist; it
+  doesn't function. Same false-protection shape
+  as DLM disabled, alarm ActionsEnabled false,
+  and WAF without rules.
+domain: exposure
+severity: high
+archetype: false-protection
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC7.1, CC7.2, CC8.1"
+  nist_800_53_r5: "CA-7, CM-2, CM-6, SI-4"
+  pci_dss_v4.0: "11.5"
+  fedramp_moderate: "CA-7, CM-6"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Rule is disabled. Compliance evaluation does
+    not run for this rule.
+  action: >
+    Re-enable the rule via the Config console or
+    aws configservice put-config-rule with the
+    State field set appropriately. If the rule
+    was disabled to suppress a known issue, fix
+    the underlying configuration before re-
+    enabling. Document the reason for any
+    intentional, persistent disable in change
+    management so it doesn't appear as a forgotten
+    artifact at the next audit.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_rule",
+        "config": {
+          "rule_name": "s3-bucket-server-side-encryption-enabled",
+          "rule_state": "ACTIVE",
+          "rule_is_active": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_rule
+    - field: properties.compliance.config.rule_is_active
+      op: eq
+      value: false
+defect: >
+  AWS Config rule is disabled.
+infection: >
+  A disabled Config rule retains its full
+  configuration: name, scope (which resource
+  types to evaluate), parameters (threshold
+  values, required settings), source (managed
+  rule or custom Lambda), and remediation (if
+  configured). An auditor checking 'do we have
+  a Config rule for S3 encryption?' sees the
+  rule and marks it compliant. The rule doesn't
+  evaluate. Resources that violate the rule
+  are not flagged. The compliance dashboard
+  shows no non-compliant resources for that
+  rule — not because everything is compliant
+  but because the rule isn't checking.
+failure: >
+  False compliance. Config rule exists but is
+  disabled — non-compliant resources are not
+  detected.
+tests:
+  - name: disabled rule fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-rule/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_rule
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_rule
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            rule_state: "DELETING_RESULTS"
+            rule_is_active: false
+  - name: active rule passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-rule/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_rule
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_rule
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            rule_state: "ACTIVE"
+            rule_is_active: true

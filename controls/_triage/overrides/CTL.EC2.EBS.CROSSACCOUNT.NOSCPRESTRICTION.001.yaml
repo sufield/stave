@@ -1,0 +1,24 @@
+control: CTL.EC2.EBS.CROSSACCOUNT.NOSCPRESTRICTION.001
+defect: >
+  No SCP prevents member accounts from making
+  EBS snapshots public.
+infection: >
+  ModifySnapshotAttribute with
+  createVolumePermission: all is the one-API-
+  call data breach. Without an SCP that denies
+  this action across the organization, any
+  admin in any member account can make any
+  snapshot public. A compromised admin account,
+  a misconfigured automation script, or an
+  insider can expose production database
+  snapshots, application images, and operating
+  system volumes to the world. An SCP with
+  Deny on ec2:ModifySnapshotAttribute scoped
+  to the public-sharing pattern prevents
+  exposure at the organizational level —
+  regardless of any individual account's IAM
+  configuration.
+failure: >
+  Organizational snapshot exposure risk. No SCP
+  prevents public snapshot sharing — any member
+  account admin can expose any snapshot.

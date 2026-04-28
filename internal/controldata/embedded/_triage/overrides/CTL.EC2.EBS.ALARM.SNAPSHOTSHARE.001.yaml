@@ -1,0 +1,26 @@
+control: CTL.EC2.EBS.ALARM.SNAPSHOTSHARE.001
+defect: >
+  No CloudWatch alarm monitors cross-account
+  snapshot sharing.
+infection: >
+  Cross-account snapshot sharing is the targeted
+  exfiltration path. Instead of making the
+  snapshot public (highly visible — auditors,
+  AWS Trusted Advisor, security tools all flag
+  public snapshots), the attacker shares the
+  snapshot with a specific attacker-controlled
+  account. The recipient creates a volume from
+  the snapshot, mounts it, and reads the data —
+  database files, credentials, application
+  state, OS files. Without an alarm, the
+  ModifySnapshotAttribute call adding the
+  external account ID to createVolumePermission
+  is invisible. The data leaves the source
+  account in plaintext (if the snapshot is
+  unencrypted) or under the recipient's KMS
+  context (if shared with an encrypted snapshot
+  via shared CMK).
+failure: >
+  Undetected cross-account exfiltration.
+  Snapshots can be shared with external accounts
+  without notification.

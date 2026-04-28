@@ -1,0 +1,130 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ACCESS.STOPRECORDER.BROAD.001
+name: config:StopConfigurationRecorder Granted to Broad Principals
+description: >
+  IAM policies grant
+  config:StopConfigurationRecorder to non-
+  administrative principals.
+  StopConfigurationRecorder disables Config
+  recording — the Config equivalent of
+  CloudTrail's StopLogging. Any principal with
+  this permission can blind the configuration
+  audit trail.
+domain: exposure
+severity: critical
+compliance:
+  cis_aws_v3.0: "1.16, 3.5"
+  soc2: "CC6.1, CC6.3, CC7.1"
+  nist_800_53_r5: "AC-3, AC-6, CM-5, SI-4"
+  pci_dss_v4.0: "7.1, 7.2, 10.5"
+  fedramp_moderate: "AC-3, AC-6, CM-5"
+  hipaa: "164.312(a)(1), 164.312(b)"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09", "LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    Too many principals can stop the Config
+    recorder.
+  action: >
+    Audit IAM policies for config:Stop*,
+    config:StopConfigurationRecorder, and
+    config:* on Resource: *. Restrict the
+    permission to a dedicated security-admin
+    role. Pair with an SCP at the org level
+    that denies StopConfigurationRecorder for
+    all member accounts (the existing
+    CTL.IAM.SCP.CONFIG.001 covers that).
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "stop_recorder_principals": ["arn:aws:iam::111122223333:role/security-admin"],
+          "stop_recorder_principal_count": 1,
+          "stop_recorder_broadly_granted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.stop_recorder_broadly_granted
+      op: eq
+      value: true
+defect: >
+  config:StopConfigurationRecorder is granted to
+  non-administrative principals.
+infection: >
+  StopConfigurationRecorder disables Config
+  recording — no new resource configurations
+  are captured. An attacker with this
+  permission stops the recorder, makes
+  configuration changes (create IAM backdoor,
+  open security group, make snapshot public),
+  then optionally restarts the recorder. The
+  configuration changes between stop and
+  restart are not recorded. Config rules don't
+  evaluate during the gap. The configuration
+  audit trail has a hole. Same pattern as
+  cloudtrail:StopLogging — the attacker blinds
+  the monitoring service before acting. This
+  permission should be restricted to security
+  administrators and protected by SCP in
+  member accounts.
+failure: >
+  Excessive Config stop access. Too many
+  principals can disable configuration
+  recording — the configuration audit trail
+  can be silenced.
+tests:
+  - name: broad StopRecorder access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            stop_recorder_principals:
+              - "arn:aws:iam::111122223333:role/dev-team"
+              - "arn:aws:iam::111122223333:role/ops"
+              - "arn:aws:iam::111122223333:role/sre"
+              - "arn:aws:iam::111122223333:role/qa"
+              - "arn:aws:iam::111122223333:role/data-team"
+              - "arn:aws:iam::111122223333:role/ci-runner"
+              - "arn:aws:iam::111122223333:role/billing"
+              - "arn:aws:iam::111122223333:role/eng"
+              - "arn:aws:iam::111122223333:user/admin-1"
+              - "arn:aws:iam::111122223333:user/admin-2"
+              - "arn:aws:iam::111122223333:user/admin-3"
+              - "arn:aws:iam::111122223333:role/security-admin"
+            stop_recorder_principal_count: 12
+            stop_recorder_broadly_granted: true
+  - name: scoped StopRecorder access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            stop_recorder_principals: ["arn:aws:iam::111122223333:role/security-admin"]
+            stop_recorder_principal_count: 1
+            stop_recorder_broadly_granted: false

@@ -1,0 +1,21 @@
+id: config_delivery_broken
+description: >
+  Any delivery failure: S3 bucket deleted, SNS
+  topic deleted, or no SNS configured. Each
+  independently means configuration data isn't
+  reaching its destination. Config records but
+  the data doesn't persist or notify.
+  Threshold of 1 because a single broken
+  delivery target severs the configuration
+  pipeline at the persistence/notification
+  link.
+controls:
+  - CTL.CONFIG.GHOST.DELIVERY.S3.001
+  - CTL.CONFIG.GHOST.DELIVERY.SNS.001
+  - CTL.CONFIG.DELIVERY.NOSNS.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

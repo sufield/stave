@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.ALARM.DELETESNAPSHOT.001
+name: No CloudWatch Alarm for DeleteSnapshot
+description: >
+  No CloudWatch alarm watches CloudTrail for
+  DeleteSnapshot API calls. DeleteSnapshot
+  permanently removes a backup; bulk deletion
+  is the canonical ransomware preparation step.
+  Without an alarm, snapshot destruction is
+  invisible.
+domain: audit
+severity: high
+archetype: silent-failure
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3, A1.2"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.2, 10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  hipaa: "164.312(b), 164.308(a)(1)(ii)(D)"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    No alarm fires when snapshots are being
+    deleted.
+  action: >
+    Create a CloudWatch alarm on a metric filter
+    matching eventName=DeleteSnapshot. Use a
+    threshold tuned to detect bulk deletion
+    (e.g., >5 events in 5 minutes) — single
+    deletes from DLM retention are normal
+    cleanup. Wire to the security paging topic.
+    Consider also enabling EBS Recycle Bin so
+    accidental or malicious deletions are
+    recoverable for a configurable retention
+    window.
+  example: |
+    {
+      "compute": {
+        "kind": "ec2_account",
+        "ebs": {
+          "alarm_delete_snapshot": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ec2_account
+    - field: properties.compute.ebs.alarm_delete_snapshot
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors DeleteSnapshot
+  API calls.
+infection: >
+  DeleteSnapshot permanently removes an EBS
+  snapshot — the backup is gone, the recovery
+  point is lost. Ransomware operators
+  systematically delete snapshots before
+  encrypting volumes: step 1 — delete all
+  snapshots (destroy recovery capability),
+  step 2 — encrypt or delete volumes (destroy
+  the data), step 3 — demand ransom (victim
+  has no backups to restore from). Without a
+  DeleteSnapshot alarm, step 1 is invisible.
+  The attacker deletes 50 snapshots over 10
+  minutes; nobody is notified. By the time
+  volumes are encrypted, recovery is impossible.
+  An alarm on the deletion API call detects
+  step 1 — the team can respond before step 2.
+failure: >
+  Undetected backup deletion. Snapshots can be
+  deleted without notification — ransomware
+  preparation step is invisible.
+tests:
+  - name: account without delete-snapshot alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            alarm_delete_snapshot: false
+  - name: account with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            alarm_delete_snapshot: true

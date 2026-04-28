@@ -1,0 +1,19 @@
+id: config_audit_trail_erasable
+description: >
+  Either no delete protection on the delivery
+  bucket or the bucket is already deleted. The
+  configuration audit trail is either erasable
+  (anyone with permissions can delete history)
+  or already gone. Threshold of 1 because each
+  case independently destroys the audit trail's
+  durability — same shape as the CloudTrail
+  log-tamperable chain.
+controls:
+  - CTL.CONFIG.DELIVERY.S3.NODELETE.001
+  - CTL.CONFIG.GHOST.DELIVERY.S3.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

@@ -1,0 +1,25 @@
+control: CTL.CONFIG.ORG.NORULES.001
+defect: >
+  Organizations active with zero organization
+  Config rules.
+infection: >
+  Organization Config rules deploy the same
+  rules to all member accounts from the
+  management or delegated admin account.
+  Without them, each account's compliance
+  posture depends on that account's admin
+  configuring rules correctly. Common failures:
+  new accounts have no rules (nobody sets them
+  up), existing accounts have different rule
+  sets (inconsistent compliance), and account
+  admins disable rules (no organizational
+  enforcement). Organization rules ensure
+  every account evaluates the same compliance
+  baseline regardless of individual account
+  configuration. Rules deployed organization-
+  wide can also be protected by SCPs that
+  prevent member-account override.
+failure: >
+  Inconsistent compliance evaluation. Each
+  member account manages its own rules — no
+  organizational compliance baseline.

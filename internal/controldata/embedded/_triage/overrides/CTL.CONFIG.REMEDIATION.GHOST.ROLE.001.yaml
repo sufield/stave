@@ -1,0 +1,25 @@
+control: CTL.CONFIG.REMEDIATION.GHOST.ROLE.001
+defect: >
+  Config remediation references a deleted IAM
+  role.
+infection: >
+  The remediation role is the IAM role SSM
+  assumes to execute the automation document.
+  When the role is deleted, Config detects non-
+  compliance, Config triggers remediation, SSM
+  attempts AssumeRole on the configured role
+  ARN, AssumeRole fails (role doesn't exist),
+  and the SSM execution never starts. The
+  remediation status surface shows "failed" but
+  the surface message ("AccessDenied") is
+  ambiguous — same exception text as a
+  permissions-only issue. Triage time is
+  longer than it should be because the failure
+  mode (role gone) is not differentiated from
+  the more common case (role exists, lacks a
+  permission). Same single-dependency failure
+  shape as the DLM execution role ghost.
+failure: >
+  Remediation cannot start. SSM execution fails
+  at AssumeRole because the configured role is
+  gone.

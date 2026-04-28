@@ -1,0 +1,142 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.LIFECYCLE.RULE.NEVERTRIGGERED.001
+name: Config Rule Has Never Evaluated Any Resource
+description: >
+  AWS Config rule has been configured for at
+  least 30 days but has never produced an
+  evaluation result. Either the rule's scope
+  doesn't match any existing resource type, the
+  recorder doesn't record the resource type the
+  rule evaluates, or the rule is change-
+  triggered for resources that have not changed.
+  Dead compliance configuration regardless of
+  cause.
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, SA-22"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Rule exists but evaluates nothing.
+  action: >
+    Inspect the rule's scope and
+    resource_scope_resource_type. If no
+    resources of that type exist in the
+    account, delete the rule (it's not
+    applicable). If resources of that type
+    exist, check whether the recorder is
+    configured to record that type
+    (NOTALLRESOURCES). If both are correct, the
+    rule may be change-triggered for resources
+    that haven't changed since rule creation —
+    trigger a manual evaluation: aws
+    configservice start-config-rules-evaluation
+    --config-rule-names <rule>.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_rule",
+        "config": {
+          "rule_name": "redshift-cluster-encrypted",
+          "rule_evaluation_count": 50,
+          "rule_has_evaluated": true,
+          "rule_age_days": 90,
+          "rule_scope_resource_type": "AWS::Redshift::Cluster"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_rule
+    - field: properties.compliance.config.rule_has_evaluated
+      op: eq
+      value: false
+    - field: properties.compliance.config.rule_age_days
+      op: gt
+      value: 30
+defect: >
+  Config rule has been configured for 30+ days
+  with zero evaluation results.
+infection: >
+  A rule that never evaluates provides zero
+  compliance value — it exists in the rule
+  inventory, may appear in compliance dashboards
+  as 'no results,' and contributes to the false
+  impression that the organization has
+  comprehensive compliance coverage. Common
+  causes: the rule evaluates a resource type
+  that doesn't exist in the account (e.g.,
+  Redshift rule in an account with no Redshift
+  clusters), the recorder doesn't record the
+  resource type the rule evaluates (scope
+  mismatch between recorder and rule), or the
+  rule is change-triggered for a resource type
+  that was created before the rule and never
+  modified.
+failure: >
+  Dead compliance rule. Rule exists but has
+  never produced any evaluation result — zero
+  compliance value.
+tests:
+  - name: rule with zero evaluations and 90 days old fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-rule/redshift-cluster-encrypted"
+      asset_type: aws_config_rule
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_rule
+          config:
+            rule_name: "redshift-cluster-encrypted"
+            rule_evaluation_count: 0
+            rule_has_evaluated: false
+            rule_age_days: 90
+            rule_scope_resource_type: "AWS::Redshift::Cluster"
+  - name: rule with evaluations passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-rule/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_rule
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_rule
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            rule_evaluation_count: 240
+            rule_has_evaluated: true
+            rule_age_days: 90
+            rule_scope_resource_type: "AWS::S3::Bucket"
+  - name: new rule under 30 days does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-rule/iam-mfa-enabled"
+      asset_type: aws_config_rule
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_rule
+          config:
+            rule_name: "iam-mfa-enabled"
+            rule_evaluation_count: 0
+            rule_has_evaluated: false
+            rule_age_days: 5
+            rule_scope_resource_type: "AWS::IAM::User"

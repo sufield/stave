@@ -1,0 +1,21 @@
+id: ebs_snapshot_sprawl
+description: >
+  Lifecycle debris compounds: the catalog's
+  existing stale-snapshot detection plus either
+  a snapshot for a deleted volume or an
+  unattached volume. Two or more together
+  describe historical data persisting across
+  volumes and snapshots without governance —
+  multiple lifecycle indicators at once. The
+  data should have been cleaned up; it
+  remains.
+controls:
+  - CTL.EC2.EBS.SNAPSHOT.STALE.001
+  - CTL.EC2.EBS.SNAPSHOT.FORDELETED.VOLUME.001
+  - CTL.EC2.EBS.UNATTACHED.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_access

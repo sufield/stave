@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.AGGREGATOR.INCOMPLETE.ACCOUNTS.001
+name: Config Aggregator Excludes Member Accounts
+description: >
+  Config aggregator exists but does not include
+  all member accounts. The centralized
+  compliance dashboard shows results for the
+  included accounts only — missing accounts
+  have no visibility in the aggregator. The
+  view is presented as complete and is
+  silently incomplete.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "CA-7, CM-8"
+  pci_dss_v4.0: "10.1"
+  fedramp_moderate: "CA-7, CM-8"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 2.5
+remediation:
+  description: >
+    Aggregator misses member accounts. Their
+    compliance status is invisible in the
+    centralized view.
+  action: >
+    Switch to organization-wide aggregation
+    instead of explicit account lists so new
+    accounts auto-include: aws configservice
+    put-configuration-aggregator
+    --organization-aggregation-source
+    RoleArn=<role>,AllAwsRegions=true. If
+    explicit account lists are required, add
+    the missing accounts and verify aggregator
+    status returns to OUTPUT_ACTIVE.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_aggregator",
+        "config": {
+          "aggregator_name": "org-aggregator",
+          "aggregator_account_count": 12,
+          "member_account_count": 12,
+          "missing_accounts": [],
+          "aggregator_accounts_complete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_aggregator
+    - field: properties.compliance.config.aggregator_accounts_complete
+      op: eq
+      value: false
+defect: >
+  Config aggregator does not include all member
+  accounts.
+infection: >
+  An incomplete aggregator creates a false
+  sense of completeness. The compliance
+  dashboard shows results for the included
+  accounts — the security team assumes this
+  is the entire organization. The missing
+  accounts have no visibility in the aggregator.
+  If a missing account has non-compliant
+  resources (public S3 buckets, unencrypted
+  volumes, overprivileged IAM roles), the
+  centralized dashboard doesn't show them.
+  Common cause: new member accounts added to
+  the organization after the aggregator was
+  configured — the aggregator doesn't auto-
+  include new accounts unless it uses
+  organization-wide collection.
+failure: >
+  Incomplete compliance aggregation. Member
+  accounts not included — their compliance
+  status is invisible in the centralized view.
+tests:
+  - name: aggregator missing accounts fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-aggregator/org-aggregator"
+      asset_type: aws_config_aggregator
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_aggregator
+          config:
+            aggregator_name: "org-aggregator"
+            aggregator_account_count: 8
+            member_account_count: 12
+            missing_accounts:
+              - "444455556666"
+              - "777788889999"
+              - "555566667777"
+              - "222233334444"
+            aggregator_accounts_complete: false
+  - name: complete aggregator passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-aggregator/org-aggregator"
+      asset_type: aws_config_aggregator
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_aggregator
+          config:
+            aggregator_name: "org-aggregator"
+            aggregator_account_count: 12
+            member_account_count: 12
+            missing_accounts: []
+            aggregator_accounts_complete: true

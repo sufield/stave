@@ -1,0 +1,24 @@
+control: CTL.EC2.EBS.ALARM.BURSTBALANCE.001
+defect: >
+  No CloudWatch alarm monitors gp2 BurstBalance
+  despite gp2 volumes being in use.
+infection: >
+  gp2 volumes have a burst credit system:
+  baseline IOPS is 3 per GB, with burst up to
+  3,000 IOPS for short periods using earned
+  credits. When credits are depleted, the
+  volume drops to baseline — for a 100 GB gp2,
+  that's 3,000 burst IOPS down to 300 baseline.
+  The performance cliff is dramatic: page
+  load times spike, queries time out, queues
+  back up, instances become unresponsive.
+  Without a BurstBalance alarm, the application
+  slowdown is the first signal — not the
+  underlying cause. With an alarm at <20%
+  remaining, the team can take pre-emptive
+  action (provisioned IOPS, gp3 migration,
+  load shed) before users notice.
+failure: >
+  Undetected performance cliff. gp2 burst
+  credits deplete silently — application
+  slowdown without root-cause attribution.

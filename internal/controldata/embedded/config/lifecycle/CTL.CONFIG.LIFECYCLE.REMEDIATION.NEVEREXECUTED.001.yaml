@@ -1,0 +1,145 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.LIFECYCLE.REMEDIATION.NEVEREXECUTED.001
+name: Config Remediation Has Never Executed Despite Non-Compliance
+description: >
+  AWS Config remediation is configured for a
+  rule that has non-compliant resources, but
+  the remediation has never executed. Either
+  remediation is set to manual (requires human
+  trigger), auto-remediation is disabled, or
+  the trigger condition does not match the
+  rule's evaluation output. The fix path is
+  configured and unused.
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC7.2, CC8.1"
+  nist_800_53_r5: "CM-3, CM-4, SI-7"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Remediation configured but never used while
+    non-compliant resources exist.
+  action: >
+    Confirm that auto-remediation is enabled on
+    the rule (not set to manual). If manual is
+    intentional, document the human-trigger
+    process and run a test execution to verify
+    the SSM document and role work end-to-end.
+    If auto is intended but the remediation
+    never fires, check that the remediation's
+    trigger condition matches the rule's
+    evaluation output (some rules don't auto-
+    trigger remediation if their result is
+    NOT_APPLICABLE rather than NON_COMPLIANT).
+  example: |
+    {
+      "compliance": {
+        "kind": "config_remediation",
+        "config": {
+          "rule_name": "s3-bucket-server-side-encryption-enabled",
+          "has_remediation": true,
+          "remediation_execution_count": 12,
+          "remediation_never_executed": false,
+          "noncompliant_count": 3,
+          "remediation_age_days": 60
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_remediation
+    - field: properties.compliance.config.remediation_never_executed
+      op: eq
+      value: true
+    - field: properties.compliance.config.noncompliant_count
+      op: gt
+      value: 0
+defect: >
+  Remediation configured but never executed
+  despite non-compliant resources.
+infection: >
+  A remediation that never executes has two
+  possible states. Legitimate: all resources
+  compliant — nothing to remediate (this
+  control's predicate gates on
+  noncompliant_count > 0 to exclude that
+  case). Broken: non-compliant resources exist
+  AND the remediation is configured AND it
+  never fires. Common causes for the broken
+  state: remediation set to manual (requires
+  human trigger that nobody pulls), auto-
+  remediation disabled on the rule, or the
+  remediation trigger condition doesn't match
+  the rule's evaluation output. The fix path
+  exists in configuration; it has never been
+  exercised.
+failure: >
+  Untested remediation. Remediation configured
+  but never executed while non-compliant
+  resources exist — unknown whether the fix
+  path works.
+tests:
+  - name: remediation never executed with noncompliance fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:remediation/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_remediation
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_remediation
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            has_remediation: true
+            remediation_execution_count: 0
+            remediation_never_executed: true
+            noncompliant_count: 5
+            remediation_age_days: 60
+  - name: remediation with execution history passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:remediation/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_remediation
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_remediation
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            has_remediation: true
+            remediation_execution_count: 12
+            remediation_never_executed: false
+            noncompliant_count: 3
+            remediation_age_days: 60
+  - name: remediation never executed but no noncompliance does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:remediation/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_remediation
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_remediation
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            has_remediation: true
+            remediation_execution_count: 0
+            remediation_never_executed: true
+            noncompliant_count: 0
+            remediation_age_days: 60

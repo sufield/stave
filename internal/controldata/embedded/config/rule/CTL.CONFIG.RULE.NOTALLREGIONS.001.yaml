@@ -1,0 +1,145 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.RULE.NOTALLREGIONS.001
+name: Config Rules Not Deployed in All Active Regions
+description: >
+  AWS Config rules are deployed in some regions
+  but not all regions where the recorder is
+  running. Resources in regions without rules
+  are recorded but not evaluated — Config
+  captures their configuration but no rule
+  judges whether they're compliant.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "CA-7, CM-2, CM-6"
+  pci_dss_v4.0: "11.5"
+  fedramp_moderate: "CA-7, CM-6"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Recorder running in regions where rules
+    aren't deployed. Compliance gaps span those
+    regions.
+  action: >
+    Deploy the same Config rule set across all
+    regions where the recorder runs. Use
+    StackSets, CloudFormation, or Terraform to
+    keep rules in sync; per-region manual
+    deployment drifts. For organization-wide
+    deployment, organization Config rules
+    deploy uniformly across all member accounts
+    and regions in scope.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "rule_regions": ["us-east-1", "us-west-2"],
+          "recorder_regions": ["us-east-1", "us-west-2"],
+          "regions_without_rules": [],
+          "rules_all_regions": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.rules_all_regions
+      op: eq
+      value: false
+defect: >
+  Config rules deployed in only some regions
+  where the recorder is running.
+infection: >
+  Config recording and Config rules are
+  regional — each region has its own recorder
+  and rules. If the recorder runs in 16 regions
+  but rules exist in only 4 regions, 12 regions
+  record configurations without compliance
+  evaluation. An attacker who creates resources
+  in a region with recording but no rules
+  evades compliance detection — Config records
+  the resource (it exists in Config's
+  inventory) but no rule evaluates whether
+  it's compliant. The resource can violate
+  every security policy without any non-
+  compliant flag. The aggregator (if
+  configured) shows the resource as 'not
+  applicable' — not non-compliant.
+failure: >
+  Compliance evaluation gaps. Config records
+  resources in some regions without evaluating
+  them — compliance checks are missing.
+tests:
+  - name: rules in 4 of 16 regions fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            rule_regions: ["us-east-1", "us-west-2", "eu-west-1", "ap-northeast-1"]
+            recorder_regions:
+              - "us-east-1"
+              - "us-west-2"
+              - "eu-west-1"
+              - "eu-central-1"
+              - "eu-north-1"
+              - "ap-northeast-1"
+              - "ap-south-1"
+              - "ap-southeast-1"
+              - "ap-southeast-2"
+              - "ca-central-1"
+              - "me-south-1"
+              - "sa-east-1"
+              - "af-south-1"
+              - "us-east-2"
+              - "us-west-1"
+              - "eu-west-2"
+            regions_without_rules:
+              - "eu-central-1"
+              - "eu-north-1"
+              - "ap-south-1"
+              - "ap-southeast-1"
+              - "ap-southeast-2"
+              - "ca-central-1"
+              - "me-south-1"
+              - "sa-east-1"
+              - "af-south-1"
+              - "us-east-2"
+              - "us-west-1"
+              - "eu-west-2"
+            rules_all_regions: false
+  - name: rules in all recorder regions passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            rule_regions: ["us-east-1", "us-west-2"]
+            recorder_regions: ["us-east-1", "us-west-2"]
+            regions_without_rules: []
+            rules_all_regions: true

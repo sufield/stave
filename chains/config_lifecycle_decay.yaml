@@ -1,0 +1,23 @@
+id: config_lifecycle_decay
+description: >
+  Never-triggered rule plus either never-
+  executed remediation or disabled rule. Multiple
+  lifecycle decay indicators stack: rules that
+  don't evaluate AND either remediation that
+  doesn't execute or rules that are off. The
+  compliance evaluation system is decaying.
+  Threshold of 2 because the dangerous compound
+  is when configured-but-unused signals stack —
+  individually each is governance clutter,
+  together they describe a system nobody is
+  maintaining.
+controls:
+  - CTL.CONFIG.LIFECYCLE.RULE.NEVERTRIGGERED.001
+  - CTL.CONFIG.LIFECYCLE.REMEDIATION.NEVEREXECUTED.001
+  - CTL.CONFIG.RULE.DISABLED.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

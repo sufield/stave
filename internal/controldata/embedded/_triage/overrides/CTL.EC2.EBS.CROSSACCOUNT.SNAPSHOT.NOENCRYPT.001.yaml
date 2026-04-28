@@ -1,0 +1,25 @@
+control: CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.NOENCRYPT.001
+defect: >
+  Encrypted snapshot shared cross-account but
+  KMS key does not grant Decrypt to the
+  recipient account.
+infection: >
+  Creating a volume from an encrypted snapshot
+  requires both ec2:CreateVolume with
+  createVolumePermission on the snapshot AND
+  kms:Decrypt on the KMS key that encrypted
+  it. When only the snapshot share is granted,
+  the recipient calls ec2:CreateVolume, the API
+  attempts to decrypt the snapshot data using
+  the KMS key, kms:Decrypt fails (recipient
+  not in key policy), and CreateVolume fails
+  with a cryptic KMS access error. The snapshot
+  sharing looks correct in the EBS console; the
+  failure surfaces only when the recipient
+  tries to use it. The same cross-service
+  permission shape as Secrets Manager
+  cross-account access without KMS sharing.
+failure: >
+  Cross-service permission mismatch. Snapshot
+  shared but KMS key not shared — recipient
+  cannot create volumes from the snapshot.

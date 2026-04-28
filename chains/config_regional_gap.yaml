@@ -1,0 +1,24 @@
+id: config_regional_gap
+description: >
+  Rules missing in some recorder regions plus
+  either aggregator missing regions or recorder
+  not recording all resources. Multiple coverage
+  gaps stack: rules don't evaluate in some
+  regions AND either the aggregator doesn't see
+  those regions or the recorder doesn't capture
+  all resource types. Configuration compliance
+  has blind spots across regions and resource
+  types simultaneously. Threshold of 2 because
+  any single gap is a coverage limitation; the
+  compound describes a systemically incomplete
+  evaluation surface.
+controls:
+  - CTL.CONFIG.RULE.NOTALLREGIONS.001
+  - CTL.CONFIG.AGGREGATOR.INCOMPLETE.REGIONS.001
+  - CTL.CONFIG.RECORDER.NOTALLRESOURCES.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

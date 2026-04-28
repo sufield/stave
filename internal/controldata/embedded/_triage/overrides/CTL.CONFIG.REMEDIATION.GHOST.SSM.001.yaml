@@ -1,0 +1,27 @@
+control: CTL.CONFIG.REMEDIATION.GHOST.SSM.001
+defect: >
+  Config remediation references a deleted SSM
+  Automation document.
+infection: >
+  Config auto-remediation uses SSM Automation
+  documents to fix non-compliant resources —
+  e.g., enable S3 encryption, restrict security
+  group rules, enable CloudTrail logging. The
+  remediation is configured: when the rule
+  detects non-compliance, Config invokes the
+  SSM document. When the SSM document is
+  deleted, Config detects non-compliance (rule
+  works), Config triggers remediation
+  (remediation is configured), SSM execution
+  fails (document not found), the resource
+  remains non-compliant. The remediation
+  appears configured in the console; the SSM
+  document is gone; the auto-fix is broken.
+  Custom (non-AWS-managed) SSM documents are
+  particularly dangerous — they can't be
+  re-created from a standard source.
+failure: >
+  Auto-remediation broken. Config detects non-
+  compliance and triggers remediation; SSM
+  document was deleted, resource stays
+  non-compliant.

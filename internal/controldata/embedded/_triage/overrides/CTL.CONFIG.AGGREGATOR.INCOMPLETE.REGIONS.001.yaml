@@ -1,0 +1,22 @@
+control: CTL.CONFIG.AGGREGATOR.INCOMPLETE.REGIONS.001
+defect: >
+  Config aggregator does not include all
+  enabled regions.
+infection: >
+  Resources created in regions outside the
+  aggregator's scope are invisible centrally.
+  Most organizations actively use only a few
+  regions; missing regions may be regions
+  where no resources exist in normal
+  operations. But an attacker can create
+  resources in an unmonitored region (an
+  IAM role with wide privileges, an S3 bucket
+  staging for exfiltration, an EC2 instance
+  for command-and-control) and the
+  centralized compliance view doesn't see them.
+  The dashboard shows compliant data; the
+  attacker's resources don't appear.
+failure: >
+  Region blind spots. Resources outside the
+  aggregator's region scope are invisible to
+  centralized compliance.

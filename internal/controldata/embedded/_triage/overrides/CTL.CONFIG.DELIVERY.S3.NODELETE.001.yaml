@@ -1,0 +1,27 @@
+control: CTL.CONFIG.DELIVERY.S3.NODELETE.001
+defect: >
+  Config delivery S3 bucket policy does not
+  deny s3:DeleteObject.
+infection: >
+  Config delivers configuration snapshots and
+  history files to S3 — these files are the
+  organization's configuration audit trail
+  (what was configured, when it changed, what
+  it changed from/to). Without a Deny for
+  DeleteObject, any principal with
+  s3:DeleteObject permission can delete
+  configuration history files. An attacker who
+  modifies a security group (opening port 22
+  to 0.0.0.0/0) can then delete the Config
+  history file that recorded the previous
+  secure configuration — the change is
+  invisible because the before-state is gone.
+  A bucket policy Deny for DeleteObject
+  prevents deletion regardless of IAM
+  permissions, providing tamper-resistance at
+  the bucket layer.
+failure: >
+  Configuration history deletable. No bucket
+  policy Deny prevents deletion of Config
+  history files; configuration audit trail
+  can be erased.

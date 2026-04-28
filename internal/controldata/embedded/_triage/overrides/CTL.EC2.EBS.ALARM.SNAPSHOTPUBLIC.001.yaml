@@ -1,0 +1,28 @@
+control: CTL.EC2.EBS.ALARM.SNAPSHOTPUBLIC.001
+defect: >
+  No CloudWatch alarm monitors
+  ModifySnapshotAttribute calls that make
+  snapshots public.
+infection: >
+  ModifySnapshotAttribute with
+  createVolumePermission: all makes the snapshot
+  publicly accessible — any AWS account can
+  create a volume from it. A single API call
+  exposes database files (customer records,
+  financial data, healthcare data), application
+  configuration (API keys, connection strings,
+  secrets), cached credentials (SSH keys,
+  certificates, tokens), and OS files. Without
+  an alarm, an attacker with
+  ec2:ModifySnapshotAttribute permission makes
+  a production snapshot public at 2am, nobody
+  is notified, the attacker creates a volume
+  from the snapshot in their account, and by
+  morning the data is exfiltrated. The snapshot
+  may be made private again — but anyone who
+  copied during the public window keeps a
+  permanent copy.
+failure: >
+  Undetected public snapshot exposure. Snapshot
+  made public without notification — entire
+  disk contents exposed to any AWS account.

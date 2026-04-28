@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.ALARM.SNAPSHOTPUBLIC.001
+name: No CloudWatch Alarm for ModifySnapshotAttribute Public Sharing
+description: >
+  No CloudWatch alarm watches CloudTrail for
+  ModifySnapshotAttribute calls that add
+  createVolumePermission: all. Making a snapshot
+  public is the most direct AWS data breach —
+  one API call exposes the entire disk to every
+  AWS account. Without an alarm, the change is
+  invisible until someone audits snapshot
+  permissions or a recipient reports the
+  exposure.
+domain: audit
+severity: critical
+archetype: silent-failure
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.2, 10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  hipaa: "164.312(b), 164.308(a)(1)(ii)(D)"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    No alarm fires when a snapshot is made
+    public.
+  action: >
+    Create a CloudWatch alarm on a metric filter
+    that matches CloudTrail events with
+    eventName=ModifySnapshotAttribute AND
+    requestParameters.createVolumePermission
+    contains "all". Wire it to a paging-grade
+    SNS topic. Test by making a non-sensitive
+    snapshot public in a sandbox and confirming
+    the alarm fires within the metric period.
+  example: |
+    {
+      "compute": {
+        "kind": "ec2_account",
+        "ebs": {
+          "alarm_snapshot_public": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ec2_account
+    - field: properties.compute.ebs.alarm_snapshot_public
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors
+  ModifySnapshotAttribute calls that make
+  snapshots public.
+infection: >
+  ModifySnapshotAttribute with
+  createVolumePermission: all makes the snapshot
+  publicly accessible — any AWS account can
+  create a volume from it. A single API call
+  exposes database files (customer records,
+  financial data, healthcare data), application
+  configuration (API keys, connection strings,
+  secrets), cached credentials (SSH keys,
+  certificates, tokens), and OS files. Without
+  an alarm, an attacker with
+  ec2:ModifySnapshotAttribute permission makes
+  a production snapshot public at 2am, nobody
+  is notified, the attacker creates a volume
+  from the snapshot in their account, and by
+  morning the data is exfiltrated. The snapshot
+  may be made private again — but anyone who
+  copied during the public window keeps a
+  permanent copy.
+failure: >
+  Undetected public snapshot exposure. Snapshot
+  made public without notification — entire
+  disk contents exposed to any AWS account.
+tests:
+  - name: account without public-snapshot alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            alarm_snapshot_public: false
+  - name: account with public-snapshot alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            alarm_snapshot_public: true

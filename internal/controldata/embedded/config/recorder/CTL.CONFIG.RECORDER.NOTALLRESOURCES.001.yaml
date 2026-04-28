@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.RECORDER.NOTALLRESOURCES.001
+name: Config Recorder Does Not Record All Resource Types
+description: >
+  AWS Config recorder is configured to record
+  only specific resource types — not all
+  supported types. Resource types not in scope
+  are invisible to Config; rules evaluating
+  them return no results (not non-compliant —
+  no data). New AWS resource types added after
+  recorder configuration are automatically
+  excluded.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, CM-8, SA-10"
+  pci_dss_v4.0: "10.1, 11.5"
+  fedramp_moderate: "CM-2, CM-8"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Recorder scope is limited; out-of-scope
+    resource types are invisible to compliance.
+  action: >
+    Update the recorder to record all supported
+    resource types: aws configservice
+    put-configuration-recorder
+    --configuration-recorder
+    name=<name>,roleARN=<role>,recordingGroup={allSupported=true,includeGlobalResourceTypes=true}.
+    Confirm via aws configservice
+    describe-configuration-recorders that
+    allSupported is true and review the next
+    configuration history file to verify new
+    resource types are captured.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_recorder",
+        "config": {
+          "recorder_name": "default",
+          "records_all_resources": true,
+          "recorded_resource_types": [],
+          "missing_critical_types": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_recorder
+    - field: properties.compliance.config.records_all_resources
+      op: eq
+      value: false
+defect: >
+  Config recorder records only a subset of
+  supported resource types.
+infection: >
+  When the recorder scope is limited, any
+  resource type not in scope is invisible to
+  Config. Common gaps: if AWS::Lambda::Function
+  is excluded, Config rules for Lambda
+  (encryption, VPC, runtime) don't evaluate;
+  if AWS::IAM::Role is excluded (and global
+  resources are off), IAM compliance checks
+  don't evaluate; if a new resource type is
+  added by AWS (which happens regularly), the
+  recorder doesn't automatically include it.
+  The most dangerous scenario: the recorder
+  was configured years ago with the resource
+  types available then; new types (AppRunner,
+  Bedrock, etc.) are automatically excluded —
+  the recorder covers the 2020 resource
+  landscape in 2026.
+failure: >
+  Partial configuration recording. Resource
+  types not in scope are invisible — compliance
+  checks for those types do not evaluate.
+tests:
+  - name: recorder with limited scope fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-recorder/default"
+      asset_type: aws_config_recorder
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_recorder
+          config:
+            recorder_name: "default"
+            records_all_resources: false
+            recorded_resource_types:
+              - "AWS::EC2::Instance"
+              - "AWS::S3::Bucket"
+            missing_critical_types:
+              - "AWS::IAM::Role"
+              - "AWS::Lambda::Function"
+              - "AWS::RDS::DBInstance"
+              - "AWS::KMS::Key"
+  - name: recorder with all resources passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-recorder/default"
+      asset_type: aws_config_recorder
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_recorder
+          config:
+            recorder_name: "default"
+            records_all_resources: true

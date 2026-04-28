@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.ALARM.CREATESNAPSHOT.001
+name: No CloudWatch Alarm for CreateSnapshot on Sensitive Volumes
+description: >
+  No CloudWatch alarm watches CloudTrail for
+  CreateSnapshot API calls on volumes tagged as
+  sensitive or production. Creating a snapshot
+  of a sensitive volume is data exfiltration —
+  the snapshot is a complete copy of the disk,
+  and an attacker can share it cross-account
+  for retrieval. Without tag-scoped alarming,
+  the exfiltration step is mixed with normal
+  backup activity.
+domain: audit
+severity: medium
+archetype: silent-failure
+compliance:
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    No alarm fires when sensitive volumes are
+    snapshotted.
+  action: >
+    Create a CloudWatch alarm on a metric filter
+    matching eventName=CreateSnapshot AND
+    requestParameters.volumeId tagged with
+    Sensitivity=high or Environment=production.
+    Tagging discipline is a precondition; if
+    volumes are not consistently tagged, the
+    alarm cannot distinguish exfiltration from
+    routine backup. Tune threshold to allow DLM
+    activity while flagging unexpected manual
+    creates.
+  example: |
+    {
+      "compute": {
+        "kind": "ec2_account",
+        "ebs": {
+          "alarm_create_snapshot": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ec2_account
+    - field: properties.compute.ebs.alarm_create_snapshot
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors CreateSnapshot on
+  sensitive volumes.
+infection: >
+  CreateSnapshot is a normal operation — DLM
+  policies, backup automation, and pre-change
+  snapshots all use it. But CreateSnapshot of a
+  production database volume by an unexpected
+  principal is data exfiltration: the snapshot
+  contains every byte of the disk, the attacker
+  shares it cross-account or makes it public,
+  creates a volume in their account, and reads
+  the data. Without an alarm scoped to
+  sensitive volumes, the exfiltration step is
+  buried in legitimate snapshot traffic.
+failure: >
+  Undetected snapshot exfiltration. Sensitive
+  volumes can be snapshotted without
+  notification.
+tests:
+  - name: no create-snapshot alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            alarm_create_snapshot: false
+  - name: create-snapshot alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            alarm_create_snapshot: true

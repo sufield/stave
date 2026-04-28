@@ -1,0 +1,21 @@
+control: CTL.CONFIG.RULE.DISABLED.001
+defect: >
+  AWS Config rule is disabled.
+infection: >
+  A disabled Config rule retains its full
+  configuration: name, scope (which resource
+  types to evaluate), parameters (threshold
+  values, required settings), source (managed
+  rule or custom Lambda), and remediation (if
+  configured). An auditor checking 'do we have
+  a Config rule for S3 encryption?' sees the
+  rule and marks it compliant. The rule doesn't
+  evaluate. Resources that violate the rule
+  are not flagged. The compliance dashboard
+  shows no non-compliant resources for that
+  rule — not because everything is compliant
+  but because the rule isn't checking.
+failure: >
+  False compliance. Config rule exists but is
+  disabled — non-compliant resources are not
+  detected.

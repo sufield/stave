@@ -1,0 +1,25 @@
+control: CTL.CONFIG.RULE.NONCOMPLIANT.NOREMEDIATION.001
+defect: >
+  Config rule has non-compliant resources and
+  no remediation configured.
+infection: >
+  Detection without remediation is a known
+  problem with no fix path. The Config rule
+  correctly identifies non-compliant resources
+  — S3 buckets without encryption, security
+  groups with 0.0.0.0/0, IAM users without MFA.
+  The non-compliant resources persist. The
+  compliance dashboard shows non-compliant —
+  but nobody acts. Without remediation
+  (automatic or manual with documented
+  process), detection is half the value. The
+  organization knows about the non-compliance
+  and accepts the risk indefinitely. Persistent
+  non-compliance with no fix path indicates
+  either an explicit accept-risk decision (which
+  should be documented) or compliance theater
+  (which should be fixed).
+failure: >
+  Detected non-compliance without fix. Config
+  rule finds non-compliant resources; no
+  remediation is configured to fix them.

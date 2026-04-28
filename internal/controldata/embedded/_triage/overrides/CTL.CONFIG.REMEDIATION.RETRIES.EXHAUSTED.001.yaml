@@ -1,0 +1,25 @@
+control: CTL.CONFIG.REMEDIATION.RETRIES.EXHAUSTED.001
+defect: >
+  Config remediation has exhausted retries with
+  resources still non-compliant.
+infection: >
+  Config auto-remediation retries a configurable
+  number of times when the SSM execution fails.
+  Common failure causes: insufficient
+  permissions on the remediation role (role
+  can't modify the resource), the resource is
+  protected by a deny policy (explicit Deny
+  overrides the remediation role's Allow), the
+  SSM document logic has a bug (automation step
+  fails), or the resource is in a state the
+  document doesn't handle. After retries are
+  exhausted, remediation stops. Resources
+  remain non-compliant. The remediation status
+  shows 'failed.' Nobody is notified unless an
+  alarm monitors remediation failures. The
+  failure_reason field surfaces the root cause
+  for triage.
+failure: >
+  Remediation gave up. Auto-fix tried and
+  failed; resources remain non-compliant with
+  no further remediation attempts.

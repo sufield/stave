@@ -1,0 +1,25 @@
+control: CTL.CONFIG.RECORDER.NOGLOBAL.001
+defect: >
+  Config recorder excludes global (IAM)
+  resources.
+infection: >
+  Global resources include IAM users, roles,
+  policies, groups, and account-level settings.
+  Without recording global resources, Config
+  rules for IAM (password policy, MFA, access
+  keys, role permissions) cannot evaluate.
+  IAM configuration changes (new role created,
+  policy attached, trust policy modified) are
+  not recorded in Config's configuration
+  history. Compliance packs that include IAM
+  controls (CIS, NIST, PCI-DSS) evaluate
+  incomplete data. IAM is the most critical
+  resource type for security — an attacker's
+  first action is often IAM manipulation
+  (create backdoor user, escalate privileges).
+  Without global resource recording, these
+  changes are invisible to Config.
+failure: >
+  IAM configuration invisible. IAM users, roles,
+  and policies not recorded — identity and
+  access compliance is not evaluated.

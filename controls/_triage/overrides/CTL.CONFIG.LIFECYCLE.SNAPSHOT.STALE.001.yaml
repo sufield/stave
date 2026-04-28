@@ -1,0 +1,27 @@
+control: CTL.CONFIG.LIFECYCLE.SNAPSHOT.STALE.001
+defect: >
+  Config configuration snapshots not delivered
+  in 30+ days.
+infection: >
+  Configuration snapshots are full resource
+  inventories — they capture the configuration
+  of every recorded resource at a point in
+  time. Without recent snapshots, compliance
+  auditors have no recent baseline to compare
+  against, incident investigators cannot
+  establish what the account looked like at a
+  specific point in time, and configuration
+  drift analysis cannot compare current state
+  to a known good state. Common causes: the
+  delivery channel S3 bucket permission was
+  changed (Config can't write), the snapshot
+  delivery schedule was removed, or the
+  recorder was stopped and restarted without
+  triggering a new snapshot. Even the longest
+  snapshot interval (24h) should produce a
+  snapshot daily — 30 days of no delivery is
+  always abnormal.
+failure: >
+  Stale configuration baseline. No configuration
+  snapshot delivered in 30+ days; the durable
+  resource inventory is outdated.

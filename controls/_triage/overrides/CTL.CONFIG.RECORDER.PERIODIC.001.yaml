@@ -1,0 +1,24 @@
+control: CTL.CONFIG.RECORDER.PERIODIC.001
+defect: >
+  Config recorder uses periodic recording mode.
+infection: >
+  Periodic recording captures resource
+  configuration on a 24-hour cadence rather
+  than continuously. Configuration changes
+  that occur and revert within a 24-hour
+  window may not appear in any Config history
+  file. An attacker who creates a backdoor IAM
+  role at 9am, uses it to exfiltrate data at
+  10am, and deletes it at 11am leaves no Config
+  record of the role's existence (the daily
+  snapshot at midnight didn't see it). Config
+  rules also evaluate against the most recent
+  snapshot, so non-compliance windows shorter
+  than 24 hours can be missed. Continuous
+  mode captures every CreateResource,
+  UpdateResource, and DeleteResource event as
+  it happens.
+failure: >
+  Sub-day configuration changes missed.
+  Resources created and removed within a 24h
+  window leave no Config trace.

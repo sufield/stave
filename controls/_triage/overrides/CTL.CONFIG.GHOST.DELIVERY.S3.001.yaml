@@ -1,0 +1,26 @@
+control: CTL.CONFIG.GHOST.DELIVERY.S3.001
+defect: >
+  Config delivery channel references a deleted
+  S3 bucket.
+infection: >
+  Config delivers two types of data to S3:
+  configuration snapshots (full resource
+  inventory at a point in time) and
+  configuration history files (change history
+  for each resource). When the S3 bucket is
+  deleted, configuration snapshots can't be
+  delivered (no point-in-time inventory),
+  configuration history can't be delivered (no
+  change audit trail), and historical data
+  already delivered is gone (bucket deleted =
+  data deleted). If the organization uses
+  Config's S3 data for compliance audits,
+  incident investigation, or configuration
+  drift analysis, that capability is lost. The
+  delivery channel shows the bucket name; the
+  bucket doesn't exist. Config continues
+  recording but cannot persist.
+failure: >
+  Configuration history lost. Config cannot
+  deliver snapshots or history to S3 because
+  the bucket was deleted.

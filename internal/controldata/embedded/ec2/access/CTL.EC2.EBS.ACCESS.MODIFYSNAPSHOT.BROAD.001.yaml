@@ -1,0 +1,127 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.ACCESS.MODIFYSNAPSHOT.BROAD.001
+name: ec2:ModifySnapshotAttribute Granted to Broad Principals
+description: >
+  IAM policies grant ec2:ModifySnapshotAttribute
+  to non-administrative principals. The API
+  call this permission gates can make any
+  snapshot public or share it cross-account —
+  one call to expose an entire disk. This
+  permission should be restricted to security
+  administrators and a small set of automation
+  roles.
+domain: exposure
+severity: critical
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6, SC-28"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  hipaa: "164.308(a)(4)(ii)(B), 164.312(a)(1)"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    Too many principals can make snapshots
+    public or share them cross-account.
+  action: >
+    Audit IAM policies for explicit ec2:Modify*
+    or ec2:ModifySnapshotAttribute and remove
+    the permission from non-admin principals.
+    Replace ec2:* on Resource: * with action-
+    scoped policies. Move snapshot-share
+    operations to a dedicated security-admin
+    role gated by MFA and CloudTrail review.
+  example: |
+    {
+      "compute": {
+        "kind": "ec2_account",
+        "ebs": {
+          "modify_snapshot_principals": ["arn:aws:iam::111122223333:role/security-admin"],
+          "modify_snapshot_principal_count": 1,
+          "modify_snapshot_broadly_granted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ec2_account
+    - field: properties.compute.ebs.modify_snapshot_broadly_granted
+      op: eq
+      value: true
+defect: >
+  ec2:ModifySnapshotAttribute is granted to
+  non-administrative principals.
+infection: >
+  ModifySnapshotAttribute is the API that makes
+  snapshots public or shares them cross-account.
+  A principal with this permission can: take
+  any snapshot in the account, make it public
+  (createVolumePermission: all), and the entire
+  disk contents — databases, credentials,
+  application code — become accessible to any
+  AWS account on earth. Or share it with a
+  specific attacker-controlled account for
+  targeted exfiltration. This permission
+  should be restricted to security administrators
+  and specific automation roles — never to
+  developers, applications, or broad role
+  patterns.
+failure: >
+  Broad snapshot sharing capability. Too many
+  principals can make any snapshot public or
+  share it cross-account — data exposure via a
+  single API call.
+tests:
+  - name: broad ModifySnapshotAttribute access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            modify_snapshot_principals:
+              - "arn:aws:iam::111122223333:role/dev-team"
+              - "arn:aws:iam::111122223333:role/data-team"
+              - "arn:aws:iam::111122223333:role/ops"
+              - "arn:aws:iam::111122223333:role/ci-runner"
+              - "arn:aws:iam::111122223333:role/sre"
+              - "arn:aws:iam::111122223333:role/qa"
+              - "arn:aws:iam::111122223333:role/billing"
+              - "arn:aws:iam::111122223333:user/eng-1"
+              - "arn:aws:iam::111122223333:user/eng-2"
+              - "arn:aws:iam::111122223333:role/security-admin"
+            modify_snapshot_principal_count: 10
+            modify_snapshot_broadly_granted: true
+  - name: scoped ModifySnapshotAttribute access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            modify_snapshot_principals:
+              - "arn:aws:iam::111122223333:role/security-admin"
+            modify_snapshot_principal_count: 1
+            modify_snapshot_broadly_granted: false

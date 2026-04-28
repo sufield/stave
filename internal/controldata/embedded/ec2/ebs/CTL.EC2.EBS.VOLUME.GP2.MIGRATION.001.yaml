@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.VOLUME.GP2.MIGRATION.001
+name: EBS Volume Uses gp2 Instead of gp3
+description: >
+  EBS volume uses the gp2 type. gp3 is the
+  successor with consistent 3,000 IOPS / 125
+  MB/s baseline (no burst-credit cliff),
+  ~20% lower per-GB cost, and independent
+  IOPS/throughput provisioning. Migration is
+  online (ModifyVolume) and improves both
+  reliability (no BurstBalance depletion) and
+  cost.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, SA-22"
+  iso_27001_2022: "A.5.9"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    gp2 has a successor with better economics
+    and a flat performance profile.
+  action: >
+    Migrate online: aws ec2 modify-volume
+    --volume-id <id> --volume-type gp3. The
+    instance does not need to be stopped; the
+    volume transitions in-place. Validate gp3's
+    baseline IOPS/throughput meet the workload
+    (gp3 default is 3,000 IOPS / 125 MB/s; for
+    higher needs, use --iops and --throughput
+    parameters). After migration, the volume
+    no longer accumulates or depletes
+    BurstBalance.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_volume",
+        "ebs": {
+          "volume_id": "vol-0123456789abcdef",
+          "volume_type": "gp3",
+          "is_gp2": false,
+          "volume_size_gb": 100
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_volume
+    - field: properties.compute.ebs.is_gp2
+      op: eq
+      value: true
+defect: >
+  EBS volume uses the gp2 type instead of gp3.
+infection: >
+  gp2 is the previous-generation general-purpose
+  SSD. Compared with gp3: gp2 charges roughly
+  20% more per GB; gp2 uses a burst-credit
+  performance model (baseline 3 IOPS/GB, burst
+  up to 3,000) which produces a performance
+  cliff when credits deplete; gp3 charges less
+  and provides flat 3,000 IOPS / 125 MB/s
+  baseline regardless of size. For volumes
+  large enough to sustain high baseline IOPS
+  on gp2 (>1,000 GB), the cost gap is
+  significant. The migration is online and
+  carries no downtime — the only friction is
+  scheduling and verification.
+failure: >
+  Outdated volume type. gp2 carries higher
+  cost, burst-credit performance variability,
+  and no advantage over gp3 for the workload.
+tests:
+  - name: gp2 volume fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:volume/vol-0123456789abcdef"
+      asset_type: aws_ebs_volume
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_volume
+          ebs:
+            volume_id: "vol-0123456789abcdef"
+            volume_type: "gp2"
+            is_gp2: true
+            volume_size_gb: 500
+  - name: gp3 volume passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:volume/vol-0123456789abcdef"
+      asset_type: aws_ebs_volume
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_volume
+          ebs:
+            volume_id: "vol-0123456789abcdef"
+            volume_type: "gp3"
+            is_gp2: false
+            volume_size_gb: 500

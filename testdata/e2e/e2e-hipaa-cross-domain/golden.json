@@ -7,7 +7,7 @@
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "55bf9b009c1bc606971fc92b6fc3d792bec0d5deaa183f86353f9e4405d1e090",
+    "policy_fingerprint": "7009af1fc2faf0447c3ddef811e9b5154a0feb669e4975d1d1635616a01e6771",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -339,6 +339,167 @@
     }
   ],
   "findings": [
+    {
+      "finding_id": "sha256:aa66250e8a1dc01c",
+      "control_id": "CTL.CONFIG.ENABLED.001",
+      "control_name": "AWS Config Must Be Recording All Resource Types",
+      "control_description": "AWS Config must be enabled and recording all supported resource types. Without Config, configuration changes are not tracked and drift from the desired security baseline cannot be detected.\n",
+      "asset_id": "config-recorder",
+      "asset_type": "aws_config_recorder",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "compliance.kind",
+            "actual_value": "recorder",
+            "operator": "eq",
+            "unsafe_value": "recorder"
+          },
+          {
+            "property": "compliance.recording_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "3.5",
+        "cis_aws_v3.0": "3.3",
+        "fedramp_moderate": "CM-2",
+        "ffiec": "CAT-D3",
+        "gdpr": "Art.30",
+        "hipaa": "164.312(b)",
+        "iso_27001_2022": "A.8.9",
+        "nist_800_53_r5": "CM-2",
+        "nist_csf_2.0": "PR.PS",
+        "pci_dss_v4.0": "6.3.2",
+        "soc2": "CC7.1"
+      },
+      "control_compliance_ccm_v4": [
+        "CCC-04",
+        "CCC-07",
+        "LOG-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "AWS Config recorder is not enabled or not recording all resource types. Configuration changes are not being tracked.",
+        "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}",
+        "example": "{\n  \"compliance\": {\n    \"kind\": \"recorder\",\n    \"recording_enabled\": true,\n    \"all_resource_types\": true\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-dc2b0777c5387fc4",
+        "target": {
+          "asset_id": "config-recorder",
+          "asset_type": "aws_config_recorder"
+        },
+        "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
+      },
+      "chain_membership": [
+        {
+          "chain_id": "config_completely_blind",
+          "chain_severity": "critical",
+          "stage_span": [
+            "detection_evasion"
+          ],
+          "narrative": "Any foundational Config failure: recorder stopped, recorder role deleted, or no delivery channel configured. Each independently means Config is non-functional — the configuration compliance system provides zero value. Threshold of 1 because each member represents complete or near-complete Config failure on its own.\n"
+        }
+      ],
+      "exposure_score": 285.10273972602744,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "compliance.kind eq \"recorder\"",
+          "observation_key": "compliance.kind",
+          "operator": "eq",
+          "expected_value": "recorder",
+          "observed_value": "recorder"
+        },
+        {
+          "predicate_expr": "compliance.recording_enabled eq false",
+          "observation_key": "compliance.recording_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "config-recorder",
+          "type": "aws_config_recorder",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.CONFIG.ENABLED.001",
+          "control_name": "AWS Config Must Be Recording All Resource Types",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "compliance.kind = \"recorder\"",
+              "observation_key": "compliance.kind",
+              "observed_value": "recorder"
+            },
+            {
+              "clause": "compliance recording is enabled = false",
+              "observation_key": "compliance.recording_enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compliance.kind",
+            "current_value": "recorder",
+            "required_value": "any value other than recorder",
+            "has_safe_default": false,
+            "description": "Change compliance.kind away from recorder"
+          },
+          {
+            "path": "compliance.recording_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set compliance.recording_enabled to true"
+          }
+        ],
+        "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "config"
+      ],
+      "defect": "Recording is not enabled.",
+      "infection": "AWS Config misconfigurations mean configuration changes to resources go unrecorded. Without Config recording, there is no baseline to detect drift, no history to investigate incidents, and no evidence for compliance audits.\n",
+      "failure": "Configuration visibility gap. Resource changes are untracked, preventing drift detection, incident investigation, and compliance evidence collection.\n",
+      "delta": [
+        {
+          "property_label": "recording",
+          "property_path": "compliance.recording_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    },
     {
       "finding_id": "sha256:4b8c49734af61142",
       "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
@@ -681,157 +842,6 @@
           "property_path": "database.access.publicly_accessible",
           "current_value": "true",
           "fix_action": "set to false (disable)"
-        }
-      ]
-    },
-    {
-      "finding_id": "sha256:aa66250e8a1dc01c",
-      "control_id": "CTL.CONFIG.ENABLED.001",
-      "control_name": "AWS Config Must Be Recording All Resource Types",
-      "control_description": "AWS Config must be enabled and recording all supported resource types. Without Config, configuration changes are not tracked and drift from the desired security baseline cannot be detected.\n",
-      "asset_id": "config-recorder",
-      "asset_type": "aws_config_recorder",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "compliance.kind",
-            "actual_value": "recorder",
-            "operator": "eq",
-            "unsafe_value": "recorder"
-          },
-          {
-            "property": "compliance.recording_enabled",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "3.5",
-        "cis_aws_v3.0": "3.3",
-        "fedramp_moderate": "CM-2",
-        "ffiec": "CAT-D3",
-        "gdpr": "Art.30",
-        "hipaa": "164.312(b)",
-        "iso_27001_2022": "A.8.9",
-        "nist_800_53_r5": "CM-2",
-        "nist_csf_2.0": "PR.PS",
-        "pci_dss_v4.0": "6.3.2",
-        "soc2": "CC7.1"
-      },
-      "control_compliance_ccm_v4": [
-        "CCC-04",
-        "CCC-07",
-        "LOG-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "AWS Config recorder is not enabled or not recording all resource types. Configuration changes are not being tracked.",
-        "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}",
-        "example": "{\n  \"compliance\": {\n    \"kind\": \"recorder\",\n    \"recording_enabled\": true,\n    \"all_resource_types\": true\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-dc2b0777c5387fc4",
-        "target": {
-          "asset_id": "config-recorder",
-          "asset_type": "aws_config_recorder"
-        },
-        "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
-      },
-      "exposure_score": 190.06849315068493,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 2.5,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0136986301369864,
-        "days_blind": 5
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "compliance.kind eq \"recorder\"",
-          "observation_key": "compliance.kind",
-          "operator": "eq",
-          "expected_value": "recorder",
-          "observed_value": "recorder"
-        },
-        {
-          "predicate_expr": "compliance.recording_enabled eq false",
-          "observation_key": "compliance.recording_enabled",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "config-recorder",
-          "type": "aws_config_recorder",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.CONFIG.ENABLED.001",
-          "control_name": "AWS Config Must Be Recording All Resource Types",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "compliance.kind = \"recorder\"",
-              "observation_key": "compliance.kind",
-              "observed_value": "recorder"
-            },
-            {
-              "clause": "compliance recording is enabled = false",
-              "observation_key": "compliance.recording_enabled",
-              "observed_value": false
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "compliance.kind",
-            "current_value": "recorder",
-            "required_value": "any value other than recorder",
-            "has_safe_default": false,
-            "description": "Change compliance.kind away from recorder"
-          },
-          {
-            "path": "compliance.recording_enabled",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set compliance.recording_enabled to true"
-          }
-        ],
-        "action": "Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}"
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "config"
-      ],
-      "defect": "Recording is not enabled.",
-      "infection": "AWS Config misconfigurations mean configuration changes to resources go unrecorded. Without Config recording, there is no baseline to detect drift, no history to investigate incidents, and no evidence for compliance audits.\n",
-      "failure": "Configuration visibility gap. Resource changes are untracked, preventing drift detection, incident investigation, and compliance evidence collection.\n",
-      "delta": [
-        {
-          "property_label": "recording",
-          "property_path": "compliance.recording_enabled",
-          "current_value": "false",
-          "fix_action": "set to true (enable)"
         }
       ]
     },
@@ -2338,6 +2348,161 @@
         {
           "property_label": "MFA enforcement",
           "property_path": "identity.auth.mfa_enforced",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:c2ed914d02c8ae20",
+      "control_id": "CTL.CONFIG.RULES.001",
+      "control_name": "AWS Config Must Have Active Rules",
+      "control_description": "AWS Config must have active Config Rules to evaluate resource compliance. Recording without rules provides change history but no automated drift detection.\n",
+      "asset_id": "config-recorder",
+      "asset_type": "aws_config_recorder",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "compliance.has_active_rules",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "compliance.kind",
+            "actual_value": "recorder",
+            "operator": "eq",
+            "unsafe_value": "recorder"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "fedramp_moderate": "CM-3",
+        "hipaa": "164.312(c)(1)",
+        "nist_800_53_r5": "CM-3",
+        "pci_dss_v4.0": "6.3.2",
+        "soc2": "CC6.3"
+      },
+      "control_compliance_ccm_v4": [
+        "CCC-04",
+        "CCC-07",
+        "LOG-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "AWS Config has no active rules. Configuration drift will not be detected automatically.",
+        "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc).",
+        "example": "{\n  \"compliance\": {\n    \"kind\": \"recorder\",\n    \"has_active_rules\": true\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-dc2b0777c5387fc4",
+        "target": {
+          "asset_id": "config-recorder",
+          "asset_type": "aws_config_recorder"
+        },
+        "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
+      },
+      "chain_membership": [
+        {
+          "chain_id": "config_evaluation_broken",
+          "chain_severity": "high",
+          "stage_span": [
+            "detection_evasion"
+          ],
+          "narrative": "Any evaluation failure: no rules at all (the catalog's existing CTL.CONFIG.RULES.001), rule disabled, or rule's custom Lambda deleted. Each independently means compliance evaluation is non-functional. Config records configuration but doesn't judge it. Threshold of 1 because each member represents a complete evaluation failure on its own.\n"
+        }
+      ],
+      "exposure_score": 76.02739726027397,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "compliance.has_active_rules eq false",
+          "observation_key": "compliance.has_active_rules",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "compliance.kind eq \"recorder\"",
+          "observation_key": "compliance.kind",
+          "operator": "eq",
+          "expected_value": "recorder",
+          "observed_value": "recorder"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "config-recorder",
+          "type": "aws_config_recorder",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.CONFIG.RULES.001",
+          "control_name": "AWS Config Must Have Active Rules",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "compliance service has active rules = false",
+              "observation_key": "compliance.has_active_rules",
+              "observed_value": false
+            },
+            {
+              "clause": "compliance.kind = \"recorder\"",
+              "observation_key": "compliance.kind",
+              "observed_value": "recorder"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compliance.has_active_rules",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set compliance.has_active_rules to true"
+          },
+          {
+            "path": "compliance.kind",
+            "current_value": "recorder",
+            "required_value": "any value other than recorder",
+            "has_safe_default": false,
+            "description": "Change compliance.kind away from recorder"
+          }
+        ],
+        "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "config"
+      ],
+      "defect": "Active rules is not enabled.",
+      "infection": "AWS Config misconfigurations mean configuration changes to resources go unrecorded. Without Config recording, there is no baseline to detect drift, no history to investigate incidents, and no evidence for compliance audits.\n",
+      "failure": "Configuration visibility gap. Resource changes are untracked, preventing drift detection, incident investigation, and compliance evidence collection.\n",
+      "delta": [
+        {
+          "property_label": "active rules",
+          "property_path": "compliance.has_active_rules",
           "current_value": "false",
           "fix_action": "set to true (enable)"
         }
@@ -4190,151 +4355,6 @@
       ]
     },
     {
-      "finding_id": "sha256:c2ed914d02c8ae20",
-      "control_id": "CTL.CONFIG.RULES.001",
-      "control_name": "AWS Config Must Have Active Rules",
-      "control_description": "AWS Config must have active Config Rules to evaluate resource compliance. Recording without rules provides change history but no automated drift detection.\n",
-      "asset_id": "config-recorder",
-      "asset_type": "aws_config_recorder",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
-        "unsafe_duration_hours": 120,
-        "misconfigurations": [
-          {
-            "property": "compliance.has_active_rules",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "compliance.kind",
-            "actual_value": "recorder",
-            "operator": "eq",
-            "unsafe_value": "recorder"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "medium",
-      "control_compliance": {
-        "fedramp_moderate": "CM-3",
-        "hipaa": "164.312(c)(1)",
-        "nist_800_53_r5": "CM-3",
-        "pci_dss_v4.0": "6.3.2",
-        "soc2": "CC6.3"
-      },
-      "control_compliance_ccm_v4": [
-        "CCC-04",
-        "CCC-07",
-        "LOG-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "AWS Config has no active rules. Configuration drift will not be detected automatically.",
-        "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc).",
-        "example": "{\n  \"compliance\": {\n    \"kind\": \"recorder\",\n    \"has_active_rules\": true\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-dc2b0777c5387fc4",
-        "target": {
-          "asset_id": "config-recorder",
-          "asset_type": "aws_config_recorder"
-        },
-        "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
-      },
-      "exposure_score": 50.68493150684932,
-      "score_breakdown": {
-        "base_score": 50,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0136986301369864,
-        "days_blind": 5
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "compliance.has_active_rules eq false",
-          "observation_key": "compliance.has_active_rules",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        },
-        {
-          "predicate_expr": "compliance.kind eq \"recorder\"",
-          "observation_key": "compliance.kind",
-          "operator": "eq",
-          "expected_value": "recorder",
-          "observed_value": "recorder"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "config-recorder",
-          "type": "aws_config_recorder",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.CONFIG.RULES.001",
-          "control_name": "AWS Config Must Have Active Rules",
-          "severity": "medium",
-          "reasoning": [
-            {
-              "clause": "compliance service has active rules = false",
-              "observation_key": "compliance.has_active_rules",
-              "observed_value": false
-            },
-            {
-              "clause": "compliance.kind = \"recorder\"",
-              "observation_key": "compliance.kind",
-              "observed_value": "recorder"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "compliance.has_active_rules",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set compliance.has_active_rules to true"
-          },
-          {
-            "path": "compliance.kind",
-            "current_value": "recorder",
-            "required_value": "any value other than recorder",
-            "has_safe_default": false,
-            "description": "Change compliance.kind away from recorder"
-          }
-        ],
-        "action": "Deploy Config Rules for your compliance requirements. Start with AWS managed rules for common checks (encrypted-volumes, restricted-common-ports, etc)."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "config"
-      ],
-      "defect": "Active rules is not enabled.",
-      "infection": "AWS Config misconfigurations mean configuration changes to resources go unrecorded. Without Config recording, there is no baseline to detect drift, no history to investigate incidents, and no evidence for compliance audits.\n",
-      "failure": "Configuration visibility gap. Resource changes are untracked, preventing drift detection, incident investigation, and compliance evidence collection.\n",
-      "delta": [
-        {
-          "property_label": "active rules",
-          "property_path": "compliance.has_active_rules",
-          "current_value": "false",
-          "fix_action": "set to true (enable)"
-        }
-      ]
-    },
-    {
       "finding_id": "sha256:0eea80a827ddcfa6",
       "control_id": "CTL.ELB.CROSSZONE.001",
       "control_name": "Load Balancer Must Have Cross-Zone Load Balancing Enabled",
@@ -4991,6 +5011,42 @@
   ],
   "chain_findings": [
     {
+      "chain": "config_completely_blind",
+      "asset_id": "config-recorder",
+      "description": "Any foundational Config failure: recorder stopped, recorder role deleted, or no delivery channel configured. Each independently means Config is non-functional — the configuration compliance system provides zero value. Threshold of 1 because each member represents complete or near-complete Config failure on its own.\n",
+      "controls_failing": [
+        "CTL.CONFIG.ENABLED.001"
+      ],
+      "missing_safeguards": [
+        "CTL.CONFIG.GHOST.RECORDER.ROLE.001",
+        "CTL.CONFIG.DELIVERY.NOTCHANNEL.001"
+      ],
+      "compound_score": 100,
+      "severity": "critical",
+      "narrative": "Any foundational Config failure: recorder stopped, recorder role deleted, or no delivery channel configured. Each independently means Config is non-functional — the configuration compliance system provides zero value. Threshold of 1 because each member represents complete or near-complete Config failure on its own.\n Failing: CTL.CONFIG.ENABLED.001.",
+      "attack_stages": [
+        "detection_evasion"
+      ]
+    },
+    {
+      "chain": "config_evaluation_broken",
+      "asset_id": "config-recorder",
+      "description": "Any evaluation failure: no rules at all (the catalog's existing CTL.CONFIG.RULES.001), rule disabled, or rule's custom Lambda deleted. Each independently means compliance evaluation is non-functional. Config records configuration but doesn't judge it. Threshold of 1 because each member represents a complete evaluation failure on its own.\n",
+      "controls_failing": [
+        "CTL.CONFIG.RULES.001"
+      ],
+      "missing_safeguards": [
+        "CTL.CONFIG.RULE.DISABLED.001",
+        "CTL.CONFIG.RULE.GHOST.LAMBDA.001"
+      ],
+      "compound_score": 50,
+      "severity": "high",
+      "narrative": "Any evaluation failure: no rules at all (the catalog's existing CTL.CONFIG.RULES.001), rule disabled, or rule's custom Lambda deleted. Each independently means compliance evaluation is non-functional. Config records configuration but doesn't judge it. Threshold of 1 because each member represents a complete evaluation failure on its own.\n Failing: CTL.CONFIG.RULES.001.",
+      "attack_stages": [
+        "detection_evasion"
+      ]
+    },
+    {
       "chain": "eol_database_phi_exposure",
       "asset_id": "phi-database",
       "description": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n",
@@ -5048,6 +5104,22 @@
   ],
   "issues": [
     {
+      "issue_id": "sha256:3d241bf836d2c38a",
+      "asset_id": "config-recorder",
+      "shared_keys": [
+        "compliance.has_active_rules",
+        "compliance.kind",
+        "compliance.recording_enabled"
+      ],
+      "headline_finding_id": "sha256:aa66250e8a1dc01c",
+      "member_finding_ids": [
+        "sha256:aa66250e8a1dc01c",
+        "sha256:c2ed914d02c8ae20"
+      ],
+      "consolidated_score": 285.10273972602744,
+      "consolidated_blast_radius": 2.5
+    },
+    {
       "issue_id": "sha256:fdc3b4aaddddd41b",
       "asset_id": "main-trail",
       "shared_keys": [
@@ -5091,22 +5163,6 @@
       ],
       "consolidated_score": 202.73972602739727,
       "consolidated_blast_radius": 1
-    },
-    {
-      "issue_id": "sha256:3d241bf836d2c38a",
-      "asset_id": "config-recorder",
-      "shared_keys": [
-        "compliance.has_active_rules",
-        "compliance.kind",
-        "compliance.recording_enabled"
-      ],
-      "headline_finding_id": "sha256:aa66250e8a1dc01c",
-      "member_finding_ids": [
-        "sha256:aa66250e8a1dc01c",
-        "sha256:c2ed914d02c8ae20"
-      ],
-      "consolidated_score": 190.06849315068493,
-      "consolidated_blast_radius": 2.5
     },
     {
       "issue_id": "sha256:962f9aa7601dd20a",
@@ -5763,6 +5819,22 @@
   ],
   "top_exposures": [
     {
+      "finding_index": 9,
+      "control_id": "CTL.CONFIG.ENABLED.001",
+      "asset_id": "config-recorder",
+      "exposure_score": 285.10273972602744,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
+        "days_blind": 5
+      },
+      "silent_killer": false
+    },
+    {
       "finding_index": 4,
       "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
       "asset_id": "main-trail",
@@ -5789,22 +5861,6 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 2,
-        "blind_multiplier": 1.0136986301369864,
-        "days_blind": 5
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 9,
-      "control_id": "CTL.CONFIG.ENABLED.001",
-      "asset_id": "config-recorder",
-      "exposure_score": 190.06849315068493,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 2.5,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -5965,6 +6021,22 @@
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
+        "days_blind": 5
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 10,
+      "control_id": "CTL.CONFIG.RULES.001",
+      "asset_id": "config-recorder",
+      "exposure_score": 76.02739726027397,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -6166,22 +6238,6 @@
       "finding_index": 3,
       "control_id": "CTL.BACKUP.REPLICATION.001",
       "asset_id": "backup-phi-database",
-      "exposure_score": 50.68493150684932,
-      "breakdown": {
-        "base_score": 50,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0136986301369864,
-        "days_blind": 5
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 10,
-      "control_id": "CTL.CONFIG.RULES.001",
-      "asset_id": "config-recorder",
       "exposure_score": 50.68493150684932,
       "breakdown": {
         "base_score": 50,

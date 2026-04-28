@@ -1,0 +1,24 @@
+control: CTL.EC2.EBS.ACCESS.MODIFYSNAPSHOT.BROAD.001
+defect: >
+  ec2:ModifySnapshotAttribute is granted to
+  non-administrative principals.
+infection: >
+  ModifySnapshotAttribute is the API that makes
+  snapshots public or shares them cross-account.
+  A principal with this permission can: take
+  any snapshot in the account, make it public
+  (createVolumePermission: all), and the entire
+  disk contents — databases, credentials,
+  application code — become accessible to any
+  AWS account on earth. Or share it with a
+  specific attacker-controlled account for
+  targeted exfiltration. This permission
+  should be restricted to security administrators
+  and specific automation roles — never to
+  developers, applications, or broad role
+  patterns.
+failure: >
+  Broad snapshot sharing capability. Too many
+  principals can make any snapshot public or
+  share it cross-account — data exposure via a
+  single API call.

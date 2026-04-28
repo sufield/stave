@@ -1,0 +1,18 @@
+id: config_aggregator_incomplete
+description: >
+  Either accounts or regions are missing from
+  the Config aggregator. The centralized
+  compliance view has blind spots — partial
+  data presented as complete. Threshold of 1
+  because either form of incompleteness is
+  enough to make the dashboard misleading
+  about the organization's compliance posture.
+controls:
+  - CTL.CONFIG.AGGREGATOR.INCOMPLETE.ACCOUNTS.001
+  - CTL.CONFIG.AGGREGATOR.INCOMPLETE.REGIONS.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

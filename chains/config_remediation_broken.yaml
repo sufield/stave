@@ -1,0 +1,20 @@
+id: config_remediation_broken
+description: >
+  Any remediation failure: SSM document deleted,
+  IAM role deleted, or retries exhausted. Each
+  independently means auto-remediation cannot
+  fix non-compliance. Config detects the
+  problem and the fix path is severed.
+  Threshold of 1 because any single failure
+  along the SSM document → role → execution
+  pipeline breaks the entire remediation.
+controls:
+  - CTL.CONFIG.REMEDIATION.GHOST.SSM.001
+  - CTL.CONFIG.REMEDIATION.GHOST.ROLE.001
+  - CTL.CONFIG.REMEDIATION.RETRIES.EXHAUSTED.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

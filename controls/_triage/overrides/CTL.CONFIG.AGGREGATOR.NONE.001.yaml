@@ -1,0 +1,24 @@
+control: CTL.CONFIG.AGGREGATOR.NONE.001
+defect: >
+  AWS Organizations active with no Config
+  aggregator.
+infection: >
+  Without a Config aggregator, each account's
+  compliance data is siloed. To answer 'how
+  many S3 buckets across the organization are
+  non-compliant with encryption?' the security
+  team must log into each member account, query
+  Config in each region within each account,
+  aggregate results manually, and repeat for
+  every compliance question. With an aggregator,
+  one query, one dashboard, one view across all
+  accounts and regions. The aggregator also
+  enables centralized compliance reporting for
+  audits — instead of collecting evidence from
+  N accounts. Without it, audit prep scales
+  linearly with the number of member accounts
+  and regions.
+failure: >
+  Fragmented compliance visibility. No
+  centralized view of configuration compliance
+  across the organization.

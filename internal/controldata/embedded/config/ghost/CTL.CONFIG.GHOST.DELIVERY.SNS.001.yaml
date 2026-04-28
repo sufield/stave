@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.GHOST.DELIVERY.SNS.001
+name: Config Delivery Channel SNS Topic Deleted
+description: >
+  AWS Config delivery channel references an SNS
+  topic that has been deleted. Config publishes
+  configuration change notifications to the SNS
+  topic, but the topic does not exist —
+  notifications go nowhere. Real-time awareness
+  of configuration drift is lost while recording
+  and S3 delivery may continue.
+domain: audit
+severity: medium
+archetype: ghost-reference
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Config's delivery SNS topic is gone. Change
+    notifications fail silently.
+  action: >
+    Recreate the SNS topic with the Config
+    publish permission, or repoint the delivery
+    channel at an existing topic: aws
+    configservice put-delivery-channel
+    --delivery-channel
+    name=<name>,snsTopicARN=<topic-arn>.
+    Verify by triggering a configuration change
+    (tag a resource) and confirming the
+    notification reaches subscribers.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_delivery_channel",
+        "config": {
+          "delivery_channel_name": "default",
+          "delivery_sns_topic_arn": "arn:aws:sns:us-east-1:111122223333:config-changes",
+          "delivery_sns_exists": true,
+          "has_ghost_delivery_sns": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_delivery_channel
+    - field: properties.compliance.config.has_ghost_delivery_sns
+      op: eq
+      value: true
+defect: >
+  Config delivery channel references a deleted
+  SNS topic.
+infection: >
+  Config's delivery SNS topic is the
+  notification channel for configuration
+  changes. When a resource configuration
+  changes, Config publishes an event to this
+  topic; subscribers (Lambda, SQS, email,
+  HTTPS) act on the notification — running
+  remediation, alerting on-call, or triggering
+  downstream automation. When the topic is
+  deleted, the publish fails silently. The
+  delivery channel still references the topic
+  ARN; recording continues; S3 delivery may
+  still work; but real-time awareness of
+  configuration drift is lost. Subscribers
+  receive no events. Remediation automation
+  doesn't fire. The configuration-change
+  signal is dropped at the source.
+failure: >
+  Configuration change notifications fail
+  silently. Recording and S3 delivery may
+  continue but real-time alerts and
+  remediation triggers don't fire.
+tests:
+  - name: delivery channel with deleted SNS fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:delivery-channel/default"
+      asset_type: aws_config_delivery_channel
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_delivery_channel
+          config:
+            delivery_channel_name: "default"
+            delivery_sns_topic_arn: "arn:aws:sns:us-east-1:111122223333:deleted-topic"
+            delivery_sns_exists: false
+            has_ghost_delivery_sns: true
+  - name: delivery channel with live SNS passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:delivery-channel/default"
+      asset_type: aws_config_delivery_channel
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_delivery_channel
+          config:
+            delivery_channel_name: "default"
+            delivery_sns_topic_arn: "arn:aws:sns:us-east-1:111122223333:config-changes"
+            delivery_sns_exists: true
+            has_ghost_delivery_sns: false

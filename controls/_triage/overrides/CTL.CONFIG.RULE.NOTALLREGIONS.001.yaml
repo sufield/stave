@@ -1,0 +1,24 @@
+control: CTL.CONFIG.RULE.NOTALLREGIONS.001
+defect: >
+  Config rules deployed in only some regions
+  where the recorder is running.
+infection: >
+  Config recording and Config rules are
+  regional — each region has its own recorder
+  and rules. If the recorder runs in 16 regions
+  but rules exist in only 4 regions, 12 regions
+  record configurations without compliance
+  evaluation. An attacker who creates resources
+  in a region with recording but no rules
+  evades compliance detection — Config records
+  the resource (it exists in Config's
+  inventory) but no rule evaluates whether
+  it's compliant. The resource can violate
+  every security policy without any non-
+  compliant flag. The aggregator (if
+  configured) shows the resource as 'not
+  applicable' — not non-compliant.
+failure: >
+  Compliance evaluation gaps. Config records
+  resources in some regions without evaluating
+  them — compliance checks are missing.

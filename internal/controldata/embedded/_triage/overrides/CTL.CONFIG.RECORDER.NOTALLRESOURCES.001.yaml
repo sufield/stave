@@ -1,0 +1,25 @@
+control: CTL.CONFIG.RECORDER.NOTALLRESOURCES.001
+defect: >
+  Config recorder records only a subset of
+  supported resource types.
+infection: >
+  When the recorder scope is limited, any
+  resource type not in scope is invisible to
+  Config. Common gaps: if AWS::Lambda::Function
+  is excluded, Config rules for Lambda
+  (encryption, VPC, runtime) don't evaluate;
+  if AWS::IAM::Role is excluded (and global
+  resources are off), IAM compliance checks
+  don't evaluate; if a new resource type is
+  added by AWS (which happens regularly), the
+  recorder doesn't automatically include it.
+  The most dangerous scenario: the recorder
+  was configured years ago with the resource
+  types available then; new types (AppRunner,
+  Bedrock, etc.) are automatically excluded —
+  the recorder covers the 2020 resource
+  landscape in 2026.
+failure: >
+  Partial configuration recording. Resource
+  types not in scope are invisible — compliance
+  checks for those types do not evaluate.

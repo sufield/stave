@@ -1,0 +1,21 @@
+control: CTL.EC2.EBS.VOLUME.GP2.MIGRATION.001
+defect: >
+  EBS volume uses the gp2 type instead of gp3.
+infection: >
+  gp2 is the previous-generation general-purpose
+  SSD. Compared with gp3: gp2 charges roughly
+  20% more per GB; gp2 uses a burst-credit
+  performance model (baseline 3 IOPS/GB, burst
+  up to 3,000) which produces a performance
+  cliff when credits deplete; gp3 charges less
+  and provides flat 3,000 IOPS / 125 MB/s
+  baseline regardless of size. For volumes
+  large enough to sustain high baseline IOPS
+  on gp2 (>1,000 GB), the cost gap is
+  significant. The migration is online and
+  carries no downtime — the only friction is
+  scheduling and verification.
+failure: >
+  Outdated volume type. gp2 carries higher
+  cost, burst-credit performance variability,
+  and no advantage over gp3 for the workload.

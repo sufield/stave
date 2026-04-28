@@ -1,0 +1,136 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.AGGREGATOR.NONE.001
+name: No Config Aggregator Configured
+description: >
+  AWS Organizations is in use but no Config
+  aggregator exists. Each account and region
+  stores Config data independently; security
+  teams must query Config in each account and
+  region individually to assess organizational
+  compliance posture.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "CA-7, CM-2, CM-8"
+  pci_dss_v4.0: "10.1"
+  fedramp_moderate: "CA-7, CM-8"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 3.0
+remediation:
+  description: >
+    Organizations active without a Config
+    aggregator. Compliance views are siloed
+    per-account.
+  action: >
+    Create a Config aggregator in the security
+    or audit account: aws configservice
+    put-configuration-aggregator
+    --configuration-aggregator-name
+    org-aggregator
+    --organization-aggregation-source
+    RoleArn=<role>,AllAwsRegions=true. Use
+    organization-wide collection so new
+    accounts are auto-included.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_org",
+        "config": {
+          "is_org_account": true,
+          "has_aggregator": true,
+          "member_account_count": 12,
+          "region_count": 16
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_org
+    - field: properties.compliance.config.is_org_account
+      op: eq
+      value: true
+    - field: properties.compliance.config.has_aggregator
+      op: eq
+      value: false
+defect: >
+  AWS Organizations active with no Config
+  aggregator.
+infection: >
+  Without a Config aggregator, each account's
+  compliance data is siloed. To answer 'how
+  many S3 buckets across the organization are
+  non-compliant with encryption?' the security
+  team must log into each member account, query
+  Config in each region within each account,
+  aggregate results manually, and repeat for
+  every compliance question. With an aggregator,
+  one query, one dashboard, one view across all
+  accounts and regions. The aggregator also
+  enables centralized compliance reporting for
+  audits — instead of collecting evidence from
+  N accounts. Without it, audit prep scales
+  linearly with the number of member accounts
+  and regions.
+failure: >
+  Fragmented compliance visibility. No
+  centralized view of configuration compliance
+  across the organization.
+tests:
+  - name: org without aggregator fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_config_org
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_org
+          config:
+            is_org_account: true
+            has_aggregator: false
+            member_account_count: 12
+            region_count: 16
+  - name: org with aggregator passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_config_org
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_org
+          config:
+            is_org_account: true
+            has_aggregator: true
+            member_account_count: 12
+            region_count: 16
+  - name: standalone account does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:root"
+      asset_type: aws_config_org
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_org
+          config:
+            is_org_account: false
+            has_aggregator: false
+            member_account_count: 1
+            region_count: 16

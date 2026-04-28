@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.RULE.LAMBDA.ERROR.001
+name: Config Custom Rule Lambda Errors on Every Evaluation
+description: >
+  AWS Config custom rule's Lambda function
+  exists but errors on every evaluation — throws
+  exceptions, times out, or returns invalid
+  responses. The rule triggers, the Lambda
+  runs, the Lambda fails, and every evaluation
+  returns an error. Compliance status is
+  unknown for every resource the rule
+  evaluates. Distinct from GHOST.LAMBDA where
+  the Lambda is deleted — here the Lambda
+  exists but cannot complete.
+domain: exposure
+severity: high
+archetype: false-protection
+compliance:
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "CA-7, CM-2, SI-4"
+  pci_dss_v4.0: "11.5"
+  fedramp_moderate: "CA-7, SI-4"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Lambda runs but fails every time; evaluation
+    is structurally broken.
+  action: >
+    Inspect the Lambda's CloudWatch logs for the
+    failure pattern (uncaught exception, timeout,
+    bad response shape). Common causes: stale
+    SDK version, missing IAM permission for the
+    Lambda execution role, unhandled
+    configuration item shape after AWS added a
+    new field. Fix and redeploy. If the Lambda's
+    logic is no longer maintainable, replace
+    with an AWS-managed rule covering the same
+    requirement.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_rule",
+        "config": {
+          "rule_name": "custom-tag-policy",
+          "rule_lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:tag-policy-eval",
+          "rule_lambda_error_rate": 0.0,
+          "rule_lambda_all_errors": false,
+          "rule_last_success_days": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_rule
+    - field: properties.compliance.config.rule_lambda_all_errors
+      op: eq
+      value: true
+defect: >
+  Config custom rule's Lambda errors on every
+  evaluation.
+infection: >
+  An erroring Lambda is worse than a disabled
+  rule. With disabled, the rule is explicitly
+  off — auditors and dashboards both surface
+  the disabled state. With LAMBDA.ERROR, the
+  rule is enabled and trying to evaluate, but
+  every invocation fails. Compliance status is
+  recorded as ERROR rather than COMPLIANT or
+  NON_COMPLIANT. ERROR is treated differently
+  by downstream tooling: some compliance
+  dashboards filter out errors, hiding the
+  rule's true non-functional state. The result
+  is silent failure — the custom compliance
+  check appears to be running but produces no
+  usable results.
+failure: >
+  Compliance status unknown for every evaluated
+  resource. Rule executes; Lambda fails on
+  every call.
+tests:
+  - name: custom rule with all-errors Lambda fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-rule/custom-tag-policy"
+      asset_type: aws_config_rule
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_rule
+          config:
+            rule_name: "custom-tag-policy"
+            rule_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:tag-policy-eval"
+            rule_lambda_error_rate: 1.0
+            rule_lambda_all_errors: true
+            rule_last_success_days: 30
+  - name: custom rule with healthy Lambda passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-rule/custom-tag-policy"
+      asset_type: aws_config_rule
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_rule
+          config:
+            rule_name: "custom-tag-policy"
+            rule_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:tag-policy-eval"
+            rule_lambda_error_rate: 0.0
+            rule_lambda_all_errors: false
+            rule_last_success_days: 1

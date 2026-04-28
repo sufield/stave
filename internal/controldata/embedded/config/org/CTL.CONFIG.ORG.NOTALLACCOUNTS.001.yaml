@@ -1,0 +1,127 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ORG.NOTALLACCOUNTS.001
+name: Config Not Enabled in All Member Accounts
+description: >
+  AWS Organizations is in use but Config is not
+  enabled (no recorder running) in every member
+  account. Some accounts have no configuration
+  recording at all — resources in those
+  accounts are completely invisible to Config.
+  No configuration history, no compliance
+  evaluation, no change tracking.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "CA-7, CM-2, CM-8"
+  pci_dss_v4.0: "10.1, 11.5"
+  fedramp_moderate: "CA-7, CM-8"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: organization
+    multiplier: 4.0
+remediation:
+  description: >
+    Member accounts exist without Config
+    recorders. Configuration blind spots span
+    those accounts.
+  action: >
+    Deploy Config to all member accounts via
+    StackSets or Control Tower. Bake Config
+    enablement into the account-creation
+    process so new accounts have Config from
+    day one. Use organization Config rules to
+    apply a consistent baseline across all
+    accounts.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_org",
+        "config": {
+          "is_org_account": true,
+          "member_account_count": 12,
+          "accounts_with_config": 12,
+          "accounts_without_config": [],
+          "config_coverage_complete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_org
+    - field: properties.compliance.config.is_org_account
+      op: eq
+      value: true
+    - field: properties.compliance.config.config_coverage_complete
+      op: eq
+      value: false
+defect: >
+  Member accounts exist without AWS Config
+  enabled.
+infection: >
+  A member account without Config has no
+  configuration recording — resources are
+  created, modified, and deleted without any
+  configuration state record. No Config rules
+  evaluate. No compliance status exists. The
+  account is a configuration blind spot. If
+  the organization uses the Config aggregator,
+  accounts without Config don't appear in the
+  aggregator — the aggregator shows data only
+  for accounts that have Config enabled. The
+  centralized compliance view is silently
+  incomplete. Common cause: new member accounts
+  provisioned without Config setup — the
+  account creation process doesn't include
+  Config enablement.
+failure: >
+  Configuration blind spots. Member accounts
+  have no Config — resources are unrecorded,
+  unevaluated, and invisible.
+tests:
+  - name: org with accounts missing Config fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_config_org
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_org
+          config:
+            is_org_account: true
+            member_account_count: 12
+            accounts_with_config: 9
+            accounts_without_config:
+              - "444455556666"
+              - "777788889999"
+              - "555566667777"
+            config_coverage_complete: false
+  - name: org with full Config coverage passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_config_org
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_org
+          config:
+            is_org_account: true
+            member_account_count: 12
+            accounts_with_config: 12
+            accounts_without_config: []
+            config_coverage_complete: true

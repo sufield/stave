@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.GHOST.DELIVERY.S3.001
+name: Config Delivery Channel S3 Bucket Deleted
+description: >
+  AWS Config delivery channel references an S3
+  bucket that has been deleted. Config records
+  configuration snapshots and history files but
+  cannot deliver them. The configuration audit
+  trail is lost; existing data in the deleted
+  bucket is gone permanently.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "AU-9, CM-2, CM-3"
+  pci_dss_v4.0: "10.5"
+  fedramp_moderate: "AU-9, CM-2"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Config's delivery S3 bucket is gone.
+    Configuration history is not being persisted.
+  action: >
+    Recreate the S3 bucket with the Config
+    bucket policy that grants
+    config.amazonaws.com PutObject permission
+    (and Deny DeleteObject — see
+    DELIVERY.S3.NODELETE), or repoint the
+    delivery channel at an existing bucket: aws
+    configservice put-delivery-channel
+    --delivery-channel
+    name=<name>,s3BucketName=<bucket>. After
+    fix, validate the next configuration
+    history file lands in the bucket.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_delivery_channel",
+        "config": {
+          "delivery_channel_name": "default",
+          "delivery_s3_bucket": "config-bucket-111122223333",
+          "delivery_s3_exists": true,
+          "has_ghost_delivery_s3": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_delivery_channel
+    - field: properties.compliance.config.has_ghost_delivery_s3
+      op: eq
+      value: true
+defect: >
+  Config delivery channel references a deleted
+  S3 bucket.
+infection: >
+  Config delivers two types of data to S3:
+  configuration snapshots (full resource
+  inventory at a point in time) and
+  configuration history files (change history
+  for each resource). When the S3 bucket is
+  deleted, configuration snapshots can't be
+  delivered (no point-in-time inventory),
+  configuration history can't be delivered (no
+  change audit trail), and historical data
+  already delivered is gone (bucket deleted =
+  data deleted). If the organization uses
+  Config's S3 data for compliance audits,
+  incident investigation, or configuration
+  drift analysis, that capability is lost. The
+  delivery channel shows the bucket name; the
+  bucket doesn't exist. Config continues
+  recording but cannot persist.
+failure: >
+  Configuration history lost. Config cannot
+  deliver snapshots or history to S3 because
+  the bucket was deleted.
+tests:
+  - name: delivery to deleted bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:delivery-channel/default"
+      asset_type: aws_config_delivery_channel
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_delivery_channel
+          config:
+            delivery_channel_name: "default"
+            delivery_s3_bucket: "deleted-config-bucket"
+            delivery_s3_exists: false
+            has_ghost_delivery_s3: true
+  - name: delivery to live bucket passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:delivery-channel/default"
+      asset_type: aws_config_delivery_channel
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_delivery_channel
+          config:
+            delivery_channel_name: "default"
+            delivery_s3_bucket: "config-bucket-111122223333"
+            delivery_s3_exists: true
+            has_ghost_delivery_s3: false

@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.REMEDIATION.GHOST.SSM.001
+name: Config Remediation References Deleted SSM Document
+description: >
+  AWS Config remediation action references an
+  SSM Automation document that has been deleted.
+  When the rule detects non-compliance and
+  triggers remediation, the SSM execution fails
+  (document not found). The non-compliant
+  resource is not fixed.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC7.2, CC8.1"
+  nist_800_53_r5: "CA-7, CM-3, CM-4, SI-7"
+  pci_dss_v4.0: "11.5"
+  fedramp_moderate: "CA-7, CM-3"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Remediation's SSM document is gone; auto-fix
+    cannot run.
+  action: >
+    Either redeploy the SSM Automation document
+    with the same name (preserving the
+    remediation configuration) or update the
+    rule's remediation to point at a replacement
+    document: aws configservice
+    put-remediation-configurations with the new
+    document name. Verify by triggering a
+    non-compliance scenario and confirming
+    auto-remediation completes.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_remediation",
+        "config": {
+          "rule_name": "s3-bucket-server-side-encryption-enabled",
+          "remediation_ssm_doc": "AWS-EnableS3BucketEncryption",
+          "remediation_ssm_exists": true,
+          "has_ghost_remediation_ssm": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_remediation
+    - field: properties.compliance.config.has_ghost_remediation_ssm
+      op: eq
+      value: true
+defect: >
+  Config remediation references a deleted SSM
+  Automation document.
+infection: >
+  Config auto-remediation uses SSM Automation
+  documents to fix non-compliant resources —
+  e.g., enable S3 encryption, restrict security
+  group rules, enable CloudTrail logging. The
+  remediation is configured: when the rule
+  detects non-compliance, Config invokes the
+  SSM document. When the SSM document is
+  deleted, Config detects non-compliance (rule
+  works), Config triggers remediation
+  (remediation is configured), SSM execution
+  fails (document not found), the resource
+  remains non-compliant. The remediation
+  appears configured in the console; the SSM
+  document is gone; the auto-fix is broken.
+  Custom (non-AWS-managed) SSM documents are
+  particularly dangerous — they can't be
+  re-created from a standard source.
+failure: >
+  Auto-remediation broken. Config detects non-
+  compliance and triggers remediation; SSM
+  document was deleted, resource stays
+  non-compliant.
+tests:
+  - name: remediation with deleted SSM doc fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:remediation/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_remediation
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_remediation
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            remediation_ssm_doc: "Custom-EnableEncryption"
+            remediation_ssm_exists: false
+            has_ghost_remediation_ssm: true
+  - name: remediation with valid SSM doc passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:remediation/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_remediation
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_remediation
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            remediation_ssm_doc: "AWS-EnableS3BucketEncryption"
+            remediation_ssm_exists: true
+            has_ghost_remediation_ssm: false

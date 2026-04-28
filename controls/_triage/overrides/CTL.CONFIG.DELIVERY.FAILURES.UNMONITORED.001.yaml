@@ -1,0 +1,25 @@
+control: CTL.CONFIG.DELIVERY.FAILURES.UNMONITORED.001
+defect: >
+  No CloudWatch alarm monitors Config delivery
+  failures.
+infection: >
+  Config publishes metrics about delivery
+  health — ConfigDeliveryFailed,
+  ConfigSnapshotDeliveryFailed. Without an
+  alarm on these metrics, the delivery channel
+  S3 bucket permission changes (Config can't
+  write — nobody knows), the delivery channel
+  SNS topic is deleted (notifications fail —
+  nobody knows), or S3 quota limits are reached
+  (delivery fails — nobody knows). The Config
+  recorder continues running — configurations
+  are captured internally. But the durable
+  persistence to S3 and the real-time
+  notification via SNS are silently broken.
+  Same pattern as CloudTrail delivery failures
+  being invisible without alarms.
+failure: >
+  Silent delivery failure. Config delivery to
+  S3/SNS can fail without notification — the
+  configuration audit trail stops being
+  persisted.

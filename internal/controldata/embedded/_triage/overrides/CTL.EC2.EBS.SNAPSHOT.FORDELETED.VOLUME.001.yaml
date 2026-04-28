@@ -1,0 +1,25 @@
+control: CTL.EC2.EBS.SNAPSHOT.FORDELETED.VOLUME.001
+defect: >
+  EBS snapshot's source volume has been deleted;
+  snapshot persists with potentially-decommissioned
+  data.
+infection: >
+  EBS snapshots persist independently from their
+  source volumes. When a volume is deleted, the
+  snapshot is not auto-removed — which is correct
+  backup behavior: deleting a volume should not
+  destroy its backups. But two scenarios produce
+  governance issues: (1) the volume was
+  intentionally decommissioned (data should be
+  deleted) and the snapshot retains data that
+  was supposed to be gone; (2) the snapshot is
+  not part of a managed retention plan and is
+  simply an orphan from a past volume deletion.
+  This control surfaces the relationship for
+  review rather than asserting the snapshot
+  must be deleted.
+failure: >
+  Snapshot retains data from a deleted volume.
+  Review whether the snapshot is still needed
+  for recovery or whether decommissioning
+  intent extends to the snapshot.

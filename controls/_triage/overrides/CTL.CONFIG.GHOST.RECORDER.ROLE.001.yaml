@@ -1,0 +1,27 @@
+control: CTL.CONFIG.GHOST.RECORDER.ROLE.001
+defect: >
+  AWS Config recorder role has been deleted.
+infection: >
+  The Config recorder role is the IAM role
+  Config assumes to call Describe* and List*
+  APIs across all AWS services. Without this
+  role, Config can't read the configuration of
+  any resource — EC2 instances, S3 buckets,
+  IAM policies, RDS databases, Lambda functions,
+  security groups, KMS keys — nothing. The
+  recorder appears in the console; the role
+  ARN is displayed; the recording status may
+  still show "Recording" until the next
+  evaluation cycle fails. Every Config rule
+  stops receiving configuration data, every
+  compliance evaluation returns
+  INSUFFICIENT_DATA, and every conformance
+  pack stops evaluating. The entire
+  configuration compliance system is
+  non-functional because the single role it
+  depends on was deleted.
+failure: >
+  Complete configuration blindness. Config can't
+  read any resource configuration because the
+  recorder role was deleted; all compliance
+  evaluation stops.

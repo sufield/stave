@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.DELIVERY.NOSNS.001
+name: Config Delivery Channel Has No SNS Topic Configured
+description: >
+  AWS Config delivery channel exists but no SNS
+  topic is configured. Recording continues, S3
+  delivery may continue, but no real-time
+  notification of resource configuration changes
+  is published. Subscribers receive nothing;
+  remediation automation cannot trigger.
+domain: audit
+severity: medium
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Delivery channel has no SNS topic. Real-time
+    change notifications are unavailable.
+  action: >
+    Create an SNS topic for Config notifications,
+    grant config.amazonaws.com publish
+    permission, and configure the delivery
+    channel: aws configservice
+    put-delivery-channel --delivery-channel
+    name=<name>,s3BucketName=<bucket>,snsTopicARN=<topic-arn>.
+    Subscribe Lambda for auto-remediation, the
+    security paging topic for incident response,
+    and a SQS queue for downstream processing.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_delivery_channel",
+        "config": {
+          "delivery_channel_name": "default",
+          "has_sns_topic": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_delivery_channel
+    - field: properties.compliance.config.has_sns_topic
+      op: eq
+      value: false
+defect: >
+  Config delivery channel has no SNS topic
+  configured.
+infection: >
+  Without an SNS topic, configuration changes
+  flow to S3 (if S3 delivery is configured) but
+  generate no real-time notifications.
+  Configuration changes are discoverable only
+  by querying Config or reading S3 delivery
+  files — neither of which provides real-time
+  awareness. For compliance frameworks that
+  require change notification, this is a
+  functional gap. For organizations relying on
+  Config-driven auto-remediation (Lambda
+  subscribers that act on configuration events),
+  the entire automation pipeline fails because
+  there's no event stream. SNS-based delivery
+  is also the canonical integration point for
+  third-party tooling.
+failure: >
+  No real-time configuration change channel.
+  Subscribers and automation receive no events;
+  awareness comes only from polling S3.
+tests:
+  - name: delivery channel without SNS fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:delivery-channel/default"
+      asset_type: aws_config_delivery_channel
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_delivery_channel
+          config:
+            delivery_channel_name: "default"
+            has_sns_topic: false
+  - name: delivery channel with SNS passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:delivery-channel/default"
+      asset_type: aws_config_delivery_channel
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_delivery_channel
+          config:
+            delivery_channel_name: "default"
+            has_sns_topic: true

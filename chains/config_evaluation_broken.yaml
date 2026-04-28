@@ -1,0 +1,20 @@
+id: config_evaluation_broken
+description: >
+  Any evaluation failure: no rules at all (the
+  catalog's existing CTL.CONFIG.RULES.001),
+  rule disabled, or rule's custom Lambda
+  deleted. Each independently means compliance
+  evaluation is non-functional. Config records
+  configuration but doesn't judge it. Threshold
+  of 1 because each member represents a complete
+  evaluation failure on its own.
+controls:
+  - CTL.CONFIG.RULES.001
+  - CTL.CONFIG.RULE.DISABLED.001
+  - CTL.CONFIG.RULE.GHOST.LAMBDA.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

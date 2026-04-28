@@ -3,29 +3,29 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1887
-**Pack hash:** `4f499d61e96447633a1bf6d239a46d055fd1fb205bdc051a81ee9477dd8dea7d`
+**Total controls:** 1929
+**Pack hash:** `dc039306b752482c6f130296295046146a4a519a0c7d8f8ea3c76fb3a8a999e4`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 209 |
-| high | 838 |
+| critical | 214 |
+| high | 859 |
 | info | 16 |
-| low | 126 |
-| medium | 698 |
+| low | 130 |
+| medium | 710 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 39 |
+| audit | 48 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1000 |
-| governance | 239 |
+| exposure | 1018 |
+| governance | 254 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -7694,6 +7694,141 @@ Cognito user pools must be associated with an AWS WAFv2 web ACL for rate limitin
 
 ---
 
+### CTL.CONFIG.ACCESS.DELETERULE.BROAD.001
+
+**config:DeleteConfigRule Granted to Broad Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6; hipaa: 164.308(a)(4)(ii)(B); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, CM-5, SI-4; pci_dss_v4.0: 7.1, 7.2, 10.5; soc2: CC6.1, CC6.3, CC7.1;
+
+IAM policies grant config:DeleteConfigRule to non-administrative principals. DeleteConfigRule removes compliance evaluation rules — a principal with this permission can delete rules that detect non-compliance, effectively removing compliance checks rather than stopping the recorder.
+
+**Remediation:** Audit IAM policies for config:DeleteConfigRule and config:* on Resource: *. Restrict to compliance-admin and security-admin roles. For high-stakes rules, require a manual approval step (e.g., a Lambda authorizer or SCP requiring an MFA condition) before deletion is allowed.
+
+---
+
+### CTL.CONFIG.ACCESS.STOPRECORDER.BROAD.001
+
+**config:StopConfigurationRecorder Granted to Broad Principals**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16, 3.5; fedramp_moderate: AC-3, AC-6, CM-5; hipaa: 164.312(a)(1), 164.312(b); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, CM-5, SI-4; pci_dss_v4.0: 7.1, 7.2, 10.5; soc2: CC6.1, CC6.3, CC7.1;
+
+IAM policies grant config:StopConfigurationRecorder to non- administrative principals. StopConfigurationRecorder disables Config recording — the Config equivalent of CloudTrail's StopLogging. Any principal with this permission can blind the configuration audit trail.
+
+**Remediation:** Audit IAM policies for config:Stop*, config:StopConfigurationRecorder, and config:* on Resource: *. Restrict the permission to a dedicated security-admin role. Pair with an SCP at the org level that denies StopConfigurationRecorder for all member accounts (the existing CTL.IAM.SCP.CONFIG.001 covers that).
+
+---
+
+### CTL.CONFIG.AGGREGATOR.INCOMPLETE.ACCOUNTS.001
+
+**Config Aggregator Excludes Member Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: CA-7, CM-8; iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CA-7, CM-8; pci_dss_v4.0: 10.1; soc2: CC7.1, CC8.1;
+
+Config aggregator exists but does not include all member accounts. The centralized compliance dashboard shows results for the included accounts only — missing accounts have no visibility in the aggregator. The view is presented as complete and is silently incomplete.
+
+**Remediation:** Switch to organization-wide aggregation instead of explicit account lists so new accounts auto-include: aws configservice put-configuration-aggregator --organization-aggregation-source RoleArn=<role>,AllAwsRegions=true. If explicit account lists are required, add the missing accounts and verify aggregator status returns to OUTPUT_ACTIVE.
+
+---
+
+### CTL.CONFIG.AGGREGATOR.INCOMPLETE.REGIONS.001
+
+**Config Aggregator Excludes Regions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CA-7; iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CA-7, CM-8; pci_dss_v4.0: 10.1; soc2: CC7.1, CC8.1;
+
+Config aggregator exists but does not include all enabled AWS regions. Resources created in excluded regions are invisible in the aggregated view. An attacker can create resources in an unmonitored region to evade the centralized compliance view.
+
+**Remediation:** Set the aggregator to AllAwsRegions=true: aws configservice put-configuration-aggregator --account-aggregation-sources AccountIds=...,AllAwsRegions=true (or for organization aggregation, --organization-aggregation-source RoleArn=...,AllAwsRegions=true). For accounts where some regions are intentionally never used, document the exclusion in change management; do not rely on aggregator scope as a region blocker.
+
+---
+
+### CTL.CONFIG.AGGREGATOR.NONE.001
+
+**No Config Aggregator Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: CA-7, CM-8; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CA-7, CM-2, CM-8; pci_dss_v4.0: 10.1; soc2: CC7.1, CC8.1;
+
+AWS Organizations is in use but no Config aggregator exists. Each account and region stores Config data independently; security teams must query Config in each account and region individually to assess organizational compliance posture.
+
+**Remediation:** Create a Config aggregator in the security or audit account: aws configservice put-configuration-aggregator --configuration-aggregator-name org-aggregator --organization-aggregation-source RoleArn=<role>,AllAwsRegions=true. Use organization-wide collection so new accounts are auto-included.
+
+---
+
+### CTL.CONFIG.DELIVERY.FAILURES.UNMONITORED.001
+
+**Config Delivery Failures Not Monitored**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, AU-9, IR-4, SI-4; pci_dss_v4.0: 10.5, 10.6; soc2: CC7.1, CC7.2;
+
+AWS Config delivery failures (S3 write failures, SNS publish failures) are not monitored by any CloudWatch alarm. When delivery fails, Config records internally but cannot persist to S3 or notify via SNS. The configuration audit trail silently stops being persisted.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/Config metrics ConfigDeliveryFailed and ConfigSnapshotDeliveryFailed with threshold > 0 over a short evaluation window. Wire the alarm to the security operations SNS topic. Pair with the existing LIFECYCLE.SNAPSHOT.STALE control so persistence-pipeline issues surface both at the metric level (FAILURES.UNMONITORED) and at the staleness level (SNAPSHOT.STALE).
+
+---
+
+### CTL.CONFIG.DELIVERY.NOSNS.001
+
+**Config Delivery Channel Has No SNS Topic Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.1, CC7.2;
+
+AWS Config delivery channel exists but no SNS topic is configured. Recording continues, S3 delivery may continue, but no real-time notification of resource configuration changes is published. Subscribers receive nothing; remediation automation cannot trigger.
+
+**Remediation:** Create an SNS topic for Config notifications, grant config.amazonaws.com publish permission, and configure the delivery channel: aws configservice put-delivery-channel --delivery-channel name=<name>,s3BucketName=<bucket>,snsTopicARN=<topic-arn>. Subscribe Lambda for auto-remediation, the security paging topic for incident response, and a SQS queue for downstream processing.
+
+---
+
+### CTL.CONFIG.DELIVERY.NOTCHANNEL.001
+
+**No Config Delivery Channel Configured**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.5, 3.6; fedramp_moderate: AU-9, CM-8; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-9, CM-3, CM-8; pci_dss_v4.0: 10.1, 10.5; soc2: CC7.1, CC8.1;
+
+AWS Config recorder exists but no delivery channel is configured. Configuration data is recorded in Config's internal buffer but not persisted to S3 (no long-term history) and not published to SNS (no real-time notifications). Any audit trail beyond Config's internal retention is lost.
+
+**Remediation:** Create a delivery channel with at minimum an S3 bucket: aws configservice put-delivery-channel --delivery-channel name=default,s3BucketName=<bucket>. Add an SNS topic if real-time notifications are needed. Verify the next configuration history file lands in the bucket and confirm Config rules begin evaluating.
+
+---
+
+### CTL.CONFIG.DELIVERY.S3.NODELETE.001
+
+**Config Delivery S3 Bucket Policy Does Not Deny DeleteObject**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.6; fedramp_moderate: AU-9, CM-3; hipaa: 164.312(b), 164.312(c)(1); iso_27001_2022: A.8.10, A.8.15; nist_800_53_r5: AU-9, AU-11, CM-3; pci_dss_v4.0: 10.5; soc2: CC6.1, CC7.1;
+
+AWS Config delivery S3 bucket policy does not include a Deny statement for s3:DeleteObject. Without explicit Deny, any principal with sufficient IAM permissions can delete Config configuration history files — erasing the configuration audit trail. Same protection pattern as CloudTrail's S3 bucket Deny requirement.
+
+**Remediation:** Add a Deny statement to the bucket policy: "Effect": "Deny", "Action": ["s3:DeleteObject", "s3:DeleteObjectVersion"], "Resource": "arn:aws:s3:::<bucket>/AWSLogs/*/Config/*", "Principal": "*". Combine with bucket versioning and Object Lock in compliance mode for stronger immutability. The same deny should apply to lifecycle expiration rules that would delete historical files on schedule.
+
+---
+
 ### CTL.CONFIG.ENABLED.001
 
 **AWS Config Must Be Recording All Resource Types**
@@ -7706,6 +7841,51 @@ Cognito user pools must be associated with an AWS WAFv2 web ACL for rate limitin
 AWS Config must be enabled and recording all supported resource types. Without Config, configuration changes are not tracked and drift from the desired security baseline cannot be detected.
 
 **Remediation:** Enable the Config recorder with all resource types. Run: aws configservice put-configuration-recorder --configuration-recorder name=default,roleARN=arn:...,recordingGroup={allSupported=true}
+
+---
+
+### CTL.CONFIG.GHOST.DELIVERY.S3.001
+
+**Config Delivery Channel S3 Bucket Deleted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: AU-9, CM-2; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-9, CM-2, CM-3; pci_dss_v4.0: 10.5; soc2: CC7.1, CC8.1;
+
+AWS Config delivery channel references an S3 bucket that has been deleted. Config records configuration snapshots and history files but cannot deliver them. The configuration audit trail is lost; existing data in the deleted bucket is gone permanently.
+
+**Remediation:** Recreate the S3 bucket with the Config bucket policy that grants config.amazonaws.com PutObject permission (and Deny DeleteObject — see DELIVERY.S3.NODELETE), or repoint the delivery channel at an existing bucket: aws configservice put-delivery-channel --delivery-channel name=<name>,s3BucketName=<bucket>. After fix, validate the next configuration history file lands in the bucket.
+
+---
+
+### CTL.CONFIG.GHOST.DELIVERY.SNS.001
+
+**Config Delivery Channel SNS Topic Deleted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.1, CC7.2;
+
+AWS Config delivery channel references an SNS topic that has been deleted. Config publishes configuration change notifications to the SNS topic, but the topic does not exist — notifications go nowhere. Real-time awareness of configuration drift is lost while recording and S3 delivery may continue.
+
+**Remediation:** Recreate the SNS topic with the Config publish permission, or repoint the delivery channel at an existing topic: aws configservice put-delivery-channel --delivery-channel name=<name>,snsTopicARN=<topic-arn>. Verify by triggering a configuration change (tag a resource) and confirming the notification reaches subscribers.
+
+---
+
+### CTL.CONFIG.GHOST.RECORDER.ROLE.001
+
+**Config Recorder IAM Role Deleted**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: CM-2, CM-8; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CM-2, CM-3, CM-8, SA-10; pci_dss_v4.0: 10.1, 11.5; soc2: CC7.1, CC8.1;
+
+AWS Config configuration recorder has an IAM role that has been deleted. The recorder exists with role ARN configured; the role itself does not exist. Config cannot assume the role, cannot read resource configurations, and recording stops silently. Every Config rule, every conformance pack, every compliance evaluation depends on this single role.
+
+**Remediation:** Recreate the IAM role with the AWSConfigServiceRolePolicy or repoint the recorder at the AWS service-linked role (AWSServiceRoleForConfig) — the latter is auto-managed and avoids the ghost-role failure mode entirely. Update via aws configservice put-configuration-recorder --configuration-recorder name=<name>,roleARN=<role>. After fix, confirm the recorder status returns to recording and the next configuration history file lands in the delivery bucket.
 
 ---
 
@@ -7723,6 +7903,141 @@ The observation snapshot is missing required AWS Config properties.
 
 ---
 
+### CTL.CONFIG.LIFECYCLE.REMEDIATION.NEVEREXECUTED.001
+
+**Config Remediation Has Never Executed Despite Non-Compliance**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: CM-3, CM-4, SI-7; soc2: CC7.2, CC8.1;
+
+AWS Config remediation is configured for a rule that has non-compliant resources, but the remediation has never executed. Either remediation is set to manual (requires human trigger), auto-remediation is disabled, or the trigger condition does not match the rule's evaluation output. The fix path is configured and unused.
+
+**Remediation:** Confirm that auto-remediation is enabled on the rule (not set to manual). If manual is intentional, document the human-trigger process and run a test execution to verify the SSM document and role work end-to-end. If auto is intended but the remediation never fires, check that the remediation's trigger condition matches the rule's evaluation output (some rules don't auto- trigger remediation if their result is NOT_APPLICABLE rather than NON_COMPLIANT).
+
+---
+
+### CTL.CONFIG.LIFECYCLE.RULE.NEVERTRIGGERED.001
+
+**Config Rule Has Never Evaluated Any Resource**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-3, SA-22; soc2: CC8.1;
+
+AWS Config rule has been configured for at least 30 days but has never produced an evaluation result. Either the rule's scope doesn't match any existing resource type, the recorder doesn't record the resource type the rule evaluates, or the rule is change- triggered for resources that have not changed. Dead compliance configuration regardless of cause.
+
+**Remediation:** Inspect the rule's scope and resource_scope_resource_type. If no resources of that type exist in the account, delete the rule (it's not applicable). If resources of that type exist, check whether the recorder is configured to record that type (NOTALLRESOURCES). If both are correct, the rule may be change-triggered for resources that haven't changed since rule creation — trigger a manual evaluation: aws configservice start-config-rules-evaluation --config-rule-names <rule>.
+
+---
+
+### CTL.CONFIG.LIFECYCLE.SNAPSHOT.STALE.001
+
+**Config Configuration Snapshots Not Delivered in 30+ Days**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-9, CA-7; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-9, CA-7, CM-2, SI-4; pci_dss_v4.0: 10.1, 10.5; soc2: CC7.1, CC7.2, CC8.1;
+
+AWS Config has not delivered a configuration snapshot to S3 in more than 30 days. Snapshots are full resource inventories at a point in time. Configuration history files (per-resource changes) may still be delivered, but the durable full-inventory baseline is stale.
+
+**Remediation:** Inspect Config delivery channel status: aws configservice describe-delivery-channel- status. If delivery is failing, fix the underlying issue (S3 permission, deleted bucket, KMS key inaccessible). After fix, trigger a manual snapshot delivery: aws configservice deliver-config-snapshot --delivery-channel-name <name>. Confirm the next snapshot lands in S3.
+
+---
+
+### CTL.CONFIG.ORG.MEMBERCANOVERRIDE.001
+
+**Member Accounts Can Override Organization Config Rules**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-5, CM-6; iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CM-5, CM-6; pci_dss_v4.0: 11.5; soc2: CC7.1, CC8.1;
+
+Organization Config rules are deployed but member accounts can modify or delete their local copies. A member admin can change rule parameters (weakening thresholds), disable rules (stopping evaluation), or delete rules (removing checks). The organizational baseline is overridable at the account level.
+
+**Remediation:** Add an SCP that denies config:DeleteConfigRule, config:PutConfigRule, config:DeleteOrganizationConfigRule, and config:PutOrganizationConfigRule for organization-deployed rules in member accounts (with an exception for the delegated admin account). The SCP makes the organization rule set the authoritative baseline regardless of member account IAM posture.
+
+---
+
+### CTL.CONFIG.ORG.NORULES.001
+
+**No Organization Config Rules Deployed**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CA-7, CM-6; iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CA-7, CM-2, CM-6; pci_dss_v4.0: 11.5; soc2: CC7.1, CC8.1;
+
+AWS Organizations is in use but no organization-level Config rules are deployed. Each member account configures rules independently — or doesn't configure them at all. Without organization rules, compliance evaluation is inconsistent across the organization: some accounts evaluate encryption, others don't; some accounts evaluate IAM MFA, others don't.
+
+**Remediation:** Deploy organization Config rules from the management or delegated admin account: aws configservice put-organization-config-rule --organization-config-rule-name <name> --organization-managed-rule-metadata RuleIdentifier=<id>. Start with a baseline set covering the most common security rules (S3 encryption, IAM MFA, CloudTrail enabled, security group rules) and expand as compliance requirements grow. Member- account admins cannot delete or modify organization rules locally.
+
+---
+
+### CTL.CONFIG.ORG.NOTALLACCOUNTS.001
+
+**Config Not Enabled in All Member Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: CA-7, CM-8; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CA-7, CM-2, CM-8; pci_dss_v4.0: 10.1, 11.5; soc2: CC7.1, CC8.1;
+
+AWS Organizations is in use but Config is not enabled (no recorder running) in every member account. Some accounts have no configuration recording at all — resources in those accounts are completely invisible to Config. No configuration history, no compliance evaluation, no change tracking.
+
+**Remediation:** Deploy Config to all member accounts via StackSets or Control Tower. Bake Config enablement into the account-creation process so new accounts have Config from day one. Use organization Config rules to apply a consistent baseline across all accounts.
+
+---
+
+### CTL.CONFIG.RECORDER.NOGLOBAL.001
+
+**Config Recorder Does Not Include Global Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: AC-2, CM-8; hipaa: 164.308(a)(4)(ii)(B); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AC-2, AC-3, CM-8, SA-10; pci_dss_v4.0: 7.2, 10.1; soc2: CC6.1, CC7.1, CC8.1;
+
+AWS Config recorder has IncludeGlobalResourceTypes set to false. Global resources — IAM users, roles, policies, groups — are not recorded. IAM is the identity and access foundation for every AWS service; without recording it, Config has no visibility into IAM configuration changes.
+
+**Remediation:** Enable global resource recording in exactly one region (typically us-east-1) — global resources should be recorded once per account, not per region: aws configservice put-configuration-recorder --configuration-recorder name=<name>,roleARN=<role>,recordingGroup={allSupported=true,includeGlobalResourceTypes=true} in us-east-1, and includeGlobalResourceTypes=false in all other regions.
+
+---
+
+### CTL.CONFIG.RECORDER.NOTALLRESOURCES.001
+
+**Config Recorder Does Not Record All Resource Types**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: CM-2, CM-8; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CM-2, CM-3, CM-8, SA-10; pci_dss_v4.0: 10.1, 11.5; soc2: CC7.1, CC8.1;
+
+AWS Config recorder is configured to record only specific resource types — not all supported types. Resource types not in scope are invisible to Config; rules evaluating them return no results (not non-compliant — no data). New AWS resource types added after recorder configuration are automatically excluded.
+
+**Remediation:** Update the recorder to record all supported resource types: aws configservice put-configuration-recorder --configuration-recorder name=<name>,roleARN=<role>,recordingGroup={allSupported=true,includeGlobalResourceTypes=true}. Confirm via aws configservice describe-configuration-recorders that allSupported is true and review the next configuration history file to verify new resource types are captured.
+
+---
+
+### CTL.CONFIG.RECORDER.PERIODIC.001
+
+**Config Recorder Uses Periodic Instead of Continuous Recording**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3, CM-8; iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CM-3, CM-8, SI-4; pci_dss_v4.0: 10.1, 11.5; soc2: CC7.1, CC7.2;
+
+AWS Config recorder is set to periodic mode instead of continuous. Periodic mode captures configuration only every 24 hours; changes between snapshots are not captured. A resource can be created, modified, and deleted within a 24-hour window without any Config record.
+
+**Remediation:** Switch the recorder to continuous mode: aws configservice put-configuration-recorder --configuration-recorder name=<name>,roleARN=<role>,recordingMode={recordingFrequency=CONTINUOUS}. Continuous mode captures every configuration change as it occurs and is the default for most setups; periodic mode is intended for resource types with less-frequent changes or cost-sensitive accounts.
+
+---
+
 ### CTL.CONFIG.REMEDIATION.001
 
 **Critical Config Rules Must Have Automatic Remediation**
@@ -7735,6 +8050,126 @@ The observation snapshot is missing required AWS Config properties.
 Safety mechanism integrity control. Checks that security guardrails are actively enforcing, not just present.
 
 **Remediation:** Review the specific guardrail identified in this finding and restore it to an enforcing state.
+
+---
+
+### CTL.CONFIG.REMEDIATION.GHOST.ROLE.001
+
+**Config Remediation IAM Role Deleted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CA-7, CM-3; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: CA-7, CM-3, CM-4, SI-7; pci_dss_v4.0: 11.5; soc2: CC7.2, CC8.1;
+
+AWS Config remediation action has an IAM role that has been deleted. The SSM document exists; the remediation triggers; SSM attempts to assume the role; AssumeRole fails. The remediation cannot execute.
+
+**Remediation:** Recreate the IAM role with the SSM and target-service permissions the document requires (the document's documented permission set), or repoint the remediation at an existing role: aws configservice put-remediation-configurations with the new RoleARN. After fix, validate by triggering a non-compliance scenario and confirming the remediation completes.
+
+---
+
+### CTL.CONFIG.REMEDIATION.GHOST.SSM.001
+
+**Config Remediation References Deleted SSM Document**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CA-7, CM-3; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: CA-7, CM-3, CM-4, SI-7; pci_dss_v4.0: 11.5; soc2: CC7.2, CC8.1;
+
+AWS Config remediation action references an SSM Automation document that has been deleted. When the rule detects non-compliance and triggers remediation, the SSM execution fails (document not found). The non-compliant resource is not fixed.
+
+**Remediation:** Either redeploy the SSM Automation document with the same name (preserving the remediation configuration) or update the rule's remediation to point at a replacement document: aws configservice put-remediation-configurations with the new document name. Verify by triggering a non-compliance scenario and confirming auto-remediation completes.
+
+---
+
+### CTL.CONFIG.REMEDIATION.RETRIES.EXHAUSTED.001
+
+**Config Remediation Retries Exhausted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CA-7, IR-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: CA-7, CM-3, IR-4, SI-4; pci_dss_v4.0: 11.5, 12.10; soc2: CC7.2, CC8.1;
+
+AWS Config remediation has exhausted its retry attempts. The remediation tried to fix non- compliant resources, failed each time, and has stopped retrying. Resources remain non- compliant. The configuration is in place; the fix gave up.
+
+**Remediation:** Inspect the failure reason. Permission denied: the remediation role lacks a needed action — update the policy. Resource protected: a Deny statement (SCP, resource policy) overrides the remediation — coordinate with the policy owner. SSM document logic error: the document hits an unhandled edge case — patch the document. After the underlying fix, manually trigger remediation: aws configservice start-remediation-execution --config-rule-name <rule> --resource-keys <list>.
+
+---
+
+### CTL.CONFIG.RULE.DISABLED.001
+
+**Config Rule Is Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: CA-7, CM-6; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CA-7, CM-2, CM-6, SI-4; pci_dss_v4.0: 11.5; soc2: CC7.1, CC7.2, CC8.1;
+
+AWS Config rule exists but is in disabled state. The rule has a name, scope, parameters, and evaluation logic — but it doesn't evaluate. The rule appears to exist; it doesn't function. Same false-protection shape as DLM disabled, alarm ActionsEnabled false, and WAF without rules.
+
+**Remediation:** Re-enable the rule via the Config console or aws configservice put-config-rule with the State field set appropriately. If the rule was disabled to suppress a known issue, fix the underlying configuration before re- enabling. Document the reason for any intentional, persistent disable in change management so it doesn't appear as a forgotten artifact at the next audit.
+
+---
+
+### CTL.CONFIG.RULE.GHOST.LAMBDA.001
+
+**Config Custom Rule References Deleted Lambda Function**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CA-7, CM-3; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CA-7, CM-2, CM-3, SI-4; pci_dss_v4.0: 11.5; soc2: CC7.1, CC8.1;
+
+AWS Config custom rule references a Lambda function that has been deleted. Custom rules delegate evaluation to a Lambda function — the function receives the configuration item and returns COMPLIANT or NON_COMPLIANT. When the Lambda is deleted, evaluation fails and the resource's compliance status becomes unknown.
+
+**Remediation:** Either redeploy the Lambda function with the same ARN (preserving rule configuration) or update the rule to point at a replacement Lambda: aws configservice put-config-rule with Source.SourceIdentifier set to the new function ARN. If the Lambda's logic is no longer needed, delete the rule rather than leaving an orphan.
+
+---
+
+### CTL.CONFIG.RULE.LAMBDA.ERROR.001
+
+**Config Custom Rule Lambda Errors on Every Evaluation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CA-7, SI-4; iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CA-7, CM-2, SI-4; pci_dss_v4.0: 11.5; soc2: CC7.1, CC8.1;
+
+AWS Config custom rule's Lambda function exists but errors on every evaluation — throws exceptions, times out, or returns invalid responses. The rule triggers, the Lambda runs, the Lambda fails, and every evaluation returns an error. Compliance status is unknown for every resource the rule evaluates. Distinct from GHOST.LAMBDA where the Lambda is deleted — here the Lambda exists but cannot complete.
+
+**Remediation:** Inspect the Lambda's CloudWatch logs for the failure pattern (uncaught exception, timeout, bad response shape). Common causes: stale SDK version, missing IAM permission for the Lambda execution role, unhandled configuration item shape after AWS added a new field. Fix and redeploy. If the Lambda's logic is no longer maintainable, replace with an AWS-managed rule covering the same requirement.
+
+---
+
+### CTL.CONFIG.RULE.NONCOMPLIANT.NOREMEDIATION.001
+
+**Config Rule Has Non-Compliant Resources But No Remediation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CA-7, CM-3; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: CA-7, CM-3, CM-4, SI-7; pci_dss_v4.0: 11.5, 12.10; soc2: CC7.2, CC7.3, CC8.1;
+
+AWS Config rule has detected non-compliant resources but no remediation action is configured — neither automatic nor manual. Detection without remediation is half the value: the organization knows about the non-compliance and accepts the risk indefinitely or fails to act on the findings.
+
+**Remediation:** Either configure a remediation action for the rule (Config → Rule → Remediation action with an SSM Automation document) or document an explicit accept-risk decision in change management with a review date. Persistent non-compliance without one of those two outcomes is compliance theater. For high-severity non-compliance (public buckets, root account use, MFA-less users), the fix path should be auto-remediation.
+
+---
+
+### CTL.CONFIG.RULE.NOTALLREGIONS.001
+
+**Config Rules Not Deployed in All Active Regions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: CA-7, CM-6; iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: CA-7, CM-2, CM-6; pci_dss_v4.0: 11.5; soc2: CC7.1, CC8.1;
+
+AWS Config rules are deployed in some regions but not all regions where the recorder is running. Resources in regions without rules are recorded but not evaluated — Config captures their configuration but no rule judges whether they're compliant.
+
+**Remediation:** Deploy the same Config rule set across all regions where the recorder runs. Use StackSets, CloudFormation, or Terraform to keep rules in sync; per-region manual deployment drifts. For organization-wide deployment, organization Config rules deploy uniformly across all member accounts and regions in scope.
 
 ---
 
@@ -8666,6 +9101,171 @@ Basic EC2 monitoring provides metrics at 5-minute intervals. Detailed monitoring
 
 ---
 
+### CTL.EC2.EBS.ACCESS.DELETESNAPSHOT.BROAD.001
+
+**ec2:DeleteSnapshot Granted to Broad Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6, CP-9; hipaa: 164.308(a)(4)(ii)(B), 164.308(a)(7)(ii)(A); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, CP-9; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3, A1.2;
+
+IAM policies grant ec2:DeleteSnapshot to non-administrative principals. DeleteSnapshot permanently destroys recovery points — ransomware operators systematically delete snapshots before encrypting volumes so the victim cannot restore. The permission should be restricted to backup-admin roles and DLM service-linked usage.
+
+**Remediation:** Audit IAM policies for ec2:Delete*, ec2:DeleteSnapshot, and ec2:* on Resource: *. Restrict DeleteSnapshot to a dedicated backup-admin role and DLM's service-linked role. Enable EBS Recycle Bin so deletions are recoverable for a configurable retention window. Wire the deletion alarm (ALARM.DELETESNAPSHOT) to the same paging topic so over-broad access is detected when exercised.
+
+---
+
+### CTL.EC2.EBS.ACCESS.MODIFYSNAPSHOT.BROAD.001
+
+**ec2:ModifySnapshotAttribute Granted to Broad Principals**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6; hipaa: 164.308(a)(4)(ii)(B), 164.312(a)(1); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, SC-28; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+IAM policies grant ec2:ModifySnapshotAttribute to non-administrative principals. The API call this permission gates can make any snapshot public or share it cross-account — one call to expose an entire disk. This permission should be restricted to security administrators and a small set of automation roles.
+
+**Remediation:** Audit IAM policies for explicit ec2:Modify* or ec2:ModifySnapshotAttribute and remove the permission from non-admin principals. Replace ec2:* on Resource: * with action- scoped policies. Move snapshot-share operations to a dedicated security-admin role gated by MFA and CloudTrail review.
+
+---
+
+### CTL.EC2.EBS.ALARM.BURSTBALANCE.001
+
+**No CloudWatch Alarm for gp2 Burst Balance Depletion**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6; iso_27001_2022: A.8.16; nist_800_53_r5: AU-6, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.1, A1.1;
+
+No CloudWatch alarm watches BurstBalance for gp2 volumes despite the account having gp2 volumes. gp2 burst credits expire silently: the volume drops from up to 3,000 burst IOPS to baseline (3 IOPS per GB) when credits hit zero. Without an alarm, the performance cliff is invisible until the application slows down.
+
+**Remediation:** Create a CloudWatch alarm on AWS/EBS BurstBalance for each gp2 volume with threshold < 20% over 15 minutes. Wire to the operational topic. Long-term, migrate sustained-throughput gp2 workloads to gp3 (no burst model — flat 3,000 IOPS / 125 MB/s with optional provisioned increases).
+
+---
+
+### CTL.EC2.EBS.ALARM.CREATESNAPSHOT.001
+
+**No CloudWatch Alarm for CreateSnapshot on Sensitive Volumes**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm watches CloudTrail for CreateSnapshot API calls on volumes tagged as sensitive or production. Creating a snapshot of a sensitive volume is data exfiltration — the snapshot is a complete copy of the disk, and an attacker can share it cross-account for retrieval. Without tag-scoped alarming, the exfiltration step is mixed with normal backup activity.
+
+**Remediation:** Create a CloudWatch alarm on a metric filter matching eventName=CreateSnapshot AND requestParameters.volumeId tagged with Sensitivity=high or Environment=production. Tagging discipline is a precondition; if volumes are not consistently tagged, the alarm cannot distinguish exfiltration from routine backup. Tune threshold to allow DLM activity while flagging unexpected manual creates.
+
+---
+
+### CTL.EC2.EBS.ALARM.DELETESNAPSHOT.001
+
+**No CloudWatch Alarm for DeleteSnapshot**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: AU-6, SI-4; hipaa: 164.312(b), 164.308(a)(1)(ii)(D); iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.2, 10.6; soc2: CC7.2, CC7.3, A1.2;
+
+No CloudWatch alarm watches CloudTrail for DeleteSnapshot API calls. DeleteSnapshot permanently removes a backup; bulk deletion is the canonical ransomware preparation step. Without an alarm, snapshot destruction is invisible.
+
+**Remediation:** Create a CloudWatch alarm on a metric filter matching eventName=DeleteSnapshot. Use a threshold tuned to detect bulk deletion (e.g., >5 events in 5 minutes) — single deletes from DLM retention are normal cleanup. Wire to the security paging topic. Consider also enabling EBS Recycle Bin so accidental or malicious deletions are recoverable for a configurable retention window.
+
+---
+
+### CTL.EC2.EBS.ALARM.SNAPSHOTPUBLIC.001
+
+**No CloudWatch Alarm for ModifySnapshotAttribute Public Sharing**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: AU-6, SI-4; hipaa: 164.312(b), 164.308(a)(1)(ii)(D); iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.2, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm watches CloudTrail for ModifySnapshotAttribute calls that add createVolumePermission: all. Making a snapshot public is the most direct AWS data breach — one API call exposes the entire disk to every AWS account. Without an alarm, the change is invisible until someone audits snapshot permissions or a recipient reports the exposure.
+
+**Remediation:** Create a CloudWatch alarm on a metric filter that matches CloudTrail events with eventName=ModifySnapshotAttribute AND requestParameters.createVolumePermission contains "all". Wire it to a paging-grade SNS topic. Test by making a non-sensitive snapshot public in a sandbox and confirming the alarm fires within the metric period.
+
+---
+
+### CTL.EC2.EBS.ALARM.SNAPSHOTSHARE.001
+
+**No CloudWatch Alarm for Cross-Account Snapshot Sharing**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: AU-6, SI-4; hipaa: 164.312(b); iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.2, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm watches CloudTrail for ModifySnapshotAttribute calls that add createVolumePermission for specific external accounts (the non-public exfiltration path). Sharing a snapshot with an attacker-controlled account grants full disk read access without the visibility of a public exposure. Without an alarm, cross-account share changes are invisible.
+
+**Remediation:** Create a CloudWatch alarm on a metric filter matching eventName=ModifySnapshotAttribute AND requestParameters.createVolumePermission contains UserId values. Wire to the same paging topic as ALARM.SNAPSHOTPUBLIC. The alarm and the public-share alarm share a metric source but distinct match patterns; keep them as two alarms so the triage framing differs (public exposure vs targeted share).
+
+---
+
+### CTL.EC2.EBS.ALARM.VOLUMESTATUS.001
+
+**No CloudWatch Alarm for EBS Volume Status Check Failure**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.6, 12.10; soc2: CC7.1, CC7.2, A1.1;
+
+No CloudWatch alarm watches the StatusCheckFailed metric for EBS volumes. A failed status check indicates hardware-level impairment of the underlying storage — attached I/O fails, data may be at risk, and recovery depends on a recent snapshot. Without an alarm, the volume degrades silently until application errors surface the issue.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/EBS StatusCheckFailed metric per volume (or per account aggregate) with threshold > 0 over a 5-minute period. Wire to the operational paging topic — status check failures indicate active hardware impairment that needs immediate response (snapshot the volume if possible, replace, restore from snapshot).
+
+---
+
+### CTL.EC2.EBS.CROSSACCOUNT.NOSCPRESTRICTION.001
+
+**No SCP Prevents Public Snapshot Sharing in Member Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.4; fedramp_moderate: AC-3, AC-4; hipaa: 164.312(a)(1); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-4, SC-28; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.6;
+
+AWS Organizations is in use but no Service Control Policy prevents member accounts from calling ModifySnapshotAttribute with createVolumePermission: all. Without an SCP, any admin in any member account can make any snapshot public — a single API call exposing disk contents to every AWS account.
+
+**Remediation:** Attach an SCP at the organization root or relevant OUs that denies ec2:ModifySnapshotAttribute when the request parameter Group equals "all" (the public- sharing pattern). Test in a sandbox OU first to confirm legitimate snapshot-share flows still work, then propagate to all OUs. Combine with the equivalent SCP for s3:PutBucketAcl, rds:ModifyDBSnapshot Attribute, and other public-sharing surfaces.
+
+---
+
+### CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.BLASTRADIUS.001
+
+**EBS Snapshot Shared with Excessive External Accounts**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, AC-6; iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, SC-28; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.6;
+
+EBS snapshot is shared with more than five external accounts. Each account with createVolumePermission can create a volume from the snapshot and read the entire disk contents. Same blast-radius threshold as KMS and Secrets Manager cross-account controls.
+
+**Remediation:** Audit the snapshot's createVolumePermission and remove unneeded recipients: aws ec2 modify-snapshot-attribute --snapshot-id <id> --create-volume-permission 'Remove=[{UserId=<acct1>},{UserId=<acct2>}]'. For data that genuinely needs broad sharing, consider creating a copy in a designated sharing account whose IAM and KMS posture is scoped to that purpose, rather than sharing source-account snapshots widely.
+
+---
+
+### CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.NOENCRYPT.001
+
+**Encrypted Snapshot Shared Cross-Account Without KMS Key Sharing**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, SC-12; hipaa: 164.312(a)(2)(iv), 164.312(e)(2)(ii); iso_27001_2022: A.5.15, A.8.24; nist_800_53_r5: AC-3, AC-4, SC-12, SC-28; pci_dss_v4.0: 3.4, 7.1; soc2: CC6.1, CC6.6;
+
+EBS snapshot is encrypted and shared with an external account, but the encrypting KMS key policy does not grant kms:Decrypt to the recipient. The recipient has createVolumePermission on the snapshot but cannot decrypt it; CreateVolume fails with a KMS access error. Cross-service permission mismatch — EBS grants access, KMS blocks it.
+
+**Remediation:** Update the encrypting CMK's key policy to grant kms:Decrypt and kms:CreateGrant to the recipient account: aws kms put-key-policy --key-id <id> --policy <updated-json>. Add the recipient's account principal under Allow with kms:Decrypt action and a kms:ViaService=ec2.<region>.amazonaws.com condition. After fix, the recipient should be able to call ec2:CreateVolume from the shared snapshot.
+
+---
+
 ### CTL.EC2.EBS.CROSSENV.SNAPSHOT.001
 
 **Production EBS Snapshot Shared With Non-Production Account**
@@ -8906,6 +9506,21 @@ Unencrypted EBS snapshots expose full disk contents if shared or made public. Ev
 
 ---
 
+### CTL.EC2.EBS.SNAPSHOT.FORDELETED.VOLUME.001
+
+**EBS Snapshot Exists for Deleted Volume**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, MP-6; hipaa: 164.310(d)(2)(i); iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, MP-6, SA-22; pci_dss_v4.0: 9.4; soc2: CC6.1, CC8.1;
+
+EBS snapshot exists for a volume that has been deleted. Retaining snapshots after volume deletion is correct backup behavior — the snapshot is the recovery point — but for a decommissioned volume whose data should also be deleted, the snapshot retains data that should be gone. Governance signal rather than defect: review whether the snapshot is still needed.
+
+**Remediation:** Determine why the source volume was deleted. If decommissioning (data should be deleted), delete the snapshot: aws ec2 delete-snapshot --snapshot-id <id>. If the volume was replaced and the snapshot is part of a backup retention plan, leave the snapshot and tag it with the retention reason. If the snapshot is DLM-managed, this control should not fire — DLM-retained snapshots of deleted volumes are intentional backup behavior.
+
+---
+
 ### CTL.EC2.EBS.SNAPSHOT.STALE.001
 
 **EBS Snapshot Older Than 365 Days**
@@ -8963,6 +9578,21 @@ EBS volume is in `available` state — not attached to any instance — and cont
 EBS volume is in error state — the underlying hardware has failed or the volume is otherwise impaired. Data on the volume may be partially or fully unrecoverable. If the volume is attached to a running instance, I/O operations fail; if it is a root volume, the instance is impaired. The only control that detects active hardware-level failure on EBS.
 
 **Remediation:** Capture every available snapshot from the volume immediately (aws ec2 create-snapshot --volume-id <id>) — even an impaired volume may produce a partial snapshot that preserves some data. Restore the most recent healthy snapshot to a new volume in a different AZ. If the impaired volume is a root volume, stop the instance, detach the impaired root, attach the recovered volume, and restart. Open an AWS support case with the impaired volume ID.
+
+---
+
+### CTL.EC2.EBS.VOLUME.GP2.MIGRATION.001
+
+**EBS Volume Uses gp2 Instead of gp3**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9; nist_800_53_r5: CM-2, SA-22; soc2: CC8.1, A1.1;
+
+EBS volume uses the gp2 type. gp3 is the successor with consistent 3,000 IOPS / 125 MB/s baseline (no burst-credit cliff), ~20% lower per-GB cost, and independent IOPS/throughput provisioning. Migration is online (ModifyVolume) and improves both reliability (no BurstBalance depletion) and cost.
+
+**Remediation:** Migrate online: aws ec2 modify-volume --volume-id <id> --volume-type gp3. The instance does not need to be stopped; the volume transitions in-place. Validate gp3's baseline IOPS/throughput meet the workload (gp3 default is 3,000 IOPS / 125 MB/s; for higher needs, use --iops and --throughput parameters). After migration, the volume no longer accumulates or depletes BurstBalance.
 
 ---
 

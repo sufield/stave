@@ -1,0 +1,23 @@
+control: CTL.CONFIG.RULE.LAMBDA.ERROR.001
+defect: >
+  Config custom rule's Lambda errors on every
+  evaluation.
+infection: >
+  An erroring Lambda is worse than a disabled
+  rule. With disabled, the rule is explicitly
+  off — auditors and dashboards both surface
+  the disabled state. With LAMBDA.ERROR, the
+  rule is enabled and trying to evaluate, but
+  every invocation fails. Compliance status is
+  recorded as ERROR rather than COMPLIANT or
+  NON_COMPLIANT. ERROR is treated differently
+  by downstream tooling: some compliance
+  dashboards filter out errors, hiding the
+  rule's true non-functional state. The result
+  is silent failure — the custom compliance
+  check appears to be running but produces no
+  usable results.
+failure: >
+  Compliance status unknown for every evaluated
+  resource. Rule executes; Lambda fails on
+  every call.

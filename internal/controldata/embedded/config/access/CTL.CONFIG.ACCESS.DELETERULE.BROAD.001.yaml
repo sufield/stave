@@ -1,0 +1,121 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ACCESS.DELETERULE.BROAD.001
+name: config:DeleteConfigRule Granted to Broad Principals
+description: >
+  IAM policies grant config:DeleteConfigRule to
+  non-administrative principals. DeleteConfigRule
+  removes compliance evaluation rules — a
+  principal with this permission can delete
+  rules that detect non-compliance, effectively
+  removing compliance checks rather than
+  stopping the recorder.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3, CC7.1"
+  nist_800_53_r5: "AC-3, AC-6, CM-5, SI-4"
+  pci_dss_v4.0: "7.1, 7.2, 10.5"
+  fedramp_moderate: "AC-3, AC-6"
+  hipaa: "164.308(a)(4)(ii)(B)"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.5
+remediation:
+  description: >
+    Too many principals can delete compliance
+    rules.
+  action: >
+    Audit IAM policies for config:DeleteConfigRule
+    and config:* on Resource: *. Restrict to
+    compliance-admin and security-admin roles.
+    For high-stakes rules, require a manual
+    approval step (e.g., a Lambda authorizer or
+    SCP requiring an MFA condition) before
+    deletion is allowed.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "delete_rule_principals": ["arn:aws:iam::111122223333:role/compliance-admin"],
+          "delete_rule_principal_count": 1,
+          "delete_rule_broadly_granted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.delete_rule_broadly_granted
+      op: eq
+      value: true
+defect: >
+  config:DeleteConfigRule is granted to non-
+  administrative principals.
+infection: >
+  DeleteConfigRule removes a compliance
+  evaluation rule. A principal with this
+  permission can delete the rule that checks
+  for public S3 buckets (non-compliant buckets
+  are no longer flagged), delete the rule that
+  checks for unencrypted volumes (unencrypted
+  volumes are no longer detected), or delete
+  all rules (compliance evaluation stops
+  entirely). The compliance dashboard shows
+  compliant — not because resources are
+  compliant, but because the rules that check
+  compliance were deleted. This permission
+  should be restricted to security and
+  compliance administrators.
+failure: >
+  Excessive rule deletion access. Too many
+  principals can delete compliance rules,
+  removing non-compliance detection.
+tests:
+  - name: broad DeleteRule access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            delete_rule_principals:
+              - "arn:aws:iam::111122223333:role/dev-team"
+              - "arn:aws:iam::111122223333:role/sre"
+              - "arn:aws:iam::111122223333:role/ops"
+              - "arn:aws:iam::111122223333:role/qa"
+              - "arn:aws:iam::111122223333:role/data-team"
+              - "arn:aws:iam::111122223333:user/admin-1"
+              - "arn:aws:iam::111122223333:user/admin-2"
+              - "arn:aws:iam::111122223333:role/compliance-admin"
+            delete_rule_principal_count: 8
+            delete_rule_broadly_granted: true
+  - name: scoped DeleteRule access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            delete_rule_principals: ["arn:aws:iam::111122223333:role/compliance-admin"]
+            delete_rule_principal_count: 1
+            delete_rule_broadly_granted: false

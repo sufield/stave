@@ -1,0 +1,24 @@
+control: CTL.EC2.EBS.ALARM.DELETESNAPSHOT.001
+defect: >
+  No CloudWatch alarm monitors DeleteSnapshot
+  API calls.
+infection: >
+  DeleteSnapshot permanently removes an EBS
+  snapshot — the backup is gone, the recovery
+  point is lost. Ransomware operators
+  systematically delete snapshots before
+  encrypting volumes: step 1 — delete all
+  snapshots (destroy recovery capability),
+  step 2 — encrypt or delete volumes (destroy
+  the data), step 3 — demand ransom (victim
+  has no backups to restore from). Without a
+  DeleteSnapshot alarm, step 1 is invisible.
+  The attacker deletes 50 snapshots over 10
+  minutes; nobody is notified. By the time
+  volumes are encrypted, recovery is impossible.
+  An alarm on the deletion API call detects
+  step 1 — the team can respond before step 2.
+failure: >
+  Undetected backup deletion. Snapshots can be
+  deleted without notification — ransomware
+  preparation step is invisible.

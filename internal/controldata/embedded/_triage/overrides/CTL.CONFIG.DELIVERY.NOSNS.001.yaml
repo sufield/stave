@@ -1,0 +1,24 @@
+control: CTL.CONFIG.DELIVERY.NOSNS.001
+defect: >
+  Config delivery channel has no SNS topic
+  configured.
+infection: >
+  Without an SNS topic, configuration changes
+  flow to S3 (if S3 delivery is configured) but
+  generate no real-time notifications.
+  Configuration changes are discoverable only
+  by querying Config or reading S3 delivery
+  files — neither of which provides real-time
+  awareness. For compliance frameworks that
+  require change notification, this is a
+  functional gap. For organizations relying on
+  Config-driven auto-remediation (Lambda
+  subscribers that act on configuration events),
+  the entire automation pipeline fails because
+  there's no event stream. SNS-based delivery
+  is also the canonical integration point for
+  third-party tooling.
+failure: >
+  No real-time configuration change channel.
+  Subscribers and automation receive no events;
+  awareness comes only from polling S3.

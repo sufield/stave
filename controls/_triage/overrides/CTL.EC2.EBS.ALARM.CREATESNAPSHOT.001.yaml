@@ -1,0 +1,20 @@
+control: CTL.EC2.EBS.ALARM.CREATESNAPSHOT.001
+defect: >
+  No CloudWatch alarm monitors CreateSnapshot on
+  sensitive volumes.
+infection: >
+  CreateSnapshot is a normal operation — DLM
+  policies, backup automation, and pre-change
+  snapshots all use it. But CreateSnapshot of a
+  production database volume by an unexpected
+  principal is data exfiltration: the snapshot
+  contains every byte of the disk, the attacker
+  shares it cross-account or makes it public,
+  creates a volume in their account, and reads
+  the data. Without an alarm scoped to
+  sensitive volumes, the exfiltration step is
+  buried in legitimate snapshot traffic.
+failure: >
+  Undetected snapshot exfiltration. Sensitive
+  volumes can be snapshotted without
+  notification.

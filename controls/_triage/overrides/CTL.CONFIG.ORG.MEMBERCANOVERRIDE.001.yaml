@@ -1,0 +1,24 @@
+control: CTL.CONFIG.ORG.MEMBERCANOVERRIDE.001
+defect: >
+  Member accounts can modify or delete
+  organization Config rules.
+infection: >
+  Organization Config rules establish a
+  compliance baseline across all member
+  accounts. Without modification protection, a
+  member account admin can change the max
+  password age from 90 to 365 (weakening the
+  rule), disable the S3 encryption rule (no
+  longer evaluating), or delete the IAM MFA
+  rule (removing the check entirely). The
+  organization deploys rules. The member
+  account modifies them. The aggregator may
+  show the modified parameters — or may show
+  the original parameters if there's a sync
+  delay. The compliance baseline the
+  organization established is quietly
+  undermined.
+failure: >
+  Organizational compliance baseline
+  overridable. Member accounts can modify or
+  delete organization Config rules.

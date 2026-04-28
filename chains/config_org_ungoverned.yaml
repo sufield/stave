@@ -1,0 +1,22 @@
+id: config_org_ungoverned
+description: >
+  No Config aggregator plus either no
+  organization-level rules or Config not in
+  every member account. Organizational
+  compliance has no centralized view AND
+  either each account evaluates independently
+  (no consistent baseline) or some accounts
+  have no Config at all. Threshold of 2
+  because the dangerous compound is when a
+  fragmented view stacks with a fragmented
+  rule set or fragmented coverage.
+controls:
+  - CTL.CONFIG.AGGREGATOR.NONE.001
+  - CTL.CONFIG.ORG.NORULES.001
+  - CTL.CONFIG.ORG.NOTALLACCOUNTS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

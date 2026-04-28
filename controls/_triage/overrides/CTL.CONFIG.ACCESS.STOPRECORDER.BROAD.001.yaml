@@ -1,0 +1,26 @@
+control: CTL.CONFIG.ACCESS.STOPRECORDER.BROAD.001
+defect: >
+  config:StopConfigurationRecorder is granted to
+  non-administrative principals.
+infection: >
+  StopConfigurationRecorder disables Config
+  recording — no new resource configurations
+  are captured. An attacker with this
+  permission stops the recorder, makes
+  configuration changes (create IAM backdoor,
+  open security group, make snapshot public),
+  then optionally restarts the recorder. The
+  configuration changes between stop and
+  restart are not recorded. Config rules don't
+  evaluate during the gap. The configuration
+  audit trail has a hole. Same pattern as
+  cloudtrail:StopLogging — the attacker blinds
+  the monitoring service before acting. This
+  permission should be restricted to security
+  administrators and protected by SCP in
+  member accounts.
+failure: >
+  Excessive Config stop access. Too many
+  principals can disable configuration
+  recording — the configuration audit trail
+  can be silenced.

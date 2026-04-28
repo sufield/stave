@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.ALARM.VOLUMESTATUS.001
+name: No CloudWatch Alarm for EBS Volume Status Check Failure
+description: >
+  No CloudWatch alarm watches the
+  StatusCheckFailed metric for EBS volumes. A
+  failed status check indicates hardware-level
+  impairment of the underlying storage —
+  attached I/O fails, data may be at risk, and
+  recovery depends on a recent snapshot.
+  Without an alarm, the volume degrades
+  silently until application errors surface
+  the issue.
+domain: audit
+severity: high
+archetype: silent-failure
+compliance:
+  soc2: "CC7.1, CC7.2, A1.1"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.6, 12.10"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    No alarm fires when volume status checks
+    fail.
+  action: >
+    Create a CloudWatch alarm on the AWS/EBS
+    StatusCheckFailed metric per volume (or per
+    account aggregate) with threshold > 0 over
+    a 5-minute period. Wire to the operational
+    paging topic — status check failures
+    indicate active hardware impairment that
+    needs immediate response (snapshot the
+    volume if possible, replace, restore from
+    snapshot).
+  example: |
+    {
+      "compute": {
+        "kind": "ec2_account",
+        "ebs": {
+          "alarm_volume_status": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ec2_account
+    - field: properties.compute.ebs.alarm_volume_status
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors EBS volume status
+  check failures.
+infection: >
+  EBS volume status checks verify the underlying
+  storage hardware is healthy. A failed status
+  check means: the volume's data may be at risk
+  (I/O errors, possible corruption), I/O
+  operations may fail or return errors, and the
+  volume may become completely unresponsive.
+  Without an alarm, the volume silently
+  degrades. The application retries I/O; if it
+  doesn't handle errors gracefully, it crashes.
+  If it does handle them, it logs them — but
+  nobody reads application logs in real time
+  during an incident. A status-check alarm
+  provides immediate notification of hardware-
+  level issues so the team can detach the
+  volume, capture a snapshot if still possible,
+  and replace before data is lost.
+failure: >
+  Undetected hardware failure. EBS volume has a
+  hardware issue — I/O fails without
+  notification.
+tests:
+  - name: no volume-status alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            alarm_volume_status: false
+  - name: volume-status alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            alarm_volume_status: true

@@ -1,0 +1,28 @@
+control: CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.BLASTRADIUS.001
+defect: >
+  EBS snapshot is shared with more than five
+  external accounts.
+infection: >
+  Each external account with
+  createVolumePermission can independently
+  create a volume from the snapshot and mount
+  it. The probability that at least one
+  recipient account is compromised, has an
+  insider risk, or no longer has a legitimate
+  need for the data scales with the recipient
+  count. At one or two recipients, the sharing
+  is auditable and intentional. Past five, the
+  sharing list typically reflects historical
+  accumulation rather than current need —
+  partner integrations that ended, accounts
+  that were intended as one-time copies and
+  never cleaned up, and broad team-share
+  patterns that were never narrowed. The
+  threshold matches the blast-radius framing
+  used for KMS and Secrets Manager cross-
+  account access.
+failure: >
+  Excessive snapshot recipient list. Disk image
+  data is accessible to many external accounts;
+  exposure surface scales linearly with the
+  recipient count.

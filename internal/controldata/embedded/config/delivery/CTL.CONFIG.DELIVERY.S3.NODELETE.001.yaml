@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.DELIVERY.S3.NODELETE.001
+name: Config Delivery S3 Bucket Policy Does Not Deny DeleteObject
+description: >
+  AWS Config delivery S3 bucket policy does not
+  include a Deny statement for s3:DeleteObject.
+  Without explicit Deny, any principal with
+  sufficient IAM permissions can delete Config
+  configuration history files — erasing the
+  configuration audit trail. Same protection
+  pattern as CloudTrail's S3 bucket Deny
+  requirement.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "3.6"
+  soc2: "CC6.1, CC7.1"
+  nist_800_53_r5: "AU-9, AU-11, CM-3"
+  pci_dss_v4.0: "10.5"
+  fedramp_moderate: "AU-9, CM-3"
+  hipaa: "164.312(b), 164.312(c)(1)"
+  iso_27001_2022: "A.8.10, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Config history bucket allows deletion;
+    audit trail is erasable.
+  action: >
+    Add a Deny statement to the bucket policy:
+    "Effect": "Deny", "Action":
+    ["s3:DeleteObject", "s3:DeleteObjectVersion"],
+    "Resource":
+    "arn:aws:s3:::<bucket>/AWSLogs/*/Config/*",
+    "Principal": "*". Combine with bucket
+    versioning and Object Lock in compliance
+    mode for stronger immutability. The same
+    deny should apply to lifecycle expiration
+    rules that would delete historical files
+    on schedule.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_delivery_channel",
+        "config": {
+          "delivery_s3_bucket": "config-bucket-111122223333",
+          "delivery_s3_policy_denies_delete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_delivery_channel
+    - field: properties.compliance.config.delivery_s3_policy_denies_delete
+      op: eq
+      value: false
+defect: >
+  Config delivery S3 bucket policy does not
+  deny s3:DeleteObject.
+infection: >
+  Config delivers configuration snapshots and
+  history files to S3 — these files are the
+  organization's configuration audit trail
+  (what was configured, when it changed, what
+  it changed from/to). Without a Deny for
+  DeleteObject, any principal with
+  s3:DeleteObject permission can delete
+  configuration history files. An attacker who
+  modifies a security group (opening port 22
+  to 0.0.0.0/0) can then delete the Config
+  history file that recorded the previous
+  secure configuration — the change is
+  invisible because the before-state is gone.
+  A bucket policy Deny for DeleteObject
+  prevents deletion regardless of IAM
+  permissions, providing tamper-resistance at
+  the bucket layer.
+failure: >
+  Configuration history deletable. No bucket
+  policy Deny prevents deletion of Config
+  history files; configuration audit trail
+  can be erased.
+tests:
+  - name: delivery bucket without delete-deny fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:delivery-channel/default"
+      asset_type: aws_config_delivery_channel
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_delivery_channel
+          config:
+            delivery_s3_bucket: "config-bucket-111122223333"
+            delivery_s3_policy_denies_delete: false
+  - name: delivery bucket with delete-deny passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:delivery-channel/default"
+      asset_type: aws_config_delivery_channel
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_delivery_channel
+          config:
+            delivery_s3_bucket: "config-bucket-111122223333"
+            delivery_s3_policy_denies_delete: true

@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.RULE.NONCOMPLIANT.NOREMEDIATION.001
+name: Config Rule Has Non-Compliant Resources But No Remediation
+description: >
+  AWS Config rule has detected non-compliant
+  resources but no remediation action is
+  configured — neither automatic nor manual.
+  Detection without remediation is half the
+  value: the organization knows about the
+  non-compliance and accepts the risk
+  indefinitely or fails to act on the findings.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, CC7.3, CC8.1"
+  nist_800_53_r5: "CA-7, CM-3, CM-4, SI-7"
+  pci_dss_v4.0: "11.5, 12.10"
+  fedramp_moderate: "CA-7, CM-3"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Non-compliance detected without a fix path.
+  action: >
+    Either configure a remediation action for
+    the rule (Config → Rule → Remediation
+    action with an SSM Automation document) or
+    document an explicit accept-risk decision
+    in change management with a review date.
+    Persistent non-compliance without one of
+    those two outcomes is compliance theater.
+    For high-severity non-compliance (public
+    buckets, root account use, MFA-less users),
+    the fix path should be auto-remediation.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_rule",
+        "config": {
+          "rule_name": "s3-bucket-server-side-encryption-enabled",
+          "noncompliant_count": 0,
+          "has_remediation": true,
+          "noncompliant_days": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_rule
+    - field: properties.compliance.config.noncompliant_count
+      op: gt
+      value: 0
+    - field: properties.compliance.config.has_remediation
+      op: eq
+      value: false
+defect: >
+  Config rule has non-compliant resources and
+  no remediation configured.
+infection: >
+  Detection without remediation is a known
+  problem with no fix path. The Config rule
+  correctly identifies non-compliant resources
+  — S3 buckets without encryption, security
+  groups with 0.0.0.0/0, IAM users without MFA.
+  The non-compliant resources persist. The
+  compliance dashboard shows non-compliant —
+  but nobody acts. Without remediation
+  (automatic or manual with documented
+  process), detection is half the value. The
+  organization knows about the non-compliance
+  and accepts the risk indefinitely. Persistent
+  non-compliance with no fix path indicates
+  either an explicit accept-risk decision (which
+  should be documented) or compliance theater
+  (which should be fixed).
+failure: >
+  Detected non-compliance without fix. Config
+  rule finds non-compliant resources; no
+  remediation is configured to fix them.
+tests:
+  - name: rule with noncompliant + no remediation fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-rule/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_rule
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_rule
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            noncompliant_count: 15
+            has_remediation: false
+            noncompliant_days: 90
+  - name: rule with remediation passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-rule/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_rule
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_rule
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            noncompliant_count: 3
+            has_remediation: true
+            noncompliant_days: 1
+  - name: rule with no noncompliant does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-rule/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_rule
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_rule
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            noncompliant_count: 0
+            has_remediation: false
+            noncompliant_days: 0

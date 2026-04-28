@@ -1,0 +1,23 @@
+control: CTL.CONFIG.RULE.GHOST.LAMBDA.001
+defect: >
+  Config custom rule references a deleted
+  Lambda function.
+infection: >
+  Custom Config rules delegate evaluation to a
+  Lambda function. When the Lambda is deleted,
+  Config triggers the rule evaluation (on
+  configuration change or on schedule), invokes
+  the Lambda, the invocation fails
+  (ResourceNotFoundException), and the
+  evaluation returns an error — not COMPLIANT,
+  not NON_COMPLIANT, just error. The resource's
+  compliance status becomes unknown. An auditor
+  sees the rule exists but compliance results
+  show errors instead of pass/fail. The custom
+  compliance check — which was presumably
+  created because no managed rule covered the
+  requirement — is non-functional.
+failure: >
+  Custom compliance check broken. Config rule
+  cannot evaluate because its Lambda function
+  was deleted; compliance status unknown.

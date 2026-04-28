@@ -1,0 +1,26 @@
+control: CTL.CONFIG.DELIVERY.NOTCHANNEL.001
+defect: >
+  Config recorder is configured but no delivery
+  channel is set; configuration data is not
+  persisted.
+infection: >
+  The delivery channel is how Config exports
+  configuration data — to S3 for persistence
+  and to SNS for real-time notification.
+  Without a delivery channel, Config records
+  configurations internally (recent items
+  queryable via API) but doesn't persist them
+  to S3 (no long-term history), doesn't send
+  change notifications via SNS (no real-time
+  awareness), and configuration history beyond
+  Config's internal retention window is lost.
+  The recorder appears to be running.
+  Compliance rules may evaluate using internal
+  data. But no durable configuration audit
+  trail exists. For compliance frameworks
+  requiring multi-year history (PCI-DSS,
+  HIPAA), this is a complete failure.
+failure: >
+  Configuration data not persisted. Config
+  records but doesn't deliver — no durable
+  audit trail, no change notifications.

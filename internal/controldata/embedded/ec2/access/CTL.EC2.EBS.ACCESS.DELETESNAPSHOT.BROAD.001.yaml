@@ -1,0 +1,128 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.ACCESS.DELETESNAPSHOT.BROAD.001
+name: ec2:DeleteSnapshot Granted to Broad Principals
+description: >
+  IAM policies grant ec2:DeleteSnapshot to
+  non-administrative principals. DeleteSnapshot
+  permanently destroys recovery points —
+  ransomware operators systematically delete
+  snapshots before encrypting volumes so the
+  victim cannot restore. The permission should
+  be restricted to backup-admin roles and DLM
+  service-linked usage.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3, A1.2"
+  nist_800_53_r5: "AC-3, AC-6, CP-9"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6, CP-9"
+  hipaa: "164.308(a)(4)(ii)(B), 164.308(a)(7)(ii)(A)"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09", "BCR-08"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Too many principals can delete snapshots —
+    backup destruction enabled.
+  action: >
+    Audit IAM policies for ec2:Delete*,
+    ec2:DeleteSnapshot, and ec2:* on Resource: *.
+    Restrict DeleteSnapshot to a dedicated
+    backup-admin role and DLM's service-linked
+    role. Enable EBS Recycle Bin so deletions
+    are recoverable for a configurable retention
+    window. Wire the deletion alarm
+    (ALARM.DELETESNAPSHOT) to the same paging
+    topic so over-broad access is detected
+    when exercised.
+  example: |
+    {
+      "compute": {
+        "kind": "ec2_account",
+        "ebs": {
+          "delete_snapshot_principals": ["arn:aws:iam::111122223333:role/backup-admin"],
+          "delete_snapshot_principal_count": 1,
+          "delete_snapshot_broadly_granted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ec2_account
+    - field: properties.compute.ebs.delete_snapshot_broadly_granted
+      op: eq
+      value: true
+defect: >
+  ec2:DeleteSnapshot is granted to non-
+  administrative principals.
+infection: >
+  ec2:DeleteSnapshot permanently removes
+  snapshots — no undo, no recovery (unless EBS
+  Recycle Bin is enabled). A principal with
+  broad DeleteSnapshot access can enumerate all
+  snapshots (ec2:DescribeSnapshots), delete
+  each one (ec2:DeleteSnapshot), and destroy
+  the entire backup inventory in minutes.
+  Common overprivilege patterns: IAM policies
+  with ec2:* on Resource: * (grants all EC2
+  actions including DeleteSnapshot),
+  AdministratorAccess (grants everything), and
+  custom policies that include ec2:Delete* for
+  cleanup automation. Each principal with
+  DeleteSnapshot is a potential backup
+  destruction point.
+failure: >
+  Broad backup deletion capability. Too many
+  principals can delete any snapshot —
+  ransomware preparation via backup destruction.
+tests:
+  - name: broad DeleteSnapshot access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            delete_snapshot_principals:
+              - "arn:aws:iam::111122223333:role/dev-team"
+              - "arn:aws:iam::111122223333:role/sre"
+              - "arn:aws:iam::111122223333:role/ops"
+              - "arn:aws:iam::111122223333:role/ci-runner"
+              - "arn:aws:iam::111122223333:role/qa"
+              - "arn:aws:iam::111122223333:user/admin-1"
+              - "arn:aws:iam::111122223333:user/admin-2"
+              - "arn:aws:iam::111122223333:role/backup-admin"
+            delete_snapshot_principal_count: 8
+            delete_snapshot_broadly_granted: true
+  - name: scoped DeleteSnapshot access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            delete_snapshot_principals:
+              - "arn:aws:iam::111122223333:role/backup-admin"
+            delete_snapshot_principal_count: 1
+            delete_snapshot_broadly_granted: false

@@ -1,0 +1,26 @@
+control: CTL.CONFIG.GHOST.DELIVERY.SNS.001
+defect: >
+  Config delivery channel references a deleted
+  SNS topic.
+infection: >
+  Config's delivery SNS topic is the
+  notification channel for configuration
+  changes. When a resource configuration
+  changes, Config publishes an event to this
+  topic; subscribers (Lambda, SQS, email,
+  HTTPS) act on the notification — running
+  remediation, alerting on-call, or triggering
+  downstream automation. When the topic is
+  deleted, the publish fails silently. The
+  delivery channel still references the topic
+  ARN; recording continues; S3 delivery may
+  still work; but real-time awareness of
+  configuration drift is lost. Subscribers
+  receive no events. Remediation automation
+  doesn't fire. The configuration-change
+  signal is dropped at the source.
+failure: >
+  Configuration change notifications fail
+  silently. Recording and S3 delivery may
+  continue but real-time alerts and
+  remediation triggers don't fire.

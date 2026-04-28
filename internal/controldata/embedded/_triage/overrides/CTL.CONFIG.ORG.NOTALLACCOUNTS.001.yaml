@@ -1,0 +1,24 @@
+control: CTL.CONFIG.ORG.NOTALLACCOUNTS.001
+defect: >
+  Member accounts exist without AWS Config
+  enabled.
+infection: >
+  A member account without Config has no
+  configuration recording — resources are
+  created, modified, and deleted without any
+  configuration state record. No Config rules
+  evaluate. No compliance status exists. The
+  account is a configuration blind spot. If
+  the organization uses the Config aggregator,
+  accounts without Config don't appear in the
+  aggregator — the aggregator shows data only
+  for accounts that have Config enabled. The
+  centralized compliance view is silently
+  incomplete. Common cause: new member accounts
+  provisioned without Config setup — the
+  account creation process doesn't include
+  Config enablement.
+failure: >
+  Configuration blind spots. Member accounts
+  have no Config — resources are unrecorded,
+  unevaluated, and invisible.

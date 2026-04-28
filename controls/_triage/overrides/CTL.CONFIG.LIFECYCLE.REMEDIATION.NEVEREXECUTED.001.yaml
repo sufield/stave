@@ -1,0 +1,25 @@
+control: CTL.CONFIG.LIFECYCLE.REMEDIATION.NEVEREXECUTED.001
+defect: >
+  Remediation configured but never executed
+  despite non-compliant resources.
+infection: >
+  A remediation that never executes has two
+  possible states. Legitimate: all resources
+  compliant — nothing to remediate (this
+  control's predicate gates on
+  noncompliant_count > 0 to exclude that
+  case). Broken: non-compliant resources exist
+  AND the remediation is configured AND it
+  never fires. Common causes for the broken
+  state: remediation set to manual (requires
+  human trigger that nobody pulls), auto-
+  remediation disabled on the rule, or the
+  remediation trigger condition doesn't match
+  the rule's evaluation output. The fix path
+  exists in configuration; it has never been
+  exercised.
+failure: >
+  Untested remediation. Remediation configured
+  but never executed while non-compliant
+  resources exist — unknown whether the fix
+  path works.

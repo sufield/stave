@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.RECORDER.NOGLOBAL.001
+name: Config Recorder Does Not Include Global Resources
+description: >
+  AWS Config recorder has
+  IncludeGlobalResourceTypes set to false.
+  Global resources — IAM users, roles, policies,
+  groups — are not recorded. IAM is the identity
+  and access foundation for every AWS service;
+  without recording it, Config has no visibility
+  into IAM configuration changes.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC6.1, CC7.1, CC8.1"
+  nist_800_53_r5: "AC-2, AC-3, CM-8, SA-10"
+  pci_dss_v4.0: "7.2, 10.1"
+  fedramp_moderate: "AC-2, CM-8"
+  hipaa: "164.308(a)(4)(ii)(B)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["IAM-09", "LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Global resources (IAM) not recorded.
+    Identity and access changes are invisible.
+  action: >
+    Enable global resource recording in exactly
+    one region (typically us-east-1) — global
+    resources should be recorded once per
+    account, not per region: aws configservice
+    put-configuration-recorder
+    --configuration-recorder
+    name=<name>,roleARN=<role>,recordingGroup={allSupported=true,includeGlobalResourceTypes=true}
+    in us-east-1, and includeGlobalResourceTypes=false
+    in all other regions.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_recorder",
+        "config": {
+          "recorder_name": "default",
+          "include_global_resources": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_recorder
+    - field: properties.compliance.config.include_global_resources
+      op: eq
+      value: false
+defect: >
+  Config recorder excludes global (IAM)
+  resources.
+infection: >
+  Global resources include IAM users, roles,
+  policies, groups, and account-level settings.
+  Without recording global resources, Config
+  rules for IAM (password policy, MFA, access
+  keys, role permissions) cannot evaluate.
+  IAM configuration changes (new role created,
+  policy attached, trust policy modified) are
+  not recorded in Config's configuration
+  history. Compliance packs that include IAM
+  controls (CIS, NIST, PCI-DSS) evaluate
+  incomplete data. IAM is the most critical
+  resource type for security — an attacker's
+  first action is often IAM manipulation
+  (create backdoor user, escalate privileges).
+  Without global resource recording, these
+  changes are invisible to Config.
+failure: >
+  IAM configuration invisible. IAM users, roles,
+  and policies not recorded — identity and
+  access compliance is not evaluated.
+tests:
+  - name: recorder without global resources fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-recorder/default"
+      asset_type: aws_config_recorder
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_recorder
+          config:
+            recorder_name: "default"
+            include_global_resources: false
+  - name: recorder with global resources passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-recorder/default"
+      asset_type: aws_config_recorder
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_recorder
+          config:
+            recorder_name: "default"
+            include_global_resources: true

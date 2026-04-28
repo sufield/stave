@@ -1,0 +1,127 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.AGGREGATOR.INCOMPLETE.REGIONS.001
+name: Config Aggregator Excludes Regions
+description: >
+  Config aggregator exists but does not include
+  all enabled AWS regions. Resources created in
+  excluded regions are invisible in the
+  aggregated view. An attacker can create
+  resources in an unmonitored region to evade
+  the centralized compliance view.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "CA-7, CM-8"
+  pci_dss_v4.0: "10.1"
+  fedramp_moderate: "CA-7"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 1.5
+remediation:
+  description: >
+    Aggregator misses regions. Resources in
+    excluded regions are invisible centrally.
+  action: >
+    Set the aggregator to AllAwsRegions=true:
+    aws configservice
+    put-configuration-aggregator
+    --account-aggregation-sources
+    AccountIds=...,AllAwsRegions=true (or for
+    organization aggregation,
+    --organization-aggregation-source
+    RoleArn=...,AllAwsRegions=true). For
+    accounts where some regions are
+    intentionally never used, document the
+    exclusion in change management; do not
+    rely on aggregator scope as a region
+    blocker.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_aggregator",
+        "config": {
+          "aggregator_name": "org-aggregator",
+          "aggregator_region_count": 16,
+          "total_enabled_regions": 16,
+          "missing_regions": [],
+          "aggregator_regions_complete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_aggregator
+    - field: properties.compliance.config.aggregator_regions_complete
+      op: eq
+      value: false
+defect: >
+  Config aggregator does not include all
+  enabled regions.
+infection: >
+  Resources created in regions outside the
+  aggregator's scope are invisible centrally.
+  Most organizations actively use only a few
+  regions; missing regions may be regions
+  where no resources exist in normal
+  operations. But an attacker can create
+  resources in an unmonitored region (an
+  IAM role with wide privileges, an S3 bucket
+  staging for exfiltration, an EC2 instance
+  for command-and-control) and the
+  centralized compliance view doesn't see them.
+  The dashboard shows compliant data; the
+  attacker's resources don't appear.
+failure: >
+  Region blind spots. Resources outside the
+  aggregator's region scope are invisible to
+  centralized compliance.
+tests:
+  - name: aggregator missing regions fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-aggregator/org-aggregator"
+      asset_type: aws_config_aggregator
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_aggregator
+          config:
+            aggregator_name: "org-aggregator"
+            aggregator_region_count: 10
+            total_enabled_regions: 16
+            missing_regions:
+              - "ap-southeast-3"
+              - "ap-southeast-4"
+              - "me-central-1"
+              - "il-central-1"
+              - "eu-south-2"
+              - "eu-central-2"
+            aggregator_regions_complete: false
+  - name: full-region aggregator passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-aggregator/org-aggregator"
+      asset_type: aws_config_aggregator
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_aggregator
+          config:
+            aggregator_name: "org-aggregator"
+            aggregator_region_count: 16
+            total_enabled_regions: 16
+            missing_regions: []
+            aggregator_regions_complete: true

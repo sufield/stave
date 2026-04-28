@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.RECORDER.PERIODIC.001
+name: Config Recorder Uses Periodic Instead of Continuous Recording
+description: >
+  AWS Config recorder is set to periodic mode
+  instead of continuous. Periodic mode captures
+  configuration only every 24 hours; changes
+  between snapshots are not captured. A
+  resource can be created, modified, and
+  deleted within a 24-hour window without any
+  Config record.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "CM-3, CM-8, SI-4"
+  pci_dss_v4.0: "10.1, 11.5"
+  fedramp_moderate: "CM-3, CM-8"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Periodic mode misses intra-window changes.
+  action: >
+    Switch the recorder to continuous mode: aws
+    configservice put-configuration-recorder
+    --configuration-recorder
+    name=<name>,roleARN=<role>,recordingMode={recordingFrequency=CONTINUOUS}.
+    Continuous mode captures every configuration
+    change as it occurs and is the default for
+    most setups; periodic mode is intended for
+    resource types with less-frequent changes
+    or cost-sensitive accounts.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_recorder",
+        "config": {
+          "recorder_name": "default",
+          "recording_mode": "continuous",
+          "is_periodic": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_recorder
+    - field: properties.compliance.config.is_periodic
+      op: eq
+      value: true
+defect: >
+  Config recorder uses periodic recording mode.
+infection: >
+  Periodic recording captures resource
+  configuration on a 24-hour cadence rather
+  than continuously. Configuration changes
+  that occur and revert within a 24-hour
+  window may not appear in any Config history
+  file. An attacker who creates a backdoor IAM
+  role at 9am, uses it to exfiltrate data at
+  10am, and deletes it at 11am leaves no Config
+  record of the role's existence (the daily
+  snapshot at midnight didn't see it). Config
+  rules also evaluate against the most recent
+  snapshot, so non-compliance windows shorter
+  than 24 hours can be missed. Continuous
+  mode captures every CreateResource,
+  UpdateResource, and DeleteResource event as
+  it happens.
+failure: >
+  Sub-day configuration changes missed.
+  Resources created and removed within a 24h
+  window leave no Config trace.
+tests:
+  - name: periodic-mode recorder fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-recorder/default"
+      asset_type: aws_config_recorder
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_recorder
+          config:
+            recorder_name: "default"
+            recording_mode: "periodic"
+            is_periodic: true
+  - name: continuous-mode recorder passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:config-recorder/default"
+      asset_type: aws_config_recorder
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_recorder
+          config:
+            recorder_name: "default"
+            recording_mode: "continuous"
+            is_periodic: false

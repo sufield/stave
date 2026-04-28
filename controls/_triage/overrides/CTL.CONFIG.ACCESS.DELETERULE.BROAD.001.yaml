@@ -1,0 +1,23 @@
+control: CTL.CONFIG.ACCESS.DELETERULE.BROAD.001
+defect: >
+  config:DeleteConfigRule is granted to non-
+  administrative principals.
+infection: >
+  DeleteConfigRule removes a compliance
+  evaluation rule. A principal with this
+  permission can delete the rule that checks
+  for public S3 buckets (non-compliant buckets
+  are no longer flagged), delete the rule that
+  checks for unencrypted volumes (unencrypted
+  volumes are no longer detected), or delete
+  all rules (compliance evaluation stops
+  entirely). The compliance dashboard shows
+  compliant — not because resources are
+  compliant, but because the rules that check
+  compliance were deleted. This permission
+  should be restricted to security and
+  compliance administrators.
+failure: >
+  Excessive rule deletion access. Too many
+  principals can delete compliance rules,
+  removing non-compliance detection.

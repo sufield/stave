@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.ALARM.SNAPSHOTSHARE.001
+name: No CloudWatch Alarm for Cross-Account Snapshot Sharing
+description: >
+  No CloudWatch alarm watches CloudTrail for
+  ModifySnapshotAttribute calls that add
+  createVolumePermission for specific external
+  accounts (the non-public exfiltration path).
+  Sharing a snapshot with an attacker-controlled
+  account grants full disk read access without
+  the visibility of a public exposure. Without
+  an alarm, cross-account share changes are
+  invisible.
+domain: audit
+severity: high
+archetype: silent-failure
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.2, 10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: cross_account
+    multiplier: 4.0
+remediation:
+  description: >
+    No alarm fires when snapshots are shared
+    cross-account.
+  action: >
+    Create a CloudWatch alarm on a metric filter
+    matching eventName=ModifySnapshotAttribute
+    AND requestParameters.createVolumePermission
+    contains UserId values. Wire to the same
+    paging topic as ALARM.SNAPSHOTPUBLIC. The
+    alarm and the public-share alarm share a
+    metric source but distinct match patterns;
+    keep them as two alarms so the triage
+    framing differs (public exposure vs targeted
+    share).
+  example: |
+    {
+      "compute": {
+        "kind": "ec2_account",
+        "ebs": {
+          "alarm_snapshot_share": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ec2_account
+    - field: properties.compute.ebs.alarm_snapshot_share
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors cross-account
+  snapshot sharing.
+infection: >
+  Cross-account snapshot sharing is the targeted
+  exfiltration path. Instead of making the
+  snapshot public (highly visible — auditors,
+  AWS Trusted Advisor, security tools all flag
+  public snapshots), the attacker shares the
+  snapshot with a specific attacker-controlled
+  account. The recipient creates a volume from
+  the snapshot, mounts it, and reads the data —
+  database files, credentials, application
+  state, OS files. Without an alarm, the
+  ModifySnapshotAttribute call adding the
+  external account ID to createVolumePermission
+  is invisible. The data leaves the source
+  account in plaintext (if the snapshot is
+  unencrypted) or under the recipient's KMS
+  context (if shared with an encrypted snapshot
+  via shared CMK).
+failure: >
+  Undetected cross-account exfiltration.
+  Snapshots can be shared with external accounts
+  without notification.
+tests:
+  - name: account without share alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            alarm_snapshot_share: false
+  - name: account with share alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            alarm_snapshot_share: true

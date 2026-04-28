@@ -1,0 +1,25 @@
+control: CTL.EC2.EBS.ALARM.VOLUMESTATUS.001
+defect: >
+  No CloudWatch alarm monitors EBS volume status
+  check failures.
+infection: >
+  EBS volume status checks verify the underlying
+  storage hardware is healthy. A failed status
+  check means: the volume's data may be at risk
+  (I/O errors, possible corruption), I/O
+  operations may fail or return errors, and the
+  volume may become completely unresponsive.
+  Without an alarm, the volume silently
+  degrades. The application retries I/O; if it
+  doesn't handle errors gracefully, it crashes.
+  If it does handle them, it logs them — but
+  nobody reads application logs in real time
+  during an incident. A status-check alarm
+  provides immediate notification of hardware-
+  level issues so the team can detach the
+  volume, capture a snapshot if still possible,
+  and replace before data is lost.
+failure: >
+  Undetected hardware failure. EBS volume has a
+  hardware issue — I/O fails without
+  notification.

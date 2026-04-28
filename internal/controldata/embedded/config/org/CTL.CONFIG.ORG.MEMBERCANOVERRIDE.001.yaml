@@ -1,0 +1,139 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ORG.MEMBERCANOVERRIDE.001
+name: Member Accounts Can Override Organization Config Rules
+description: >
+  Organization Config rules are deployed but
+  member accounts can modify or delete their
+  local copies. A member admin can change rule
+  parameters (weakening thresholds), disable
+  rules (stopping evaluation), or delete rules
+  (removing checks). The organizational
+  baseline is overridable at the account level.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "CM-5, CM-6"
+  pci_dss_v4.0: "11.5"
+  fedramp_moderate: "CM-5, CM-6"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["IAM-09", "LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 2.0
+remediation:
+  description: >
+    Org rules deployed without member-account
+    protection.
+  action: >
+    Add an SCP that denies
+    config:DeleteConfigRule,
+    config:PutConfigRule,
+    config:DeleteOrganizationConfigRule, and
+    config:PutOrganizationConfigRule for
+    organization-deployed rules in member
+    accounts (with an exception for the
+    delegated admin account). The SCP makes
+    the organization rule set the authoritative
+    baseline regardless of member account IAM
+    posture.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_org",
+        "config": {
+          "is_org_account": true,
+          "has_org_rules": true,
+          "org_rules_protected": true,
+          "member_can_modify_org_rules": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_org
+    - field: properties.compliance.config.is_org_account
+      op: eq
+      value: true
+    - field: properties.compliance.config.has_org_rules
+      op: eq
+      value: true
+    - field: properties.compliance.config.member_can_modify_org_rules
+      op: eq
+      value: true
+defect: >
+  Member accounts can modify or delete
+  organization Config rules.
+infection: >
+  Organization Config rules establish a
+  compliance baseline across all member
+  accounts. Without modification protection, a
+  member account admin can change the max
+  password age from 90 to 365 (weakening the
+  rule), disable the S3 encryption rule (no
+  longer evaluating), or delete the IAM MFA
+  rule (removing the check entirely). The
+  organization deploys rules. The member
+  account modifies them. The aggregator may
+  show the modified parameters — or may show
+  the original parameters if there's a sync
+  delay. The compliance baseline the
+  organization established is quietly
+  undermined.
+failure: >
+  Organizational compliance baseline
+  overridable. Member accounts can modify or
+  delete organization Config rules.
+tests:
+  - name: org rules unprotected fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_config_org
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_org
+          config:
+            is_org_account: true
+            has_org_rules: true
+            org_rules_protected: false
+            member_can_modify_org_rules: true
+  - name: org rules protected passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_config_org
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_org
+          config:
+            is_org_account: true
+            has_org_rules: true
+            org_rules_protected: true
+            member_can_modify_org_rules: false
+  - name: standalone account does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:root"
+      asset_type: aws_config_org
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_org
+          config:
+            is_org_account: false
+            has_org_rules: false
+            org_rules_protected: false
+            member_can_modify_org_rules: false

@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.DELIVERY.FAILURES.UNMONITORED.001
+name: Config Delivery Failures Not Monitored
+description: >
+  AWS Config delivery failures (S3 write
+  failures, SNS publish failures) are not
+  monitored by any CloudWatch alarm. When
+  delivery fails, Config records internally but
+  cannot persist to S3 or notify via SNS. The
+  configuration audit trail silently stops
+  being persisted.
+domain: audit
+severity: medium
+archetype: silent-failure
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, AU-9, IR-4, SI-4"
+  pci_dss_v4.0: "10.5, 10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    No alarm watches Config delivery health.
+    Persistence failures go silent.
+  action: >
+    Create a CloudWatch alarm on the AWS/Config
+    metrics ConfigDeliveryFailed and
+    ConfigSnapshotDeliveryFailed with threshold
+    > 0 over a short evaluation window. Wire
+    the alarm to the security operations SNS
+    topic. Pair with the existing
+    LIFECYCLE.SNAPSHOT.STALE control so
+    persistence-pipeline issues surface both at
+    the metric level (FAILURES.UNMONITORED) and
+    at the staleness level (SNAPSHOT.STALE).
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "delivery_failure_alarm": true,
+          "delivery_channel_name": "default",
+          "last_delivery_success_days": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.delivery_failure_alarm
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors Config delivery
+  failures.
+infection: >
+  Config publishes metrics about delivery
+  health — ConfigDeliveryFailed,
+  ConfigSnapshotDeliveryFailed. Without an
+  alarm on these metrics, the delivery channel
+  S3 bucket permission changes (Config can't
+  write — nobody knows), the delivery channel
+  SNS topic is deleted (notifications fail —
+  nobody knows), or S3 quota limits are reached
+  (delivery fails — nobody knows). The Config
+  recorder continues running — configurations
+  are captured internally. But the durable
+  persistence to S3 and the real-time
+  notification via SNS are silently broken.
+  Same pattern as CloudTrail delivery failures
+  being invisible without alarms.
+failure: >
+  Silent delivery failure. Config delivery to
+  S3/SNS can fail without notification — the
+  configuration audit trail stops being
+  persisted.
+tests:
+  - name: account without delivery alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            delivery_failure_alarm: false
+            delivery_channel_name: "default"
+            last_delivery_success_days: 0
+  - name: account with delivery alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            delivery_failure_alarm: true
+            delivery_channel_name: "default"
+            last_delivery_success_days: 0

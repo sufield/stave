@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.REMEDIATION.GHOST.ROLE.001
+name: Config Remediation IAM Role Deleted
+description: >
+  AWS Config remediation action has an IAM role
+  that has been deleted. The SSM document
+  exists; the remediation triggers; SSM
+  attempts to assume the role; AssumeRole
+  fails. The remediation cannot execute.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC7.2, CC8.1"
+  nist_800_53_r5: "CA-7, CM-3, CM-4, SI-7"
+  pci_dss_v4.0: "11.5"
+  fedramp_moderate: "CA-7, CM-3"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["IAM-09", "LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Remediation's automation role is gone;
+    AssumeRole fails before the SSM document
+    can run.
+  action: >
+    Recreate the IAM role with the SSM and
+    target-service permissions the document
+    requires (the document's documented
+    permission set), or repoint the remediation
+    at an existing role: aws configservice
+    put-remediation-configurations with the
+    new RoleARN. After fix, validate by
+    triggering a non-compliance scenario and
+    confirming the remediation completes.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_remediation",
+        "config": {
+          "rule_name": "s3-bucket-server-side-encryption-enabled",
+          "remediation_role_arn": "arn:aws:iam::111122223333:role/config-remediation",
+          "remediation_role_exists": true,
+          "has_ghost_remediation_role": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_remediation
+    - field: properties.compliance.config.has_ghost_remediation_role
+      op: eq
+      value: true
+defect: >
+  Config remediation references a deleted IAM
+  role.
+infection: >
+  The remediation role is the IAM role SSM
+  assumes to execute the automation document.
+  When the role is deleted, Config detects non-
+  compliance, Config triggers remediation, SSM
+  attempts AssumeRole on the configured role
+  ARN, AssumeRole fails (role doesn't exist),
+  and the SSM execution never starts. The
+  remediation status surface shows "failed" but
+  the surface message ("AccessDenied") is
+  ambiguous — same exception text as a
+  permissions-only issue. Triage time is
+  longer than it should be because the failure
+  mode (role gone) is not differentiated from
+  the more common case (role exists, lacks a
+  permission). Same single-dependency failure
+  shape as the DLM execution role ghost.
+failure: >
+  Remediation cannot start. SSM execution fails
+  at AssumeRole because the configured role is
+  gone.
+tests:
+  - name: remediation with deleted role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:remediation/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_remediation
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_remediation
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            remediation_role_arn: "arn:aws:iam::111122223333:role/deleted-remediation-role"
+            remediation_role_exists: false
+            has_ghost_remediation_role: true
+  - name: remediation with valid role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:remediation/s3-bucket-server-side-encryption-enabled"
+      asset_type: aws_config_remediation
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_remediation
+          config:
+            rule_name: "s3-bucket-server-side-encryption-enabled"
+            remediation_role_arn: "arn:aws:iam::111122223333:role/config-remediation"
+            remediation_role_exists: true
+            has_ghost_remediation_role: false

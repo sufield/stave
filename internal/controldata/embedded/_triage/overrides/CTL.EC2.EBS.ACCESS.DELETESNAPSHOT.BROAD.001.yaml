@@ -1,0 +1,24 @@
+control: CTL.EC2.EBS.ACCESS.DELETESNAPSHOT.BROAD.001
+defect: >
+  ec2:DeleteSnapshot is granted to non-
+  administrative principals.
+infection: >
+  ec2:DeleteSnapshot permanently removes
+  snapshots — no undo, no recovery (unless EBS
+  Recycle Bin is enabled). A principal with
+  broad DeleteSnapshot access can enumerate all
+  snapshots (ec2:DescribeSnapshots), delete
+  each one (ec2:DeleteSnapshot), and destroy
+  the entire backup inventory in minutes.
+  Common overprivilege patterns: IAM policies
+  with ec2:* on Resource: * (grants all EC2
+  actions including DeleteSnapshot),
+  AdministratorAccess (grants everything), and
+  custom policies that include ec2:Delete* for
+  cleanup automation. Each principal with
+  DeleteSnapshot is a potential backup
+  destruction point.
+failure: >
+  Broad backup deletion capability. Too many
+  principals can delete any snapshot —
+  ransomware preparation via backup destruction.
