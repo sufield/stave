@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.AZ.SAME.001
+name: ELB Subnets Resolve to the Same Availability Zone
+description: >
+  ALB or NLB has multiple subnets configured
+  but they all map to the same AZ. The
+  configuration looks redundant but isn't —
+  loss of that single AZ takes the load
+  balancer offline despite the multi-subnet
+  appearance.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.1, A1.1"
+  nist_800_53_r5: "CP-7, SC-5"
+  pci_dss_v4.0: "12.10"
+  fedramp_moderate: "CP-7"
+  iso_27001_2022: "A.5.30, A.8.14"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Multiple subnets but all in one AZ. False
+    redundancy.
+  action: >
+    Replace one or more subnets with subnets
+    from a different AZ: aws elbv2
+    set-subnets with a list spanning at
+    least two AZs. Verify by checking each
+    subnet's AvailabilityZone field — they
+    must differ. The minimum production
+    posture for HA is two AZs; three is
+    common in regions with three AZs
+    available.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "subnet_az_count": 3,
+          "subnets_same_az": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.subnets_same_az
+      op: eq
+      value: true
+defect: >
+  ELB subnets all resolve to the same AZ.
+infection: >
+  Multi-subnet ELB configuration suggests
+  multi-AZ resilience to operators reading
+  the configuration; CTL.ELB.NETWORK.SINGLEAZ
+  catches the single-subnet case explicitly.
+  AZ.SAME is the subtler shape: multiple
+  subnets are configured, satisfying the
+  tooling that requires "more than one
+  subnet," but every subnet maps to the
+  same AZ. The configuration looks correct
+  in the console — two or three subnet IDs
+  listed — but a single AZ outage takes
+  every target out of rotation. Detection
+  requires resolving each subnet ID to its
+  AvailabilityZone and counting unique AZs.
+failure: >
+  False multi-AZ posture. AZ outage takes
+  the ELB offline despite multi-subnet
+  configuration.
+tests:
+  - name: same-AZ subnets fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            subnet_az_count: 1
+            subnets_same_az: true
+  - name: multi-AZ subnets pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            subnet_az_count: 3
+            subnets_same_az: false

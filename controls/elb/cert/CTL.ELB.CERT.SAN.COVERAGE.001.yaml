@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CERT.SAN.COVERAGE.001
+name: ELB Listener Certificate Doesn't Cover All Routed Domains
+description: >
+  Route 53 alias records point at the ELB
+  from multiple domains, but the listener
+  certificate's SAN list doesn't include
+  every domain. Some routed domains
+  produce hostname-mismatch TLS errors —
+  partial outage that only some users
+  experience.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7, CC8.1"
+  nist_800_53_r5: "SC-12, SC-23"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-12, SC-23"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Cert SAN doesn't cover all routed
+    domains.
+  action: >
+    Either add the missing domains to the
+    certificate's SAN list (request a new
+    cert, ACM allows up to 10 SANs and a
+    wildcard counts as one SAN per
+    subdomain level), or remove the Route 53
+    records for domains the cert doesn't
+    cover. Detection cross-references
+    Route 53 alias targets pointing at the
+    ELB DNS name with the certificate's
+    SAN list.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "routed_domains": ["app.example.com", "api.example.com"],
+          "certificate_san": ["app.example.com", "api.example.com"],
+          "certificate_san_missing_domains": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.certificate_san_coverage_incomplete
+      op: eq
+      value: true
+defect: >
+  ELB certificate SAN list doesn't cover
+  every Route 53 domain pointing at the
+  load balancer.
+infection: >
+  Route 53 alias records often fan multiple
+  domains to the same ELB. The certificate
+  on the listener must cover every domain
+  routed to it; users hitting a domain
+  without certificate coverage see TLS
+  hostname-mismatch errors. The
+  misconfiguration is partial — some
+  domains work, some don't — so it
+  surfaces only when a user complains
+  about a specific URL. Detection requires
+  reconciling the Route 53 alias inventory
+  with the certificate's SAN list.
+failure: >
+  Partial TLS coverage. Some Route 53
+  domains pointing at the ELB produce
+  hostname-mismatch errors.
+tests:
+  - name: missing SAN coverage fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            routed_domains: ["app.example.com", "api.example.com", "admin.example.com"]
+            certificate_san: ["app.example.com"]
+            certificate_san_missing_domains: ["api.example.com", "admin.example.com"]
+            certificate_san_coverage_incomplete: true
+  - name: full SAN coverage passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            routed_domains: ["app.example.com", "api.example.com"]
+            certificate_san: ["app.example.com", "api.example.com"]
+            certificate_san_missing_domains: []
+            certificate_san_coverage_incomplete: false

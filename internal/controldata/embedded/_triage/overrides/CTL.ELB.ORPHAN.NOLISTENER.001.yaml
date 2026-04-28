@@ -1,0 +1,24 @@
+control: CTL.ELB.ORPHAN.NOLISTENER.001
+defect: >
+  ELB has no listeners configured.
+infection: >
+  ELBs without listeners are the cleanest
+  orphan signature: the LB exists, has a
+  DNS name, runs in subnets, costs money
+  per hour — but accepts no traffic. The
+  shape typically arises from partial
+  deletes (operator deleted the listener
+  in cleanup but not the LB), Terraform
+  plans that broke mid-apply, or new LBs
+  abandoned during setup. From a security
+  perspective, the LB still has a public
+  DNS name (if internet-facing) that
+  could be exploited if listeners are
+  later added without scrutiny — orphans
+  are sometimes reactivated by attackers
+  who acquire admin access and exploit
+  forgotten infrastructure.
+failure: >
+  Configuration shell. ELB exists but
+  accepts no traffic; pure governance
+  debt.

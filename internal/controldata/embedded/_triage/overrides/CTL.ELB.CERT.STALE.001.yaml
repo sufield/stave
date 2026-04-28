@@ -1,0 +1,27 @@
+control: CTL.ELB.CERT.STALE.001
+defect: >
+  ELB listener has certificates attached
+  that are no longer in active routing.
+infection: >
+  Certificate replacement is a common
+  operation: a new cert is provisioned
+  and attached to the listener, traffic
+  flips over, and the old cert is
+  supposed to be removed. In practice,
+  the removal step is frequently skipped
+  — the new cert works, the old cert
+  doesn't break anything, and the
+  cleanup task drops off the queue. Stale
+  certs accumulate. Two consequences:
+  the listener attaches a longer chain
+  of unused certs that auditors must
+  reason about, and an attacker who
+  knows about the old cert and can
+  influence DNS may still route traffic
+  through it via SNI manipulation.
+  Cleanup is straightforward; the
+  control surfaces the work.
+failure: >
+  Stale certs on listener. Cleanup debt
+  from past cert replacements; auditors
+  must reason about each unused cert.

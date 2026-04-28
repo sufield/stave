@@ -1,0 +1,22 @@
+control: CTL.ELB.CERT.SAN.COVERAGE.001
+defect: >
+  ELB certificate SAN list doesn't cover
+  every Route 53 domain pointing at the
+  load balancer.
+infection: >
+  Route 53 alias records often fan multiple
+  domains to the same ELB. The certificate
+  on the listener must cover every domain
+  routed to it; users hitting a domain
+  without certificate coverage see TLS
+  hostname-mismatch errors. The
+  misconfiguration is partial — some
+  domains work, some don't — so it
+  surfaces only when a user complains
+  about a specific URL. Detection requires
+  reconciling the Route 53 alias inventory
+  with the certificate's SAN list.
+failure: >
+  Partial TLS coverage. Some Route 53
+  domains pointing at the ELB produce
+  hostname-mismatch errors.

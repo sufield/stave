@@ -1,0 +1,27 @@
+control: CTL.ELB.CERT.EXPIRY.WARN.001
+defect: >
+  ELB listener certificate expires within 30
+  days.
+infection: >
+  Certificate expiry is the most common
+  reliable cause of TLS outages. AWS-managed
+  certs (ACM) auto-renew when DNS validation
+  records remain in place; imported certs
+  don't, and ACM certs whose validation has
+  broken silently miss their renewal window.
+  Expired certs cause every browser request
+  to fail with a TLS error; the outage
+  starts at the second the cert expires
+  and lasts until manual rotation. A
+  30-day warning gives the operator time
+  to investigate (manual cert? broken
+  DNS validation?) and rotate before the
+  outage. The existing
+  CERT.RENEWAL.FAILING control fires only
+  if AWS reports active renewal failure;
+  EXPIRY.WARN fires regardless and
+  surfaces the timing.
+failure: >
+  Imminent TLS outage. Certificate expires
+  within 30 days; user-visible TLS errors
+  begin at expiry.

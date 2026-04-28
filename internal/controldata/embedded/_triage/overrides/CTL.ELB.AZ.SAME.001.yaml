@@ -1,0 +1,22 @@
+control: CTL.ELB.AZ.SAME.001
+defect: >
+  ELB subnets all resolve to the same AZ.
+infection: >
+  Multi-subnet ELB configuration suggests
+  multi-AZ resilience to operators reading
+  the configuration; CTL.ELB.NETWORK.SINGLEAZ
+  catches the single-subnet case explicitly.
+  AZ.SAME is the subtler shape: multiple
+  subnets are configured, satisfying the
+  tooling that requires "more than one
+  subnet," but every subnet maps to the
+  same AZ. The configuration looks correct
+  in the console — two or three subnet IDs
+  listed — but a single AZ outage takes
+  every target out of rotation. Detection
+  requires resolving each subnet ID to its
+  AvailabilityZone and counting unique AZs.
+failure: >
+  False multi-AZ posture. AZ outage takes
+  the ELB offline despite multi-subnet
+  configuration.

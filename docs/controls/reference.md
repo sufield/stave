@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2035
-**Pack hash:** `82010f814db99e0e4bc6916eb0705c6d3f77e8eccdc9e91ea7cdcd4741fd33b0`
+**Total controls:** 2040
+**Pack hash:** `534ccf43e93a127cfb0631ad44983ce93623db83b90741ffda725698ffa13167`
 
 ## Summary
 
@@ -13,8 +13,8 @@
 | critical | 231 |
 | high | 905 |
 | info | 16 |
-| low | 138 |
-| medium | 745 |
+| low | 140 |
+| medium | 748 |
 
 | Domain | Count |
 |--------|-------|
@@ -25,7 +25,7 @@
 | detection | 96 |
 | encryption | 92 |
 | exposure | 1063 |
-| governance | 274 |
+| governance | 279 |
 | hygiene | 16 |
 | identity | 360 |
 | network | 28 |
@@ -13295,6 +13295,21 @@ ALB listener rule has an authenticate-oidc or authenticate-cognito action with O
 
 ---
 
+### CTL.ELB.AZ.SAME.001
+
+**ELB Subnets Resolve to the Same Availability Zone**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-7; iso_27001_2022: A.5.30, A.8.14; nist_800_53_r5: CP-7, SC-5; pci_dss_v4.0: 12.10; soc2: CC7.1, A1.1;
+
+ALB or NLB has multiple subnets configured but they all map to the same AZ. The configuration looks redundant but isn't — loss of that single AZ takes the load balancer offline despite the multi-subnet appearance.
+
+**Remediation:** Replace one or more subnets with subnets from a different AZ: aws elbv2 set-subnets with a list spanning at least two AZs. Verify by checking each subnet's AvailabilityZone field — they must differ. The minimum production posture for HA is two AZs; three is common in regions with three AZs available.
+
+---
+
 ### CTL.ELB.CERT.CHAIN.INCOMPLETE.001
 
 **ELB Listener Certificate Chain Missing Intermediate CA**
@@ -13307,6 +13322,21 @@ ALB listener rule has an authenticate-oidc or authenticate-cognito action with O
 ELB listener certificate is configured without the intermediate CA in its chain. Browsers that don't have the intermediate cached fail to verify the certificate; some clients (curl, mobile platforms) reject the connection outright.
 
 **Remediation:** Re-import the certificate with the full intermediate chain via aws acm import-certificate with the --certificate-chain flag pointing at the PEM-bundled intermediate CAs. ACM-issued certificates auto-include the chain; manually imported certs require the operator to bundle intermediates explicitly.
+
+---
+
+### CTL.ELB.CERT.EXPIRY.WARN.001
+
+**ELB Listener Certificate Expiring Within 30 Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12; pci_dss_v4.0: 4.2; soc2: CC6.1, CC8.1;
+
+ELB listener certificate has 30 or fewer days until expiry. ACM-issued certificates auto-renew if DNS validation is in place, but imported certificates and ACM certs with broken validation paths require manual rotation. A certificate expiring inside 30 days needs immediate operator attention.
+
+**Remediation:** For ACM certificates: confirm DNS validation records are in place so the cert can auto-renew (the existing CTL.ELB.CERT.RENEWAL.FAILING control catches the case where renewal is actively failing). For imported certificates: request a new cert, import it via aws acm import-certificate, and swap it onto the listener via aws elbv2 modify-listener-certificates before the current one expires.
 
 ---
 
@@ -13370,6 +13400,21 @@ ACM certificate used by the load balancer has auto-renewal failing. ACM attempte
 
 ---
 
+### CTL.ELB.CERT.SAN.COVERAGE.001
+
+**ELB Listener Certificate Doesn't Cover All Routed Domains**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-12, SC-23; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7, CC8.1;
+
+Route 53 alias records point at the ELB from multiple domains, but the listener certificate's SAN list doesn't include every domain. Some routed domains produce hostname-mismatch TLS errors — partial outage that only some users experience.
+
+**Remediation:** Either add the missing domains to the certificate's SAN list (request a new cert, ACM allows up to 10 SANs and a wildcard counts as one SAN per subdomain level), or remove the Route 53 records for domains the cert doesn't cover. Detection cross-references Route 53 alias targets pointing at the ELB DNS name with the certificate's SAN list.
+
+---
+
 ### CTL.ELB.CERT.SELFSIGNED.001
 
 **ELB Listener Uses Self-Signed Certificate**
@@ -13382,6 +13427,21 @@ ACM certificate used by the load balancer has auto-renewal failing. ACM attempte
 ELB listener serves a certificate that is self-signed (issuer equals subject) rather than issued by a publicly trusted CA. Browsers reject the connection with a certificate error; users either bypass the warning (training them to ignore TLS errors) or fail to connect.
 
 **Remediation:** Replace the self-signed certificate with one from ACM (free, auto-renewing) or another publicly trusted CA. Use aws elbv2 modify-listener with the new certificate ARN. If self-signed is intentional (lab testing only), document the deviation; production listeners should never serve self-signed certs to end users.
+
+---
+
+### CTL.ELB.CERT.STALE.001
+
+**ELB Listener Has Old Certificate Still Attached After Replacement**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+
+ELB listener has multiple certificates attached including one that's been superseded but not removed. The stale certificate is no longer the default but remains active for SNI matches against its SAN list — a forgotten cert may still be serving traffic.
+
+**Remediation:** Identify the active certificate (the one used by current production traffic) and remove the others: aws elbv2 remove-listener-certificates with --certificates CertificateArn=<old>. Each ALB listener can attach multiple certificates (for SNI), so 'multiple' isn't itself a defect — but certificates that no SAN-bearing domain currently routes to the LB are stale.
 
 ---
 
@@ -13771,6 +13831,21 @@ Network Load Balancer has connection logging disabled. Per-connection TLS handsh
 Network Load Balancer has a TCP listener on port 80 but no TLS listener on 443. NLBs pass through TCP without termination, so there is no TLS handshake at the LB layer — every byte transits in plaintext from client to backend.
 
 **Remediation:** Either add a TLS listener on the NLB (aws elbv2 create-listener with Protocol=TLS,Port=443 and a configured SSL policy + certificate) and remove the TCP/80 listener, or enable TLS on the backend service and switch the NLB to TLS pass-through. NLBs that genuinely need to handle plaintext TCP (legacy protocols, internal-only) should be documented; production user-facing workloads on TCP/80 are almost always misconfiguration.
+
+---
+
+### CTL.ELB.ORPHAN.NOLISTENER.001
+
+**ELB Has No Listeners Configured**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+
+ALB or NLB exists with zero listeners. The load balancer can't accept any traffic — it's a configuration shell. Either left over from a half-deleted deployment or a new LB whose setup was abandoned mid-way.
+
+**Remediation:** Either configure listeners (aws elbv2 create-listener) if the LB is intended to be in service, or delete the LB (aws elbv2 delete-load-balancer) if it isn't. ALBs and NLBs cost the hourly rate plus LCU regardless of listener presence — listenerless LBs incur cost for no value.
 
 ---
 

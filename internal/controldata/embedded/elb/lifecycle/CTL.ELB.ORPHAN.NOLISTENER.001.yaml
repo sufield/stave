@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ORPHAN.NOLISTENER.001
+name: ELB Has No Listeners Configured
+description: >
+  ALB or NLB exists with zero listeners. The
+  load balancer can't accept any traffic —
+  it's a configuration shell. Either left
+  over from a half-deleted deployment or a
+  new LB whose setup was abandoned mid-way.
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8, SA-22"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    LB exists with no listeners. It can't
+    accept traffic.
+  action: >
+    Either configure listeners (aws elbv2
+    create-listener) if the LB is intended
+    to be in service, or delete the LB
+    (aws elbv2 delete-load-balancer) if it
+    isn't. ALBs and NLBs cost the hourly
+    rate plus LCU regardless of listener
+    presence — listenerless LBs incur cost
+    for no value.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "listener_count": 2,
+          "has_listeners": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.has_listeners
+      op: eq
+      value: false
+defect: >
+  ELB has no listeners configured.
+infection: >
+  ELBs without listeners are the cleanest
+  orphan signature: the LB exists, has a
+  DNS name, runs in subnets, costs money
+  per hour — but accepts no traffic. The
+  shape typically arises from partial
+  deletes (operator deleted the listener
+  in cleanup but not the LB), Terraform
+  plans that broke mid-apply, or new LBs
+  abandoned during setup. From a security
+  perspective, the LB still has a public
+  DNS name (if internet-facing) that
+  could be exploited if listeners are
+  later added without scrutiny — orphans
+  are sometimes reactivated by attackers
+  who acquire admin access and exploit
+  forgotten infrastructure.
+failure: >
+  Configuration shell. ELB exists but
+  accepts no traffic; pure governance
+  debt.
+tests:
+  - name: ELB without listeners fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/orphan/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            listener_count: 0
+            has_listeners: false
+  - name: ELB with listeners passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/active/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            listener_count: 2
+            has_listeners: true

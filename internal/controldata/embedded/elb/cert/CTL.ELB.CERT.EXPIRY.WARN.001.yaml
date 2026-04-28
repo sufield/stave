@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CERT.EXPIRY.WARN.001
+name: ELB Listener Certificate Expiring Within 30 Days
+description: >
+  ELB listener certificate has 30 or fewer
+  days until expiry. ACM-issued certificates
+  auto-renew if DNS validation is in place,
+  but imported certificates and ACM certs
+  with broken validation paths require
+  manual rotation. A certificate expiring
+  inside 30 days needs immediate operator
+  attention.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "SC-12"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-12"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Listener certificate expires within 30
+    days.
+  action: >
+    For ACM certificates: confirm DNS
+    validation records are in place so the
+    cert can auto-renew (the existing
+    CTL.ELB.CERT.RENEWAL.FAILING control
+    catches the case where renewal is
+    actively failing). For imported
+    certificates: request a new cert,
+    import it via aws acm import-certificate,
+    and swap it onto the listener via
+    aws elbv2 modify-listener-certificates
+    before the current one expires.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "certificate_days_until_expiry": 90,
+          "certificate_expiring_soon": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.certificate_expiring_soon
+      op: eq
+      value: true
+defect: >
+  ELB listener certificate expires within 30
+  days.
+infection: >
+  Certificate expiry is the most common
+  reliable cause of TLS outages. AWS-managed
+  certs (ACM) auto-renew when DNS validation
+  records remain in place; imported certs
+  don't, and ACM certs whose validation has
+  broken silently miss their renewal window.
+  Expired certs cause every browser request
+  to fail with a TLS error; the outage
+  starts at the second the cert expires
+  and lasts until manual rotation. A
+  30-day warning gives the operator time
+  to investigate (manual cert? broken
+  DNS validation?) and rotate before the
+  outage. The existing
+  CERT.RENEWAL.FAILING control fires only
+  if AWS reports active renewal failure;
+  EXPIRY.WARN fires regardless and
+  surfaces the timing.
+failure: >
+  Imminent TLS outage. Certificate expires
+  within 30 days; user-visible TLS errors
+  begin at expiry.
+tests:
+  - name: 15-day expiry fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            certificate_days_until_expiry: 15
+            certificate_expiring_soon: true
+  - name: 90-day expiry passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            certificate_days_until_expiry: 90
+            certificate_expiring_soon: false
