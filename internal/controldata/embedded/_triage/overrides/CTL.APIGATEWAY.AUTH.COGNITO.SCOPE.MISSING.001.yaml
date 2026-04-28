@@ -1,0 +1,27 @@
+control: CTL.APIGATEWAY.AUTH.COGNITO.SCOPE.MISSING.001
+defect: >
+  REST API method protected by a Cognito user
+  pool authorizer has no authorization scopes
+  configured.
+infection: >
+  Cognito authorizers can validate the OAuth
+  scopes carried in the access token's scope
+  claim against the per-method
+  authorizationScopes configuration. With no
+  scopes set, the authorizer enforces only that
+  the token is valid (signed by the pool, not
+  expired) — every method protected by the
+  authorizer is reachable by every valid token,
+  regardless of which scopes the token was
+  issued for. A read-only-scoped token reaches
+  admin write methods unless application code
+  performs an additional check (which it
+  frequently doesn't, since the operator
+  thought scopes covered the case). Scopes are
+  the per-method ACL; without them the
+  authorizer collapses to authentication.
+failure: >
+  Authorization collapse. Every Cognito-issued
+  token reaches every Cognito-protected method
+  on this API, with no scope check between
+  read-only and admin operations.

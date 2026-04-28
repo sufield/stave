@@ -1,0 +1,29 @@
+control: CTL.APIGATEWAY.APIKEY.SOURCE.HEADER.LOGGED.001
+defect: >
+  Access log captures the API key value the
+  client sends as the x-api-key header.
+infection: >
+  REST API keys default to source HEADER —
+  clients send the key as the x-api-key
+  request header. When the access log format
+  includes $context.identity.apiKey or expands
+  request headers verbatim
+  ($context.requestOverride.header.x-api-key,
+  generic header dumps), the access log
+  persists every API key in use. CloudWatch
+  log groups and S3 buckets that hold these
+  logs are commonly read by the analytics team,
+  the ops dashboards, the audit pipeline — many
+  more eyes than the operator who configured
+  the keys imagined. API keys that should
+  function as opaque secrets become searchable
+  strings sitting at rest in log storage. The
+  fix is to log the AWS-managed
+  $context.identity.apiKeyId (a non-secret
+  identifier) rather than the secret value.
+failure: >
+  Credential exposure at rest. Every API key in
+  use is persisted as a searchable string in
+  CloudWatch / S3 — a much wider exposure than
+  the operator intended when they issued the
+  keys.

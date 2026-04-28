@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.APIKEY.SOURCE.HEADER.LOGGED.001
+name: API Key Source HEADER While Access Log Captures the Key Header
+description: >
+  REST API key source is set to HEADER (clients send the key as
+  the x-api-key request header), and the access log format includes
+  $context.identity.apiKey or $context.requestOverride.header.x-api-key
+  — or a verbose $context.requestOverride.header.* expansion. The
+  access log persists every API key that any client sends. Logs
+  end up in CloudWatch or S3, both common access targets for
+  internal audit, ops dashboards, and downstream analytics
+  pipelines. API keys that should be opaque session tokens become
+  searchable strings sitting at rest in log storage. Anyone with
+  log read access reads every key in use.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AU-9, IA-5, SC-28"
+  fedramp_moderate: "AU-9, IA-5, SC-28"
+  pci_dss_v4.0: "3.5, 8.3, 10.5"
+  soc2: "CC6.1, CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["IAM-13", "LOG-08"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Access log captures the API key value from the request header.
+    Every API key in use is persisted in log storage at rest.
+  action: >
+    Remove $context.identity.apiKey and any header expansion that
+    captures x-api-key from the access log format: aws apigateway
+    update-stage with --patch-operations
+    op=replace,path=/accessLogSettings/format,value=<sanitized-format>.
+    If audit needs to know which key authenticated the request,
+    log $context.identity.apiKeyId (the AWS-managed identifier)
+    rather than the secret value. Consider migrating from API
+    keys to a stronger primitive (Cognito, IAM, JWT) for any API
+    where the key authenticates a human or production system.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "apikey": {
+          "source": "HEADER",
+          "captured_in_access_log": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.apikey.source
+      op: eq
+      value: HEADER
+    - field: properties.api.apikey.captured_in_access_log
+      op: eq
+      value: true

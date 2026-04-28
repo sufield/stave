@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2052
-**Pack hash:** `107e14db31ff959817a6063f8b3c82d06ea83fc8dd25baf6a1e9fc35c7f565b0`
+**Total controls:** 2060
+**Pack hash:** `0ce90e71340949ea5354e4b87aef15284d527e888231bdedfd293efc7064f918`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 231 |
-| high | 911 |
+| high | 915 |
 | info | 16 |
 | low | 140 |
-| medium | 754 |
+| medium | 758 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,10 +24,10 @@
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1072 |
+| exposure | 1073 |
 | governance | 280 |
 | hygiene | 16 |
-| identity | 360 |
+| identity | 367 |
 | network | 28 |
 | resilience | 19 |
 | secrets | 4 |
@@ -680,6 +680,21 @@ External trusts must have SID filtering enabled to prevent SID history injection
 
 ---
 
+### CTL.APIGATEWAY.APIKEY.SOURCE.HEADER.LOGGED.001
+
+**API Key Source HEADER While Access Log Captures the Key Header**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AU-9, IA-5, SC-28; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-9, IA-5, SC-28; pci_dss_v4.0: 3.5, 8.3, 10.5; soc2: CC6.1, CC6.7;
+
+REST API key source is set to HEADER (clients send the key as the x-api-key request header), and the access log format includes $context.identity.apiKey or $context.requestOverride.header.x-api-key — or a verbose $context.requestOverride.header.* expansion. The access log persists every API key that any client sends. Logs end up in CloudWatch or S3, both common access targets for internal audit, ops dashboards, and downstream analytics pipelines. API keys that should be opaque session tokens become searchable strings sitting at rest in log storage. Anyone with log read access reads every key in use.
+
+**Remediation:** Remove $context.identity.apiKey and any header expansion that captures x-api-key from the access log format: aws apigateway update-stage with --patch-operations op=replace,path=/accessLogSettings/format,value=<sanitized-format>. If audit needs to know which key authenticated the request, log $context.identity.apiKeyId (the AWS-managed identifier) rather than the secret value. Consider migrating from API keys to a stronger primitive (Cognito, IAM, JWT) for any API where the key authenticates a human or production system.
+
+---
+
 ### CTL.APIGATEWAY.AUTH.001
 
 **API Routes Must Have Authorization Configured**
@@ -710,6 +725,51 @@ API Gateway method or route requires an API key but has no other authorizer (no 
 
 ---
 
+### CTL.APIGATEWAY.AUTH.COGNITO.MULTICLIENT.001
+
+**Cognito Authorizer Accepts Tokens From Any App Client in Pool**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2, AC-3, AC-6; iso_27001_2022: A.5.15, A.5.16; nist_800_53_r5: AC-2, AC-3, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2, 8.3; soc2: CC6.1, CC6.3;
+
+Cognito user pool authorizer is attached to a user pool but the authorizer's allowed app-client list is empty or wildcarded. Any access token issued by any app client in the pool is accepted. User pools commonly host multiple applications: the consumer mobile app, the partner portal, the internal admin console — each typically has its own app client. With no client-ID restriction, a token issued for the consumer app is also accepted by the admin API. A leaked or compromised consumer token grants admin access if the admin API also trusts the same pool.
+
+**Remediation:** Configure the Cognito authorizer's identity validation to pin the specific app client IDs that should be accepted. In a Lambda authorizer fronting Cognito, validate the token's client_id (id token) or aud (access token) claim against an allowlist. For HTTP API JWT authorizers, set the audience field to the specific client IDs. Document which app clients legitimately reach this API and reject tokens from others.
+
+---
+
+### CTL.APIGATEWAY.AUTH.COGNITO.SCOPE.MISSING.001
+
+**Cognito User Pool Authorizer Without Scope Validation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2, AC-3, AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-2, AC-3, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+REST API method protected by a Cognito user pool authorizer is configured without authorization scopes. With no scopes, any valid access token from the user pool is accepted regardless of the OAuth scopes the token was issued for. A token issued for read-only access to the catalog endpoint is also accepted by the admin endpoint, the billing endpoint, and every other method attached to the same authorizer. Scopes are the per-method ACL — without them, the authorizer collapses to authentication only, and authorization is delegated entirely to the application code (which often performs no further check).
+
+**Remediation:** Set authorizationScopes on the method integration with the OAuth scopes that should be required: aws apigateway update-method with --patch-operations op=add,path=/authorizationScopes,value=resource-server/read. Define and enforce per-method scopes that match the operation's sensitivity (read vs. write, public-read vs. admin). Cognito user pool app clients must be configured to issue the corresponding scopes.
+
+---
+
+### CTL.APIGATEWAY.AUTH.IAM.UNRESTRICTED.001
+
+**IAM-Authorized Method Without Resource-Level Restriction**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2, AC-3, AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-2, AC-3, AC-6; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+REST API method uses AWS_IAM authorization, but no resource policy restricts which IAM principals can invoke. With AWS_IAM alone, every IAM principal in the AWS account that holds execute-api:Invoke on this API's ARN can call the method. In large accounts that's hundreds or thousands of principals — far beyond the intended caller set. AWS_IAM is the authentication layer; the authorization layer is the resource policy. Without a resource policy that names specific principals or scopes invocation by VPC, source IP, or organization, the method is effectively open to every IAM identity that can hit it.
+
+**Remediation:** Attach a resource policy that names the specific principals permitted to invoke (Principal: AWS: arn:aws:iam::ACCOUNT:role/X) or scopes by source VPC / source IP / aws:PrincipalOrgID. aws apigateway update-rest-api with --patch-operations op=replace,path=/policy,value=<json>. For private APIs, scope by aws:SourceVpce. For public-internet APIs, scope by aws:PrincipalOrgID to the organization that should reach the API.
+
+---
+
 ### CTL.APIGATEWAY.AUTH.JWT.AUDIENCE.001
 
 **HTTP API JWT Authorizer Without Audience Validation**
@@ -737,6 +797,21 @@ HTTP API JWT authorizer does not validate the audience (aud) claim. Without audi
 WebSocket API's $connect route has no authorizer. WebSocket APIs authenticate only at connection time — once a connection is established, the client can send messages to any route ($default, custom routes) without further authentication. If $connect has no authorizer, any client can establish a WebSocket connection, send messages to all routes, receive responses, and maintain the connection indefinitely. For WebSocket APIs that provide real-time data, execute commands, or access internal services, unauthenticated $connect means unauthenticated access to all WebSocket functionality.
 
 **Remediation:** Attach an authorizer (Lambda authorizer or IAM auth) to the $connect route. The $connect route is the only place where WebSocket APIs can enforce authorization — message-level checks are not a substitute. If the API is intentionally public (e.g., a public chat broadcast), document the intent in an exemption rather than relying on the absence of auth.
+
+---
+
+### CTL.APIGATEWAY.AUTHORIZER.LAMBDA.CACHE.LONG.001
+
+**Lambda Authorizer Cache TTL Exceeds Recommended Ceiling**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2, AC-3, IA-2; iso_27001_2022: A.5.16, A.8.2; nist_800_53_r5: AC-2, AC-3, IA-2; pci_dss_v4.0: 8.2, 8.3; soc2: CC6.1, CC6.2;
+
+Lambda authorizer is configured with an authorization cache TTL greater than 300 seconds. API Gateway caches the authorizer's IAM policy decision for the configured TTL — once cached, the cached policy is reused for matching tokens without re-invoking the authorizer Lambda. A long TTL means revoked tokens, deleted users, scope changes, and policy revocations don't take effect until the cache entry expires. The default and AWS-recommended ceiling is 300 seconds; values up to 3600 are allowed but only appropriate when the upstream identity store guarantees the permissions named in the cached policy can't change within that window.
+
+**Remediation:** Lower the authorizer's authorizer_result_ttl_in_seconds to 300 or less (default is 300). For high-revocation-rate workloads consider 60 seconds or disable the cache entirely (TTL = 0) and accept the per-request authorizer invocation cost. aws apigateway update-authorizer with --patch-operations op=replace,path=/authorizerResultTtlInSeconds,value=300.
 
 ---
 
@@ -905,6 +980,21 @@ API Gateway VPC Link references an NLB or ALB that has been deleted from the loa
 
 ---
 
+### CTL.APIGATEWAY.HTTPAPI.DEFAULT.ROUTE.001
+
+**HTTP API Has $default Catch-All Route**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, CM-2, SC-7; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, CM-2, SC-7; pci_dss_v4.0: 1.2, 6.4.2; soc2: CC6.1, CC6.6;
+
+HTTP API has a $default route configured. The $default route matches any path and method that no specific route handles — including paths the API author never intended to expose. When the $default route forwards to a Lambda or HTTP backend, the backend receives traffic for /admin, /internal, /.git, /actuator, /debug, and every other path the backend itself implements, even if no specific API Gateway route was created for them. Discovery becomes path enumeration on the backend rather than on the API. The safer pattern is explicit route definitions for every supported method+path; unknown paths receive 404 from API Gateway rather than reaching the backend.
+
+**Remediation:** Replace the $default route with explicit routes for each supported method+path: aws apigatewayv2 delete-route --route-id <default> followed by create-route for each intended route. If the application genuinely needs a catch- all (single-page app routing, custom 404 handling), keep $default but front it with a Lambda that explicitly allowlists expected paths and returns 404 for everything else.
+
+---
+
 ### CTL.APIGATEWAY.HTTPAPI.JWT.ISSUER.HTTP.001
 
 **HTTP API JWT Authorizer Issuer URL Uses HTTP**
@@ -917,6 +1007,21 @@ API Gateway VPC Link references an NLB or ALB that has been deleted from the loa
 HTTP API JWT authorizer is configured with an issuer URL whose scheme is HTTP rather than HTTPS. The JWT authorizer derives the JWKS endpoint from the issuer URL — typically by appending /.well-known/jwks.json — and retrieves the issuer's public keys from that endpoint to validate token signatures. When the issuer URL is HTTP, the JWKS retrieval traverses the network in plaintext. An attacker on the network path between API Gateway and the issuer (an upstream router, a malicious DNS server, a compromised intermediate proxy) can intercept the JWKS request and substitute their own public keys. The authorizer caches the substituted keys and accepts any JWT signed by the attacker's matching private key as valid — a complete authentication bypass on every route protected by this authorizer. HTTPS prevents key substitution by encrypting and authenticating the JWKS retrieval.
 
 **Remediation:** Update the authorizer's issuer URL to HTTPS. Verify that the issuer's JWKS endpoint serves over HTTPS with a certificate whose subject matches the issuer hostname. If the issuer can only serve HTTP, treat that as the underlying problem — fix the issuer's TLS configuration before pointing the authorizer at it. Rotate any JWTs issued under the previous configuration; treat them as potentially exposed.
+
+---
+
+### CTL.APIGATEWAY.HTTPAPI.JWT.SCOPE.MISSING.001
+
+**HTTP API JWT Authorizer Without Per-Route Scope Validation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2, AC-3, AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-2, AC-3, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2, 8.3; soc2: CC6.1, CC6.3;
+
+HTTP API route is protected by a JWT authorizer, but no authorization scopes are configured on the route. Any valid token from the issuer with valid audience is accepted regardless of the OAuth scopes the token bears. A token issued for read-only access is also accepted by the admin write route. Scopes are the per-route ACL — without them the JWT authorizer enforces only authentication and audience, and authorization collapses to whatever the application code does (which often isn't a scope check). HTTP APIs let scopes be configured per route via authorizationScopes; routes that omit it inherit scope-less authorization.
+
+**Remediation:** Set authorizationScopes on each protected route with the OAuth scopes that should be required: aws apigatewayv2 update-route --route-id ... --authorization-scopes resource-server/read resource-server/write. Define scopes that match the operation sensitivity and configure the IdP (Cognito, Auth0, Okta) to issue them based on role/group membership.
 
 ---
 
@@ -1081,6 +1186,21 @@ API Gateway has no custom domain associated and has not been deployed in the las
 API Gateway has an authorizer configured but no route or method references it. The authorizer exists in the API's configuration but is enforcing authentication on nothing. Three causes produce this state. First, an authorizer that was attached to routes earlier was detached during a configuration change — the routes are now unauthenticated and the authorizer is a vestigial artifact. Second, an authorizer was created during initial setup and the routes that were supposed to use it were never updated to reference it — the authorizer's existence masks the fact that nothing is authenticated. Third, the routes that referenced the authorizer were deleted but the authorizer wasn't cleaned up. The control is low severity — the authorizer's existence is not itself a vulnerability — but the orphan signal indicates one of the three causes above warrants investigation.
 
 **Remediation:** Determine which of the three causes applies. If routes were detached, re-attach the authorizer (or confirm the detachment was intentional and the routes are deliberately unauthenticated). If routes were never attached, attach the authorizer to the intended routes. If the authorizer is truly unused, delete it so the API's configuration accurately reflects what it enforces.
+
+---
+
+### CTL.APIGATEWAY.POLICY.METHODAUTH.CONFLICT.001
+
+**Resource Policy Conflicts With Method-Level Authorization**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3, AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, CM-2; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3, CC8.1;
+
+REST API resource policy and method-level authorization are inconsistent — one is permissive while the other is restrictive. Common shapes: resource policy allows Principal "*" while methods require AWS_IAM (the resource policy effectively grants public access regardless of the method's IAM requirement); or method is open (NONE) while the resource policy denies external principals (callers see Forbidden even though the method is intentionally public). The resource policy is evaluated together with method auth — discrepancies produce surprising auth outcomes that pass one review and fail another.
+
+**Remediation:** Reconcile the two layers: decide whether authorization is enforced at the resource-policy layer (Principal allowlist), the method layer (AWS_IAM / Cognito / Lambda authorizer), or both layered consistently. The common safe pattern is method authorization as the per-route check, with the resource policy as a coarse-grained enforcement layer (org-scoped, VPC- scoped). If the method is intentionally NONE (e.g., a public health endpoint), the resource policy should explicitly allow that route from the expected source set rather than implicitly relying on the method being open.
 
 ---
 

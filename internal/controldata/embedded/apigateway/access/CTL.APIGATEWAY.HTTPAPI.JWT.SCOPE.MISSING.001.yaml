@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.HTTPAPI.JWT.SCOPE.MISSING.001
+name: HTTP API JWT Authorizer Without Per-Route Scope Validation
+description: >
+  HTTP API route is protected by a JWT authorizer, but no
+  authorization scopes are configured on the route. Any valid
+  token from the issuer with valid audience is accepted regardless
+  of the OAuth scopes the token bears. A token issued for
+  read-only access is also accepted by the admin write route.
+  Scopes are the per-route ACL — without them the JWT authorizer
+  enforces only authentication and audience, and authorization
+  collapses to whatever the application code does (which often
+  isn't a scope check). HTTP APIs let scopes be configured per
+  route via authorizationScopes; routes that omit it inherit
+  scope-less authorization.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-2, AC-3, AC-6, IA-2"
+  fedramp_moderate: "AC-2, AC-3, AC-6"
+  pci_dss_v4.0: "7.1, 7.2, 8.3"
+  soc2: "CC6.1, CC6.3"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-04", "IAM-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    HTTP API route uses JWT authorizer but no authorizationScopes
+    configured; any valid token grants access regardless of scope.
+  action: >
+    Set authorizationScopes on each protected route with the OAuth
+    scopes that should be required: aws apigatewayv2 update-route
+    --route-id ... --authorization-scopes resource-server/read
+    resource-server/write. Define scopes that match the operation
+    sensitivity and configure the IdP (Cognito, Auth0, Okta) to
+    issue them based on role/group membership.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_http_route",
+        "route": {
+          "authorization_type": "JWT",
+          "jwt": {
+            "scopes_configured": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_http_route
+    - field: properties.api.route.authorization_type
+      op: eq
+      value: JWT
+    - field: properties.api.route.jwt.scopes_configured
+      op: eq
+      value: false

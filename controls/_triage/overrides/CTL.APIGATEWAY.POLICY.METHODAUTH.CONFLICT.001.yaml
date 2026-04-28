@@ -1,0 +1,31 @@
+control: CTL.APIGATEWAY.POLICY.METHODAUTH.CONFLICT.001
+defect: >
+  REST API resource policy and method-level
+  authorization disagree.
+infection: >
+  API Gateway evaluates the resource policy
+  alongside method-level auth. Two layers that
+  disagree produce surprising effective
+  authorization. Common shapes: resource policy
+  Principal=* with a method that requires
+  AWS_IAM (the resource policy effectively
+  grants public access — IAM signing isn't
+  required when the resource policy already
+  permits *); resource policy denies external
+  principals while a method is configured as
+  NONE (callers see Forbidden even on the
+  intentionally-public method); method
+  configured for Cognito while the resource
+  policy explicitly allows IAM principals
+  (different identity layers conflict). Effective
+  auth is the union of the two — the more
+  permissive layer wins. The two should be
+  designed together, not in isolation, with the
+  resource policy as the coarse-grained
+  enforcement layer (org-scoped, VPC-scoped)
+  and the method as the per-route check.
+failure: >
+  Surprising effective authorization.
+  Reviewing one layer in isolation gives the
+  wrong picture; the other layer can permit
+  what the first denied or vice versa.

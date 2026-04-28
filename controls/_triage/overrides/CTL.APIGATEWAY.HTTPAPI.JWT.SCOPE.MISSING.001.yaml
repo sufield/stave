@@ -1,0 +1,23 @@
+control: CTL.APIGATEWAY.HTTPAPI.JWT.SCOPE.MISSING.001
+defect: >
+  HTTP API route protected by a JWT authorizer
+  has no authorizationScopes configured.
+infection: >
+  HTTP API JWT authorizers can validate the
+  scope claim of an OAuth access token against
+  the per-route authorizationScopes setting.
+  With no scopes set, the authorizer enforces
+  only authentication (signed by issuer, valid
+  audience, not expired) — every route reaches
+  any valid token regardless of which scopes
+  the token bears. A token issued for read-only
+  access reaches the admin write route. Per-
+  route scopes are how OAuth-style authorization
+  is expressed in HTTP APIs; routes that omit
+  the setting fall back to scope-less behavior.
+  Pair with audience and issuer pinning for
+  full JWT-based authorization.
+failure: >
+  Authorization collapse. JWT authentication
+  works but every route is reachable by every
+  valid token, regardless of scope.

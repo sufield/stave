@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.AUTHORIZER.LAMBDA.CACHE.LONG.001
+defect: >
+  Lambda authorizer cache TTL exceeds the AWS-
+  recommended 300-second ceiling.
+infection: >
+  API Gateway caches the IAM policy returned by
+  a Lambda authorizer for the configured TTL.
+  During the cache window, matching tokens are
+  authorized against the cached policy without
+  re-invoking the authorizer Lambda. Long TTLs
+  amortize Lambda invocation cost, but they also
+  delay every authorization decision change:
+  revoked tokens still pass, deleted users are
+  still allowed in, and scope/role changes don't
+  apply until the cache entry expires. The
+  default ceiling is 300 seconds; values up to
+  3600 are allowed but appropriate only when
+  the upstream identity store guarantees no
+  permission changes within that window.
+failure: >
+  Stale authorization. Revoked tokens, deleted
+  users, and permission changes don't take
+  effect until the cache window closes — up to
+  the configured TTL.

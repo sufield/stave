@@ -1,0 +1,27 @@
+control: CTL.APIGATEWAY.AUTH.IAM.UNRESTRICTED.001
+defect: >
+  REST API method uses AWS_IAM authorization
+  but no resource policy scopes which IAM
+  principals can invoke.
+infection: >
+  AWS_IAM authorization on an API Gateway method
+  enforces only that the caller signs requests
+  with valid AWS credentials and holds an IAM
+  policy that grants execute-api:Invoke. In a
+  large account, hundreds or thousands of IAM
+  roles may hold execute-api:Invoke through
+  shared baseline policies (administrative roles,
+  cross-team developer roles, third-party
+  integrations). Without an API Gateway resource
+  policy, every one of those principals can
+  reach the method. The resource policy is the
+  authorization layer — it should name the
+  specific principals or scope by source VPC,
+  source IP, or aws:PrincipalOrgID. AWS_IAM
+  alone authenticates; the resource policy
+  authorizes.
+failure: >
+  Open to every authenticated AWS principal.
+  AWS_IAM provides authentication, but with no
+  resource policy, authorization is whatever
+  the caller's identity policy allows.

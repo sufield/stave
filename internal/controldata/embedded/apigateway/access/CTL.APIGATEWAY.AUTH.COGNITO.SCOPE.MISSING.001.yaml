@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.AUTH.COGNITO.SCOPE.MISSING.001
+name: Cognito User Pool Authorizer Without Scope Validation
+description: >
+  REST API method protected by a Cognito user pool authorizer is
+  configured without authorization scopes. With no scopes, any
+  valid access token from the user pool is accepted regardless of
+  the OAuth scopes the token was issued for. A token issued for
+  read-only access to the catalog endpoint is also accepted by the
+  admin endpoint, the billing endpoint, and every other method
+  attached to the same authorizer. Scopes are the per-method
+  ACL — without them, the authorizer collapses to authentication
+  only, and authorization is delegated entirely to the application
+  code (which often performs no further check).
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-2, AC-3, AC-6, IA-2"
+  fedramp_moderate: "AC-2, AC-3, AC-6"
+  pci_dss_v4.0: "7.1, 7.2"
+  soc2: "CC6.1, CC6.3"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-04", "IAM-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Cognito-protected method has no scope requirement; any valid
+    user-pool token grants access regardless of issued scopes.
+  action: >
+    Set authorizationScopes on the method integration with the
+    OAuth scopes that should be required: aws apigateway
+    update-method with --patch-operations
+    op=add,path=/authorizationScopes,value=resource-server/read.
+    Define and enforce per-method scopes that match the operation's
+    sensitivity (read vs. write, public-read vs. admin). Cognito
+    user pool app clients must be configured to issue the
+    corresponding scopes.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_method",
+        "method": {
+          "authorization_type": "COGNITO_USER_POOLS",
+          "cognito": {
+            "scopes_configured": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_method
+    - field: properties.api.method.authorization_type
+      op: eq
+      value: COGNITO_USER_POOLS
+    - field: properties.api.method.cognito.scopes_configured
+      op: eq
+      value: false

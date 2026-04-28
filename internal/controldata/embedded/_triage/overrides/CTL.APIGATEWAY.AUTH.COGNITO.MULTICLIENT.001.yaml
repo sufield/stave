@@ -1,0 +1,26 @@
+control: CTL.APIGATEWAY.AUTH.COGNITO.MULTICLIENT.001
+defect: >
+  Cognito user pool authorizer accepts tokens
+  from any app client in the pool — no client-ID
+  pinning.
+infection: >
+  Cognito user pools commonly host multiple
+  applications: the consumer mobile app, the
+  partner portal, the internal admin console.
+  Each application registers its own app client
+  with the pool. A user with a session in one
+  application receives tokens issued by that
+  app client. Without client-ID pinning at the
+  authorizer, a token issued by the consumer-
+  mobile app client is accepted by the admin-
+  console API, the partner-portal API, and any
+  other API that trusts the same pool. Token
+  exfiltration from the lowest-trust application
+  grants access to the highest-trust API. The
+  fix is to pin allowed client IDs explicitly
+  on the authorizer (or in a Lambda authorizer
+  fronting Cognito).
+failure: >
+  Cross-application token reuse. A token issued
+  for a low-trust app client is accepted by
+  high-trust APIs that share the same user pool.

@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.HTTPAPI.DEFAULT.ROUTE.001
+name: HTTP API Has $default Catch-All Route
+description: >
+  HTTP API has a $default route configured. The $default route
+  matches any path and method that no specific route handles —
+  including paths the API author never intended to expose. When
+  the $default route forwards to a Lambda or HTTP backend, the
+  backend receives traffic for /admin, /internal, /.git, /actuator,
+  /debug, and every other path the backend itself implements,
+  even if no specific API Gateway route was created for them.
+  Discovery becomes path enumeration on the backend rather than
+  on the API. The safer pattern is explicit route definitions
+  for every supported method+path; unknown paths receive 404 from
+  API Gateway rather than reaching the backend.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, CM-2, SC-7"
+  fedramp_moderate: "AC-3, CM-2, SC-7"
+  pci_dss_v4.0: "1.2, 6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    HTTP API has a $default catch-all route that forwards every
+    unmatched path/method to a backend.
+  action: >
+    Replace the $default route with explicit routes for each
+    supported method+path: aws apigatewayv2 delete-route
+    --route-id <default> followed by create-route for each
+    intended route. If the application genuinely needs a catch-
+    all (single-page app routing, custom 404 handling), keep
+    $default but front it with a Lambda that explicitly allowlists
+    expected paths and returns 404 for everything else.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_http_api",
+        "routes": {
+          "has_default_route": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_http_api
+    - field: properties.api.routes.has_default_route
+      op: eq
+      value: true

@@ -1,0 +1,29 @@
+control: CTL.APIGATEWAY.HTTPAPI.DEFAULT.ROUTE.001
+defect: >
+  HTTP API has a $default catch-all route that
+  forwards every unmatched method+path to a
+  backend.
+infection: >
+  HTTP APIs let operators define a $default
+  route that matches any path/method not
+  explicitly declared. When that route forwards
+  to a Lambda or HTTP integration, the backend
+  receives traffic for paths the API author
+  never intended to expose: /admin, /internal,
+  /.git, /actuator, /debug, /health,
+  /metrics — anything the backend itself
+  implements. Discovery becomes path
+  enumeration on the backend rather than the
+  API definition. Worse, when the $default
+  route uses a permissive authorizer (NONE,
+  AWS_IAM with no resource scope), every
+  backend path is reachable without per-route
+  authorization. The safer pattern is explicit
+  routes for every supported method+path, so
+  unknown paths return 404 from API Gateway
+  without the backend seeing the request.
+failure: >
+  Path enumeration on the backend. Unknown
+  paths reach the backend through the catch-
+  all route, exposing internal endpoints the
+  API author never intended to publish.

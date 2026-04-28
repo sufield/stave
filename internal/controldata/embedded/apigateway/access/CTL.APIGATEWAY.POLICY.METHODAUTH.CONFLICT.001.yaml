@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.POLICY.METHODAUTH.CONFLICT.001
+name: Resource Policy Conflicts With Method-Level Authorization
+description: >
+  REST API resource policy and method-level authorization are
+  inconsistent — one is permissive while the other is restrictive.
+  Common shapes: resource policy allows Principal "*" while methods
+  require AWS_IAM (the resource policy effectively grants public
+  access regardless of the method's IAM requirement); or method is
+  open (NONE) while the resource policy denies external principals
+  (callers see Forbidden even though the method is intentionally
+  public). The resource policy is evaluated together with method
+  auth — discrepancies produce surprising auth outcomes that pass
+  one review and fail another.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, AC-6, CM-2"
+  fedramp_moderate: "AC-3, AC-6"
+  pci_dss_v4.0: "7.1, 7.2"
+  soc2: "CC6.1, CC6.3, CC8.1"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Resource policy and method authorization disagree on who can
+    invoke; effective authorization is the union of the two.
+  action: >
+    Reconcile the two layers: decide whether authorization is
+    enforced at the resource-policy layer (Principal allowlist),
+    the method layer (AWS_IAM / Cognito / Lambda authorizer), or
+    both layered consistently. The common safe pattern is method
+    authorization as the per-route check, with the resource
+    policy as a coarse-grained enforcement layer (org-scoped, VPC-
+    scoped). If the method is intentionally NONE (e.g., a public
+    health endpoint), the resource policy should explicitly allow
+    that route from the expected source set rather than implicitly
+    relying on the method being open.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_rest_api",
+        "policy": {
+          "method_auth_consistent": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_rest_api
+    - field: properties.api.policy.method_auth_consistent
+      op: eq
+      value: false

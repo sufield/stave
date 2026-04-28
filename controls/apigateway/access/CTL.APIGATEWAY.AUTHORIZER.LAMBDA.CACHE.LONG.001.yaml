@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.AUTHORIZER.LAMBDA.CACHE.LONG.001
+name: Lambda Authorizer Cache TTL Exceeds Recommended Ceiling
+description: >
+  Lambda authorizer is configured with an authorization cache TTL
+  greater than 300 seconds. API Gateway caches the authorizer's
+  IAM policy decision for the configured TTL — once cached, the
+  cached policy is reused for matching tokens without re-invoking
+  the authorizer Lambda. A long TTL means revoked tokens, deleted
+  users, scope changes, and policy revocations don't take effect
+  until the cache entry expires. The default and AWS-recommended
+  ceiling is 300 seconds; values up to 3600 are allowed but only
+  appropriate when the upstream identity store guarantees the
+  permissions named in the cached policy can't change within
+  that window.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2, AC-3, IA-2"
+  fedramp_moderate: "AC-2, AC-3, IA-2"
+  pci_dss_v4.0: "8.2, 8.3"
+  soc2: "CC6.1, CC6.2"
+  iso_27001_2022: "A.5.16, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Lambda authorizer cache TTL is too generous; revocations and
+    permission changes don't take effect until the cache expires.
+  action: >
+    Lower the authorizer's authorizer_result_ttl_in_seconds to 300
+    or less (default is 300). For high-revocation-rate workloads
+    consider 60 seconds or disable the cache entirely (TTL = 0) and
+    accept the per-request authorizer invocation cost. aws apigateway
+    update-authorizer with --patch-operations
+    op=replace,path=/authorizerResultTtlInSeconds,value=300.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_authorizer",
+        "authorizer": {
+          "type": "TOKEN",
+          "lambda": {
+            "ttl_seconds": 300
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_authorizer
+    - field: properties.api.authorizer.type
+      op: in
+      value: ["TOKEN", "REQUEST"]
+    - field: properties.api.authorizer.lambda.ttl_seconds
+      op: gt
+      value: 300
