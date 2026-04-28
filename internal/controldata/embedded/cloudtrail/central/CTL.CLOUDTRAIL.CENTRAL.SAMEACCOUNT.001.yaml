@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.CENTRAL.SAMEACCOUNT.001
+name: CloudTrail Trail S3 Bucket Is in the Same Account as Resources
+description: >
+  CloudTrail trail delivers log files to an S3 bucket in
+  the same AWS account that the trail monitors. If the
+  account is compromised, the attacker has access to both
+  the resources AND the audit log — they can modify or
+  delete log files to cover their tracks. Best practice
+  is to deliver trail logs to a dedicated logging account
+  with restricted access; compromising the production
+  account doesn't grant access to the log account.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-4, AU-9, AC-3"
+  pci_dss_v4.0: "10.5, 10.7"
+  fedramp_moderate: "AU-9"
+  iso_27001_2022: "A.5.15, A.8.15"
+  ccm_v4: ["IAM-04", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Trail S3 bucket lives in the same account as the
+    monitored resources. Account compromise exposes both
+    resources and the audit trail.
+  action: >
+    Create a dedicated AWS account for audit logging and
+    move the trail's S3 bucket there. Update the trail's
+    S3BucketName to point at the logging-account bucket
+    and update the bucket policy in the logging account
+    to grant cloudtrail.amazonaws.com PutObject from
+    the trail-account's trail ARN (with aws:SourceArn
+    pinning per CTL.CLOUDTRAIL.S3.SOURCEARN.001).
+    Restrict access to the logging account to a small
+    security-team principal set; production-account IAM
+    cannot reach the log bucket.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "trail_account_id": "111122223333",
+          "s3_bucket_account_id": "444455556666",
+          "log_bucket_same_account": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.log_bucket_same_account
+      op: eq
+      value: true
+defect: >
+  CloudTrail trail delivers logs to an S3 bucket in the
+  same account as the monitored resources.
+infection: >
+  When the trail and its log bucket are in the same
+  account, an attacker who compromises the account has
+  access to everything: the resources they're attacking
+  AND the audit logs recording their actions. The
+  attacker can: stop the trail (CT-1 detects this IF
+  alarms are configured), delete log files from the S3
+  bucket (CT-3's S3 hardening controls mitigate this),
+  or modify the bucket policy to block future writes. A
+  dedicated logging account isolates the audit trail
+  from the monitored account. Compromising the
+  production account doesn't grant access to the
+  logging account. The attacker must compromise TWO
+  accounts to both attack and erase evidence.
+failure: >
+  Audit logs co-located with monitored resources. Account
+  compromise exposes both resources and the audit trail.
+tests:
+  - name: trail and bucket in same account fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/local-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            trail_account_id: "111122223333"
+            s3_bucket_account_id: "111122223333"
+            log_bucket_same_account: true
+  - name: trail in management, bucket in logging account passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            trail_account_id: "111122223333"
+            s3_bucket_account_id: "444455556666"
+            log_bucket_same_account: false

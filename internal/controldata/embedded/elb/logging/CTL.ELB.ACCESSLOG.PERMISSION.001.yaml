@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ACCESSLOG.PERMISSION.001
+name: ELB Cannot Write to Access Log S3 Bucket
+description: >
+  ELB access logging is enabled and the S3 bucket
+  exists, but the bucket policy doesn't grant the
+  region's ELB log-delivery service account
+  s3:PutObject. Logs are silently dropped — same
+  effect as a deleted bucket, but caused by missing
+  permissions rather than missing infrastructure. A
+  common failure mode when buckets are created without
+  the ELB grant or the grant is later removed by
+  policy edits.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "2.1"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-2, AU-9, AC-3"
+  pci_dss_v4.0: "10.1, 10.5"
+  fedramp_moderate: "AU-2"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-02", "LOG-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    ELB access logging is enabled, the S3 bucket exists,
+    but the bucket policy denies write to the regional
+    ELB log-delivery account.
+  action: >
+    Update the bucket policy to grant s3:PutObject to
+    the regional ELB log-delivery service account
+    (e.g., 127311923021 for us-east-1 — the IDs are
+    region-specific and listed in the AWS docs). Test
+    by triggering ELB traffic and verifying a new log
+    file appears under
+    AWSLogs/<account>/elasticloadbalancing/<region>/
+    within five minutes.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "access_logging_enabled": true,
+          "access_log_bucket": "org-elb-access-logs",
+          "access_log_bucket_exists": true,
+          "access_log_writable": true,
+          "has_access_log_permission_error": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.access_logging_enabled
+      op: eq
+      value: true
+    - field: properties.network.elb.access_log_bucket_exists
+      op: eq
+      value: true
+    - field: properties.network.elb.has_access_log_permission_error
+      op: eq
+      value: true
+defect: >
+  ELB access logging is enabled but ELB cannot write to
+  the configured S3 bucket — permission denied.
+infection: >
+  Access logging is enabled. The bucket exists. But the
+  bucket policy doesn't grant write access to the ELB
+  service account for the correct region. ELB access
+  logs are written by a region-specific AWS service
+  account (e.g., 127311923021 for us-east-1). The
+  bucket policy must grant s3:PutObject to this service
+  account. Common failure modes: bucket created without
+  the ELB access log policy, bucket policy modified
+  and the ELB grant was removed, or ELB and bucket are
+  in different regions (wrong service account ID). The
+  ELB silently drops logs when writes fail — no error,
+  no alarm, no notification.
+failure: >
+  Silent access log failure. Logging is configured and
+  the bucket exists, but write permission is denied —
+  logs are silently dropped.
+tests:
+  - name: ELB with bucket but no write permission fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            access_logging_enabled: true
+            access_log_bucket: "org-elb-access-logs"
+            access_log_bucket_exists: true
+            access_log_writable: false
+            has_access_log_permission_error: true
+  - name: ELB with writable bucket passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            access_logging_enabled: true
+            access_log_bucket: "org-elb-access-logs"
+            access_log_bucket_exists: true
+            access_log_writable: true
+            has_access_log_permission_error: false

@@ -1,0 +1,21 @@
+control: CTL.ELB.ACCESSLOG.PERMISSION.001
+defect: >
+  ELB access logging is enabled but ELB cannot write to
+  the configured S3 bucket — permission denied.
+infection: >
+  Access logging is enabled. The bucket exists. But the
+  bucket policy doesn't grant write access to the ELB
+  service account for the correct region. ELB access
+  logs are written by a region-specific AWS service
+  account (e.g., 127311923021 for us-east-1). The
+  bucket policy must grant s3:PutObject to this service
+  account. Common failure modes: bucket created without
+  the ELB access log policy, bucket policy modified
+  and the ELB grant was removed, or ELB and bucket are
+  in different regions (wrong service account ID). The
+  ELB silently drops logs when writes fail — no error,
+  no alarm, no notification.
+failure: >
+  Silent access log failure. Logging is configured and
+  the bucket exists, but write permission is denied —
+  logs are silently dropped.

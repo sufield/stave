@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ORG.MEMBERCANSTOP.001
+name: Organization Member Accounts Can Stop or Delete Their Trail
+description: >
+  No Service Control Policy prevents organization member
+  accounts from calling cloudtrail:StopLogging or
+  cloudtrail:DeleteTrail. Even with an organization trail
+  in place, a compromised member-account admin can disable
+  their local trail copy or — if the account has its own
+  trail — disable audit logging for that account
+  entirely. An SCP with Deny on these actions (excluding a
+  break-glass security-admin role) is the only way to
+  prevent member-account principals from disabling
+  logging.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.1"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AC-3, AU-9, AU-12"
+  pci_dss_v4.0: "10.5, 10.7"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.15"
+  ccm_v4: ["IAM-04", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: organization
+    multiplier: 4.0
+remediation:
+  description: >
+    No SCP prevents member accounts from disabling
+    CloudTrail. Member-account compromise can blind audit
+    logging.
+  action: >
+    Attach an SCP to the organization (or the relevant OU)
+    that denies cloudtrail:StopLogging,
+    cloudtrail:DeleteTrail, cloudtrail:UpdateTrail, and
+    cloudtrail:PutEventSelectors with a NotPrincipal
+    excluding the security-admin role and the management
+    account. Verify by attempting StopLogging from a
+    member account's admin role — the call must fail with
+    an SCP-denied error before reaching the API.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "has_scp_protect_trail": true,
+          "scp_denies_stop_logging": true,
+          "scp_denies_delete_trail": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.scp_denies_stop_logging
+      op: eq
+      value: false
+defect: >
+  No SCP prevents member accounts from stopping or deleting
+  CloudTrail trails.
+infection: >
+  Without an SCP that denies cloudtrail:StopLogging and
+  cloudtrail:DeleteTrail for member accounts: a
+  compromised admin in a member account calls StopLogging
+  — logging stops in that account. If the account has its
+  own trail (no org trail), all audit records stop. If
+  the account has an org trail, the organization trail
+  continues (it's managed by the management account) but
+  the local CW Logs delivery stops — local metric filters
+  and alarms go blind. An SCP with Deny on
+  cloudtrail:StopLogging and cloudtrail:DeleteTrail (with
+  condition excluding the management account or a
+  security role) prevents member accounts from disabling
+  their audit trail.
+failure: >
+  Member accounts can disable audit logging. No SCP
+  prevents StopLogging or DeleteTrail in member accounts.
+tests:
+  - name: org member without SCP fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/member-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            has_scp_protect_trail: false
+            scp_denies_stop_logging: false
+            scp_denies_delete_trail: false
+  - name: org member with SCP Deny passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/member-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            has_scp_protect_trail: true
+            scp_denies_stop_logging: true
+            scp_denies_delete_trail: true

@@ -1,0 +1,138 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.WAF.NORULES.001
+name: ALB WAF Web ACL Has No Rules
+description: >
+  ALB has a WAF web ACL associated and the web ACL
+  exists, but the web ACL contains zero rules — no
+  managed rule groups, no custom rules, no rate-based
+  rules. The WAF evaluates nothing. Every request
+  passes through the default action (typically Allow).
+  An auditor checking "is WAF configured?" sees the
+  association and marks it compliant. The WAF provides
+  the appearance of application-layer filtering without
+  any filtering. Same false-protection class as DMARC
+  p=none and rotation-enabled-but-Lambda-deleted.
+domain: governance
+severity: high
+archetype: false-protection
+compliance:
+  cis_aws_v3.0: "2.6"
+  soc2: "CC6.1, CC6.6, CC7.1"
+  nist_800_53_r5: "SC-7, SI-3, SI-4"
+  pci_dss_v4.0: "6.4.2, 6.6"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.8.20, A.8.22"
+  ccm_v4: ["TVM-04", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    ALB WAF web ACL has zero rules. The WAF performs no
+    filtering.
+  action: >
+    Add at minimum the AWS managed core rule set
+    (AWSManagedRulesCommonRuleSet), the SQL injection
+    rule set (AWSManagedRulesSQLiRuleSet), and a
+    rate-based rule for IP-level throttling. Use the
+    AWS WAF console or
+    aws wafv2 update-web-acl. Run rules in COUNT mode
+    initially (CTL.ELB.WAF.COUNTONLY.001 catches
+    leaving them in COUNT) to surface false positives
+    before flipping to BLOCK.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "waf_associated": true,
+          "waf_web_acl_exists": true,
+          "waf_rule_count": 5,
+          "waf_has_rules": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.waf_associated
+      op: eq
+      value: true
+    - field: properties.network.elb.waf_web_acl_exists
+      op: eq
+      value: true
+    - field: properties.network.elb.waf_has_rules
+      op: eq
+      value: false
+defect: >
+  ALB WAF web ACL has zero rules.
+infection: >
+  A WAF web ACL with no rules evaluates no request
+  attributes. Every request — SQL injection payloads,
+  XSS attempts, known malicious IPs, bot traffic,
+  credential stuffing — passes through the WAF to the
+  backend. The default action (typically Allow) applies
+  to every request because no rule matches first. An
+  auditor checking "is WAF configured?" sees the web
+  ACL association and marks it compliant. A security
+  team checking "are we protected against OWASP top
+  10?" sees the WAF and assumes yes. The WAF is a
+  shell — it exists structurally but provides zero
+  filtering.
+failure: >
+  Empty WAF. WAF web ACL has no rules — all requests
+  pass through unfiltered. False protection at the
+  perimeter.
+tests:
+  - name: ALB with empty web ACL fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            waf_associated: true
+            waf_web_acl_exists: true
+            waf_rule_count: 0
+            waf_has_rules: false
+  - name: ALB with 5-rule web ACL passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            waf_associated: true
+            waf_web_acl_exists: true
+            waf_rule_count: 5
+            waf_has_rules: true
+  - name: ALB with single rate-based rule passes (minimal but not zero)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            waf_associated: true
+            waf_web_acl_exists: true
+            waf_rule_count: 1
+            waf_has_rules: true

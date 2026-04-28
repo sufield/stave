@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.WAF.COUNTONLY.001
+name: ALB WAF Web ACL Rules Are in COUNT Mode Only
+description: >
+  ALB WAF web ACL has rules but every rule is in COUNT
+  mode. COUNT mode evaluates requests and records
+  matches but takes no action — the request continues
+  to the backend. SQL injection payloads, known-bad IPs,
+  bot traffic — all matched, all logged, all forwarded.
+  COUNT is intended for testing new rules before
+  enabling BLOCK; production-deployed COUNT-only WAF
+  detects threats without preventing them. Same false-
+  protection class as no-rule WAF — slightly less
+  invisible (logs exist) but no actual blocking.
+domain: governance
+severity: high
+archetype: false-protection
+compliance:
+  cis_aws_v3.0: "2.6"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "SC-7, SI-3, SI-4"
+  pci_dss_v4.0: "6.4.2, 6.6"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.8.20, A.8.22"
+  ccm_v4: ["TVM-04", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Every WAF rule on the ALB is in COUNT mode. Threats
+    are detected but reach the backend.
+  action: >
+    Switch rules from COUNT to BLOCK after a brief
+    bake-in window. Use the WAF console (Override
+    statement → none) or
+    aws wafv2 update-web-acl with the rule's Action set
+    to Block instead of Override+Count. Move one rule
+    group at a time, watch the WAF logs for false
+    positives between transitions, and revert if
+    legitimate traffic gets blocked. The common failure:
+    rules deployed in COUNT for testing, testing
+    completed, nobody switched to BLOCK.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "waf_associated": true,
+          "waf_web_acl_exists": true,
+          "waf_rule_count": 4,
+          "waf_block_rule_count": 3,
+          "waf_count_rule_count": 1,
+          "waf_rules_all_count": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.waf_associated
+      op: eq
+      value: true
+    - field: properties.network.elb.waf_web_acl_exists
+      op: eq
+      value: true
+    - field: properties.network.elb.waf_has_rules
+      op: eq
+      value: true
+    - field: properties.network.elb.waf_rules_all_count
+      op: eq
+      value: true
+defect: >
+  Every rule on the ALB's WAF web ACL is in COUNT mode;
+  no rule is BLOCK.
+infection: >
+  COUNT mode evaluates requests against rules and
+  records matches — but takes no action. The request
+  continues to the backend. A SQL injection payload
+  matches the SQLi rule group — counted, not blocked.
+  A known-bad IP matches the IP reputation list —
+  counted, not blocked. A bot sends 10,000 requests
+  per second — counted, not rate-limited. COUNT mode
+  provides visibility (WAF logs show what WOULD be
+  blocked). It provides zero protection. The common
+  failure: rules deployed in COUNT for testing,
+  testing completed, nobody switched to BLOCK.
+failure: >
+  WAF detects but doesn't block. All rules in COUNT
+  mode — threats are logged but reach the backend.
+tests:
+  - name: ALB with all-COUNT rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            waf_associated: true
+            waf_web_acl_exists: true
+            waf_has_rules: true
+            waf_rule_count: 3
+            waf_block_rule_count: 0
+            waf_count_rule_count: 3
+            waf_rules_all_count: true
+  - name: ALB with at least one BLOCK rule passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            waf_associated: true
+            waf_web_acl_exists: true
+            waf_has_rules: true
+            waf_rule_count: 3
+            waf_block_rule_count: 1
+            waf_count_rule_count: 2
+            waf_rules_all_count: false

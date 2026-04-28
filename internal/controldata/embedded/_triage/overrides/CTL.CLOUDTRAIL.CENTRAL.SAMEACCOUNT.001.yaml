@@ -1,0 +1,21 @@
+control: CTL.CLOUDTRAIL.CENTRAL.SAMEACCOUNT.001
+defect: >
+  CloudTrail trail delivers logs to an S3 bucket in the
+  same account as the monitored resources.
+infection: >
+  When the trail and its log bucket are in the same
+  account, an attacker who compromises the account has
+  access to everything: the resources they're attacking
+  AND the audit logs recording their actions. The
+  attacker can: stop the trail (CT-1 detects this IF
+  alarms are configured), delete log files from the S3
+  bucket (CT-3's S3 hardening controls mitigate this),
+  or modify the bucket policy to block future writes. A
+  dedicated logging account isolates the audit trail
+  from the monitored account. Compromising the
+  production account doesn't grant access to the
+  logging account. The attacker must compromise TWO
+  accounts to both attack and erase evidence.
+failure: >
+  Audit logs co-located with monitored resources. Account
+  compromise exposes both resources and the audit trail.

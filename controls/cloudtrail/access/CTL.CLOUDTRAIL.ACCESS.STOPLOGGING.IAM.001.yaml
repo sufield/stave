@@ -1,0 +1,125 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ACCESS.STOPLOGGING.IAM.001
+name: IAM Principals Can Call StopLogging Without Admin Restriction
+description: >
+  IAM policies grant cloudtrail:StopLogging to non-
+  administrative principals. StopLogging disables the
+  audit trail — it should be restricted to a minimal set
+  of security administrators. Each principal with
+  StopLogging permission is a potential trail-disablement
+  point: compromise that principal and the trail can be
+  stopped. Counts principals reachable via explicit
+  cloudtrail:StopLogging, cloudtrail:* (wildcard), or
+  AdministratorAccess (grants everything including
+  StopLogging).
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16, 4.5"
+  soc2: "CC6.1, CC6.3, CC7.1"
+  nist_800_53_r5: "AC-3, AC-6, AU-9"
+  pci_dss_v4.0: "7.1, 7.2, 10.5"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-04", "IAM-09"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    cloudtrail:StopLogging is reachable by too many IAM
+    principals. The audit-trail disablement surface is
+    broader than necessary.
+  action: >
+    Audit each principal in stop_logging_principals: if
+    they don't need StopLogging for legitimate
+    maintenance, remove the permission. Replace
+    AdministratorAccess attachments with scoped policies
+    on developer/operator roles. Replace cloudtrail:*
+    wildcards with the specific actions each role
+    actually uses (typically cloudtrail:LookupEvents,
+    cloudtrail:GetEventSelectors, cloudtrail:GetTrail).
+    Reserve cloudtrail:StopLogging for a single
+    security-admin role, gated behind MFA.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "principals_with_stop": ["arn:aws:iam::111122223333:role/SecurityAdmin"],
+          "stop_logging_principal_count": 1,
+          "stop_logging_broadly_granted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.stop_logging_broadly_granted
+      op: eq
+      value: true
+defect: >
+  cloudtrail:StopLogging is granted to non-administrative
+  IAM principals.
+infection: >
+  StopLogging is the most dangerous CloudTrail API call —
+  it turns off the audit trail. Only security
+  administrators should have this permission. Common
+  overprivilege patterns: IAM policies with cloudtrail:*
+  on Resource:* (grants all CloudTrail actions including
+  StopLogging), AdministratorAccess managed policy
+  (grants everything — including StopLogging), and
+  custom policies that include StopLogging without intent
+  (the developer wanted cloudtrail:LookupEvents but
+  wrote cloudtrail:*). Each principal with StopLogging
+  is a potential trail-disablement point — compromise
+  that principal and the trail can be stopped.
+failure: >
+  Excessive StopLogging access. Multiple principals can
+  disable the audit trail.
+tests:
+  - name: 8 principals with StopLogging fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            principals_with_stop:
+              - "arn:aws:iam::111122223333:role/Admin"
+              - "arn:aws:iam::111122223333:role/Developer1"
+              - "arn:aws:iam::111122223333:role/Developer2"
+              - "arn:aws:iam::111122223333:role/Developer3"
+              - "arn:aws:iam::111122223333:role/Developer4"
+              - "arn:aws:iam::111122223333:role/Operator1"
+              - "arn:aws:iam::111122223333:role/Operator2"
+              - "arn:aws:iam::111122223333:role/CIRunner"
+            stop_logging_principal_count: 8
+            stop_logging_broadly_granted: true
+  - name: only security-admin role has StopLogging passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            principals_with_stop:
+              - "arn:aws:iam::111122223333:role/SecurityAdmin"
+            stop_logging_principal_count: 1
+            stop_logging_broadly_granted: false

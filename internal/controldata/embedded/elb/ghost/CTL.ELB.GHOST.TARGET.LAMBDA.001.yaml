@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.GHOST.TARGET.LAMBDA.001
+name: Target Group References Deleted Lambda Function
+description: >
+  ELB target group of type Lambda references a Lambda
+  function that has been deleted. Every request forwarded
+  to this target group fails — the ALB attempts to invoke
+  the Lambda, the invocation returns
+  ResourceNotFoundException, and the response is 502 Bad
+  Gateway. Distinct from CTL.ELB.TARGET.GHOST.001
+  (terminated EC2 instances) — the Lambda case is
+  invisible at the EC2 inventory layer.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1, A1.2"
+  nist_800_53_r5: "CM-2, CM-3, SC-7"
+  pci_dss_v4.0: "11.5.1"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["IVS-04", "BCR-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Lambda target group references a deleted function.
+    Every request to this group returns 502.
+  action: >
+    Either redeploy the Lambda function (same name and
+    version) or update the target group to register a
+    different Lambda
+    (aws elbv2 register-targets --target-group-arn <arn>
+    --targets Id=<new-lambda-arn>). Audit the routing
+    rules that forward to this target group — if the
+    deletion was intentional, the rules also need to be
+    repointed or removed.
+  example: |
+    {
+      "network": {
+        "kind": "target_group",
+        "elb": {
+          "target_lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:api-handler",
+          "target_lambda_exists": true,
+          "has_ghost_lambda_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: target_group
+    - field: properties.network.elb.has_ghost_lambda_target
+      op: eq
+      value: true
+defect: >
+  ELB Lambda target group references a deleted Lambda
+  function.
+infection: >
+  ALB-to-Lambda integration uses a target group of type
+  Lambda whose registered target is the function ARN.
+  When the Lambda is deleted, the ALB still has the
+  target registered. Every request the ALB forwards
+  attempts to invoke the Lambda; the invocation fails
+  with ResourceNotFoundException; the ALB returns 502
+  Bad Gateway to the client. The target group's health
+  check shows the target as unhealthy — but that signal
+  is only visible if someone is watching it. Production
+  traffic continues to fail.
+failure: >
+  Service outage on Lambda routes. Every request
+  forwarded to the target group returns 502 because the
+  Lambda function was deleted.
+tests:
+  - name: target group with deleted Lambda fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            target_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:api-handler-deleted"
+            target_lambda_exists: false
+            has_ghost_lambda_target: true
+  - name: target group with active Lambda passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            target_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:api-handler"
+            target_lambda_exists: true
+            has_ghost_lambda_target: false

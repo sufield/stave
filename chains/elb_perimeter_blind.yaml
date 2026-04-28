@@ -1,0 +1,21 @@
+id: elb_perimeter_blind
+description: >
+  Any WAF protection failure — ghost WAF (deleted web
+  ACL), empty WAF (no rules), or passive WAF (COUNT
+  mode only). Each independently means the perimeter
+  has no effective application-layer filtering. The
+  false-protection archetype at the internet edge —
+  the WAF appears configured at every audit surface
+  but evaluates nothing or blocks nothing. Threshold
+  of 1 fires whenever any of the three failure modes
+  is present.
+controls:
+  - CTL.ELB.GHOST.WAF.001
+  - CTL.ELB.WAF.NORULES.001
+  - CTL.ELB.WAF.COUNTONLY.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

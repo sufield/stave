@@ -1,0 +1,19 @@
+control: CTL.ELB.GHOST.ACCESSLOG.001
+defect: >
+  ELB access logging targets an S3 bucket that has been
+  deleted.
+infection: >
+  Access logging is enabled — the configuration shows the
+  bucket name, the prefix, and "enabled: true." An
+  auditor or compliance check sees access logging
+  configured and marks it compliant. But the bucket was
+  deleted. Every access log write fails silently. No
+  request is recorded — who accessed the application,
+  from where, when, which paths, which response codes —
+  all unrecorded. If a security incident occurs, there
+  is no request-level audit trail. The investigation is
+  blind to what happened at the load balancer layer.
+failure: >
+  Silent access log loss. Access logging appears enabled
+  but no logs are written because the S3 bucket was
+  deleted.

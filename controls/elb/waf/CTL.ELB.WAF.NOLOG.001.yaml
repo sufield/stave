@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.WAF.NOLOG.001
+name: ALB WAF Logging Not Enabled
+description: >
+  ALB has a WAF web ACL associated and the web ACL
+  exists, but WAF logging is not enabled. Without WAF
+  logs, which requests were blocked is unknown
+  (cannot verify the WAF is filtering), which requests
+  matched rules is unknown (cannot tune rules), which
+  IPs trigger rules is unknown (cannot identify
+  attackers), and false positive analysis is impossible
+  (legitimate requests blocked but nobody knows). WAF
+  rules still block requests in the data plane; logging
+  is the operational-intelligence layer.
+domain: detection
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.6"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-2, AU-6, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "AU-6"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-08", "TVM-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    WAF logging is disabled. Block decisions and
+    rule-match events are not recorded.
+  action: >
+    Enable logging on the WAF web ACL pointing at a
+    Kinesis Firehose, CloudWatch Logs group, or S3
+    bucket: aws wafv2 put-logging-configuration
+    --logging-configuration ResourceArn=<webacl-arn>,
+    LogDestinationConfigs=<destination-arn>. Pair with
+    a CloudWatch alarm on the BlockedRequests metric
+    so spikes in blocking surface immediately.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "waf_associated": true,
+          "waf_web_acl_exists": true,
+          "waf_logging_enabled": true,
+          "waf_log_destination": "arn:aws:logs:us-east-1:111122223333:log-group:/aws/wafv2/prod"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.waf_associated
+      op: eq
+      value: true
+    - field: properties.network.elb.waf_web_acl_exists
+      op: eq
+      value: true
+    - field: properties.network.elb.waf_logging_enabled
+      op: eq
+      value: false
+defect: >
+  ALB WAF logging is not enabled.
+infection: >
+  WAF rules still block requests in the data plane —
+  the protection layer is intact. But operational
+  visibility is missing. Which requests were blocked?
+  Which rule matched? Which IPs triggered which rules?
+  Are legitimate users being blocked (false positives)?
+  All unknown without WAF logs. Tuning the WAF
+  requires logs. Investigating an attack requires
+  logs. Verifying the WAF is doing what it should
+  requires logs. Without them, the WAF is a black box
+  — it works or it doesn't, and there's no way to tell
+  which.
+failure: >
+  WAF operates without observability. Block decisions
+  and rule matches are unrecorded — cannot tune,
+  cannot investigate, cannot verify protection.
+tests:
+  - name: ALB with WAF but no logging fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            waf_associated: true
+            waf_web_acl_exists: true
+            waf_logging_enabled: false
+  - name: ALB with WAF logging passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            waf_associated: true
+            waf_web_acl_exists: true
+            waf_logging_enabled: true
+            waf_log_destination: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/wafv2/prod"

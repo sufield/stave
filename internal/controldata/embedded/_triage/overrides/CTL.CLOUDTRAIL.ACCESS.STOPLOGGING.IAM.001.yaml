@@ -1,0 +1,20 @@
+control: CTL.CLOUDTRAIL.ACCESS.STOPLOGGING.IAM.001
+defect: >
+  cloudtrail:StopLogging is granted to non-administrative
+  IAM principals.
+infection: >
+  StopLogging is the most dangerous CloudTrail API call —
+  it turns off the audit trail. Only security
+  administrators should have this permission. Common
+  overprivilege patterns: IAM policies with cloudtrail:*
+  on Resource:* (grants all CloudTrail actions including
+  StopLogging), AdministratorAccess managed policy
+  (grants everything — including StopLogging), and
+  custom policies that include StopLogging without intent
+  (the developer wanted cloudtrail:LookupEvents but
+  wrote cloudtrail:*). Each principal with StopLogging
+  is a potential trail-disablement point — compromise
+  that principal and the trail can be stopped.
+failure: >
+  Excessive StopLogging access. Multiple principals can
+  disable the audit trail.

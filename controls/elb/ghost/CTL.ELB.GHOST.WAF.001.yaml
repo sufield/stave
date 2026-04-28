@@ -1,0 +1,133 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.GHOST.WAF.001
+name: ALB References Deleted WAF Web ACL
+description: >
+  ALB has a WAF web ACL association but the web ACL has
+  been deleted. The ALB's WebACLArn references a
+  non-existent web ACL. CTL.ELB.WAF.001 sees "WAF
+  associated" and passes. The web ACL doesn't exist —
+  no rules evaluate, no requests are blocked. SQL
+  injection, XSS, bot traffic, known-bad IPs all pass
+  through. This is the false-protection archetype at
+  the perimeter — the most dangerous location for
+  false protection because every external request
+  passes through.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+compliance:
+  cis_aws_v3.0: "2.6"
+  soc2: "CC6.1, CC6.6, CC7.2"
+  nist_800_53_r5: "SC-7, SI-3, SI-4, CM-2"
+  pci_dss_v4.0: "6.4.2, 6.6"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["TVM-04", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    ALB references a deleted WAF web ACL. The WAF
+    appears associated but provides no protection.
+  action: >
+    Either (a) recreate the web ACL with the original
+    rule set and re-associate via
+    aws wafv2 associate-web-acl — WebACLArn —
+    ResourceArn, or (b) detach the dangling association
+    and associate an existing web ACL. Confirm filtering
+    is active by sending a request with a known-malicious
+    payload (e.g., a SQL injection canary string) and
+    verifying it's blocked. Audit the gap window — every
+    request handled while the WAF was a ghost passed
+    through unfiltered.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "waf_associated": true,
+          "waf_web_acl_arn": "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/prod/abc",
+          "waf_web_acl_exists": true,
+          "has_ghost_waf": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.waf_associated
+      op: eq
+      value: true
+    - field: properties.network.elb.has_ghost_waf
+      op: eq
+      value: true
+defect: >
+  ALB references a WAF web ACL that has been deleted.
+infection: >
+  The ALB's WAF association shows a web ACL ARN.
+  CTL.ELB.WAF.001 checks whether a WAF is associated —
+  it IS associated. The web ACL ARN is present. But the
+  web ACL was deleted. No rules evaluate. No requests
+  are blocked. SQL injection, XSS, bot traffic,
+  known-bad IPs — all pass through. An auditor checking
+  "is WAF configured on this ALB?" sees the association
+  and marks it compliant. The protection is a ghost —
+  the reference exists, the protection doesn't.
+failure: >
+  False WAF protection. WAF appears associated but the
+  web ACL was deleted. No requests are filtered —
+  complete perimeter defense failure.
+tests:
+  - name: ALB with deleted web ACL fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            waf_associated: true
+            waf_web_acl_arn: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/deleted/xyz"
+            waf_web_acl_exists: false
+            has_ghost_waf: true
+  - name: ALB with active web ACL passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            waf_associated: true
+            waf_web_acl_arn: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/prod/abc"
+            waf_web_acl_exists: true
+            has_ghost_waf: false
+  - name: internet-facing ALB with ghost WAF fires (severe)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/public-api/xyz"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            waf_associated: true
+            waf_web_acl_exists: false
+            has_ghost_waf: true
+            scheme: "internet-facing"

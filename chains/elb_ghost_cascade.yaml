@@ -1,17 +1,22 @@
 id: elb_ghost_cascade
 description: >
-  Load balancer carries multiple ghost references — deleted or
-  terminated targets AND either a deleted target group or an
-  expired/deleted certificate. One ghost reference is a single
-  missed decommission; multiple ghost references on the same
-  load balancer indicate a systematic failure in the
-  decommissioning pipeline. The load balancer is in an
-  inconsistent state relative to its intended configuration
-  along multiple dimensions simultaneously.
+  Two or more ELB ghost references. Multiple load
+  balancer dependencies have been deleted — terminated
+  targets, deleted listener-rule target groups, expired
+  or deleted certificates, ghost WAF web ACLs, ghost
+  access-log S3 buckets, or ghost Lambda targets. One
+  ghost reference is a single missed decommission;
+  multiple ghost references on the same load balancer
+  indicate a systematic failure in the decommissioning
+  pipeline. Threshold of 2 fires when distinct ghost
+  surfaces coexist on the perimeter.
 controls:
   - CTL.ELB.TARGET.GHOST.001
   - CTL.ELB.LISTENER.GHOST.001
   - CTL.ELB.CERT.GHOST.001
+  - CTL.ELB.GHOST.ACCESSLOG.001
+  - CTL.ELB.GHOST.WAF.001
+  - CTL.ELB.GHOST.TARGET.LAMBDA.001
 escalation_threshold: 2
 compound_severity: high
 preconditions:

@@ -1,0 +1,19 @@
+control: CTL.ELB.WAF.COUNTONLY.001
+defect: >
+  Every rule on the ALB's WAF web ACL is in COUNT mode;
+  no rule is BLOCK.
+infection: >
+  COUNT mode evaluates requests against rules and
+  records matches — but takes no action. The request
+  continues to the backend. A SQL injection payload
+  matches the SQLi rule group — counted, not blocked.
+  A known-bad IP matches the IP reputation list —
+  counted, not blocked. A bot sends 10,000 requests
+  per second — counted, not rate-limited. COUNT mode
+  provides visibility (WAF logs show what WOULD be
+  blocked). It provides zero protection. The common
+  failure: rules deployed in COUNT for testing,
+  testing completed, nobody switched to BLOCK.
+failure: >
+  WAF detects but doesn't block. All rules in COUNT
+  mode — threats are logged but reach the backend.

@@ -1,0 +1,20 @@
+control: CTL.ELB.WAF.NORULES.001
+defect: >
+  ALB WAF web ACL has zero rules.
+infection: >
+  A WAF web ACL with no rules evaluates no request
+  attributes. Every request — SQL injection payloads,
+  XSS attempts, known malicious IPs, bot traffic,
+  credential stuffing — passes through the WAF to the
+  backend. The default action (typically Allow) applies
+  to every request because no rule matches first. An
+  auditor checking "is WAF configured?" sees the web
+  ACL association and marks it compliant. A security
+  team checking "are we protected against OWASP top
+  10?" sees the WAF and assumes yes. The WAF is a
+  shell — it exists structurally but provides zero
+  filtering.
+failure: >
+  Empty WAF. WAF web ACL has no rules — all requests
+  pass through unfiltered. False protection at the
+  perimeter.

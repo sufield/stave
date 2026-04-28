@@ -1,0 +1,17 @@
+control: CTL.ELB.GHOST.WAF.001
+defect: >
+  ALB references a WAF web ACL that has been deleted.
+infection: >
+  The ALB's WAF association shows a web ACL ARN.
+  CTL.ELB.WAF.001 checks whether a WAF is associated —
+  it IS associated. The web ACL ARN is present. But the
+  web ACL was deleted. No rules evaluate. No requests
+  are blocked. SQL injection, XSS, bot traffic,
+  known-bad IPs — all pass through. An auditor checking
+  "is WAF configured on this ALB?" sees the association
+  and marks it compliant. The protection is a ghost —
+  the reference exists, the protection doesn't.
+failure: >
+  False WAF protection. WAF appears associated but the
+  web ACL was deleted. No requests are filtered —
+  complete perimeter defense failure.

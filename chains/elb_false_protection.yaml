@@ -1,0 +1,21 @@
+id: elb_false_protection
+description: >
+  Two or more false-protection indicators at the
+  perimeter — ghost WAF, empty WAF, COUNT-only WAF, or
+  ghost access logs. Multiple controls appear
+  configured but don't function: the WAF is associated
+  but evaluates nothing, OR the WAF blocks nothing, OR
+  access logs are configured but not written. Threshold
+  of 2 fires when the false-protection archetype has
+  multiple instances on the same load balancer.
+controls:
+  - CTL.ELB.GHOST.WAF.001
+  - CTL.ELB.WAF.NORULES.001
+  - CTL.ELB.WAF.COUNTONLY.001
+  - CTL.ELB.GHOST.ACCESSLOG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

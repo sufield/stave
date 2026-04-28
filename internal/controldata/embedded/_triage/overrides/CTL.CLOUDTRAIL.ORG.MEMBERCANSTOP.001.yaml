@@ -1,0 +1,21 @@
+control: CTL.CLOUDTRAIL.ORG.MEMBERCANSTOP.001
+defect: >
+  No SCP prevents member accounts from stopping or
+  deleting CloudTrail trails.
+infection: >
+  Without an SCP that denies cloudtrail:StopLogging and
+  cloudtrail:DeleteTrail for member accounts: a
+  compromised admin in a member account calls StopLogging
+  — logging stops in that account. If the account has its
+  own trail (no org trail), all audit records stop. If
+  the account has an org trail, the organization trail
+  continues (it's managed by the management account) but
+  the local CW Logs delivery stops — local metric filters
+  and alarms go blind. An SCP with Deny on
+  cloudtrail:StopLogging and cloudtrail:DeleteTrail (with
+  condition excluding the management account or a
+  security role) prevents member accounts from disabling
+  their audit trail.
+failure: >
+  Member accounts can disable audit logging. No SCP
+  prevents StopLogging or DeleteTrail in member accounts.

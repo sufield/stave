@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1808
-**Pack hash:** `40a7e8872adc8d088cecdc0c506ac990ed0029ae3393bf4e234429999ff281fd`
+**Total controls:** 1820
+**Pack hash:** `e5f1ea73a885d8f45d1c3a4309b7759d12606e66c963bf908eb0b9fa7a883dfe`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 199 |
-| high | 800 |
+| critical | 200 |
+| high | 809 |
 | info | 16 |
 | low | 123 |
-| medium | 670 |
+| medium | 672 |
 
 | Domain | Count |
 |--------|-------|
@@ -22,10 +22,10 @@
 | audit | 33 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 90 |
+| detection | 91 |
 | encryption | 92 |
-| exposure | 971 |
-| governance | 201 |
+| exposure | 976 |
+| governance | 207 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -5536,6 +5536,36 @@ CloudFront distribution has a WAF web ACL but the ACL contains no rate-based rul
 
 ---
 
+### CTL.CLOUDTRAIL.ACCESS.LOGREAD.BROAD.001
+
+**CloudTrail Log Files Accessible to Overly Broad Principals**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, AU-9; pci_dss_v4.0: 7.1, 7.2, 10.5; soc2: CC6.1, CC6.3, CC7.1;
+
+CloudTrail trail S3 bucket is readable by too many principals. Audit logs contain every API call — principal ARNs, source IPs, resource ARNs, parameters, timestamps. Broad read access to audit logs lets an insider or compromised principal map the entire infrastructure without making any API calls themselves (stealth reconnaissance), identify high-value targets, and time their actions against admin activity windows. Audit log read access should be limited to the security team and incident responders.
+
+**Remediation:** Audit each principal in s3_read_principals. Remove read access from any principal that doesn't have a legitimate analysis or incident-response role. Replace bucket-wide reads with prefix-scoped reads where possible (e.g., a specific account's AWSLogs/<account-id>/ prefix for that account's security team). Reserve full bucket reads for the central security and IR teams.
+
+---
+
+### CTL.CLOUDTRAIL.ACCESS.STOPLOGGING.IAM.001
+
+**IAM Principals Can Call StopLogging Without Admin Restriction**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.16, 4.5; fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, AU-9; pci_dss_v4.0: 7.1, 7.2, 10.5; soc2: CC6.1, CC6.3, CC7.1;
+
+IAM policies grant cloudtrail:StopLogging to non- administrative principals. StopLogging disables the audit trail — it should be restricted to a minimal set of security administrators. Each principal with StopLogging permission is a potential trail-disablement point: compromise that principal and the trail can be stopped. Counts principals reachable via explicit cloudtrail:StopLogging, cloudtrail:* (wildcard), or AdministratorAccess (grants everything including StopLogging).
+
+**Remediation:** Audit each principal in stop_logging_principals: if they don't need StopLogging for legitimate maintenance, remove the permission. Replace AdministratorAccess attachments with scoped policies on developer/operator roles. Replace cloudtrail:* wildcards with the specific actions each role actually uses (typically cloudtrail:LookupEvents, cloudtrail:GetEventSelectors, cloudtrail:GetTrail). Reserve cloudtrail:StopLogging for a single security-admin role, gated behind MFA.
+
+---
+
 ### CTL.CLOUDTRAIL.ALARM.DELETETRAIL.001
 
 **No CloudWatch Alarm for CloudTrail DeleteTrail**
@@ -5668,6 +5698,36 @@ No CloudWatch metric filter and alarm monitors CloudTrail for PutBucketPolicy, D
 No CloudWatch alarm monitors CloudTrail for StopLogging API calls. StopLogging is the single most dangerous CloudTrail API call: it disables the audit trail immediately, every API call afterward is unrecorded, and the trail's configuration remains intact (the console still shows the trail). Without an alarm, the audit infrastructure can be silently turned off. Companion to CTL.CLOUDTRAIL.STOP.DETECT.001 (which detects the resulting state); this control detects the EVENT, enabling minutes-level response.
 
 **Remediation:** Create a CloudTrail metric filter on eventName = StopLogging and a CloudWatch alarm with threshold 1 over a 60-second period: aws logs put-metric-filter --filter-pattern '{ ($.eventName = "StopLogging") }' followed by aws cloudwatch put-metric-alarm. Route the alarm to a high-priority on-call channel; treat StopLogging as a P0 incident until proven otherwise.
+
+---
+
+### CTL.CLOUDTRAIL.CENTRAL.SAMEACCOUNT.001
+
+**CloudTrail Trail S3 Bucket Is in the Same Account as Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: AU-9; iso_27001_2022: A.5.15, A.8.15; nist_800_53_r5: AU-4, AU-9, AC-3; pci_dss_v4.0: 10.5, 10.7; soc2: CC7.1, CC7.2;
+
+CloudTrail trail delivers log files to an S3 bucket in the same AWS account that the trail monitors. If the account is compromised, the attacker has access to both the resources AND the audit log — they can modify or delete log files to cover their tracks. Best practice is to deliver trail logs to a dedicated logging account with restricted access; compromising the production account doesn't grant access to the log account.
+
+**Remediation:** Create a dedicated AWS account for audit logging and move the trail's S3 bucket there. Update the trail's S3BucketName to point at the logging-account bucket and update the bucket policy in the logging account to grant cloudtrail.amazonaws.com PutObject from the trail-account's trail ARN (with aws:SourceArn pinning per CTL.CLOUDTRAIL.S3.SOURCEARN.001). Restrict access to the logging account to a small security-team principal set; production-account IAM cannot reach the log bucket.
+
+---
+
+### CTL.CLOUDTRAIL.CONFIG.GLOBALEVENTS.001
+
+**CloudTrail Trail Does Not Include Global Service Events**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.1; fedramp_moderate: AU-2; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-3, AU-12; pci_dss_v4.0: 10.1, 10.2; soc2: CC7.1;
+
+CloudTrail trail has IncludeGlobalServiceEvents set to false. Global service events come from services that operate globally rather than per-region — IAM, STS, CloudFront, Route 53. With global events excluded: IAM policy changes are not logged, STS AssumeRole calls are not logged, CloudFront distribution changes are not logged, and Route 53 record changes are not logged. These are among the most security-critical events. AWS multi-region trails default IncludeGlobalServiceEvents to true; this control catches single-region trails or multi-region trails where the flag has been explicitly flipped.
+
+**Remediation:** Update the trail to include global service events: aws cloudtrail update-trail --name <trail> --include-global-service-events. For multi-region trails this is the default — the flag is only false when explicitly disabled. For single-region trails, enabling global events causes that trail to receive duplicate global events if any other trail in the account already does. The org pattern is one multi-region trail with global events enabled, and any per-region trails with global events disabled.
 
 ---
 
@@ -6002,6 +6062,21 @@ CloudTrail Network Activity event logging must be enabled to capture VPC endpoin
 CloudTrail trails must be configured as AWS Organizations trails covering all member accounts. Account-level trails leave member accounts without centralized logging.
 
 **Remediation:** Convert to an organization trail via the management account.
+
+---
+
+### CTL.CLOUDTRAIL.ORG.MEMBERCANSTOP.001
+
+**Organization Member Accounts Can Stop or Delete Their Trail**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.1; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.15; nist_800_53_r5: AC-3, AU-9, AU-12; pci_dss_v4.0: 10.5, 10.7; soc2: CC7.1, CC7.2;
+
+No Service Control Policy prevents organization member accounts from calling cloudtrail:StopLogging or cloudtrail:DeleteTrail. Even with an organization trail in place, a compromised member-account admin can disable their local trail copy or — if the account has its own trail — disable audit logging for that account entirely. An SCP with Deny on these actions (excluding a break-glass security-admin role) is the only way to prevent member-account principals from disabling logging.
+
+**Remediation:** Attach an SCP to the organization (or the relevant OU) that denies cloudtrail:StopLogging, cloudtrail:DeleteTrail, cloudtrail:UpdateTrail, and cloudtrail:PutEventSelectors with a NotPrincipal excluding the security-admin role and the management account. Verify by attempting StopLogging from a member account's admin role — the call must fail with an SCP-denied error before reaching the API.
 
 ---
 
@@ -10445,6 +10520,21 @@ ElastiCache clusters must have in-transit encryption enabled. Without TLS, cache
 
 ---
 
+### CTL.ELB.ACCESSLOG.PERMISSION.001
+
+**ELB Cannot Write to Access Log S3 Bucket**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1; fedramp_moderate: AU-2; iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-2, AU-9, AC-3; pci_dss_v4.0: 10.1, 10.5; soc2: CC7.1, CC7.2;
+
+ELB access logging is enabled and the S3 bucket exists, but the bucket policy doesn't grant the region's ELB log-delivery service account s3:PutObject. Logs are silently dropped — same effect as a deleted bucket, but caused by missing permissions rather than missing infrastructure. A common failure mode when buckets are created without the ELB grant or the grant is later removed by policy edits.
+
+**Remediation:** Update the bucket policy to grant s3:PutObject to the regional ELB log-delivery service account (e.g., 127311923021 for us-east-1 — the IDs are region-specific and listed in the AWS docs). Test by triggering ELB traffic and verifying a new log file appears under AWSLogs/<account>/elasticloadbalancing/<region>/ within five minutes.
+
+---
+
 ### CTL.ELB.CERT.GHOST.001
 
 **Load Balancer References Deleted or Expired SSL Certificate**
@@ -10487,6 +10577,51 @@ Load balancers must distribute traffic across all registered targets in all enab
 Production load balancers must have deletion protection enabled.
 
 **Remediation:** Enable deletion protection.
+
+---
+
+### CTL.ELB.GHOST.ACCESSLOG.001
+
+**ELB Access Log S3 Bucket Does Not Exist**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1; fedramp_moderate: AU-2; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-2, AU-9, CM-2, CM-3; pci_dss_v4.0: 10.1, 10.5; soc2: CC7.1, CC7.2;
+
+ELB access logging is enabled but the S3 destination bucket has been deleted. The configuration shows "access logging: enabled" with the bucket name. An auditor sees access logging configured. Every log write fails silently. Same invisible-harmful pattern as CTL.CLOUDTRAIL.GHOST.S3BUCKET.001 — the logging appears configured, the destination is gone, the logs are silently lost.
+
+**Remediation:** Either (a) recreate the bucket with the same name and restore the bucket policy granting the regional ELB log-delivery service account s3:PutObject, or (b) repoint the ELB at an existing audit bucket via aws elbv2 modify-load-balancer-attributes — Key access_logs.s3.bucket. Verify by triggering traffic and confirming a new log file appears in the bucket within five minutes. Audit the gap window: every request handled while the bucket was missing has no access-log record.
+
+---
+
+### CTL.ELB.GHOST.TARGET.LAMBDA.001
+
+**Target Group References Deleted Lambda Function**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, CM-3, SC-7; pci_dss_v4.0: 11.5.1; soc2: CC6.1, CC8.1, A1.2;
+
+ELB target group of type Lambda references a Lambda function that has been deleted. Every request forwarded to this target group fails — the ALB attempts to invoke the Lambda, the invocation returns ResourceNotFoundException, and the response is 502 Bad Gateway. Distinct from CTL.ELB.TARGET.GHOST.001 (terminated EC2 instances) — the Lambda case is invisible at the EC2 inventory layer.
+
+**Remediation:** Either redeploy the Lambda function (same name and version) or update the target group to register a different Lambda (aws elbv2 register-targets --target-group-arn <arn> --targets Id=<new-lambda-arn>). Audit the routing rules that forward to this target group — if the deletion was intentional, the rules also need to be repointed or removed.
+
+---
+
+### CTL.ELB.GHOST.WAF.001
+
+**ALB References Deleted WAF Web ACL**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.6; fedramp_moderate: SC-7; iso_27001_2022: A.5.16, A.8.20; nist_800_53_r5: SC-7, SI-3, SI-4, CM-2; pci_dss_v4.0: 6.4.2, 6.6; soc2: CC6.1, CC6.6, CC7.2;
+
+ALB has a WAF web ACL association but the web ACL has been deleted. The ALB's WebACLArn references a non-existent web ACL. CTL.ELB.WAF.001 sees "WAF associated" and passes. The web ACL doesn't exist — no rules evaluate, no requests are blocked. SQL injection, XSS, bot traffic, known-bad IPs all pass through. This is the false-protection archetype at the perimeter — the most dangerous location for false protection because every external request passes through.
+
+**Remediation:** Either (a) recreate the web ACL with the original rule set and re-associate via aws wafv2 associate-web-acl — WebACLArn — ResourceArn, or (b) detach the dangling association and associate an existing web ACL. Confirm filtering is active by sending a request with a known-malicious payload (e.g., a SQL injection canary string) and verifying it's blocked. Audit the gap window — every request handled while the WAF was a ghost passed through unfiltered.
 
 ---
 
@@ -10606,6 +10741,51 @@ Application and Network Load Balancers must use TLS 1.2 or higher for HTTPS list
 Internet-facing ALBs must have an AWS WAF web ACL associated.
 
 **Remediation:** Associate a WAF web ACL with the ALB.
+
+---
+
+### CTL.ELB.WAF.COUNTONLY.001
+
+**ALB WAF Web ACL Rules Are in COUNT Mode Only**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 2.6; fedramp_moderate: SC-7; iso_27001_2022: A.8.20, A.8.22; nist_800_53_r5: SC-7, SI-3, SI-4; pci_dss_v4.0: 6.4.2, 6.6; soc2: CC6.1, CC6.6;
+
+ALB WAF web ACL has rules but every rule is in COUNT mode. COUNT mode evaluates requests and records matches but takes no action — the request continues to the backend. SQL injection payloads, known-bad IPs, bot traffic — all matched, all logged, all forwarded. COUNT is intended for testing new rules before enabling BLOCK; production-deployed COUNT-only WAF detects threats without preventing them. Same false- protection class as no-rule WAF — slightly less invisible (logs exist) but no actual blocking.
+
+**Remediation:** Switch rules from COUNT to BLOCK after a brief bake-in window. Use the WAF console (Override statement → none) or aws wafv2 update-web-acl with the rule's Action set to Block instead of Override+Count. Move one rule group at a time, watch the WAF logs for false positives between transitions, and revert if legitimate traffic gets blocked. The common failure: rules deployed in COUNT for testing, testing completed, nobody switched to BLOCK.
+
+---
+
+### CTL.ELB.WAF.NOLOG.001
+
+**ALB WAF Logging Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 2.6; fedramp_moderate: AU-6; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-6, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.1, CC7.2;
+
+ALB has a WAF web ACL associated and the web ACL exists, but WAF logging is not enabled. Without WAF logs, which requests were blocked is unknown (cannot verify the WAF is filtering), which requests matched rules is unknown (cannot tune rules), which IPs trigger rules is unknown (cannot identify attackers), and false positive analysis is impossible (legitimate requests blocked but nobody knows). WAF rules still block requests in the data plane; logging is the operational-intelligence layer.
+
+**Remediation:** Enable logging on the WAF web ACL pointing at a Kinesis Firehose, CloudWatch Logs group, or S3 bucket: aws wafv2 put-logging-configuration --logging-configuration ResourceArn=<webacl-arn>, LogDestinationConfigs=<destination-arn>. Pair with a CloudWatch alarm on the BlockedRequests metric so spikes in blocking surface immediately.
+
+---
+
+### CTL.ELB.WAF.NORULES.001
+
+**ALB WAF Web ACL Has No Rules**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 2.6; fedramp_moderate: SC-7; iso_27001_2022: A.8.20, A.8.22; nist_800_53_r5: SC-7, SI-3, SI-4; pci_dss_v4.0: 6.4.2, 6.6; soc2: CC6.1, CC6.6, CC7.1;
+
+ALB has a WAF web ACL associated and the web ACL exists, but the web ACL contains zero rules — no managed rule groups, no custom rules, no rate-based rules. The WAF evaluates nothing. Every request passes through the default action (typically Allow). An auditor checking "is WAF configured?" sees the association and marks it compliant. The WAF provides the appearance of application-layer filtering without any filtering. Same false-protection class as DMARC p=none and rotation-enabled-but-Lambda-deleted.
+
+**Remediation:** Add at minimum the AWS managed core rule set (AWSManagedRulesCommonRuleSet), the SQL injection rule set (AWSManagedRulesSQLiRuleSet), and a rate-based rule for IP-level throttling. Use the AWS WAF console or aws wafv2 update-web-acl. Run rules in COUNT mode initially (CTL.ELB.WAF.COUNTONLY.001 catches leaving them in COUNT) to surface false positives before flipping to BLOCK.
 
 ---
 

@@ -1,0 +1,22 @@
+control: CTL.CLOUDTRAIL.ACCESS.LOGREAD.BROAD.001
+defect: >
+  CloudTrail trail S3 bucket is readable by an
+  unnecessarily broad set of IAM principals.
+infection: >
+  Audit logs are the most information-dense resource in
+  the account. Every API call is recorded with: who
+  (principal ARN, access key, account ID), what (API
+  action, resource ARN, parameters), when (timestamp),
+  where (source IP, user agent, region). An attacker
+  with read access to audit logs can: map the entire
+  infrastructure without making any API calls themselves
+  (stealth reconnaissance), identify high-value targets
+  (which resources are accessed most, which roles have
+  broad access), and time their attack (learn when
+  admins are active/inactive). Audit log read access
+  should be limited to the security team and incident
+  responders.
+failure: >
+  Audit log exposure. Too many principals can read the
+  full API call history — enabling stealth
+  reconnaissance.

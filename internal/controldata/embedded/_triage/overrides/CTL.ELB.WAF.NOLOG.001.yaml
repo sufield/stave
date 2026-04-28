@@ -1,0 +1,19 @@
+control: CTL.ELB.WAF.NOLOG.001
+defect: >
+  ALB WAF logging is not enabled.
+infection: >
+  WAF rules still block requests in the data plane —
+  the protection layer is intact. But operational
+  visibility is missing. Which requests were blocked?
+  Which rule matched? Which IPs triggered which rules?
+  Are legitimate users being blocked (false positives)?
+  All unknown without WAF logs. Tuning the WAF
+  requires logs. Investigating an attack requires
+  logs. Verifying the WAF is doing what it should
+  requires logs. Without them, the WAF is a black box
+  — it works or it doesn't, and there's no way to tell
+  which.
+failure: >
+  WAF operates without observability. Block decisions
+  and rule matches are unrecorded — cannot tune,
+  cannot investigate, cannot verify protection.
