@@ -1,0 +1,19 @@
+id: elb_waf_circumvented
+description: >
+  WAF bypass via direct backend access plus either no
+  WAF associated or WAF is a ghost. The backend is
+  reachable directly AND either the ALB has no WAF or
+  the WAF web ACL has been deleted. The perimeter
+  defense is both bypassable AND absent or
+  non-functional. Threshold of 2 fires when the
+  bypass surface compounds with a missing/broken WAF.
+controls:
+  - CTL.ELB.WAF.BYPASS.DIRECT.001
+  - CTL.ELB.WAF.001
+  - CTL.ELB.GHOST.WAF.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

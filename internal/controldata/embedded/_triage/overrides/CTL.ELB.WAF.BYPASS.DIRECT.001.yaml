@@ -1,0 +1,22 @@
+control: CTL.ELB.WAF.BYPASS.DIRECT.001
+defect: >
+  Backend target security group allows inbound from
+  sources other than the ALB security group.
+infection: >
+  The ALB provides: WAF filtering (if associated),
+  TLS termination, access logging, authentication
+  (if configured), and rate limiting. All of these
+  controls apply ONLY to traffic that flows through
+  the ALB. When backend targets accept traffic
+  directly (their security group allows sources
+  beyond the ALB's security group), an attacker
+  sends requests directly to the target IP:port —
+  bypassing every ALB-layer control. If WAF is
+  configured on the ALB but the backend is directly
+  accessible, WAF protection is circumvented. Backend
+  security groups should allow inbound ONLY from the
+  ALB's security group on the application port.
+failure: >
+  Perimeter bypass. Backend targets accessible
+  directly — WAF, TLS, auth, and access logging are
+  all circumvented.

@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CLB.DRAINING.001
+name: Classic Load Balancer Connection Draining Not Enabled
+description: >
+  Classic Load Balancer does not have connection
+  draining enabled. When an instance is deregistered
+  (during deployment or scaling), in-flight requests
+  on that instance are immediately dropped — the
+  connection closes mid-request. Clients receive
+  connection-reset or timeout errors during routine
+  deployments. Connection draining gives in-flight
+  requests a graceful completion window before the
+  instance is removed from rotation.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.1, A1.2"
+  nist_800_53_r5: "CP-10, SI-2"
+  pci_dss_v4.0: "11.5.1"
+  fedramp_moderate: "CP-10"
+  iso_27001_2022: "A.5.30, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    CLB drops in-flight requests during deregistration.
+    Deployments cause client errors.
+  action: >
+    Enable connection draining on the CLB:
+    aws elb modify-load-balancer-attributes
+    --load-balancer-name <name> --load-balancer-attributes
+    "ConnectionDraining={Enabled=true,Timeout=300}".
+    A 300-second drain window gives long-running
+    requests time to complete; tune lower for
+    short-request workloads. Better long-term move:
+    migrate to ALB
+    (CTL.ELB.LIFECYCLE.CLB.MIGRATION.001) — ALB
+    handles graceful deregistration without a
+    distinct draining flag.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "elb_type": "clb",
+          "is_classic": true,
+          "connection_draining_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.is_classic
+      op: eq
+      value: true
+    - field: properties.network.elb.connection_draining_enabled
+      op: eq
+      value: false
+defect: >
+  CLB does not have connection draining enabled.
+infection: >
+  Connection draining is the CLB-specific feature that
+  preserves in-flight requests during instance
+  deregistration. Without it, every deployment that
+  rotates instances drops live connections — clients
+  experience reset / timeout / 502 during the
+  rolling-replace window. The deployment looks
+  successful from the operator's side; users see
+  intermittent failures. Connection draining is a
+  CLB-only setting (ALB handles graceful
+  deregistration through target-group attributes
+  instead) so the control is gated to is_classic.
+failure: >
+  Disruptive deployments. CLB drops in-flight
+  requests when instances deregister; clients see
+  errors during routine rotations.
+tests:
+  - name: CLB without connection draining fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/legacy-clb"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            elb_type: "clb"
+            is_classic: true
+            connection_draining_enabled: false
+  - name: CLB with connection draining passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/legacy-clb"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            elb_type: "clb"
+            is_classic: true
+            connection_draining_enabled: true

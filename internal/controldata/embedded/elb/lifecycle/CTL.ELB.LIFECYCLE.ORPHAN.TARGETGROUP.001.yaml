@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.LIFECYCLE.ORPHAN.TARGETGROUP.001
+name: Target Group Not Associated with Any Load Balancer
+description: >
+  ELB target group exists but is not associated with
+  any ALB, NLB, or CLB listener. The target group has
+  registered targets, health-check configuration, and
+  attributes — but no load balancer routes traffic to
+  it. Typically the load balancer was deleted but the
+  target group wasn't, or the target group was created
+  for a service that was never deployed.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3"
+  pci_dss_v4.0: "1.2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["IAM-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Target group has no listener association and is not
+    on any routing path.
+  action: >
+    Either reattach the target group to an active
+    load balancer's listener (modify-listener or
+    create-rule with a forward action), or delete it
+    (aws elbv2 delete-target-group --target-group-arn
+    <arn>). Before deletion, audit registered targets
+    — they may still be running production workloads
+    and the orphan target group may be the only
+    documentation that the workload exists.
+  example: |
+    {
+      "network": {
+        "kind": "target_group",
+        "elb": {
+          "target_group_associated": true,
+          "target_group_listener_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: target_group
+    - field: properties.network.elb.target_group_associated
+      op: eq
+      value: false
+defect: >
+  Target group has no listener association.
+infection: >
+  An orphaned target group retains its registered
+  targets. If the targets are EC2 instances, they
+  remain in the target group's health check loop —
+  the target group continuously health-checks
+  instances that nobody routes traffic to. The
+  instances may still be running production workloads
+  — the orphaned target group's health checks add
+  unnecessary load. More importantly, orphaned target
+  groups with registered targets indicate incomplete
+  decommissioning — a service was removed but its
+  backend infrastructure persists.
+failure: >
+  Orphaned backend infrastructure. Target group exists
+  with registered targets but no load balancer routes
+  to it.
+tests:
+  - name: orphan target group with 3 targets fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/orphan-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            target_group_associated: false
+            target_group_listener_count: 0
+            target_count: 3
+  - name: associated target group passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            target_group_associated: true
+            target_group_listener_count: 1
+            target_count: 3

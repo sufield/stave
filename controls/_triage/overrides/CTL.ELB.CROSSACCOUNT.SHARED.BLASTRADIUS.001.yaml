@@ -1,0 +1,22 @@
+control: CTL.ELB.CROSSACCOUNT.SHARED.BLASTRADIUS.001
+defect: >
+  ALB hosts more than 5 distinct services across
+  different teams or applications.
+infection: >
+  A shared ALB centralizes the blast radius of any
+  load-balancer-level change. TLS policy downgrade
+  affects every service. WAF removal removes
+  filtering for every service. Security group
+  modification changes ingress for every service.
+  Listener rule errors (a misordered rule, a
+  conditional that drops traffic) impact tenants
+  beyond the team making the change. Cost-optimized
+  consolidation is a legitimate choice but warrants
+  explicit ownership and change-control discipline;
+  the combination of "shared ALB" with "no
+  change-control gating" creates fragile shared
+  infrastructure.
+failure: >
+  Shared-ALB blast radius. Many tenants behind one
+  load balancer; any ALB-level change affects every
+  tenant.

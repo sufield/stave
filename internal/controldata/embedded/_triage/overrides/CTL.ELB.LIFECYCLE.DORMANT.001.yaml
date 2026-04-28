@@ -1,0 +1,20 @@
+control: CTL.ELB.LIFECYCLE.DORMANT.001
+defect: >
+  Load balancer has had no traffic in 90+ days.
+infection: >
+  A dormant load balancer retains its full
+  configuration: security groups (inbound rules still
+  allow traffic), listeners (ports still open), target
+  groups (backends still registered), and WAF
+  association (if any). Nobody monitors a dormant load
+  balancer for anomalous activity because it's assumed
+  unused. But the load balancer is still reachable —
+  for an internet-facing ALB, anyone on the internet
+  can send requests. The security group allows it. The
+  listener accepts it. The target group routes it. The
+  backend processes it. A dormant internet-facing ALB
+  is a forgotten entry point into the network.
+failure: >
+  Forgotten entry point. A dormant load balancer with
+  active configuration is reachable and routes traffic
+  without monitoring.

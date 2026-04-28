@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CLB.HEALTHCHECK.MISSING.001
+name: Classic Load Balancer Has No Health Check Configured
+description: >
+  Classic Load Balancer has no health check configured
+  (or has health checks disabled). The CLB cannot
+  detect unhealthy instances — every registered
+  instance receives traffic regardless of health. An
+  instance with a crashed application, hung process,
+  or network failure still gets 1/N of the traffic;
+  every request to that instance fails for the client.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "2.5"
+  soc2: "CC7.1, A1.1, A1.2"
+  nist_800_53_r5: "CP-10, SI-4"
+  pci_dss_v4.0: "11.5.1"
+  fedramp_moderate: "CP-10"
+  iso_27001_2022: "A.5.30, A.8.32"
+  ccm_v4: ["BCR-08", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    CLB cannot detect unhealthy instances. Failed
+    instances continue receiving traffic.
+  action: >
+    Configure a health check on the CLB:
+    aws elb configure-health-check --load-balancer-name
+    <name> --health-check Target=HTTP:80/health,Interval=30,
+    Timeout=5,UnhealthyThreshold=2,HealthyThreshold=2.
+    Pick a target endpoint that exercises the
+    application's basic functionality (database
+    reachability, dependency check) rather than a
+    static OK page. Better long-term: migrate to ALB
+    (CTL.ELB.LIFECYCLE.CLB.MIGRATION.001) — ALB
+    target-group health checks are richer (matcher
+    codes, multiple paths, advanced options).
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "elb_type": "clb",
+          "is_classic": true,
+          "health_check_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.is_classic
+      op: eq
+      value: true
+    - field: properties.network.elb.health_check_configured
+      op: eq
+      value: false
+defect: >
+  CLB has no health check configured.
+infection: >
+  Without a health check, CLB routes traffic to ALL
+  registered instances regardless of health. An
+  instance with a crashed application still receives
+  traffic. Every request to that instance fails. With
+  N instances and one failing, 1/N of requests fail
+  even though the load balancer "works." Increasing
+  failure rate as more instances degrade — the load
+  balancer continues distributing traffic across all
+  of them, reducing aggregate availability. Health
+  checks are the mechanism that lets the LB stop
+  routing to failing targets.
+failure: >
+  Routing to failed instances. CLB has no health
+  signal — failed targets continue to receive
+  traffic.
+tests:
+  - name: CLB without health check fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/legacy-clb"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            elb_type: "clb"
+            is_classic: true
+            health_check_configured: false
+  - name: CLB with health check passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/legacy-clb"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            elb_type: "clb"
+            is_classic: true
+            health_check_configured: true

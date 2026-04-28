@@ -1,0 +1,19 @@
+control: CTL.ELB.CLB.DRAINING.001
+defect: >
+  CLB does not have connection draining enabled.
+infection: >
+  Connection draining is the CLB-specific feature that
+  preserves in-flight requests during instance
+  deregistration. Without it, every deployment that
+  rotates instances drops live connections — clients
+  experience reset / timeout / 502 during the
+  rolling-replace window. The deployment looks
+  successful from the operator's side; users see
+  intermittent failures. Connection draining is a
+  CLB-only setting (ALB handles graceful
+  deregistration through target-group attributes
+  instead) so the control is gated to is_classic.
+failure: >
+  Disruptive deployments. CLB drops in-flight
+  requests when instances deregister; clients see
+  errors during routine rotations.

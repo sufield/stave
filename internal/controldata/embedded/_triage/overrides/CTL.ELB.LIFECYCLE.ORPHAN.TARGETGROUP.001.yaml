@@ -1,0 +1,19 @@
+control: CTL.ELB.LIFECYCLE.ORPHAN.TARGETGROUP.001
+defect: >
+  Target group has no listener association.
+infection: >
+  An orphaned target group retains its registered
+  targets. If the targets are EC2 instances, they
+  remain in the target group's health check loop —
+  the target group continuously health-checks
+  instances that nobody routes traffic to. The
+  instances may still be running production workloads
+  — the orphaned target group's health checks add
+  unnecessary load. More importantly, orphaned target
+  groups with registered targets indicate incomplete
+  decommissioning — a service was removed but its
+  backend infrastructure persists.
+failure: >
+  Orphaned backend infrastructure. Target group exists
+  with registered targets but no load balancer routes
+  to it.

@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.LIFECYCLE.CLB.MIGRATION.001
+name: Classic Load Balancer Still in Use
+description: >
+  Classic Load Balancer is still in active use. CLB is
+  legacy infrastructure: AWS recommends migration to
+  ALB or NLB. CLBs lack WAF integration (no
+  application-layer filtering), modern TLS policies,
+  authentication integration (OIDC/Cognito on ALB),
+  content-based routing, HTTP/2, WebSocket, and Lambda
+  targets. Workloads on CLB miss security and
+  operational features that ALB ships with.
+domain: governance
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.5"
+  soc2: "CC6.1, CC6.6, A1.2"
+  nist_800_53_r5: "CM-2, SC-7, SI-2"
+  pci_dss_v4.0: "6.6"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.8.20, A.8.22"
+  ccm_v4: ["TVM-04", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    CLB lacks security and operational features
+    available only on ALB.
+  action: >
+    Migrate to ALB. Provision an ALB in the same VPC
+    and AZs, recreate listeners and target groups,
+    register targets, and switch DNS / Route 53
+    aliases from the CLB endpoint to the ALB endpoint.
+    Run both in parallel during the cut-over window
+    to validate. After traffic moves, delete the CLB.
+    Migration unlocks WAF integration, modern TLS
+    policies, authentication actions, content-based
+    routing, and the alarm/auth controls in this
+    catalog.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "elb_type": "alb",
+          "is_classic": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.is_classic
+      op: eq
+      value: true
+defect: >
+  Classic Load Balancer is still in use.
+infection: >
+  Classic Load Balancers lack security features
+  available on ALB: WAF integration (no
+  application-layer filtering on CLB — SQLi, XSS,
+  and bot traffic pass through unfiltered),
+  advanced TLS policies (CLB supports fewer and
+  older TLS policies than ALB), authentication
+  integration (no OIDC/Cognito auth on CLB —
+  application must implement auth), and modern
+  monitoring (fewer CloudWatch metrics than ALB).
+  CLBs also lack operational features: no path-
+  based routing, no host-based routing, no HTTP/2,
+  no WebSocket, no Lambda targets. Migration to
+  ALB provides both security and operational
+  improvements.
+failure: >
+  Legacy perimeter. Classic Load Balancer lacks WAF,
+  modern TLS, authentication integration, and
+  advanced routing — security features only
+  available on ALB.
+tests:
+  - name: CLB fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/legacy-clb"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            elb_type: "clb"
+            is_classic: true
+            clb_age_days: 900
+  - name: ALB passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            elb_type: "alb"
+            is_classic: false

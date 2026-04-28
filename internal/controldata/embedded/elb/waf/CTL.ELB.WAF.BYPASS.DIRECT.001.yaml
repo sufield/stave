@@ -1,0 +1,130 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.WAF.BYPASS.DIRECT.001
+name: Backend Targets Are Directly Accessible Bypassing ALB and WAF
+description: >
+  Backend targets behind an ALB have security groups
+  that allow inbound traffic from sources OTHER than
+  the ALB's security group. An attacker who can reach
+  the target IP directly bypasses every ALB-layer
+  control: WAF, TLS termination, access logging,
+  authentication, rate limiting. The ALB's security
+  controls apply only to traffic that flows through
+  the ALB. Backend security groups should permit
+  inbound only from the ALB's security group on the
+  application port.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1, 5.2"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "SC-7, SI-3, AC-3"
+  pci_dss_v4.0: "1.2, 1.3, 6.6"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.8.20, A.8.22"
+  ccm_v4: ["IVS-04", "TVM-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Backend targets accept traffic from sources beyond
+    the ALB's security group. ALB-layer controls are
+    bypassable.
+  action: >
+    Tighten the target instances' security group:
+    keep one inbound rule allowing the application
+    port from the ALB's security-group ID, and remove
+    every other inbound rule on that port (especially
+    0.0.0.0/0, broad CIDRs, or peer security groups
+    that aren't the ALB's). Verify by attempting a
+    direct connection from a test instance — the
+    connection must fail. The ALB's WAF, TLS, auth,
+    and access logging then become the only path to
+    the backend.
+  example: |
+    {
+      "network": {
+        "kind": "target_group",
+        "elb": {
+          "target_sg_allows_non_elb": false,
+          "waf_associated": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: target_group
+    - field: properties.network.elb.target_sg_allows_non_elb
+      op: eq
+      value: true
+defect: >
+  Backend target security group allows inbound from
+  sources other than the ALB security group.
+infection: >
+  The ALB provides: WAF filtering (if associated),
+  TLS termination, access logging, authentication
+  (if configured), and rate limiting. All of these
+  controls apply ONLY to traffic that flows through
+  the ALB. When backend targets accept traffic
+  directly (their security group allows sources
+  beyond the ALB's security group), an attacker
+  sends requests directly to the target IP:port —
+  bypassing every ALB-layer control. If WAF is
+  configured on the ALB but the backend is directly
+  accessible, WAF protection is circumvented. Backend
+  security groups should allow inbound ONLY from the
+  ALB's security group on the application port.
+failure: >
+  Perimeter bypass. Backend targets accessible
+  directly — WAF, TLS, auth, and access logging are
+  all circumvented.
+tests:
+  - name: target SG allowing 0.0.0.0/0 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            target_sg_allows_non_elb: true
+            target_non_elb_sources: ["0.0.0.0/0"]
+            waf_associated: true
+  - name: target SG only allowing ALB SG passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/api-tg/abc"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            target_sg_allows_non_elb: false
+            target_non_elb_sources: []
+            waf_associated: true
+  - name: WAF associated + direct access bypass fires (severe)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/sensitive-tg/xyz"
+      asset_type: aws_target_group
+      vendor: aws
+      properties:
+        network:
+          kind: target_group
+          elb:
+            target_sg_allows_non_elb: true
+            target_non_elb_sources: ["10.0.0.0/8", "192.168.0.0/16"]
+            waf_associated: true

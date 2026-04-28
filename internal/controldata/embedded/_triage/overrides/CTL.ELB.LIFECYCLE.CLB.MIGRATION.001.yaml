@@ -1,0 +1,23 @@
+control: CTL.ELB.LIFECYCLE.CLB.MIGRATION.001
+defect: >
+  Classic Load Balancer is still in use.
+infection: >
+  Classic Load Balancers lack security features
+  available on ALB: WAF integration (no
+  application-layer filtering on CLB — SQLi, XSS,
+  and bot traffic pass through unfiltered),
+  advanced TLS policies (CLB supports fewer and
+  older TLS policies than ALB), authentication
+  integration (no OIDC/Cognito auth on CLB —
+  application must implement auth), and modern
+  monitoring (fewer CloudWatch metrics than ALB).
+  CLBs also lack operational features: no path-
+  based routing, no host-based routing, no HTTP/2,
+  no WebSocket, no Lambda targets. Migration to
+  ALB provides both security and operational
+  improvements.
+failure: >
+  Legacy perimeter. Classic Load Balancer lacks WAF,
+  modern TLS, authentication integration, and
+  advanced routing — security features only available
+  on ALB.

@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CROSSACCOUNT.SHARED.BLASTRADIUS.001
+name: Multiple Unrelated Services Share the Same ALB
+description: >
+  Multiple services from different teams or
+  applications share the same ALB via listener rules.
+  A single ALB-level change — TLS policy downgrade,
+  WAF removal, security-group modification — affects
+  every service behind it. The blast radius spans
+  multiple service owners. Shared ALBs are sometimes
+  intentional (cost optimization) but the increased
+  blast radius warrants explicit acknowledgement.
+  Heuristic threshold: more than 5 distinct services
+  on one ALB.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, SC-7"
+  pci_dss_v4.0: "11.5.1"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    ALB hosts more than 5 distinct services. Any
+    ALB-level change affects every tenant.
+  action: >
+    Either split the ALB along service / team
+    boundaries (one ALB per major service) or
+    document the shared-ALB choice with the affected
+    teams and add change-control gating on any
+    ALB-level modification (TLS policy, WAF, security
+    group). Pair with CTL.ELB.WAF.NORULES.001 and
+    CTL.ELB.WAF.COUNTONLY.001 — a misconfigured WAF
+    on a shared ALB blast-radiuses across every
+    tenant.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "service_count": 3,
+          "has_excessive_sharing": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.has_excessive_sharing
+      op: eq
+      value: true
+defect: >
+  ALB hosts more than 5 distinct services across
+  different teams or applications.
+infection: >
+  A shared ALB centralizes the blast radius of any
+  load-balancer-level change. TLS policy downgrade
+  affects every service. WAF removal removes
+  filtering for every service. Security group
+  modification changes ingress for every service.
+  Listener rule errors (a misordered rule, a
+  conditional that drops traffic) impact tenants
+  beyond the team making the change. Cost-optimized
+  consolidation is a legitimate choice but warrants
+  explicit ownership and change-control discipline;
+  the combination of "shared ALB" with "no
+  change-control gating" creates fragile shared
+  infrastructure.
+failure: >
+  Shared-ALB blast radius. Many tenants behind one
+  load balancer; any ALB-level change affects every
+  tenant.
+tests:
+  - name: ALB with 8 services fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/shared-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            target_group_count: 12
+            listener_rule_count: 18
+            service_count: 8
+            has_excessive_sharing: true
+  - name: ALB with 2 target groups for one service passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/api-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            target_group_count: 2
+            listener_rule_count: 3
+            service_count: 1
+            has_excessive_sharing: false

@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.LIFECYCLE.DORMANT.001
+name: Load Balancer Has No Traffic in 90+ Days
+description: >
+  Load balancer has processed no requests (RequestCount
+  for ALB, ActiveFlowCount for NLB) in more than 90
+  days. The ALB/NLB/CLB exists with listeners, target
+  groups, security groups, WAF association, and TLS
+  configuration but serves no traffic. Latent
+  infrastructure: security groups still allow inbound
+  traffic, the ALB still costs money, and an
+  internet-facing dormant ALB is a forgotten entry
+  point reachable from the internet.
+domain: governance
+severity: medium
+archetype: dormant-resource
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, SA-22"
+  pci_dss_v4.0: "1.2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["IAM-08", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Load balancer has been dormant for 90+ days with
+    active configuration. Latent reachable surface.
+  action: >
+    Audit the LB's CloudTrail history to confirm
+    dormancy. If truly unused, delete the load
+    balancer (aws elbv2 delete-load-balancer
+    --load-balancer-arn <arn>) along with associated
+    target groups and listener rules. If retained
+    for future use, restrict the security group to
+    a minimal source set, document the planned
+    reactivation, and attach a request-count alarm
+    so any traffic surfaces immediately.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "is_dormant": false,
+          "last_request_days": 7
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.is_dormant
+      op: eq
+      value: true
+defect: >
+  Load balancer has had no traffic in 90+ days.
+infection: >
+  A dormant load balancer retains its full
+  configuration: security groups (inbound rules still
+  allow traffic), listeners (ports still open), target
+  groups (backends still registered), and WAF
+  association (if any). Nobody monitors a dormant load
+  balancer for anomalous activity because it's assumed
+  unused. But the load balancer is still reachable —
+  for an internet-facing ALB, anyone on the internet
+  can send requests. The security group allows it. The
+  listener accepts it. The target group routes it. The
+  backend processes it. A dormant internet-facing ALB
+  is a forgotten entry point into the network.
+failure: >
+  Forgotten entry point. A dormant load balancer with
+  active configuration is reachable and routes traffic
+  without monitoring.
+tests:
+  - name: 120-day dormant internet-facing ALB fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/legacy-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            is_dormant: true
+            last_request_days: 120
+            elb_type: "alb"
+            scheme: "internet-facing"
+  - name: 5-day-active ALB passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            is_dormant: false
+            last_request_days: 5
+  - name: dormant internal ALB fires (less severe but still latent)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/internal-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            is_dormant: true
+            last_request_days: 200
+            elb_type: "alb"
+            scheme: "internal"

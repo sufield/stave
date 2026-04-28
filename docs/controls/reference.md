@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1836
-**Pack hash:** `398016d69486c7b76f2ab7514634f2f75acede14e33cad81caf447b82ee59c6d`
+**Total controls:** 1844
+**Pack hash:** `6ba4e640b01196c1c43596ae934b627053603e7b6c6c2646de5bda95500a13eb`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 204 |
-| high | 815 |
+| high | 818 |
 | info | 16 |
 | low | 123 |
-| medium | 678 |
+| medium | 683 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 977 |
-| governance | 217 |
+| exposure | 979 |
+| governance | 223 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -10685,6 +10685,66 @@ ACM certificate used by the load balancer has auto-renewal failing. ACM attempte
 
 ---
 
+### CTL.ELB.CLB.DRAINING.001
+
+**Classic Load Balancer Connection Draining Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-10; iso_27001_2022: A.5.30, A.8.32; nist_800_53_r5: CP-10, SI-2; pci_dss_v4.0: 11.5.1; soc2: A1.1, A1.2;
+
+Classic Load Balancer does not have connection draining enabled. When an instance is deregistered (during deployment or scaling), in-flight requests on that instance are immediately dropped — the connection closes mid-request. Clients receive connection-reset or timeout errors during routine deployments. Connection draining gives in-flight requests a graceful completion window before the instance is removed from rotation.
+
+**Remediation:** Enable connection draining on the CLB: aws elb modify-load-balancer-attributes --load-balancer-name <name> --load-balancer-attributes "ConnectionDraining={Enabled=true,Timeout=300}". A 300-second drain window gives long-running requests time to complete; tune lower for short-request workloads. Better long-term move: migrate to ALB (CTL.ELB.LIFECYCLE.CLB.MIGRATION.001) — ALB handles graceful deregistration without a distinct draining flag.
+
+---
+
+### CTL.ELB.CLB.HEALTHCHECK.MISSING.001
+
+**Classic Load Balancer Has No Health Check Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 2.5; fedramp_moderate: CP-10; iso_27001_2022: A.5.30, A.8.32; nist_800_53_r5: CP-10, SI-4; pci_dss_v4.0: 11.5.1; soc2: CC7.1, A1.1, A1.2;
+
+Classic Load Balancer has no health check configured (or has health checks disabled). The CLB cannot detect unhealthy instances — every registered instance receives traffic regardless of health. An instance with a crashed application, hung process, or network failure still gets 1/N of the traffic; every request to that instance fails for the client.
+
+**Remediation:** Configure a health check on the CLB: aws elb configure-health-check --load-balancer-name <name> --health-check Target=HTTP:80/health,Interval=30, Timeout=5,UnhealthyThreshold=2,HealthyThreshold=2. Pick a target endpoint that exercises the application's basic functionality (database reachability, dependency check) rather than a static OK page. Better long-term: migrate to ALB (CTL.ELB.LIFECYCLE.CLB.MIGRATION.001) — ALB target-group health checks are richer (matcher codes, multiple paths, advanced options).
+
+---
+
+### CTL.ELB.CROSSACCOUNT.PRIVATELINK.OPEN.001
+
+**NLB PrivateLink Service Allows Connections from Any Account**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-3, AC-4, SC-7; pci_dss_v4.0: 1.2, 7.1; soc2: CC6.1, CC6.6;
+
+NLB is configured as a VPC endpoint service (PrivateLink) but the endpoint service permissions allow connections from any AWS account — no account restriction, no PrincipalOrgID condition. Any account can create a VPC endpoint targeting this NLB and route traffic to its backend services via PrivateLink. Open permissions defeat the purpose of PrivateLink (private connectivity with controlled access).
+
+**Remediation:** Restrict allowed principals: aws ec2 modify-vpc-endpoint-service-permissions --service-id <id> --add-allowed-principals "arn:aws:iam::<consumer-account>:root" — and remove the wildcard. For organization-internal endpoint services, attach an SCP with aws:PrincipalOrgID so only org accounts can connect. Verify by attempting a connection from an out-of-org account — it must fail with a permission error before reaching the NLB.
+
+---
+
+### CTL.ELB.CROSSACCOUNT.SHARED.BLASTRADIUS.001
+
+**Multiple Unrelated Services Share the Same ALB**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, SC-7; pci_dss_v4.0: 11.5.1; soc2: CC6.1, CC8.1;
+
+Multiple services from different teams or applications share the same ALB via listener rules. A single ALB-level change — TLS policy downgrade, WAF removal, security-group modification — affects every service behind it. The blast radius spans multiple service owners. Shared ALBs are sometimes intentional (cost optimization) but the increased blast radius warrants explicit acknowledgement. Heuristic threshold: more than 5 distinct services on one ALB.
+
+**Remediation:** Either split the ALB along service / team boundaries (one ALB per major service) or document the shared-ALB choice with the affected teams and add change-control gating on any ALB-level modification (TLS policy, WAF, security group). Pair with CTL.ELB.WAF.NORULES.001 and CTL.ELB.WAF.COUNTONLY.001 — a misconfigured WAF on a shared ALB blast-radiuses across every tenant.
+
+---
+
 ### CTL.ELB.CROSSZONE.001
 
 **Load Balancer Must Have Cross-Zone Load Balancing Enabled**
@@ -10786,6 +10846,51 @@ Load balancers serving PHI must redirect all HTTP traffic to HTTPS. Allowing pla
 Load balancer safety cannot be assessed when TLS configuration is missing from the snapshot. The extractor must populate loadbalancer.encryption.tls_1_2_or_higher.
 
 **Remediation:** Re-run the extractor with ELB permissions: elasticloadbalancing:DescribeLoadBalancers, elasticloadbalancing:DescribeLoadBalancerAttributes, elasticloadbalancing:DescribeListeners.
+
+---
+
+### CTL.ELB.LIFECYCLE.CLB.MIGRATION.001
+
+**Classic Load Balancer Still in Use**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 2.5; fedramp_moderate: SC-7; iso_27001_2022: A.8.20, A.8.22; nist_800_53_r5: CM-2, SC-7, SI-2; pci_dss_v4.0: 6.6; soc2: CC6.1, CC6.6, A1.2;
+
+Classic Load Balancer is still in active use. CLB is legacy infrastructure: AWS recommends migration to ALB or NLB. CLBs lack WAF integration (no application-layer filtering), modern TLS policies, authentication integration (OIDC/Cognito on ALB), content-based routing, HTTP/2, WebSocket, and Lambda targets. Workloads on CLB miss security and operational features that ALB ships with.
+
+**Remediation:** Migrate to ALB. Provision an ALB in the same VPC and AZs, recreate listeners and target groups, register targets, and switch DNS / Route 53 aliases from the CLB endpoint to the ALB endpoint. Run both in parallel during the cut-over window to validate. After traffic moves, delete the CLB. Migration unlocks WAF integration, modern TLS policies, authentication actions, content-based routing, and the alarm/auth controls in this catalog.
+
+---
+
+### CTL.ELB.LIFECYCLE.DORMANT.001
+
+**Load Balancer Has No Traffic in 90+ Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, CM-3, SA-22; pci_dss_v4.0: 1.2; soc2: CC6.1, CC8.1;
+
+Load balancer has processed no requests (RequestCount for ALB, ActiveFlowCount for NLB) in more than 90 days. The ALB/NLB/CLB exists with listeners, target groups, security groups, WAF association, and TLS configuration but serves no traffic. Latent infrastructure: security groups still allow inbound traffic, the ALB still costs money, and an internet-facing dormant ALB is a forgotten entry point reachable from the internet.
+
+**Remediation:** Audit the LB's CloudTrail history to confirm dormancy. If truly unused, delete the load balancer (aws elbv2 delete-load-balancer --load-balancer-arn <arn>) along with associated target groups and listener rules. If retained for future use, restrict the security group to a minimal source set, document the planned reactivation, and attach a request-count alarm so any traffic surfaces immediately.
+
+---
+
+### CTL.ELB.LIFECYCLE.ORPHAN.TARGETGROUP.001
+
+**Target Group Not Associated with Any Load Balancer**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, CM-3; pci_dss_v4.0: 1.2; soc2: CC6.1, CC8.1;
+
+ELB target group exists but is not associated with any ALB, NLB, or CLB listener. The target group has registered targets, health-check configuration, and attributes — but no load balancer routes traffic to it. Typically the load balancer was deleted but the target group wasn't, or the target group was created for a service that was never deployed.
+
+**Remediation:** Either reattach the target group to an active load balancer's listener (modify-listener or create-rule with a forward action), or delete it (aws elbv2 delete-target-group --target-group-arn <arn>). Before deletion, audit registered targets — they may still be running production workloads and the orphan target group may be the only documentation that the workload exists.
 
 ---
 
@@ -10981,6 +11086,21 @@ Application and Network Load Balancers must use TLS 1.2 or higher for HTTPS list
 Internet-facing ALBs must have an AWS WAF web ACL associated.
 
 **Remediation:** Associate a WAF web ACL with the ALB.
+
+---
+
+### CTL.ELB.WAF.BYPASS.DIRECT.001
+
+**Backend Targets Are Directly Accessible Bypassing ALB and WAF**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1, 5.2; fedramp_moderate: SC-7; iso_27001_2022: A.8.20, A.8.22; nist_800_53_r5: SC-7, SI-3, AC-3; pci_dss_v4.0: 1.2, 1.3, 6.6; soc2: CC6.1, CC6.6;
+
+Backend targets behind an ALB have security groups that allow inbound traffic from sources OTHER than the ALB's security group. An attacker who can reach the target IP directly bypasses every ALB-layer control: WAF, TLS termination, access logging, authentication, rate limiting. The ALB's security controls apply only to traffic that flows through the ALB. Backend security groups should permit inbound only from the ALB's security group on the application port.
+
+**Remediation:** Tighten the target instances' security group: keep one inbound rule allowing the application port from the ALB's security-group ID, and remove every other inbound rule on that port (especially 0.0.0.0/0, broad CIDRs, or peer security groups that aren't the ALB's). Verify by attempting a direct connection from a test instance — the connection must fail. The ALB's WAF, TLS, auth, and access logging then become the only path to the backend.
 
 ---
 

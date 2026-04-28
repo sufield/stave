@@ -1,0 +1,20 @@
+control: CTL.ELB.CROSSACCOUNT.PRIVATELINK.OPEN.001
+defect: >
+  NLB PrivateLink endpoint service allows connections
+  from any AWS account.
+infection: >
+  VPC endpoint services (PrivateLink) allow other AWS
+  accounts to create VPC endpoints that connect to
+  the NLB. Without principal restrictions: any AWS
+  account — including an attacker's account — can
+  create a VPC endpoint to this NLB. The attacker's
+  VPC resources can send traffic to the NLB's backend
+  services via PrivateLink. PrivateLink traffic stays
+  within the AWS network (not internet) but the
+  access boundary is open to any account. Endpoint
+  service permissions should restrict to specific
+  account IDs or organizational principals.
+failure: >
+  Unrestricted PrivateLink access. Any AWS account
+  can connect to this NLB's backend services via VPC
+  endpoint.

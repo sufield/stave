@@ -1,0 +1,20 @@
+id: elb_clb_insecure
+description: >
+  Classic Load Balancer in use plus either no health
+  check or no connection draining. Legacy load
+  balancer AND either unhealthy instances serve
+  traffic (no health check) or deployments drop
+  connections (no draining). Multiple CLB-specific
+  failures on the same legacy load balancer.
+  Threshold of 2 fires when CLB usage compounds with
+  a CLB-specific configuration gap.
+controls:
+  - CTL.ELB.LIFECYCLE.CLB.MIGRATION.001
+  - CTL.ELB.CLB.HEALTHCHECK.MISSING.001
+  - CTL.ELB.CLB.DRAINING.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

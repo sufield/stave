@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CROSSACCOUNT.PRIVATELINK.OPEN.001
+name: NLB PrivateLink Service Allows Connections from Any Account
+description: >
+  NLB is configured as a VPC endpoint service
+  (PrivateLink) but the endpoint service permissions
+  allow connections from any AWS account — no account
+  restriction, no PrincipalOrgID condition. Any
+  account can create a VPC endpoint targeting this
+  NLB and route traffic to its backend services via
+  PrivateLink. Open permissions defeat the purpose of
+  PrivateLink (private connectivity with controlled
+  access).
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, SC-7"
+  pci_dss_v4.0: "1.2, 7.1"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-16", "IVS-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+  blast_radius:
+    type: prevention
+    scope: organization
+    multiplier: 4.0
+remediation:
+  description: >
+    Endpoint service grants connection permission to
+    any AWS account.
+  action: >
+    Restrict allowed principals: aws ec2
+    modify-vpc-endpoint-service-permissions
+    --service-id <id> --add-allowed-principals
+    "arn:aws:iam::<consumer-account>:root" — and
+    remove the wildcard. For organization-internal
+    endpoint services, attach an SCP with
+    aws:PrincipalOrgID so only org accounts can
+    connect. Verify by attempting a connection from
+    an out-of-org account — it must fail with a
+    permission error before reaching the NLB.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "is_endpoint_service": true,
+          "endpoint_allows_all": false,
+          "endpoint_allowed_principals": ["arn:aws:iam::222233334444:root"],
+          "endpoint_has_org_restriction": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.is_endpoint_service
+      op: eq
+      value: true
+    - field: properties.network.elb.endpoint_allows_all
+      op: eq
+      value: true
+defect: >
+  NLB PrivateLink endpoint service allows connections
+  from any AWS account.
+infection: >
+  VPC endpoint services (PrivateLink) allow other AWS
+  accounts to create VPC endpoints that connect to
+  the NLB. Without principal restrictions: any AWS
+  account — including an attacker's account — can
+  create a VPC endpoint to this NLB. The attacker's
+  VPC resources can send traffic to the NLB's backend
+  services via PrivateLink. PrivateLink traffic stays
+  within the AWS network (not internet) but the access
+  boundary is open to any account. Endpoint service
+  permissions should restrict to specific account IDs
+  or organizational principals.
+failure: >
+  Unrestricted PrivateLink access. Any AWS account
+  can connect to this NLB's backend services via VPC
+  endpoint.
+tests:
+  - name: endpoint service allowing all fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/svc-nlb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            is_endpoint_service: true
+            endpoint_allows_all: true
+            endpoint_has_org_restriction: false
+  - name: endpoint service with restricted principals passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/svc-nlb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            is_endpoint_service: true
+            endpoint_allows_all: false
+            endpoint_allowed_principals: ["arn:aws:iam::222233334444:root"]
+            endpoint_has_org_restriction: true

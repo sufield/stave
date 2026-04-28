@@ -1,0 +1,19 @@
+control: CTL.ELB.CLB.HEALTHCHECK.MISSING.001
+defect: >
+  CLB has no health check configured.
+infection: >
+  Without a health check, CLB routes traffic to ALL
+  registered instances regardless of health. An
+  instance with a crashed application still receives
+  traffic. Every request to that instance fails. With
+  N instances and one failing, 1/N of requests fail
+  even though the load balancer "works." Increasing
+  failure rate as more instances degrade — the load
+  balancer continues distributing traffic across all
+  of them, reducing aggregate availability. Health
+  checks are the mechanism that lets the LB stop
+  routing to failing targets.
+failure: >
+  Routing to failed instances. CLB has no health
+  signal — failed targets continue to receive
+  traffic.
