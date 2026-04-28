@@ -1,0 +1,19 @@
+control: CTL.EC2.EBS.DLM.DISABLED.001
+defect: >
+  DLM lifecycle policy is in DISABLED state.
+infection: >
+  A disabled DLM policy retains its full
+  configuration: schedule, tag selector,
+  retention count, execution role, cross-region
+  copy settings. An auditor checking 'do we have
+  a DLM policy?' sees the policy and marks it
+  compliant. The policy doesn't run. No snapshots
+  are created. Common cause: disabled during
+  troubleshooting (policy was creating too many
+  snapshots, was using too much storage, or was
+  erroring on execution) and never re-enabled.
+  The policy looks correct in every dimension
+  except the one that matters — it's off.
+failure: >
+  False backup protection. DLM policy exists but
+  is disabled — no snapshots are being created.

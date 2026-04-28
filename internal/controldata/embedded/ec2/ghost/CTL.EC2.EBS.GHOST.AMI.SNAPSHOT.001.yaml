@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.GHOST.AMI.SNAPSHOT.001
+name: AMI References Deleted EBS Snapshot
+description: >
+  Amazon Machine Image references an EBS
+  snapshot in its block device mapping that has
+  been deleted. The AMI exists with valid ID,
+  name, and configuration. Launching an EC2
+  instance from this AMI fails because the root
+  volume snapshot doesn't exist. Auto Scaling
+  groups using this AMI cannot scale out;
+  scaling events fail.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1, A1.2"
+  nist_800_53_r5: "CM-2, CM-3"
+  pci_dss_v4.0: "9.5"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.8.13"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    AMI references a deleted snapshot. Instance
+    launches from this AMI fail.
+  action: >
+    Either deregister the AMI (aws ec2
+    deregister-image --image-id <ami-id>) and
+    rebuild from a current source, or recreate
+    the missing snapshot if the original volume
+    is still available. Audit Auto Scaling
+    groups and launch templates referencing
+    this AMI — scaling events through them
+    will fail until the AMI is repaired or
+    replaced.
+  example: |
+    {
+      "compute": {
+        "kind": "ami",
+        "ebs": {
+          "ami_id": "ami-0abc123def456",
+          "ami_snapshot_ids": ["snap-0123456789abcdef"],
+          "ami_snapshots_exist": true,
+          "has_ghost_ami_snapshot": false,
+          "missing_snapshot_ids": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ami
+    - field: properties.compute.ebs.has_ghost_ami_snapshot
+      op: eq
+      value: true
+defect: >
+  AMI references one or more EBS snapshots that
+  have been deleted.
+infection: >
+  An AMI's block device mapping specifies which
+  EBS snapshots to use when creating volumes
+  for a new instance. The root volume snapshot
+  is required — without it, the instance has
+  no operating system. When the snapshot is
+  deleted: ec2:RunInstances with this AMI fails
+  with 'snapshot not found'. Auto Scaling groups
+  using this AMI cannot launch new instances
+  (scaling events fail), launch templates
+  referencing this AMI produce failed instances,
+  and disaster recovery procedures that depend
+  on the AMI fail at the worst possible moment.
+  The AMI appears in the console as a valid,
+  available image. The failure occurs only at
+  launch time — when the snapshot is needed
+  but doesn't exist.
+failure: >
+  AMI launch failure. Instance launches from
+  this AMI fail because the underlying EBS
+  snapshot was deleted.
+tests:
+  - name: AMI with deleted root snapshot fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1::image/ami-0abc123def456"
+      asset_type: aws_ami
+      vendor: aws
+      properties:
+        compute:
+          kind: ami
+          ebs:
+            ami_id: "ami-0abc123def456"
+            ami_snapshot_ids: ["snap-deleted123"]
+            ami_snapshots_exist: false
+            has_ghost_ami_snapshot: true
+            missing_snapshot_ids: ["snap-deleted123"]
+  - name: AMI with valid snapshots passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1::image/ami-0abc123def456"
+      asset_type: aws_ami
+      vendor: aws
+      properties:
+        compute:
+          kind: ami
+          ebs:
+            ami_id: "ami-0abc123def456"
+            ami_snapshot_ids: ["snap-0123456789abcdef"]
+            ami_snapshots_exist: true
+            has_ghost_ami_snapshot: false
+            missing_snapshot_ids: []

@@ -1,0 +1,24 @@
+control: CTL.EC2.EBS.DLM.NOCROSSREGION.001
+defect: >
+  DLM lifecycle policy creates no cross-region
+  snapshot copies.
+infection: >
+  EBS volumes are AZ-scoped; EBS snapshots are
+  region-scoped. Without cross-region copy, a
+  regional failure (full region outage, large-
+  scale AZ event affecting the regional control
+  plane) takes both the volumes and their
+  snapshots offline simultaneously. Recovery
+  has nowhere to begin from until the source
+  region returns, which can take hours to days.
+  Cross-region copy creates an additional copy
+  of each snapshot in a paired region; the
+  backup survives even when the source region
+  is unavailable. For production databases,
+  customer data, and compliance-regulated
+  workloads, cross-region backup is a
+  fundamental DR primitive.
+failure: >
+  Backups co-located with data. All snapshots
+  in the same region as the volumes — regional
+  failure loses both data and backups.

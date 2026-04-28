@@ -1,0 +1,127 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.VOLUME.ERRORSTATE.001
+name: EBS Volume Is in Error State
+description: >
+  EBS volume is in error state — the underlying
+  hardware has failed or the volume is otherwise
+  impaired. Data on the volume may be partially
+  or fully unrecoverable. If the volume is
+  attached to a running instance, I/O operations
+  fail; if it is a root volume, the instance is
+  impaired. The only control that detects active
+  hardware-level failure on EBS.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "A1.1, A1.2"
+  nist_800_53_r5: "CP-9, CP-10, SI-4"
+  pci_dss_v4.0: "9.5"
+  fedramp_moderate: "CP-9, SI-4"
+  hipaa: "164.308(a)(7)(ii)(A)"
+  iso_27001_2022: "A.5.30, A.8.13, A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    Volume hardware failure or impairment. Data
+    may be unrecoverable.
+  action: >
+    Capture every available snapshot from the
+    volume immediately (aws ec2 create-snapshot
+    --volume-id <id>) — even an impaired volume
+    may produce a partial snapshot that
+    preserves some data. Restore the most
+    recent healthy snapshot to a new volume in
+    a different AZ. If the impaired volume is
+    a root volume, stop the instance, detach
+    the impaired root, attach the recovered
+    volume, and restart. Open an AWS support
+    case with the impaired volume ID.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_volume",
+        "ebs": {
+          "volume_id": "vol-0123456789abcdef",
+          "volume_state": "in-use",
+          "volume_status": "ok",
+          "is_error_state": false,
+          "attached_instance_id": "i-0abc123def456"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_volume
+    - field: properties.compute.ebs.is_error_state
+      op: eq
+      value: true
+defect: >
+  EBS volume is in error state; data may be
+  unrecoverable.
+infection: >
+  EBS volume error state means the storage
+  service has detected hardware failure or
+  impairment of the underlying physical volume.
+  Reads return I/O errors; writes either fail
+  or are silently dropped depending on driver
+  behavior. If the volume is attached to a
+  running instance, the instance experiences
+  I/O failures — application processes hang on
+  syscalls, the kernel may remount filesystems
+  read-only or panic, and data written between
+  the last successful sync and the failure may
+  be lost. Root volumes in error state mean
+  the instance cannot complete normal
+  operation. Recovery depends on the most
+  recent good snapshot; this is the moment
+  every DLM gap matters most.
+failure: >
+  Hardware-level data loss in progress. Volume
+  is impaired and attached I/O is failing;
+  every minute without a recovery snapshot is
+  unprotected data.
+tests:
+  - name: volume in error state fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:volume/vol-0123456789abcdef"
+      asset_type: aws_ebs_volume
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_volume
+          ebs:
+            volume_id: "vol-0123456789abcdef"
+            volume_state: "error"
+            volume_status: "impaired"
+            is_error_state: true
+            attached_instance_id: "i-0abc123def456"
+  - name: healthy volume passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:volume/vol-0123456789abcdef"
+      asset_type: aws_ebs_volume
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_volume
+          ebs:
+            volume_id: "vol-0123456789abcdef"
+            volume_state: "in-use"
+            volume_status: "ok"
+            is_error_state: false
+            attached_instance_id: "i-0abc123def456"

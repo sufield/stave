@@ -1,0 +1,25 @@
+control: CTL.EC2.EBS.GHOST.DLM.ROLE.001
+defect: >
+  DLM lifecycle policy execution role has been
+  deleted. Scheduled snapshots fail silently.
+infection: >
+  DLM automates EBS snapshot creation on a
+  schedule — hourly, daily, weekly. The
+  execution role is the IAM role DLM assumes to
+  call ec2:CreateSnapshot. When the role is
+  deleted, DLM triggers on schedule, attempts
+  AssumeRole, fails (role doesn't exist), and
+  no snapshot is created. This repeats on every
+  scheduled execution. The DLM policy shows
+  ENABLED in the console. The schedule shows
+  the next execution time. The policy appears
+  to be creating backups. No snapshots are
+  created. The team believes they have
+  automated backups; they don't. They discover
+  this when a volume fails and the most recent
+  snapshot is from before the role was deleted —
+  potentially months ago.
+failure: >
+  Silent backup failure. Automated snapshots
+  appear configured but the execution role was
+  deleted; no backups are being created.

@@ -1,0 +1,134 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.GHOST.DLM.ROLE.001
+name: DLM Lifecycle Policy Execution Role Deleted
+description: >
+  Data Lifecycle Manager policy has an execution
+  role that has been deleted. The DLM policy
+  exists with schedule, target tags, and
+  retention count, but the IAM role it assumes
+  to call ec2:CreateSnapshot doesn't exist.
+  Every scheduled execution silently fails. No
+  snapshots are created. The team discovers the
+  gap during disaster recovery — when they need
+  a backup that never existed.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+compliance:
+  cis_aws_v3.0: "2.2.1"
+  soc2: "CC6.1, CC8.1, A1.2, A1.3"
+  nist_800_53_r5: "CM-2, CM-3, CP-9, CP-10"
+  pci_dss_v4.0: "9.5"
+  fedramp_moderate: "CP-9"
+  hipaa: "164.308(a)(7)(ii)(A), 164.308(a)(7)(ii)(B)"
+  iso_27001_2022: "A.5.30, A.8.13"
+  ccm_v4: ["BCR-08", "BCR-11"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    DLM policy's IAM role is gone. Scheduled
+    snapshots silently fail.
+  action: >
+    Recreate the IAM role with the
+    AWSDataLifecycleManagerServiceRole policy
+    attached, or repoint the DLM policy to an
+    existing valid role: aws dlm
+    update-lifecycle-policy --policy-id <id>
+    --execution-role-arn <new-role-arn>. After
+    fix, validate by triggering an immediate
+    snapshot via the AWS console (the policy's
+    "Force trigger" option) and confirming a new
+    snapshot appears under the matching tag.
+    Audit recent snapshot history for the gap
+    period — there are no automated snapshots
+    from the role-deletion timestamp until now.
+  example: |
+    {
+      "compute": {
+        "kind": "dlm_policy",
+        "ebs": {
+          "dlm_policy_id": "policy-0123456789abcdef",
+          "dlm_execution_role_arn": "arn:aws:iam::111122223333:role/AWSDataLifecycleManagerDefaultRole",
+          "dlm_execution_role_exists": true,
+          "has_ghost_dlm_role": false,
+          "dlm_policy_state": "ENABLED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: dlm_policy
+    - field: properties.compute.ebs.has_ghost_dlm_role
+      op: eq
+      value: true
+defect: >
+  DLM lifecycle policy execution role has been
+  deleted. Scheduled snapshots fail silently.
+infection: >
+  DLM automates EBS snapshot creation on a
+  schedule — hourly, daily, weekly. The
+  execution role is the IAM role DLM assumes to
+  call ec2:CreateSnapshot. When the role is
+  deleted, DLM triggers on schedule, attempts
+  AssumeRole, fails (role doesn't exist), and
+  no snapshot is created. This repeats on every
+  scheduled execution. The DLM policy shows
+  ENABLED in the console. The schedule shows
+  the next execution time. The policy appears
+  to be creating backups. No snapshots are
+  created. The team believes they have
+  automated backups; they don't. They discover
+  this when a volume fails and the most recent
+  snapshot is from before the role was deleted —
+  potentially months ago.
+failure: >
+  Silent backup failure. Automated snapshots
+  appear configured but the execution role was
+  deleted; no backups are being created.
+tests:
+  - name: DLM policy with deleted role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_execution_role_arn: "arn:aws:iam::111122223333:role/deleted-role"
+            dlm_execution_role_exists: false
+            has_ghost_dlm_role: true
+            dlm_policy_state: "ENABLED"
+            dlm_target_tags:
+              - Key: "Backup"
+                Value: "true"
+  - name: DLM policy with valid role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_execution_role_arn: "arn:aws:iam::111122223333:role/AWSDataLifecycleManagerDefaultRole"
+            dlm_execution_role_exists: true
+            has_ghost_dlm_role: false
+            dlm_policy_state: "ENABLED"

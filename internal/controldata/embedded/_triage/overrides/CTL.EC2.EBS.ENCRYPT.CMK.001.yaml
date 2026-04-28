@@ -1,0 +1,23 @@
+control: CTL.EC2.EBS.ENCRYPT.CMK.001
+defect: >
+  EBS volume is encrypted with the AWS-managed
+  key rather than a customer-managed KMS key.
+infection: >
+  AWS-managed encryption (aws/ebs) protects
+  data against raw storage access — the
+  encryption key never leaves AWS, and the
+  underlying disks cannot be read in plaintext.
+  But the key lives in AWS's account, not the
+  customer's. There is no key policy to scope
+  decryption authority, no CloudTrail visibility
+  into decryption events, and no way to revoke
+  access by deleting or disabling the key. A
+  customer-managed key with a tightly-scoped
+  policy gives the operator control over which
+  principals can decrypt and a revocation path
+  if access needs to be cut off.
+failure: >
+  No key policy control. Default encryption
+  protects against raw storage access but not
+  against compromised attach permissions inside
+  the account.

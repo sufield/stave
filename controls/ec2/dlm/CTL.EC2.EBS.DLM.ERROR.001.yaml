@@ -1,0 +1,127 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.DLM.ERROR.001
+name: DLM Lifecycle Policy Is in Error State
+description: >
+  DLM lifecycle policy is in ERROR state. The
+  policy has been executing but encountering
+  errors — common causes are insufficient
+  execution-role permissions, an inaccessible
+  KMS key, or snapshot quotas reached. New
+  snapshots are not being created. The
+  last-success timestamp indicates the RPO gap.
+domain: exposure
+severity: critical
+archetype: false-protection
+compliance:
+  cis_aws_v3.0: "2.2.2"
+  soc2: "CC7.1, A1.2, A1.3"
+  nist_800_53_r5: "CP-9, CP-10, IR-4, SI-4"
+  pci_dss_v4.0: "9.5, 12.10"
+  fedramp_moderate: "CP-9, IR-4"
+  hipaa: "164.308(a)(7)(ii)(A)"
+  iso_27001_2022: "A.5.30, A.8.13, A.8.16"
+  ccm_v4: ["BCR-08", "BCR-11"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    DLM policy is failing on execution. New
+    snapshots are not being created.
+  action: >
+    Inspect the policy's last error in CloudTrail
+    for the assumed-role context (look for
+    AssumeRole, CreateSnapshot, KMS Encrypt
+    failures). Common fixes: re-grant
+    ec2:CreateSnapshot to the execution role;
+    re-enable a disabled CMK; raise the regional
+    snapshot quota. After fixing, force-trigger
+    the policy to confirm the next execution
+    succeeds and the policy returns to ENABLED.
+    Audit the gap from last_success_time —
+    every day in the gap is unprotected data.
+  example: |
+    {
+      "compute": {
+        "kind": "dlm_policy",
+        "ebs": {
+          "dlm_policy_id": "policy-0123456789abcdef",
+          "dlm_policy_state": "ENABLED",
+          "dlm_is_error": false,
+          "dlm_last_success_time": "2026-04-27T00:00:00Z",
+          "dlm_last_success_days": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: dlm_policy
+    - field: properties.compute.ebs.dlm_is_error
+      op: eq
+      value: true
+defect: >
+  DLM lifecycle policy is in ERROR state; new
+  snapshots are not being created.
+infection: >
+  A DLM policy in ERROR state attempted to
+  execute and failed. Unlike a disabled policy
+  (which never attempts execution), an error-
+  state policy is trying to run but cannot
+  complete. Common causes: the execution role
+  lost ec2:CreateSnapshot permission (IAM
+  policy changed), the KMS key for snapshot
+  encryption is disabled or scheduled for
+  deletion (can't encrypt new snapshots), or
+  the account reached the regional snapshot
+  limit (typically 100,000 snapshots). The
+  policy's last successful execution
+  timestamp indicates the RPO gap — how far
+  back the most recent backup is. If the last
+  success was 30 days ago, 30 days of data is
+  unprotected.
+failure: >
+  Backup policy failing on execution. DLM
+  attempts to run but errors out — no new
+  snapshots since the last success time.
+tests:
+  - name: DLM policy in ERROR state fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_policy_state: "ERROR"
+            dlm_is_error: true
+            dlm_last_success_time: "2026-03-13T00:00:00Z"
+            dlm_last_success_days: 45
+  - name: healthy DLM policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_policy_state: "ENABLED"
+            dlm_is_error: false
+            dlm_last_success_time: "2026-04-27T00:00:00Z"
+            dlm_last_success_days: 1

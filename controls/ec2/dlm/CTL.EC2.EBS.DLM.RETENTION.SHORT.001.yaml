@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.DLM.RETENTION.SHORT.001
+name: DLM Lifecycle Policy Retention Too Short
+description: >
+  DLM lifecycle policy keeps fewer recovery points
+  than the workload requires — for example,
+  fewer than seven daily snapshots or fewer than
+  four weekly snapshots. Short retention narrows
+  the recovery window: only N days of recovery
+  points to choose from, oldest recovery point
+  only N days back, no long-term recovery target.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, A1.2, A1.3"
+  nist_800_53_r5: "CP-9, CP-10"
+  pci_dss_v4.0: "9.5, 9.6"
+  fedramp_moderate: "CP-9"
+  hipaa: "164.308(a)(7)(ii)(A)"
+  iso_27001_2022: "A.5.30, A.8.13"
+  ccm_v4: ["BCR-08", "BCR-11"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    DLM retention is too narrow for the
+    workload's RPO target.
+  action: >
+    Decide on the recovery window the workload
+    requires (production databases typically
+    7-30 days of dailies plus 4-12 weeks of
+    weeklies) and update retention: aws dlm
+    update-lifecycle-policy --policy-id <id>
+    --policy-details ... with retain.count or
+    retain.interval.count adjusted upward. Note
+    that adding retention does not retroactively
+    extend existing snapshots; the wider window
+    starts from the next execution.
+  example: |
+    {
+      "compute": {
+        "kind": "dlm_policy",
+        "ebs": {
+          "dlm_policy_id": "policy-0123456789abcdef",
+          "dlm_retention_count": 14,
+          "dlm_schedule_interval": "daily",
+          "dlm_retention_short": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: dlm_policy
+    - field: properties.compute.ebs.dlm_retention_short
+      op: eq
+      value: true
+defect: >
+  DLM policy retention is too short for the
+  expected recovery horizon.
+infection: >
+  Retention length on a DLM policy controls how
+  many recovery points exist at any time. A
+  daily policy with retain.count=2 holds two
+  daily snapshots; the oldest recovery point is
+  two days back. If a corruption or attack went
+  undetected for three days, none of the
+  available snapshots predate the issue —
+  every recovery point is already corrupted.
+  For production data, daily retention of
+  7-30 days plus weekly retention of 4-12 weeks
+  is a common floor. For development data, a
+  few days may be acceptable. The control fires
+  when the retention is below a threshold the
+  workload's RPO requires; it does not prescribe
+  a single number across all workloads.
+failure: >
+  Recovery window too narrow. Backups exist but
+  the available restore points don't reach far
+  enough back to cover an undetected incident.
+tests:
+  - name: daily policy with 2-snapshot retention fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_retention_count: 2
+            dlm_schedule_interval: "daily"
+            dlm_retention_short: true
+  - name: daily policy with 14-snapshot retention passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_retention_count: 14
+            dlm_schedule_interval: "daily"
+            dlm_retention_short: false

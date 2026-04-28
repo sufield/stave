@@ -1,0 +1,25 @@
+control: CTL.EC2.EBS.GHOST.AMI.SNAPSHOT.001
+defect: >
+  AMI references one or more EBS snapshots that
+  have been deleted.
+infection: >
+  An AMI's block device mapping specifies which
+  EBS snapshots to use when creating volumes
+  for a new instance. The root volume snapshot
+  is required — without it, the instance has
+  no operating system. When the snapshot is
+  deleted: ec2:RunInstances with this AMI fails
+  with 'snapshot not found'. Auto Scaling groups
+  using this AMI cannot launch new instances
+  (scaling events fail), launch templates
+  referencing this AMI produce failed instances,
+  and disaster recovery procedures that depend
+  on the AMI fail at the worst possible moment.
+  The AMI appears in the console as a valid,
+  available image. The failure occurs only at
+  launch time — when the snapshot is needed
+  but doesn't exist.
+failure: >
+  AMI launch failure. Instance launches from
+  this AMI fail because the underlying EBS
+  snapshot was deleted.

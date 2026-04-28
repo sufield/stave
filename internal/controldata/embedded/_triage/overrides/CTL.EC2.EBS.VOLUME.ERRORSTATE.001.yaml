@@ -1,0 +1,26 @@
+control: CTL.EC2.EBS.VOLUME.ERRORSTATE.001
+defect: >
+  EBS volume is in error state; data may be
+  unrecoverable.
+infection: >
+  EBS volume error state means the storage
+  service has detected hardware failure or
+  impairment of the underlying physical volume.
+  Reads return I/O errors; writes either fail
+  or are silently dropped depending on driver
+  behavior. If the volume is attached to a
+  running instance, the instance experiences
+  I/O failures — application processes hang on
+  syscalls, the kernel may remount filesystems
+  read-only or panic, and data written between
+  the last successful sync and the failure may
+  be lost. Root volumes in error state mean
+  the instance cannot complete normal
+  operation. Recovery depends on the most
+  recent good snapshot; this is the moment
+  every DLM gap matters most.
+failure: >
+  Hardware-level data loss in progress. Volume
+  is impaired and attached I/O is failing;
+  every minute without a recovery snapshot is
+  unprotected data.

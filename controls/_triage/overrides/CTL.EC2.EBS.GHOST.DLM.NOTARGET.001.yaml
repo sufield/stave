@@ -1,0 +1,23 @@
+control: CTL.EC2.EBS.GHOST.DLM.NOTARGET.001
+defect: >
+  DLM lifecycle policy tag selector matches
+  zero volumes.
+infection: >
+  DLM policies use tag selectors to identify
+  which volumes to snapshot. Common patterns:
+  Backup=true, Environment=production,
+  DLM-Managed=yes. If volumes were retagged
+  (Backup=true changed to backup=true — case
+  sensitive), if the tag was removed during an
+  infrastructure change, or if the policy was
+  created with a typo in the tag key/value, the
+  selector matches nothing. DLM runs on schedule,
+  matches zero volumes, creates zero snapshots.
+  No error is raised — matching zero volumes is
+  a valid result (an empty set). The policy
+  appears enabled and running. No backups are
+  created.
+failure: >
+  Backup policy matches nothing. DLM runs on
+  schedule but no volumes match the tag
+  selector — zero snapshots created.

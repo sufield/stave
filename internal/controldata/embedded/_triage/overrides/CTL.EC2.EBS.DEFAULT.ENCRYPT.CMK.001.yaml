@@ -1,0 +1,24 @@
+control: CTL.EC2.EBS.DEFAULT.ENCRYPT.CMK.001
+defect: >
+  Account default EBS encryption uses the AWS-
+  managed key, not a customer-managed CMK.
+infection: >
+  Default EBS encryption controls what happens
+  when a volume is created without specifying
+  a KmsKeyId. With AWS-managed default, every
+  new volume from auto-scaling, console
+  launches, or scripts that don't set a key
+  receives the aws/ebs key — and inherits the
+  no-policy-control, no-audit, no-revocation
+  posture of the AWS-managed key. Setting the
+  default key to a CMK propagates customer-
+  controlled encryption to every new volume
+  without requiring callers to set the key
+  explicitly. Existing volumes are not
+  retroactively re-encrypted; only new volumes
+  from this point forward.
+failure: >
+  Default encryption inherits AWS-managed key.
+  Every new volume receives a key the customer
+  doesn't control — no policy scoping, no audit,
+  no revocation.

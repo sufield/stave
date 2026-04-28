@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.DLM.NOPOLICY.001
+name: No DLM Lifecycle Policy for EBS Volumes
+description: >
+  No Data Lifecycle Manager policy exists for
+  automated EBS snapshot creation. Backups depend
+  entirely on manual processes — someone
+  remembering to create snapshots, scripts that
+  may or may not run, or no backups at all.
+  Without DLM, there is no automated, policy-
+  driven backup strategy for the account's EBS
+  volumes.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "2.2.2"
+  soc2: "CC6.1, A1.2, A1.3"
+  nist_800_53_r5: "CP-6, CP-9, CP-10"
+  pci_dss_v4.0: "9.5"
+  fedramp_moderate: "CP-9"
+  hipaa: "164.308(a)(7)(ii)(A), 164.308(a)(7)(ii)(B)"
+  iso_27001_2022: "A.5.30, A.8.13"
+  ccm_v4: ["BCR-08", "BCR-11"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    No DLM policy exists in the account. EBS
+    backup is fully manual.
+  action: >
+    Create at least one DLM policy: aws dlm
+    create-lifecycle-policy --execution-role-arn
+    <role> --description "<desc>" --state ENABLED
+    --policy-details file://policy.json. Tag
+    production volumes with the policy's
+    selector (e.g., Backup=true) and validate by
+    triggering an immediate snapshot. Confirm
+    daily snapshots for production data and
+    cross-region copy for DR-relevant workloads.
+  example: |
+    {
+      "compute": {
+        "kind": "ec2_account",
+        "ebs": {
+          "dlm_policy_count": 1,
+          "has_dlm_policy": true,
+          "volume_count": 24
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ec2_account
+    - field: properties.compute.ebs.has_dlm_policy
+      op: eq
+      value: false
+defect: >
+  Account has no DLM lifecycle policy for
+  automated EBS snapshots.
+infection: >
+  Without DLM, snapshots are created manually if
+  at all, schedules depend on scripts or human
+  memory, retention is manual (old snapshots
+  accumulate or are never cleaned up), and
+  cross-region backup copies are not automated.
+  When a volume fails — hardware error, accidental
+  deletion, ransomware encryption — the recovery
+  point is whatever was the last manual snapshot.
+  If the last manual snapshot was 30 days ago,
+  30 days of data is lost. If no snapshot exists,
+  all data is lost. DLM is the only AWS-native
+  way to enforce automated, policy-driven EBS
+  backup.
+failure: >
+  No automated backup strategy. EBS volumes have
+  no policy-driven snapshot creation; data
+  recovery depends on manual processes.
+tests:
+  - name: account with no DLM policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            dlm_policy_count: 0
+            has_dlm_policy: false
+            volume_count: 24
+  - name: account with DLM policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            dlm_policy_count: 1
+            has_dlm_policy: true
+            volume_count: 24

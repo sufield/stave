@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.DLM.NOCROSSREGION.001
+name: DLM Lifecycle Policy Has No Cross-Region Snapshot Copy
+description: >
+  DLM lifecycle policy creates snapshots in the
+  source region only — no cross-region copy
+  rule. EBS volumes are AZ-scoped and snapshots
+  are region-scoped, so a regional event leaves
+  both volumes and their backups in the same
+  failure domain. Cross-region copy is the only
+  AWS-native way to keep the backup outside the
+  data's region.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.2, A1.3"
+  nist_800_53_r5: "CP-6, CP-9, CP-10"
+  pci_dss_v4.0: "9.5, 9.6"
+  fedramp_moderate: "CP-6, CP-9"
+  hipaa: "164.308(a)(7)(ii)(B)"
+  iso_27001_2022: "A.5.30, A.8.13"
+  ccm_v4: ["BCR-08", "BCR-11"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: data
+    scope: region
+    multiplier: 2.0
+remediation:
+  description: >
+    DLM has no cross-region copy. Backups co-
+    located with data.
+  action: >
+    Add a CrossRegionCopyRule to the DLM policy
+    pointing at a paired DR region (typically
+    the closest region on the same continent
+    for latency or a specific compliance
+    region). Use a CMK in the destination
+    region; the source CMK cannot decrypt in
+    the destination. Cost note: cross-region
+    storage and transfer are billed; price the
+    DR region's snapshot retention into the
+    workload's TCO.
+  example: |
+    {
+      "compute": {
+        "kind": "dlm_policy",
+        "ebs": {
+          "dlm_policy_id": "policy-0123456789abcdef",
+          "dlm_cross_region_copy": true,
+          "dlm_copy_regions": ["us-west-2"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: dlm_policy
+    - field: properties.compute.ebs.dlm_cross_region_copy
+      op: eq
+      value: false
+defect: >
+  DLM lifecycle policy creates no cross-region
+  snapshot copies.
+infection: >
+  EBS volumes are AZ-scoped; EBS snapshots are
+  region-scoped. Without cross-region copy, a
+  regional failure (full region outage, large-
+  scale AZ event affecting the regional control
+  plane) takes both the volumes and their
+  snapshots offline simultaneously. Recovery
+  has nowhere to begin from until the source
+  region returns, which can take hours to days.
+  Cross-region copy creates an additional copy
+  of each snapshot in a paired region; the
+  backup survives even when the source region
+  is unavailable. For production databases,
+  customer data, and compliance-regulated
+  workloads, cross-region backup is a
+  fundamental DR primitive.
+failure: >
+  Backups co-located with data. All snapshots
+  in the same region as the volumes — regional
+  failure loses both data and backups.
+tests:
+  - name: DLM policy without cross-region copy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_cross_region_copy: false
+            dlm_copy_regions: []
+  - name: DLM policy with cross-region copy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_cross_region_copy: true
+            dlm_copy_regions: ["us-west-2"]

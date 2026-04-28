@@ -1,0 +1,24 @@
+control: CTL.EC2.EBS.DLM.RETENTION.SHORT.001
+defect: >
+  DLM policy retention is too short for the
+  expected recovery horizon.
+infection: >
+  Retention length on a DLM policy controls how
+  many recovery points exist at any time. A
+  daily policy with retain.count=2 holds two
+  daily snapshots; the oldest recovery point is
+  two days back. If a corruption or attack went
+  undetected for three days, none of the
+  available snapshots predate the issue —
+  every recovery point is already corrupted.
+  For production data, daily retention of
+  7-30 days plus weekly retention of 4-12 weeks
+  is a common floor. For development data, a
+  few days may be acceptable. The control fires
+  when the retention is below a threshold the
+  workload's RPO requires; it does not prescribe
+  a single number across all workloads.
+failure: >
+  Recovery window too narrow. Backups exist but
+  the available restore points don't reach far
+  enough back to cover an undetected incident.

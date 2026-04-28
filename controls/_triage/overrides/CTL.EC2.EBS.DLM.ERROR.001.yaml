@@ -1,0 +1,25 @@
+control: CTL.EC2.EBS.DLM.ERROR.001
+defect: >
+  DLM lifecycle policy is in ERROR state; new
+  snapshots are not being created.
+infection: >
+  A DLM policy in ERROR state attempted to
+  execute and failed. Unlike a disabled policy
+  (which never attempts execution), an error-
+  state policy is trying to run but cannot
+  complete. Common causes: the execution role
+  lost ec2:CreateSnapshot permission (IAM
+  policy changed), the KMS key for snapshot
+  encryption is disabled or scheduled for
+  deletion (can't encrypt new snapshots), or
+  the account reached the regional snapshot
+  limit (typically 100,000 snapshots). The
+  policy's last successful execution
+  timestamp indicates the RPO gap — how far
+  back the most recent backup is. If the last
+  success was 30 days ago, 30 days of data is
+  unprotected.
+failure: >
+  Backup policy failing on execution. DLM
+  attempts to run but errors out — no new
+  snapshots since the last success time.

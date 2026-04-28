@@ -1,0 +1,130 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.GHOST.DLM.NOTARGET.001
+name: DLM Lifecycle Policy Tag Selector Matches No Volumes
+description: >
+  Data Lifecycle Manager policy targets volumes
+  with specific tags, but no volumes in the
+  account currently have those tags. The DLM
+  policy runs on schedule, evaluates the tag
+  selector, finds zero matching volumes, and
+  creates zero snapshots. Common cause: tag
+  values were changed (case-sensitive — Backup
+  vs backup), the tag was removed during an
+  infrastructure refactor, or the policy was
+  created with a typo.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  cis_aws_v3.0: "2.2.1"
+  soc2: "CC6.1, CC8.1, A1.2"
+  nist_800_53_r5: "CM-2, CM-3, CP-9"
+  pci_dss_v4.0: "9.5"
+  fedramp_moderate: "CP-9"
+  hipaa: "164.308(a)(7)(ii)(A)"
+  iso_27001_2022: "A.5.30, A.8.13"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    DLM tag selector matches no volumes. Zero
+    snapshots created on every run.
+  action: >
+    Either retag the intended volumes to match
+    the policy's selector (aws ec2 create-tags
+    --resources <vol-ids> --tags
+    Key=Backup,Value=true), or update the
+    policy's selector to match the existing
+    tags (aws dlm update-lifecycle-policy
+    --policy-id <id> --policy-details ...).
+    Confirm by checking dlm_matching_volume_count
+    is non-zero after the fix and triggering a
+    snapshot via Force trigger.
+  example: |
+    {
+      "compute": {
+        "kind": "dlm_policy",
+        "ebs": {
+          "dlm_policy_id": "policy-0123456789abcdef",
+          "dlm_target_tags": [
+            { "Key": "Backup", "Value": "true" }
+          ],
+          "dlm_matching_volume_count": 12,
+          "has_no_target_volumes": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: dlm_policy
+    - field: properties.compute.ebs.has_no_target_volumes
+      op: eq
+      value: true
+defect: >
+  DLM lifecycle policy tag selector matches
+  zero volumes.
+infection: >
+  DLM policies use tag selectors to identify
+  which volumes to snapshot. Common patterns:
+  Backup=true, Environment=production,
+  DLM-Managed=yes. If volumes were retagged
+  (Backup=true changed to backup=true — case
+  sensitive), if the tag was removed during an
+  infrastructure change, or if the policy was
+  created with a typo in the tag key/value, the
+  selector matches nothing. DLM runs on schedule,
+  matches zero volumes, creates zero snapshots.
+  No error is raised — matching zero volumes is
+  a valid result (an empty set). The policy
+  appears enabled and running. No backups are
+  created.
+failure: >
+  Backup policy matches nothing. DLM runs on
+  schedule but no volumes match the tag
+  selector — zero snapshots created.
+tests:
+  - name: DLM policy with no matching volumes fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_target_tags:
+              - Key: "Backup"
+                Value: "true"
+            dlm_matching_volume_count: 0
+            has_no_target_volumes: true
+  - name: DLM policy with matching volumes passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_target_tags:
+              - Key: "Backup"
+                Value: "true"
+            dlm_matching_volume_count: 12
+            has_no_target_volumes: false

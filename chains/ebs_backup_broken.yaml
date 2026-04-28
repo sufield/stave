@@ -1,0 +1,21 @@
+id: ebs_backup_broken
+description: >
+  Either the DLM execution role has been deleted
+  or the DLM tag selector matches no volumes.
+  Each independently means automated EBS
+  snapshots are silently not running. The DLM
+  policy appears configured and enabled in the
+  console; no backups are actually being created.
+  Threshold of 1 because either failure mode is
+  enough to silently break the backup pipeline,
+  and the team typically discovers the gap only
+  during disaster recovery.
+controls:
+  - CTL.EC2.EBS.GHOST.DLM.ROLE.001
+  - CTL.EC2.EBS.GHOST.DLM.NOTARGET.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

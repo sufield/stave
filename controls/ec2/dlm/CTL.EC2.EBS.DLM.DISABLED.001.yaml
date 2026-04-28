@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.DLM.DISABLED.001
+name: DLM Lifecycle Policy Is Disabled
+description: >
+  DLM lifecycle policy exists but is in DISABLED
+  state. The policy retains schedule, tag
+  selector, retention, and execution role — it's
+  fully configured but not running. No snapshots
+  are being created. The same false-protection
+  shape as rotation-enabled-but-Lambda-deleted:
+  appears configured, doesn't function.
+domain: exposure
+severity: high
+archetype: false-protection
+compliance:
+  cis_aws_v3.0: "2.2.2"
+  soc2: "CC6.1, CC7.1, A1.2"
+  nist_800_53_r5: "CP-9, CP-10, SI-4"
+  pci_dss_v4.0: "9.5"
+  fedramp_moderate: "CP-9"
+  hipaa: "164.308(a)(7)(ii)(A)"
+  iso_27001_2022: "A.5.30, A.8.13"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.5
+remediation:
+  description: >
+    DLM policy exists but is disabled. No
+    snapshots are being created.
+  action: >
+    Re-enable the policy: aws dlm
+    update-lifecycle-policy --policy-id <id>
+    --state ENABLED. If the policy was disabled
+    intentionally (during troubleshooting),
+    confirm the underlying issue is resolved
+    before re-enabling. Validate by triggering
+    Force trigger and confirming a new snapshot
+    appears.
+  example: |
+    {
+      "compute": {
+        "kind": "dlm_policy",
+        "ebs": {
+          "dlm_policy_id": "policy-0123456789abcdef",
+          "dlm_policy_state": "ENABLED",
+          "dlm_is_disabled": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: dlm_policy
+    - field: properties.compute.ebs.dlm_is_disabled
+      op: eq
+      value: true
+defect: >
+  DLM lifecycle policy is in DISABLED state.
+infection: >
+  A disabled DLM policy retains its full
+  configuration: schedule, tag selector,
+  retention count, execution role, cross-region
+  copy settings. An auditor checking 'do we have
+  a DLM policy?' sees the policy and marks it
+  compliant. The policy doesn't run. No snapshots
+  are created. Common cause: disabled during
+  troubleshooting (policy was creating too many
+  snapshots, was using too much storage, or was
+  erroring on execution) and never re-enabled.
+  The policy looks correct in every dimension
+  except the one that matters — it's off.
+failure: >
+  False backup protection. DLM policy exists but
+  is disabled — no snapshots are being created.
+tests:
+  - name: disabled DLM policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_policy_state: "DISABLED"
+            dlm_is_disabled: true
+  - name: enabled DLM policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dlm:us-east-1:111122223333:policy/policy-0123456789abcdef"
+      asset_type: aws_dlm_policy
+      vendor: aws
+      properties:
+        compute:
+          kind: dlm_policy
+          ebs:
+            dlm_policy_id: "policy-0123456789abcdef"
+            dlm_policy_state: "ENABLED"
+            dlm_is_disabled: false

@@ -1,0 +1,22 @@
+control: CTL.EC2.EBS.DLM.NOPOLICY.001
+defect: >
+  Account has no DLM lifecycle policy for
+  automated EBS snapshots.
+infection: >
+  Without DLM, snapshots are created manually if
+  at all, schedules depend on scripts or human
+  memory, retention is manual (old snapshots
+  accumulate or are never cleaned up), and
+  cross-region backup copies are not automated.
+  When a volume fails — hardware error, accidental
+  deletion, ransomware encryption — the recovery
+  point is whatever was the last manual snapshot.
+  If the last manual snapshot was 30 days ago,
+  30 days of data is lost. If no snapshot exists,
+  all data is lost. DLM is the only AWS-native
+  way to enforce automated, policy-driven EBS
+  backup.
+failure: >
+  No automated backup strategy. EBS volumes have
+  no policy-driven snapshot creation; data
+  recovery depends on manual processes.

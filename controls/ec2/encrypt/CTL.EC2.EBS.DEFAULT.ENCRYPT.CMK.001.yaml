@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.DEFAULT.ENCRYPT.CMK.001
+name: Account Default EBS Encryption Uses AWS-Managed Key Not CMK
+description: >
+  Account-level default EBS encryption is
+  enabled (CTL.EC2.EBS.DEFAULT.001 passes), but
+  the configured default key is the AWS-managed
+  key (aws/ebs) rather than a customer-managed
+  KMS key. Every new volume created without
+  explicitly specifying a key inherits the
+  AWS-managed key — no key policy, no audit
+  trail, no revocation capability.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.2.1"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.4, 3.5.1"
+  fedramp_moderate: "SC-12, SC-13"
+  hipaa: "164.312(a)(2)(iv)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "CEK-09"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Account default encryption uses the AWS-
+    managed key. Every new volume inherits the
+    same gap.
+  action: >
+    Update the default key to a customer-
+    managed CMK: aws ec2
+    modify-ebs-default-kms-key-id --kms-key-id
+    <cmk-arn>. New volumes from this point
+    forward inherit the CMK; existing volumes
+    are unaffected (re-encrypt those separately
+    via snapshot+copy with a new key).
+  example: |
+    {
+      "compute": {
+        "kind": "ec2_account",
+        "ebs": {
+          "default_encrypt_enabled": true,
+          "default_kms_key_arn": "arn:aws:kms:us-east-1:111122223333:key/abc",
+          "default_uses_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ec2_account
+    - field: properties.compute.ebs.default_encrypt_enabled
+      op: eq
+      value: true
+    - field: properties.compute.ebs.default_uses_cmk
+      op: eq
+      value: false
+defect: >
+  Account default EBS encryption uses the AWS-
+  managed key, not a customer-managed CMK.
+infection: >
+  Default EBS encryption controls what happens
+  when a volume is created without specifying
+  a KmsKeyId. With AWS-managed default, every
+  new volume from auto-scaling, console
+  launches, or scripts that don't set a key
+  receives the aws/ebs key — and inherits the
+  no-policy-control, no-audit, no-revocation
+  posture of the AWS-managed key. Setting the
+  default key to a CMK propagates customer-
+  controlled encryption to every new volume
+  without requiring callers to set the key
+  explicitly. Existing volumes are not
+  retroactively re-encrypted; only new volumes
+  from this point forward.
+failure: >
+  Default encryption inherits AWS-managed key.
+  Every new volume receives a key the customer
+  doesn't control — no policy scoping, no audit,
+  no revocation.
+tests:
+  - name: default encryption with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            default_encrypt_enabled: true
+            default_kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/aws/ebs"
+            default_uses_cmk: false
+  - name: default encryption with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ebs:
+            default_encrypt_enabled: true
+            default_kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/abc-cmk-id"
+            default_uses_cmk: true

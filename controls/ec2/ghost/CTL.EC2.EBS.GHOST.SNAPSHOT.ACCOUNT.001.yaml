@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.GHOST.SNAPSHOT.ACCOUNT.001
+name: EBS Snapshot Shared with Decommissioned Account
+description: >
+  EBS snapshot has a createVolumePermission
+  granting access to an AWS account that has
+  been decommissioned — closed, transferred, or
+  left the organization. The sharing entry
+  persists in the snapshot's permissions; if
+  the account ID is later reclaimed (or the
+  account remains under a former-employee's
+  control), the new owner gains the historical
+  share.
+domain: exposure
+severity: medium
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC6.6, CC8.1"
+  nist_800_53_r5: "AC-2, AC-3, CM-3"
+  pci_dss_v4.0: "7.2, 8.2"
+  fedramp_moderate: "AC-2, AC-3"
+  iso_27001_2022: "A.5.16, A.5.18"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: data
+    scope: cross_account
+    multiplier: 1.5
+remediation:
+  description: >
+    Snapshot retains share entry for a
+    decommissioned account. Stale grant in
+    permissions metadata.
+  action: >
+    Remove the stale grant: aws ec2
+    modify-snapshot-attribute --snapshot-id
+    <id> --create-volume-permission
+    'Remove=[{UserId=<decommissioned-account>}]'.
+    Audit other snapshots in the account for
+    similar stale grants — accounts that left
+    the organization rarely have only one
+    affected resource.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_snapshot",
+        "ebs": {
+          "snapshot_id": "snap-0123456789abcdef",
+          "snapshot_shared_accounts": ["111122223333"],
+          "has_decommissioned_account": false,
+          "decommissioned_accounts": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_snapshot
+    - field: properties.compute.ebs.has_decommissioned_account
+      op: eq
+      value: true
+defect: >
+  EBS snapshot is shared with one or more
+  decommissioned AWS accounts.
+infection: >
+  EBS snapshot share entries persist in the
+  snapshot's permissions metadata regardless
+  of the lifecycle of the recipient accounts.
+  When a member account leaves the organization
+  or a partner account is closed, the share
+  entry remains attached to the snapshot. Two
+  failure modes follow: (1) AWS occasionally
+  recycles closed account IDs, in which case
+  the new owner of that account ID inherits
+  the historical share; (2) some closed
+  accounts remain operational under former-
+  employee or former-partner control, retaining
+  the share. Either way, the snapshot's recipient
+  list overstates who is currently authorized,
+  and disk image data may be accessible to
+  parties no longer in scope.
+failure: >
+  Stale snapshot share to a decommissioned
+  account. Sharing metadata overstates current
+  authorized recipients.
+tests:
+  - name: snapshot shared with decommissioned account fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:snapshot/snap-0123456789abcdef"
+      asset_type: aws_ebs_snapshot
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_snapshot
+          ebs:
+            snapshot_id: "snap-0123456789abcdef"
+            snapshot_shared_accounts: ["444455556666", "777788889999"]
+            has_decommissioned_account: true
+            decommissioned_accounts: ["444455556666"]
+  - name: snapshot shared with active accounts passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:snapshot/snap-0123456789abcdef"
+      asset_type: aws_ebs_snapshot
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_snapshot
+          ebs:
+            snapshot_id: "snap-0123456789abcdef"
+            snapshot_shared_accounts: ["444455556666"]
+            has_decommissioned_account: false
+            decommissioned_accounts: []

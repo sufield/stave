@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1875
-**Pack hash:** `37c30ff9e270c92327861afa21a1e3be765af04cc1862b370b6d3dfcc396b183`
+**Total controls:** 1887
+**Pack hash:** `4f499d61e96447633a1bf6d239a46d055fd1fb205bdc051a81ee9477dd8dea7d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 206 |
-| high | 834 |
+| critical | 209 |
+| high | 838 |
 | info | 16 |
 | low | 126 |
-| medium | 693 |
+| medium | 698 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 990 |
-| governance | 237 |
+| exposure | 1000 |
+| governance | 239 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -8696,6 +8696,21 @@ EBS default encryption must be enabled at the account level to ensure all new EB
 
 ---
 
+### CTL.EC2.EBS.DEFAULT.ENCRYPT.CMK.001
+
+**Account Default EBS Encryption Uses AWS-Managed Key Not CMK**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.2.1; fedramp_moderate: SC-12, SC-13; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.4, 3.5.1; soc2: CC6.1, CC6.7;
+
+Account-level default EBS encryption is enabled (CTL.EC2.EBS.DEFAULT.001 passes), but the configured default key is the AWS-managed key (aws/ebs) rather than a customer-managed KMS key. Every new volume created without explicitly specifying a key inherits the AWS-managed key — no key policy, no audit trail, no revocation capability.
+
+**Remediation:** Update the default key to a customer- managed CMK: aws ec2 modify-ebs-default-kms-key-id --kms-key-id <cmk-arn>. New volumes from this point forward inherit the CMK; existing volumes are unaffected (re-encrypt those separately via snapshot+copy with a new key).
+
+---
+
 ### CTL.EC2.EBS.DELETEONTERMINATION.001
 
 **EBS Volume Has DeleteOnTermination Disabled**
@@ -8711,6 +8726,81 @@ EBS volume attached to a running instance has `DeleteOnTermination` set to false
 
 ---
 
+### CTL.EC2.EBS.DLM.DISABLED.001
+
+**DLM Lifecycle Policy Is Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.2.2; fedramp_moderate: CP-9; hipaa: 164.308(a)(7)(ii)(A); iso_27001_2022: A.5.30, A.8.13; nist_800_53_r5: CP-9, CP-10, SI-4; pci_dss_v4.0: 9.5; soc2: CC6.1, CC7.1, A1.2;
+
+DLM lifecycle policy exists but is in DISABLED state. The policy retains schedule, tag selector, retention, and execution role — it's fully configured but not running. No snapshots are being created. The same false-protection shape as rotation-enabled-but-Lambda-deleted: appears configured, doesn't function.
+
+**Remediation:** Re-enable the policy: aws dlm update-lifecycle-policy --policy-id <id> --state ENABLED. If the policy was disabled intentionally (during troubleshooting), confirm the underlying issue is resolved before re-enabling. Validate by triggering Force trigger and confirming a new snapshot appears.
+
+---
+
+### CTL.EC2.EBS.DLM.ERROR.001
+
+**DLM Lifecycle Policy Is in Error State**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.2.2; fedramp_moderate: CP-9, IR-4; hipaa: 164.308(a)(7)(ii)(A); iso_27001_2022: A.5.30, A.8.13, A.8.16; nist_800_53_r5: CP-9, CP-10, IR-4, SI-4; pci_dss_v4.0: 9.5, 12.10; soc2: CC7.1, A1.2, A1.3;
+
+DLM lifecycle policy is in ERROR state. The policy has been executing but encountering errors — common causes are insufficient execution-role permissions, an inaccessible KMS key, or snapshot quotas reached. New snapshots are not being created. The last-success timestamp indicates the RPO gap.
+
+**Remediation:** Inspect the policy's last error in CloudTrail for the assumed-role context (look for AssumeRole, CreateSnapshot, KMS Encrypt failures). Common fixes: re-grant ec2:CreateSnapshot to the execution role; re-enable a disabled CMK; raise the regional snapshot quota. After fixing, force-trigger the policy to confirm the next execution succeeds and the policy returns to ENABLED. Audit the gap from last_success_time — every day in the gap is unprotected data.
+
+---
+
+### CTL.EC2.EBS.DLM.NOCROSSREGION.001
+
+**DLM Lifecycle Policy Has No Cross-Region Snapshot Copy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-6, CP-9; hipaa: 164.308(a)(7)(ii)(B); iso_27001_2022: A.5.30, A.8.13; nist_800_53_r5: CP-6, CP-9, CP-10; pci_dss_v4.0: 9.5, 9.6; soc2: A1.2, A1.3;
+
+DLM lifecycle policy creates snapshots in the source region only — no cross-region copy rule. EBS volumes are AZ-scoped and snapshots are region-scoped, so a regional event leaves both volumes and their backups in the same failure domain. Cross-region copy is the only AWS-native way to keep the backup outside the data's region.
+
+**Remediation:** Add a CrossRegionCopyRule to the DLM policy pointing at a paired DR region (typically the closest region on the same continent for latency or a specific compliance region). Use a CMK in the destination region; the source CMK cannot decrypt in the destination. Cost note: cross-region storage and transfer are billed; price the DR region's snapshot retention into the workload's TCO.
+
+---
+
+### CTL.EC2.EBS.DLM.NOPOLICY.001
+
+**No DLM Lifecycle Policy for EBS Volumes**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.2.2; fedramp_moderate: CP-9; hipaa: 164.308(a)(7)(ii)(A), 164.308(a)(7)(ii)(B); iso_27001_2022: A.5.30, A.8.13; nist_800_53_r5: CP-6, CP-9, CP-10; pci_dss_v4.0: 9.5; soc2: CC6.1, A1.2, A1.3;
+
+No Data Lifecycle Manager policy exists for automated EBS snapshot creation. Backups depend entirely on manual processes — someone remembering to create snapshots, scripts that may or may not run, or no backups at all. Without DLM, there is no automated, policy- driven backup strategy for the account's EBS volumes.
+
+**Remediation:** Create at least one DLM policy: aws dlm create-lifecycle-policy --execution-role-arn <role> --description "<desc>" --state ENABLED --policy-details file://policy.json. Tag production volumes with the policy's selector (e.g., Backup=true) and validate by triggering an immediate snapshot. Confirm daily snapshots for production data and cross-region copy for DR-relevant workloads.
+
+---
+
+### CTL.EC2.EBS.DLM.RETENTION.SHORT.001
+
+**DLM Lifecycle Policy Retention Too Short**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-9; hipaa: 164.308(a)(7)(ii)(A); iso_27001_2022: A.5.30, A.8.13; nist_800_53_r5: CP-9, CP-10; pci_dss_v4.0: 9.5, 9.6; soc2: CC6.1, A1.2, A1.3;
+
+DLM lifecycle policy keeps fewer recovery points than the workload requires — for example, fewer than seven daily snapshots or fewer than four weekly snapshots. Short retention narrows the recovery window: only N days of recovery points to choose from, oldest recovery point only N days back, no long-term recovery target.
+
+**Remediation:** Decide on the recovery window the workload requires (production databases typically 7-30 days of dailies plus 4-12 weeks of weeklies) and update retention: aws dlm update-lifecycle-policy --policy-id <id> --policy-details ... with retain.count or retain.interval.count adjusted upward. Note that adding retention does not retroactively extend existing snapshots; the wider window starts from the next execution.
+
+---
+
 ### CTL.EC2.EBS.ENCRYPT.001
 
 **EBS Volumes Must Be Encrypted**
@@ -8723,6 +8813,81 @@ EBS volume attached to a running instance has `DeleteOnTermination` set to false
 EBS volumes attached to EC2 instances must have encryption enabled. Unencrypted volumes storing PHI or sensitive data violate encryption at rest requirements.
 
 **Remediation:** Enable EBS encryption by default for the account. For existing volumes, create an encrypted snapshot and restore to a new encrypted volume. Run: aws ec2 enable-ebs-encryption-by-default
+
+---
+
+### CTL.EC2.EBS.ENCRYPT.CMK.001
+
+**EBS Volume Encrypted with AWS-Managed Key Not CMK**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.2.1; fedramp_moderate: SC-12, SC-13, SC-28; hipaa: 164.312(a)(2)(iv), 164.312(e)(2)(ii); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.4, 3.5.1; soc2: CC6.1, CC6.7;
+
+EBS volume is encrypted (CTL.EC2.EBS.ENCRYPT.001 passes) but the encryption key is the AWS- managed key (aws/ebs) rather than a customer-managed KMS key. Default encryption exists; customer-controlled encryption does not. There is no key policy, no usage audit trail, no revocation capability — same CMK enforcement pattern as every other encrypted service.
+
+**Remediation:** Re-encrypt the volume with a customer- managed key by creating a new encrypted snapshot with KmsKeyId set to a CMK ARN, then creating a new volume from that snapshot. Update the instance to use the new volume. The CMK's policy should grant Encrypt/Decrypt to the EC2 service principal and decrypt access only to the principals that need to attach the volume.
+
+---
+
+### CTL.EC2.EBS.GHOST.AMI.SNAPSHOT.001
+
+**AMI References Deleted EBS Snapshot**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.8.13; nist_800_53_r5: CM-2, CM-3; pci_dss_v4.0: 9.5; soc2: CC6.1, CC8.1, A1.2;
+
+Amazon Machine Image references an EBS snapshot in its block device mapping that has been deleted. The AMI exists with valid ID, name, and configuration. Launching an EC2 instance from this AMI fails because the root volume snapshot doesn't exist. Auto Scaling groups using this AMI cannot scale out; scaling events fail.
+
+**Remediation:** Either deregister the AMI (aws ec2 deregister-image --image-id <ami-id>) and rebuild from a current source, or recreate the missing snapshot if the original volume is still available. Audit Auto Scaling groups and launch templates referencing this AMI — scaling events through them will fail until the AMI is repaired or replaced.
+
+---
+
+### CTL.EC2.EBS.GHOST.DLM.NOTARGET.001
+
+**DLM Lifecycle Policy Tag Selector Matches No Volumes**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.2.1; fedramp_moderate: CP-9; hipaa: 164.308(a)(7)(ii)(A); iso_27001_2022: A.5.30, A.8.13; nist_800_53_r5: CM-2, CM-3, CP-9; pci_dss_v4.0: 9.5; soc2: CC6.1, CC8.1, A1.2;
+
+Data Lifecycle Manager policy targets volumes with specific tags, but no volumes in the account currently have those tags. The DLM policy runs on schedule, evaluates the tag selector, finds zero matching volumes, and creates zero snapshots. Common cause: tag values were changed (case-sensitive — Backup vs backup), the tag was removed during an infrastructure refactor, or the policy was created with a typo.
+
+**Remediation:** Either retag the intended volumes to match the policy's selector (aws ec2 create-tags --resources <vol-ids> --tags Key=Backup,Value=true), or update the policy's selector to match the existing tags (aws dlm update-lifecycle-policy --policy-id <id> --policy-details ...). Confirm by checking dlm_matching_volume_count is non-zero after the fix and triggering a snapshot via Force trigger.
+
+---
+
+### CTL.EC2.EBS.GHOST.DLM.ROLE.001
+
+**DLM Lifecycle Policy Execution Role Deleted**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.2.1; fedramp_moderate: CP-9; hipaa: 164.308(a)(7)(ii)(A), 164.308(a)(7)(ii)(B); iso_27001_2022: A.5.30, A.8.13; nist_800_53_r5: CM-2, CM-3, CP-9, CP-10; pci_dss_v4.0: 9.5; soc2: CC6.1, CC8.1, A1.2, A1.3;
+
+Data Lifecycle Manager policy has an execution role that has been deleted. The DLM policy exists with schedule, target tags, and retention count, but the IAM role it assumes to call ec2:CreateSnapshot doesn't exist. Every scheduled execution silently fails. No snapshots are created. The team discovers the gap during disaster recovery — when they need a backup that never existed.
+
+**Remediation:** Recreate the IAM role with the AWSDataLifecycleManagerServiceRole policy attached, or repoint the DLM policy to an existing valid role: aws dlm update-lifecycle-policy --policy-id <id> --execution-role-arn <new-role-arn>. After fix, validate by triggering an immediate snapshot via the AWS console (the policy's "Force trigger" option) and confirming a new snapshot appears under the matching tag. Audit recent snapshot history for the gap period — there are no automated snapshots from the role-deletion timestamp until now.
+
+---
+
+### CTL.EC2.EBS.GHOST.SNAPSHOT.ACCOUNT.001
+
+**EBS Snapshot Shared with Decommissioned Account**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-2, AC-3; iso_27001_2022: A.5.16, A.5.18; nist_800_53_r5: AC-2, AC-3, CM-3; pci_dss_v4.0: 7.2, 8.2; soc2: CC6.1, CC6.6, CC8.1;
+
+EBS snapshot has a createVolumePermission granting access to an AWS account that has been decommissioned — closed, transferred, or left the organization. The sharing entry persists in the snapshot's permissions; if the account ID is later reclaimed (or the account remains under a former-employee's control), the new owner gains the historical share.
+
+**Remediation:** Remove the stale grant: aws ec2 modify-snapshot-attribute --snapshot-id <id> --create-volume-permission 'Remove=[{UserId=<decommissioned-account>}]'. Audit other snapshots in the account for similar stale grants — accounts that left the organization rarely have only one affected resource.
 
 ---
 
@@ -8783,6 +8948,21 @@ EBS snapshot is shared with one or more accounts and is unencrypted. The receivi
 EBS volume is in `available` state — not attached to any instance — and continues to persist with whatever data it contained when last detached. Unattached volumes are data remnants from terminated workloads: application databases, log files, configuration files with credentials, temporary data, user uploads. The volume is invisible to instance- level security tools (no instance to scan), invisible to most monitoring (no associated workload), and accessible to anyone in the account with `ec2:AttachVolume` permission. Accumulation is the real risk — dozens of orphan volumes from years of terminated instances, each with unknown data.
 
 **Remediation:** Verify the volume's contents are not needed: snapshot it if there is uncertainty, then delete the volume. If the volume is intentionally retained for restore purposes, snapshot it and delete the volume — the snapshot is cheaper and clearer about the lifecycle. Add an automated sweep that flags volumes in `available` state older than a defined threshold (typically 30 days) and either snapshots-then-deletes or escalates to the asset owner.
+
+---
+
+### CTL.EC2.EBS.VOLUME.ERRORSTATE.001
+
+**EBS Volume Is in Error State**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CP-9, SI-4; hipaa: 164.308(a)(7)(ii)(A); iso_27001_2022: A.5.30, A.8.13, A.8.16; nist_800_53_r5: CP-9, CP-10, SI-4; pci_dss_v4.0: 9.5; soc2: A1.1, A1.2;
+
+EBS volume is in error state — the underlying hardware has failed or the volume is otherwise impaired. Data on the volume may be partially or fully unrecoverable. If the volume is attached to a running instance, I/O operations fail; if it is a root volume, the instance is impaired. The only control that detects active hardware-level failure on EBS.
+
+**Remediation:** Capture every available snapshot from the volume immediately (aws ec2 create-snapshot --volume-id <id>) — even an impaired volume may produce a partial snapshot that preserves some data. Restore the most recent healthy snapshot to a new volume in a different AZ. If the impaired volume is a root volume, stop the instance, detach the impaired root, attach the recovered volume, and restart. Open an AWS support case with the impaired volume ID.
 
 ---
 
