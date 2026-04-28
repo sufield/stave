@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ALARM.REJECTEDCONNECTION.001
+name: No CloudWatch Alarm for Rejected Connections
+description: >
+  No CloudWatch alarm monitors RejectedConnectionCount.
+  Rejected connections mean the load balancer can't
+  accept new connections — capacity exhausted. Causes
+  include traffic spike beyond ALB scaling, DDoS
+  activity exhausting connection limits, or
+  underprovisioned ALB. Without an alarm, connection
+  refusals accumulate while users get connect-refused
+  errors.
+domain: detection
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.2"
+  nist_800_53_r5: "SI-4, SI-10"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    RejectedConnectionCount has no alarm. Capacity
+    exhaustion goes undetected.
+  action: >
+    Create a CloudWatch alarm on
+    RejectedConnectionCount with threshold > 0 over a
+    1-minute period. Route to on-call. A non-zero
+    rejected count means the ALB is at capacity —
+    investigate scaling, DDoS, or upstream traffic
+    pattern changes.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "alarm_rejected_connections": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.alarm_rejected_connections
+      op: eq
+      value: false
+defect: >
+  Load balancer has no CloudWatch alarm for rejected
+  connections.
+infection: >
+  Rejected connections mean the ALB can't accept new
+  connections — it's at capacity. This indicates a
+  scaling issue: the ALB is receiving more traffic
+  than it can handle, or a DDoS attack is exhausting
+  ALB capacity. Without an alarm, connection
+  rejections accumulate — users get connection refused
+  errors before any other signal reaches the
+  operations team.
+failure: >
+  Undetected capacity exhaustion. ALB rejects
+  connections without notification — users see
+  connection refused.
+tests:
+  - name: ELB without rejected-connection alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            alarm_rejected_connections: false
+  - name: ELB with rejected-connection alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            alarm_rejected_connections: true

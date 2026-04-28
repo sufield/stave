@@ -1,0 +1,22 @@
+control: CTL.ELB.LISTENER.DEFAULTFORWARD.001
+defect: >
+  Listener has authenticated rules but its default
+  action forwards without authentication.
+infection: >
+  The default action applies to every request that
+  doesn't match a specific listener rule. If specific
+  rules protect paths like /admin, /api, and
+  /dashboard with authentication, the default rule
+  catches everything else — /internal, /debug,
+  /healthcheck, /unknown-path, and every typo or
+  probing path an attacker tries. Without
+  authentication on the default action, these
+  unmatched paths reach the backend without any
+  identity check. Common exploitation: an attacker
+  discovers paths not covered by specific rules
+  (path enumeration) and accesses them via the
+  unauthenticated default rule.
+failure: >
+  Default path unauthenticated. Requests to unmatched
+  paths reach the backend without authentication —
+  auth coverage has gaps.

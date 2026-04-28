@@ -1,0 +1,22 @@
+control: CTL.ELB.ALARM.UNHEALTHYHOST.001
+defect: >
+  Load balancer has no CloudWatch alarm for
+  UnHealthyHostCount.
+infection: >
+  UnHealthyHostCount tracks how many registered
+  targets are failing health checks. A rising
+  unhealthy count indicates: application is crashing
+  on targets (OOM, unhandled exception, dependency
+  failure), network issue between ALB and targets
+  (security group changed, subnet route broken), or
+  health check misconfiguration (health check path
+  changed, target application redeployed with
+  different health endpoint). Without an alarm, the
+  unhealthy count can rise from 0 to N without anyone
+  noticing — until the service is fully degraded or
+  down. An alarm at threshold 1 (first unhealthy
+  target) provides early warning before the service
+  is impacted.
+failure: >
+  Undetected backend degradation. Targets go unhealthy
+  without notification — service degrades silently.

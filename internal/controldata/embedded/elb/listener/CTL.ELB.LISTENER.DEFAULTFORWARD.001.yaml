@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.LISTENER.DEFAULTFORWARD.001
+name: ALB Listener Default Action Forwards Without Authentication
+description: >
+  ALB listener's default action forwards to a target
+  group without any authentication action AND the
+  listener has at least one rule that DOES carry
+  authentication. The default rule catches every
+  request that doesn't match a specific rule. If
+  specific rules require auth but the default doesn't,
+  any path not covered by a specific rule reaches the
+  backend without authentication. Detects
+  inconsistency, not the absence of auth — listeners
+  with no auth on any rule are out of scope.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, SC-7"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-01"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Listener has authenticated rules but the default
+    action forwards without auth. Unmatched paths
+    reach the backend without identity.
+  action: >
+    Add an authenticate-oidc or authenticate-cognito
+    action to the listener's default action chain
+    (action types compose; auth then forward). For
+    paths that should be public, define explicit
+    rules with no auth before the default — the rule
+    order matters. Verify with a request to a path
+    that doesn't match any specific rule: the response
+    should be a redirect to login or 401, not the
+    backend's response.
+  example: |
+    {
+      "network": {
+        "kind": "listener",
+        "elb": {
+          "default_action_type": "authenticate-oidc",
+          "default_has_auth": true,
+          "default_forwards_without_auth": false,
+          "listener_has_auth_rules": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: listener
+    - field: properties.network.elb.listener_has_auth_rules
+      op: eq
+      value: true
+    - field: properties.network.elb.default_forwards_without_auth
+      op: eq
+      value: true
+defect: >
+  Listener has authenticated rules but its default
+  action forwards without authentication.
+infection: >
+  The default action applies to every request that
+  doesn't match a specific listener rule. If specific
+  rules protect paths like /admin, /api, and
+  /dashboard with authentication, the default rule
+  catches everything else — /internal, /debug,
+  /healthcheck, /unknown-path, and every typo or
+  probing path an attacker tries. Without
+  authentication on the default action, these
+  unmatched paths reach the backend without any
+  identity check. Common exploitation: an attacker
+  discovers paths not covered by specific rules
+  (path enumeration) and accesses them via the
+  unauthenticated default rule.
+failure: >
+  Default path unauthenticated. Requests to unmatched
+  paths reach the backend without authentication —
+  auth coverage has gaps.
+tests:
+  - name: listener with auth rules + unauthenticated default fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/prod-alb/abc/def"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            default_action_type: "forward"
+            default_has_auth: false
+            default_forwards_without_auth: true
+            listener_has_auth_rules: true
+  - name: listener with auth on default action passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/prod-alb/abc/def"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            default_action_type: "authenticate-oidc"
+            default_has_auth: true
+            default_forwards_without_auth: false
+            listener_has_auth_rules: true
+  - name: listener with no auth rules at all does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/public-alb/abc/def"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            default_action_type: "forward"
+            default_has_auth: false
+            default_forwards_without_auth: true
+            listener_has_auth_rules: false

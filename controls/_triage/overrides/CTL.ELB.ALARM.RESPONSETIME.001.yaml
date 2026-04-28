@@ -1,0 +1,18 @@
+control: CTL.ELB.ALARM.RESPONSETIME.001
+defect: >
+  Load balancer has no CloudWatch alarm for target
+  response time.
+infection: >
+  TargetResponseTime measures the latency between the
+  ALB forwarding the request and receiving the
+  response from the target. Rising response time
+  indicates: backend is overloaded (not enough
+  targets, targets at CPU/memory limits), downstream
+  dependency is slow (database, API, cache), or
+  application bug (memory leak, thread exhaustion).
+  Without an alarm, latency spikes are invisible
+  until users report slow performance.
+failure: >
+  Undetected latency regression. Backend slowness is
+  invisible to the operations team until users
+  report it.

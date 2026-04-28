@@ -1,0 +1,17 @@
+control: CTL.ELB.ALARM.TLSERROR.001
+defect: >
+  Load balancer has no CloudWatch alarm for TLS
+  negotiation errors.
+infection: >
+  TLS negotiation errors mean clients can't establish
+  HTTPS connections — the TLS handshake fails. Common
+  causes: certificate expired (client rejects), TLS
+  policy too strict (client doesn't support required
+  TLS version), certificate mismatch (client requested
+  a domain the cert doesn't cover), or intermediate
+  CA missing (client can't validate the chain).
+  Without an alarm, TLS errors accumulate — clients
+  silently fail to connect.
+failure: >
+  Undetected TLS handshake failures. Specific clients
+  can't connect; the operations team has no signal.

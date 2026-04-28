@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ALARM.TLSERROR.001
+name: No CloudWatch Alarm for TLS Negotiation Errors
+description: >
+  No CloudWatch alarm monitors
+  ClientTLSNegotiationErrorCount. TLS errors mean
+  clients can't establish HTTPS connections — the
+  TLS handshake fails before any HTTP request reaches
+  the load balancer. Common causes: certificate
+  expired, TLS policy too strict for the client's
+  supported versions, certificate mismatch (SNI
+  doesn't cover the requested host), missing
+  intermediate CA. Without an alarm, TLS errors
+  accumulate while clients silently fail to connect.
+domain: detection
+severity: medium
+compliance:
+  soc2: "CC7.2"
+  nist_800_53_r5: "SI-4, SC-12"
+  pci_dss_v4.0: "10.6, 4.1"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16, A.8.24"
+  ccm_v4: ["LOG-08", "CEK-10"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    TLS handshake failures go unalarmed. Certificate
+    or policy issues are invisible until users
+    complain.
+  action: >
+    Create a CloudWatch alarm on
+    ClientTLSNegotiationErrorCount dimensioned by the
+    load balancer. Threshold tuned to a small baseline
+    (e.g., > 5 errors per 5 minutes — there's always
+    some noise from outdated bots and probing
+    clients). Pair with
+    CTL.ELB.CERT.RENEWAL.FAILING.001 so cert
+    expiration is caught earlier than its TLS-error
+    consequence.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "alarm_tls_error": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.alarm_tls_error
+      op: eq
+      value: false
+defect: >
+  Load balancer has no CloudWatch alarm for TLS
+  negotiation errors.
+infection: >
+  TLS negotiation errors mean clients can't establish
+  HTTPS connections — the TLS handshake fails. Common
+  causes: certificate expired (client rejects), TLS
+  policy too strict (client doesn't support required
+  TLS version), certificate mismatch (client requested
+  a domain the cert doesn't cover), or intermediate
+  CA missing (client can't validate the chain).
+  Without an alarm, TLS errors accumulate — clients
+  silently fail to connect.
+failure: >
+  Undetected TLS handshake failures. Specific clients
+  can't connect; the operations team has no signal.
+tests:
+  - name: ELB without TLS error alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            alarm_tls_error: false
+  - name: ELB with TLS error alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            alarm_tls_error: true

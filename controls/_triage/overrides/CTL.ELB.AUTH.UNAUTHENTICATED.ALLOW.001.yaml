@@ -1,0 +1,24 @@
+control: CTL.ELB.AUTH.UNAUTHENTICATED.ALLOW.001
+defect: >
+  ALB listener rule authentication action has
+  OnUnauthenticatedRequest set to "allow."
+infection: >
+  OnUnauthenticatedRequest has three values: "deny"
+  (return 401 — strictest), "authenticate" (redirect
+  to login — standard), and "allow" (pass through
+  without auth — permissive). With "allow" a request
+  without a valid session token passes through the
+  authentication action as if it were authenticated.
+  The backend receives the request with no user
+  identity. If the backend trusts the ALB's
+  authentication (checking only that the request
+  came from the ALB, not verifying the auth token),
+  unauthenticated requests access protected resources.
+  "allow" is intended for paths where some content is
+  public and some is authenticated — but it's often
+  misconfigured on paths that should be fully
+  authenticated.
+failure: >
+  Authentication bypass. Unauthenticated requests pass
+  through the authentication action — the ALB doesn't
+  enforce login.

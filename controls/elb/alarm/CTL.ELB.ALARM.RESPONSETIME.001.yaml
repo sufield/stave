@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ALARM.RESPONSETIME.001
+name: No CloudWatch Alarm for Target Response Time
+description: >
+  No CloudWatch alarm monitors TargetResponseTime
+  (ALB). Rising response time indicates backend
+  overload, downstream-dependency latency, or
+  application bugs (memory leaks, thread exhaustion).
+  Latency spikes degrade user experience without
+  necessarily generating errors — without an alarm,
+  the team learns about slowness from user reports
+  rather than monitoring.
+domain: detection
+severity: medium
+compliance:
+  soc2: "CC7.2"
+  nist_800_53_r5: "SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    TargetResponseTime has no alarm. Latency
+    regressions are invisible.
+  action: >
+    Create a CloudWatch anomaly-detection alarm on
+    AWS/ApplicationELB TargetResponseTime
+    dimensioned by the load balancer or target group.
+    Anomaly detection adapts to baseline latency so
+    static thresholds aren't required (a 100ms baseline
+    API and a 5s baseline report endpoint shouldn't
+    share a single static threshold). Route to the
+    application on-call team.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "alarm_response_time": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.alarm_response_time
+      op: eq
+      value: false
+defect: >
+  Load balancer has no CloudWatch alarm for target
+  response time.
+infection: >
+  TargetResponseTime measures the latency between the
+  ALB forwarding the request and receiving the
+  response from the target. Rising response time
+  indicates: backend is overloaded (not enough
+  targets, targets at CPU/memory limits), downstream
+  dependency is slow (database, API, cache), or
+  application bug (memory leak, thread exhaustion).
+  Without an alarm, latency spikes are invisible
+  until users report slow performance.
+failure: >
+  Undetected latency regression. Backend slowness is
+  invisible to the operations team until users
+  report it.
+tests:
+  - name: ELB without response-time alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            alarm_response_time: false
+  - name: ELB with response-time alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            alarm_response_time: true

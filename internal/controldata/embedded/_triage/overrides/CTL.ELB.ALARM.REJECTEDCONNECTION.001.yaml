@@ -1,0 +1,17 @@
+control: CTL.ELB.ALARM.REJECTEDCONNECTION.001
+defect: >
+  Load balancer has no CloudWatch alarm for rejected
+  connections.
+infection: >
+  Rejected connections mean the ALB can't accept new
+  connections — it's at capacity. This indicates a
+  scaling issue: the ALB is receiving more traffic
+  than it can handle, or a DDoS attack is exhausting
+  ALB capacity. Without an alarm, connection
+  rejections accumulate — users get connection refused
+  errors before any other signal reaches the
+  operations team.
+failure: >
+  Undetected capacity exhaustion. ALB rejects
+  connections without notification — users see
+  connection refused.

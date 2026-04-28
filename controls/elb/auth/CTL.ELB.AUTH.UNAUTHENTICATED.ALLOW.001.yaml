@@ -1,0 +1,133 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.AUTH.UNAUTHENTICATED.ALLOW.001
+name: ALB Authentication Action Allows Unauthenticated Requests
+description: >
+  ALB listener rule has an authenticate-oidc or
+  authenticate-cognito action with
+  OnUnauthenticatedRequest set to "allow."
+  Unauthenticated requests pass through the
+  authentication action without being challenged.
+  An auditor sees "authentication configured" — the
+  rule has an authenticate-* action. Unauthenticated
+  requests reach the backend anyway. False protection
+  archetype at the auth layer: same class as DMARC
+  p=none, WAF COUNT-only, and rotation-Lambda-deleted.
+domain: governance
+severity: high
+archetype: false-protection
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3, CC6.6"
+  nist_800_53_r5: "AC-3, IA-2, IA-8"
+  pci_dss_v4.0: "8.1, 8.2"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-01", "IAM-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    ALB authentication action permits unauthenticated
+    requests. Authentication is configured but not
+    enforced.
+  action: >
+    Update the listener rule's authentication action
+    to set OnUnauthenticatedRequest to either
+    "authenticate" (redirect to login — standard) or
+    "deny" (return 401 — strictest). Reserve "allow"
+    for paths that intentionally serve mixed
+    authenticated/unauthenticated content. Verify by
+    sending a request without a valid session token —
+    the response should be a redirect or 401, not the
+    backend's response.
+  example: |
+    {
+      "network": {
+        "kind": "listener_rule",
+        "elb": {
+          "auth_type": "oidc",
+          "on_unauthenticated": "authenticate",
+          "auth_allows_unauthenticated": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: listener_rule
+    - field: properties.network.elb.auth_allows_unauthenticated
+      op: eq
+      value: true
+defect: >
+  ALB listener rule authentication action has
+  OnUnauthenticatedRequest set to "allow."
+infection: >
+  OnUnauthenticatedRequest has three values: "deny"
+  (return 401 — strictest), "authenticate" (redirect
+  to login — standard), and "allow" (pass through
+  without auth — permissive). With "allow" a request
+  without a valid session token passes through the
+  authentication action as if it were authenticated.
+  The backend receives the request with no user
+  identity. If the backend trusts the ALB's
+  authentication (checking only that the request
+  came from the ALB, not verifying the auth token),
+  unauthenticated requests access protected resources.
+  "allow" is intended for paths where some content is
+  public and some is authenticated — but it's often
+  misconfigured on paths that should be fully
+  authenticated.
+failure: >
+  Authentication bypass. Unauthenticated requests pass
+  through the authentication action — the ALB doesn't
+  enforce login.
+tests:
+  - name: rule with OnUnauthenticated=allow fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/app/prod-alb/abc/def/ghi"
+      asset_type: aws_listener_rule
+      vendor: aws
+      properties:
+        network:
+          kind: listener_rule
+          elb:
+            auth_type: "oidc"
+            on_unauthenticated: "allow"
+            auth_allows_unauthenticated: true
+  - name: rule with OnUnauthenticated=authenticate passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/app/prod-alb/abc/def/ghi"
+      asset_type: aws_listener_rule
+      vendor: aws
+      properties:
+        network:
+          kind: listener_rule
+          elb:
+            auth_type: "oidc"
+            on_unauthenticated: "authenticate"
+            auth_allows_unauthenticated: false
+  - name: rule with OnUnauthenticated=deny passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/app/prod-alb/abc/def/ghi"
+      asset_type: aws_listener_rule
+      vendor: aws
+      properties:
+        network:
+          kind: listener_rule
+          elb:
+            auth_type: "cognito"
+            on_unauthenticated: "deny"
+            auth_allows_unauthenticated: false

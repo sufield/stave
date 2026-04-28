@@ -1,0 +1,19 @@
+id: elb_service_degradation_undetected
+description: >
+  No 5xx alarm plus either no UnHealthyHostCount alarm
+  or zero healthy targets. The service is either
+  actively broken (zero healthy targets) or degrading
+  (unhealthy hosts increasing) AND neither condition
+  generates a notification. Service failure without
+  detection. Threshold of 2 fires when an alerting gap
+  compounds with a current degradation signal.
+controls:
+  - CTL.ELB.ALARM.5XX.001
+  - CTL.ELB.ALARM.UNHEALTHYHOST.001
+  - CTL.ELB.TARGET.NOHEALTHY.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

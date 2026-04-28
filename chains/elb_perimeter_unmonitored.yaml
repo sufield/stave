@@ -1,0 +1,20 @@
+id: elb_perimeter_unmonitored
+description: >
+  No 5xx alarm plus either no UnHealthyHostCount alarm
+  or no TLS-error alarm. Multiple perimeter health
+  metrics are unmonitored — server errors, backend
+  degradation, and TLS handshake failures are all
+  invisible. The internet edge has no operational
+  monitoring beyond the catastrophic case. Threshold
+  of 2 fires when more than one health metric lacks
+  alerting.
+controls:
+  - CTL.ELB.ALARM.5XX.001
+  - CTL.ELB.ALARM.UNHEALTHYHOST.001
+  - CTL.ELB.ALARM.TLSERROR.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

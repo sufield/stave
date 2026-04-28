@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.AUTH.COGNITO.GHOST.001
+name: ALB Authentication References Deleted Cognito User Pool
+description: >
+  ALB listener rule has an authenticate-cognito action
+  referencing a Cognito user pool that has been
+  deleted. The auth action attempts to redirect
+  unauthenticated users to the Cognito hosted login;
+  the user pool doesn't exist; the redirect fails.
+  Depending on OnUnauthenticatedRequest: users see an
+  error page (auth broken) or — if set to "allow" —
+  reach the backend without auth (compound failure
+  with CTL.ELB.AUTH.UNAUTHENTICATED.ALLOW.001).
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC6.3, CC8.1"
+  nist_800_53_r5: "AC-3, CM-2, CM-3"
+  pci_dss_v4.0: "8.1, 8.2"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.3"
+  ccm_v4: ["IAM-01", "IAM-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    ALB authentication references a deleted Cognito
+    user pool. Authentication is broken.
+  action: >
+    Either recreate the Cognito user pool with the
+    same configuration (clients, identity providers,
+    callback URLs) and update the rule's
+    UserPoolArn / UserPoolClientId / UserPoolDomain,
+    or repoint the rule at an existing user pool, or
+    remove the authenticate-cognito action if
+    authentication is no longer required. Audit any
+    rules where OnUnauthenticatedRequest = allow —
+    those are silently bypassing auth right now.
+  example: |
+    {
+      "network": {
+        "kind": "listener_rule",
+        "elb": {
+          "auth_type": "cognito",
+          "cognito_user_pool_arn": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_AbCdEf",
+          "cognito_user_pool_exists": true,
+          "has_ghost_cognito": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: listener_rule
+    - field: properties.network.elb.auth_type
+      op: eq
+      value: cognito
+    - field: properties.network.elb.has_ghost_cognito
+      op: eq
+      value: true
+defect: >
+  ALB listener rule references a Cognito user pool
+  that has been deleted.
+infection: >
+  authenticate-cognito redirects unauthenticated
+  requests to a Cognito-hosted login page. The Cognito
+  user pool defines the user directory, identity
+  providers, and login flow. When the pool is deleted,
+  the redirect target no longer exists. The behavior
+  depends on OnUnauthenticatedRequest: with "deny" or
+  "authenticate" the user sees a broken redirect
+  (auth chain fails), with "allow" the request bypasses
+  the broken auth and reaches the backend with no
+  identity. Either case is a service-affecting
+  failure, but the "allow" combination is silent —
+  protected resources become accessible without any
+  visible error.
+failure: >
+  False authentication. Cognito user pool deleted —
+  authentication redirect fails. Combined with
+  OnUnauthenticated=allow, the auth bypass is silent.
+tests:
+  - name: ghost Cognito pool fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/app/prod-alb/abc/def/ghi"
+      asset_type: aws_listener_rule
+      vendor: aws
+      properties:
+        network:
+          kind: listener_rule
+          elb:
+            auth_type: "cognito"
+            cognito_user_pool_arn: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_Deleted"
+            cognito_user_pool_exists: false
+            has_ghost_cognito: true
+  - name: active Cognito pool passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/app/prod-alb/abc/def/ghi"
+      asset_type: aws_listener_rule
+      vendor: aws
+      properties:
+        network:
+          kind: listener_rule
+          elb:
+            auth_type: "cognito"
+            cognito_user_pool_arn: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_AbCdEf"
+            cognito_user_pool_exists: true
+            has_ghost_cognito: false
+  - name: ghost Cognito + OnUnauthenticated=allow fires (silent bypass)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/app/prod-alb/abc/def/jkl"
+      asset_type: aws_listener_rule
+      vendor: aws
+      properties:
+        network:
+          kind: listener_rule
+          elb:
+            auth_type: "cognito"
+            has_ghost_cognito: true
+            on_unauthenticated: "allow"
+            auth_allows_unauthenticated: true

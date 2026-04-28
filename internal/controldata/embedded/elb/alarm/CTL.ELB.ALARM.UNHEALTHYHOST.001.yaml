@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ALARM.UNHEALTHYHOST.001
+name: No CloudWatch Alarm for Unhealthy Host Count
+description: >
+  No CloudWatch alarm monitors UnHealthyHostCount.
+  Rising unhealthy host count is the leading indicator
+  of backend degradation — it precedes the zero-healthy
+  state caught by CTL.ELB.TARGET.NOHEALTHY.001. Early
+  detection (alarm at threshold 1) flags the first
+  unhealthy target; by the time TARGET.NOHEALTHY fires,
+  every target is unhealthy and the service is down.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "2.5"
+  soc2: "CC7.2, CC7.3, A1.2"
+  nist_800_53_r5: "SI-4, IR-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    UnHealthyHostCount is unmonitored. Backend
+    degradation is invisible until total failure.
+  action: >
+    Create a CloudWatch alarm on
+    UnHealthyHostCount per target group with
+    threshold >= 1 over a 5-minute period. Route to
+    on-call. Pair with HealthyHostCount alarm at
+    threshold 0 so total-failure (NOHEALTHY) is
+    caught even if UnHealthyHostCount stays at 0
+    (e.g., all targets deregistered).
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "alarm_unhealthy_host": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.alarm_unhealthy_host
+      op: eq
+      value: false
+defect: >
+  Load balancer has no CloudWatch alarm for
+  UnHealthyHostCount.
+infection: >
+  UnHealthyHostCount tracks how many registered
+  targets are failing health checks. A rising
+  unhealthy count indicates: application is crashing
+  on targets (OOM, unhandled exception, dependency
+  failure), network issue between ALB and targets
+  (security group changed, subnet route broken), or
+  health check misconfiguration (health check path
+  changed, target application redeployed with
+  different health endpoint). Without an alarm, the
+  unhealthy count can rise from 0 to N without anyone
+  noticing — until the service is fully degraded or
+  down. An alarm at threshold 1 (first unhealthy
+  target) provides early warning before the service
+  is impacted.
+failure: >
+  Undetected backend degradation. Targets go unhealthy
+  without notification — service degrades silently.
+tests:
+  - name: ELB without unhealthy host alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            alarm_unhealthy_host: false
+  - name: ELB with unhealthy host alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/prod-alb/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            alarm_unhealthy_host: true

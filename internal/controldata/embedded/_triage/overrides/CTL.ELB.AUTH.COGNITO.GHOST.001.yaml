@@ -1,0 +1,22 @@
+control: CTL.ELB.AUTH.COGNITO.GHOST.001
+defect: >
+  ALB listener rule references a Cognito user pool
+  that has been deleted.
+infection: >
+  authenticate-cognito redirects unauthenticated
+  requests to a Cognito-hosted login page. The Cognito
+  user pool defines the user directory, identity
+  providers, and login flow. When the pool is deleted,
+  the redirect target no longer exists. The behavior
+  depends on OnUnauthenticatedRequest: with "deny" or
+  "authenticate" the user sees a broken redirect
+  (auth chain fails), with "allow" the request bypasses
+  the broken auth and reaches the backend with no
+  identity. Either case is a service-affecting
+  failure, but the "allow" combination is silent —
+  protected resources become accessible without any
+  visible error.
+failure: >
+  False authentication. Cognito user pool deleted —
+  authentication redirect fails. Combined with
+  OnUnauthenticated=allow, the auth bypass is silent.

@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1828
-**Pack hash:** `c6726511cdfc8eec71e07603fa4bd7dcc785fc824186a74b0342063cba5111fd`
+**Total controls:** 1836
+**Pack hash:** `398016d69486c7b76f2ab7514634f2f75acede14e33cad81caf447b82ee59c6d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 203 |
-| high | 812 |
+| critical | 204 |
+| high | 815 |
 | info | 16 |
 | low | 123 |
-| medium | 674 |
+| medium | 678 |
 
 | Domain | Count |
 |--------|-------|
@@ -22,10 +22,10 @@
 | audit | 33 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 91 |
+| detection | 96 |
 | encryption | 92 |
-| exposure | 976 |
-| governance | 215 |
+| exposure | 977 |
+| governance | 217 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -10535,6 +10535,111 @@ ELB access logging is enabled and the S3 bucket exists, but the bucket policy do
 
 ---
 
+### CTL.ELB.ALARM.5XX.001
+
+**No CloudWatch Alarm for ELB 5xx Errors**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 2.5; fedramp_moderate: SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: SI-4, IR-4, IR-5; pci_dss_v4.0: 10.6, 12.10; soc2: CC7.2, CC7.3, A1.2;
+
+No CloudWatch alarm monitors HTTPCode_ELB_5XX_Count (ALB) or HTTPCode_ELB_5XX (CLB). 5xx errors come from the load balancer itself — not the backend application — and indicate perimeter failures: 503 (no healthy targets), 502 (target closed connection), or 500 (internal LB error). Without an alarm, users experience errors while operations team has no signal. Skipped for NLB which doesn't generate HTTP error codes.
+
+**Remediation:** Create a CloudWatch alarm on AWS/ApplicationELB HTTPCode_ELB_5XX_Count (or AWS/ELB HTTPCode_ELB_5XX for CLB) dimensioned by the load balancer name. Threshold > 0 over a 1-minute period; route to on-call. Pair with a target-side HTTPCode_Target_5XX_Count alarm so the team can distinguish ELB-side failures (no healthy targets) from application-side failures (target returned 5xx).
+
+---
+
+### CTL.ELB.ALARM.REJECTEDCONNECTION.001
+
+**No CloudWatch Alarm for Rejected Connections**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: SI-4, SI-10; pci_dss_v4.0: 10.6; soc2: CC7.2, A1.2;
+
+No CloudWatch alarm monitors RejectedConnectionCount. Rejected connections mean the load balancer can't accept new connections — capacity exhausted. Causes include traffic spike beyond ALB scaling, DDoS activity exhausting connection limits, or underprovisioned ALB. Without an alarm, connection refusals accumulate while users get connect-refused errors.
+
+**Remediation:** Create a CloudWatch alarm on RejectedConnectionCount with threshold > 0 over a 1-minute period. Route to on-call. A non-zero rejected count means the ALB is at capacity — investigate scaling, DDoS, or upstream traffic pattern changes.
+
+---
+
+### CTL.ELB.ALARM.RESPONSETIME.001
+
+**No CloudWatch Alarm for Target Response Time**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.6; soc2: CC7.2;
+
+No CloudWatch alarm monitors TargetResponseTime (ALB). Rising response time indicates backend overload, downstream-dependency latency, or application bugs (memory leaks, thread exhaustion). Latency spikes degrade user experience without necessarily generating errors — without an alarm, the team learns about slowness from user reports rather than monitoring.
+
+**Remediation:** Create a CloudWatch anomaly-detection alarm on AWS/ApplicationELB TargetResponseTime dimensioned by the load balancer or target group. Anomaly detection adapts to baseline latency so static thresholds aren't required (a 100ms baseline API and a 5s baseline report endpoint shouldn't share a single static threshold). Route to the application on-call team.
+
+---
+
+### CTL.ELB.ALARM.TLSERROR.001
+
+**No CloudWatch Alarm for TLS Negotiation Errors**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16, A.8.24; nist_800_53_r5: SI-4, SC-12; pci_dss_v4.0: 10.6, 4.1; soc2: CC7.2;
+
+No CloudWatch alarm monitors ClientTLSNegotiationErrorCount. TLS errors mean clients can't establish HTTPS connections — the TLS handshake fails before any HTTP request reaches the load balancer. Common causes: certificate expired, TLS policy too strict for the client's supported versions, certificate mismatch (SNI doesn't cover the requested host), missing intermediate CA. Without an alarm, TLS errors accumulate while clients silently fail to connect.
+
+**Remediation:** Create a CloudWatch alarm on ClientTLSNegotiationErrorCount dimensioned by the load balancer. Threshold tuned to a small baseline (e.g., > 5 errors per 5 minutes — there's always some noise from outdated bots and probing clients). Pair with CTL.ELB.CERT.RENEWAL.FAILING.001 so cert expiration is caught earlier than its TLS-error consequence.
+
+---
+
+### CTL.ELB.ALARM.UNHEALTHYHOST.001
+
+**No CloudWatch Alarm for Unhealthy Host Count**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 2.5; fedramp_moderate: SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: SI-4, IR-4; pci_dss_v4.0: 10.6; soc2: CC7.2, CC7.3, A1.2;
+
+No CloudWatch alarm monitors UnHealthyHostCount. Rising unhealthy host count is the leading indicator of backend degradation — it precedes the zero-healthy state caught by CTL.ELB.TARGET.NOHEALTHY.001. Early detection (alarm at threshold 1) flags the first unhealthy target; by the time TARGET.NOHEALTHY fires, every target is unhealthy and the service is down.
+
+**Remediation:** Create a CloudWatch alarm on UnHealthyHostCount per target group with threshold >= 1 over a 5-minute period. Route to on-call. Pair with HealthyHostCount alarm at threshold 0 so total-failure (NOHEALTHY) is caught even if UnHealthyHostCount stays at 0 (e.g., all targets deregistered).
+
+---
+
+### CTL.ELB.AUTH.COGNITO.GHOST.001
+
+**ALB Authentication References Deleted Cognito User Pool**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, CM-2, CM-3; pci_dss_v4.0: 8.1, 8.2; soc2: CC6.1, CC6.3, CC8.1;
+
+ALB listener rule has an authenticate-cognito action referencing a Cognito user pool that has been deleted. The auth action attempts to redirect unauthenticated users to the Cognito hosted login; the user pool doesn't exist; the redirect fails. Depending on OnUnauthenticatedRequest: users see an error page (auth broken) or — if set to "allow" — reach the backend without auth (compound failure with CTL.ELB.AUTH.UNAUTHENTICATED.ALLOW.001).
+
+**Remediation:** Either recreate the Cognito user pool with the same configuration (clients, identity providers, callback URLs) and update the rule's UserPoolArn / UserPoolClientId / UserPoolDomain, or repoint the rule at an existing user pool, or remove the authenticate-cognito action if authentication is no longer required. Audit any rules where OnUnauthenticatedRequest = allow — those are silently bypassing auth right now.
+
+---
+
+### CTL.ELB.AUTH.UNAUTHENTICATED.ALLOW.001
+
+**ALB Authentication Action Allows Unauthenticated Requests**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, IA-2, IA-8; pci_dss_v4.0: 8.1, 8.2; soc2: CC6.1, CC6.3, CC6.6;
+
+ALB listener rule has an authenticate-oidc or authenticate-cognito action with OnUnauthenticatedRequest set to "allow." Unauthenticated requests pass through the authentication action without being challenged. An auditor sees "authentication configured" — the rule has an authenticate-* action. Unauthenticated requests reach the backend anyway. False protection archetype at the auth layer: same class as DMARC p=none, WAF COUNT-only, and rotation-Lambda-deleted.
+
+**Remediation:** Update the listener rule's authentication action to set OnUnauthenticatedRequest to either "authenticate" (redirect to login — standard) or "deny" (return 401 — strictest). Reserve "allow" for paths that intentionally serve mixed authenticated/unauthenticated content. Verify by sending a request without a valid session token — the response should be a redirect or 401, not the backend's response.
+
+---
+
 ### CTL.ELB.CERT.GHOST.001
 
 **Load Balancer References Deleted or Expired SSL Certificate**
@@ -10681,6 +10786,21 @@ Load balancers serving PHI must redirect all HTTP traffic to HTTPS. Allowing pla
 Load balancer safety cannot be assessed when TLS configuration is missing from the snapshot. The extractor must populate loadbalancer.encryption.tls_1_2_or_higher.
 
 **Remediation:** Re-run the extractor with ELB permissions: elasticloadbalancing:DescribeLoadBalancers, elasticloadbalancing:DescribeLoadBalancerAttributes, elasticloadbalancing:DescribeListeners.
+
+---
+
+### CTL.ELB.LISTENER.DEFAULTFORWARD.001
+
+**ALB Listener Default Action Forwards Without Authentication**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, SC-7; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+ALB listener's default action forwards to a target group without any authentication action AND the listener has at least one rule that DOES carry authentication. The default rule catches every request that doesn't match a specific rule. If specific rules require auth but the default doesn't, any path not covered by a specific rule reaches the backend without authentication. Detects inconsistency, not the absence of auth — listeners with no auth on any rule are out of scope.
+
+**Remediation:** Add an authenticate-oidc or authenticate-cognito action to the listener's default action chain (action types compose; auth then forward). For paths that should be public, define explicit rules with no auth before the default — the rule order matters. Verify with a request to a path that doesn't match any specific rule: the response should be a redirect to login or 401, not the backend's response.
 
 ---
 
