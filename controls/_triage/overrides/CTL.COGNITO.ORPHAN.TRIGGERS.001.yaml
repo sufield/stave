@@ -1,0 +1,29 @@
+control: CTL.COGNITO.ORPHAN.TRIGGERS.001
+defect: >
+  Cognito user pool has Lambda triggers
+  configured but is otherwise dormant.
+infection: >
+  Pool dormancy plus configured triggers
+  is the worst pattern for Cognito ghost
+  references. The trigger Lambdas haven't
+  fired in a long time so nobody notices
+  if one is deleted; the pool is dormant
+  so nobody reviews it during normal
+  operations; if the pool is reactivated
+  later (a new launch reuses the pool, an
+  attacker who acquires admin access
+  decides to use the existing pool to
+  hide), the trigger configuration is
+  the surface that fires on every signup
+  and login. A trigger that hasn't been
+  audited in a year may have credentials
+  baked in, may produce stale custom
+  claims that don't match current
+  application logic, or may simply error.
+  Either delete the pool or actively use
+  it.
+failure: >
+  Stale trigger surface on a dormant pool.
+  Configuration accumulates drift; future
+  reactivation triggers possibly-broken
+  logic.

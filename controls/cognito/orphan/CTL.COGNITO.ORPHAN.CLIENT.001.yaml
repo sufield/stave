@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ORPHAN.CLIENT.001
+name: Cognito App Client Has No Recent Authentication Activity
+description: >
+  Cognito user pool app client has had no
+  authentication activity in 90+ days —
+  TokenIssuance metric reports zero, no
+  refresh activity. The client exists with
+  valid credentials and a callback list
+  but no application uses it.
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8, IA-5"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["IAM-09", "DSP-04"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    App client has had no authentication
+    traffic for 90+ days.
+  action: >
+    Confirm with the application owner that
+    the client is unused. If decommissioned,
+    delete the app client (aws cognito-idp
+    delete-user-pool-client). Orphaned
+    clients with secrets are particularly
+    dangerous — a forgotten client_secret
+    in old code or stored in a long-lived
+    secrets manager grants the same access
+    today as it did when the client was
+    created.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "last_token_days": 5,
+          "is_app_client_dormant": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.is_app_client_dormant
+      op: eq
+      value: true
+defect: >
+  Cognito app client has had no authentication
+  activity in 90+ days.
+infection: >
+  Dormant app clients accumulate. A team
+  rebuilds an app, creates a new client
+  with the new architecture, and never
+  deletes the old one. The old client_id
+  and client_secret remain valid — anywhere
+  they're still stored (legacy code,
+  archived secrets, old CI configurations,
+  abandoned mobile-app builds), they
+  continue to authenticate. An attacker
+  who finds the credentials can use them
+  without ever being noticed because the
+  team isn't watching the orphan client's
+  metrics. The 90-day threshold is the
+  same as other dormancy controls; tune
+  if the workload has long quiet periods.
+failure: >
+  Dormant app client. Credentials remain
+  valid and usable; nobody monitors for
+  abuse.
+tests:
+  - name: dormant app client fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/dormant"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            last_token_days: 120
+            is_app_client_dormant: true
+  - name: active app client passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/active"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            last_token_days: 5
+            is_app_client_dormant: false

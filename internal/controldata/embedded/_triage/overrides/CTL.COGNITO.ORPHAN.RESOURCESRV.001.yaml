@@ -1,0 +1,24 @@
+control: CTL.COGNITO.ORPHAN.RESOURCESRV.001
+defect: >
+  Cognito resource server has no app clients
+  referencing its scopes.
+infection: >
+  Resource servers exist to define custom
+  OAuth scopes for applications to request.
+  When no app client lists the resource
+  server's scopes in allowed_o_auth_scopes,
+  the scopes are unreachable — no token
+  request can include them. The resource
+  server appears in the user pool's
+  configuration but produces no
+  authorization-layer effect. The
+  governance failure shape is shared with
+  other orphan-resource controls: clutter
+  in the configuration surface, drift over
+  time, and risk that someone re-enables
+  the orphan without realizing the
+  surrounding ecosystem changed.
+failure: >
+  Resource server with no consumers. Custom
+  scopes are unreachable; configuration is
+  clutter.

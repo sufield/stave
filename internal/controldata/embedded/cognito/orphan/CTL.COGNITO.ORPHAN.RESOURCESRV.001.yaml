@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ORPHAN.RESOURCESRV.001
+name: Cognito Resource Server Has No Referencing App Clients
+description: >
+  Cognito resource server defines custom
+  scopes but no app client lists those
+  scopes in allowed_o_auth_scopes. The
+  scopes can never be requested or issued
+  — the resource server is configuration
+  noise.
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8, SA-22"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Resource server has no client references.
+    Its scopes are unreachable.
+  action: >
+    Confirm whether the resource server's
+    scopes are intended for use. If yes,
+    update an app client to include the
+    scopes in allowed_o_auth_scopes. If no,
+    delete the resource server (aws
+    cognito-idp delete-resource-server).
+    Orphan resource servers usually exist
+    because the integrating application was
+    decommissioned but Cognito-side
+    resources weren't cleaned up.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_resource_server",
+        "cognito": {
+          "referencing_client_count": 1,
+          "is_resource_server_orphan": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_resource_server
+    - field: properties.identity.cognito.is_resource_server_orphan
+      op: eq
+      value: true
+defect: >
+  Cognito resource server has no app clients
+  referencing its scopes.
+infection: >
+  Resource servers exist to define custom
+  OAuth scopes for applications to request.
+  When no app client lists the resource
+  server's scopes in allowed_o_auth_scopes,
+  the scopes are unreachable — no token
+  request can include them. The resource
+  server appears in the user pool's
+  configuration but produces no
+  authorization-layer effect. The
+  governance failure shape is shared with
+  other orphan-resource controls: clutter
+  in the configuration surface, drift over
+  time, and risk that someone re-enables
+  the orphan without realizing the
+  surrounding ecosystem changed.
+failure: >
+  Resource server with no consumers. Custom
+  scopes are unreachable; configuration is
+  clutter.
+tests:
+  - name: orphan resource server fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/resource-server/orphan"
+      asset_type: aws_cognito_resource_server
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_resource_server
+          cognito:
+            referencing_client_count: 0
+            is_resource_server_orphan: true
+  - name: referenced resource server passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/resource-server/active"
+      asset_type: aws_cognito_resource_server
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_resource_server
+          cognito:
+            referencing_client_count: 2
+            is_resource_server_orphan: false

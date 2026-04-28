@@ -1,0 +1,24 @@
+control: CTL.COGNITO.ORPHAN.IDPOOL.001
+defect: >
+  Cognito identity pool has no identity
+  providers configured.
+infection: >
+  An identity pool's job is to exchange
+  tokens from configured identity providers
+  for AWS credentials. With no providers,
+  no token exchange is possible — the pool
+  exists but does no work. Two failure
+  shapes follow. First, governance debt —
+  the pool counts toward quotas and
+  compliance scope without contributing.
+  Second, latent risk — if
+  allow_unauthenticated=true is also set,
+  the pool issues anonymous credentials to
+  any client even though no legitimate
+  user can authenticate. The unauth path
+  becomes the only working path through
+  the pool.
+failure: >
+  Pool with no providers. Authenticated
+  exchange impossible; unauthenticated
+  exchange may still issue credentials.

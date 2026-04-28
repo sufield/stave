@@ -1,0 +1,24 @@
+control: CTL.COGNITO.ORPHAN.CLIENT.001
+defect: >
+  Cognito app client has had no authentication
+  activity in 90+ days.
+infection: >
+  Dormant app clients accumulate. A team
+  rebuilds an app, creates a new client
+  with the new architecture, and never
+  deletes the old one. The old client_id
+  and client_secret remain valid — anywhere
+  they're still stored (legacy code,
+  archived secrets, old CI configurations,
+  abandoned mobile-app builds), they
+  continue to authenticate. An attacker
+  who finds the credentials can use them
+  without ever being noticed because the
+  team isn't watching the orphan client's
+  metrics. The 90-day threshold is the
+  same as other dormancy controls; tune
+  if the workload has long quiet periods.
+failure: >
+  Dormant app client. Credentials remain
+  valid and usable; nobody monitors for
+  abuse.

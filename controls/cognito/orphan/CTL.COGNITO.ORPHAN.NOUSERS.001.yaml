@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ORPHAN.NOUSERS.001
+name: Cognito User Pool Has Zero Users for 90+ Days
+description: >
+  Cognito user pool's estimated user count is
+  zero and has been zero for 90+ days. The
+  pool is dormant — no users, no
+  authentication traffic, no reason to keep
+  it. Same dormancy threshold as the rest of
+  the catalog (Lambda, ELB, Secrets Manager).
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8, SA-22"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Pool has zero users for 90+ days.
+    Probably abandoned.
+  action: >
+    Confirm with the application team that the
+    pool is genuinely unused. If decommissioned,
+    delete the pool to remove it from
+    compliance scope and free quota. If the
+    pool is intended to receive future
+    registrations (a slow-rolling launch), tag
+    it so future audits don't re-flag.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "estimated_user_count": 0,
+          "user_pool_dormant_days": 120,
+          "is_user_pool_dormant": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.is_user_pool_dormant
+      op: eq
+      value: true
+defect: >
+  Cognito user pool is dormant (zero users
+  for 90+ days).
+infection: >
+  Dormant user pools are governance debt
+  with no offsetting value. They consume
+  Cognito quota, appear in compliance
+  scope, and accumulate configuration drift
+  — every other Stave control that fires
+  on a dormant pool is signal-to-noise loss
+  for the audit. Common origins: PoC pools
+  that were never decommissioned, pools
+  created for short-lived events
+  (conferences, contests, time-bounded
+  campaigns), pools left behind during
+  migrations to a different identity
+  service.
+failure: >
+  Dormant pool. Zero users for 90+ days;
+  pool likely abandoned.
+tests:
+  - name: dormant pool fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_dormant"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            estimated_user_count: 0
+            user_pool_dormant_days: 120
+            is_user_pool_dormant: true
+  - name: active pool passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_active"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            estimated_user_count: 12500
+            user_pool_dormant_days: 0
+            is_user_pool_dormant: false

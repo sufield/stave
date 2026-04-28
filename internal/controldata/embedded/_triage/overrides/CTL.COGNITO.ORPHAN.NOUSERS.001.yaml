@@ -1,0 +1,21 @@
+control: CTL.COGNITO.ORPHAN.NOUSERS.001
+defect: >
+  Cognito user pool is dormant (zero users
+  for 90+ days).
+infection: >
+  Dormant user pools are governance debt
+  with no offsetting value. They consume
+  Cognito quota, appear in compliance
+  scope, and accumulate configuration drift
+  — every other Stave control that fires
+  on a dormant pool is signal-to-noise loss
+  for the audit. Common origins: PoC pools
+  that were never decommissioned, pools
+  created for short-lived events
+  (conferences, contests, time-bounded
+  campaigns), pools left behind during
+  migrations to a different identity
+  service.
+failure: >
+  Dormant pool. Zero users for 90+ days;
+  pool likely abandoned.

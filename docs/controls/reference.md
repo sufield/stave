@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2000
-**Pack hash:** `fa9fb6aa9ed9723da528d8ff993827e5f9fec7624ffdd3b6427839c23a3b8752`
+**Total controls:** 2006
+**Pack hash:** `eed2b1b113c33c020f83d2a9eba2c7c63deba065f7cda036ba50cf265c8507c7`
 
 ## Summary
 
@@ -13,7 +13,7 @@
 | critical | 231 |
 | high | 892 |
 | info | 16 |
-| low | 130 |
+| low | 136 |
 | medium | 731 |
 
 | Domain | Count |
@@ -25,7 +25,7 @@
 | detection | 96 |
 | encryption | 92 |
 | exposure | 1052 |
-| governance | 258 |
+| governance | 264 |
 | hygiene | 16 |
 | identity | 354 |
 | network | 28 |
@@ -8501,6 +8501,96 @@ Cognito OIDC identity provider configuration requests scopes beyond `openid prof
 Cognito OIDC identity provider's client secret has not been rotated in 90+ days. Long-lived OIDC client secrets become high-value credentials over time; compromise of a secret rotated infrequently yields long-term federated access.
 
 **Remediation:** Generate a new client secret at the IdP, update the Cognito provider with the new value: aws cognito-idp update-identity- provider with provider_details containing the new client_secret. Revoke the old secret at the IdP after a brief overlap window. For high-trust deployments, automate the rotation cycle on a quarterly cadence.
+
+---
+
+### CTL.COGNITO.ORPHAN.CLIENT.001
+
+**Cognito App Client Has No Recent Authentication Activity**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, IA-5; soc2: CC8.1;
+
+Cognito user pool app client has had no authentication activity in 90+ days — TokenIssuance metric reports zero, no refresh activity. The client exists with valid credentials and a callback list but no application uses it.
+
+**Remediation:** Confirm with the application owner that the client is unused. If decommissioned, delete the app client (aws cognito-idp delete-user-pool-client). Orphaned clients with secrets are particularly dangerous — a forgotten client_secret in old code or stored in a long-lived secrets manager grants the same access today as it did when the client was created.
+
+---
+
+### CTL.COGNITO.ORPHAN.IDPOOL.001
+
+**Cognito Identity Pool Has No Identity Providers**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+
+Cognito identity pool exists with no identity providers configured (no Cognito user pool, no SAML, no OIDC, no social providers, no developer-authenticated identities). The pool can't actually authenticate anyone — it's a configuration shell.
+
+**Remediation:** Confirm whether the pool is intended for use. If yes, configure an identity provider (link to a Cognito user pool, add a SAML/OIDC provider, etc.). If no, delete the pool. An identity pool with no providers but allow_unauthenticated=true is the worst kind of dead-but-dangerous — no legitimate users but anonymous credentials still issuable.
+
+---
+
+### CTL.COGNITO.ORPHAN.NOCLIENTS.001
+
+**Cognito User Pool Has No App Clients**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+
+Cognito user pool exists but has zero app clients configured. The pool can hold users but no application can authenticate against it. Either the pool is leftover from a decommissioned project or a new pool was created and the integration was abandoned mid-setup.
+
+**Remediation:** Confirm whether any application is intended to use this pool. If yes, create the app client per the integration plan. If no, delete the pool — the controls in COG-1 through COG-8 don't apply because there's no consumer, but the pool still consumes quota and contributes to compliance scope.
+
+---
+
+### CTL.COGNITO.ORPHAN.NOUSERS.001
+
+**Cognito User Pool Has Zero Users for 90+ Days**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+
+Cognito user pool's estimated user count is zero and has been zero for 90+ days. The pool is dormant — no users, no authentication traffic, no reason to keep it. Same dormancy threshold as the rest of the catalog (Lambda, ELB, Secrets Manager).
+
+**Remediation:** Confirm with the application team that the pool is genuinely unused. If decommissioned, delete the pool to remove it from compliance scope and free quota. If the pool is intended to receive future registrations (a slow-rolling launch), tag it so future audits don't re-flag.
+
+---
+
+### CTL.COGNITO.ORPHAN.RESOURCESRV.001
+
+**Cognito Resource Server Has No Referencing App Clients**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+
+Cognito resource server defines custom scopes but no app client lists those scopes in allowed_o_auth_scopes. The scopes can never be requested or issued — the resource server is configuration noise.
+
+**Remediation:** Confirm whether the resource server's scopes are intended for use. If yes, update an app client to include the scopes in allowed_o_auth_scopes. If no, delete the resource server (aws cognito-idp delete-resource-server). Orphan resource servers usually exist because the integrating application was decommissioned but Cognito-side resources weren't cleaned up.
+
+---
+
+### CTL.COGNITO.ORPHAN.TRIGGERS.001
+
+**Cognito User Pool Has Lambda Triggers but Pool Is Dormant**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+
+Cognito user pool has Lambda triggers configured AND the pool is dormant (zero users, no auth activity). The triggers don't fire — the pool has no auth traffic — but they exist in configuration, accumulate drift, and contribute to attack surface if the pool is later reactivated by an attacker.
+
+**Remediation:** Decide whether the pool is dormant intentionally or by neglect. If intentional and the pool will be reactivated, leave the triggers but document the pause. If by neglect, delete the pool — the COG-1 ghost controls catch trigger Lambdas that later get deleted, and you'll save yourself a future incident.
 
 ---
 

@@ -1,0 +1,121 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ORPHAN.TRIGGERS.001
+name: Cognito User Pool Has Lambda Triggers but Pool Is Dormant
+description: >
+  Cognito user pool has Lambda triggers
+  configured AND the pool is dormant (zero
+  users, no auth activity). The triggers
+  don't fire — the pool has no auth
+  traffic — but they exist in
+  configuration, accumulate drift, and
+  contribute to attack surface if the
+  pool is later reactivated by an
+  attacker.
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8, SA-22"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Lambda triggers configured on a dormant
+    pool. Triggers waste configuration on a
+    pool that doesn't fire them.
+  action: >
+    Decide whether the pool is dormant
+    intentionally or by neglect. If
+    intentional and the pool will be
+    reactivated, leave the triggers but
+    document the pause. If by neglect,
+    delete the pool — the COG-1 ghost
+    controls catch trigger Lambdas that
+    later get deleted, and you'll save
+    yourself a future incident.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "trigger_count": 3,
+          "is_user_pool_dormant": false,
+          "has_orphan_triggers": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.has_orphan_triggers
+      op: eq
+      value: true
+defect: >
+  Cognito user pool has Lambda triggers
+  configured but is otherwise dormant.
+infection: >
+  Pool dormancy plus configured triggers
+  is the worst pattern for Cognito ghost
+  references. The trigger Lambdas haven't
+  fired in a long time so nobody notices
+  if one is deleted; the pool is dormant
+  so nobody reviews it during normal
+  operations; if the pool is reactivated
+  later (a new launch reuses the pool, an
+  attacker who acquires admin access
+  decides to use the existing pool to
+  hide), the trigger configuration is
+  the surface that fires on every signup
+  and login. A trigger that hasn't been
+  audited in a year may have credentials
+  baked in, may produce stale custom
+  claims that don't match current
+  application logic, or may simply error.
+  Either delete the pool or actively use
+  it.
+failure: >
+  Stale trigger surface on a dormant pool.
+  Configuration accumulates drift; future
+  reactivation triggers possibly-broken
+  logic.
+tests:
+  - name: dormant pool with triggers fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_dormant"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            trigger_count: 3
+            is_user_pool_dormant: true
+            has_orphan_triggers: true
+  - name: active pool with triggers passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_active"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            trigger_count: 3
+            is_user_pool_dormant: false
+            has_orphan_triggers: false

@@ -1,0 +1,24 @@
+control: CTL.COGNITO.ORPHAN.NOCLIENTS.001
+defect: >
+  Cognito user pool has no app clients
+  configured.
+infection: >
+  A user pool without app clients is a pool
+  that no application authenticates against.
+  Users in the pool can't sign in (no client
+  to issue tokens), federation flows have no
+  client to redirect to, and any
+  configuration the team applied to the pool
+  produces no end-to-end effect. Two common
+  causes: pool was created by an automation
+  template and the consumer app's deployment
+  was rolled back; pool was created during
+  proof-of-concept and never integrated.
+  Either way, the pool is governance debt —
+  it counts toward Cognito quotas, appears
+  in compliance scope, and accumulates
+  configuration drift over time.
+failure: >
+  Pool with no consumer. App clients are the
+  only way applications use a pool; without
+  them, the pool is governance debt.

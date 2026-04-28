@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ORPHAN.IDPOOL.001
+name: Cognito Identity Pool Has No Identity Providers
+description: >
+  Cognito identity pool exists with no
+  identity providers configured (no Cognito
+  user pool, no SAML, no OIDC, no social
+  providers, no developer-authenticated
+  identities). The pool can't actually
+  authenticate anyone — it's a
+  configuration shell.
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8, SA-22"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Identity pool has no identity providers.
+    Pool can't authenticate anyone.
+  action: >
+    Confirm whether the pool is intended for
+    use. If yes, configure an identity
+    provider (link to a Cognito user pool,
+    add a SAML/OIDC provider, etc.). If no,
+    delete the pool. An identity pool with
+    no providers but allow_unauthenticated=true
+    is the worst kind of dead-but-dangerous —
+    no legitimate users but anonymous
+    credentials still issuable.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "cognito": {
+          "identity_provider_count": 1,
+          "has_identity_providers": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.cognito.has_identity_providers
+      op: eq
+      value: false
+defect: >
+  Cognito identity pool has no identity
+  providers configured.
+infection: >
+  An identity pool's job is to exchange
+  tokens from configured identity providers
+  for AWS credentials. With no providers,
+  no token exchange is possible — the pool
+  exists but does no work. Two failure
+  shapes follow. First, governance debt —
+  the pool counts toward quotas and
+  compliance scope without contributing.
+  Second, latent risk — if
+  allow_unauthenticated=true is also set,
+  the pool issues anonymous credentials to
+  any client even though no legitimate
+  user can authenticate. The unauth path
+  becomes the only working path through
+  the pool.
+failure: >
+  Pool with no providers. Authenticated
+  exchange impossible; unauthenticated
+  exchange may still issue credentials.
+tests:
+  - name: identity pool without providers fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:orphan"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            identity_provider_count: 0
+            has_identity_providers: false
+  - name: identity pool with providers passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:active"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            identity_provider_count: 1
+            has_identity_providers: true

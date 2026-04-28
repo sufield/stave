@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ORPHAN.NOCLIENTS.001
+name: Cognito User Pool Has No App Clients
+description: >
+  Cognito user pool exists but has zero app
+  clients configured. The pool can hold
+  users but no application can authenticate
+  against it. Either the pool is leftover
+  from a decommissioned project or a new
+  pool was created and the integration was
+  abandoned mid-setup.
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8, SA-22"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    User pool has no app clients. No application
+    can use it.
+  action: >
+    Confirm whether any application is intended
+    to use this pool. If yes, create the app
+    client per the integration plan. If no,
+    delete the pool — the controls in COG-1
+    through COG-8 don't apply because there's
+    no consumer, but the pool still consumes
+    quota and contributes to compliance scope.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "app_client_count": 2,
+          "has_app_clients": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.has_app_clients
+      op: eq
+      value: false
+defect: >
+  Cognito user pool has no app clients
+  configured.
+infection: >
+  A user pool without app clients is a pool
+  that no application authenticates against.
+  Users in the pool can't sign in (no client
+  to issue tokens), federation flows have no
+  client to redirect to, and any
+  configuration the team applied to the pool
+  produces no end-to-end effect. Two common
+  causes: pool was created by an automation
+  template and the consumer app's deployment
+  was rolled back; pool was created during
+  proof-of-concept and never integrated.
+  Either way, the pool is governance debt —
+  it counts toward Cognito quotas, appears
+  in compliance scope, and accumulates
+  configuration drift over time.
+failure: >
+  Pool with no consumer. App clients are the
+  only way applications use a pool; without
+  them, the pool is governance debt.
+tests:
+  - name: pool with no clients fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_orphan"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            app_client_count: 0
+            has_app_clients: false
+  - name: pool with clients passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_active"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            app_client_count: 2
+            has_app_clients: true
