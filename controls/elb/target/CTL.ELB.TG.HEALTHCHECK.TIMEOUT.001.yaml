@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.TG.HEALTHCHECK.TIMEOUT.001
+name: ELB Target Group Health Check Timeout Equals or Exceeds Interval
+description: >
+  Target group health check timeout is greater
+  than or equal to the health check interval.
+  Health checks overlap — a slow check from
+  one cycle may still be running when the
+  next cycle starts. The result is unstable
+  health detection: targets thrash between
+  healthy and unhealthy unpredictably.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.1, A1.1"
+  nist_800_53_r5: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Health check timeout overlaps with
+    interval. Detection is unstable.
+  action: >
+    Set HealthCheckTimeoutSeconds < HealthCheckIntervalSeconds.
+    Typical defaults are interval=30s,
+    timeout=5s. Tune both based on the
+    backend's expected response time;
+    timeout should be 25%–50% of the
+    interval so the previous check
+    completes well before the next begins.
+  example: |
+    {
+      "compute": {
+        "kind": "elb_target_group",
+        "elb": {
+          "tg_healthcheck_interval_seconds": 30,
+          "tg_healthcheck_timeout_seconds": 5,
+          "tg_healthcheck_timeout_overlaps": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb_target_group
+    - field: properties.compute.elb.tg_healthcheck_timeout_overlaps
+      op: eq
+      value: true
+defect: >
+  Health check timeout exceeds interval —
+  overlapping checks.
+infection: >
+  Health checks are scheduled at fixed
+  intervals. Each check has a timeout —
+  the maximum time the probe waits for a
+  response before considering the target
+  unhealthy. When timeout >= interval, a
+  slow check from cycle N may still be
+  running when cycle N+1 starts. The
+  load balancer's internal state for the
+  target oscillates: healthy on one
+  result, unhealthy on the next, and the
+  visible flapping comes from concurrent
+  probe responses arriving out of order.
+  Setting timeout strictly less than
+  interval (typically 25–50% of it)
+  guarantees the previous probe finishes
+  before the next starts.
+failure: >
+  Unstable health detection. Probes overlap;
+  targets thrash between healthy and
+  unhealthy.
+tests:
+  - name: overlapping timeout fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/abc/123"
+      asset_type: aws_elb_target_group
+      vendor: aws
+      properties:
+        compute:
+          kind: elb_target_group
+          elb:
+            tg_healthcheck_interval_seconds: 10
+            tg_healthcheck_timeout_seconds: 15
+            tg_healthcheck_timeout_overlaps: true
+  - name: well-sized timeout passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/abc/123"
+      asset_type: aws_elb_target_group
+      vendor: aws
+      properties:
+        compute:
+          kind: elb_target_group
+          elb:
+            tg_healthcheck_interval_seconds: 30
+            tg_healthcheck_timeout_seconds: 5
+            tg_healthcheck_timeout_overlaps: false

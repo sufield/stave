@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.LOG.LIFECYCLE.001
+name: ELB Access Log S3 Bucket Has No Lifecycle Policy
+description: >
+  S3 bucket receiving ELB access logs has no
+  lifecycle policy. Logs accumulate
+  indefinitely; storage cost grows linearly
+  with traffic and retention windows aren't
+  enforced from the storage side.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "AU-11, SI-12"
+  pci_dss_v4.0: "10.5.1, 10.7"
+  fedramp_moderate: "AU-11"
+  iso_27001_2022: "A.5.16, A.8.10"
+  ccm_v4: ["LOG-12"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Access log bucket has no lifecycle
+    expiration or transition rules.
+  action: >
+    Add a lifecycle configuration to the
+    access log bucket with rules matching
+    the workload's compliance retention
+    requirement: aws s3api
+    put-bucket-lifecycle-configuration with
+    rules that transition objects to S3
+    Glacier after 90 days and expire them
+    after the compliance window (typically
+    1 year for SOC 2/PCI, 6+ years for
+    HIPAA). Lifecycle ensures costs stay
+    bounded as traffic grows.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "log_bucket_lifecycle_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.log_bucket_lifecycle_configured
+      op: eq
+      value: false
+defect: >
+  ELB access log bucket has no lifecycle
+  policy.
+infection: >
+  ELB access logs accumulate at the rate of
+  every request. For high-traffic workloads,
+  the volume reaches gigabytes per day.
+  Without a lifecycle policy, S3 stores
+  every object indefinitely at standard
+  pricing. Two failure modes: cost grows
+  unbounded (storage budget surprise), and
+  retention isn't enforced — logs older
+  than the compliance window remain,
+  potentially violating data-minimization
+  requirements. A lifecycle rule that
+  transitions to Glacier and expires per
+  compliance retention solves both.
+failure: >
+  Unbounded log retention. Storage cost
+  grows linearly; retention windows not
+  enforced.
+tests:
+  - name: bucket without lifecycle fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            log_bucket_lifecycle_configured: false
+  - name: bucket with lifecycle passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            log_bucket_lifecycle_configured: true

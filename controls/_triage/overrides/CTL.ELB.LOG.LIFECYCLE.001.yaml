@@ -1,0 +1,22 @@
+control: CTL.ELB.LOG.LIFECYCLE.001
+defect: >
+  ELB access log bucket has no lifecycle
+  policy.
+infection: >
+  ELB access logs accumulate at the rate of
+  every request. For high-traffic workloads,
+  the volume reaches gigabytes per day.
+  Without a lifecycle policy, S3 stores
+  every object indefinitely at standard
+  pricing. Two failure modes: cost grows
+  unbounded (storage budget surprise), and
+  retention isn't enforced — logs older
+  than the compliance window remain,
+  potentially violating data-minimization
+  requirements. A lifecycle rule that
+  transitions to Glacier and expires per
+  compliance retention solves both.
+failure: >
+  Unbounded log retention. Storage cost
+  grows linearly; retention windows not
+  enforced.

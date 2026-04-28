@@ -1,0 +1,22 @@
+control: CTL.ELB.TG.BACKEND.PLAINTEXT.001
+defect: >
+  Target group sends plaintext HTTP to a
+  backend that supports HTTPS.
+infection: >
+  ALB-to-target traffic transits over the VPC
+  network. AWS attests that traffic between
+  ALB and target stays inside the VPC, but
+  defense-in-depth treats the VPC as
+  untrusted (zero-trust posture). For
+  HIPAA-regulated workloads, encryption end-
+  to-end including the ALB-to-target hop is
+  the typical compliance baseline. The
+  control fires when the target group
+  protocol is HTTP and the backend
+  demonstrably supports HTTPS — the
+  asymmetry indicates configuration drift
+  rather than an architectural choice.
+failure: >
+  Plaintext over VPC network. ALB-to-target
+  hop unencrypted despite backend supporting
+  HTTPS.

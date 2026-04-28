@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.LOG.ACCESS.BROAD.001
+name: ELB Access Log S3 Bucket Accessible to Overly Broad Principals
+description: >
+  S3 bucket receiving ELB access logs has a
+  bucket policy or ACL granting read access
+  to broad principals (Principal: *,
+  AuthenticatedUsers, or many cross-account
+  principals without OrgID). Anyone with
+  matching credentials reads the access
+  trail.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AU-9, AU-11"
+  pci_dss_v4.0: "10.5"
+  fedramp_moderate: "AC-3, AU-9"
+  hipaa: "164.312(b), 164.312(c)(1)"
+  iso_27001_2022: "A.5.15, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Access log bucket is broadly readable.
+  action: >
+    Tighten the bucket policy: restrict
+    s3:GetObject to specific accounts or
+    roles with legitimate need (security,
+    compliance, the ELB's logging service
+    principal). Remove Principal: * grants;
+    require aws:PrincipalOrgID for cross-
+    account read. Audit existing
+    principals listed in the policy and
+    cull anyone without ongoing need.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "log_bucket_broad_read": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.log_bucket_broad_read
+      op: eq
+      value: true
+defect: >
+  ELB access log bucket grants read access to
+  overly broad principals.
+infection: >
+  ELB access logs contain source IPs, user
+  agents, request paths, response codes —
+  enough to map traffic patterns, identify
+  user behavior, and infer application
+  behavior. A bucket policy granting
+  Principal: * or unscoped cross-account
+  access lets unauthorized parties read the
+  audit trail. The contents themselves are
+  often considered moderately-sensitive
+  (request paths can reveal endpoints
+  worth probing; user agents fingerprint
+  client populations). The fix is standard
+  bucket-policy hygiene: minimum-necessary
+  principals, OrgID for cross-account
+  reads, and explicit deny for broad
+  patterns.
+failure: >
+  Audit trail readable beyond intended
+  scope. Source IPs and request patterns
+  visible to broad principals.
+tests:
+  - name: broadly readable bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            log_bucket_broad_read: true
+  - name: scoped bucket passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            log_bucket_broad_read: false

@@ -1,0 +1,25 @@
+control: CTL.ELB.LOG.ACCESS.BROAD.001
+defect: >
+  ELB access log bucket grants read access to
+  overly broad principals.
+infection: >
+  ELB access logs contain source IPs, user
+  agents, request paths, response codes —
+  enough to map traffic patterns, identify
+  user behavior, and infer application
+  behavior. A bucket policy granting
+  Principal: * or unscoped cross-account
+  access lets unauthorized parties read the
+  audit trail. The contents themselves are
+  often considered moderately-sensitive
+  (request paths can reveal endpoints
+  worth probing; user agents fingerprint
+  client populations). The fix is standard
+  bucket-policy hygiene: minimum-necessary
+  principals, OrgID for cross-account
+  reads, and explicit deny for broad
+  patterns.
+failure: >
+  Audit trail readable beyond intended
+  scope. Source IPs and request patterns
+  visible to broad principals.

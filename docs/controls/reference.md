@@ -3,29 +3,29 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2028
-**Pack hash:** `64fac01374f92211b25af5d921597329f381976b29b89f9e5d8c694f9e25a7ca`
+**Total controls:** 2035
+**Pack hash:** `82010f814db99e0e4bc6916eb0705c6d3f77e8eccdc9e91ea7cdcd4741fd33b0`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 231 |
-| high | 903 |
+| high | 905 |
 | info | 16 |
 | low | 138 |
-| medium | 740 |
+| medium | 745 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 60 |
+| audit | 62 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1060 |
-| governance | 272 |
+| exposure | 1063 |
+| governance | 274 |
 | hygiene | 16 |
 | identity | 360 |
 | network | 28 |
@@ -13654,6 +13654,36 @@ Load balancer access logging must be enabled for audit and forensic analysis. Wi
 
 ---
 
+### CTL.ELB.LOG.ACCESS.BROAD.001
+
+**ELB Access Log S3 Bucket Accessible to Overly Broad Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AU-9; hipaa: 164.312(b), 164.312(c)(1); iso_27001_2022: A.5.15, A.8.15; nist_800_53_r5: AC-3, AU-9, AU-11; pci_dss_v4.0: 10.5; soc2: CC6.1, CC6.6;
+
+S3 bucket receiving ELB access logs has a bucket policy or ACL granting read access to broad principals (Principal: *, AuthenticatedUsers, or many cross-account principals without OrgID). Anyone with matching credentials reads the access trail.
+
+**Remediation:** Tighten the bucket policy: restrict s3:GetObject to specific accounts or roles with legitimate need (security, compliance, the ELB's logging service principal). Remove Principal: * grants; require aws:PrincipalOrgID for cross- account read. Audit existing principals listed in the policy and cull anyone without ongoing need.
+
+---
+
+### CTL.ELB.LOG.LIFECYCLE.001
+
+**ELB Access Log S3 Bucket Has No Lifecycle Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-11; iso_27001_2022: A.5.16, A.8.10; nist_800_53_r5: AU-11, SI-12; pci_dss_v4.0: 10.5.1, 10.7; soc2: CC7.1, CC8.1;
+
+S3 bucket receiving ELB access logs has no lifecycle policy. Logs accumulate indefinitely; storage cost grows linearly with traffic and retention windows aren't enforced from the storage side.
+
+**Remediation:** Add a lifecycle configuration to the access log bucket with rules matching the workload's compliance retention requirement: aws s3api put-bucket-lifecycle-configuration with rules that transition objects to S3 Glacier after 90 days and expire them after the compliance window (typically 1 year for SOC 2/PCI, 6+ years for HIPAA). Lifecycle ensures costs stay bounded as traffic grows.
+
+---
+
 ### CTL.ELB.NETWORK.INTERNAL.PUBLICSUBNET.001
 
 **Internal Load Balancer Is in Public Subnets**
@@ -13696,6 +13726,36 @@ Internet-facing ALB or NLB is deployed in private subnets (subnets without a rou
 ALB or NLB has subnets configured in only one Availability Zone. The load balancer itself has a single point of AZ failure — if the AZ goes down, the LB has no ENIs in any other AZ and the load balancer becomes unreachable. ALB requires a minimum of two subnets but doesn't require they be in different AZs; two subnets in the same AZ satisfy the API requirement but provide no redundancy. The control checks UNIQUE AZ count, not subnet count.
 
 **Remediation:** Add subnets in additional AZs to the load balancer: aws elbv2 set-subnets --load-balancer-arn <arn> --subnets <subnet-az-a> <subnet-az-b>. Verify the subnets resolve to distinct AvailabilityZone values. Pair with CTL.ELB.TARGET.SINGLEAZ.001 — distributing the load balancer across AZs is necessary but not sufficient; targets must also span AZs.
+
+---
+
+### CTL.ELB.NLB.ACCESSLOG.001
+
+**NLB Access Logging Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AU-2, AU-9, AU-12; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-2, AU-9, AU-12; pci_dss_v4.0: 10.2, 10.5; soc2: CC7.1, CC7.2;
+
+Network Load Balancer has access logging disabled. Connection-level audit data (source IP, port, accepted/rejected, bytes, timestamps) is not written to S3. Investigation of NLB-fronted incidents has no audit trail to query.
+
+**Remediation:** Enable access logging on the NLB and point it at an S3 bucket: aws elbv2 modify-load-balancer-attributes with Attributes including access_logs.s3.enabled=true and access_logs.s3.bucket=<bucket>. Pair with the existing CTL.ELB.ACCESSLOG.PERMISSION control that catches misconfigured bucket policies.
+
+---
+
+### CTL.ELB.NLB.CONNLOG.001
+
+**NLB Connection Logging Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-2, AU-12; iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-2, AU-9, AU-12; pci_dss_v4.0: 10.2; soc2: CC7.1, CC7.2;
+
+Network Load Balancer has connection logging disabled. Per-connection TLS handshake outcomes, cipher negotiations, and SNI values are not logged. TLS troubleshooting and connection-state forensics lose their primary data source.
+
+**Remediation:** Enable connection logging: aws elbv2 modify-load-balancer-attributes with connection_logs.s3.enabled=true and a target bucket. Connection logs are distinct from access logs — they record TLS handshake details (negotiated cipher, client SNI, handshake outcome) that access logs don't capture. Useful for diagnosing client-compatibility issues and TLS-policy-related failures.
 
 ---
 
@@ -13801,6 +13861,51 @@ ELB target group has registered targets but zero are passing health checks. Ever
 ELB target group has all registered targets in a single Availability Zone. AZ failure (hardware, network, power) takes every target offline simultaneously — the target group has zero healthy targets and every request returns 503. The load balancer itself may span multiple AZs but has nothing to route to once the AZ holding all targets fails.
 
 **Remediation:** Distribute targets across at least two AZs aligned with the load balancer's subnet AZs. For Auto Scaling Group-backed target groups, set the ASG to span multiple AZs and the appropriate HealthCheckGracePeriod. For manually registered targets, deregister and re-register from instances in additional AZs. Verify via aws elbv2 describe-target-health that targets appear in distinct AvailabilityZone values.
+
+---
+
+### CTL.ELB.TG.BACKEND.PLAINTEXT.001
+
+**ELB Target Group Uses HTTP to Backend Despite Backend Supporting HTTPS**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-8, SC-23; hipaa: 164.312(e)(1); iso_27001_2022: A.8.20, A.8.24; nist_800_53_r5: SC-8, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+Target group's Protocol is HTTP even though the backend supports HTTPS (port 443 reachable). The ALB terminates TLS at the listener and re-encodes the request as plaintext over the network to the target. Defense-in-depth requires TLS end-to-end for sensitive workloads.
+
+**Remediation:** Update the target group protocol to HTTPS and the port to the backend's TLS port: aws elbv2 modify-target-group with Protocol=HTTPS,Port=443. Verify backend targets present a valid certificate (or accept self-signed if internal). The ALB will then re-encrypt to the backend rather than send plaintext over the VPC network.
+
+---
+
+### CTL.ELB.TG.HEALTHCHECK.PROTOCOL.001
+
+**ELB Target Group Health Check Uses HTTP When Target Protocol Is HTTPS**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8, SI-4; iso_27001_2022: A.8.20, A.8.24; nist_800_53_r5: SC-8, SI-4; pci_dss_v4.0: 4.2; soc2: CC6.1, CC7.1;
+
+Target group's traffic protocol is HTTPS but the health check protocol is HTTP. Health checks bypass the TLS configuration of the application — a backend whose HTTPS endpoint is broken can still pass health checks if its HTTP endpoint works.
+
+**Remediation:** Update the target group health check protocol to match traffic protocol: aws elbv2 modify-target-group with HealthCheckProtocol=HTTPS. The health check then validates that the backend's TLS endpoint is healthy — broken certificates, expired keys, or TLS misconfigurations cause health failures promptly rather than going undetected.
+
+---
+
+### CTL.ELB.TG.HEALTHCHECK.TIMEOUT.001
+
+**ELB Target Group Health Check Timeout Equals or Exceeds Interval**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.8.16; nist_800_53_r5: SI-4; soc2: CC7.1, A1.1;
+
+Target group health check timeout is greater than or equal to the health check interval. Health checks overlap — a slow check from one cycle may still be running when the next cycle starts. The result is unstable health detection: targets thrash between healthy and unhealthy unpredictably.
+
+**Remediation:** Set HealthCheckTimeoutSeconds < HealthCheckIntervalSeconds. Typical defaults are interval=30s, timeout=5s. Tune both based on the backend's expected response time; timeout should be 25%–50% of the interval so the previous check completes well before the next begins.
 
 ---
 

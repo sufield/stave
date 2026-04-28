@@ -1,0 +1,22 @@
+control: CTL.ELB.TG.HEALTHCHECK.PROTOCOL.001
+defect: >
+  Target group health check protocol doesn't
+  match traffic protocol.
+infection: >
+  Health checks validate that targets are
+  serving traffic. When the traffic protocol
+  is HTTPS but health checks use HTTP, the
+  health probe doesn't exercise the TLS
+  layer. A backend whose HTTPS endpoint is
+  broken (expired cert, misconfigured cipher,
+  closed port) but whose HTTP endpoint still
+  responds passes health checks and receives
+  user traffic. Users hit the broken HTTPS
+  endpoint and see TLS errors. Matching the
+  health check protocol to the traffic
+  protocol ensures health checks fail
+  when the actual application path fails.
+failure: >
+  Health checks miss TLS-layer failures.
+  Targets with broken HTTPS endpoints pass
+  health checks via HTTP probe.

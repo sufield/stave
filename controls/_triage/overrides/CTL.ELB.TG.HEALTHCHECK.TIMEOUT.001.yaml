@@ -1,0 +1,25 @@
+control: CTL.ELB.TG.HEALTHCHECK.TIMEOUT.001
+defect: >
+  Health check timeout exceeds interval —
+  overlapping checks.
+infection: >
+  Health checks are scheduled at fixed
+  intervals. Each check has a timeout —
+  the maximum time the probe waits for a
+  response before considering the target
+  unhealthy. When timeout >= interval, a
+  slow check from cycle N may still be
+  running when cycle N+1 starts. The
+  load balancer's internal state for the
+  target oscillates: healthy on one
+  result, unhealthy on the next, and the
+  visible flapping comes from concurrent
+  probe responses arriving out of order.
+  Setting timeout strictly less than
+  interval (typically 25–50% of it)
+  guarantees the previous probe finishes
+  before the next starts.
+failure: >
+  Unstable health detection. Probes overlap;
+  targets thrash between healthy and
+  unhealthy.

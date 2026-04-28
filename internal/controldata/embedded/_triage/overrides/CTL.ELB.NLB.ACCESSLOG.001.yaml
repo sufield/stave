@@ -1,0 +1,21 @@
+control: CTL.ELB.NLB.ACCESSLOG.001
+defect: >
+  Network Load Balancer has access logging
+  disabled.
+infection: >
+  NLB access logs record per-connection
+  metadata: source IP, source port,
+  destination, accepted vs rejected
+  status, bytes transferred, timestamps.
+  Without logs, investigating NLB-
+  fronted incidents (DDoS, scanning,
+  abuse) has no per-connection audit
+  trail. Many compliance frameworks
+  require connection-level logging for
+  network-facing services. Same enable-
+  it pattern as ALB access logging
+  (CTL.ELB.LOG.001), but NLB logging is
+  off by default and frequently overlooked.
+failure: >
+  No NLB connection audit trail. Per-
+  connection metadata not retained.

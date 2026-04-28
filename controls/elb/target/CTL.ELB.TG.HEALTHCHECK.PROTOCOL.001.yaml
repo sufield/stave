@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.TG.HEALTHCHECK.PROTOCOL.001
+name: ELB Target Group Health Check Uses HTTP When Target Protocol Is HTTPS
+description: >
+  Target group's traffic protocol is HTTPS but
+  the health check protocol is HTTP. Health
+  checks bypass the TLS configuration of the
+  application — a backend whose HTTPS endpoint
+  is broken can still pass health checks if
+  its HTTP endpoint works.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC7.1"
+  nist_800_53_r5: "SC-8, SI-4"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-8, SI-4"
+  iso_27001_2022: "A.8.20, A.8.24"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Health check protocol mismatches target
+    group traffic protocol.
+  action: >
+    Update the target group health check
+    protocol to match traffic protocol: aws
+    elbv2 modify-target-group with
+    HealthCheckProtocol=HTTPS. The health
+    check then validates that the backend's
+    TLS endpoint is healthy — broken
+    certificates, expired keys, or TLS
+    misconfigurations cause health failures
+    promptly rather than going undetected.
+  example: |
+    {
+      "compute": {
+        "kind": "elb_target_group",
+        "elb": {
+          "tg_protocol": "HTTPS",
+          "tg_healthcheck_protocol": "HTTPS",
+          "tg_healthcheck_protocol_mismatch": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb_target_group
+    - field: properties.compute.elb.tg_healthcheck_protocol_mismatch
+      op: eq
+      value: true
+defect: >
+  Target group health check protocol doesn't
+  match traffic protocol.
+infection: >
+  Health checks validate that targets are
+  serving traffic. When the traffic protocol
+  is HTTPS but health checks use HTTP, the
+  health probe doesn't exercise the TLS
+  layer. A backend whose HTTPS endpoint is
+  broken (expired cert, misconfigured cipher,
+  closed port) but whose HTTP endpoint still
+  responds passes health checks and receives
+  user traffic. Users hit the broken HTTPS
+  endpoint and see TLS errors. Matching the
+  health check protocol to the traffic
+  protocol ensures health checks fail
+  when the actual application path fails.
+failure: >
+  Health checks miss TLS-layer failures.
+  Targets with broken HTTPS endpoints pass
+  health checks via HTTP probe.
+tests:
+  - name: protocol mismatch fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/abc/123"
+      asset_type: aws_elb_target_group
+      vendor: aws
+      properties:
+        compute:
+          kind: elb_target_group
+          elb:
+            tg_protocol: "HTTPS"
+            tg_healthcheck_protocol: "HTTP"
+            tg_healthcheck_protocol_mismatch: true
+  - name: matching protocol passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/abc/123"
+      asset_type: aws_elb_target_group
+      vendor: aws
+      properties:
+        compute:
+          kind: elb_target_group
+          elb:
+            tg_protocol: "HTTPS"
+            tg_healthcheck_protocol: "HTTPS"
+            tg_healthcheck_protocol_mismatch: false

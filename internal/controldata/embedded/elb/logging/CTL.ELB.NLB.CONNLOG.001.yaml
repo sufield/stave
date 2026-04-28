@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.NLB.CONNLOG.001
+name: NLB Connection Logging Not Enabled
+description: >
+  Network Load Balancer has connection logging
+  disabled. Per-connection TLS handshake
+  outcomes, cipher negotiations, and SNI
+  values are not logged. TLS troubleshooting
+  and connection-state forensics lose their
+  primary data source.
+domain: audit
+severity: medium
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-2, AU-9, AU-12"
+  pci_dss_v4.0: "10.2"
+  fedramp_moderate: "AU-2, AU-12"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    NLB connection logging disabled. TLS-level
+    audit data missing.
+  action: >
+    Enable connection logging: aws elbv2
+    modify-load-balancer-attributes with
+    connection_logs.s3.enabled=true and a
+    target bucket. Connection logs are
+    distinct from access logs — they record
+    TLS handshake details (negotiated cipher,
+    client SNI, handshake outcome) that
+    access logs don't capture. Useful for
+    diagnosing client-compatibility issues
+    and TLS-policy-related failures.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "lb_type": "network",
+          "nlb_connection_log_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.lb_type
+      op: eq
+      value: network
+    - field: properties.compute.elb.nlb_connection_log_enabled
+      op: eq
+      value: false
+defect: >
+  Network Load Balancer has connection logging
+  disabled.
+infection: >
+  Connection logs (introduced for NLB in 2024)
+  record TLS handshake outcomes, negotiated
+  cipher suites, client SNI values, and
+  handshake results. These data fields are
+  absent from access logs. For TLS
+  troubleshooting (a particular client can't
+  connect, certain ciphers are negotiated
+  unexpectedly, SNI routing isn't working),
+  connection logs are the primary forensic
+  surface. Without them, debugging requires
+  packet capture or client-side traces.
+failure: >
+  No TLS handshake audit. Connection-level
+  TLS events not captured for forensics or
+  debugging.
+tests:
+  - name: NLB without connection log fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "network"
+            nlb_connection_log_enabled: false
+  - name: NLB with connection log passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "network"
+            nlb_connection_log_enabled: true
