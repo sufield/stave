@@ -1,0 +1,27 @@
+control: CTL.CLOUDFRONT.HEADERS.NOHSTS.001
+defect: >
+  CloudFront distribution doesn't send Strict-Transport-
+  Security header.
+infection: >
+  Browsers honor HTTPS only when they know to enforce it.
+  A first visit to a domain over HTTP — typed URL without
+  scheme, click on an http:// link, redirect chain that
+  includes HTTP — establishes a brief plaintext window
+  during which an attacker on the network path can
+  intercept the request, present their own redirect or
+  capture credentials. CloudFront's HTTPS-only viewer
+  protocol policy (CTL.CLOUDFRONT.HTTPS.ONLY.001) closes
+  the window for HTTP requests reaching CloudFront, but
+  it doesn't close the window for the network hop before
+  CloudFront receives the request. HSTS instructs the
+  browser to upgrade http://hostname to https://hostname
+  for a max-age window (typically 1 year, with
+  IncludeSubdomains and optionally Preload), eliminating
+  the redirect-attack window after the first successful
+  HTTPS visit. The fix is a response headers policy
+  attached to every cache behavior with the appropriate
+  HSTS configuration.
+failure: >
+  First-visit HTTP interceptable. Browsers don't know to
+  upgrade http://hostname to https://hostname; the
+  redirect-attack window stays open.

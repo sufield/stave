@@ -1,0 +1,28 @@
+control: CTL.CLOUDFRONT.HEADERS.NOREFERRER.001
+defect: >
+  CloudFront distribution doesn't send Referrer-Policy
+  header.
+infection: >
+  The HTTP Referer header (the misspelling is RFC-canonical)
+  carries the URL of the page that initiated a request.
+  When a user navigates from a site to another site or
+  loads a third-party resource (analytics tracker, ad,
+  embedded widget, font CDN), the browser sends the full
+  URL of the originating page by default. URLs frequently
+  carry information the operator didn't intend to share
+  beyond the originating site: account identifiers in
+  paths, one-time auth tokens in query strings, password-
+  reset links, signed download URLs. Third-party services
+  receive the referrer, log it, and persist it under
+  whatever data policies they have. Referrer-Policy lets
+  the server constrain what gets sent: no-referrer
+  suppresses entirely, strict-origin sends only the origin
+  (scheme + host + port) with no path or query, strict-
+  origin-when-cross-origin keeps full referrer for same-
+  origin requests but strips to origin-only for cross-
+  origin. The default browser behavior leaks more than
+  most operators realize.
+failure: >
+  URL-embedded credentials and identifiers leak. Third-
+  party analytics, ads, and embedded resources receive
+  full referrer URLs including query-string tokens.

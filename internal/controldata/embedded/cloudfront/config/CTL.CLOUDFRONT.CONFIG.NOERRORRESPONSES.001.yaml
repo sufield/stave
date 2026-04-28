@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.CONFIG.NOERRORRESPONSES.001
+name: CloudFront Distribution Has No Custom Error Responses Configured
+description: >
+  CloudFront distribution has no CustomErrorResponses
+  configured. When the origin returns 4xx / 5xx status
+  codes, CloudFront serves the default CloudFront error
+  pages — generic AWS-branded responses that include
+  CloudFront-specific headers, the request ID, and details
+  about the underlying failure. These pages are
+  fingerprinting-friendly (they identify the service as
+  CloudFront), reveal that something failed at the
+  CloudFront layer, and may surface origin-specific error
+  detail that would otherwise be transformed by the
+  origin's own error pages. Custom error responses let the
+  operator return application-shaped error pages instead,
+  hiding the CloudFront fingerprint.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-11, SC-7"
+  fedramp_moderate: "SI-11, SC-7"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Distribution has no custom error responses; CloudFront
+    default pages reveal service identity on errors.
+  action: >
+    Configure custom error responses for the common error
+    codes (403, 404, 5XX): aws cloudfront update-distribution
+    with CustomErrorResponses pointing at application-shaped
+    error pages on the origin (or static pages on a separate
+    bucket). Set ErrorCachingMinTTL appropriately so origin
+    errors don't get cached too long. Common pattern:
+    /errors/403.html, /errors/404.html, /errors/500.html
+    served from S3 with branded styling matching the
+    application.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "custom_error_response_count": 3
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.custom_error_response_count
+      op: eq
+      value: 0
+defect: >
+  CloudFront distribution has no custom error responses
+  configured.
+infection: >
+  When the origin returns an error status code (403, 404,
+  500, 502, 503, 504) or CloudFront itself can't reach
+  the origin, CloudFront serves a response to the viewer.
+  Without custom error responses, that response is the
+  CloudFront default error page: an AWS-branded HTML page
+  with the CloudFront request ID, the failure reason, and
+  service-identifying headers. The page fingerprints the
+  service (anyone seeing it knows the site runs on
+  CloudFront), reveals that the failure was at the edge
+  rather than the application, and surfaces origin-
+  specific error detail that the operator would normally
+  transform. Custom error responses let the operator
+  return application-shaped pages — branded, generic,
+  without service-identifying detail — for each error
+  code. The fix is configuration-only and improves both
+  user experience (consistent branding on errors) and
+  reconnaissance resistance (no stack disclosure).
+failure: >
+  Stack disclosure on errors. Default CloudFront error
+  pages identify the service and surface origin error
+  detail; reconnaissance learns more from a 404 than it
+  needs to.
+tests:
+  - name: no custom error responses fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            custom_error_response_count: 0
+  - name: custom error responses passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            custom_error_response_count: 3

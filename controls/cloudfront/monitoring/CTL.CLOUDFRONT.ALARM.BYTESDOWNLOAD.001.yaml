@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ALARM.BYTESDOWNLOAD.001
+name: No CloudWatch Alarm on CloudFront BytesDownloaded
+description: >
+  CloudFront publishes BytesDownloaded to CloudWatch — total
+  bytes served to viewers — but no alarm watches it for
+  spikes. Volume excursions on bytes-downloaded signal
+  legitimate viral traffic, scraping campaigns, or
+  data-exfiltration through compromised credentials. A
+  viewer who has obtained valid signed URLs (or has
+  bypassed signing) can stream large amounts of content
+  without producing error spikes — request-count and 4xx
+  alarms don't fire on successful downloads. BytesDownloaded
+  excursion is the signal that catches large-volume
+  exfiltration patterns the request-count and error-rate
+  alarms miss.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-6, AU-13, SI-4"
+  fedramp_moderate: "AU-6, SI-4"
+  pci_dss_v4.0: "10.4"
+  soc2: "CC7.2, CC7.3"
+  iso_27001_2022: "A.5.25, A.8.16"
+  ccm_v4: ["LOG-04", "DSP-07"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    No alarm watches CloudFront BytesDownloaded; large-volume
+    exfiltration patterns go unnoticed.
+  action: >
+    Create a CloudWatch alarm on AWS/CloudFront namespace,
+    BytesDownloaded metric, dimensioned by DistributionId.
+    Use a deviation-from-baseline threshold (e.g., 5x
+    rolling average over 1 hour) so legitimate traffic
+    growth doesn't trigger but rapid exfiltration does.
+    aws cloudwatch put-metric-alarm with --metric-name
+    BytesDownloaded.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "alarms_has_bytes_downloaded": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.alarms_has_bytes_downloaded
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm watches CloudFront BytesDownloaded.
+infection: >
+  Volume excursions in bytes-downloaded signal a class of
+  events that error-rate and request-count alarms don't
+  catch: high-volume successful downloads. Viewers who
+  obtained valid signed URLs (or bypassed signing through
+  the existing ACCESS.NOSIGNING / SIGNED.MIXEDACCESS
+  failure modes) can stream large amounts of content
+  successfully — every request returns 200, request count
+  may be normal (one viewer downloading 100GB looks like
+  one request per file), but the distribution's egress
+  spikes massively. Scraping campaigns produce similar
+  shapes: many requests downloading specific content
+  systematically. Data-exfiltration through compromised
+  credentials looks the same — successful authenticated
+  downloads at unusual volume. BytesDownloaded with
+  deviation-from-baseline alarming surfaces these
+  patterns; the request-count and 4xx alarms don't.
+failure: >
+  Exfiltration invisible at the metric layer. Successful
+  high-volume downloads don't produce error spikes; the
+  bytes are the only signal, and without an alarm the
+  data accumulates before anyone notices.
+tests:
+  - name: missing bytes-downloaded alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            alarms_has_bytes_downloaded: false
+  - name: bytes-downloaded alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            alarms_has_bytes_downloaded: true

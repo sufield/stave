@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.WAF.PERBEHAVIOR.MISSING.001
+name: CloudFront WAF Web ACL Applies to Whole Distribution Without Per-Behavior Variation
+description: >
+  CloudFront distribution has a single WAF web ACL associated
+  at the distribution level — every cache behavior shares
+  the same WAF rule set. CloudFront supports per-behavior
+  WAF associations, allowing operators to apply tighter
+  rule sets to admin paths, login endpoints, or other
+  high-sensitivity behaviors than to public static-asset
+  behaviors. With one ACL for the whole distribution,
+  every behavior runs the same rules — typically tuned
+  for the loosest behavior to avoid false positives. The
+  high-sensitivity behaviors don't get the tighter rate
+  limits, sensitive-data inspection, or stricter managed-
+  rule choices they'd benefit from. Per-behavior WAF
+  configuration is the standard pattern for distributions
+  with mixed-sensitivity behaviors.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, SC-7, SI-4"
+  fedramp_moderate: "AC-3, SC-7, SI-4"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Distribution uses a single WAF ACL across all behaviors;
+    high-sensitivity paths get loose-tuned rules.
+  action: >
+    Create per-behavior WAF web ACLs: one tighter ACL for
+    admin / login / payment / API behaviors with stricter
+    rate limits, broader managed rule groups, and inspection
+    of request bodies; a looser ACL for static-asset
+    behaviors. aws cloudfront update-distribution with
+    behavior-specific WebACLId values.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "waf_per_behavior": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.waf_per_behavior
+      op: eq
+      value: false
+defect: >
+  CloudFront distribution applies a single WAF web ACL
+  across all cache behaviors.
+infection: >
+  CloudFront cache behaviors typically serve mixed-sensitivity
+  content: a static-asset behavior with /static/* path
+  pattern, a public-API behavior with /api/* path pattern,
+  an admin behavior with /admin/* path pattern, a login
+  behavior with /login or /oauth path pattern. Each has
+  different sensitivity, different traffic patterns, and
+  different attack profiles. A single distribution-level
+  WAF ACL has to be tuned for the loosest behavior to avoid
+  false positives — broad rate limits to accommodate
+  static-asset traffic, lenient managed-rule choices to
+  avoid breaking public-API integrations. The high-
+  sensitivity behaviors (admin, login, payment) end up
+  with rules tuned for the static path's needs. Per-
+  behavior WAF configuration lets each behavior have an
+  ACL appropriate for its threat model: tight rate limits
+  on login (to slow credential stuffing), broad inspection
+  on admin (to catch privilege-escalation attempts), light
+  rules on static (to maximize cache efficiency).
+failure: >
+  Loose-tuned rules everywhere. High-sensitivity behaviors
+  inherit static-asset-tuned WAF rules; the rules that
+  would catch attacks on admin paths are tuned out to
+  avoid false positives on static traffic.
+tests:
+  - name: distribution-wide WAF fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            waf_per_behavior: false
+  - name: per-behavior WAF passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            waf_per_behavior: true

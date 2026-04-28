@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.CONFIG.WILDCARD.CNAME.001
+name: CloudFront Distribution Uses Wildcard CNAME Covering Broader Subdomain Set
+description: >
+  CloudFront distribution is configured with a wildcard
+  alternate domain name (e.g., *.example.com) on its
+  Aliases list. The wildcard matches every direct
+  subdomain of example.com — including subdomains the
+  operator may not have provisioned yet. Wildcard CNAMEs
+  break the DNS-takeover defense: when an operator later
+  creates a new subdomain pointing at a different service,
+  the wildcard distribution still claims the name; the
+  operator's intended service may end up at a different
+  CNAME or fail to deploy. Worse, an attacker who provisions
+  a CNAME under the wildcard's parent domain can route
+  through the wildcard distribution by manipulating their
+  own DNS, potentially taking advantage of the
+  distribution's certificate, WAF, or signed-URL
+  configuration intended for legitimate subdomains.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2, SC-7"
+  fedramp_moderate: "CM-2, SC-7"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["IVS-09", "GRC-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Distribution uses wildcard CNAME; subdomain coverage is
+    broader than likely intended.
+  action: >
+    Replace the wildcard alias with explicit per-subdomain
+    aliases: aws cloudfront update-distribution with
+    Aliases listing each specific subdomain rather than the
+    wildcard. Issue / re-issue the viewer certificate with
+    SANs covering the explicit list. For genuinely-needed
+    wildcard scenarios (multi-tenant SaaS where each
+    customer subdomain routes to the same distribution),
+    document the rationale and pair with strict DNS-zone
+    governance ensuring no foreign CNAME can land under
+    the wildcard.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "uses_wildcard_alias": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.uses_wildcard_alias
+      op: eq
+      value: true
+defect: >
+  CloudFront distribution uses a wildcard alternate domain
+  name covering broader subdomain set than likely intended.
+infection: >
+  Wildcard CNAMEs (*.example.com) on a CloudFront
+  distribution claim every direct subdomain of the parent
+  domain. The convenience is real — one alias serves many
+  subdomains — but the consequences widen beyond the
+  operator's typical mental model. New subdomains created
+  later under the same parent domain may unintentionally
+  route to the wildcard distribution rather than the
+  service the operator intended; the wildcard's
+  certificate covers all of them, the wildcard's WAF
+  applies to all of them, and the wildcard's signed-URL
+  configuration applies. An attacker who can provision a
+  CNAME under the parent domain (through a DNS takeover
+  of a stale subdomain, through compromise of a sub-
+  delegation, through any control-plane access to the
+  zone) can route through the wildcard distribution
+  using the operator's legitimate certificate and
+  configuration. The wildcard pattern is appropriate
+  for genuine multi-tenant SaaS where every subdomain
+  routes to the same distribution; it's a footgun for
+  most other use cases.
+failure: >
+  Subdomain set unbounded. New subdomains route through the
+  wildcard distribution unintentionally; attacker-
+  provisioned subdomains can leverage the distribution's
+  certificate and configuration.
+tests:
+  - name: wildcard alias fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            uses_wildcard_alias: true
+  - name: explicit aliases pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            uses_wildcard_alias: false

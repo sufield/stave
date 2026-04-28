@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.MULTIDIST.SAMEORIGIN.001
+name: Multiple CloudFront Distributions Front the Same Origin With Inconsistent Security
+description: >
+  Multiple CloudFront distributions are configured with the
+  same origin but different security configurations. One
+  distribution has a WAF ACL; another doesn't. One enforces
+  HTTPS-only; another allows HTTP. One requires signed URLs;
+  another doesn't. The origin is reachable through every
+  distribution — whichever has the weakest configuration
+  becomes the de facto front door for attackers who find
+  both. Operators provisioning a second distribution
+  typically don't realize the first distribution's
+  protections are bypassable via the second; the second is
+  often a dev / staging / experimental distribution that
+  was provisioned for testing and never decommissioned.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "2.1.5"
+  nist_800_53_r5: "AC-3, CM-2, SC-7"
+  pci_dss_v4.0: "1.2, 6.4.2"
+  fedramp_moderate: "AC-3, CM-2, SC-7"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Multiple distributions front the same origin with
+    inconsistent security configurations.
+  action: >
+    Audit every distribution sharing the origin: identify
+    each distribution's WAF, viewer protocol policy, signed-
+    URL requirement, geo-restriction, and response headers
+    policy. Either tighten the loosest distributions to
+    match the strictest, or decommission the redundant
+    distributions and consolidate to one. For dev / staging
+    distributions sharing a production origin, route them
+    to a separate origin or restrict the origin's bucket
+    policy / SG to refuse the dev distribution.
+  example: |
+    {
+      "cdn": {
+        "kind": "origin_endpoint",
+        "cloudfront": {
+          "fronting_distributions_consistent": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: origin_endpoint
+    - field: properties.cdn.cloudfront.fronting_distributions_consistent
+      op: eq
+      value: false
+defect: >
+  Multiple CloudFront distributions front the same origin
+  with inconsistent security configurations.
+infection: >
+  An origin (S3 bucket, ALB, API Gateway, custom HTTP) can
+  be reached through any CloudFront distribution that's
+  configured with it as an origin. When two distributions
+  share an origin and have different security
+  configurations, the origin's effective protection is
+  whichever distribution is loosest. Common shapes: prod
+  distribution with WAF, dev distribution without WAF, both
+  on the same origin (an attacker who finds the dev
+  distribution bypasses WAF entirely); HTTPS-only on one,
+  HTTP-allowed on another (downgrade attacks succeed via
+  the HTTP-allowing distribution); signed-URL required on
+  one, optional on another (signing is bypassable). The
+  pattern complements the existing
+  CTL.CLOUDFRONT.ORIGIN.S3.MULTIDIST.001 control which
+  catches the S3-specific shape; this control catches the
+  general multi-distribution-same-origin shape across all
+  origin types. The fix is consolidation or per-origin
+  isolation.
+failure: >
+  Weakest-link edge protection. The origin's protections
+  collapse to whichever fronting distribution has the
+  loosest WAF / signing / geo-restriction / TLS policy.
+tests:
+  - name: inconsistent distributions fire
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_cloudfront_origin
+      vendor: aws
+      properties:
+        cdn:
+          kind: origin_endpoint
+          cloudfront:
+            fronting_distributions_consistent: false
+  - name: consistent distributions pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_cloudfront_origin
+      vendor: aws
+      properties:
+        cdn:
+          kind: origin_endpoint
+          cloudfront:
+            fronting_distributions_consistent: true

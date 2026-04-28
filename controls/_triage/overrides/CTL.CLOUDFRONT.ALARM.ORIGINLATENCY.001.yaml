@@ -1,0 +1,23 @@
+control: CTL.CLOUDFRONT.ALARM.ORIGINLATENCY.001
+defect: >
+  No CloudWatch alarm watches CloudFront OriginLatency.
+infection: >
+  OriginLatency measures the time CloudFront waits for the
+  origin to respond on cache misses. CloudFront caches
+  static and cacheable content at the edge — cache hits
+  are sub-millisecond from the viewer's perspective. Cache
+  misses (first request for a new path, expired TTL,
+  cache-bypass requests) hit the origin, and viewer
+  latency on those requests is dominated by the origin's
+  response time. Origin slowdowns surface viewer-visible
+  latency before they become outright errors — and the
+  sooner they surface, the sooner on-call can intervene.
+  Without an alarm on OriginLatency, the operator learns
+  about origin degradation from customer complaints,
+  abandoned-session metrics, or downstream service that
+  times out waiting on the origin. The metric is published
+  whether anyone alarms on it; the alarm is what turns
+  the data into actionable signal.
+failure: >
+  Origin degradation invisible. Cache-miss latency rises
+  without surfacing until customer impact accumulates.

@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.KEYGROUP.001
+name: CloudFront Trusted Key Group Not Used By Any Distribution
+description: >
+  CloudFront key group exists in the account but no
+  distribution cache behavior references it via
+  TrustedKeyGroups. The key group's public keys hold no
+  signing role; the corresponding private keys (held off-AWS
+  by the operator's signing service) sit unused. Common
+  cause: signing migration where a new key group replaced
+  the old one and the old key group wasn't deleted; key
+  rotation where the rotated-out key group remained for
+  rollback safety and was forgotten. Orphan key groups
+  clutter the inventory and represent stale signing
+  material — if the corresponding private keys leak, the
+  attacker can sign URLs that no distribution accepts (low
+  immediate impact) but the orphan represents long-lived
+  cryptographic material that should be retired.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2, CM-8, IA-5"
+  fedramp_moderate: "CM-2, CM-8, IA-5"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.10, A.5.16, A.8.9"
+  ccm_v4: ["GRC-04", "IAM-13"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Key group not used by any distribution; signing material
+    accumulates as inventory clutter.
+  action: >
+    Audit the key group to confirm no current or pending
+    distribution uses it. Either repoint a current
+    distribution at the key group or delete the key group
+    and its associated public keys: aws cloudfront
+    delete-key-group followed by delete-public-key for each
+    public key. Confirm the corresponding private keys are
+    decommissioned in the operator's signing service.
+  example: |
+    {
+      "cdn": {
+        "kind": "cloudfront_key_group",
+        "key_group": {
+          "distribution_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: cloudfront_key_group
+    - field: properties.cdn.key_group.distribution_count
+      op: eq
+      value: 0
+defect: >
+  CloudFront trusted key group is not used by any
+  distribution cache behavior.
+infection: >
+  Trusted key groups hold the public keys CloudFront uses
+  to verify signed URL and signed cookie signatures.
+  Distributions reference key groups via TrustedKeyGroups
+  on cache behaviors that require signing. An unassociated
+  key group's public keys hold no verification role; the
+  corresponding private keys (held off-AWS by the
+  operator's signing service) accumulate as long-lived
+  cryptographic material with no current purpose. Common
+  causes: signing migration where the new key group
+  replaced the old and the old wasn't cleaned up; key
+  rotation where the rotated-out key group was preserved
+  for rollback and forgotten; experimental signing setup
+  that didn't reach production. Orphan key groups clutter
+  the inventory and represent stale signing material —
+  if the corresponding private keys leak, the attacker
+  can sign URLs that no distribution currently accepts
+  (low immediate impact) but the orphan signals
+  housekeeping debt and complicates audit of which keys
+  are live.
+failure: >
+  Stale signing material accumulating. Key group's purpose
+  is gone; the corresponding private keys exist somewhere
+  in the operator's signing infrastructure with no
+  current use.
+tests:
+  - name: orphan key group fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:key-group/abc-123"
+      asset_type: aws_cloudfront_key_group
+      vendor: aws
+      properties:
+        cdn:
+          kind: cloudfront_key_group
+          key_group:
+            distribution_count: 0
+  - name: used key group passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:key-group/abc-123"
+      asset_type: aws_cloudfront_key_group
+      vendor: aws
+      properties:
+        cdn:
+          kind: cloudfront_key_group
+          key_group:
+            distribution_count: 2

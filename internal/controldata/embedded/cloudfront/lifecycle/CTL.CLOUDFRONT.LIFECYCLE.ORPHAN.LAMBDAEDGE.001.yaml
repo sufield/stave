@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.LAMBDAEDGE.001
+name: Lambda@Edge Function Not Associated With Any CloudFront Behavior
+description: >
+  Lambda@Edge function (a Lambda function published in
+  us-east-1 with edge-replication enabled) is not associated
+  with any CloudFront distribution cache behavior. The
+  function exists across edge locations — replicated at
+  publish time — but no traffic triggers it. Common cause:
+  experimental edge function rolled back without cleanup;
+  function used by a decommissioned distribution; refactored
+  function where the LambdaFunctionAssociation was updated
+  to a new ARN and the old function version remained.
+  Orphan Lambda@Edge functions accumulate Lambda invocation
+  cost only when invoked (which is zero), but the function
+  versions persist in every edge location until cleaned
+  up — and Lambda@Edge cleanup has a longer-than-usual
+  delay because edge replicas have to drain before
+  deletion.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2, CM-8"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.10, A.8.9"
+  ccm_v4: ["GRC-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Lambda@Edge function not associated with any
+    distribution behavior.
+  action: >
+    Either associate the function with the behavior that
+    should use it: aws cloudfront update-distribution with
+    LambdaFunctionAssociations on the appropriate behavior
+    referencing the function ARN with version. Or delete
+    the orphan function: aws lambda delete-function --
+    note that Lambda@Edge functions can't be deleted
+    immediately after disassociation; AWS retains the
+    edge replicas until they drain (typically a few hours
+    to a day). Plan the deletion for the next cleanup
+    cycle.
+  example: |
+    {
+      "cdn": {
+        "kind": "lambda_edge_function",
+        "lambda_edge": {
+          "association_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: lambda_edge_function
+    - field: properties.cdn.lambda_edge.association_count
+      op: eq
+      value: 0
+defect: >
+  Lambda@Edge function is not associated with any CloudFront
+  cache behavior.
+infection: >
+  Lambda@Edge functions execute at edge locations during
+  viewer-request, origin-request, origin-response, or
+  viewer-response triggers. They're associated with
+  specific cache behaviors via LambdaFunctionAssociations
+  pointing at versioned function ARNs. An unassociated
+  Lambda@Edge function is inert: no traffic invokes it
+  (zero invocation cost) but the function version persists
+  in every edge location until edge replicas drain and the
+  function is deleted. Drain plus delete typically takes
+  hours to a day. Orphan Lambda@Edge functions accumulate
+  in two ways: inventory clutter (every region's Lambda
+  console shows them) and version pile-up (each refactor
+  creates a new version, the old version often isn't
+  cleaned). Over time, the orphan inventory grows and the
+  cleanup-cost-vs-benefit ratio worsens.
+failure: >
+  Inventory and replica accumulation. Function exists in
+  every edge location without serving traffic; cleanup
+  delay means the orphan persists for hours-to-day after
+  intent.
+tests:
+  - name: orphan Lambda@Edge fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:edge-fn"
+      asset_type: aws_lambda_edge_function
+      vendor: aws
+      properties:
+        cdn:
+          kind: lambda_edge_function
+          lambda_edge:
+            association_count: 0
+  - name: associated Lambda@Edge passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:edge-fn"
+      asset_type: aws_lambda_edge_function
+      vendor: aws
+      properties:
+        cdn:
+          kind: lambda_edge_function
+          lambda_edge:
+            association_count: 2

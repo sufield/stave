@@ -1,0 +1,27 @@
+control: CTL.CLOUDFRONT.HEADERS.NOPERMISSIONSPOLICY.001
+defect: >
+  CloudFront distribution doesn't send Permissions-Policy
+  header.
+infection: >
+  Modern browsers grant access to powerful features (camera,
+  microphone, geolocation, payment, USB, notifications,
+  autoplay, full-screen) on a per-page-and-origin basis.
+  The Permissions-Policy header lets the operator declare
+  which features the page is allowed to use; everything
+  not in the allowlist is implicitly denied. Without the
+  header, the browser allows whatever the origin or any
+  embedded iframe attempts — and the user gets the
+  prompt with no operator-side opt-in. An attacker who
+  finds an XSS, compromises a third-party CDN serving
+  scripts to the page, or convinces a user to visit a
+  malicious page that frames the site can request access
+  to camera, microphone, or geolocation as if from the
+  legitimate origin. The defense is an explicit
+  Permissions-Policy that denies features the page
+  doesn't legitimately use; the cost is a one-line
+  header, the benefit is browser-side enforcement of the
+  operator's intent.
+failure: >
+  Browser feature surface unbounded. Page or any embedded
+  resource can request camera, microphone, geolocation,
+  payment, USB; the user is the only line of defense.

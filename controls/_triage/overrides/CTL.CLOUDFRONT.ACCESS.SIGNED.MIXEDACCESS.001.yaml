@@ -1,0 +1,27 @@
+control: CTL.CLOUDFRONT.ACCESS.SIGNED.MIXEDACCESS.001
+defect: >
+  CloudFront cache behaviors on the same distribution have
+  inconsistent signed-URL requirements; protected content
+  reachable via unprotected behaviors.
+infection: >
+  CloudFront cache behaviors apply to path patterns. A
+  distribution with a /protected/* behavior requiring
+  signed URLs and a default catch-all (*) behavior with no
+  signing requirement provides apparent protection for
+  /protected/* paths — but the same content is reachable
+  via the catch-all if request paths can construct an
+  alternative URL that maps to the same backend object
+  (URL encoding tricks, alternate path normalization). The
+  classic case is signed access on /downloads/* paired
+  with public access on /static/* where both behaviors
+  point at the same S3 origin: an attacker who can guess
+  or enumerate the static path bypasses the signing
+  requirement entirely. The fix is consistent signing
+  across all behaviors that reach the protected content,
+  or origin-level isolation: protected content lives in a
+  separate bucket fronted by a separate distribution where
+  every behavior signs.
+failure: >
+  Signing requirement bypassable. Protected content reachable
+  via unprotected behavior; the access control the operator
+  configured doesn't apply uniformly.

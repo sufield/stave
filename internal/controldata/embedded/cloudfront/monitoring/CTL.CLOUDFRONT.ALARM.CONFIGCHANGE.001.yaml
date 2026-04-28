@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ALARM.CONFIGCHANGE.001
+name: No Alarm on CloudFront Distribution / Origin / WAF Configuration Changes
+description: >
+  No CloudWatch alarm fires on CloudFront management API
+  events (CreateDistribution, UpdateDistribution,
+  DeleteDistribution, AssociateAlias, CreateOriginAccessControl,
+  changes to the WAF web ACL associated with a distribution).
+  CloudTrail captures the events — the data exists. Without
+  an alarm, configuration drift on production distributions
+  surfaces only when someone audits the trail manually.
+  Distribution changes (origin protocol downgraded, WAF
+  disassociated, signed-URL requirement removed, geo-
+  restriction removed) are high-priority signals that
+  warrant real-time visibility.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "4.7"
+  nist_800_53_r5: "AU-6, AU-12, SI-4"
+  fedramp_moderate: "AU-6, AU-12, SI-4"
+  pci_dss_v4.0: "10.4, 12.10"
+  soc2: "CC7.2, CC8.1"
+  iso_27001_2022: "A.5.25, A.8.16"
+  ccm_v4: ["LOG-04", "GRC-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No alarm fires on CloudFront distribution / origin / WAF
+    configuration change events.
+  action: >
+    Create a CloudWatch metric filter on the CloudTrail log
+    group matching CloudFront management events:
+    eventSource=cloudfront.amazonaws.com AND
+    eventName=(CreateDistribution|UpdateDistribution|
+    DeleteDistribution|AssociateAlias|UpdateWebACL|
+    DisassociateWebACL|...). aws logs put-metric-filter,
+    then aws cloudwatch put-metric-alarm with --threshold 1
+    so any event reaches on-call. Deletion and disassociate
+    events warrant a higher-priority pager target than
+    create/update.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "alarms_has_config_change": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.alarms_has_config_change
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm watches CloudFront management API
+  events.
+infection: >
+  CloudFront management calls land in CloudTrail
+  automatically. Without a metric filter on the relevant
+  events and an alarm on the metric, configuration drift
+  surfaces only when someone audits the trail manually.
+  For production distributions, configuration drift
+  warrants real-time visibility: origin protocol downgraded
+  from HTTPS to HTTP, WAF disassociated, signed-URL
+  requirement removed from a behavior, geo-restriction
+  removed, response-headers policy detached, OAC removed
+  from an S3 origin. Each of these surfaces in CloudTrail
+  the moment the API call lands; without an alarm the
+  operator finds out from probing or customer impact.
+  Deletion events (DeleteDistribution, DeleteOAC) deserve
+  a higher-priority pager target than create / update —
+  deletion is rarely undoable without reprovisioning. The
+  alarm pairs with the existing drift-detection in stave
+  drift but provides real-time signal that drift detection
+  doesn't.
+failure: >
+  Configuration drift invisible. Distribution / origin /
+  WAF changes happen with no signal to the team; problems
+  surface from probing or customer impact rather than
+  the management event.
+tests:
+  - name: missing config-change alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            alarms_has_config_change: false
+  - name: config-change alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            alarms_has_config_change: true

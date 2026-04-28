@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.HEADERS.NOREFERRER.001
+name: CloudFront Distribution Doesn't Send Referrer-Policy Header
+description: >
+  CloudFront distribution's response headers policy doesn't
+  include a Referrer-Policy directive. Without one,
+  browsers default to sending the full URL of the previous
+  page in the Referer request header on outbound
+  navigation — including sensitive paths, query strings
+  with auth tokens, and account-identifying URL segments.
+  Third-party services (analytics, ads, embedded widgets,
+  font CDNs) receive the referrer; logs persist it; URL-
+  embedded credentials and one-time tokens leak to parties
+  the operator didn't intend. Setting Referrer-Policy
+  (typical values: no-referrer, strict-origin,
+  strict-origin-when-cross-origin) constrains what gets
+  sent.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SC-7, SI-12"
+  fedramp_moderate: "SC-7, SI-12"
+  pci_dss_v4.0: "8.3"
+  soc2: "CC6.1, CC6.7"
+  iso_27001_2022: "A.5.10, A.8.10"
+  ccm_v4: ["DSP-07"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Distribution doesn't send Referrer-Policy; outbound
+    navigation leaks full URLs to third parties.
+  action: >
+    Add Referrer-Policy to the response headers policy: aws
+    cloudfront update-response-headers-policy with
+    SecurityHeadersConfig.ReferrerPolicy. Reasonable values
+    by use case: no-referrer for high-sensitivity sites,
+    strict-origin for APIs and apps that don't need
+    cross-origin context, strict-origin-when-cross-origin
+    as a balanced default that preserves same-origin
+    referrer detail while truncating cross-origin to the
+    origin only.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "headers_has_referrer_policy": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.headers_has_referrer_policy
+      op: eq
+      value: false
+defect: >
+  CloudFront distribution doesn't send Referrer-Policy
+  header.
+infection: >
+  The HTTP Referer header (the misspelling is RFC-canonical)
+  carries the URL of the page that initiated a request.
+  When a user navigates from a site to another site or
+  loads a third-party resource (analytics tracker, ad,
+  embedded widget, font CDN), the browser sends the full
+  URL of the originating page by default. URLs frequently
+  carry information the operator didn't intend to share
+  beyond the originating site: account identifiers in
+  paths, one-time auth tokens in query strings, password-
+  reset links, signed download URLs. Third-party services
+  receive the referrer, log it, and persist it under
+  whatever data policies they have. Referrer-Policy lets
+  the server constrain what gets sent: no-referrer
+  suppresses entirely, strict-origin sends only the origin
+  (scheme + host + port) with no path or query, strict-
+  origin-when-cross-origin keeps full referrer for same-
+  origin requests but strips to origin-only for cross-
+  origin. The default browser behavior leaks more than
+  most operators realize.
+failure: >
+  URL-embedded credentials and identifiers leak. Third-
+  party analytics, ads, and embedded resources receive
+  full referrer URLs including query-string tokens.
+tests:
+  - name: missing referrer-policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            headers_has_referrer_policy: false
+  - name: referrer-policy configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            headers_has_referrer_policy: true

@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.HEADERS.NOFRAMEOPTIONS.001
+name: CloudFront Distribution Doesn't Send X-Frame-Options or frame-ancestors CSP
+description: >
+  CloudFront distribution's response headers policy doesn't
+  include X-Frame-Options (or the modern equivalent
+  frame-ancestors directive in Content-Security-Policy).
+  Without either header, browsers allow the response to be
+  embedded in iframes on any origin. An attacker hosts a
+  page that frames the legitimate site, overlays invisible
+  controls, and tricks users into clicking through to
+  destructive actions (clickjacking). The pattern is one
+  of the older browser-side attacks but remains effective
+  against any site that doesn't explicitly forbid framing.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7, SI-10"
+  fedramp_moderate: "SC-7, SI-10"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Distribution doesn't send X-Frame-Options or
+    frame-ancestors CSP; iframe embedding is uncontrolled.
+  action: >
+    Add X-Frame-Options to the response headers policy with
+    FrameOptions: DENY (or SAMEORIGIN if the site
+    legitimately frames its own pages). For modern browser
+    coverage, also add frame-ancestors to a Content-
+    Security-Policy header. aws cloudfront
+    update-response-headers-policy with the new
+    SecurityHeadersConfig.FrameOptions block.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "headers_has_frame_options": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.headers_has_frame_options
+      op: eq
+      value: false
+defect: >
+  CloudFront distribution doesn't send X-Frame-Options or
+  frame-ancestors CSP directive.
+infection: >
+  Iframe embedding lets one origin display another origin's
+  content inside a frame on its own page. Without a server-
+  side instruction forbidding the framing, browsers allow
+  it. An attacker hosts a page that frames the legitimate
+  site, overlays invisible UI controls (transparent
+  buttons, click-targets positioned over the framed
+  content), and tricks the visitor into clicking through
+  to destructive actions on the framed site — funds
+  transfers, profile changes, account deletion. The
+  pattern (clickjacking) is one of the older browser-side
+  attacks but remains effective against any site that
+  doesn't forbid framing. The classic defense is the
+  X-Frame-Options header (DENY or SAMEORIGIN). The modern
+  defense is the frame-ancestors directive in Content-
+  Security-Policy, which supports more granular control.
+  Most sites should use both for defense in depth — older
+  browsers honor X-Frame-Options, newer browsers honor
+  the CSP directive, and frames from foreign origins are
+  refused either way.
+failure: >
+  Clickjacking exposure. The site embeds in iframes on
+  attacker-controlled pages; UI overlay attacks succeed
+  on any user who can be social-engineered to visit.
+tests:
+  - name: missing frame-options fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            headers_has_frame_options: false
+  - name: frame-options configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            headers_has_frame_options: true

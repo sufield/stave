@@ -1,0 +1,28 @@
+control: CTL.CLOUDFRONT.ALARM.CONFIGCHANGE.001
+defect: >
+  No CloudWatch alarm watches CloudFront management API
+  events.
+infection: >
+  CloudFront management calls land in CloudTrail
+  automatically. Without a metric filter on the relevant
+  events and an alarm on the metric, configuration drift
+  surfaces only when someone audits the trail manually.
+  For production distributions, configuration drift
+  warrants real-time visibility: origin protocol downgraded
+  from HTTPS to HTTP, WAF disassociated, signed-URL
+  requirement removed from a behavior, geo-restriction
+  removed, response-headers policy detached, OAC removed
+  from an S3 origin. Each of these surfaces in CloudTrail
+  the moment the API call lands; without an alarm the
+  operator finds out from probing or customer impact.
+  Deletion events (DeleteDistribution, DeleteOAC) deserve
+  a higher-priority pager target than create / update —
+  deletion is rarely undoable without reprovisioning. The
+  alarm pairs with the existing drift-detection in stave
+  drift but provides real-time signal that drift detection
+  doesn't.
+failure: >
+  Configuration drift invisible. Distribution / origin /
+  WAF changes happen with no signal to the team; problems
+  surface from probing or customer impact rather than
+  the management event.

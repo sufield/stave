@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.HEADERS.NOHSTS.001
+name: CloudFront Distribution Doesn't Send Strict-Transport-Security Header
+description: >
+  CloudFront distribution serves over HTTPS but its response
+  headers policy doesn't include Strict-Transport-Security
+  (HSTS). Without HSTS, browsers don't know to refuse HTTP
+  on subsequent requests — a first visit over HTTP (typed
+  URL, redirect chain, ad-injected http:// link) reaches
+  the distribution at HTTP, the redirect-to-HTTPS that
+  CTL.CLOUDFRONT.HTTPS.ONLY.001 enforces is itself
+  interceptable. HSTS instructs browsers to upgrade
+  http://hostname to https://hostname for a max-age window
+  (typically 1 year), eliminating the redirect-attack
+  window after the first successful HTTPS visit.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8, SC-23"
+  fedramp_moderate: "SC-8, SC-23"
+  pci_dss_v4.0: "4.2"
+  soc2: "CC6.1, CC6.7"
+  iso_27001_2022: "A.5.10, A.8.20"
+  ccm_v4: ["CEK-03", "DSP-10"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Distribution doesn't send Strict-Transport-Security;
+    first-visit HTTP redirects are interceptable.
+  action: >
+    Attach a response headers policy with Strict-Transport-
+    Security configured: aws cloudfront
+    create-response-headers-policy with
+    StrictTransportSecurity AccessControlMaxAgeSec=31536000
+    IncludeSubdomains=true Preload=true. Update the
+    distribution's default cache behavior (and any other
+    behaviors) to reference the policy via
+    ResponseHeadersPolicyId. The 1-year max-age is the
+    common default; set Preload=true only if the domain is
+    submitted to the HSTS preload list.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "headers_has_hsts": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.headers_has_hsts
+      op: eq
+      value: false
+defect: >
+  CloudFront distribution doesn't send Strict-Transport-
+  Security header.
+infection: >
+  Browsers honor HTTPS only when they know to enforce it.
+  A first visit to a domain over HTTP — typed URL without
+  scheme, click on an http:// link, redirect chain that
+  includes HTTP — establishes a brief plaintext window
+  during which an attacker on the network path can
+  intercept the request, present their own redirect or
+  capture credentials. CloudFront's HTTPS-only viewer
+  protocol policy (CTL.CLOUDFRONT.HTTPS.ONLY.001) closes
+  the window for HTTP requests reaching CloudFront, but
+  it doesn't close the window for the network hop before
+  CloudFront receives the request. HSTS instructs the
+  browser to upgrade http://hostname to https://hostname
+  for a max-age window (typically 1 year, with
+  IncludeSubdomains and optionally Preload), eliminating
+  the redirect-attack window after the first successful
+  HTTPS visit. The fix is a response headers policy
+  attached to every cache behavior with the appropriate
+  HSTS configuration.
+failure: >
+  First-visit HTTP interceptable. Browsers don't know to
+  upgrade http://hostname to https://hostname; the
+  redirect-attack window stays open.
+tests:
+  - name: missing HSTS fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            headers_has_hsts: false
+  - name: HSTS configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            headers_has_hsts: true

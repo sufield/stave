@@ -1,0 +1,28 @@
+control: CTL.CLOUDFRONT.WAF.PERBEHAVIOR.MISSING.001
+defect: >
+  CloudFront distribution applies a single WAF web ACL
+  across all cache behaviors.
+infection: >
+  CloudFront cache behaviors typically serve mixed-sensitivity
+  content: a static-asset behavior with /static/* path
+  pattern, a public-API behavior with /api/* path pattern,
+  an admin behavior with /admin/* path pattern, a login
+  behavior with /login or /oauth path pattern. Each has
+  different sensitivity, different traffic patterns, and
+  different attack profiles. A single distribution-level
+  WAF ACL has to be tuned for the loosest behavior to avoid
+  false positives — broad rate limits to accommodate
+  static-asset traffic, lenient managed-rule choices to
+  avoid breaking public-API integrations. The high-
+  sensitivity behaviors (admin, login, payment) end up
+  with rules tuned for the static path's needs. Per-
+  behavior WAF configuration lets each behavior have an
+  ACL appropriate for its threat model: tight rate limits
+  on login (to slow credential stuffing), broad inspection
+  on admin (to catch privilege-escalation attempts), light
+  rules on static (to maximize cache efficiency).
+failure: >
+  Loose-tuned rules everywhere. High-sensitivity behaviors
+  inherit static-asset-tuned WAF rules; the rules that
+  would catch attacks on admin paths are tuned out to
+  avoid false positives on static traffic.

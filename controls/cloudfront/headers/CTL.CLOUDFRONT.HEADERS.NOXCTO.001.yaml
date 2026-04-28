@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.HEADERS.NOXCTO.001
+name: CloudFront Distribution Doesn't Send X-Content-Type-Options Header
+description: >
+  CloudFront distribution's response headers policy doesn't
+  include X-Content-Type-Options: nosniff. Without it,
+  browsers may MIME-sniff response bodies — overriding the
+  Content-Type header and treating a file as a different
+  type than declared. An image upload that contains
+  embedded HTML/JavaScript can be sniffed as text/html and
+  executed; a JSON response with embedded script content
+  can be treated as JavaScript. The nosniff directive
+  forces browsers to honor the declared Content-Type,
+  closing a class of MIME-confusion attacks.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SI-10, SC-7"
+  fedramp_moderate: "SI-10, SC-7"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Distribution doesn't send X-Content-Type-Options: nosniff;
+    MIME sniffing is uncontrolled.
+  action: >
+    Add X-Content-Type-Options: nosniff to the response
+    headers policy: aws cloudfront
+    update-response-headers-policy with
+    SecurityHeadersConfig.ContentTypeOptions Override=true.
+    Then update the distribution's cache behaviors to
+    reference the policy.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "headers_has_xcto": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.headers_has_xcto
+      op: eq
+      value: false
+defect: >
+  CloudFront distribution doesn't send X-Content-Type-Options:
+  nosniff.
+infection: >
+  Browsers historically inspected response body content to
+  guess the actual content type when the declared Content-
+  Type seemed wrong (or was missing). The behavior — MIME
+  sniffing — was meant to handle servers that didn't
+  configure types correctly. It became an attack surface:
+  an attacker uploads a file with image/png Content-Type
+  but body content shaped like HTML/JavaScript; the
+  victim browser sniffs the body, decides it's HTML, and
+  executes embedded scripts in the origin's security
+  context. The X-Content-Type-Options: nosniff directive
+  tells the browser to refuse sniffing — honor the declared
+  type or refuse to render. The defense is a one-line
+  header, costs nothing to add, and closes a class of
+  MIME-confusion attacks across uploaded content,
+  user-generated images, and downloadable files.
+failure: >
+  MIME-confusion exposure. Browsers may sniff response
+  bodies and execute content the operator declared as
+  another type.
+tests:
+  - name: missing nosniff fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            headers_has_xcto: false
+  - name: nosniff configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            headers_has_xcto: true

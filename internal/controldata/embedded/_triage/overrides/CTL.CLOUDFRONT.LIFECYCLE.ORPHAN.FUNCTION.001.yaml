@@ -1,0 +1,27 @@
+control: CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.FUNCTION.001
+defect: >
+  CloudFront Function exists but is not associated with any
+  distribution cache behavior.
+infection: >
+  CloudFront Functions execute at edge locations on viewer-
+  request and viewer-response triggers. They're associated
+  with specific cache behaviors via FunctionAssociations.
+  An unassociated function is inert: no traffic invokes
+  it, no logs accrue, no edge processing happens. Common
+  causes: experimental function rolled back without
+  cleanup; function authored for a distribution that was
+  decommissioned and not cleaned up alongside; refactored
+  function where a new version replaced the association
+  but the old function wasn't deleted. The orphan adds
+  inventory clutter, accumulates small storage cost, and —
+  more importantly — represents code the operator may
+  later reuse without re-reviewing. When a function is
+  later associated with a behavior, its configuration is
+  whatever it drifted to; if security posture has shifted
+  in the interim (new logging requirements, new header
+  manipulation rules), the orphan-then-reused function
+  carries the old posture.
+failure: >
+  Inert configuration plus drift hazard. Function exists
+  without serving traffic; later reuse may carry stale
+  configuration that doesn't match current standards.

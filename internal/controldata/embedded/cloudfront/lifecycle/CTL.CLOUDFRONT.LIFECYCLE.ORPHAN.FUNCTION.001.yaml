@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.FUNCTION.001
+name: CloudFront Function Not Associated With Any Distribution
+description: >
+  CloudFront Function exists in the account but is not
+  associated with any cache behavior on any distribution.
+  The function is inert — no traffic invokes it. Common
+  cause: experimental function that was rolled back without
+  cleanup; function authored for a distribution that was
+  decommissioned; refactored function where the new
+  version replaced the association but the old function
+  wasn't deleted. Orphan functions clutter the inventory
+  view and accumulate small storage cost; their
+  configuration drifts from current standards if they
+  later get reused.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2, CM-8"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.10, A.8.9"
+  ccm_v4: ["GRC-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    CloudFront Function not associated with any distribution
+    cache behavior.
+  action: >
+    Either associate the function with the cache behavior
+    that should use it: aws cloudfront update-distribution
+    with FunctionAssociations on the appropriate behavior.
+    Or delete the orphan function: aws cloudfront
+    delete-function --name <name> --if-match <etag>.
+  example: |
+    {
+      "cdn": {
+        "kind": "cloudfront_function",
+        "function": {
+          "association_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: cloudfront_function
+    - field: properties.cdn.function.association_count
+      op: eq
+      value: 0
+defect: >
+  CloudFront Function exists but is not associated with any
+  distribution cache behavior.
+infection: >
+  CloudFront Functions execute at edge locations on viewer-
+  request and viewer-response triggers. They're associated
+  with specific cache behaviors via FunctionAssociations.
+  An unassociated function is inert: no traffic invokes
+  it, no logs accrue, no edge processing happens. Common
+  causes: experimental function rolled back without
+  cleanup; function authored for a distribution that was
+  decommissioned and not cleaned up alongside; refactored
+  function where a new version replaced the association
+  but the old function wasn't deleted. The orphan adds
+  inventory clutter, accumulates small storage cost, and —
+  more importantly — represents code the operator may
+  later reuse without re-reviewing. When a function is
+  later associated with a behavior, its configuration is
+  whatever it drifted to; if security posture has shifted
+  in the interim (new logging requirements, new header
+  manipulation rules), the orphan-then-reused function
+  carries the old posture.
+failure: >
+  Inert configuration plus drift hazard. Function exists
+  without serving traffic; later reuse may carry stale
+  configuration that doesn't match current standards.
+tests:
+  - name: orphan function fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:function/my-function"
+      asset_type: aws_cloudfront_function
+      vendor: aws
+      properties:
+        cdn:
+          kind: cloudfront_function
+          function:
+            association_count: 0
+  - name: associated function passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:function/my-function"
+      asset_type: aws_cloudfront_function
+      vendor: aws
+      properties:
+        cdn:
+          kind: cloudfront_function
+          function:
+            association_count: 1

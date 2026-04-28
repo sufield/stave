@@ -1,0 +1,27 @@
+control: CTL.CLOUDFRONT.GHOST.RESPONSEHEADERS.001
+defect: >
+  CloudFront cache behavior references a deleted response
+  headers policy.
+infection: >
+  Response headers policies attach to cache behaviors via
+  ResponseHeadersPolicyId. When the policy is deleted, the
+  ID becomes a dangling reference: the behavior still has
+  it set, the distribution config still shows the
+  reference, but the headers the policy used to add no
+  longer apply. CloudFront serves responses without the
+  policy's headers — no HSTS, no X-Frame-Options, no
+  Permissions-Policy, no custom Server-header removal,
+  whatever was configured in the missing policy. The
+  silent-fail pattern is the same as the other ghost-
+  reference shapes: the configuration looks complete,
+  the actual behavior is degraded, the operator finds
+  out from external observation (browser dev tools showing
+  missing headers, security scanners flagging the absent
+  HSTS) rather than from CloudFront. Pair with the
+  existing GHOST.* family — every CloudFront ghost-
+  reference shape is the same defect with a different
+  resource type.
+failure: >
+  Headers silently absent. Distribution config shows policy
+  attached; actual responses lack the configured headers;
+  security headers don't apply.

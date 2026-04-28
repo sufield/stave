@@ -1,0 +1,30 @@
+control: CTL.CLOUDFRONT.CONFIG.WILDCARD.CNAME.001
+defect: >
+  CloudFront distribution uses a wildcard alternate domain
+  name covering broader subdomain set than likely intended.
+infection: >
+  Wildcard CNAMEs (*.example.com) on a CloudFront
+  distribution claim every direct subdomain of the parent
+  domain. The convenience is real — one alias serves many
+  subdomains — but the consequences widen beyond the
+  operator's typical mental model. New subdomains created
+  later under the same parent domain may unintentionally
+  route to the wildcard distribution rather than the
+  service the operator intended; the wildcard's
+  certificate covers all of them, the wildcard's WAF
+  applies to all of them, and the wildcard's signed-URL
+  configuration applies. An attacker who can provision a
+  CNAME under the parent domain (through a DNS takeover
+  of a stale subdomain, through compromise of a sub-
+  delegation, through any control-plane access to the
+  zone) can route through the wildcard distribution
+  using the operator's legitimate certificate and
+  configuration. The wildcard pattern is appropriate
+  for genuine multi-tenant SaaS where every subdomain
+  routes to the same distribution; it's a footgun for
+  most other use cases.
+failure: >
+  Subdomain set unbounded. New subdomains route through the
+  wildcard distribution unintentionally; attacker-
+  provisioned subdomains can leverage the distribution's
+  certificate and configuration.

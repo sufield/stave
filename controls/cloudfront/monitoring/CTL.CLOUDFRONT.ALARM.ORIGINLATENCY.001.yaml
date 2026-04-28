@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ALARM.ORIGINLATENCY.001
+name: No CloudWatch Alarm on CloudFront Origin Latency
+description: >
+  CloudFront publishes the OriginLatency metric to CloudWatch
+  (when additional metrics are enabled — see
+  CTL.CLOUDFRONT.METRICS.ADDITIONAL.001) but no alarm watches
+  it. OriginLatency measures the time CloudFront waits for
+  the origin to respond to a request that misses the edge
+  cache. Origin slowdowns are the leading cause of viewer-
+  visible latency on cached content (cache hits stay fast,
+  cache misses suffer). Without an alarm, origin
+  degradation surfaces as customer complaints rather than
+  early-warning signal. Alarming on a P99 threshold tied to
+  the origin's SLO is the standard pattern.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  fedramp_moderate: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.4"
+  soc2: "CC7.2, A1.1, A1.2"
+  iso_27001_2022: "A.5.25, A.8.6, A.8.16"
+  ccm_v4: ["LOG-04", "BCR-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No alarm watches CloudFront OriginLatency.
+  action: >
+    Enable additional metrics on the distribution if not
+    already (the existing
+    CTL.CLOUDFRONT.METRICS.ADDITIONAL.001 covers that
+    prerequisite). Create a CloudWatch alarm on
+    AWS/CloudFront namespace, OriginLatency metric,
+    dimensioned by DistributionId, with a P99 threshold
+    matching the origin's SLO. aws cloudwatch
+    put-metric-alarm with --metric-name OriginLatency
+    --extended-statistic p99 --threshold <ms>.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "alarms_has_origin_latency": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.alarms_has_origin_latency
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm watches CloudFront OriginLatency.
+infection: >
+  OriginLatency measures the time CloudFront waits for the
+  origin to respond on cache misses. CloudFront caches
+  static and cacheable content at the edge — cache hits
+  are sub-millisecond from the viewer's perspective. Cache
+  misses (first request for a new path, expired TTL,
+  cache-bypass requests) hit the origin, and viewer
+  latency on those requests is dominated by the origin's
+  response time. Origin slowdowns surface viewer-visible
+  latency before they become outright errors — and the
+  sooner they surface, the sooner on-call can intervene.
+  Without an alarm on OriginLatency, the operator learns
+  about origin degradation from customer complaints,
+  abandoned-session metrics, or downstream service that
+  times out waiting on the origin. The metric is published
+  whether anyone alarms on it; the alarm is what turns
+  the data into actionable signal.
+failure: >
+  Origin degradation invisible. Cache-miss latency rises
+  without surfacing until customer impact accumulates.
+tests:
+  - name: missing origin latency alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            alarms_has_origin_latency: false
+  - name: origin latency alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            alarms_has_origin_latency: true

@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.GHOST.RESPONSEHEADERS.001
+name: CloudFront Distribution References Deleted Response Headers Policy
+description: >
+  CloudFront cache behavior has a ResponseHeadersPolicyId
+  pointing at a response headers policy that no longer
+  exists. The behavior runs without the policy's headers —
+  no HSTS, no X-Frame-Options, no Permissions-Policy, no
+  custom Server header removal. Deletion of the policy
+  doesn't break the distribution: CloudFront silently
+  serves responses without the policy's headers. Operators
+  see "policy attached" in the distribution config; the
+  actual behavior is "policy ID dangles, no headers
+  applied." Common cause: operator deletes a response
+  headers policy intending to replace it, deletes the old
+  before creating the new, and the distribution is
+  briefly in the dangling state.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2, CM-3, SC-7"
+  fedramp_moderate: "CM-2, CM-3, SC-7"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.10, A.8.9"
+  ccm_v4: ["IVS-09", "GRC-04"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudFront cache behavior references a deleted response
+    headers policy; configured headers don't apply.
+  action: >
+    Either recreate the policy with the same headers
+    configuration and update the behavior to point at the
+    new policy ID: aws cloudfront create-response-headers-policy
+    followed by update-distribution with the new
+    ResponseHeadersPolicyId. Or repoint the behavior at an
+    existing policy that delivers equivalent headers.
+    Audit other distributions for the same dangling
+    reference if the deletion was widespread.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "has_ghost_response_headers_policy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.has_ghost_response_headers_policy
+      op: eq
+      value: true
+defect: >
+  CloudFront cache behavior references a deleted response
+  headers policy.
+infection: >
+  Response headers policies attach to cache behaviors via
+  ResponseHeadersPolicyId. When the policy is deleted, the
+  ID becomes a dangling reference: the behavior still has
+  it set, the distribution config still shows the
+  reference, but the headers the policy used to add no
+  longer apply. CloudFront serves responses without the
+  policy's headers — no HSTS, no X-Frame-Options, no
+  Permissions-Policy, no custom Server-header removal,
+  whatever was configured in the missing policy. The
+  silent-fail pattern is the same as the other ghost-
+  reference shapes: the configuration looks complete,
+  the actual behavior is degraded, the operator finds
+  out from external observation (browser dev tools showing
+  missing headers, security scanners flagging the absent
+  HSTS) rather than from CloudFront. Pair with the
+  existing GHOST.* family — every CloudFront ghost-
+  reference shape is the same defect with a different
+  resource type.
+failure: >
+  Headers silently absent. Distribution config shows policy
+  attached; actual responses lack the configured headers;
+  security headers don't apply.
+tests:
+  - name: ghost response headers policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            has_ghost_response_headers_policy: true
+  - name: live response headers policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            has_ghost_response_headers_policy: false

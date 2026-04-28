@@ -1,0 +1,24 @@
+control: CTL.CLOUDFRONT.HEADERS.NOXCTO.001
+defect: >
+  CloudFront distribution doesn't send X-Content-Type-Options:
+  nosniff.
+infection: >
+  Browsers historically inspected response body content to
+  guess the actual content type when the declared Content-
+  Type seemed wrong (or was missing). The behavior — MIME
+  sniffing — was meant to handle servers that didn't
+  configure types correctly. It became an attack surface:
+  an attacker uploads a file with image/png Content-Type
+  but body content shaped like HTML/JavaScript; the
+  victim browser sniffs the body, decides it's HTML, and
+  executes embedded scripts in the origin's security
+  context. The X-Content-Type-Options: nosniff directive
+  tells the browser to refuse sniffing — honor the declared
+  type or refuse to render. The defense is a one-line
+  header, costs nothing to add, and closes a class of
+  MIME-confusion attacks across uploaded content,
+  user-generated images, and downloadable files.
+failure: >
+  MIME-confusion exposure. Browsers may sniff response
+  bodies and execute content the operator declared as
+  another type.

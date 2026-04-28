@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.HEADERS.NOPERMISSIONSPOLICY.001
+name: CloudFront Distribution Doesn't Send Permissions-Policy Header
+description: >
+  CloudFront distribution's response headers policy doesn't
+  include a Permissions-Policy directive. Permissions-Policy
+  (the successor to Feature-Policy) lets the operator
+  declare which browser features the page is allowed to use:
+  camera, microphone, geolocation, payment, USB,
+  notifications, autoplay, full-screen, and more. Without
+  the header, the browser allows whatever feature the
+  origin or any embedded iframe attempts. An attacker who
+  finds an XSS or includes a compromised third-party
+  resource can request access to camera, microphone, or
+  geolocation; with no Permissions-Policy, the browser
+  prompts the user without operator-side opt-in. The
+  control flags the absence; the safe state is an
+  explicit allowlist of features the page legitimately
+  uses with everything else implicitly denied.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SC-7, AC-3"
+  fedramp_moderate: "SC-7, AC-3"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Distribution doesn't send Permissions-Policy header;
+    browser features are uncontrolled at the document
+    level.
+  action: >
+    Add Permissions-Policy to the response headers policy
+    via the policy's CustomHeadersConfig (since
+    SecurityHeadersConfig doesn't include Permissions-
+    Policy directly): set the Header to "Permissions-Policy"
+    and the Value to an allowlist matching the page's
+    legitimate feature use, e.g.,
+    "camera=(), microphone=(), geolocation=(), payment=()"
+    to deny all four. Sites that need a feature should
+    list it explicitly with an origin allowlist.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "headers_has_permissions_policy": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.headers_has_permissions_policy
+      op: eq
+      value: false
+defect: >
+  CloudFront distribution doesn't send Permissions-Policy
+  header.
+infection: >
+  Modern browsers grant access to powerful features (camera,
+  microphone, geolocation, payment, USB, notifications,
+  autoplay, full-screen) on a per-page-and-origin basis.
+  The Permissions-Policy header lets the operator declare
+  which features the page is allowed to use; everything
+  not in the allowlist is implicitly denied. Without the
+  header, the browser allows whatever the origin or any
+  embedded iframe attempts — and the user gets the
+  prompt with no operator-side opt-in. An attacker who
+  finds an XSS, compromises a third-party CDN serving
+  scripts to the page, or convinces a user to visit a
+  malicious page that frames the site can request access
+  to camera, microphone, or geolocation as if from the
+  legitimate origin. The defense is an explicit
+  Permissions-Policy that denies features the page
+  doesn't legitimately use; the cost is a one-line
+  header, the benefit is browser-side enforcement of the
+  operator's intent.
+failure: >
+  Browser feature surface unbounded. Page or any embedded
+  resource can request camera, microphone, geolocation,
+  payment, USB; the user is the only line of defense.
+tests:
+  - name: missing permissions-policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            headers_has_permissions_policy: false
+  - name: permissions-policy configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            headers_has_permissions_policy: true

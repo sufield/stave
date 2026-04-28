@@ -3,31 +3,31 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2137
-**Pack hash:** `4a13891be6e76e8d46d15be472e96647c288284a164796af47be36711290ac41`
+**Total controls:** 2155
+**Pack hash:** `2e5e7fe4bf6d7884cc8b32e58b51b6e3dc8b48dc08a8a53f530e1a0b1b3a0842`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 232 |
-| high | 937 |
+| high | 939 |
 | info | 16 |
-| low | 149 |
-| medium | 803 |
+| low | 155 |
+| medium | 813 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 79 |
+| audit | 82 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1102 |
-| governance | 304 |
+| exposure | 1110 |
+| governance | 310 |
 | hygiene | 16 |
-| identity | 374 |
+| identity | 375 |
 | network | 28 |
 | resilience | 20 |
 | secrets | 4 |
@@ -5836,6 +5836,36 @@ CloudFront cache behavior path pattern matches a restricted-looking prefix (/pre
 
 ---
 
+### CTL.CLOUDFRONT.ACCESS.SIGNED.LONG.EXPIRY.001
+
+**CloudFront Signed URL / Cookie Default Expiration Window Is Days or Weeks**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3, IA-5, SC-12; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AC-3, IA-5, SC-12; pci_dss_v4.0: 8.2, 8.3; soc2: CC6.1, CC6.7;
+
+CloudFront distribution issues signed URLs or signed cookies whose default expiration window exceeds 24 hours (often days or weeks). The expiration timestamp is encoded into the signed URL itself; once issued, the URL stays valid until expiry regardless of subsequent revocation. A leaked long-lived signed URL grants access for days; the attacker doesn't need to maintain credentials, just retain the URL. Most signed-URL use cases tolerate expiration windows in minutes (single-page download) to hours (a viewing session). Days-or-weeks expiration is appropriate only for content meant to be widely distributable — at which point the signing requirement itself is questionable.
+
+**Remediation:** Reduce the default expiration window in the application code that issues signed URLs to the minimum the use case allows (15 minutes for one-shot downloads, a few hours for streaming sessions). Issue per-request URLs rather than reusing them across viewing sessions. For use cases that genuinely need long-lived access (e.g., podcast episodes, public-asset CDN content), reconsider whether signed URLs are the right primitive — public distribution may suit better, paired with rate limits and WAF.
+
+---
+
+### CTL.CLOUDFRONT.ACCESS.SIGNED.MIXEDACCESS.001
+
+**CloudFront Cache Behavior Allows Both Signed and Unsigned Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, IA-5; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, IA-5; pci_dss_v4.0: 7.1, 8.2; soc2: CC6.1, CC6.6;
+
+CloudFront cache behavior is configured with TrustedKeyGroups or TrustedSigners — meaning signed URLs are nominally required — but the same content is also reachable via another behavior on the same distribution (or a different path pattern) that has no signing requirement. The signing requirement on the protected behavior is bypassable by addressing the same content through the unprotected path. Common cause: catch-all default behavior with no signing while specific path patterns enforce signing — but the catch-all matches the same content; or a static-asset behavior with no signing that serves the same files as a signed-asset behavior.
+
+**Remediation:** Audit every behavior on the distribution: identify which require signing and which don't. Either require signing on all behaviors that can reach the protected content, or split protected content onto a separate origin fronted by a separate distribution where the signing requirement is consistent across behaviors. The default catch-all behavior frequently matches more paths than the operator realizes — explicit per-path signing requirements should pair with a default behavior that also requires signing or returns 403.
+
+---
+
 ### CTL.CLOUDFRONT.ALARM.4XX.001
 
 **No CloudWatch Alarm for CloudFront 4xx Error Rate**
@@ -5866,6 +5896,21 @@ No CloudWatch alarm monitors the CloudFront 5xxErrorRate metric. 5xx errors indi
 
 ---
 
+### CTL.CLOUDFRONT.ALARM.BYTESDOWNLOAD.001
+
+**No CloudWatch Alarm on CloudFront BytesDownloaded**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, SI-4; iso_27001_2022: A.5.25, A.8.16; nist_800_53_r5: AU-6, AU-13, SI-4; pci_dss_v4.0: 10.4; soc2: CC7.2, CC7.3;
+
+CloudFront publishes BytesDownloaded to CloudWatch — total bytes served to viewers — but no alarm watches it for spikes. Volume excursions on bytes-downloaded signal legitimate viral traffic, scraping campaigns, or data-exfiltration through compromised credentials. A viewer who has obtained valid signed URLs (or has bypassed signing) can stream large amounts of content without producing error spikes — request-count and 4xx alarms don't fire on successful downloads. BytesDownloaded excursion is the signal that catches large-volume exfiltration patterns the request-count and error-rate alarms miss.
+
+**Remediation:** Create a CloudWatch alarm on AWS/CloudFront namespace, BytesDownloaded metric, dimensioned by DistributionId. Use a deviation-from-baseline threshold (e.g., 5x rolling average over 1 hour) so legitimate traffic growth doesn't trigger but rapid exfiltration does. aws cloudwatch put-metric-alarm with --metric-name BytesDownloaded.
+
+---
+
 ### CTL.CLOUDFRONT.ALARM.CACHEHIT.001
 
 **No CloudWatch Alarm for CloudFront Cache Hit Rate**
@@ -5878,6 +5923,36 @@ No CloudWatch alarm monitors the CloudFront 5xxErrorRate metric. 5xx errors indi
 No CloudWatch alarm monitors the CacheHitRate metric. A dropping cache hit rate may indicate: cache poisoning (an attacker deliberately crafting requests to populate the cache with malicious responses), cache key misconfiguration (too many cache variants causing a cache miss for every request), application changes that broke caching, or a cache invalidation storm. When the hit rate drops, more requests reach the origin — origin load increases, latency rises, and backend costs grow. A security-relevant drop: cache poisoning by response header manipulation can cause cached responses to be delivered to different users than intended. CacheHitRate requires the additional CloudWatch metrics subscription — it is not available by default. This control checks that the alarm exists; CTL.CLOUDFRONT.METRICS.ADDITIONAL.001 checks that the metrics subscription is active.
 
 **Remediation:** First enable additional CloudWatch metrics on the distribution (CTL.CLOUDFRONT.METRICS.ADDITIONAL.001) — CacheHitRate is not available without the metrics subscription. Then create a CloudWatch alarm in us-east-1 on the CacheHitRate metric with a threshold based on your expected cache efficiency (e.g., alarm when CacheHitRate drops below 80% for 3 consecutive 5-minute periods).
+
+---
+
+### CTL.CLOUDFRONT.ALARM.CONFIGCHANGE.001
+
+**No Alarm on CloudFront Distribution / Origin / WAF Configuration Changes**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.7; fedramp_moderate: AU-6, AU-12, SI-4; iso_27001_2022: A.5.25, A.8.16; nist_800_53_r5: AU-6, AU-12, SI-4; pci_dss_v4.0: 10.4, 12.10; soc2: CC7.2, CC8.1;
+
+No CloudWatch alarm fires on CloudFront management API events (CreateDistribution, UpdateDistribution, DeleteDistribution, AssociateAlias, CreateOriginAccessControl, changes to the WAF web ACL associated with a distribution). CloudTrail captures the events — the data exists. Without an alarm, configuration drift on production distributions surfaces only when someone audits the trail manually. Distribution changes (origin protocol downgraded, WAF disassociated, signed-URL requirement removed, geo- restriction removed) are high-priority signals that warrant real-time visibility.
+
+**Remediation:** Create a CloudWatch metric filter on the CloudTrail log group matching CloudFront management events: eventSource=cloudfront.amazonaws.com AND eventName=(CreateDistribution|UpdateDistribution| DeleteDistribution|AssociateAlias|UpdateWebACL| DisassociateWebACL|...). aws logs put-metric-filter, then aws cloudwatch put-metric-alarm with --threshold 1 so any event reaches on-call. Deletion and disassociate events warrant a higher-priority pager target than create/update.
+
+---
+
+### CTL.CLOUDFRONT.ALARM.ORIGINLATENCY.001
+
+**No CloudWatch Alarm on CloudFront Origin Latency**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, IR-4, SI-4; iso_27001_2022: A.5.25, A.8.6, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.4; soc2: CC7.2, A1.1, A1.2;
+
+CloudFront publishes the OriginLatency metric to CloudWatch (when additional metrics are enabled — see CTL.CLOUDFRONT.METRICS.ADDITIONAL.001) but no alarm watches it. OriginLatency measures the time CloudFront waits for the origin to respond to a request that misses the edge cache. Origin slowdowns are the leading cause of viewer- visible latency on cached content (cache hits stay fast, cache misses suffer). Without an alarm, origin degradation surfaces as customer complaints rather than early-warning signal. Alarming on a P99 threshold tied to the origin's SLO is the standard pattern.
+
+**Remediation:** Enable additional metrics on the distribution if not already (the existing CTL.CLOUDFRONT.METRICS.ADDITIONAL.001 covers that prerequisite). Create a CloudWatch alarm on AWS/CloudFront namespace, OriginLatency metric, dimensioned by DistributionId, with a P99 threshold matching the origin's SLO. aws cloudwatch put-metric-alarm with --metric-name OriginLatency --extended-statistic p99 --threshold <ms>.
 
 ---
 
@@ -5956,6 +6031,21 @@ CloudFront distribution has an alternate domain name (CNAME) configured but DNS 
 
 ---
 
+### CTL.CLOUDFRONT.CONFIG.NOERRORRESPONSES.001
+
+**CloudFront Distribution Has No Custom Error Responses Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-11, SC-7; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: SI-11, SC-7; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+CloudFront distribution has no CustomErrorResponses configured. When the origin returns 4xx / 5xx status codes, CloudFront serves the default CloudFront error pages — generic AWS-branded responses that include CloudFront-specific headers, the request ID, and details about the underlying failure. These pages are fingerprinting-friendly (they identify the service as CloudFront), reveal that something failed at the CloudFront layer, and may surface origin-specific error detail that would otherwise be transformed by the origin's own error pages. Custom error responses let the operator return application-shaped error pages instead, hiding the CloudFront fingerprint.
+
+**Remediation:** Configure custom error responses for the common error codes (403, 404, 5XX): aws cloudfront update-distribution with CustomErrorResponses pointing at application-shaped error pages on the origin (or static pages on a separate bucket). Set ErrorCachingMinTTL appropriately so origin errors don't get cached too long. Common pattern: /errors/403.html, /errors/404.html, /errors/500.html served from S3 with branded styling matching the application.
+
+---
+
 ### CTL.CLOUDFRONT.CONFIG.NOHTTP2.001
 
 **CloudFront Distribution Does Not Enable HTTP/2**
@@ -5983,6 +6073,21 @@ CloudFront distribution is configured for HTTP/1.1 only. HTTP/2 provides multipl
 CloudFront distribution does not have a default root object configured. When a viewer requests the root URL (https://domain/), CloudFront forwards the request for the root path (/) to the origin rather than serving a specific object. For S3 origins with ListBucket permission granted, the response is an XML object listing that exposes every file name, size, and last-modified timestamp in the bucket — full content inventory disclosure. For S3 origins without ListBucket, the response is 403 Access Denied. For custom origins, the request is forwarded to the origin's root handler. Setting the default root object to index.html (or another appropriate object) ensures root URL requests serve the intended content and eliminates the S3 object listing exposure.
 
 **Remediation:** Set the default root object in the CloudFront distribution configuration via UpdateDistribution with DefaultRootObject: "index.html" (or the appropriate root document for the application). For S3 static websites, this is typically index.html. For applications, it should be the root path that serves the entry point.
+
+---
+
+### CTL.CLOUDFRONT.CONFIG.WILDCARD.CNAME.001
+
+**CloudFront Distribution Uses Wildcard CNAME Covering Broader Subdomain Set**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, SC-7; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: CM-2, SC-7; soc2: CC6.1, CC8.1;
+
+CloudFront distribution is configured with a wildcard alternate domain name (e.g., *.example.com) on its Aliases list. The wildcard matches every direct subdomain of example.com — including subdomains the operator may not have provisioned yet. Wildcard CNAMEs break the DNS-takeover defense: when an operator later creates a new subdomain pointing at a different service, the wildcard distribution still claims the name; the operator's intended service may end up at a different CNAME or fail to deploy. Worse, an attacker who provisions a CNAME under the wildcard's parent domain can route through the wildcard distribution by manipulating their own DNS, potentially taking advantage of the distribution's certificate, WAF, or signed-URL configuration intended for legitimate subdomains.
+
+**Remediation:** Replace the wildcard alias with explicit per-subdomain aliases: aws cloudfront update-distribution with Aliases listing each specific subdomain rather than the wildcard. Issue / re-issue the viewer certificate with SANs covering the explicit list. For genuinely-needed wildcard scenarios (multi-tenant SaaS where each customer subdomain routes to the same distribution), document the rationale and pair with strict DNS-zone governance ensuring no foreign CNAME can land under the wildcard.
 
 ---
 
@@ -6091,6 +6196,21 @@ CloudFront distribution origin references an S3 bucket, ALB, API Gateway, or cus
 
 ---
 
+### CTL.CLOUDFRONT.GHOST.RESPONSEHEADERS.001
+
+**CloudFront Distribution References Deleted Response Headers Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-2, CM-3, SC-7; iso_27001_2022: A.5.10, A.8.9; nist_800_53_r5: CM-2, CM-3, SC-7; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC8.1;
+
+CloudFront cache behavior has a ResponseHeadersPolicyId pointing at a response headers policy that no longer exists. The behavior runs without the policy's headers — no HSTS, no X-Frame-Options, no Permissions-Policy, no custom Server header removal. Deletion of the policy doesn't break the distribution: CloudFront silently serves responses without the policy's headers. Operators see "policy attached" in the distribution config; the actual behavior is "policy ID dangles, no headers applied." Common cause: operator deletes a response headers policy intending to replace it, deletes the old before creating the new, and the distribution is briefly in the dangling state.
+
+**Remediation:** Either recreate the policy with the same headers configuration and update the behavior to point at the new policy ID: aws cloudfront create-response-headers-policy followed by update-distribution with the new ResponseHeadersPolicyId. Or repoint the behavior at an existing policy that delivers equivalent headers. Audit other distributions for the same dangling reference if the deletion was widespread.
+
+---
+
 ### CTL.CLOUDFRONT.GHOST.WAF.001
 
 **CloudFront Distribution References Deleted WAF Web ACL**
@@ -6133,6 +6253,81 @@ CloudFront distributions must have a response headers policy attached that inclu
 CloudFront response headers policy does not include a Content-Security-Policy (CSP) header. CSP is the primary browser- enforced defense against Cross-Site Scripting (XSS) — it restricts which origins the browser can load scripts, stylesheets, images, fonts, and other resources from. Without CSP, an XSS vulnerability allows the attacker to inject and execute arbitrary scripts, load external resources from attacker-controlled origins, and exfiltrate data. CTL.CLOUDFRONT.HEADERS.001 requires HSTS, X-Frame-Options, X-Content-Type-Options, and Referrer-Policy, but explicitly excludes CSP because it requires application-specific source definitions. This control fills that gap — it checks for CSP presence without validating the value, because any CSP (even a permissive initial policy) is better than none and indicates intentional deployment.
 
 **Remediation:** Add a Content-Security-Policy header to the CloudFront response headers policy. Start with a report-only policy to gather violation data before enforcing: Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self'; report-uri /csp-report. Once you've tuned the policy using violation reports, switch to enforcement mode. Avoid unsafe-inline and unsafe-eval in the script-src directive — these negate most XSS protection.
+
+---
+
+### CTL.CLOUDFRONT.HEADERS.NOFRAMEOPTIONS.001
+
+**CloudFront Distribution Doesn't Send X-Frame-Options or frame-ancestors CSP**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7, SI-10; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: SC-7, SI-10; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+CloudFront distribution's response headers policy doesn't include X-Frame-Options (or the modern equivalent frame-ancestors directive in Content-Security-Policy). Without either header, browsers allow the response to be embedded in iframes on any origin. An attacker hosts a page that frames the legitimate site, overlays invisible controls, and tricks users into clicking through to destructive actions (clickjacking). The pattern is one of the older browser-side attacks but remains effective against any site that doesn't explicitly forbid framing.
+
+**Remediation:** Add X-Frame-Options to the response headers policy with FrameOptions: DENY (or SAMEORIGIN if the site legitimately frames its own pages). For modern browser coverage, also add frame-ancestors to a Content- Security-Policy header. aws cloudfront update-response-headers-policy with the new SecurityHeadersConfig.FrameOptions block.
+
+---
+
+### CTL.CLOUDFRONT.HEADERS.NOHSTS.001
+
+**CloudFront Distribution Doesn't Send Strict-Transport-Security Header**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8, SC-23; iso_27001_2022: A.5.10, A.8.20; nist_800_53_r5: SC-8, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+CloudFront distribution serves over HTTPS but its response headers policy doesn't include Strict-Transport-Security (HSTS). Without HSTS, browsers don't know to refuse HTTP on subsequent requests — a first visit over HTTP (typed URL, redirect chain, ad-injected http:// link) reaches the distribution at HTTP, the redirect-to-HTTPS that CTL.CLOUDFRONT.HTTPS.ONLY.001 enforces is itself interceptable. HSTS instructs browsers to upgrade http://hostname to https://hostname for a max-age window (typically 1 year), eliminating the redirect-attack window after the first successful HTTPS visit.
+
+**Remediation:** Attach a response headers policy with Strict-Transport- Security configured: aws cloudfront create-response-headers-policy with StrictTransportSecurity AccessControlMaxAgeSec=31536000 IncludeSubdomains=true Preload=true. Update the distribution's default cache behavior (and any other behaviors) to reference the policy via ResponseHeadersPolicyId. The 1-year max-age is the common default; set Preload=true only if the domain is submitted to the HSTS preload list.
+
+---
+
+### CTL.CLOUDFRONT.HEADERS.NOPERMISSIONSPOLICY.001
+
+**CloudFront Distribution Doesn't Send Permissions-Policy Header**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7, AC-3; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: SC-7, AC-3; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+CloudFront distribution's response headers policy doesn't include a Permissions-Policy directive. Permissions-Policy (the successor to Feature-Policy) lets the operator declare which browser features the page is allowed to use: camera, microphone, geolocation, payment, USB, notifications, autoplay, full-screen, and more. Without the header, the browser allows whatever feature the origin or any embedded iframe attempts. An attacker who finds an XSS or includes a compromised third-party resource can request access to camera, microphone, or geolocation; with no Permissions-Policy, the browser prompts the user without operator-side opt-in. The control flags the absence; the safe state is an explicit allowlist of features the page legitimately uses with everything else implicitly denied.
+
+**Remediation:** Add Permissions-Policy to the response headers policy via the policy's CustomHeadersConfig (since SecurityHeadersConfig doesn't include Permissions- Policy directly): set the Header to "Permissions-Policy" and the Value to an allowlist matching the page's legitimate feature use, e.g., "camera=(), microphone=(), geolocation=(), payment=()" to deny all four. Sites that need a feature should list it explicitly with an origin allowlist.
+
+---
+
+### CTL.CLOUDFRONT.HEADERS.NOREFERRER.001
+
+**CloudFront Distribution Doesn't Send Referrer-Policy Header**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7, SI-12; iso_27001_2022: A.5.10, A.8.10; nist_800_53_r5: SC-7, SI-12; pci_dss_v4.0: 8.3; soc2: CC6.1, CC6.7;
+
+CloudFront distribution's response headers policy doesn't include a Referrer-Policy directive. Without one, browsers default to sending the full URL of the previous page in the Referer request header on outbound navigation — including sensitive paths, query strings with auth tokens, and account-identifying URL segments. Third-party services (analytics, ads, embedded widgets, font CDNs) receive the referrer; logs persist it; URL- embedded credentials and one-time tokens leak to parties the operator didn't intend. Setting Referrer-Policy (typical values: no-referrer, strict-origin, strict-origin-when-cross-origin) constrains what gets sent.
+
+**Remediation:** Add Referrer-Policy to the response headers policy: aws cloudfront update-response-headers-policy with SecurityHeadersConfig.ReferrerPolicy. Reasonable values by use case: no-referrer for high-sensitivity sites, strict-origin for APIs and apps that don't need cross-origin context, strict-origin-when-cross-origin as a balanced default that preserves same-origin referrer detail while truncating cross-origin to the origin only.
+
+---
+
+### CTL.CLOUDFRONT.HEADERS.NOXCTO.001
+
+**CloudFront Distribution Doesn't Send X-Content-Type-Options Header**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-10, SC-7; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: SI-10, SC-7; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+CloudFront distribution's response headers policy doesn't include X-Content-Type-Options: nosniff. Without it, browsers may MIME-sniff response bodies — overriding the Content-Type header and treating a file as a different type than declared. An image upload that contains embedded HTML/JavaScript can be sniffed as text/html and executed; a JSON response with embedded script content can be treated as JavaScript. The nosniff directive forces browsers to honor the declared Content-Type, closing a class of MIME-confusion attacks.
+
+**Remediation:** Add X-Content-Type-Options: nosniff to the response headers policy: aws cloudfront update-response-headers-policy with SecurityHeadersConfig.ContentTypeOptions Override=true. Then update the distribution's cache behaviors to reference the policy.
 
 ---
 
@@ -6193,6 +6388,51 @@ CloudFront distribution is in a Disabled state but has alternate domain names (C
 CloudFront distribution is enabled but has received no viewer requests in more than 90 days. The distribution retains its full operational configuration: origins (potentially with live data), WAF associations, TLS certificates, S3 OAC grants, IAM policies granting origin access, and Lambda@Edge or CloudFront Functions that execute for every request. Nobody monitors a dormant distribution for anomalous access because it is assumed unused. But the *.cloudfront.net domain is permanently assigned and publicly reachable — anyone who discovers the URL (via web archives, referrer logs, prior shared links, or OSINT) can reach the origin through the distribution. 90-day threshold matches Lambda, IAM, DynamoDB, ECS, and EC2 dormant controls for consistency across the lifecycle category.
 
 **Remediation:** Verify whether the distribution is needed. If it is a permanent part of the infrastructure but currently unused (e.g., a staging environment), document the expected dormancy and set a reminder to review again in 90 days. If the distribution is no longer needed, disable it and schedule deletion after verifying no active dependencies. Disabling prevents any new traffic and removes the distribution from attack surface without losing the configuration.
+
+---
+
+### CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.FUNCTION.001
+
+**CloudFront Function Not Associated With Any Distribution**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, CM-8; iso_27001_2022: A.5.10, A.8.9; nist_800_53_r5: CM-2, CM-8; soc2: CC6.1, CC8.1;
+
+CloudFront Function exists in the account but is not associated with any cache behavior on any distribution. The function is inert — no traffic invokes it. Common cause: experimental function that was rolled back without cleanup; function authored for a distribution that was decommissioned; refactored function where the new version replaced the association but the old function wasn't deleted. Orphan functions clutter the inventory view and accumulate small storage cost; their configuration drifts from current standards if they later get reused.
+
+**Remediation:** Either associate the function with the cache behavior that should use it: aws cloudfront update-distribution with FunctionAssociations on the appropriate behavior. Or delete the orphan function: aws cloudfront delete-function --name <name> --if-match <etag>.
+
+---
+
+### CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.KEYGROUP.001
+
+**CloudFront Trusted Key Group Not Used By Any Distribution**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, CM-8, IA-5; iso_27001_2022: A.5.10, A.5.16, A.8.9; nist_800_53_r5: CM-2, CM-8, IA-5; soc2: CC6.1, CC8.1;
+
+CloudFront key group exists in the account but no distribution cache behavior references it via TrustedKeyGroups. The key group's public keys hold no signing role; the corresponding private keys (held off-AWS by the operator's signing service) sit unused. Common cause: signing migration where a new key group replaced the old one and the old key group wasn't deleted; key rotation where the rotated-out key group remained for rollback safety and was forgotten. Orphan key groups clutter the inventory and represent stale signing material — if the corresponding private keys leak, the attacker can sign URLs that no distribution accepts (low immediate impact) but the orphan represents long-lived cryptographic material that should be retired.
+
+**Remediation:** Audit the key group to confirm no current or pending distribution uses it. Either repoint a current distribution at the key group or delete the key group and its associated public keys: aws cloudfront delete-key-group followed by delete-public-key for each public key. Confirm the corresponding private keys are decommissioned in the operator's signing service.
+
+---
+
+### CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.LAMBDAEDGE.001
+
+**Lambda@Edge Function Not Associated With Any CloudFront Behavior**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, CM-8; iso_27001_2022: A.5.10, A.8.9; nist_800_53_r5: CM-2, CM-8; soc2: CC6.1, CC8.1;
+
+Lambda@Edge function (a Lambda function published in us-east-1 with edge-replication enabled) is not associated with any CloudFront distribution cache behavior. The function exists across edge locations — replicated at publish time — but no traffic triggers it. Common cause: experimental edge function rolled back without cleanup; function used by a decommissioned distribution; refactored function where the LambdaFunctionAssociation was updated to a new ARN and the old function version remained. Orphan Lambda@Edge functions accumulate Lambda invocation cost only when invoked (which is zero), but the function versions persist in every edge location until cleaned up — and Lambda@Edge cleanup has a longer-than-usual delay because edge replicas have to drain before deletion.
+
+**Remediation:** Either associate the function with the behavior that should use it: aws cloudfront update-distribution with LambdaFunctionAssociations on the appropriate behavior referencing the function ARN with version. Or delete the orphan function: aws lambda delete-function -- note that Lambda@Edge functions can't be deleted immediately after disassociation; AWS retains the edge replicas until they drain (typically a few hours to a day). Plan the deletion for the next cleanup cycle.
 
 ---
 
@@ -6283,6 +6523,21 @@ CloudFront access logs record every request served by the distribution — viewe
 CloudFront distribution does not have the additional CloudWatch metrics subscription enabled. By default, CloudFront publishes 6 metrics to CloudWatch: Requests, BytesDownloaded, BytesUploaded, 4xxErrorRate, 5xxErrorRate, and TotalErrorRate. The additional metrics subscription provides: CacheHitRate (essential for cache poisoning detection and cache efficiency monitoring), OriginLatency (measures how fast the origin responds — baseline for anomaly detection), and per-status-code error rates (detailed breakdown of which 4xx/5xx codes are occurring). These metrics are essential for operational monitoring and security analysis of the CDN layer. Without CacheHitRate, cache poisoning and cache misconfiguration are undetectable. Without OriginLatency, origin performance degradation that precedes 5xx errors is invisible. The additional subscription has a per-distribution cost.
 
 **Remediation:** Enable the additional metrics subscription via the CloudFront console (Distribution → Monitoring → Enable additional metrics) or via the API: aws cloudfront create-monitoring-subscription --distribution-id DIST_ID --monitoring-subscription RealtimeMetricsSubscriptionConfig={RealtimeMetricsSubscriptionStatus=Enabled}. Note: This has a per-distribution hourly cost. Review your monitoring requirements before enabling for all distributions.
+
+---
+
+### CTL.CLOUDFRONT.MULTIDIST.SAMEORIGIN.001
+
+**Multiple CloudFront Distributions Front the Same Origin With Inconsistent Security**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 2.1.5; fedramp_moderate: AC-3, CM-2, SC-7; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, CM-2, SC-7; pci_dss_v4.0: 1.2, 6.4.2; soc2: CC6.1, CC8.1;
+
+Multiple CloudFront distributions are configured with the same origin but different security configurations. One distribution has a WAF ACL; another doesn't. One enforces HTTPS-only; another allows HTTP. One requires signed URLs; another doesn't. The origin is reachable through every distribution — whichever has the weakest configuration becomes the de facto front door for attackers who find both. Operators provisioning a second distribution typically don't realize the first distribution's protections are bypassable via the second; the second is often a dev / staging / experimental distribution that was provisioned for testing and never decommissioned.
+
+**Remediation:** Audit every distribution sharing the origin: identify each distribution's WAF, viewer protocol policy, signed- URL requirement, geo-restriction, and response headers policy. Either tighten the loosest distributions to match the strictest, or decommission the redundant distributions and consolidate to one. For dev / staging distributions sharing a production origin, route them to a separate origin or restrict the origin's bucket policy / SG to refuse the dev distribution.
 
 ---
 
@@ -6568,6 +6823,21 @@ CloudFront distribution uses the default *.cloudfront.net wildcard certificate i
 CloudFront distributions must have an AWS WAF Web ACL associated for layer-7 protection against web application attacks. Without WAF, requests reach the origin without inspection for SQL injection, XSS, known exploit signatures, rate limiting, or IP reputation blocking.
 
 **Remediation:** Create a WAF Web ACL in us-east-1 (required for CloudFront) with AWSManagedRulesCommonRuleSet and associate it with the distribution via UpdateDistribution API.
+
+---
+
+### CTL.CLOUDFRONT.WAF.PERBEHAVIOR.MISSING.001
+
+**CloudFront WAF Web ACL Applies to Whole Distribution Without Per-Behavior Variation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3, SC-7, SI-4; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, SC-7, SI-4; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+CloudFront distribution has a single WAF web ACL associated at the distribution level — every cache behavior shares the same WAF rule set. CloudFront supports per-behavior WAF associations, allowing operators to apply tighter rule sets to admin paths, login endpoints, or other high-sensitivity behaviors than to public static-asset behaviors. With one ACL for the whole distribution, every behavior runs the same rules — typically tuned for the loosest behavior to avoid false positives. The high-sensitivity behaviors don't get the tighter rate limits, sensitive-data inspection, or stricter managed- rule choices they'd benefit from. Per-behavior WAF configuration is the standard pattern for distributions with mixed-sensitivity behaviors.
+
+**Remediation:** Create per-behavior WAF web ACLs: one tighter ACL for admin / login / payment / API behaviors with stricter rate limits, broader managed rule groups, and inspection of request bodies; a looser ACL for static-asset behaviors. aws cloudfront update-distribution with behavior-specific WebACLId values.
 
 ---
 

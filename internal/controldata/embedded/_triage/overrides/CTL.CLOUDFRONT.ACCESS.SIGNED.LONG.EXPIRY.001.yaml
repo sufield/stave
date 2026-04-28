@@ -1,0 +1,29 @@
+control: CTL.CLOUDFRONT.ACCESS.SIGNED.LONG.EXPIRY.001
+defect: >
+  CloudFront signed URL / cookie default expiration window
+  exceeds 24 hours.
+infection: >
+  Signed URLs and signed cookies encode the expiration
+  timestamp into the signature itself. Once issued, the URL
+  / cookie remains valid until that timestamp regardless
+  of subsequent revocation, key rotation, or operator
+  intent — there's no per-URL revocation primitive
+  short of rotating the entire trusted-key-group key
+  (which invalidates every URL signed by that key, not
+  just the leaked one). A leaked long-lived signed URL
+  is effectively a long-lived credential: the attacker
+  doesn't need to maintain auth, just retain the URL.
+  Signed URLs leak through normal channels — browser
+  history, web access logs the URL appears in, share-
+  link copy/paste in chat tools, screenshots. Each leak
+  in a long-expiration scenario gives the attacker
+  days-to-weeks of access; in a short-expiration
+  scenario the leak is moot within minutes. Most use
+  cases tolerate minutes-to-hours expiration; the
+  default in many SDKs is hours-to-days because the
+  default trades off operator convenience against
+  security.
+failure: >
+  Long-lived URL credentials. Leaked signed URLs grant
+  attacker access for days; revocation requires key
+  rotation that invalidates legitimate URLs too.

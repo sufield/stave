@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ACCESS.SIGNED.MIXEDACCESS.001
+name: CloudFront Cache Behavior Allows Both Signed and Unsigned Access
+description: >
+  CloudFront cache behavior is configured with TrustedKeyGroups
+  or TrustedSigners — meaning signed URLs are nominally
+  required — but the same content is also reachable via
+  another behavior on the same distribution (or a different
+  path pattern) that has no signing requirement. The
+  signing requirement on the protected behavior is
+  bypassable by addressing the same content through the
+  unprotected path. Common cause: catch-all default
+  behavior with no signing while specific path patterns
+  enforce signing — but the catch-all matches the same
+  content; or a static-asset behavior with no signing that
+  serves the same files as a signed-asset behavior.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, IA-5"
+  fedramp_moderate: "AC-3, IA-5"
+  pci_dss_v4.0: "7.1, 8.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IAM-13", "IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Some behaviors require signed URLs; others on the same
+    distribution don't, and the same content is reachable
+    via both. Signing is bypassable.
+  action: >
+    Audit every behavior on the distribution: identify which
+    require signing and which don't. Either require signing
+    on all behaviors that can reach the protected content,
+    or split protected content onto a separate origin
+    fronted by a separate distribution where the signing
+    requirement is consistent across behaviors. The default
+    catch-all behavior frequently matches more paths than
+    the operator realizes — explicit per-path signing
+    requirements should pair with a default behavior that
+    also requires signing or returns 403.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "signing_consistent_across_behaviors": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.signing_consistent_across_behaviors
+      op: eq
+      value: false
+defect: >
+  CloudFront cache behaviors on the same distribution have
+  inconsistent signed-URL requirements; protected content
+  reachable via unprotected behaviors.
+infection: >
+  CloudFront cache behaviors apply to path patterns. A
+  distribution with a /protected/* behavior requiring
+  signed URLs and a default catch-all (*) behavior with no
+  signing requirement provides apparent protection for
+  /protected/* paths — but the same content is reachable
+  via the catch-all if request paths can construct an
+  alternative URL that maps to the same backend object
+  (URL encoding tricks, alternate path normalization). The
+  classic case is signed access on /downloads/* paired
+  with public access on /static/* where both behaviors
+  point at the same S3 origin: an attacker who can guess
+  or enumerate the static path bypasses the signing
+  requirement entirely. The fix is consistent signing
+  across all behaviors that reach the protected content,
+  or origin-level isolation: protected content lives in a
+  separate bucket fronted by a separate distribution where
+  every behavior signs.
+failure: >
+  Signing requirement bypassable. Protected content reachable
+  via unprotected behavior; the access control the operator
+  configured doesn't apply uniformly.
+tests:
+  - name: inconsistent signing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            signing_consistent_across_behaviors: false
+  - name: consistent signing passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            signing_consistent_across_behaviors: true

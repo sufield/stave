@@ -1,0 +1,27 @@
+control: CTL.CLOUDFRONT.MULTIDIST.SAMEORIGIN.001
+defect: >
+  Multiple CloudFront distributions front the same origin
+  with inconsistent security configurations.
+infection: >
+  An origin (S3 bucket, ALB, API Gateway, custom HTTP) can
+  be reached through any CloudFront distribution that's
+  configured with it as an origin. When two distributions
+  share an origin and have different security
+  configurations, the origin's effective protection is
+  whichever distribution is loosest. Common shapes: prod
+  distribution with WAF, dev distribution without WAF, both
+  on the same origin (an attacker who finds the dev
+  distribution bypasses WAF entirely); HTTPS-only on one,
+  HTTP-allowed on another (downgrade attacks succeed via
+  the HTTP-allowing distribution); signed-URL required on
+  one, optional on another (signing is bypassable). The
+  pattern complements the existing
+  CTL.CLOUDFRONT.ORIGIN.S3.MULTIDIST.001 control which
+  catches the S3-specific shape; this control catches the
+  general multi-distribution-same-origin shape across all
+  origin types. The fix is consolidation or per-origin
+  isolation.
+failure: >
+  Weakest-link edge protection. The origin's protections
+  collapse to whichever fronting distribution has the
+  loosest WAF / signing / geo-restriction / TLS policy.

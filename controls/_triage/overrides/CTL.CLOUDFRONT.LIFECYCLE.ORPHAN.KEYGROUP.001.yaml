@@ -1,0 +1,29 @@
+control: CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.KEYGROUP.001
+defect: >
+  CloudFront trusted key group is not used by any
+  distribution cache behavior.
+infection: >
+  Trusted key groups hold the public keys CloudFront uses
+  to verify signed URL and signed cookie signatures.
+  Distributions reference key groups via TrustedKeyGroups
+  on cache behaviors that require signing. An unassociated
+  key group's public keys hold no verification role; the
+  corresponding private keys (held off-AWS by the
+  operator's signing service) accumulate as long-lived
+  cryptographic material with no current purpose. Common
+  causes: signing migration where the new key group
+  replaced the old and the old wasn't cleaned up; key
+  rotation where the rotated-out key group was preserved
+  for rollback and forgotten; experimental signing setup
+  that didn't reach production. Orphan key groups clutter
+  the inventory and represent stale signing material —
+  if the corresponding private keys leak, the attacker
+  can sign URLs that no distribution currently accepts
+  (low immediate impact) but the orphan signals
+  housekeeping debt and complicates audit of which keys
+  are live.
+failure: >
+  Stale signing material accumulating. Key group's purpose
+  is gone; the corresponding private keys exist somewhere
+  in the operator's signing infrastructure with no
+  current use.

@@ -1,0 +1,27 @@
+control: CTL.CLOUDFRONT.CONFIG.NOERRORRESPONSES.001
+defect: >
+  CloudFront distribution has no custom error responses
+  configured.
+infection: >
+  When the origin returns an error status code (403, 404,
+  500, 502, 503, 504) or CloudFront itself can't reach
+  the origin, CloudFront serves a response to the viewer.
+  Without custom error responses, that response is the
+  CloudFront default error page: an AWS-branded HTML page
+  with the CloudFront request ID, the failure reason, and
+  service-identifying headers. The page fingerprints the
+  service (anyone seeing it knows the site runs on
+  CloudFront), reveals that the failure was at the edge
+  rather than the application, and surfaces origin-
+  specific error detail that the operator would normally
+  transform. Custom error responses let the operator
+  return application-shaped pages — branded, generic,
+  without service-identifying detail — for each error
+  code. The fix is configuration-only and improves both
+  user experience (consistent branding on errors) and
+  reconnaissance resistance (no stack disclosure).
+failure: >
+  Stack disclosure on errors. Default CloudFront error
+  pages identify the service and surface origin error
+  detail; reconnaissance learns more from a 404 than it
+  needs to.

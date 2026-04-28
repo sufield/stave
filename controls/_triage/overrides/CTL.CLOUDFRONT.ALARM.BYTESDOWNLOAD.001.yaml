@@ -1,0 +1,25 @@
+control: CTL.CLOUDFRONT.ALARM.BYTESDOWNLOAD.001
+defect: >
+  No CloudWatch alarm watches CloudFront BytesDownloaded.
+infection: >
+  Volume excursions in bytes-downloaded signal a class of
+  events that error-rate and request-count alarms don't
+  catch: high-volume successful downloads. Viewers who
+  obtained valid signed URLs (or bypassed signing through
+  the existing ACCESS.NOSIGNING / SIGNED.MIXEDACCESS
+  failure modes) can stream large amounts of content
+  successfully — every request returns 200, request count
+  may be normal (one viewer downloading 100GB looks like
+  one request per file), but the distribution's egress
+  spikes massively. Scraping campaigns produce similar
+  shapes: many requests downloading specific content
+  systematically. Data-exfiltration through compromised
+  credentials looks the same — successful authenticated
+  downloads at unusual volume. BytesDownloaded with
+  deviation-from-baseline alarming surfaces these
+  patterns; the request-count and 4xx alarms don't.
+failure: >
+  Exfiltration invisible at the metric layer. Successful
+  high-volume downloads don't produce error spikes; the
+  bytes are the only signal, and without an alarm the
+  data accumulates before anyone notices.
