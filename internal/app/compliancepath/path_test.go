@@ -29,12 +29,15 @@ func TestCompute_GreedyPicksHighestCoverage(t *testing.T) {
 		finding("CTL.B.001", "enable-mfa", map[policy.ComplianceFramework]string{"soc2": "CC6.1"}),
 	}
 
-	result := Compute(Input{
+	result, err := Compute(Input{
 		Findings:        findings,
 		TargetFramework: "soc2",
 		TargetReadiness: 90,
 		TotalControls:   10,
 	})
+	if err != nil {
+		t.Fatalf("Compute: %v", err)
+	}
 
 	if len(result.Bundles) == 0 {
 		t.Fatal("expected at least one bundle")
@@ -53,7 +56,7 @@ func TestCompute_EffortModelApplied(t *testing.T) {
 		finding("CTL.A.001", "fix-a", nil),
 	}
 
-	result := Compute(Input{
+	result, err := Compute(Input{
 		Findings:        findings,
 		TargetFramework: "soc2",
 		TargetReadiness: 95,
@@ -63,6 +66,9 @@ func TestCompute_EffortModelApplied(t *testing.T) {
 			Controls:     map[string]float64{"CTL.A.001": 2},
 		},
 	})
+	if err != nil {
+		t.Fatalf("Compute: %v", err)
+	}
 
 	if result.TotalEffort != 2 {
 		t.Errorf("effort = %.0f, want 2 (from effort model)", result.TotalEffort)

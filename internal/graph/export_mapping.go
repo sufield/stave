@@ -56,6 +56,13 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 	// via the Resource ← TARGETS ← Finding → Control chain. Built
 	// alongside the node pass.
 	findingControl := make(map[string]string, len(g.Nodes))
+	// controlIDToNodeID maps a Finding's control_id property value to
+	// the internal node ID of the Control node that should be the
+	// shortcut-edge target. The two are usually identical, but the
+	// previous direct idMap[controlID] lookup silently dropped the
+	// shortcut edge whenever the Control node's internal ID didn't
+	// match the property string verbatim.
+	controlIDToNodeID := make(map[string]string, len(g.Nodes))
 	// findingResource maps each Finding's internal ID to the Resource's
 	// internal ID it targets, populated as TARGETS edges are seen.
 	findingResource := make(map[string]string, len(g.Nodes))
@@ -70,6 +77,14 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 		if n.Type == "Finding" {
 			if cid, ok := stringProp(n.Properties, "control_id"); ok {
 				findingControl[n.ID] = cid
+			}
+		}
+		if n.Type == "Control" {
+			// Always map node-ID → node-ID so simple cases work even
+			// when control_id isn't set as a separate property.
+			controlIDToNodeID[n.ID] = n.ID
+			if cid, ok := stringProp(n.Properties, "control_id"); ok && cid != "" {
+				controlIDToNodeID[cid] = n.ID
 			}
 		}
 
@@ -137,8 +152,26 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 		seen[k] = struct{}{}
 
 		fromIRI, fromOK := idMap[resourceID]
-		toIRI, toOK := idMap[controlID]
+		// Resolve control_id through the dedicated lookup before
+		// hitting idMap. The previous `idMap[controlID]` lookup
+		// keyed on the raw property value, which silently dropped
+		// shortcut edges whenever the Control node's internal ID
+		// differed from the property string.
+		controlNodeID, hasControlNode := controlIDToNodeID[controlID]
+		var toIRI string
+		var toOK bool
+		if hasControlNode {
+			toIRI, toOK = idMap[controlNodeID]
+		}
 		if !fromOK || !toOK {
+			slog.Warn("graph export: dropping shortcut edge",
+				"finding", findingID,
+				"resource", resourceID,
+				"control_id", controlID,
+				"control_node_id", controlNodeID,
+				"from_in_idmap", fromOK,
+				"control_in_lookup", hasControlNode,
+				"to_in_idmap", toOK)
 			continue
 		}
 

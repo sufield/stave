@@ -688,7 +688,10 @@ func TestComputeObservationDelta(t *testing.T) {
 		},
 	}
 
-	delta := ComputeDrift(prev, curr)
+	delta, err := ComputeDrift(prev, curr)
+	if err != nil {
+		t.Fatalf("ComputeDrift: %v", err)
+	}
 	if delta.Summary.Total() != 3 {
 		t.Fatalf("Total = %d (expected 3: 1 modified, 1 removed, 1 added)", delta.Summary.Total())
 	}

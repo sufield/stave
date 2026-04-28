@@ -67,8 +67,8 @@ func (a *App) installInterruptHandler() func() {
 		select {
 		case <-sigCh:
 			fmt.Fprintln(os.Stderr, "Interrupted")
-			if a.cancel != nil {
-				a.cancel()
+			if cancel := a.cancel.Load(); cancel != nil {
+				(*cancel)()
 			} else {
 				// Pre-bootstrap signal: context not yet available.
 				a.ExitFunc(ui.ExitInterrupted)

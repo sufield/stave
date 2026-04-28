@@ -69,7 +69,11 @@ func (e *Engine) runBisect(ctx context.Context, snapshots []asset.Snapshot, resu
 			IsOngoing:  true,
 		}}
 		result.IsMonotonic = true
-		result.Delta = computeDelta(snapshots[0], snapshots[0])
+		delta, dErr := computeDelta(snapshots[0], snapshots[0])
+		if dErr != nil {
+			return result, fmt.Errorf("compute delta (earliest violation): %w", dErr)
+		}
+		result.Delta = delta
 		return result, nil
 	}
 
@@ -96,7 +100,11 @@ func (e *Engine) runBisect(ctx context.Context, snapshots []asset.Snapshot, resu
 		EntryAfter:  snapshots[high].CapturedAt,
 		IsOngoing:   true,
 	}}
-	result.Delta = computeDelta(snapshots[low], snapshots[high])
+	delta, dErr := computeDelta(snapshots[low], snapshots[high])
+	if dErr != nil {
+		return result, fmt.Errorf("compute delta (bisect window): %w", dErr)
+	}
+	result.Delta = delta
 
 	// Post-check for non-monotonicity: sample a few points before low
 	// to detect if earlier violations existed (fix → re-break pattern).
@@ -161,7 +169,11 @@ func (e *Engine) runScan(ctx context.Context, snapshots []asset.Snapshot, result
 			before := findSnapshotAt(snapshots, w.EntryBefore)
 			after := findSnapshotAt(snapshots, w.EntryAfter)
 			if before != nil && after != nil {
-				result.Delta = computeDelta(*before, *after)
+				delta, dErr := computeDelta(*before, *after)
+				if dErr != nil {
+					return result, fmt.Errorf("compute delta (scan window): %w", dErr)
+				}
+				result.Delta = delta
 			}
 		}
 	}
@@ -175,9 +187,12 @@ func (e *Engine) eval(ctx context.Context, snap asset.Snapshot, result *Result) 
 	return e.Evaluate(ctx, snap)
 }
 
-func computeDelta(before, after asset.Snapshot) *asset.InfrastructureDrift {
-	drift := asset.ComputeDrift(before, after)
-	return &drift
+func computeDelta(before, after asset.Snapshot) (*asset.InfrastructureDrift, error) {
+	drift, err := asset.ComputeDrift(before, after)
+	if err != nil {
+		return nil, err
+	}
+	return &drift, nil
 }
 
 func findSnapshotAt(snapshots []asset.Snapshot, t time.Time) *asset.Snapshot {

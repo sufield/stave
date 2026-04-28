@@ -53,7 +53,7 @@ func (a *App) bootstrapPipeline() []bootstrapPhase {
 // phaseContext sets up the cancelable root context and validates builtins.
 func (a *App) phaseContext(cmd *cobra.Command) error {
 	ctx, cancel := context.WithCancel(cmd.Context()) //nolint:gosec // cancel stored on a.cancel, called by signal handler
-	a.cancel = cancel
+	a.cancel.Store(&cancel)
 	cmd.SetContext(ctx)
 
 	if err := a.startCPUProfile(); err != nil {

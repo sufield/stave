@@ -27,7 +27,10 @@ func TestComputeObservationDelta_DetectsChanges(t *testing.T) {
 		},
 	}
 
-	diff := asset.ComputeDrift(prev, curr)
+	diff, err := asset.ComputeDrift(prev, curr)
+	if err != nil {
+		t.Fatalf("ComputeDrift: %v", err)
+	}
 	if diff.Summary.Provisioned() != 1 {
 		t.Errorf("Added = %d, want 1", diff.Summary.Provisioned())
 	}

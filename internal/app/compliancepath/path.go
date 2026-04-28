@@ -5,10 +5,18 @@
 package compliancepath
 
 import (
+	"errors"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
+
+// ErrUnknownFramework is returned by Compute when TotalControls is zero
+// (typically because the requested compliance framework has no
+// controls in the catalog). Callers should surface this as a
+// configuration error rather than the previous silent fallback to
+// 100% readiness.
+var ErrUnknownFramework = errors.New("compliancepath: total controls is zero — unknown or empty framework")
 
 // SprintBundle groups findings that share a remediation action.
 type SprintBundle struct {
@@ -48,13 +56,14 @@ type Input struct {
 // Compute produces the minimum viable compliance path using greedy
 // set cover. Each iteration picks the remediation action that covers
 // the most remaining violations.
-func Compute(in Input) *PathResult {
-	if in.TotalControls == 0 {
-		return &PathResult{
-			TargetFramework:  in.TargetFramework,
-			TargetReadiness:  in.TargetReadiness,
-			CurrentReadiness: 100,
-		}
+//
+// Returns ErrUnknownFramework when in.TotalControls is zero. The
+// previous behavior — silently returning CurrentReadiness=100 — was a
+// dangerous false-safe: a typo'd framework name produced a "fully
+// compliant" report.
+func Compute(in Input) (*PathResult, error) {
+	if in.TotalControls <= 0 {
+		return nil, ErrUnknownFramework
 	}
 
 	// Group findings by remediation action.
@@ -147,7 +156,7 @@ func Compute(in Input) *PathResult {
 		Bundles:          bundles,
 		ProjectedScore:   projected,
 		TotalEffort:      totalEffort,
-	}
+	}, nil
 }
 
 func countUniqueControls(findings []remediation.Finding) int {

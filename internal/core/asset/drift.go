@@ -138,14 +138,23 @@ func GetStateTransition(snapshots []Snapshot) (prev Snapshot, curr Snapshot, err
 
 	prev = sorted[len(sorted)-2]
 	curr = sorted[len(sorted)-1]
-	if curr.CapturedAt.Before(prev.CapturedAt) {
+	// curr.CapturedAt >= prev.CapturedAt is invariant after the
+	// ascending sort. Equal timestamps are ambiguous (which snapshot
+	// is "later"?) and flagged so callers can resolve before inferring
+	// drift direction.
+	if curr.CapturedAt.Equal(prev.CapturedAt) {
 		return Snapshot{}, Snapshot{}, ErrSnapshotsNotOrdered
 	}
 	return prev, curr, nil
 }
 
-// ComputeDrift compares two infrastructure states and identifies all asset-level changes.
-func ComputeDrift(prev, curr Snapshot) InfrastructureDrift {
+// ComputeDrift compares two infrastructure states and identifies all
+// asset-level changes. Returns an error when the summary counters drift
+// from the change list — that indicates a programming bug in the diff
+// pipeline (Record called for an unrecognized type, or a change appended
+// without being summarized) and the caller should treat the drift
+// output as untrustworthy.
+func ComputeDrift(prev, curr Snapshot) (InfrastructureDrift, error) {
 	prevByID := assetMap(prev.Assets)
 	currByID := assetMap(curr.Assets)
 	ids := uniqueSortedKeys(prevByID, currByID)
@@ -178,10 +187,11 @@ func ComputeDrift(prev, curr Snapshot) InfrastructureDrift {
 	}
 
 	if !drift.Summary.matchesChangeCount(len(drift.Changes)) {
-		panic("structural contract violation: summary total mismatch")
+		return InfrastructureDrift{}, fmt.Errorf("compute drift: summary total mismatch (changes=%d, summary total=%d)",
+			len(drift.Changes), drift.Summary.total)
 	}
 
-	return drift
+	return drift, nil
 }
 
 // SummarizeDrift computes summary counts from a list of asset changes.

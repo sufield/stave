@@ -10,10 +10,28 @@ import (
 )
 
 // Thresholds defines the maximum allowed findings per severity.
+//
+// A value of -1 disables the check for that severity. The zero value
+// means "no tolerance" (any finding at that severity fails the gate).
+// Callers wanting CLI-typical behavior — block on critical/high,
+// inform on medium — should construct via DefaultThresholds().
 type Thresholds struct {
 	MaxCritical int
 	MaxHigh     int
 	MaxMedium   int
+}
+
+// DefaultThresholds returns the recommended CLI defaults: zero
+// tolerance for critical and high findings, medium not checked.
+// Production gates typically want this shape — medium-severity
+// noise during evaluation shouldn't block a deploy that has no
+// high or critical findings.
+func DefaultThresholds() Thresholds {
+	return Thresholds{
+		MaxCritical: 0,
+		MaxHigh:     0,
+		MaxMedium:   -1,
+	}
 }
 
 // GateResult holds the per-team gate evaluation.
@@ -67,10 +85,14 @@ func Evaluate(in Input) GateResult {
 		Passed:        true,
 	}
 
-	if critical > in.Thresholds.MaxCritical {
+	// A negative threshold (-1) disables the check for that severity,
+	// matching the documented sentinel. Apply consistently across
+	// critical/high/medium so callers don't need a different pattern
+	// per tier.
+	if in.Thresholds.MaxCritical >= 0 && critical > in.Thresholds.MaxCritical {
 		result.Passed = false
 		result.Reason = "critical findings exceed threshold"
-	} else if high > in.Thresholds.MaxHigh {
+	} else if in.Thresholds.MaxHigh >= 0 && high > in.Thresholds.MaxHigh {
 		result.Passed = false
 		result.Reason = "high findings exceed threshold"
 	} else if in.Thresholds.MaxMedium >= 0 && medium > in.Thresholds.MaxMedium {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sync/atomic"
 
 	"github.com/spf13/cobra"
 
@@ -65,8 +66,11 @@ type App struct {
 	LogCloser      *logging.LogCloser
 	ExitFunc       func(int)
 	Root           *cobra.Command
-	cpuProfileFile *os.File           // held open during execution, closed in postRun
-	cancel         context.CancelFunc // set by bootstrap, called by signal handler
+	cpuProfileFile *os.File // held open during execution, closed in postRun
+	// cancel is published by bootstrap (phaseContext) and read by the
+	// signal-handler goroutine. atomic.Pointer makes the publish/load
+	// race-free without locking the read path.
+	cancel atomic.Pointer[context.CancelFunc]
 
 	// Confidence holds the configurable confidence thresholds, set during
 	// bootstrap from stave.yaml. Passed to the engine Runner.

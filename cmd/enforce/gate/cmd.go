@@ -128,9 +128,10 @@ Exit Codes:
 					return &ui.UserError{Err: fmt.Errorf("parse evaluation for team gate: %w", unmarshalErr)}
 				}
 				teamResult := teamgate.Evaluate(teamgate.Input{
-					Findings: evalDoc.Findings,
-					Manifest: manifest,
-					TeamID:   opts.Team,
+					Findings:   evalDoc.Findings,
+					Manifest:   manifest,
+					TeamID:     opts.Team,
+					Thresholds: teamgate.DefaultThresholds(),
 				})
 				resp.Passed = teamResult.Passed
 				if !teamResult.Passed {

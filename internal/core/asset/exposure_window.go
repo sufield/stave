@@ -3,6 +3,7 @@ package asset
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/sufield/stave/internal/core/kernel"
@@ -44,6 +45,13 @@ func (w ExposureWindow) EffectiveEndAt(now time.Time) time.Time {
 
 // Resolve transitions an active window to a resolved state.
 // The operation is idempotent for already-resolved windows.
+//
+// When resolvedAt is before openedAt the window is clamped to a zero-
+// duration window and a warning is emitted: a negative duration is a
+// caller-side bug (e.g., a clock that moved backwards or a snapshot
+// reordering that wasn't caught earlier) and silently clamping
+// hides it. Callers that can't tolerate the clamp should validate
+// resolvedAt before calling Resolve.
 func (w ExposureWindow) Resolve(resolvedAt time.Time) ExposureWindow {
 	if !w.IsActive() {
 		return w
@@ -51,6 +59,9 @@ func (w ExposureWindow) Resolve(resolvedAt time.Time) ExposureWindow {
 
 	effectiveEnd := resolvedAt
 	if effectiveEnd.Before(w.openedAt) {
+		slog.Warn("ExposureWindow.Resolve: resolvedAt before openedAt; clamping to zero-duration window",
+			"opened_at", w.openedAt.Format(time.RFC3339),
+			"resolved_at", resolvedAt.Format(time.RFC3339))
 		effectiveEnd = w.openedAt
 	}
 

@@ -261,6 +261,26 @@ func computeScore(a *corereport.Assessment, chainDefs int, maxChainWeight float6
 			}
 		}
 	}
+
+	// Coverage scoring: average framework readiness across whatever
+	// frameworks the assessment reports. Without this, the score's
+	// 10% coverage weight always credited as 1.0 (perfect coverage)
+	// because HasCoverage / CoveragePct were never set — an
+	// assessment with zero compliance evaluation appeared to have
+	// perfect compliance coverage. When no FrameworkReadiness data
+	// is available, signal that explicitly so the score-weight
+	// system can decline the credit instead of defaulting to perfect.
+	var coveragePct float64
+	hasCoverage := false
+	if len(a.Summary.FrameworkReadiness) > 0 {
+		var total float64
+		for _, fr := range a.Summary.FrameworkReadiness {
+			total += float64(fr.ReadinessPercent)
+		}
+		coveragePct = total / float64(len(a.Summary.FrameworkReadiness))
+		hasCoverage = true
+	}
+
 	return appscore.Compute(appscore.Input{
 		Findings:       a.Findings,
 		ChainFindings:  a.ChainFindings,
@@ -268,7 +288,9 @@ func computeScore(a *corereport.Assessment, chainDefs int, maxChainWeight float6
 		MaxChainWeight: maxChainWeight,
 		SLABreached:    slaBreached,
 		SLATotal:       slaTotal,
+		CoveragePct:    coveragePct,
 		HasSLA:         slaTotal > 0,
+		HasCoverage:    hasCoverage,
 		Weights:        appscore.DefaultWeights(),
 		GeneratedAt:    a.Run.Now,
 	})

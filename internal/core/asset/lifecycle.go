@@ -212,7 +212,7 @@ func (l *ExposureLifecycle) ExceedsSLA(now time.Time, threshold time.Duration) (
 // FormatExposureSummary provides a human-readable string for CLI output.
 func (l *ExposureLifecycle) FormatExposureSummary(threshold time.Duration, now time.Time) string {
 	if !l.HasActiveWindow() {
-		return "Asset is currently in a non-compliant state."
+		return "Asset is currently in a compliant state."
 	}
 
 	d, dErr := l.ExposureDuration(now)

@@ -77,5 +77,9 @@ func (r *runner) computeDelta(ctx context.Context, dir string, filter asset.Filt
 	if err != nil {
 		return asset.InfrastructureDrift{}, fmt.Errorf("select latest snapshots: %w", err)
 	}
-	return asset.ComputeDrift(prev, curr).ApplyFilter(filter), nil
+	drift, err := asset.ComputeDrift(prev, curr)
+	if err != nil {
+		return asset.InfrastructureDrift{}, fmt.Errorf("compute drift: %w", err)
+	}
+	return drift.ApplyFilter(filter), nil
 }

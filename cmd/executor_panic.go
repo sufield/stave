@@ -22,6 +22,11 @@ func (a *App) recoverExecutePanic() {
 			)
 		}
 
+		// postRun is skipped on panic-recovery, so stop any active CPU
+		// profile here to avoid leaking the open profile file and
+		// truncated profile data.
+		a.stopCPUProfile()
+
 		errInfo := a.buildPanicErrorInfo(sanitized)
 		a.writeErrorInfo(errInfo)
 		a.ExitFunc(ui.ExitInternal)
@@ -57,5 +62,12 @@ func panicMessageFromValue(recovered any) string {
 }
 
 func (a *App) sanitizeExecuteMessage(message string) string {
+	// The sanitizer is initialized in bootstrap phaseLogging. A panic
+	// before that phase (validate, config, context) reaches here with
+	// a nil sanitizer; returning the raw message is safer than
+	// dereferencing nil.
+	if a.sanitizer == nil {
+		return message
+	}
 	return a.sanitizer.ScrubMessage(message)
 }

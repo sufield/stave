@@ -203,7 +203,17 @@ func computeFromAssessment(a *report.Assessment, weights appscore.Weights, chain
 	for i := range a.Findings {
 		violationWeight += appscore.SeverityWeightFor(a.Findings[i].ControlSeverity)
 	}
-	passingChecks := max(a.Summary.TotalAssets-len(a.Findings), 0)
+	// passingAssets = assets with zero findings. The previous
+	// `TotalAssets - len(Findings)` mixed scales: TotalAssets is a
+	// per-asset count, len(Findings) is a per-control-per-asset count,
+	// so an asset with five findings was counted five times against
+	// the asset pool, producing systematically wrong (often zero or
+	// negative-clamped-to-zero) passing-check counts.
+	failingAssets := make(map[string]struct{}, len(a.Findings))
+	for i := range a.Findings {
+		failingAssets[string(a.Findings[i].AssetID)] = struct{}{}
+	}
+	passingChecks := max(a.Summary.TotalAssets-len(failingAssets), 0)
 	totalCheckWeight := violationWeight + float64(passingChecks)*2.0
 
 	return appscore.Compute(appscore.Input{

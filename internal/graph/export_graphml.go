@@ -37,6 +37,11 @@ func MarshalGraphML(w io.Writer, g *GraphData) error {
 	rdf := mapToRDFGraph(g)
 
 	keys := collectGraphMLKeys(rdf)
+	// Build the key index once. The previous implementation rebuilt
+	// the same map inside every writeGraphMLNode and
+	// writeGraphMLEdge call, allocating O(nodes+edges) identical
+	// maps for no gain.
+	idx := indexKeys(keys)
 
 	xw := &graphmlWriter{w: bufio.NewWriter(w)}
 	xw.writeString(xml.Header)
@@ -51,10 +56,10 @@ func MarshalGraphML(w io.Writer, g *GraphData) error {
 	scratch := &bytes.Buffer{}
 
 	for i := range rdf.Nodes {
-		writeGraphMLNode(xw, scratch, &rdf.Nodes[i], keys)
+		writeGraphMLNode(xw, scratch, &rdf.Nodes[i], idx)
 	}
 	for i := range rdf.Edges {
-		writeGraphMLEdge(xw, scratch, &rdf.Edges[i], keys, i)
+		writeGraphMLEdge(xw, scratch, &rdf.Edges[i], idx, i)
 	}
 
 	xw.writeString(graphmlClose)
@@ -208,8 +213,7 @@ func indexKeys(keys []graphmlKey) keyIndex {
 	return out
 }
 
-func writeGraphMLNode(xw *graphmlWriter, scratch *bytes.Buffer, n *RDFNode, keys []graphmlKey) {
-	idx := indexKeys(keys)
+func writeGraphMLNode(xw *graphmlWriter, scratch *bytes.Buffer, n *RDFNode, idx keyIndex) {
 	xw.writeString("  <node id=\"")
 	xw.writeString(xmlEscape(n.ID))
 	xw.writeString("\">\n")
@@ -237,8 +241,7 @@ func writeGraphMLNode(xw *graphmlWriter, scratch *bytes.Buffer, n *RDFNode, keys
 	xw.writeString("  </node>\n")
 }
 
-func writeGraphMLEdge(xw *graphmlWriter, scratch *bytes.Buffer, e *RDFEdge, keys []graphmlKey, idx int) {
-	keyIdx := indexKeys(keys)
+func writeGraphMLEdge(xw *graphmlWriter, scratch *bytes.Buffer, e *RDFEdge, keyIdx keyIndex, idx int) {
 	xw.writeString("  <edge id=\"e")
 	xw.writeString(strconv.Itoa(idx))
 	xw.writeString("\" source=\"")

@@ -75,7 +75,10 @@ func TestComputeObservationDelta_DetectsAddedRemovedModified(t *testing.T) {
 		},
 	}
 
-	out := asset.ComputeDrift(prev, curr)
+	out, err := asset.ComputeDrift(prev, curr)
+	if err != nil {
+		t.Fatalf("ComputeDrift: %v", err)
+	}
 	if out.Summary.Provisioned() != 1 || out.Summary.Decommissioned() != 1 || out.Summary.Reconfigured() != 1 {
 		t.Fatalf("unexpected summary: %+v", out.Summary)
 	}

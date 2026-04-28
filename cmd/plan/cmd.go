@@ -17,6 +17,7 @@ import (
 	"github.com/sufield/stave/internal/app/plan"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/compliance"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -113,12 +114,24 @@ func runPlan(stdout io.Writer, opts *options) error {
 
 	// Compliance path mode: compute minimum-effort path to target readiness.
 	if opts.Threshold > 0 && opts.ComplianceProfile != "" {
-		result := compliancepath.Compute(compliancepath.Input{
+		// TotalControls must reflect the actual size of the requested
+		// framework's control set, not the count of findings. The old
+		// `max(len(Findings), 1)` produced absurd readiness scores —
+		// 1 finding and a 50-control framework reported as 0%-ready
+		// against a 1-control denominator.
+		totalControls := len(compliance.ControlRegistry.ByProfile(opts.ComplianceProfile))
+		if totalControls == 0 {
+			return &ui.UserError{Err: fmt.Errorf("compliance profile %q has no controls in the catalog; check the profile name", opts.ComplianceProfile)}
+		}
+		result, computeErr := compliancepath.Compute(compliancepath.Input{
 			Findings:        assessment.Findings,
 			TargetFramework: opts.ComplianceProfile,
 			TargetReadiness: opts.Threshold,
-			TotalControls:   max(len(assessment.Findings), 1),
+			TotalControls:   totalControls,
 		})
+		if computeErr != nil {
+			return &ui.UserError{Err: fmt.Errorf("compute compliance path: %w", computeErr)}
+		}
 
 		w := stdout
 		if opts.OutPath != "" {
@@ -141,10 +154,13 @@ func runPlan(stdout io.Writer, opts *options) error {
 		return &ui.UserError{Err: fmt.Errorf("load manifest: %w", err)}
 	}
 
-	slaProfile := ""
-	if opts.SLAFile != "" {
-		slaProfile = filepath.Base(opts.SLAFile)
-	}
+	// Preserve the operator-supplied path verbatim — relative paths
+	// stay relative-to-cwd, absolute paths stay absolute. Recording
+	// only the basename made the SLA file unlocatable: a downstream
+	// consumer reading the plan output had no way to find
+	// "production-sla.yaml" if the operator originally supplied
+	// "/policies/sla/production-sla.yaml".
+	slaProfile := opts.SLAFile
 
 	p := plan.Group(plan.GroupInput{
 		GeneratedAt: time.Now().UTC().Format(time.RFC3339),

@@ -109,8 +109,18 @@ func run(w io.Writer, opts *options) error {
 	}
 	if len(excs) > 0 {
 		acks := exception.ApplyExceptions(excs, report.Results, extractBucketName(snap))
+		// Only valid exceptions belong in the public Acknowledged list.
+		// Previously, invalid acks (where the compensating control
+		// wasn't in place) were also appended, making it look as if
+		// the user had successfully acknowledged a finding that
+		// remained un-mitigated.
+		validAcks := make(map[string]struct{}, len(acks))
 		for i := range acks {
 			ack := &acks[i]
+			if !ack.Valid {
+				continue
+			}
+			validAcks[string(ack.ControlID)] = struct{}{}
 			report.Acknowledged = append(report.Acknowledged, profile.AcknowledgedEntry{
 				ControlID:      ack.ControlID,
 				Bucket:         ack.Bucket,
@@ -121,6 +131,27 @@ func run(w io.Writer, opts *options) error {
 				InvalidDetail:  ack.InvalidDetail,
 			})
 		}
+
+		// Re-evaluate compound findings: a compound risk whose
+		// TriggerIDs are all covered by valid acknowledged exceptions
+		// is no longer an active risk. Filter those out; everything
+		// else stays.
+		filteredCompound := report.CompoundFindings[:0]
+		for i := range report.CompoundFindings {
+			cf := &report.CompoundFindings[i]
+			allAcked := len(cf.TriggerIDs) > 0
+			for _, tid := range cf.TriggerIDs {
+				if _, ok := validAcks[tid]; !ok {
+					allAcked = false
+					break
+				}
+			}
+			if !allAcked {
+				filteredCompound = append(filteredCompound, *cf)
+			}
+		}
+		report.CompoundFindings = filteredCompound
+
 		// Recount after exceptions.
 		report.FailCounts = make(map[policy.Severity]int)
 		report.Pass = true
