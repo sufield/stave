@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.AUTH.SESSION.TIMEOUT.001
+name: ELB Authentication Session Timeout Exceeds Threshold
+description: >
+  ALB authenticate-cognito or authenticate-oidc
+  action has SessionTimeout greater than 12
+  hours. The authentication session persists
+  past the working day; a stolen session
+  cookie remains usable for an extended
+  window.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-12, IA-2"
+  pci_dss_v4.0: "8.6"
+  fedramp_moderate: "AC-12, IA-2"
+  hipaa: "164.312(a)(2)(iii)"
+  iso_27001_2022: "A.5.17, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Authentication session timeout is too long.
+  action: >
+    Set SessionTimeout to 43200 seconds (12
+    hours) or less in the listener rule's
+    authenticate-cognito or authenticate-oidc
+    action: aws elbv2 modify-rule with
+    Authenticate*Config.SessionTimeout=43200
+    (or shorter for sensitive workloads —
+    HIPAA-aligned applications often pick
+    3600 seconds / 1 hour).
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "auth_session_timeout_seconds": 3600,
+          "auth_session_timeout_too_long": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.auth_session_timeout_too_long
+      op: eq
+      value: true
+defect: >
+  ELB authentication session timeout exceeds
+  the recommended ceiling.
+infection: >
+  ALB authenticate-cognito and authenticate-oidc
+  actions store the user's authenticated
+  session in a cookie. SessionTimeout controls
+  how long that cookie remains valid before
+  re-authentication is required. With the
+  default 7-day timeout, a session cookie
+  stolen via XSS, malware, or a leaked
+  browser profile remains usable for a week.
+  Bounding the session to 12 hours or shorter
+  forces daily re-authentication, limiting
+  stolen-cookie exposure to the working
+  window. For HIPAA workloads, 1-hour
+  sessions are common; for casual consumer
+  apps, 12 hours is a reasonable balance
+  between UX and security.
+failure: >
+  Multi-day authenticated sessions. Stolen
+  session cookies remain valid for the full
+  timeout window.
+tests:
+  - name: 7-day session timeout fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            auth_session_timeout_seconds: 604800
+            auth_session_timeout_too_long: true
+  - name: 1-hour session timeout passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            auth_session_timeout_seconds: 3600
+            auth_session_timeout_too_long: false

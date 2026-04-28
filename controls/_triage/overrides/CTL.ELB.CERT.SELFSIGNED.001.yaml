@@ -1,0 +1,23 @@
+control: CTL.ELB.CERT.SELFSIGNED.001
+defect: >
+  ELB listener certificate is self-signed.
+infection: >
+  Self-signed certificates have issuer equal
+  to subject — the certificate vouches for
+  itself. Browsers reject these because they
+  can't establish a chain of trust to a
+  known root CA. Users see a 'Your connection
+  is not private' interstitial; clicking
+  through (which Chrome and Firefox both
+  allow with friction) habituates users to
+  bypass certificate errors, undermining
+  the value of TLS warnings on legitimate
+  attacks. ACM provides free, auto-renewing
+  publicly-trusted certificates for any AWS
+  domain; there is no production reason to
+  serve self-signed.
+failure: >
+  Browsers reject the connection. Users
+  either fail to access the application or
+  habitually bypass the warning, weakening
+  TLS error response across the board.

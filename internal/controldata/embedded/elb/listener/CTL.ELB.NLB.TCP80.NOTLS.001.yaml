@@ -1,0 +1,137 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.NLB.TCP80.NOTLS.001
+name: NLB Has TCP Listener on Port 80 Without Companion TLS Listener
+description: >
+  Network Load Balancer has a TCP listener on
+  port 80 but no TLS listener on 443. NLBs
+  pass through TCP without termination, so
+  there is no TLS handshake at the LB layer
+  — every byte transits in plaintext from
+  client to backend.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-8, SC-23"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-8, SC-23"
+  hipaa: "164.312(e)(1)"
+  iso_27001_2022: "A.8.20, A.8.24"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    NLB serves TCP/80 without a TLS listener.
+    All traffic is plaintext.
+  action: >
+    Either add a TLS listener on the NLB
+    (aws elbv2 create-listener with
+    Protocol=TLS,Port=443 and a configured
+    SSL policy + certificate) and remove the
+    TCP/80 listener, or enable TLS on the
+    backend service and switch the NLB to
+    TLS pass-through. NLBs that genuinely
+    need to handle plaintext TCP (legacy
+    protocols, internal-only) should be
+    documented; production user-facing
+    workloads on TCP/80 are almost always
+    misconfiguration.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "lb_type": "network",
+          "has_tcp_80_listener": false,
+          "has_tls_listener": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.lb_type
+      op: eq
+      value: network
+    - field: properties.compute.elb.has_tcp_80_listener
+      op: eq
+      value: true
+    - field: properties.compute.elb.has_tls_listener
+      op: eq
+      value: false
+defect: >
+  NLB serves TCP traffic on port 80 without a
+  companion TLS listener.
+infection: >
+  Network Load Balancers operate at layer 4
+  — they pass TCP through to the backend
+  without TLS termination. A TCP/80 listener
+  on an NLB means clients send plaintext
+  HTTP to the NLB, which forwards it as
+  plaintext to the backend. Anyone on the
+  network path between the client and the
+  AWS edge sees credentials, session cookies,
+  and request bodies. ALBs differ — they
+  terminate TLS at the listener even when
+  presented with plaintext, but NLB does
+  not. The fix is either to add a TLS
+  listener and migrate clients onto it, or
+  to acknowledge the legacy TCP requirement
+  with documented risk acceptance.
+failure: >
+  NLB plaintext traffic. TCP/80 without TLS
+  exposes content end-to-end on the network
+  path.
+tests:
+  - name: NLB with TCP/80 only fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "network"
+            has_tcp_80_listener: true
+            has_tls_listener: false
+  - name: NLB with TLS listener passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "network"
+            has_tcp_80_listener: false
+            has_tls_listener: true
+  - name: ALB does not fire on this control
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "application"
+            has_tcp_80_listener: true
+            has_tls_listener: false

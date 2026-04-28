@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.REDIRECT.TARGET.HTTP.001
+name: ELB Listener Redirects HTTP to Another HTTP Target
+description: >
+  ALB listener rule redirect action sends
+  HTTP traffic to another HTTP target rather
+  than to HTTPS. The redirect superficially
+  looks correct but doesn't move the user
+  onto TLS — credentials and content stay
+  in plaintext.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-8, SC-23"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-8, SC-23"
+  hipaa: "164.312(e)(1)"
+  iso_27001_2022: "A.8.20, A.8.24"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    HTTP listener redirect target is itself
+    HTTP. TLS upgrade never happens.
+  action: >
+    Update the redirect action's Protocol to
+    HTTPS and Port to 443: aws elbv2
+    modify-rule with Action.RedirectConfig
+    Protocol=HTTPS,Port=443. Verify by
+    requesting http://app.example.com and
+    confirming the response Location header
+    points at https://. Pair with
+    Strict-Transport-Security headers on the
+    HTTPS responses to lock browsers into
+    the secure path.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "redirect_target_protocol": "HTTPS",
+          "redirect_to_http": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.redirect_to_http
+      op: eq
+      value: true
+defect: >
+  ALB redirect action sends HTTP traffic to
+  another HTTP target.
+infection: >
+  HTTP→HTTPS redirects move users from a
+  plaintext channel to a secure one — that's
+  the whole point. A redirect rule that
+  points back to HTTP keeps users on plaintext
+  forever; credentials, session cookies, and
+  request bodies all transit in the open.
+  The misconfiguration usually shows up
+  during partial migrations: someone
+  configured the redirect early in the work
+  but pointed it at the temporary HTTP
+  endpoint, intending to update it once
+  HTTPS was ready, and never came back. The
+  ALB attribute-check confirms the redirect
+  target is HTTPS, not HTTP-loopback.
+failure: >
+  HTTP redirect doesn't upgrade to TLS. Users
+  remain on plaintext after the redirect.
+tests:
+  - name: HTTP redirect target fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/app/abc/123/rule"
+      asset_type: aws_elb_listener_rule
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            redirect_target_protocol: "HTTP"
+            redirect_to_http: true
+  - name: HTTPS redirect target passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/app/abc/123/rule"
+      asset_type: aws_elb_listener_rule
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            redirect_target_protocol: "HTTPS"
+            redirect_to_http: false

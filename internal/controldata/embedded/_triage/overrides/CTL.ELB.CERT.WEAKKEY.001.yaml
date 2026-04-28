@@ -1,0 +1,22 @@
+control: CTL.ELB.CERT.WEAKKEY.001
+defect: >
+  ELB certificate uses RSA-1024 or weaker key.
+infection: >
+  RSA-1024 was the standard in the early
+  2000s; cryptographic guidance has long
+  considered it insufficient against
+  state-level adversaries. Public CAs
+  stopped issuing 1024-bit certificates
+  around 2014. A 1024-bit certificate on
+  an ELB listener almost always indicates
+  a long-lived manually-imported certificate
+  that nobody refreshed when key-size
+  guidance changed. Practical attacks
+  against RSA-1024 in real time aren't
+  common, but the certificate is stale by
+  every modern definition; auditors
+  reasonably treat it as a finding.
+failure: >
+  Cryptographically weak listener
+  certificate. RSA-1024 sits well below
+  modern minimums.

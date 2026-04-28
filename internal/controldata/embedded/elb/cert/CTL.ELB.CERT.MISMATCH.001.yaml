@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CERT.MISMATCH.001
+name: ELB Listener Certificate Does Not Match Listener Domain
+description: >
+  ELB listener serves a certificate whose
+  CN/SAN does not include the domain users
+  reach the listener on. Browsers reject
+  the connection with a hostname-mismatch
+  error.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-23"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-12, SC-23"
+  hipaa: "164.312(e)(1)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Certificate CN/SAN doesn't cover the
+    listener domain.
+  action: >
+    Either request a new certificate covering
+    all domains routed to the listener
+    (including SANs for each subdomain) and
+    swap it in via aws elbv2
+    modify-listener-certificates, or remove
+    the mismatched DNS records pointing at
+    the listener. ACM supports up to 10 SAN
+    entries per certificate; for more, use
+    a wildcard or split across multiple
+    certificates with SNI.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "listener_domain": "app.example.com",
+          "certificate_san": ["app.example.com"],
+          "certificate_san_mismatch": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.certificate_san_mismatch
+      op: eq
+      value: true
+defect: >
+  ELB certificate SAN doesn't match listener
+  domain.
+infection: >
+  Browsers verify that the certificate's CN
+  or SubjectAltName (SAN) entries cover the
+  hostname the user typed. When the listener
+  serves app.example.com but the certificate
+  only lists api.example.com, the browser
+  rejects the connection with an
+  ERR_CERT_COMMON_NAME_INVALID error. The
+  misconfiguration usually happens during
+  partial migrations: someone added the
+  domain to Route 53 pointing at the ALB but
+  forgot to add it to the certificate's
+  SANs. Detection requires correlating
+  Route 53 records pointing at the ELB
+  with the listener's certificate SAN list.
+failure: >
+  Hostname-mismatch certificate. Browsers
+  reject connections; clicking through
+  weakens TLS-warning training across the
+  board.
+tests:
+  - name: SAN mismatch fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            listener_domain: "app.example.com"
+            certificate_san: ["api.example.com"]
+            certificate_san_mismatch: true
+  - name: SAN matches passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            listener_domain: "app.example.com"
+            certificate_san: ["app.example.com"]
+            certificate_san_mismatch: false

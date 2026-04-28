@@ -1,0 +1,24 @@
+control: CTL.ELB.CERT.MISMATCH.001
+defect: >
+  ELB certificate SAN doesn't match listener
+  domain.
+infection: >
+  Browsers verify that the certificate's CN
+  or SubjectAltName (SAN) entries cover the
+  hostname the user typed. When the listener
+  serves app.example.com but the certificate
+  only lists api.example.com, the browser
+  rejects the connection with an
+  ERR_CERT_COMMON_NAME_INVALID error. The
+  misconfiguration usually happens during
+  partial migrations: someone added the
+  domain to Route 53 pointing at the ALB but
+  forgot to add it to the certificate's
+  SANs. Detection requires correlating
+  Route 53 records pointing at the ELB
+  with the listener's certificate SAN list.
+failure: >
+  Hostname-mismatch certificate. Browsers
+  reject connections; clicking through
+  weakens TLS-warning training across the
+  board.

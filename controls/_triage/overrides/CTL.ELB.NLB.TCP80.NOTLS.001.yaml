@@ -1,0 +1,24 @@
+control: CTL.ELB.NLB.TCP80.NOTLS.001
+defect: >
+  NLB serves TCP traffic on port 80 without a
+  companion TLS listener.
+infection: >
+  Network Load Balancers operate at layer 4
+  — they pass TCP through to the backend
+  without TLS termination. A TCP/80 listener
+  on an NLB means clients send plaintext
+  HTTP to the NLB, which forwards it as
+  plaintext to the backend. Anyone on the
+  network path between the client and the
+  AWS edge sees credentials, session cookies,
+  and request bodies. ALBs differ — they
+  terminate TLS at the listener even when
+  presented with plaintext, but NLB does
+  not. The fix is either to add a TLS
+  listener and migrate clients onto it, or
+  to acknowledge the legacy TCP requirement
+  with documented risk acceptance.
+failure: >
+  NLB plaintext traffic. TCP/80 without TLS
+  exposes content end-to-end on the network
+  path.

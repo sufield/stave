@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2019
-**Pack hash:** `a971895c120bb232deda5328ba209a3c3a6ec6ae4e55bf4b89a8676b13918285`
+**Total controls:** 2028
+**Pack hash:** `64fac01374f92211b25af5d921597329f381976b29b89f9e5d8c694f9e25a7ca`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 231 |
-| high | 896 |
+| high | 903 |
 | info | 16 |
 | low | 138 |
-| medium | 738 |
+| medium | 740 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,10 +24,10 @@
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1053 |
+| exposure | 1060 |
 | governance | 272 |
 | hygiene | 16 |
-| identity | 358 |
+| identity | 360 |
 | network | 28 |
 | resilience | 18 |
 | secrets | 4 |
@@ -13250,6 +13250,36 @@ ALB listener rule has an authenticate-cognito action referencing a Cognito user 
 
 ---
 
+### CTL.ELB.AUTH.OIDC.SECRET.PLAINTEXT.001
+
+**ELB OIDC Auth Action Stores Client Secret in Plaintext**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-5, SC-13; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.5.17, A.8.24; nist_800_53_r5: IA-5, SC-13; pci_dss_v4.0: 3.5, 8.6; soc2: CC6.1, CC6.7;
+
+ALB authenticate-oidc action's ClientSecret is a literal string rather than a reference to AWS Secrets Manager. The OIDC client secret sits in the listener rule configuration in plaintext, visible to anyone with elbv2:DescribeRules.
+
+**Remediation:** Migrate the client secret to AWS Secrets Manager and reference it from the listener rule: store the secret with aws secretsmanager create-secret, then update the rule's authenticate-oidc action to reference the secret ARN. Anyone with elbv2:DescribeRules then sees the ARN rather than the literal secret. Rotate the secret afterwards since the previous plaintext value may be in CloudTrail history.
+
+---
+
+### CTL.ELB.AUTH.SESSION.TIMEOUT.001
+
+**ELB Authentication Session Timeout Exceeds Threshold**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-12, IA-2; hipaa: 164.312(a)(2)(iii); iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: AC-12, IA-2; pci_dss_v4.0: 8.6; soc2: CC6.1;
+
+ALB authenticate-cognito or authenticate-oidc action has SessionTimeout greater than 12 hours. The authentication session persists past the working day; a stolen session cookie remains usable for an extended window.
+
+**Remediation:** Set SessionTimeout to 43200 seconds (12 hours) or less in the listener rule's authenticate-cognito or authenticate-oidc action: aws elbv2 modify-rule with Authenticate*Config.SessionTimeout=43200 (or shorter for sensitive workloads — HIPAA-aligned applications often pick 3600 seconds / 1 hour).
+
+---
+
 ### CTL.ELB.AUTH.UNAUTHENTICATED.ALLOW.001
 
 **ALB Authentication Action Allows Unauthenticated Requests**
@@ -13265,6 +13295,21 @@ ALB listener rule has an authenticate-oidc or authenticate-cognito action with O
 
 ---
 
+### CTL.ELB.CERT.CHAIN.INCOMPLETE.001
+
+**ELB Listener Certificate Chain Missing Intermediate CA**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12, SC-23; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+ELB listener certificate is configured without the intermediate CA in its chain. Browsers that don't have the intermediate cached fail to verify the certificate; some clients (curl, mobile platforms) reject the connection outright.
+
+**Remediation:** Re-import the certificate with the full intermediate chain via aws acm import-certificate with the --certificate-chain flag pointing at the PEM-bundled intermediate CAs. ACM-issued certificates auto-include the chain; manually imported certs require the operator to bundle intermediates explicitly.
+
+---
+
 ### CTL.ELB.CERT.GHOST.001
 
 **Load Balancer References Deleted or Expired SSL Certificate**
@@ -13277,6 +13322,21 @@ ALB listener rule has an authenticate-oidc or authenticate-cognito action with O
 Load balancer HTTPS listener references an ACM certificate that has been deleted, has expired, or failed renewal. The load balancer continues to serve the missing or expired certificate — browsers display certificate warnings, API clients reject the TLS handshake, and automated integrations (webhooks, partner APIs, service meshes) fail at connection time. The listener configuration appears intact; the failure is external and immediate.
 
 **Remediation:** Replace the certificate on the listener. If the original ACM certificate was deleted, request a new one with the same subject alternative names and associate it. If renewal failed, investigate the ACM renewal path (DNS validation records, IAM permissions for renewal). Enable automated ACM renewal where possible and add a 30-day-before-expiry alarm so the finding does not recur.
+
+---
+
+### CTL.ELB.CERT.MISMATCH.001
+
+**ELB Listener Certificate Does Not Match Listener Domain**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-12, SC-23; hipaa: 164.312(e)(1); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+ELB listener serves a certificate whose CN/SAN does not include the domain users reach the listener on. Browsers reject the connection with a hostname-mismatch error.
+
+**Remediation:** Either request a new certificate covering all domains routed to the listener (including SANs for each subdomain) and swap it in via aws elbv2 modify-listener-certificates, or remove the mismatched DNS records pointing at the listener. ACM supports up to 10 SAN entries per certificate; for more, use a wildcard or split across multiple certificates with SNI.
 
 ---
 
@@ -13307,6 +13367,36 @@ Load balancer listener uses an SSL/TLS certificate that is not managed by AWS Ce
 ACM certificate used by the load balancer has auto-renewal failing. ACM attempted to renew the certificate but the DNS validation record is missing or the email validation wasn't completed. The certificate will expire on its expiration date if not resolved. Precursor to expiration — fires while there's still time to fix the validation record before the certificate stops working.
 
 **Remediation:** Inspect the certificate's renewal status via aws acm describe-certificate. For DNS-validated certificates, recreate the missing CNAME validation record in the domain's DNS zone. For email-validated certificates, request a new validation email and have a domain admin click the validation link. After fixing, ACM retries renewal automatically; status moves to SUCCESS within a day or two. Track certificate_expiry_days — if it drops below 14 the risk of expiration becomes immediate.
+
+---
+
+### CTL.ELB.CERT.SELFSIGNED.001
+
+**ELB Listener Uses Self-Signed Certificate**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-12, SC-23; hipaa: 164.312(e)(1); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+ELB listener serves a certificate that is self-signed (issuer equals subject) rather than issued by a publicly trusted CA. Browsers reject the connection with a certificate error; users either bypass the warning (training them to ignore TLS errors) or fail to connect.
+
+**Remediation:** Replace the self-signed certificate with one from ACM (free, auto-renewing) or another publicly trusted CA. Use aws elbv2 modify-listener with the new certificate ARN. If self-signed is intentional (lab testing only), document the deviation; production listeners should never serve self-signed certs to end users.
+
+---
+
+### CTL.ELB.CERT.WEAKKEY.001
+
+**ELB Listener Certificate Uses Weak RSA-1024 Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-12, SC-13; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-13; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+ELB listener certificate uses RSA-1024 (or weaker) key. RSA-1024 has been considered insufficient for TLS use since 2014 — major CAs stopped issuing 1024-bit certificates long ago. A certificate using 1024-bit keys typically indicates a long-lived manual import that wasn't refreshed.
+
+**Remediation:** Replace the certificate with one using RSA-2048 (minimum) or ECDSA-P-256. Request via ACM (which only issues modern key sizes) or, if importing, generate a new key with openssl genrsa 2048 (or openssl ecparam genkey -name prime256v1). Update the listener via aws elbv2 modify-listener-certificates.
 
 ---
 
@@ -13609,6 +13699,36 @@ ALB or NLB has subnets configured in only one Availability Zone. The load balanc
 
 ---
 
+### CTL.ELB.NLB.TCP80.NOTLS.001
+
+**NLB Has TCP Listener on Port 80 Without Companion TLS Listener**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-8, SC-23; hipaa: 164.312(e)(1); iso_27001_2022: A.8.20, A.8.24; nist_800_53_r5: SC-8, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+Network Load Balancer has a TCP listener on port 80 but no TLS listener on 443. NLBs pass through TCP without termination, so there is no TLS handshake at the LB layer — every byte transits in plaintext from client to backend.
+
+**Remediation:** Either add a TLS listener on the NLB (aws elbv2 create-listener with Protocol=TLS,Port=443 and a configured SSL policy + certificate) and remove the TCP/80 listener, or enable TLS on the backend service and switch the NLB to TLS pass-through. NLBs that genuinely need to handle plaintext TCP (legacy protocols, internal-only) should be documented; production user-facing workloads on TCP/80 are almost always misconfiguration.
+
+---
+
+### CTL.ELB.REDIRECT.TARGET.HTTP.001
+
+**ELB Listener Redirects HTTP to Another HTTP Target**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-8, SC-23; hipaa: 164.312(e)(1); iso_27001_2022: A.8.20, A.8.24; nist_800_53_r5: SC-8, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+ALB listener rule redirect action sends HTTP traffic to another HTTP target rather than to HTTPS. The redirect superficially looks correct but doesn't move the user onto TLS — credentials and content stay in plaintext.
+
+**Remediation:** Update the redirect action's Protocol to HTTPS and Port to 443: aws elbv2 modify-rule with Action.RedirectConfig Protocol=HTTPS,Port=443. Verify by requesting http://app.example.com and confirming the response Location header points at https://. Pair with Strict-Transport-Security headers on the HTTPS responses to lock browsers into the secure path.
+
+---
+
 ### CTL.ELB.SG.GHOST.001
 
 **Load Balancer References Deleted Security Group**
@@ -13696,6 +13816,21 @@ ELB target group has all registered targets in a single Availability Zone. AZ fa
 Application and Network Load Balancers must use TLS 1.2 or higher for HTTPS listeners. Older TLS versions have known vulnerabilities.
 
 **Remediation:** Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01).
+
+---
+
+### CTL.ELB.TLS.CUSTOM.WEAKCIPHER.001
+
+**ELB Custom SSL Policy Includes Weak Ciphers**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-8, SC-13; hipaa: 164.312(e)(1), 164.312(e)(2)(ii); iso_27001_2022: A.8.24; nist_800_53_r5: SC-8, SC-12, SC-13; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+ELB listener uses a custom SSL policy whose cipher list contains weak entries — RC4, DES, 3DES, NULL, EXPORT, or anonymous Diffie-Hellman ciphers. The policy may appear locked-down but accepts cipher suites known-broken at the cryptographic level.
+
+**Remediation:** Switch to one of AWS's predefined modern SSL policies (e.g., ELBSecurityPolicy-TLS13-1-2-2021-06 or ELBSecurityPolicy-FS-1-2-Res-2020-10): aws elbv2 modify-listener with SslPolicy=<modern-policy>. If a custom policy is required, remove RC4, DES, 3DES, NULL, EXPORT, and anonymous DH cipher suites and require modern key exchange (ECDHE).
 
 ---
 

@@ -1,0 +1,26 @@
+control: CTL.ELB.TLS.CUSTOM.WEAKCIPHER.001
+defect: >
+  ELB custom SSL policy permits weak ciphers.
+infection: >
+  AWS's predefined SSL policies are the
+  recommended path — they're maintained by
+  AWS, updated as cryptographic guidance
+  evolves, and the cipher list is curated.
+  Custom SSL policies allow operators to
+  specify their own cipher list, which can
+  drift from current best practice. RC4 was
+  deprecated in 2015; 3DES is too small for
+  modern threat models; NULL and EXPORT
+  ciphers don't encrypt at all; anonymous
+  Diffie-Hellman skips authentication. A
+  custom policy listing any of these is
+  serving downgrade-vulnerable connections
+  to clients that prefer the weak suites.
+  An attacker manipulating the client
+  cipher-list (downgrade attack) can force
+  the broken suite.
+failure: >
+  Cryptographically weak TLS connections.
+  Custom SSL policy negotiates broken cipher
+  suites with willing or downgrade-attacked
+  clients.

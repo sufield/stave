@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.TLS.CUSTOM.WEAKCIPHER.001
+name: ELB Custom SSL Policy Includes Weak Ciphers
+description: >
+  ELB listener uses a custom SSL policy whose
+  cipher list contains weak entries — RC4,
+  DES, 3DES, NULL, EXPORT, or anonymous
+  Diffie-Hellman ciphers. The policy may
+  appear locked-down but accepts cipher
+  suites known-broken at the cryptographic
+  level.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-8, SC-12, SC-13"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-8, SC-13"
+  hipaa: "164.312(e)(1), 164.312(e)(2)(ii)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09", "IVS-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Custom SSL policy includes weak ciphers.
+  action: >
+    Switch to one of AWS's predefined modern
+    SSL policies (e.g.,
+    ELBSecurityPolicy-TLS13-1-2-2021-06 or
+    ELBSecurityPolicy-FS-1-2-Res-2020-10):
+    aws elbv2 modify-listener with
+    SslPolicy=<modern-policy>. If a custom
+    policy is required, remove RC4, DES,
+    3DES, NULL, EXPORT, and anonymous DH
+    cipher suites and require modern key
+    exchange (ECDHE).
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "ssl_policy_is_custom": true,
+          "ssl_policy_weak_ciphers": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.ssl_policy_has_weak_cipher
+      op: eq
+      value: true
+defect: >
+  ELB custom SSL policy permits weak ciphers.
+infection: >
+  AWS's predefined SSL policies are the
+  recommended path — they're maintained by
+  AWS, updated as cryptographic guidance
+  evolves, and the cipher list is curated.
+  Custom SSL policies allow operators to
+  specify their own cipher list, which can
+  drift from current best practice. RC4 was
+  deprecated in 2015; 3DES is too small for
+  modern threat models; NULL and EXPORT
+  ciphers don't encrypt at all; anonymous
+  Diffie-Hellman skips authentication. A
+  custom policy listing any of these is
+  serving downgrade-vulnerable connections
+  to clients that prefer the weak suites.
+  An attacker manipulating the client
+  cipher-list (downgrade attack) can force
+  the broken suite.
+failure: >
+  Cryptographically weak TLS connections.
+  Custom SSL policy negotiates broken cipher
+  suites with willing or downgrade-attacked
+  clients.
+tests:
+  - name: weak ciphers in policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            ssl_policy_is_custom: true
+            ssl_policy_weak_ciphers: ["RC4-SHA", "DES-CBC3-SHA"]
+            ssl_policy_has_weak_cipher: true
+  - name: modern cipher list passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            ssl_policy_is_custom: false
+            ssl_policy_weak_ciphers: []
+            ssl_policy_has_weak_cipher: false

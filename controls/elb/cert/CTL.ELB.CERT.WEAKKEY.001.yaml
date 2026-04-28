@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CERT.WEAKKEY.001
+name: ELB Listener Certificate Uses Weak RSA-1024 Key
+description: >
+  ELB listener certificate uses RSA-1024 (or
+  weaker) key. RSA-1024 has been considered
+  insufficient for TLS use since 2014 — major
+  CAs stopped issuing 1024-bit certificates
+  long ago. A certificate using 1024-bit
+  keys typically indicates a long-lived
+  manual import that wasn't refreshed.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13"
+  pci_dss_v4.0: "3.5"
+  fedramp_moderate: "SC-12, SC-13"
+  hipaa: "164.312(a)(2)(iv)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Listener certificate uses RSA-1024 or
+    weaker.
+  action: >
+    Replace the certificate with one using
+    RSA-2048 (minimum) or ECDSA-P-256.
+    Request via ACM (which only issues
+    modern key sizes) or, if importing,
+    generate a new key with openssl genrsa
+    2048 (or openssl ecparam genkey
+    -name prime256v1). Update the listener
+    via aws elbv2 modify-listener-certificates.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "certificate_key_algorithm": "RSA-2048",
+          "certificate_weak_key": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.certificate_weak_key
+      op: eq
+      value: true
+defect: >
+  ELB certificate uses RSA-1024 or weaker key.
+infection: >
+  RSA-1024 was the standard in the early
+  2000s; cryptographic guidance has long
+  considered it insufficient against
+  state-level adversaries. Public CAs
+  stopped issuing 1024-bit certificates
+  around 2014. A 1024-bit certificate on
+  an ELB listener almost always indicates
+  a long-lived manually-imported certificate
+  that nobody refreshed when key-size
+  guidance changed. Practical attacks
+  against RSA-1024 in real time aren't
+  common, but the certificate is stale by
+  every modern definition; auditors
+  reasonably treat it as a finding.
+failure: >
+  Cryptographically weak listener
+  certificate. RSA-1024 sits well below
+  modern minimums.
+tests:
+  - name: RSA-1024 cert fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            certificate_key_algorithm: "RSA-1024"
+            certificate_weak_key: true
+  - name: RSA-2048 cert passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            certificate_key_algorithm: "RSA-2048"
+            certificate_weak_key: false

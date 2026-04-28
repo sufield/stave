@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CERT.CHAIN.INCOMPLETE.001
+name: ELB Listener Certificate Chain Missing Intermediate CA
+description: >
+  ELB listener certificate is configured
+  without the intermediate CA in its chain.
+  Browsers that don't have the intermediate
+  cached fail to verify the certificate;
+  some clients (curl, mobile platforms)
+  reject the connection outright.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-23"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-12, SC-23"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Listener certificate's chain is incomplete.
+  action: >
+    Re-import the certificate with the full
+    intermediate chain via aws acm
+    import-certificate with the
+    --certificate-chain flag pointing at the
+    PEM-bundled intermediate CAs. ACM-issued
+    certificates auto-include the chain;
+    manually imported certs require the
+    operator to bundle intermediates
+    explicitly.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "certificate_chain_complete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.certificate_chain_complete
+      op: eq
+      value: false
+defect: >
+  ELB certificate chain is incomplete.
+infection: >
+  TLS handshakes need a complete chain from
+  the leaf certificate up to a trusted root.
+  Browsers cache common intermediates, so an
+  incomplete chain often appears to work in
+  desktop browsers — but new browsers, fresh
+  installs, mobile platforms, and command-
+  line tools (curl, wget) without the cached
+  intermediate fail with
+  unable-to-get-issuer-cert errors.
+  Intermittent client failures — 'works on
+  my machine' — typically indicate chain
+  problems. The fix is to import the full
+  chain into ACM; ACM-issued certificates
+  are complete by default, so the
+  misconfiguration appears only with
+  manually-imported certs.
+failure: >
+  Intermittent certificate validation
+  failures. Clients without cached
+  intermediates can't verify the chain.
+tests:
+  - name: incomplete chain fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            certificate_chain_complete: false
+  - name: complete chain passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            certificate_chain_complete: true

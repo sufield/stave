@@ -1,0 +1,24 @@
+control: CTL.ELB.AUTH.SESSION.TIMEOUT.001
+defect: >
+  ELB authentication session timeout exceeds
+  the recommended ceiling.
+infection: >
+  ALB authenticate-cognito and authenticate-oidc
+  actions store the user's authenticated
+  session in a cookie. SessionTimeout controls
+  how long that cookie remains valid before
+  re-authentication is required. With the
+  default 7-day timeout, a session cookie
+  stolen via XSS, malware, or a leaked
+  browser profile remains usable for a week.
+  Bounding the session to 12 hours or shorter
+  forces daily re-authentication, limiting
+  stolen-cookie exposure to the working
+  window. For HIPAA workloads, 1-hour
+  sessions are common; for casual consumer
+  apps, 12 hours is a reasonable balance
+  between UX and security.
+failure: >
+  Multi-day authenticated sessions. Stolen
+  session cookies remain valid for the full
+  timeout window.

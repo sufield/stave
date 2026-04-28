@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CERT.SELFSIGNED.001
+name: ELB Listener Uses Self-Signed Certificate
+description: >
+  ELB listener serves a certificate that is
+  self-signed (issuer equals subject) rather
+  than issued by a publicly trusted CA.
+  Browsers reject the connection with a
+  certificate error; users either bypass
+  the warning (training them to ignore TLS
+  errors) or fail to connect.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-23"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-12, SC-23"
+  hipaa: "164.312(e)(1)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Listener serves a self-signed certificate.
+    Browsers will reject connections.
+  action: >
+    Replace the self-signed certificate with
+    one from ACM (free, auto-renewing) or
+    another publicly trusted CA. Use aws
+    elbv2 modify-listener with the new
+    certificate ARN. If self-signed is
+    intentional (lab testing only), document
+    the deviation; production listeners
+    should never serve self-signed certs to
+    end users.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "certificate_self_signed": false,
+          "certificate_issuer": "Amazon"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.certificate_self_signed
+      op: eq
+      value: true
+defect: >
+  ELB listener certificate is self-signed.
+infection: >
+  Self-signed certificates have issuer equal
+  to subject — the certificate vouches for
+  itself. Browsers reject these because they
+  can't establish a chain of trust to a
+  known root CA. Users see a 'Your connection
+  is not private' interstitial; clicking
+  through (which Chrome and Firefox both
+  allow with friction) habituates users to
+  bypass certificate errors, undermining
+  the value of TLS warnings on legitimate
+  attacks. ACM provides free, auto-renewing
+  publicly-trusted certificates for any AWS
+  domain; there is no production reason to
+  serve self-signed.
+failure: >
+  Browsers reject the connection. Users
+  either fail to access the application or
+  habitually bypass the warning, weakening
+  TLS error response across the board.
+tests:
+  - name: self-signed cert fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            certificate_self_signed: true
+            certificate_issuer: "self"
+  - name: CA-issued cert passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/abc/123/listener"
+      asset_type: aws_elb_listener
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            certificate_self_signed: false
+            certificate_issuer: "Amazon"

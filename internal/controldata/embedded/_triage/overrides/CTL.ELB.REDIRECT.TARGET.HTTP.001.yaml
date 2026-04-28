@@ -1,0 +1,22 @@
+control: CTL.ELB.REDIRECT.TARGET.HTTP.001
+defect: >
+  ALB redirect action sends HTTP traffic to
+  another HTTP target.
+infection: >
+  HTTP→HTTPS redirects move users from a
+  plaintext channel to a secure one — that's
+  the whole point. A redirect rule that
+  points back to HTTP keeps users on plaintext
+  forever; credentials, session cookies, and
+  request bodies all transit in the open.
+  The misconfiguration usually shows up
+  during partial migrations: someone
+  configured the redirect early in the work
+  but pointed it at the temporary HTTP
+  endpoint, intending to update it once
+  HTTPS was ready, and never came back. The
+  ALB attribute-check confirms the redirect
+  target is HTTPS, not HTTP-loopback.
+failure: >
+  HTTP redirect doesn't upgrade to TLS. Users
+  remain on plaintext after the redirect.

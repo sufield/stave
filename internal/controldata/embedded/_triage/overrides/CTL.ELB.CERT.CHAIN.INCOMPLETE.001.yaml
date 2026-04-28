@@ -1,0 +1,24 @@
+control: CTL.ELB.CERT.CHAIN.INCOMPLETE.001
+defect: >
+  ELB certificate chain is incomplete.
+infection: >
+  TLS handshakes need a complete chain from
+  the leaf certificate up to a trusted root.
+  Browsers cache common intermediates, so an
+  incomplete chain often appears to work in
+  desktop browsers — but new browsers, fresh
+  installs, mobile platforms, and command-
+  line tools (curl, wget) without the cached
+  intermediate fail with
+  unable-to-get-issuer-cert errors.
+  Intermittent client failures — 'works on
+  my machine' — typically indicate chain
+  problems. The fix is to import the full
+  chain into ACM; ACM-issued certificates
+  are complete by default, so the
+  misconfiguration appears only with
+  manually-imported certs.
+failure: >
+  Intermittent certificate validation
+  failures. Clients without cached
+  intermediates can't verify the chain.
