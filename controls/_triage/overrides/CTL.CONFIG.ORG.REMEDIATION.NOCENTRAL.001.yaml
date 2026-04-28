@@ -1,0 +1,29 @@
+control: CTL.CONFIG.ORG.REMEDIATION.NOCENTRAL.001
+defect: >
+  Organization detects non-compliance via org
+  rules but has no centralized remediation
+  pipeline.
+infection: >
+  Organization Config rules detect issues
+  uniformly across member accounts —
+  consistent rule definition, consistent
+  evaluation, consistent reporting through
+  the aggregator. The response side breaks
+  the symmetry: each member account either
+  has its own remediation, has none, or has
+  remediation that drifts in approach. The
+  org rule's value is partly wasted. The
+  same finding in two member accounts
+  produces two different (or no) responses.
+  Auditors trying to demonstrate
+  detection-to-response coverage find a
+  uniform detection layer and a fragmented
+  response layer. Centralized remediation —
+  either via organization remediation
+  actions deployed alongside org rules, or
+  via an aggregation-EventBridge-Lambda
+  pipeline — closes the symmetry.
+failure: >
+  Detection without uniform response. Org
+  rules surface non-compliance consistently;
+  remediation is per-account and drifts.

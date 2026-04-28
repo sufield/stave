@@ -1,0 +1,133 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ORG.NODELEGATED.001
+name: AWS Organization Has No Delegated Administrator for Config
+description: >
+  AWS Organization runs Config across member
+  accounts but has not registered a
+  delegated administrator account for
+  config.amazonaws.com. Without delegation,
+  organization-level Config administration —
+  org rules, org conformance packs,
+  aggregator authorization — must happen
+  from the management account, which AWS
+  best-practice guidance discourages
+  exposing to day-to-day administrative
+  workloads. The management account holds
+  billing, root user, and the organization
+  itself; concentrating Config admin there
+  means the same identity boundary owns the
+  audit-tool layer it should be evaluating
+  independently.
+domain: governance
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3, CC8.1"
+  nist_800_53_r5: "AC-3, AC-6, CM-5"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6, CM-5"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09", "GRC-04"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 3.0
+remediation:
+  description: >
+    Org Config administration runs from the
+    management account because no delegated
+    administrator is registered.
+  action: >
+    Register a dedicated security or audit
+    account as the delegated administrator
+    for Config: aws organizations
+    register-delegated-administrator
+    --account-id <security-acct>
+    --service-principal config.amazonaws.com.
+    Move org rule, org conformance pack, and
+    aggregator administration to that
+    account. The management account retains
+    the ability to revoke delegation but
+    shouldn't be the day-to-day admin point.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_organization",
+        "config": {
+          "is_org_account": true,
+          "delegated_admin_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_organization
+    - field: properties.compliance.config.is_org_account
+      op: eq
+      value: true
+    - field: properties.compliance.config.delegated_admin_configured
+      op: eq
+      value: false
+defect: >
+  AWS Organization has no Config delegated
+  administrator registered.
+infection: >
+  AWS Organizations supports delegating
+  service administration to a non-management
+  account via register-delegated-administrator.
+  For Config, delegation lets a dedicated
+  security or audit account run org rules,
+  org conformance packs, and the aggregator
+  without needing administrative access in
+  the management account. AWS best practice
+  is to keep the management account
+  minimally used — it holds billing, root,
+  and the organization itself; identity
+  compromises in the management account
+  cascade to every member account. Day-to-
+  day Config administration concentrates
+  authentication and operational footprint
+  in the management account when no
+  delegated admin exists; that same identity
+  boundary owns both the audit-tool config
+  and the audited resources, weakening
+  separation of duties.
+failure: >
+  Concentrated administrative footprint in
+  the management account. Org Config admin
+  shares the highest-trust account boundary
+  with billing and root.
+tests:
+  - name: org without delegated admin fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_config_organization
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_organization
+          config:
+            is_org_account: true
+            delegated_admin_configured: false
+  - name: org with delegated admin passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_config_organization
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_organization
+          config:
+            is_org_account: true
+            delegated_admin_configured: true

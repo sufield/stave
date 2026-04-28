@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.VALIDATION.PATH.MISSING.001
+defect: >
+  REST API method has a request validator attached, but path
+  parameters are not validated.
+infection: >
+  Path parameters appear in the resource URL pattern as
+  {placeholder} segments — /users/{userId}/orders/{orderId}.
+  They're the most direct integration input on REST APIs:
+  every request that matches the resource path includes them.
+  When the validator skips parameter validation, path
+  parameters flow through unchecked. Common issues that reach
+  the backend without filtering: path-traversal sequences
+  (../../../etc/passwd embedded in a URL-encoded path
+  parameter), type-mismatched values (UUIDs where integers
+  expected, vice versa), oversized values that exceed
+  downstream column lengths, injection payloads. Path
+  parameters aren't always declared with strict types in the
+  resource definition — operators frequently leave them
+  free-form — so the backend ends up with the validation
+  burden the API Gateway layer should have absorbed.
+failure: >
+  Path parameter validation absent. Path traversal, type
+  mismatches, and injection payloads reach the backend
+  through declared path parameters that aren't gated.

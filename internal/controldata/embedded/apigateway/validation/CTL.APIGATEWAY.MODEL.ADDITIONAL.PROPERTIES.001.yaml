@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.MODEL.ADDITIONAL.PROPERTIES.001
+name: Request Model Permits additionalProperties (Schema Not Closed)
+description: >
+  REST API request model is associated with a method, but the
+  JSON Schema either declares "additionalProperties": true or
+  omits the keyword entirely (which JSON Schema interprets as
+  true by default). Callers can include arbitrary extra
+  fields on the request body and the model accepts them. The
+  backend may not handle the unexpected fields, may
+  inadvertently persist them, or may fail to spot mass-
+  assignment vulnerabilities where a caller smuggles a field
+  the API didn't intend to accept (admin=true on a profile
+  update). Closed schemas — additionalProperties: false —
+  reject extra fields at the API Gateway layer before the
+  backend ever sees them.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-10, SC-7"
+  fedramp_moderate: "SI-10, SC-7"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Request model schema is open; callers can add arbitrary
+    fields the model doesn't gate.
+  action: >
+    Update the model's JSON Schema to set
+    additionalProperties: false: aws apigateway update-model
+    --rest-api-id <id> --model-name <name> --patch-operations
+    op=replace,path=/schema,value=<closed-schema-json>. The
+    closed schema rejects any field not declared in the
+    properties list. Migrate carefully — clients sending
+    legitimate-but-undocumented fields will start receiving
+    400 responses; communicate the schema tightening before
+    enforcing.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_rest_api",
+        "models": {
+          "open_schema_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_rest_api
+    - field: properties.api.models.open_schema_count
+      op: gt
+      value: 0

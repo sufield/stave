@@ -1,0 +1,31 @@
+control: CTL.CONFIG.ACCESS.PUTRECORDER.BROAD.001
+defect: >
+  config:PutConfigurationRecorder is granted to
+  non-administrative principals.
+infection: >
+  PutConfigurationRecorder modifies an existing
+  recorder's scope: which resource types it
+  records, whether IAM global resources are
+  included, recording mode. The danger isn't
+  stopping or deleting the recorder — those
+  are observable as "recorder not running" or
+  "recorder gone." It's narrowing the scope
+  to exclude specific resource types while
+  the recorder continues appearing healthy.
+  An attacker drops S3 from the recorder's
+  type list, then makes a bucket public; the
+  bucket change isn't captured because S3
+  isn't being recorded. The recorder stays
+  green in Config's status; the specific type
+  the attacker abused is silently absent.
+  Pair with the existing
+  RECORDER.NOTALLRESOURCES.001 control —
+  that control catches the symptom (not all
+  types recorded), this one catches the
+  prerequisite (who can change it).
+failure: >
+  Selective recorder scope tampering. Too many
+  principals can narrow the recorder to
+  exclude specific resource types — Config
+  appears healthy while specific types are
+  silently dropped.

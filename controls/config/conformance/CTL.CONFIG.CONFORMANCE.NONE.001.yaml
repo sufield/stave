@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.CONFORMANCE.NONE.001
+name: AWS Config Account Has No Conformance Pack Deployed
+description: >
+  AWS Config records resource configurations in
+  the account, but no conformance pack is
+  deployed. Conformance packs are bundles of
+  Config rules organized around a compliance
+  framework — CIS AWS Foundations, NIST 800-53,
+  PCI-DSS, HIPAA, FedRAMP. Without one,
+  compliance evaluation depends on whatever
+  ad-hoc rules the operator added. Most
+  accounts hosting regulated workloads need at
+  least one conformance pack as the baseline
+  set of evaluations; without it, "we use
+  Config for compliance" is half-true.
+domain: governance
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC7.1, CC7.2, CC8.1"
+  nist_800_53_r5: "CA-2, CA-7, CM-6"
+  pci_dss_v4.0: "12.4"
+  fedramp_moderate: "CA-2, CA-7, CM-6"
+  iso_27001_2022: "A.5.36, A.8.9"
+  ccm_v4: ["GRC-04", "GRC-06"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Account has Config recording but no
+    conformance pack — no framework-aligned
+    evaluation baseline.
+  action: >
+    Deploy a conformance pack matching the
+    account's compliance obligations: aws
+    configservice put-conformance-pack
+    --conformance-pack-name <name> with the
+    appropriate template (AWS publishes
+    sample-templates for CIS, NIST 800-53,
+    PCI-DSS, HIPAA, FedRAMP, and others).
+    Pair the pack with monitoring on the
+    pack's compliance score so degradation
+    surfaces.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "conformance_pack_count": 2
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.conformance_pack_count
+      op: eq
+      value: 0
+defect: >
+  Account has AWS Config recording but no
+  conformance pack deployed.
+infection: >
+  Conformance packs are AWS's mechanism for
+  shipping bundles of Config rules organized
+  around a named compliance framework. AWS
+  publishes sample templates for CIS AWS
+  Foundations, NIST 800-53, PCI-DSS, HIPAA,
+  FedRAMP Moderate, and others. Without a
+  conformance pack, the account's Config rule
+  set is whatever ad-hoc rules the operator
+  added — often partial coverage of the
+  framework the organization claims to align
+  with. Auditors asking "how do you
+  demonstrate continuous evaluation against
+  your framework" get an inventory of
+  individual rules rather than a packaged
+  baseline. Conformance packs aren't required
+  by Config to function — Config records and
+  evaluates without them — but they're the
+  recommended baseline for compliance-driven
+  workloads.
+failure: >
+  No framework-aligned compliance baseline. The
+  account uses Config but has no packaged
+  evaluation aligned with a compliance
+  framework — coverage is whatever ad-hoc
+  rules happened to be added.
+tests:
+  - name: zero conformance packs fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            conformance_pack_count: 0
+  - name: conformance pack deployed passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            conformance_pack_count: 2

@@ -3,31 +3,31 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2092
-**Pack hash:** `0ccd3a2425466e7e9ae93173a0f99cd38e348d85ccb033785114758901d30f37`
+**Total controls:** 2117
+**Pack hash:** `8e5972794a9e13865f6e1e341c66142767e9ae4a2c3bfea96062de961727d16a`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 231 |
-| high | 923 |
+| critical | 232 |
+| high | 931 |
 | info | 16 |
 | low | 144 |
-| medium | 778 |
+| medium | 794 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 70 |
+| audit | 78 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1086 |
-| governance | 287 |
+| exposure | 1094 |
+| governance | 295 |
 | hygiene | 16 |
-| identity | 371 |
+| identity | 372 |
 | network | 28 |
 | resilience | 20 |
 | secrets | 4 |
@@ -770,6 +770,36 @@ API Gateway stage emits the 5XXError metric to CloudWatch but no alarm watches i
 
 ---
 
+### CTL.APIGATEWAY.ALARM.CONFIGCHANGE.001
+
+**No Alarm on API Gateway Configuration Change Events**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.7; fedramp_moderate: AU-6, AU-12, SI-4; iso_27001_2022: A.5.25, A.8.16; nist_800_53_r5: AU-6, AU-12, SI-4; pci_dss_v4.0: 10.4, 12.10; soc2: CC7.2, CC8.1;
+
+No CloudWatch alarm fires when API Gateway configuration changes (CreateStage, DeleteStage, CreateAuthorizer, DeleteAuthorizer, UpdateRestApi, CreateDeployment, CreateApiKey, etc.). API Gateway management API calls land in CloudTrail, but without a metric filter on the relevant events and an alarm on the metric, configuration drift surfaces only when someone audits the trail manually. Configuration drift on production APIs warrants real-time visibility — the wrong stage gets enabled, an authorizer gets removed, a deployment lands without review.
+
+**Remediation:** Create a CloudWatch metric filter on the CloudTrail log group matching API Gateway management events: eventSource=apigateway.amazonaws.com AND eventName=(CreateStage|DeleteStage|CreateAuthorizer| DeleteAuthorizer|UpdateRestApi|UpdateStage|...). aws logs put-metric-filter with the pattern, then aws cloudwatch put-metric-alarm on the metric. Alarm targets should reach the API-owning team; deletion events may warrant a higher-priority pager target.
+
+---
+
+### CTL.APIGATEWAY.ALARM.COUNT.DDOS.001
+
+**No CloudWatch Alarm on API Gateway Request Count Spike**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, IR-4, SC-5; iso_27001_2022: A.5.25, A.8.6, A.8.16; nist_800_53_r5: AU-6, IR-4, SC-5, SI-4; pci_dss_v4.0: 10.4, 11.5; soc2: CC7.2, A1.1;
+
+API Gateway stage publishes the Count metric to CloudWatch but no alarm watches it for traffic spikes. Volume spikes signal: legitimate viral traffic that needs capacity scaling, application-layer DDoS that needs WAF rate-rule tightening, or runaway clients caught in a retry loop. All three demand on-call attention; without an alarm, none of them surfaces until customer impact or cost reports arrive. Pair with the existing 4XX / 5XX / latency / throttle alarms; Count catches volume excursions those don't (a flood of 200s isn't an error spike but is still operationally meaningful).
+
+**Remediation:** Create an alarm on the AWS/ApiGateway namespace Count metric, dimensioned by ApiName/Stage, with a deviation- from-baseline threshold (e.g., 5x rolling average over 5 minutes). aws cloudwatch put-metric-alarm with --metric-name Count --threshold <baseline*5>. For accounts with very dynamic traffic, anomaly detection alarms are a better fit than fixed thresholds.
+
+---
+
 ### CTL.APIGATEWAY.ALARM.LATENCY.001
 
 **No CloudWatch Alarm on API Gateway Latency**
@@ -782,6 +812,21 @@ API Gateway stage emits the 5XXError metric to CloudWatch but no alarm watches i
 API Gateway stage emits the Latency and IntegrationLatency metrics to CloudWatch but no alarm watches either. Latency alarms are how operators learn the backend is slowing down before customers notice. Latency excursions often precede outages: backend connection-pool exhaustion, downstream dependency degradation, Lambda cold-start storms. The two metrics are complementary — Latency is end-to-end (including API Gateway overhead and authorizer time); IntegrationLatency isolates the backend hop. Alarming on both gives both customer-visible signal and root-cause attribution.
 
 **Remediation:** Create alarms on AWS/ApiGateway namespace for both Latency and IntegrationLatency, dimensioned by ApiName/Stage. P99 threshold tied to the SLO is the standard pattern; a P50 threshold flags broader degradation. aws cloudwatch put-metric-alarm with --metric-name Latency --extended-statistic p99 --threshold <ms>. Document the SLO in the runbook so on-call has the right action when the alarm fires.
+
+---
+
+### CTL.APIGATEWAY.ALARM.RESOURCEPOLICY.CHANGE.001
+
+**No Alarm on API Gateway Resource Policy Modifications**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.7; fedramp_moderate: AU-6, AU-12, SI-4, AC-3; iso_27001_2022: A.5.25, A.8.16; nist_800_53_r5: AU-6, AU-12, SI-4, AC-3; pci_dss_v4.0: 10.4, 7.1; soc2: CC6.1, CC7.2, CC8.1;
+
+No CloudWatch alarm fires when an API Gateway resource policy is modified (UpdateRestApi with a policy patch). Resource policies are the network-and-principal authorization layer on REST APIs — they decide whether a request is allowed based on source VPC, source IP, principal ARN, or organization ID. Modifications open or close the API to classes of callers; an attacker with apigateway:UpdateRestApi permission can flip a private API to allow Principal=*, and the change should be the highest-priority alarm category in the API Gateway monitoring set.
+
+**Remediation:** Create a CloudWatch metric filter on the CloudTrail log group matching policy patches: eventSource=apigateway.amazonaws.com AND eventName=UpdateRestApi AND requestParameters.patchOperations.path contains "/policy". aws logs put-metric-filter, then aws cloudwatch put-metric-alarm with --threshold 1 (any occurrence is meaningful). Alarm should page on-call immediately and route to a security pager during off- hours.
 
 ---
 
@@ -1100,6 +1145,21 @@ Execution logging is enabled with data trace on — every request and response b
 
 ---
 
+### CTL.APIGATEWAY.EXECLOG.LEVEL.INFO.001
+
+**REST API Execution Logging Set to INFO in Production**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-9, SC-28; iso_27001_2022: A.5.33, A.8.10, A.8.15; nist_800_53_r5: AU-9, SC-28, SI-12; pci_dss_v4.0: 10.5; soc2: CC6.7, CC8.1;
+
+REST API stage has execution logging enabled at level INFO on what appears to be a production stage (stage_name not matching dev/test/staging conventions). INFO-level execution logs include detailed per-request internal processing — authorizer outputs, integration request/response headers and metadata, mapping template execution. Production volume at INFO level inflates CloudWatch costs significantly and surfaces operational metadata that can leak sensitive detail. ERROR level captures the same diagnostic value for failures without persisting per-request internals on the happy path. INFO is appropriate for development and short- lived diagnostic windows; the long-lived production setting should be ERROR.
+
+**Remediation:** Lower the production stage's execution log level to ERROR: aws apigateway update-stage with --patch-operations op=replace,path=/*/loggingLevel,value=ERROR. For short- lived diagnostic windows, raise to INFO temporarily, then revert when the diagnosis is complete. Pair with the existing CTL.APIGATEWAY.EXECLOG.DATALOG.001 control — keep data trace off in production regardless of log level.
+
+---
+
 ### CTL.APIGATEWAY.GATEWAYRESPONSE.SERVERHEADER.001
 
 **Gateway Responses Include Server Header That Discloses API Gateway Version**
@@ -1294,6 +1354,21 @@ API Gateway integration forwards requests to a backend over plain HTTP, not HTTP
 
 ---
 
+### CTL.APIGATEWAY.INTEGRATION.HTTP.TLS.UNVALIDATED.001
+
+**HTTP Integration Doesn't Validate Backend TLS Certificate**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8, SC-12, SC-23; iso_27001_2022: A.5.10, A.8.20, A.8.24; nist_800_53_r5: SC-8, SC-12, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+HTTP / HTTP_PROXY integration is configured with TLS certificate validation disabled (insecureSkipVerification flag, or an explicit configuration that accepts any certificate). Integration traffic is technically encrypted but the certificate chain is not checked — API Gateway accepts connections to a backend whose certificate is self-signed, expired, or impersonated. An attacker who can redirect traffic in the network path between API Gateway and the backend (DNS hijack, BGP misroute, compromised intermediate) can present any certificate; API Gateway accepts it and forwards traffic. The encryption is cosmetic — confidentiality of credentials and request data is no stronger than plaintext HTTP.
+
+**Remediation:** Re-enable TLS validation on the integration: aws apigateway update-integration with --patch-operations op=replace,path=/tlsConfig/insecureSkipVerification,value=false. For backends with self-signed or internal-CA certificates, install the issuing CA into ACM and import the chain so validation succeeds; don't disable validation as a shortcut.
+
+---
+
 ### CTL.APIGATEWAY.INTEGRATION.LAMBDA.SCOPE.001
 
 **Lambda Permission Not Scoped to Specific API**
@@ -1369,6 +1444,21 @@ REST API method is configured with httpMethod ANY, which matches any HTTP verb (
 
 ---
 
+### CTL.APIGATEWAY.METHOD.RESPONSE.MISSING.001
+
+**REST API Method Has No Method Response Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-11, SC-7; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: SI-11, SC-7; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+REST API method has no method response (no methodResponses for any status code, or only the 200 response is declared). Without method responses, API Gateway passes the integration's raw response straight through to clients — including backend error responses with stack traces, internal paths, ORM error details, and any other exception detail the backend emits. Method responses let the operator declare which status codes are expected and what response models / parameter mappings apply, transforming integration responses into a stable API contract instead of a passthrough.
+
+**Remediation:** Declare method responses for each expected status code: aws apigateway put-method-response --status-code 200, --status-code 400, --status-code 5XX, etc. Pair with response models that constrain the body shape and integration-response mappings that transform raw backend output into the declared contract. The default integration response (when present) catches anything the explicit mappings don't.
+
+---
+
 ### CTL.APIGATEWAY.METHOD.THROTTLE.MISSING.001
 
 **REST API Method Lacks Per-Method Throttle Override**
@@ -1381,6 +1471,36 @@ REST API method is configured with httpMethod ANY, which matches any HTTP verb (
 Sensitive REST API method (login, signup, password reset, payment, search, file upload) has no method-level throttle override. The method inherits the stage-level rate, which is typically tuned for normal-flow methods. Sensitive methods warrant tighter limits — login at 5 RPS rather than 1000 RPS drops credential-stuffing throughput by 200x without affecting legitimate users (who login once per session). Method-level overrides are the surgical layer; stage-level is the broad layer; usage plans are the per-consumer layer. All three combine to bound an attacker's effective throughput.
 
 **Remediation:** Add method-level throttle on sensitive methods via the stage methodSettings: aws apigateway update-stage with --patch-operations op=replace,path=/~1users~1login/POST/throttling/rateLimit, value=5. The path encoding uses ~1 for / in the method selector. Identify sensitive methods by reviewing the API's operation list — any operation that gates auth, mutates sensitive resources, or has a meaningful per-user upper bound on legitimate frequency is a candidate.
+
+---
+
+### CTL.APIGATEWAY.MODEL.ADDITIONAL.PROPERTIES.001
+
+**Request Model Permits additionalProperties (Schema Not Closed)**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-10, SC-7; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: SI-10, SC-7; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+REST API request model is associated with a method, but the JSON Schema either declares "additionalProperties": true or omits the keyword entirely (which JSON Schema interprets as true by default). Callers can include arbitrary extra fields on the request body and the model accepts them. The backend may not handle the unexpected fields, may inadvertently persist them, or may fail to spot mass- assignment vulnerabilities where a caller smuggles a field the API didn't intend to accept (admin=true on a profile update). Closed schemas — additionalProperties: false — reject extra fields at the API Gateway layer before the backend ever sees them.
+
+**Remediation:** Update the model's JSON Schema to set additionalProperties: false: aws apigateway update-model --rest-api-id <id> --model-name <name> --patch-operations op=replace,path=/schema,value=<closed-schema-json>. The closed schema rejects any field not declared in the properties list. Migrate carefully — clients sending legitimate-but-undocumented fields will start receiving 400 responses; communicate the schema tightening before enforcing.
+
+---
+
+### CTL.APIGATEWAY.MODEL.UNASSOCIATED.001
+
+**Request Model Defined But Not Associated With Any Method**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-10, CM-2; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: SI-10, CM-2; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6, CC8.1;
+
+REST API has request model resources defined (the JSON Schema contracts API Gateway uses to validate request bodies), but the model is not attached to any method's requestModels[contentType]. The model exists in the API inventory but never enforces anything — every method accepts whatever the caller sends. Operators provisioning the model often assume it's enforced because it appears in the API definition; the actual enforcement requires an explicit per-method association alongside a request validator that includes body validation.
+
+**Remediation:** Either associate the model with the method that should enforce it: aws apigateway update-method with --patch-operations op=add,path=/requestModels/application~1json,value=<modelName>. Or delete the orphan model if it's leftover from a partial refactor: aws apigateway delete-model --model-name <name>. Pair with a request validator that has --validate-request-body set so the model actually gates traffic.
 
 ---
 
@@ -1816,6 +1936,36 @@ REST API method has a request validator, but the validator type is BODY only —
 REST API method has no request validator configured at the method level. Distinct from CTL.APIGATEWAY.VALIDATION.001, which checks that the API has *any* validation enabled — this control checks per-method and fires for individual methods whose validator type is NONE even when other methods on the same API have validators. Without a method-level validator, every request reaching that method — body, query string, headers — is forwarded to the backend uninspected. Validation at the gateway is the cheapest layer of input filtering, applied before WAF rule evaluation and before the backend has to spend cycles parsing malformed input. When validation is absent on a method, malformed JSON, oversized values, missing required parameters, and injection-shaped payloads all reach the backend as if they were valid.
 
 **Remediation:** Define a request model (JSON schema) for the method's body and a parameter schema for query strings and headers, then attach a validator of type BODY_AND_PARAMS to the method. Reject obviously malformed requests at the gateway. For HTTP APIs, the equivalent is OpenAPI request validation — not yet covered by this control's predicate; HTTP API methods will not fire this control.
+
+---
+
+### CTL.APIGATEWAY.VALIDATION.PATH.MISSING.001
+
+**REST API Method Validator Doesn't Validate Path Parameters**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-10, SC-7; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: SI-10, SC-7; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+REST API method has a request validator attached but the validator skips path parameter validation. Path parameters ({userId} in /users/{userId}/orders) flow through to the integration unchecked. Without validation, common issues reach the backend: path-traversal sequences (../../../), type-mismatched values (GUIDs where integers expected, vice versa), oversized values that exceed downstream query column lengths, injection payloads. Path parameters are the most direct integration input on REST APIs — unchecked, they amplify whatever input-handling weaknesses the backend has.
+
+**Remediation:** Use a request validator that includes parameter validation and declare path parameters explicitly: aws apigateway update-method-request-parameter with the path parameter name and required=true. Validate with the OpenAPI / Swagger schema if the API is exported from one — the model can declare type, format, and pattern constraints API Gateway enforces before invoking the integration.
+
+---
+
+### CTL.APIGATEWAY.VALIDATION.QUERY.MISSING.001
+
+**REST API Method Validator Doesn't Validate Query Parameters**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-10, SC-7; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: SI-10, SC-7; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+REST API method has a request validator attached but the validator is configured to skip query-string parameter validation. Method query parameters declared on the method (with required=true) flow through to the integration unchecked: missing parameters reach the backend (which often 500s on null), wrong-type parameters bypass schema expectations, parameter-injection payloads transit unfiltered to the backend. Body validation alone is incomplete — many REST endpoints carry their primary input in query strings, and those need the same schema-driven gating as bodies.
+
+**Remediation:** Configure a request validator that includes query/header validation and attach it to the method: aws apigateway create-request-validator with --validate-request-parameters true, then update-method --request-validator-id <id>. Declare each method query parameter with required=true / false explicitly so the validator has a contract to enforce.
 
 ---
 
@@ -9644,6 +9794,21 @@ Cognito user pools must be associated with an AWS WAFv2 web ACL for rate limitin
 
 ---
 
+### CTL.CONFIG.ACCESS.DELETERECORDER.BROAD.001
+
+**config:DeleteConfigurationRecorder Granted to Broad Principals**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16, 3.5; fedramp_moderate: AC-3, AC-6, CM-5; hipaa: 164.312(a)(1), 164.312(b); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, CM-5, SI-4; pci_dss_v4.0: 7.1, 7.2, 10.5; soc2: CC6.1, CC6.3, CC7.1;
+
+IAM policies grant config:DeleteConfigurationRecorder to non- administrative principals. DeleteConfigurationRecorder is the permanent counterpart to StopConfigurationRecorder — instead of stopping the recorder (recoverable), it deletes the recorder configuration entirely (recoverable only by recreation). Once deleted, no resource configurations are recorded; the configuration audit trail has no future entries until a new recorder is created. The permission should be tightly restricted to security administrators and protected by SCP at the org level.
+
+**Remediation:** Audit IAM policies for config:Delete*, config:DeleteConfigurationRecorder, and config:* on Resource: *. Restrict the permission to a dedicated security-admin role. Pair with an SCP at the org level that denies DeleteConfigurationRecorder for all member accounts (the existing CTL.CONFIG.ACCESS.NOSCP.001 covers that).
+
+---
+
 ### CTL.CONFIG.ACCESS.DELETERULE.BROAD.001
 
 **config:DeleteConfigRule Granted to Broad Principals**
@@ -9656,6 +9821,51 @@ Cognito user pools must be associated with an AWS WAFv2 web ACL for rate limitin
 IAM policies grant config:DeleteConfigRule to non-administrative principals. DeleteConfigRule removes compliance evaluation rules — a principal with this permission can delete rules that detect non-compliance, effectively removing compliance checks rather than stopping the recorder.
 
 **Remediation:** Audit IAM policies for config:DeleteConfigRule and config:* on Resource: *. Restrict to compliance-admin and security-admin roles. For high-stakes rules, require a manual approval step (e.g., a Lambda authorizer or SCP requiring an MFA condition) before deletion is allowed.
+
+---
+
+### CTL.CONFIG.ACCESS.NOSCP.001
+
+**No SCP Prevents Member Accounts From Stopping or Modifying Config**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.16, 3.5; fedramp_moderate: AC-3, AC-6, CM-5; iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, CM-5, SI-4; pci_dss_v4.0: 7.1, 7.2, 10.5; soc2: CC6.1, CC6.3, CC8.1;
+
+AWS Organization has Config recording in member accounts but no Service Control Policy (SCP) denies the destructive Config permissions (config:StopConfigurationRecorder, config:DeleteConfigurationRecorder, config:DeleteConfigRule, config:PutConfigurationRecorder) at the org level. Without an SCP, member-account IAM policies are the only barrier — and a member-account admin can grant themselves any IAM permission they want. The organizational baseline that "all member accounts have Config recording" is enforceable only at the org boundary; SCPs are that boundary.
+
+**Remediation:** Author and attach an SCP at the organizational unit (OU) or root level that explicitly denies config:StopConfigurationRecorder, config:DeleteConfigurationRecorder, config:DeleteConfigRule, config:PutConfigurationRecorder, and config:PutDeliveryChannel for all principals in the OU. AWS publishes sample SCPs for this exact case. Pair with the existing CTL.IAM.SCP.CONFIG.001 control if it covers the SCP-existence side; this control catches the absence at the Config-account level.
+
+---
+
+### CTL.CONFIG.ACCESS.PUTRECORDER.BROAD.001
+
+**config:PutConfigurationRecorder Granted to Broad Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16, 3.5; fedramp_moderate: AC-3, AC-6, CM-5; iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, CM-5, SI-4; pci_dss_v4.0: 7.1, 7.2, 10.5; soc2: CC6.1, CC6.3, CC7.1;
+
+IAM policies grant config:PutConfigurationRecorder to non- administrative principals. PutConfigurationRecorder modifies the recorder's scope (which resource types it records, whether it includes global resources, recording mode). An attacker with this permission narrows the recorder's scope to exclude resource types they intend to abuse — drops S3 from the recorded list, drops IAM from global recording — and the recorder continues appearing healthy while specific resource types are silently no longer recorded. The attacker's actions on the dropped types are invisible to Config.
+
+**Remediation:** Audit IAM policies for config:PutConfigurationRecorder, config:Put*, and config:* on Resource: *. Restrict the permission to a dedicated security-admin role. Pair with an SCP at the org level that denies PutConfigurationRecorder for all member accounts. Any legitimate operator who needs to adjust recorder scope should do so through the security-admin role with change-management documentation.
+
+---
+
+### CTL.CONFIG.ACCESS.PUTREMEDIATION.BROAD.001
+
+**config:PutRemediationConfigurations Granted to Broad Principals**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16, 3.5; fedramp_moderate: AC-3, AC-6, CM-5; iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, CM-5, SI-4; pci_dss_v4.0: 7.1, 7.2, 12.10; soc2: CC6.1, CC6.3, CC7.1;
+
+IAM policies grant config:PutRemediationConfigurations to non- administrative principals. The permission modifies the remediation actions tied to Config rules — what runs when a rule fires non-compliant, with what role, against what target, with what parameters. An attacker with this permission rewrites the remediation to a no-op, to an action that ignores specific resources, or to one that uses a less-privileged role; the rule still fires non-compliant but the remediation no longer corrects the state. Auto-remediation appears configured; enforcement is hollow.
+
+**Remediation:** Audit IAM policies for config:PutRemediationConfigurations, config:Put*, and config:* on Resource: *. Restrict the permission to a dedicated security-admin role. Remediation changes should go through the same change-control process as rule definitions — production remediation is part of the compliance enforcement layer and shouldn't be casually mutable.
 
 ---
 
@@ -9716,6 +9926,66 @@ Config aggregator exists but does not include all enabled AWS regions. Resources
 AWS Organizations is in use but no Config aggregator exists. Each account and region stores Config data independently; security teams must query Config in each account and region individually to assess organizational compliance posture.
 
 **Remediation:** Create a Config aggregator in the security or audit account: aws configservice put-configuration-aggregator --configuration-aggregator-name org-aggregator --organization-aggregation-source RoleArn=<role>,AllAwsRegions=true. Use organization-wide collection so new accounts are auto-included.
+
+---
+
+### CTL.CONFIG.CONFORMANCE.NONE.001
+
+**AWS Config Account Has No Conformance Pack Deployed**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: CA-2, CA-7, CM-6; iso_27001_2022: A.5.36, A.8.9; nist_800_53_r5: CA-2, CA-7, CM-6; pci_dss_v4.0: 12.4; soc2: CC7.1, CC7.2, CC8.1;
+
+AWS Config records resource configurations in the account, but no conformance pack is deployed. Conformance packs are bundles of Config rules organized around a compliance framework — CIS AWS Foundations, NIST 800-53, PCI-DSS, HIPAA, FedRAMP. Without one, compliance evaluation depends on whatever ad-hoc rules the operator added. Most accounts hosting regulated workloads need at least one conformance pack as the baseline set of evaluations; without it, "we use Config for compliance" is half-true.
+
+**Remediation:** Deploy a conformance pack matching the account's compliance obligations: aws configservice put-conformance-pack --conformance-pack-name <name> with the appropriate template (AWS publishes sample-templates for CIS, NIST 800-53, PCI-DSS, HIPAA, FedRAMP, and others). Pair the pack with monitoring on the pack's compliance score so degradation surfaces.
+
+---
+
+### CTL.CONFIG.CONFORMANCE.PARAMS.WEAKENED.001
+
+**Conformance Pack Parameter Overrides Weaken Pack Defaults**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: CA-2, CA-7, CM-6; iso_27001_2022: A.5.36, A.8.9; nist_800_53_r5: CA-2, CA-7, CM-6, SI-4; pci_dss_v4.0: 12.4; soc2: CC7.1, CC8.1;
+
+AWS Config conformance pack is deployed with parameter overrides that loosen the pack template's default values. Common shapes: the pack's password-age rule defaulted to 90 days but is overridden to 365; the encryption rule defaulted to required-for- S3 but is overridden to optional; the MFA rule defaulted to required-for-all-IAM-users but is overridden to required-for-root-only. The pack name in the inventory still matches the framework, but the actual rule parameters no longer enforce the framework's thresholds.
+
+**Remediation:** Audit the pack's input parameters against the published template defaults: aws configservice describe-conformance-packs --conformance-pack-names <name>; compare ConformancePackInputParameters against the pack template values. Restore parameters that match the framework's intent, or redeploy the pack from the original template: aws configservice put-conformance-pack with the unmodified template URI. Document any deliberately- looser parameter as a triage override with the operational rationale.
+
+---
+
+### CTL.CONFIG.CONFORMANCE.RULES.DISABLED.001
+
+**Conformance Pack Has Disabled Rules Within It**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: CA-2, CA-7, CM-6; iso_27001_2022: A.5.36, A.8.9; nist_800_53_r5: CA-2, CA-7, CM-6; pci_dss_v4.0: 12.4; soc2: CC7.1, CC7.2, CC8.1;
+
+AWS Config conformance pack is deployed but one or more rules within the pack are in DELETING / inactive state, or were individually disabled after deployment. The pack's compliance score continues to compute against the active subset; the disabled rules don't appear in non-compliant counts even though their checks aren't running. Operators see "pack deployed" and assume the full rule set is evaluating; the disabled rules silently produce zero evidence.
+
+**Remediation:** Inspect the pack's rule set: aws configservice describe-conformance-pack-status, then describe-config-rules for each rule the pack defines. Re-enable any rule in DELETING or non-ACTIVE state, or redeploy the pack: aws configservice put-conformance-pack --conformance-pack-name <name> --template-s3-uri <uri>. Audit who disabled the rule (CloudTrail) — pack-rule disables are usually deliberate; verify the rationale.
+
+---
+
+### CTL.CONFIG.CONFORMANCE.SCORE.UNMONITORED.001
+
+**Conformance Pack Compliance Score Has No Alarm**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AU-6, CA-7, SI-4; iso_27001_2022: A.5.25, A.8.16; nist_800_53_r5: AU-6, CA-7, SI-4; pci_dss_v4.0: 10.4, 12.4; soc2: CC7.1, CC7.2, CC8.1;
+
+AWS Config conformance pack is deployed but no CloudWatch alarm watches its compliance score. The score is the percentage of evaluated resources judged compliant against the pack's rules — the headline metric for framework alignment. Without an alarm, score degradation (a rule starts producing non-compliant results, the percentage drops) is invisible until a human happens to view the pack's dashboard. By then the non-compliance has been live for whatever the human-review interval is, which is typically much longer than the operator imagines.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/Config namespace ComplianceByConfigRule metric, dimensioned by ComplianceType=NON_COMPLIANT and the conformance pack's rule names. Or put a metric filter on the pack's compliance score and alarm on threshold breach: aws cloudwatch put-metric-alarm with the pack-score metric. Alarm targets should reach the team owning the pack — pack owners are typically compliance or security, not generic SRE.
 
 ---
 
@@ -9898,6 +10168,36 @@ AWS Config has not delivered a configuration snapshot to S3 in more than 30 days
 
 ---
 
+### CTL.CONFIG.ORG.AGGREGATOR.UNENCRYPTED.001
+
+**Cross-Account Config Aggregator Storage Not Encrypted With Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: SC-12, SC-28, AU-9; hipaa: 164.312(a)(2)(iv), 164.312(e)(2)(ii); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-13, SC-28, AU-9; pci_dss_v4.0: 3.5, 10.5; soc2: CC6.1, CC6.7;
+
+AWS Config aggregator collects configuration data from multiple accounts and regions, but the underlying S3 bucket holding aggregated data is encrypted with the AWS-managed key (default) rather than a customer-managed KMS key. The aggregator data spans every member account — IAM policies, security group rules, encryption keys, network configuration — the highest-sensitivity inventory in the organization. AWS-managed encryption is opaque to the customer: no per-key access policy, no CloudTrail decrypt trail, no customer-side revocation. Customer-managed KMS keys are the standard for cross- account audit data.
+
+**Remediation:** Reconfigure the aggregator's storage S3 bucket to use a customer-managed KMS key: aws s3api put-bucket-encryption with SSEAlgorithm=aws:kms and the appropriate KMSMasterKeyID. The KMS key policy must allow the Config service principal (and aggregator source accounts) to encrypt; the central audit account holds key- administration. Existing aggregator objects remain encrypted under whatever key was active when they were written.
+
+---
+
+### CTL.CONFIG.ORG.AUDIT.COLOCATED.001
+
+**Member Account Config Data Delivered to Bucket in Management Account**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6, AU-9, CM-5; iso_27001_2022: A.5.15, A.5.18, A.8.15; nist_800_53_r5: AC-3, AC-6, AU-9, CM-5; pci_dss_v4.0: 10.5, 7.1; soc2: CC6.1, CC6.3, CC7.2, CC8.1;
+
+Member account Config delivery channel points at an S3 bucket owned by the management account. The configuration audit trail for member accounts is co-located with the management account's resources — billing, root user, top-level IAM, organization configuration. A compromise of the management account reaches both the audited resources (the organization itself) and the audit data (the configuration history of every member account). AWS best-practice guidance is to deliver Config data to a dedicated security or audit account outside the management account, so identity compromises don't cascade across the audit boundary.
+
+**Remediation:** Stand up a dedicated security or audit account in the organization. Create the Config delivery destination bucket in that account, with bucket policy allowing each member account's Config service principal to write. Reconfigure each member account's delivery channel: aws configservice put-delivery-channel --delivery-channel name=<name>, s3BucketName=<audit-account-bucket>, s3KmsKeyArn=<audit-account-cmk>. The delivery role in the member account needs permission to write to the audit account's bucket.
+
+---
+
 ### CTL.CONFIG.ORG.MEMBERCANOVERRIDE.001
 
 **Member Accounts Can Override Organization Config Rules**
@@ -9910,6 +10210,36 @@ AWS Config has not delivered a configuration snapshot to S3 in more than 30 days
 Organization Config rules are deployed but member accounts can modify or delete their local copies. A member admin can change rule parameters (weakening thresholds), disable rules (stopping evaluation), or delete rules (removing checks). The organizational baseline is overridable at the account level.
 
 **Remediation:** Add an SCP that denies config:DeleteConfigRule, config:PutConfigRule, config:DeleteOrganizationConfigRule, and config:PutOrganizationConfigRule for organization-deployed rules in member accounts (with an exception for the delegated admin account). The SCP makes the organization rule set the authoritative baseline regardless of member account IAM posture.
+
+---
+
+### CTL.CONFIG.ORG.NOCONFORMANCE.001
+
+**Organization Has No Organization Conformance Pack Deployed**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: CA-2, CA-7, CM-6; iso_27001_2022: A.5.36, A.8.9; nist_800_53_r5: CA-2, CA-7, CM-6, AC-3; pci_dss_v4.0: 12.4; soc2: CC7.1, CC8.1;
+
+AWS Organization spans multiple member accounts but no organization conformance pack is deployed. Per-account conformance packs require each member account to deploy independently, and they drift — some accounts have the pack, others don't, parameter overrides differ across accounts. An organization conformance pack deploys uniformly to all member accounts from the management or delegated-admin account, and the configuration is authoritative across the organization. Without one, the org-wide compliance baseline is whatever individual accounts happened to deploy.
+
+**Remediation:** Deploy an organization conformance pack from the management account or delegated administrator: aws configservice put-organization-conformance-pack --organization-conformance-pack-name <name> --template-s3-uri <uri> --excluded-accounts (optional). The pack deploys uniformly to all member accounts in the organization. Pair with the delegated administrator (CTL.CONFIG.ORG.NODELEGATED.001) so org Config is administered outside the management account.
+
+---
+
+### CTL.CONFIG.ORG.NODELEGATED.001
+
+**AWS Organization Has No Delegated Administrator for Config**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6, CM-5; iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, CM-5; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3, CC8.1;
+
+AWS Organization runs Config across member accounts but has not registered a delegated administrator account for config.amazonaws.com. Without delegation, organization-level Config administration — org rules, org conformance packs, aggregator authorization — must happen from the management account, which AWS best-practice guidance discourages exposing to day-to-day administrative workloads. The management account holds billing, root user, and the organization itself; concentrating Config admin there means the same identity boundary owns the audit-tool layer it should be evaluating independently.
+
+**Remediation:** Register a dedicated security or audit account as the delegated administrator for Config: aws organizations register-delegated-administrator --account-id <security-acct> --service-principal config.amazonaws.com. Move org rule, org conformance pack, and aggregator administration to that account. The management account retains the ability to revoke delegation but shouldn't be the day-to-day admin point.
 
 ---
 
@@ -9943,6 +10273,21 @@ AWS Organizations is in use but Config is not enabled (no recorder running) in e
 
 ---
 
+### CTL.CONFIG.ORG.REMEDIATION.NOCENTRAL.001
+
+**Organization Has No Centralized Remediation for Org-Wide Non-Compliance**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CA-7, IR-4, RA-5; iso_27001_2022: A.5.25, A.8.16; nist_800_53_r5: CA-7, IR-4, RA-5, SI-4; pci_dss_v4.0: 11.5, 12.10; soc2: CC7.2, CC8.1;
+
+Organization-level Config rules detect non- compliance in member accounts but remediation is configured (if at all) per account. There is no centralized remediation pipeline that fires when an org rule produces non-compliant findings across the organization. Each member account either remediates locally (drifts in approach), doesn't remediate (relies on humans to notice), or has remediation configured but inconsistently. The org rule's value is partly wasted — detection is uniform, response is fragmented.
+
+**Remediation:** Either deploy organization remediation actions tied to the org rules (so remediation deploys to member accounts alongside the rule) or set up an aggregation-and-respond pipeline: aggregator surfaces non-compliance, an EventBridge rule fires on new non- compliant findings, and a centralized Lambda or SSM automation responds. Document the remediation flow so auditors can trace detection-to-response end-to-end.
+
+---
+
 ### CTL.CONFIG.RECORDER.NOGLOBAL.001
 
 **Config Recorder Does Not Include Global Resources**
@@ -9955,6 +10300,21 @@ AWS Organizations is in use but Config is not enabled (no recorder running) in e
 AWS Config recorder has IncludeGlobalResourceTypes set to false. Global resources — IAM users, roles, policies, groups — are not recorded. IAM is the identity and access foundation for every AWS service; without recording it, Config has no visibility into IAM configuration changes.
 
 **Remediation:** Enable global resource recording in exactly one region (typically us-east-1) — global resources should be recorded once per account, not per region: aws configservice put-configuration-recorder --configuration-recorder name=<name>,roleARN=<role>,recordingGroup={allSupported=true,includeGlobalResourceTypes=true} in us-east-1, and includeGlobalResourceTypes=false in all other regions.
+
+---
+
+### CTL.CONFIG.RECORDER.NOTALLREGIONS.001
+
+**Config Recorder Not Running in All Active Regions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: AU-2, CA-7, CM-2; iso_27001_2022: A.5.25, A.8.16; nist_800_53_r5: AU-2, CA-7, CM-2, CM-8; pci_dss_v4.0: 10.2, 11.5; soc2: CC7.1, CC7.2;
+
+AWS Config recorders are running in some regions but not all regions where the account has resources. Resources in unrecorded regions are completely invisible to Config — they don't appear in the configuration inventory, no rule evaluates them, no compliance status applies to them. An attacker who creates resources in a region without a recorder evades every Config-based detection. Most accounts should run a recorder in every region they use, regardless of how few resources are there; the cost of the recorder is small, the cost of an unrecorded blast-radius region is large.
+
+**Remediation:** Either provision a Config recorder in every active region (aws configservice put-configuration-recorder per region — AWS publishes Terraform / CloudFormation templates to deploy recorders across regions), or restrict resource creation to a smaller region set via SCP and record those. For organizations, deploy via CloudFormation StackSets or AWS Control Tower's account baseline so the recorder is provisioned automatically in every region of every member account.
 
 ---
 
@@ -9985,6 +10345,21 @@ AWS Config recorder is configured to record only specific resource types — not
 AWS Config recorder is set to periodic mode instead of continuous. Periodic mode captures configuration only every 24 hours; changes between snapshots are not captured. A resource can be created, modified, and deleted within a 24-hour window without any Config record.
 
 **Remediation:** Switch the recorder to continuous mode: aws configservice put-configuration-recorder --configuration-recorder name=<name>,roleARN=<role>,recordingMode={recordingFrequency=CONTINUOUS}. Continuous mode captures every configuration change as it occurs and is the default for most setups; periodic mode is intended for resource types with less-frequent changes or cost-sensitive accounts.
+
+---
+
+### CTL.CONFIG.RECORDER.ROLE.TRUST.BROAD.001
+
+**Config Recorder Service Role Trusts Services Beyond config.amazonaws.com**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6, IA-2; iso_27001_2022: A.5.15, A.5.16; nist_800_53_r5: AC-3, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3, CC8.1;
+
+AWS Config recorder service role trust policy allows services other than config.amazonaws.com to assume the role. The recorder role typically holds broad read access across resource types — IAM, EC2, S3, Lambda, RDS, every recorded type. With trust extended to additional services (or to specific account principals beyond Config), the role becomes a generic high-privilege handle reachable by other AWS-internal callers. The service role should be scoped narrowly to the single service that legitimately needs it: aws Config.
+
+**Remediation:** Update the recorder role's trust policy to allow only the Config service: aws iam update-assume-role-policy --role-name <recorder-role> --policy-document with Principal: {"Service": "config.amazonaws.com"}. Audit who originally added the additional trust entries (CloudTrail) — extra entries are usually deliberate mistakes or short-term workarounds; verify the rationale or remove.
 
 ---
 

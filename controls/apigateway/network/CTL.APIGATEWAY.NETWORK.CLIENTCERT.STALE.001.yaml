@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.NETWORK.CLIENTCERT.STALE.001
+name: REST API Stage Client Certificate Older Than Rotation Policy
+description: >
+  REST API stage uses a client certificate (the certificate
+  API Gateway presents to backends to authenticate itself
+  during integration calls), and the certificate is older
+  than the rotation policy threshold (default: 365 days).
+  Client certificates that aren't rotated accumulate the same
+  drift problems as long-lived credentials elsewhere — if
+  the private key is compromised, every backend that trusts
+  the cert is reachable; rotation cadence limits the blast
+  radius. The expiry control (CTL.APIGATEWAY.NETWORK.CLIENTCERT.EXPIRY.001)
+  catches imminent expiry; this control catches stale-but-
+  not-yet-expired certs that are overdue for rotation.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5, SC-12, SC-17"
+  fedramp_moderate: "IA-5, SC-12, SC-17"
+  pci_dss_v4.0: "3.7, 8.3"
+  soc2: "CC6.1, CC6.7"
+  iso_27001_2022: "A.5.16, A.8.24"
+  ccm_v4: ["IAM-13", "CEK-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Stage client certificate has not been rotated within the
+    rotation-policy window.
+  action: >
+    Generate a new client certificate, distribute it to the
+    backends that trust it, and update the stage to use the
+    new certificate: aws apigateway generate-client-certificate
+    followed by aws apigateway update-stage with
+    --patch-operations
+    op=replace,path=/clientCertificateId,value=<new-cert-id>.
+    Plan rotation in advance — backends typically need a
+    deployment to trust the new certificate before the stage
+    flips. Once rotation is complete, delete the old
+    certificate.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "client_cert": {
+          "configured": true,
+          "age_days": 90
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.client_cert.configured
+      op: eq
+      value: true
+    - field: properties.api.client_cert.age_days
+      op: gt
+      value: 365

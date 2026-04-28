@@ -1,0 +1,128 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.CONFORMANCE.RULES.DISABLED.001
+name: Conformance Pack Has Disabled Rules Within It
+description: >
+  AWS Config conformance pack is deployed but
+  one or more rules within the pack are in
+  DELETING / inactive state, or were
+  individually disabled after deployment. The
+  pack's compliance score continues to compute
+  against the active subset; the disabled
+  rules don't appear in non-compliant counts
+  even though their checks aren't running.
+  Operators see "pack deployed" and assume
+  the full rule set is evaluating; the
+  disabled rules silently produce zero
+  evidence.
+domain: audit
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC7.1, CC7.2, CC8.1"
+  nist_800_53_r5: "CA-2, CA-7, CM-6"
+  pci_dss_v4.0: "12.4"
+  fedramp_moderate: "CA-2, CA-7, CM-6"
+  iso_27001_2022: "A.5.36, A.8.9"
+  ccm_v4: ["GRC-04", "GRC-06"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Conformance pack contains rules that are
+    inactive or disabled.
+  action: >
+    Inspect the pack's rule set: aws
+    configservice describe-conformance-pack-status,
+    then describe-config-rules for each rule the
+    pack defines. Re-enable any rule in
+    DELETING or non-ACTIVE state, or redeploy
+    the pack: aws configservice
+    put-conformance-pack --conformance-pack-name
+    <name> --template-s3-uri <uri>. Audit who
+    disabled the rule (CloudTrail) — pack-rule
+    disables are usually deliberate; verify the
+    rationale.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_conformance_pack",
+        "config": {
+          "pack_name": "my-pack",
+          "pack_rule_count": 24,
+          "pack_rules_active": 24,
+          "pack_has_disabled_rules": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_conformance_pack
+    - field: properties.compliance.config.pack_has_disabled_rules
+      op: eq
+      value: true
+defect: >
+  AWS Config conformance pack contains rules
+  in non-ACTIVE state.
+infection: >
+  Conformance packs ship as a unit — the
+  template bundles N rules, the pack deploys
+  them all. After deployment, individual rules
+  inside the pack can be disabled or end up
+  stuck in DELETING state from a partial
+  remove operation. The pack's compliance
+  score only computes against ACTIVE rules; a
+  disabled rule contributes neither to the
+  compliant nor non-compliant count. The
+  operational view shows "pack deployed" —
+  what the operator notices — and the
+  disabled rule is silently absent from
+  evaluation. Auditors looking at the pack's
+  declared rule list and the pack's reported
+  compliance score don't see the gap. Audit
+  the pack's actual ACTIVE rule set against
+  the pack template's declared rule list.
+failure: >
+  Silent rule attrition inside the pack.
+  Disabled rules don't evaluate; the pack's
+  compliance score reflects a smaller-than-
+  declared rule set.
+tests:
+  - name: pack with disabled rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:conformance-pack/my-pack"
+      asset_type: aws_config_conformance_pack
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_conformance_pack
+          config:
+            pack_name: "my-pack"
+            pack_rule_count: 24
+            pack_rules_active: 18
+            pack_has_disabled_rules: true
+  - name: pack with all rules active passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:conformance-pack/my-pack"
+      asset_type: aws_config_conformance_pack
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_conformance_pack
+          config:
+            pack_name: "my-pack"
+            pack_rule_count: 24
+            pack_rules_active: 24
+            pack_has_disabled_rules: false

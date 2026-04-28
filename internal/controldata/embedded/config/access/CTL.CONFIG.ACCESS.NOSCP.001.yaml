@@ -1,0 +1,143 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ACCESS.NOSCP.001
+name: No SCP Prevents Member Accounts From Stopping or Modifying Config
+description: >
+  AWS Organization has Config recording in
+  member accounts but no Service Control
+  Policy (SCP) denies the destructive Config
+  permissions
+  (config:StopConfigurationRecorder,
+  config:DeleteConfigurationRecorder,
+  config:DeleteConfigRule,
+  config:PutConfigurationRecorder) at the org
+  level. Without an SCP, member-account IAM
+  policies are the only barrier — and a
+  member-account admin can grant themselves
+  any IAM permission they want. The
+  organizational baseline that "all member
+  accounts have Config recording" is
+  enforceable only at the org boundary; SCPs
+  are that boundary.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16, 3.5"
+  soc2: "CC6.1, CC6.3, CC8.1"
+  nist_800_53_r5: "AC-3, AC-6, CM-5, SI-4"
+  pci_dss_v4.0: "7.1, 7.2, 10.5"
+  fedramp_moderate: "AC-3, AC-6, CM-5"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09", "GRC-04"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: organization
+    multiplier: 5.0
+remediation:
+  description: >
+    No SCP at the org level prevents member-
+    account admins from disabling Config.
+  action: >
+    Author and attach an SCP at the
+    organizational unit (OU) or root level
+    that explicitly denies
+    config:StopConfigurationRecorder,
+    config:DeleteConfigurationRecorder,
+    config:DeleteConfigRule,
+    config:PutConfigurationRecorder, and
+    config:PutDeliveryChannel for all
+    principals in the OU. AWS publishes
+    sample SCPs for this exact case. Pair
+    with the existing
+    CTL.IAM.SCP.CONFIG.001 control if it
+    covers the SCP-existence side; this
+    control catches the absence at the
+    Config-account level.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "is_org_account": true,
+          "scp_protects_config": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.is_org_account
+      op: eq
+      value: true
+    - field: properties.compliance.config.scp_protects_config
+      op: eq
+      value: false
+defect: >
+  AWS Organization has no SCP denying Config
+  destructive permissions in member accounts.
+infection: >
+  Service Control Policies are the
+  organizational guardrail above member-
+  account IAM. A member-account admin can
+  grant themselves any IAM permission within
+  their account — so member-account-level
+  controls on
+  config:StopConfigurationRecorder are
+  defense-in-depth, not a hard boundary. The
+  hard boundary is an SCP at the OU or root:
+  even a member-account admin cannot exceed
+  what the SCP allows. Without an SCP
+  denying the destructive Config permissions,
+  the organizational guarantee that "all
+  member accounts have Config recording" is
+  trust-based — the org assumes member
+  admins won't disable Config, but no policy
+  enforces that. SCPs should deny
+  StopConfigurationRecorder,
+  DeleteConfigurationRecorder,
+  DeleteConfigRule,
+  PutConfigurationRecorder, and
+  PutDeliveryChannel for all member
+  accounts; legitimate Config administration
+  should be done through the delegated
+  administrator account or via the
+  management account, both above the SCP.
+failure: >
+  Org Config baseline unenforced. Member-
+  account admins can disable Config recording
+  in their account; the organizational
+  guarantee that all accounts record
+  configurations relies on trust, not policy.
+tests:
+  - name: org without Config SCP fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            is_org_account: true
+            scp_protects_config: false
+  - name: org with Config SCP passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            is_org_account: true
+            scp_protects_config: true

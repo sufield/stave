@@ -1,0 +1,27 @@
+control: CTL.APIGATEWAY.INTEGRATION.HTTP.TLS.UNVALIDATED.001
+defect: >
+  HTTP / HTTP_PROXY integration is configured with TLS
+  certificate validation disabled.
+infection: >
+  TLS connections without certificate validation are encrypted
+  but unauthenticated — the encryption protects against
+  passive observation but not against active attackers. API
+  Gateway's tlsConfig.insecureSkipVerification flag, when
+  true, accepts any certificate the backend presents:
+  self-signed, expired, impersonated, issued for a different
+  domain. An attacker who can redirect network traffic
+  between API Gateway and the backend (DNS hijack, BGP
+  misroute, compromised intermediate router) presents their
+  own certificate; API Gateway accepts it, terminates TLS
+  with the attacker, and forwards request data plus
+  responses through the attacker's hop. The encryption
+  channel is cosmetic — confidentiality of credentials and
+  request data is no stronger than plaintext HTTP. The
+  tlsConfig flag is sometimes set as a shortcut when a
+  backend uses a self-signed or internal-CA certificate that
+  ACM doesn't trust by default; the right fix is to import
+  the CA chain into ACM rather than disable validation.
+failure: >
+  Cosmetic encryption. The integration channel is HTTPS in
+  name only — any certificate the backend presents is
+  accepted, MITM is undetectable.

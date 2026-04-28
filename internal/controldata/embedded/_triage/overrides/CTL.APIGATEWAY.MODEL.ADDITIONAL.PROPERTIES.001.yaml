@@ -1,0 +1,27 @@
+control: CTL.APIGATEWAY.MODEL.ADDITIONAL.PROPERTIES.001
+defect: >
+  Request model JSON Schema either declares
+  additionalProperties: true or omits the keyword (which
+  defaults to true).
+infection: >
+  JSON Schema's additionalProperties controls whether fields
+  not listed in properties are allowed. The default is
+  permissive (additionalProperties: true) — the schema
+  validates declared fields but accepts anything else. For
+  request validation that gates traffic, the safer default
+  is closed: additionalProperties: false. Closed schemas
+  reject extra fields at the API Gateway layer before the
+  backend ever processes them. The exposure of an open
+  schema is mass-assignment vulnerability — a caller smuggles
+  a field the API didn't intend to accept (admin: true,
+  role: "owner", verified: true) and the backend persists
+  it unless application code separately filters. Many
+  application frameworks (Rails, Django, Spring) auto-bind
+  request fields to model attributes; mass assignment is
+  the classic exploitation pattern, and the fix at the API
+  layer is closing the schema rather than relying on the
+  application to remember to filter.
+failure: >
+  Mass-assignment exposure. Callers can smuggle fields the
+  API didn't intend to accept; whatever auto-binding the
+  backend performs accepts them as legitimate input.

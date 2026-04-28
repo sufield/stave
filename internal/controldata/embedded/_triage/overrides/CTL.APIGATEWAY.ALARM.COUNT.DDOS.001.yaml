@@ -1,0 +1,25 @@
+control: CTL.APIGATEWAY.ALARM.COUNT.DDOS.001
+defect: >
+  No CloudWatch alarm watches the API Gateway stage's Count
+  metric.
+infection: >
+  AWS/ApiGateway publishes Count to CloudWatch automatically
+  for every stage — total requests received in the period.
+  Volume excursions signal three distinct conditions, all of
+  which warrant on-call attention: legitimate viral traffic
+  that needs capacity scaling and possibly WAF-rate-rule
+  loosening; application-layer DDoS that needs the opposite
+  (rate-rule tightening, possibly geo-restriction); and
+  runaway clients caught in retry loops that magnify
+  legitimate traffic into self-DoS. None of those surfaces
+  through the 4XX, 5XX, latency, or throttle alarms — a
+  flood of 200-OK requests at 100x baseline isn't an error
+  spike, but it is operationally meaningful. Deviation-from-
+  baseline (5x rolling average) or anomaly-detection alarms
+  are the right shape for stages with dynamic traffic;
+  fixed thresholds work for stages with predictable load
+  profiles.
+failure: >
+  Volume excursions invisible. Viral traffic, application-
+  layer DDoS, and retry-loop self-DoS all fire 200s; without
+  a Count alarm none of them surface to on-call.

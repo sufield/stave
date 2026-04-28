@@ -1,0 +1,137 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ACCESS.PUTRECORDER.BROAD.001
+name: config:PutConfigurationRecorder Granted to Broad Principals
+description: >
+  IAM policies grant
+  config:PutConfigurationRecorder to non-
+  administrative principals.
+  PutConfigurationRecorder modifies the
+  recorder's scope (which resource types it
+  records, whether it includes global
+  resources, recording mode). An attacker
+  with this permission narrows the recorder's
+  scope to exclude resource types they
+  intend to abuse — drops S3 from the
+  recorded list, drops IAM from global
+  recording — and the recorder continues
+  appearing healthy while specific resource
+  types are silently no longer recorded. The
+  attacker's actions on the dropped types
+  are invisible to Config.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16, 3.5"
+  soc2: "CC6.1, CC6.3, CC7.1"
+  nist_800_53_r5: "AC-3, AC-6, CM-5, SI-4"
+  pci_dss_v4.0: "7.1, 7.2, 10.5"
+  fedramp_moderate: "AC-3, AC-6, CM-5"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09", "LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Too many principals can modify the Config
+    recorder's scope.
+  action: >
+    Audit IAM policies for
+    config:PutConfigurationRecorder,
+    config:Put*, and config:* on Resource: *.
+    Restrict the permission to a dedicated
+    security-admin role. Pair with an SCP at
+    the org level that denies
+    PutConfigurationRecorder for all member
+    accounts. Any legitimate operator who
+    needs to adjust recorder scope should do
+    so through the security-admin role with
+    change-management documentation.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "put_recorder_principals": ["arn:aws:iam::111122223333:role/security-admin"],
+          "put_recorder_principal_count": 1,
+          "put_recorder_broadly_granted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.put_recorder_broadly_granted
+      op: eq
+      value: true
+defect: >
+  config:PutConfigurationRecorder is granted to
+  non-administrative principals.
+infection: >
+  PutConfigurationRecorder modifies an existing
+  recorder's scope: which resource types it
+  records, whether IAM global resources are
+  included, recording mode. The danger isn't
+  stopping or deleting the recorder — those
+  are observable as "recorder not running" or
+  "recorder gone." It's narrowing the scope
+  to exclude specific resource types while
+  the recorder continues appearing healthy.
+  An attacker drops S3 from the recorder's
+  type list, then makes a bucket public; the
+  bucket change isn't captured because S3
+  isn't being recorded. The recorder stays
+  green in Config's status; the specific type
+  the attacker abused is silently absent.
+  Pair with the existing
+  RECORDER.NOTALLRESOURCES.001 control —
+  that control catches the symptom (not all
+  types recorded), this one catches the
+  prerequisite (who can change it).
+failure: >
+  Selective recorder scope tampering. Too many
+  principals can narrow the recorder to
+  exclude specific resource types — Config
+  appears healthy while specific types are
+  silently dropped.
+tests:
+  - name: broad PutRecorder access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            put_recorder_principals:
+              - "arn:aws:iam::111122223333:role/dev-team"
+              - "arn:aws:iam::111122223333:role/ops"
+              - "arn:aws:iam::111122223333:role/sre"
+              - "arn:aws:iam::111122223333:role/security-admin"
+            put_recorder_principal_count: 4
+            put_recorder_broadly_granted: true
+  - name: scoped PutRecorder access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            put_recorder_principals: ["arn:aws:iam::111122223333:role/security-admin"]
+            put_recorder_principal_count: 1
+            put_recorder_broadly_granted: false

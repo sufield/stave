@@ -1,0 +1,37 @@
+control: CTL.CONFIG.RECORDER.ROLE.TRUST.BROAD.001
+defect: >
+  Config recorder service role trust policy
+  allows services or principals beyond
+  config.amazonaws.com.
+infection: >
+  Service roles work via trust policies that
+  name the AWS service legitimately allowed
+  to assume the role. The Config recorder
+  role is provisioned with read access
+  across every recorded resource type — IAM
+  identities, EC2 configurations, S3 bucket
+  policies, RDS settings, Lambda
+  configurations. That breadth is necessary
+  for Config to record configurations; it
+  becomes a problem when other services or
+  account principals can also assume the
+  role. Common shapes for the broadening:
+  the role trust extended to ec2.amazonaws.com
+  or lambda.amazonaws.com to let an
+  operational tool reuse the role's read
+  access; the trust extended to a specific
+  IAM user or role for a debugging session
+  that wasn't reverted; trust extended to
+  the AWS organization root for cross-
+  account access that wasn't scoped down.
+  Each extension widens the attack surface
+  on a high-privilege service role; a
+  compromise of any trusted principal
+  inherits the role's read-everywhere
+  scope. Trust should be the minimum
+  needed: just config.amazonaws.com.
+failure: >
+  Service role widely assumable. The recorder
+  role's broad read scope is reachable from
+  more principals than Config itself,
+  enlarging the compromise surface.

@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.API.NOCUSTOMDOMAIN.001
+name: REST API Has No Custom Domain Mapped to Any Stage
+description: >
+  REST API serves traffic only on the default execute-api
+  domain (e.g., abcdef.execute-api.us-east-1.amazonaws.com)
+  with no custom domain mapped to any of its stages. The
+  default execute-api domain is a public AWS-managed name —
+  it appears in URLs clients see, it changes if the API is
+  recreated, and it doesn't carry the operator's TLS policy
+  / WAF / mutual-TLS configuration that custom domains
+  enable. APIs serving production-shaped traffic should
+  publish at a custom domain the operator owns; the default
+  endpoint is suitable for development and quick prototypes
+  but not for long-lived public-facing services.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2, SC-7"
+  fedramp_moderate: "CM-2, SC-7"
+  soc2: "CC6.1, CC6.6, CC8.1"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["GRC-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    API serves only on the default execute-api domain — no
+    custom domain mapping.
+  action: >
+    Provision a custom domain with an ACM certificate matching
+    the operator's preferred hostname: aws apigateway
+    create-domain-name --domain-name api.example.com
+    --regional-certificate-arn <arn> --endpoint-configuration
+    types=REGIONAL. Map it to the API stage: aws apigateway
+    create-base-path-mapping --domain-name api.example.com
+    --rest-api-id <id> --stage <stage>. Pair with the
+    existing CTL.APIGATEWAY.ENDPOINT.DEFAULT.001 control which
+    flags whether the default endpoint is also disabled.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_rest_api",
+        "domain": {
+          "custom_domain_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_rest_api
+    - field: properties.api.domain.custom_domain_count
+      op: eq
+      value: 0

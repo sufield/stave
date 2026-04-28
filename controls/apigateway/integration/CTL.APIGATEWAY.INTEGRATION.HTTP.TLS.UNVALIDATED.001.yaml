@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.INTEGRATION.HTTP.TLS.UNVALIDATED.001
+name: HTTP Integration Doesn't Validate Backend TLS Certificate
+description: >
+  HTTP / HTTP_PROXY integration is configured with TLS
+  certificate validation disabled (insecureSkipVerification
+  flag, or an explicit configuration that accepts any
+  certificate). Integration traffic is technically encrypted
+  but the certificate chain is not checked — API Gateway
+  accepts connections to a backend whose certificate is
+  self-signed, expired, or impersonated. An attacker who can
+  redirect traffic in the network path between API Gateway
+  and the backend (DNS hijack, BGP misroute, compromised
+  intermediate) can present any certificate; API Gateway
+  accepts it and forwards traffic. The encryption is
+  cosmetic — confidentiality of credentials and request
+  data is no stronger than plaintext HTTP.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8, SC-12, SC-23"
+  fedramp_moderate: "SC-8, SC-12, SC-23"
+  pci_dss_v4.0: "4.2"
+  soc2: "CC6.1, CC6.7"
+  iso_27001_2022: "A.5.10, A.8.20, A.8.24"
+  ccm_v4: ["IVS-09", "CEK-03"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    HTTP integration accepts backend TLS certificates without
+    validation — the encryption channel is unauthenticated.
+  action: >
+    Re-enable TLS validation on the integration: aws apigateway
+    update-integration with --patch-operations
+    op=replace,path=/tlsConfig/insecureSkipVerification,value=false.
+    For backends with self-signed or internal-CA certificates,
+    install the issuing CA into ACM and import the chain so
+    validation succeeds; don't disable validation as a
+    shortcut.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_integration",
+        "integration": {
+          "type": "HTTP_PROXY",
+          "tls_validation_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_integration
+    - field: properties.api.integration.type
+      op: in
+      value: ["HTTP", "HTTP_PROXY"]
+    - field: properties.api.integration.tls_validation_enabled
+      op: eq
+      value: false

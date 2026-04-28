@@ -1,0 +1,30 @@
+control: CTL.CONFIG.CONFORMANCE.NONE.001
+defect: >
+  Account has AWS Config recording but no
+  conformance pack deployed.
+infection: >
+  Conformance packs are AWS's mechanism for
+  shipping bundles of Config rules organized
+  around a named compliance framework. AWS
+  publishes sample templates for CIS AWS
+  Foundations, NIST 800-53, PCI-DSS, HIPAA,
+  FedRAMP Moderate, and others. Without a
+  conformance pack, the account's Config rule
+  set is whatever ad-hoc rules the operator
+  added — often partial coverage of the
+  framework the organization claims to align
+  with. Auditors asking "how do you
+  demonstrate continuous evaluation against
+  your framework" get an inventory of
+  individual rules rather than a packaged
+  baseline. Conformance packs aren't required
+  by Config to function — Config records and
+  evaluates without them — but they're the
+  recommended baseline for compliance-driven
+  workloads.
+failure: >
+  No framework-aligned compliance baseline. The
+  account uses Config but has no packaged
+  evaluation aligned with a compliance
+  framework — coverage is whatever ad-hoc
+  rules happened to be added.

@@ -1,0 +1,141 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ORG.AUDIT.COLOCATED.001
+name: Member Account Config Data Delivered to Bucket in Management Account
+description: >
+  Member account Config delivery channel
+  points at an S3 bucket owned by the
+  management account. The configuration
+  audit trail for member accounts is
+  co-located with the management account's
+  resources — billing, root user, top-level
+  IAM, organization configuration. A
+  compromise of the management account
+  reaches both the audited resources (the
+  organization itself) and the audit data
+  (the configuration history of every
+  member account). AWS best-practice
+  guidance is to deliver Config data to a
+  dedicated security or audit account
+  outside the management account, so
+  identity compromises don't cascade across
+  the audit boundary.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3, CC7.2, CC8.1"
+  nist_800_53_r5: "AC-3, AC-6, AU-9, CM-5"
+  pci_dss_v4.0: "10.5, 7.1"
+  fedramp_moderate: "AC-3, AC-6, AU-9, CM-5"
+  iso_27001_2022: "A.5.15, A.5.18, A.8.15"
+  ccm_v4: ["IAM-09", "LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: data
+    scope: organization
+    multiplier: 4.0
+remediation:
+  description: >
+    Member-account Config data delivered to a
+    bucket in the management account — audit
+    boundary co-located with the highest-
+    trust account.
+  action: >
+    Stand up a dedicated security or audit
+    account in the organization. Create the
+    Config delivery destination bucket in
+    that account, with bucket policy allowing
+    each member account's Config service
+    principal to write. Reconfigure each
+    member account's delivery channel:
+    aws configservice put-delivery-channel
+    --delivery-channel name=<name>,
+    s3BucketName=<audit-account-bucket>,
+    s3KmsKeyArn=<audit-account-cmk>. The
+    delivery role in the member account
+    needs permission to write to the audit
+    account's bucket.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "delivery_s3_bucket_account": "999988887777",
+          "is_management_account_bucket": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.is_management_account_bucket
+      op: eq
+      value: true
+defect: >
+  Member account Config delivery destination
+  is a bucket in the management account.
+infection: >
+  The Config delivery bucket holds the durable
+  configuration audit trail for the account
+  delivering to it. When the bucket lives in
+  the management account, the audit trail
+  for member accounts is co-located with
+  the most sensitive identity boundary in
+  the organization: billing, root user,
+  organization configuration, top-level
+  IAM. A compromise of the management
+  account is the worst-case scenario for
+  most organizations; co-locating the audit
+  trail there means the same compromise
+  reaches both the audited resources (the
+  organization itself) and the audit data
+  (every member account's configuration
+  history). The audit trail loses
+  independence — the integrity of the
+  evidence depends on the integrity of the
+  resources being audited. AWS best-
+  practice guidance is to deliver Config
+  data (and CloudTrail data) to a
+  dedicated security or audit account
+  outside the management account; that
+  account is operated with minimal
+  workload to keep the identity boundary
+  small.
+failure: >
+  Audit trail co-located with audit subject.
+  Management-account compromise reaches both
+  the resources being audited and the audit
+  data itself.
+tests:
+  - name: delivery to management account fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:222233334444:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            delivery_s3_bucket_account: "111122223333"
+            is_management_account_bucket: true
+  - name: delivery to dedicated audit account passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:222233334444:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            delivery_s3_bucket_account: "999988887777"
+            is_management_account_bucket: false

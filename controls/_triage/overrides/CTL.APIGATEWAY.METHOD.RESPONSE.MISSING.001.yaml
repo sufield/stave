@@ -1,0 +1,26 @@
+control: CTL.APIGATEWAY.METHOD.RESPONSE.MISSING.001
+defect: >
+  REST API method has fewer than two declared method
+  responses; integration responses pass through to clients
+  unfiltered.
+infection: >
+  REST API method responses (the methodResponses map keyed by
+  status code) declare which status codes the method emits
+  and what response models / parameter mappings apply to each.
+  Integration responses (returned from Lambda, HTTP backend,
+  etc.) are mapped through the matching method response.
+  Without method responses, API Gateway passes the
+  integration's raw response straight through to clients —
+  including backend error responses with stack traces,
+  internal paths, ORM error details, internal hostnames, and
+  any other exception detail the backend emits. The method
+  response layer is the operator's chance to define a stable
+  API contract instead of a passthrough; declaring at least
+  one success response and at least one error response
+  forces transformation through a controlled mapping.
+  Without it, clients see whatever the backend happens to
+  emit, including its internal failures.
+failure: >
+  Backend internals leak through. Integration responses pass
+  through unfiltered; clients see stack traces, internal
+  paths, and exception details on error.

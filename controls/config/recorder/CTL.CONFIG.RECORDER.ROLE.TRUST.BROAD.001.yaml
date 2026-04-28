@@ -1,0 +1,137 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.RECORDER.ROLE.TRUST.BROAD.001
+name: Config Recorder Service Role Trusts Services Beyond config.amazonaws.com
+description: >
+  AWS Config recorder service role trust policy
+  allows services other than
+  config.amazonaws.com to assume the role.
+  The recorder role typically holds broad
+  read access across resource types — IAM,
+  EC2, S3, Lambda, RDS, every recorded
+  type. With trust extended to additional
+  services (or to specific account principals
+  beyond Config), the role becomes a generic
+  high-privilege handle reachable by other
+  AWS-internal callers. The service role
+  should be scoped narrowly to the single
+  service that legitimately needs it: aws
+  Config.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3, CC8.1"
+  nist_800_53_r5: "AC-3, AC-6, IA-2"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6, IA-2"
+  iso_27001_2022: "A.5.15, A.5.16"
+  ccm_v4: ["IAM-04", "IAM-09"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Recorder service role trust policy allows
+    principals other than config.amazonaws.com.
+  action: >
+    Update the recorder role's trust policy
+    to allow only the Config service:
+    aws iam update-assume-role-policy
+    --role-name <recorder-role>
+    --policy-document with Principal:
+    {"Service": "config.amazonaws.com"}.
+    Audit who originally added the additional
+    trust entries (CloudTrail) — extra
+    entries are usually deliberate mistakes
+    or short-term workarounds; verify the
+    rationale or remove.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "recorder_role_trusted_services": ["config.amazonaws.com"],
+          "recorder_role_trust_scoped": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.recorder_role_trust_scoped
+      op: eq
+      value: false
+defect: >
+  Config recorder service role trust policy
+  allows services or principals beyond
+  config.amazonaws.com.
+infection: >
+  Service roles work via trust policies that
+  name the AWS service legitimately allowed
+  to assume the role. The Config recorder
+  role is provisioned with read access
+  across every recorded resource type — IAM
+  identities, EC2 configurations, S3 bucket
+  policies, RDS settings, Lambda
+  configurations. That breadth is necessary
+  for Config to record configurations; it
+  becomes a problem when other services or
+  account principals can also assume the
+  role. Common shapes for the broadening:
+  the role trust extended to ec2.amazonaws.com
+  or lambda.amazonaws.com to let an
+  operational tool reuse the role's read
+  access; the trust extended to a specific
+  IAM user or role for a debugging session
+  that wasn't reverted; trust extended to
+  the AWS organization root for cross-
+  account access that wasn't scoped down.
+  Each extension widens the attack surface
+  on a high-privilege service role; a
+  compromise of any trusted principal
+  inherits the role's read-everywhere
+  scope. Trust should be the minimum
+  needed: just config.amazonaws.com.
+failure: >
+  Service role widely assumable. The recorder
+  role's broad read scope is reachable from
+  more principals than Config itself,
+  enlarging the compromise surface.
+tests:
+  - name: recorder role trust beyond config service fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            recorder_role_trusted_services:
+              - "config.amazonaws.com"
+              - "ec2.amazonaws.com"
+              - "lambda.amazonaws.com"
+            recorder_role_trust_scoped: false
+  - name: recorder role trust scoped to config passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            recorder_role_trusted_services: ["config.amazonaws.com"]
+            recorder_role_trust_scoped: true

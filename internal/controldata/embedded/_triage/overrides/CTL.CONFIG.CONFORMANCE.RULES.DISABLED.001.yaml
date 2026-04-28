@@ -1,0 +1,27 @@
+control: CTL.CONFIG.CONFORMANCE.RULES.DISABLED.001
+defect: >
+  AWS Config conformance pack contains rules
+  in non-ACTIVE state.
+infection: >
+  Conformance packs ship as a unit — the
+  template bundles N rules, the pack deploys
+  them all. After deployment, individual rules
+  inside the pack can be disabled or end up
+  stuck in DELETING state from a partial
+  remove operation. The pack's compliance
+  score only computes against ACTIVE rules; a
+  disabled rule contributes neither to the
+  compliant nor non-compliant count. The
+  operational view shows "pack deployed" —
+  what the operator notices — and the
+  disabled rule is silently absent from
+  evaluation. Auditors looking at the pack's
+  declared rule list and the pack's reported
+  compliance score don't see the gap. Audit
+  the pack's actual ACTIVE rule set against
+  the pack template's declared rule list.
+failure: >
+  Silent rule attrition inside the pack.
+  Disabled rules don't evaluate; the pack's
+  compliance score reflects a smaller-than-
+  declared rule set.

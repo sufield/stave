@@ -1,0 +1,140 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.RECORDER.NOTALLREGIONS.001
+name: Config Recorder Not Running in All Active Regions
+description: >
+  AWS Config recorders are running in some
+  regions but not all regions where the
+  account has resources. Resources in
+  unrecorded regions are completely invisible
+  to Config — they don't appear in the
+  configuration inventory, no rule evaluates
+  them, no compliance status applies to
+  them. An attacker who creates resources
+  in a region without a recorder evades
+  every Config-based detection. Most
+  accounts should run a recorder in every
+  region they use, regardless of how few
+  resources are there; the cost of the
+  recorder is small, the cost of an
+  unrecorded blast-radius region is large.
+domain: audit
+severity: high
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-2, CA-7, CM-2, CM-8"
+  pci_dss_v4.0: "10.2, 11.5"
+  fedramp_moderate: "AU-2, CA-7, CM-2"
+  iso_27001_2022: "A.5.25, A.8.16"
+  ccm_v4: ["LOG-08", "GRC-04"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Active regions exist without a Config
+    recorder running.
+  action: >
+    Either provision a Config recorder in
+    every active region (aws configservice
+    put-configuration-recorder per region —
+    AWS publishes Terraform / CloudFormation
+    templates to deploy recorders across
+    regions), or restrict resource creation
+    to a smaller region set via SCP and
+    record those. For organizations, deploy
+    via CloudFormation StackSets or AWS
+    Control Tower's account baseline so the
+    recorder is provisioned automatically
+    in every region of every member account.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "active_regions": ["us-east-1", "us-west-2", "eu-west-1"],
+          "recorder_regions": ["us-east-1", "us-west-2", "eu-west-1"],
+          "regions_without_recorder": [],
+          "recorder_all_regions": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.recorder_all_regions
+      op: eq
+      value: false
+defect: >
+  AWS Config recorder is not running in every
+  active region in the account.
+infection: >
+  Config is regional — each region runs its
+  own recorder, evaluates its own rules, and
+  delivers its own configuration history.
+  Regions without a recorder don't capture
+  resource configurations at all; resources
+  created there don't appear in Config's
+  inventory, no rule evaluates them, no
+  compliance state applies. An attacker
+  with the ability to create resources in
+  any region (the typical AWS principal
+  permission scope) creates resources in a
+  region without a recorder to evade every
+  Config-based detection. The aggregator
+  doesn't show those resources — there's
+  nothing to aggregate. Compliance
+  dashboards show the recorded regions
+  only. The fix is to run a recorder in
+  every active region; the per-recorder
+  cost is small, and the recording itself
+  is cheap if few resources exist there.
+  For organizations, CloudFormation
+  StackSets or Control Tower's account
+  baseline deploys recorders to every
+  region of every member account
+  automatically.
+failure: >
+  Regional blind spots. Resources created
+  in unrecorded regions are invisible to
+  Config — no inventory, no rule evaluation,
+  no compliance state.
+tests:
+  - name: recorder missing regions fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            active_regions: ["us-east-1", "us-west-2", "eu-west-1", "ap-southeast-1"]
+            recorder_regions: ["us-east-1", "us-west-2"]
+            regions_without_recorder: ["eu-west-1", "ap-southeast-1"]
+            recorder_all_regions: false
+  - name: recorder in all regions passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            active_regions: ["us-east-1", "us-west-2", "eu-west-1"]
+            recorder_regions: ["us-east-1", "us-west-2", "eu-west-1"]
+            regions_without_recorder: []
+            recorder_all_regions: true

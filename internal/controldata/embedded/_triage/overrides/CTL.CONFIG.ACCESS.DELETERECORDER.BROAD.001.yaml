@@ -1,0 +1,29 @@
+control: CTL.CONFIG.ACCESS.DELETERECORDER.BROAD.001
+defect: >
+  config:DeleteConfigurationRecorder is granted
+  to non-administrative principals.
+infection: >
+  DeleteConfigurationRecorder permanently
+  removes the recorder configuration. Unlike
+  StopConfigurationRecorder, which is a
+  reversible state change, deletion drops the
+  recorder definition entirely — no scope
+  configuration, no role association, no
+  delivery channel binding survives. An
+  attacker with this permission deletes the
+  recorder, makes configuration changes (IAM
+  backdoor, public bucket, open SG, snapshot
+  share to attacker account), and either
+  leaves the recorder deleted or recreates a
+  new one with narrower scope to avoid
+  capturing the same change set. The
+  configuration audit trail has a
+  larger-than-stop-recorder gap and the
+  recorder's prior configuration is lost.
+  This permission should be one of the most
+  tightly restricted in the account.
+failure: >
+  Excessive Config delete access. Too many
+  principals can permanently remove
+  configuration recording — the configuration
+  audit trail can be terminated.

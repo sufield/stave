@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ALARM.RESOURCEPOLICY.CHANGE.001
+name: No Alarm on API Gateway Resource Policy Modifications
+description: >
+  No CloudWatch alarm fires when an API Gateway resource policy
+  is modified (UpdateRestApi with a policy patch). Resource
+  policies are the network-and-principal authorization layer
+  on REST APIs — they decide whether a request is allowed
+  based on source VPC, source IP, principal ARN, or
+  organization ID. Modifications open or close the API to
+  classes of callers; an attacker with apigateway:UpdateRestApi
+  permission can flip a private API to allow Principal=*, and
+  the change should be the highest-priority alarm category in
+  the API Gateway monitoring set.
+domain: audit
+severity: high
+compliance:
+  cis_aws_v3.0: "4.7"
+  soc2: "CC6.1, CC7.2, CC8.1"
+  nist_800_53_r5: "AU-6, AU-12, SI-4, AC-3"
+  pci_dss_v4.0: "10.4, 7.1"
+  fedramp_moderate: "AU-6, AU-12, SI-4, AC-3"
+  iso_27001_2022: "A.5.25, A.8.16"
+  ccm_v4: ["LOG-04", "IAM-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    No alarm watches resource policy modifications; an attacker
+    with UpdateRestApi can flip an API public without anyone
+    noticing.
+  action: >
+    Create a CloudWatch metric filter on the CloudTrail log
+    group matching policy patches:
+    eventSource=apigateway.amazonaws.com AND
+    eventName=UpdateRestApi AND requestParameters.patchOperations.path
+    contains "/policy". aws logs put-metric-filter, then
+    aws cloudwatch put-metric-alarm with --threshold 1 (any
+    occurrence is meaningful). Alarm should page on-call
+    immediately and route to a security pager during off-
+    hours.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_account",
+        "alarms": {
+          "has_resource_policy_change_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_account
+    - field: properties.api.alarms.has_resource_policy_change_alarm
+      op: eq
+      value: false

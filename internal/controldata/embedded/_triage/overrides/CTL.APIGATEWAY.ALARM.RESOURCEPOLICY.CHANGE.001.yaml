@@ -1,0 +1,26 @@
+control: CTL.APIGATEWAY.ALARM.RESOURCEPOLICY.CHANGE.001
+defect: >
+  No CloudWatch alarm watches API Gateway resource policy
+  modifications.
+infection: >
+  Resource policies are the network-and-principal authorization
+  layer on REST APIs. They decide whether a request is
+  allowed based on aws:SourceVpc, aws:SourceIp, principal
+  ARN, aws:PrincipalOrgID, or aws:SourceAccount. Modifications
+  to a resource policy open or close the API to whole classes
+  of callers. An attacker with apigateway:UpdateRestApi
+  permission can flip a private API to allow Principal=*,
+  expose a previously-PrincipalOrgID-scoped API to any
+  account, or remove the SourceVpc condition that scoped a
+  PRIVATE API. Resource policy changes deserve to be the
+  highest-priority alarm category in the API Gateway
+  monitoring set: any change is meaningful, the threshold
+  should be 1 occurrence, the pager target should be on-call
+  security with after-hours coverage. CloudTrail captures the
+  events; the alarm is what makes them actionable in real
+  time.
+failure: >
+  Authorization-layer change invisible. An attacker flips a
+  private API to public via UpdateRestApi and the change goes
+  unnoticed until external probes find the now-open
+  endpoint.

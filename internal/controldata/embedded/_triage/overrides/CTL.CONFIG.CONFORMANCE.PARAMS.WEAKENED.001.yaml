@@ -1,0 +1,30 @@
+control: CTL.CONFIG.CONFORMANCE.PARAMS.WEAKENED.001
+defect: >
+  Conformance pack parameter overrides loosen
+  the pack template's defaults.
+infection: >
+  Conformance pack templates ship with default
+  parameter values that match the framework
+  the pack represents — CIS-aligned password
+  age thresholds, NIST-aligned encryption
+  requirements, PCI-aligned IAM MFA
+  requirements. The pack supports operator
+  overrides via ConformancePackInputParameters,
+  intended for legitimate variation (region-
+  specific role names, custom tag keys). The
+  same override mechanism can loosen
+  thresholds — extending password age from 90
+  to 365 days, downgrading encryption from
+  required to optional, narrowing MFA from
+  all-users to root-only. The pack name in
+  inventory still matches the framework, but
+  the rule parameters no longer enforce the
+  framework's intent. The operator who set
+  the override may have had a reason; the
+  framework auditor reading "we deploy the
+  CIS conformance pack" gets the wrong
+  picture unless the override is documented.
+failure: >
+  Compliance theatre. The pack's name claims
+  framework alignment; the parameter
+  overrides have weakened it from inside.

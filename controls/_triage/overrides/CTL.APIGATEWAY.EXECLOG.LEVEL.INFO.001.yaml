@@ -1,0 +1,30 @@
+control: CTL.APIGATEWAY.EXECLOG.LEVEL.INFO.001
+defect: >
+  REST API stage has execution logging enabled at level INFO
+  on a stage whose naming convention indicates production.
+infection: >
+  Execution logging at INFO captures detailed per-request
+  internal processing — authorizer outputs, integration
+  request/response headers and metadata, mapping template
+  execution. This is appropriate during development, where
+  the operator needs the detail to diagnose a mapping or
+  authorizer issue. In production it has two costs: log
+  volume scales with request volume (CloudWatch ingestion
+  and storage costs grow linearly), and per-request metadata
+  surfaces information that isn't sensitive on its own but
+  cumulatively helps reconnaissance — authorizer principal
+  IDs, integration backend hostnames, mapping template
+  details. ERROR level captures the same diagnostic value
+  for failures (the case operators usually need execution
+  logs for) without persisting per-request internals on the
+  happy path. INFO is appropriate for short-lived diagnostic
+  windows; the long-lived production setting should be ERROR.
+  The control identifies production stages by naming
+  convention (stage_name not matching dev/test/staging) —
+  the operator's intent matters more than the inferred
+  category, and the triage override is where to document
+  exceptions.
+failure: >
+  Verbose production logging. INFO-level execution logs
+  inflate cost and surface per-request internal metadata at
+  production volume.

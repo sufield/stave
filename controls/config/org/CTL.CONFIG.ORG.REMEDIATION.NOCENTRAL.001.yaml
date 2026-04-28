@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ORG.REMEDIATION.NOCENTRAL.001
+name: Organization Has No Centralized Remediation for Org-Wide Non-Compliance
+description: >
+  Organization-level Config rules detect non-
+  compliance in member accounts but
+  remediation is configured (if at all) per
+  account. There is no centralized
+  remediation pipeline that fires when an
+  org rule produces non-compliant findings
+  across the organization. Each member
+  account either remediates locally (drifts
+  in approach), doesn't remediate (relies
+  on humans to notice), or has remediation
+  configured but inconsistently. The org
+  rule's value is partly wasted — detection
+  is uniform, response is fragmented.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, CC8.1"
+  nist_800_53_r5: "CA-7, IR-4, RA-5, SI-4"
+  pci_dss_v4.0: "11.5, 12.10"
+  fedramp_moderate: "CA-7, IR-4, RA-5"
+  iso_27001_2022: "A.5.25, A.8.16"
+  ccm_v4: ["GRC-04", "TVM-04"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 2.5
+remediation:
+  description: >
+    Org rules detect non-compliance but
+    remediation is not centralized — response
+    is per-account.
+  action: >
+    Either deploy organization remediation
+    actions tied to the org rules (so
+    remediation deploys to member accounts
+    alongside the rule) or set up an
+    aggregation-and-respond pipeline:
+    aggregator surfaces non-compliance, an
+    EventBridge rule fires on new non-
+    compliant findings, and a centralized
+    Lambda or SSM automation responds.
+    Document the remediation flow so
+    auditors can trace detection-to-response
+    end-to-end.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_organization",
+        "config": {
+          "is_org_account": true,
+          "has_org_rules": true,
+          "centralized_remediation": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_organization
+    - field: properties.compliance.config.is_org_account
+      op: eq
+      value: true
+    - field: properties.compliance.config.has_org_rules
+      op: eq
+      value: true
+    - field: properties.compliance.config.centralized_remediation
+      op: eq
+      value: false
+defect: >
+  Organization detects non-compliance via org
+  rules but has no centralized remediation
+  pipeline.
+infection: >
+  Organization Config rules detect issues
+  uniformly across member accounts —
+  consistent rule definition, consistent
+  evaluation, consistent reporting through
+  the aggregator. The response side breaks
+  the symmetry: each member account either
+  has its own remediation, has none, or has
+  remediation that drifts in approach. The
+  org rule's value is partly wasted. The
+  same finding in two member accounts
+  produces two different (or no) responses.
+  Auditors trying to demonstrate
+  detection-to-response coverage find a
+  uniform detection layer and a fragmented
+  response layer. Centralized remediation —
+  either via organization remediation
+  actions deployed alongside org rules, or
+  via an aggregation-EventBridge-Lambda
+  pipeline — closes the symmetry.
+failure: >
+  Detection without uniform response. Org
+  rules surface non-compliance consistently;
+  remediation is per-account and drifts.
+tests:
+  - name: org with rules but no central remediation fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_config_organization
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_organization
+          config:
+            is_org_account: true
+            has_org_rules: true
+            centralized_remediation: false
+  - name: org with central remediation passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_config_organization
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_organization
+          config:
+            is_org_account: true
+            has_org_rules: true
+            centralized_remediation: true

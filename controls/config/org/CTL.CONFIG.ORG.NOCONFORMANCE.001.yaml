@@ -1,0 +1,134 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ORG.NOCONFORMANCE.001
+name: Organization Has No Organization Conformance Pack Deployed
+description: >
+  AWS Organization spans multiple member
+  accounts but no organization conformance
+  pack is deployed. Per-account conformance
+  packs require each member account to
+  deploy independently, and they drift —
+  some accounts have the pack, others
+  don't, parameter overrides differ across
+  accounts. An organization conformance pack
+  deploys uniformly to all member accounts
+  from the management or delegated-admin
+  account, and the configuration is
+  authoritative across the organization.
+  Without one, the org-wide compliance
+  baseline is whatever individual accounts
+  happened to deploy.
+domain: governance
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "CA-2, CA-7, CM-6, AC-3"
+  pci_dss_v4.0: "12.4"
+  fedramp_moderate: "CA-2, CA-7, CM-6"
+  iso_27001_2022: "A.5.36, A.8.9"
+  ccm_v4: ["GRC-04", "GRC-06"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 3.0
+remediation:
+  description: >
+    AWS Organization has no organization
+    conformance pack — compliance baseline
+    is per-account and drifts.
+  action: >
+    Deploy an organization conformance pack
+    from the management account or delegated
+    administrator: aws configservice
+    put-organization-conformance-pack
+    --organization-conformance-pack-name
+    <name> --template-s3-uri <uri>
+    --excluded-accounts (optional). The pack
+    deploys uniformly to all member accounts
+    in the organization. Pair with the
+    delegated administrator (CTL.CONFIG.ORG.NODELEGATED.001)
+    so org Config is administered outside
+    the management account.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_organization",
+        "config": {
+          "is_org_account": true,
+          "org_conformance_pack_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_organization
+    - field: properties.compliance.config.is_org_account
+      op: eq
+      value: true
+    - field: properties.compliance.config.org_conformance_pack_count
+      op: eq
+      value: 0
+defect: >
+  AWS Organization has no organization
+  conformance pack deployed.
+infection: >
+  Organization conformance packs are AWS's
+  mechanism for deploying a uniform
+  compliance baseline across every member
+  account. Without one, conformance pack
+  deployment is per-account: each member
+  account must deploy the pack independently,
+  parameter overrides drift across accounts,
+  and there's no single inventory point
+  that says "every account in this org has
+  the CIS pack." The compliance posture is
+  whatever each account separately chose.
+  Auditors asking "how do you demonstrate
+  consistent compliance evaluation across
+  the organization" get a per-account
+  inventory and a manual reconciliation,
+  rather than a single org-level statement.
+  Org packs are deployed from the management
+  account or the delegated administrator;
+  member accounts cannot opt out via local
+  IAM (the deployment is from above the
+  member account boundary).
+failure: >
+  Per-account compliance baseline only.
+  Conformance pack deployment is fragmented;
+  the organization has no uniform evaluation
+  baseline across member accounts.
+tests:
+  - name: org without org conformance pack fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_config_organization
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_organization
+          config:
+            is_org_account: true
+            org_conformance_pack_count: 0
+  - name: org with org conformance pack passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_config_organization
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_organization
+          config:
+            is_org_account: true
+            org_conformance_pack_count: 1

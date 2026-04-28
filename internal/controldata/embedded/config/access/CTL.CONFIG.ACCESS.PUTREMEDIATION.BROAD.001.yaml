@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ACCESS.PUTREMEDIATION.BROAD.001
+name: config:PutRemediationConfigurations Granted to Broad Principals
+description: >
+  IAM policies grant
+  config:PutRemediationConfigurations to non-
+  administrative principals. The permission
+  modifies the remediation actions tied to
+  Config rules — what runs when a rule fires
+  non-compliant, with what role, against
+  what target, with what parameters. An
+  attacker with this permission rewrites the
+  remediation to a no-op, to an action that
+  ignores specific resources, or to one that
+  uses a less-privileged role; the rule
+  still fires non-compliant but the
+  remediation no longer corrects the state.
+  Auto-remediation appears configured;
+  enforcement is hollow.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.16, 3.5"
+  soc2: "CC6.1, CC6.3, CC7.1"
+  nist_800_53_r5: "AC-3, AC-6, CM-5, SI-4"
+  pci_dss_v4.0: "7.1, 7.2, 12.10"
+  fedramp_moderate: "AC-3, AC-6, CM-5"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Too many principals can modify Config
+    remediation actions.
+  action: >
+    Audit IAM policies for
+    config:PutRemediationConfigurations,
+    config:Put*, and config:* on Resource: *.
+    Restrict the permission to a dedicated
+    security-admin role. Remediation changes
+    should go through the same change-control
+    process as rule definitions — production
+    remediation is part of the compliance
+    enforcement layer and shouldn't be
+    casually mutable.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_account",
+        "config": {
+          "put_remediation_principals": ["arn:aws:iam::111122223333:role/security-admin"],
+          "put_remediation_principal_count": 1,
+          "put_remediation_broadly_granted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_account
+    - field: properties.compliance.config.put_remediation_broadly_granted
+      op: eq
+      value: true
+defect: >
+  config:PutRemediationConfigurations is granted
+  to non-administrative principals.
+infection: >
+  PutRemediationConfigurations modifies the
+  remediation action tied to a Config rule:
+  what SSM document runs, with what
+  parameters, under what IAM role. An
+  attacker with this permission rewrites the
+  remediation to a no-op — point it at an
+  empty SSM document, or change parameters
+  so the action targets nothing useful.
+  Config rules continue to evaluate and
+  produce non-compliant findings; the
+  remediation still appears in
+  describe-remediation-configurations as
+  configured; but when the rule fires, the
+  rewritten remediation does nothing. The
+  rule's compliance state stays NON_COMPLIANT
+  (the resource isn't actually being fixed),
+  which an attentive operator could notice —
+  but if the rule had no compliance alarm
+  before the rewrite, the silently-broken
+  remediation can run for weeks. Same shape
+  as PutRecorder for the recording layer.
+failure: >
+  Hollow remediation. Too many principals can
+  rewrite remediation actions to no-ops; auto-
+  remediation appears configured but
+  enforcement is silent.
+tests:
+  - name: broad PutRemediation access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            put_remediation_principals:
+              - "arn:aws:iam::111122223333:role/dev-team"
+              - "arn:aws:iam::111122223333:role/ops"
+              - "arn:aws:iam::111122223333:role/sre"
+              - "arn:aws:iam::111122223333:role/security-admin"
+            put_remediation_principal_count: 4
+            put_remediation_broadly_granted: true
+  - name: scoped PutRemediation access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:account"
+      asset_type: aws_config_account
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_account
+          config:
+            put_remediation_principals: ["arn:aws:iam::111122223333:role/security-admin"]
+            put_remediation_principal_count: 1
+            put_remediation_broadly_granted: false

@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ALARM.CONFIGCHANGE.001
+name: No Alarm on API Gateway Configuration Change Events
+description: >
+  No CloudWatch alarm fires when API Gateway configuration
+  changes (CreateStage, DeleteStage, CreateAuthorizer,
+  DeleteAuthorizer, UpdateRestApi, CreateDeployment,
+  CreateApiKey, etc.). API Gateway management API calls land
+  in CloudTrail, but without a metric filter on the relevant
+  events and an alarm on the metric, configuration drift
+  surfaces only when someone audits the trail manually.
+  Configuration drift on production APIs warrants real-time
+  visibility — the wrong stage gets enabled, an authorizer
+  gets removed, a deployment lands without review.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "4.7"
+  soc2: "CC7.2, CC8.1"
+  nist_800_53_r5: "AU-6, AU-12, SI-4"
+  pci_dss_v4.0: "10.4, 12.10"
+  fedramp_moderate: "AU-6, AU-12, SI-4"
+  iso_27001_2022: "A.5.25, A.8.16"
+  ccm_v4: ["LOG-04", "GRC-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No alarm fires on API Gateway management API changes
+    (stage / authorizer / deployment modifications).
+  action: >
+    Create a CloudWatch metric filter on the CloudTrail log
+    group matching API Gateway management events:
+    eventSource=apigateway.amazonaws.com AND
+    eventName=(CreateStage|DeleteStage|CreateAuthorizer|
+    DeleteAuthorizer|UpdateRestApi|UpdateStage|...). aws logs
+    put-metric-filter with the pattern, then aws cloudwatch
+    put-metric-alarm on the metric. Alarm targets should
+    reach the API-owning team; deletion events may warrant
+    a higher-priority pager target.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_account",
+        "alarms": {
+          "has_configchange_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_account
+    - field: properties.api.alarms.has_configchange_alarm
+      op: eq
+      value: false

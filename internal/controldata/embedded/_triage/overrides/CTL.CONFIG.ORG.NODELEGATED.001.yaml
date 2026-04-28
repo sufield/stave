@@ -1,0 +1,30 @@
+control: CTL.CONFIG.ORG.NODELEGATED.001
+defect: >
+  AWS Organization has no Config delegated
+  administrator registered.
+infection: >
+  AWS Organizations supports delegating
+  service administration to a non-management
+  account via register-delegated-administrator.
+  For Config, delegation lets a dedicated
+  security or audit account run org rules,
+  org conformance packs, and the aggregator
+  without needing administrative access in
+  the management account. AWS best practice
+  is to keep the management account
+  minimally used — it holds billing, root,
+  and the organization itself; identity
+  compromises in the management account
+  cascade to every member account. Day-to-
+  day Config administration concentrates
+  authentication and operational footprint
+  in the management account when no
+  delegated admin exists; that same identity
+  boundary owns both the audit-tool config
+  and the audited resources, weakening
+  separation of duties.
+failure: >
+  Concentrated administrative footprint in
+  the management account. Org Config admin
+  shares the highest-trust account boundary
+  with billing and root.

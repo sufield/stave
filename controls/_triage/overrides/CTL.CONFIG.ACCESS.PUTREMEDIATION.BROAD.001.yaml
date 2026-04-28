@@ -1,0 +1,31 @@
+control: CTL.CONFIG.ACCESS.PUTREMEDIATION.BROAD.001
+defect: >
+  config:PutRemediationConfigurations is granted
+  to non-administrative principals.
+infection: >
+  PutRemediationConfigurations modifies the
+  remediation action tied to a Config rule:
+  what SSM document runs, with what
+  parameters, under what IAM role. An
+  attacker with this permission rewrites the
+  remediation to a no-op — point it at an
+  empty SSM document, or change parameters
+  so the action targets nothing useful.
+  Config rules continue to evaluate and
+  produce non-compliant findings; the
+  remediation still appears in
+  describe-remediation-configurations as
+  configured; but when the rule fires, the
+  rewritten remediation does nothing. The
+  rule's compliance state stays NON_COMPLIANT
+  (the resource isn't actually being fixed),
+  which an attentive operator could notice —
+  but if the rule had no compliance alarm
+  before the rewrite, the silently-broken
+  remediation can run for weeks. Same shape
+  as PutRecorder for the recording layer.
+failure: >
+  Hollow remediation. Too many principals can
+  rewrite remediation actions to no-ops; auto-
+  remediation appears configured but
+  enforcement is silent.

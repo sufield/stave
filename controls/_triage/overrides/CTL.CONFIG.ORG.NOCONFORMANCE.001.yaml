@@ -1,0 +1,31 @@
+control: CTL.CONFIG.ORG.NOCONFORMANCE.001
+defect: >
+  AWS Organization has no organization
+  conformance pack deployed.
+infection: >
+  Organization conformance packs are AWS's
+  mechanism for deploying a uniform
+  compliance baseline across every member
+  account. Without one, conformance pack
+  deployment is per-account: each member
+  account must deploy the pack independently,
+  parameter overrides drift across accounts,
+  and there's no single inventory point
+  that says "every account in this org has
+  the CIS pack." The compliance posture is
+  whatever each account separately chose.
+  Auditors asking "how do you demonstrate
+  consistent compliance evaluation across
+  the organization" get a per-account
+  inventory and a manual reconciliation,
+  rather than a single org-level statement.
+  Org packs are deployed from the management
+  account or the delegated administrator;
+  member accounts cannot opt out via local
+  IAM (the deployment is from above the
+  member account boundary).
+failure: >
+  Per-account compliance baseline only.
+  Conformance pack deployment is fragmented;
+  the organization has no uniform evaluation
+  baseline across member accounts.

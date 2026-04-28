@@ -1,0 +1,136 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.ORG.AGGREGATOR.UNENCRYPTED.001
+name: Cross-Account Config Aggregator Storage Not Encrypted With Customer-Managed KMS Key
+description: >
+  AWS Config aggregator collects configuration
+  data from multiple accounts and regions,
+  but the underlying S3 bucket holding
+  aggregated data is encrypted with the
+  AWS-managed key (default) rather than a
+  customer-managed KMS key. The aggregator
+  data spans every member account — IAM
+  policies, security group rules,
+  encryption keys, network configuration —
+  the highest-sensitivity inventory in the
+  organization. AWS-managed encryption is
+  opaque to the customer: no per-key access
+  policy, no CloudTrail decrypt trail, no
+  customer-side revocation. Customer-managed
+  KMS keys are the standard for cross-
+  account audit data.
+domain: audit
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28, AU-9"
+  pci_dss_v4.0: "3.5, 10.5"
+  fedramp_moderate: "SC-12, SC-28, AU-9"
+  hipaa: "164.312(a)(2)(iv), 164.312(e)(2)(ii)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "LOG-08"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: organization
+    multiplier: 3.0
+remediation:
+  description: >
+    Aggregator storage uses AWS-managed key,
+    not customer-managed KMS.
+  action: >
+    Reconfigure the aggregator's storage S3
+    bucket to use a customer-managed KMS key:
+    aws s3api put-bucket-encryption with
+    SSEAlgorithm=aws:kms and the appropriate
+    KMSMasterKeyID. The KMS key policy must
+    allow the Config service principal (and
+    aggregator source accounts) to encrypt;
+    the central audit account holds key-
+    administration. Existing aggregator
+    objects remain encrypted under whatever
+    key was active when they were written.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_aggregator",
+        "config": {
+          "aggregator_name": "central",
+          "aggregator_storage_kms_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_aggregator
+    - field: properties.compliance.config.aggregator_storage_kms_cmk
+      op: eq
+      value: false
+defect: >
+  Cross-account Config aggregator storage is
+  encrypted with the AWS-managed key, not a
+  customer-managed KMS key.
+infection: >
+  Config aggregators concentrate the
+  configuration inventory of every member
+  account into one queryable view: IAM
+  identities, security group rules,
+  encryption configurations, network
+  topology, every API resource. The
+  aggregator's underlying storage is the
+  organization's most sensitive
+  configuration archive. AWS-managed
+  encryption is functional (data is at rest
+  encrypted) but opaque from a control
+  perspective — no per-key access policy,
+  no CloudTrail decrypt trail of who
+  decrypted what, no customer-side
+  revocation. For cross-account audit data,
+  customer-managed keys are the standard.
+  Customer-managed encryption gives the
+  audit team a key they own, an access
+  policy they control, and a CloudTrail
+  trail that shows every decryption.
+  Compliance frameworks that require
+  customer-controlled encryption (HIPAA,
+  FedRAMP High, several PCI interpretations)
+  don't accept the AWS-managed key for
+  this kind of cross-account audit
+  inventory.
+failure: >
+  Audit-grade data without audit-grade key
+  control. Aggregator storage encrypted with
+  AWS-managed key — no customer access
+  policy, no CloudTrail decrypt trail.
+tests:
+  - name: aggregator without CMK fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:aggregator/central"
+      asset_type: aws_config_aggregator
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_aggregator
+          config:
+            aggregator_name: "central"
+            aggregator_storage_kms_cmk: false
+  - name: aggregator with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:aggregator/central"
+      asset_type: aws_config_aggregator
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_aggregator
+          config:
+            aggregator_name: "central"
+            aggregator_storage_kms_cmk: true

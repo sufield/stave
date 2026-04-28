@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.ALARM.CONFIGCHANGE.001
+defect: >
+  No CloudWatch alarm fires on API Gateway management API
+  events (CreateStage, DeleteStage, CreateAuthorizer,
+  DeleteAuthorizer, UpdateRestApi, CreateDeployment, etc.).
+infection: >
+  API Gateway management calls land in CloudTrail
+  automatically — the data exists. Without a CloudWatch
+  metric filter on the relevant events and an alarm on the
+  metric, configuration drift surfaces only when someone
+  audits the trail manually. For production APIs,
+  configuration drift warrants real-time visibility: the
+  wrong stage gets enabled, an authorizer gets removed
+  (silently disabling auth on every method that referenced
+  it), a deployment lands without review, an API key is
+  added to a usage plan it shouldn't be in. Deletion events
+  (DeleteStage, DeleteAuthorizer, DeleteRestApi) deserve a
+  higher-priority pager target than create / update events
+  — deletion is rarely undoable without a re-deploy.
+failure: >
+  Drift invisible. Stage / authorizer / deployment changes
+  happen with no signal to the team owning the API; problems
+  surface from customer impact rather than the configuration
+  event.

@@ -1,0 +1,25 @@
+control: CTL.APIGATEWAY.VALIDATION.QUERY.MISSING.001
+defect: >
+  REST API method has a request validator attached, but the
+  validator is configured to skip query-string parameter
+  validation.
+infection: >
+  Request validators in REST API can be configured to validate
+  body, parameters, both, or neither. The body-only configuration
+  is common — operators add a model to gate POST bodies and
+  assume the validator is comprehensive. Query parameters
+  declared on the method (with required=true / type=number /
+  pattern=...) flow through to the integration unchecked when
+  the validator's validate-request-parameters flag is false.
+  Missing required parameters reach the backend (which often
+  500s on null), wrong-type parameters bypass schema
+  expectations, parameter-injection payloads transit
+  unfiltered to the backend. For REST APIs whose primary
+  inputs are query-string parameters (search APIs, filter
+  endpoints, GET-style read APIs), the body validator is the
+  wrong layer — the query parameters are the input.
+failure: >
+  Query parameter validation absent. Declared method query
+  parameters reach the backend without type, format, or
+  presence checks; the contract the API author declared
+  isn't actually enforced.

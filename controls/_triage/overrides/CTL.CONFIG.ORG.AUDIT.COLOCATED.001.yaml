@@ -1,0 +1,36 @@
+control: CTL.CONFIG.ORG.AUDIT.COLOCATED.001
+defect: >
+  Member account Config delivery destination
+  is a bucket in the management account.
+infection: >
+  The Config delivery bucket holds the durable
+  configuration audit trail for the account
+  delivering to it. When the bucket lives in
+  the management account, the audit trail
+  for member accounts is co-located with
+  the most sensitive identity boundary in
+  the organization: billing, root user,
+  organization configuration, top-level
+  IAM. A compromise of the management
+  account is the worst-case scenario for
+  most organizations; co-locating the audit
+  trail there means the same compromise
+  reaches both the audited resources (the
+  organization itself) and the audit data
+  (every member account's configuration
+  history). The audit trail loses
+  independence — the integrity of the
+  evidence depends on the integrity of the
+  resources being audited. AWS best-
+  practice guidance is to deliver Config
+  data (and CloudTrail data) to a
+  dedicated security or audit account
+  outside the management account; that
+  account is operated with minimal
+  workload to keep the identity boundary
+  small.
+failure: >
+  Audit trail co-located with audit subject.
+  Management-account compromise reaches both
+  the resources being audited and the audit
+  data itself.

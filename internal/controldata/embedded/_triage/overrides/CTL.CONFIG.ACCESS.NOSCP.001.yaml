@@ -1,0 +1,37 @@
+control: CTL.CONFIG.ACCESS.NOSCP.001
+defect: >
+  AWS Organization has no SCP denying Config
+  destructive permissions in member accounts.
+infection: >
+  Service Control Policies are the
+  organizational guardrail above member-
+  account IAM. A member-account admin can
+  grant themselves any IAM permission within
+  their account — so member-account-level
+  controls on
+  config:StopConfigurationRecorder are
+  defense-in-depth, not a hard boundary. The
+  hard boundary is an SCP at the OU or root:
+  even a member-account admin cannot exceed
+  what the SCP allows. Without an SCP
+  denying the destructive Config permissions,
+  the organizational guarantee that "all
+  member accounts have Config recording" is
+  trust-based — the org assumes member
+  admins won't disable Config, but no policy
+  enforces that. SCPs should deny
+  StopConfigurationRecorder,
+  DeleteConfigurationRecorder,
+  DeleteConfigRule,
+  PutConfigurationRecorder, and
+  PutDeliveryChannel for all member
+  accounts; legitimate Config administration
+  should be done through the delegated
+  administrator account or via the
+  management account, both above the SCP.
+failure: >
+  Org Config baseline unenforced. Member-
+  account admins can disable Config recording
+  in their account; the organizational
+  guarantee that all accounts record
+  configurations relies on trust, not policy.

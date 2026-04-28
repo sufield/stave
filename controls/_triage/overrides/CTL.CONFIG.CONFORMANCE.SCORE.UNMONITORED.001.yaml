@@ -1,0 +1,31 @@
+control: CTL.CONFIG.CONFORMANCE.SCORE.UNMONITORED.001
+defect: >
+  Conformance pack compliance score is not
+  watched by any CloudWatch alarm.
+infection: >
+  Conformance packs publish per-rule
+  compliance status to the AWS/Config metric
+  namespace, and the pack's overall score is
+  derivable from the per-rule metrics. Without
+  an alarm on the score (or on the pack's
+  rule-level non-compliant counts),
+  degradation surfaces only when an operator
+  views the pack's dashboard or runs a
+  describe-conformance-pack-status call. The
+  human-review interval is typically much
+  longer than operators imagine — daily for
+  diligent teams, weekly or quarterly for
+  most. During that interval, a rule that
+  starts producing non-compliant results
+  (someone disabled S3 encryption on a new
+  bucket; someone created an IAM user
+  without MFA) has live non-compliance with
+  no signal reaching anyone. Same pattern as
+  CloudWatch unmonitored metrics elsewhere —
+  the metric is published, the alarm is the
+  delivery mechanism.
+failure: >
+  Silent compliance drift. Pack score
+  degrades, no alarm fires, the team
+  responsible for the framework doesn't know
+  until someone happens to look.

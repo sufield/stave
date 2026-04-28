@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ALARM.COUNT.DDOS.001
+name: No CloudWatch Alarm on API Gateway Request Count Spike
+description: >
+  API Gateway stage publishes the Count metric to CloudWatch
+  but no alarm watches it for traffic spikes. Volume spikes
+  signal: legitimate viral traffic that needs capacity scaling,
+  application-layer DDoS that needs WAF rate-rule tightening,
+  or runaway clients caught in a retry loop. All three demand
+  on-call attention; without an alarm, none of them surfaces
+  until customer impact or cost reports arrive. Pair with the
+  existing 4XX / 5XX / latency / throttle alarms; Count
+  catches volume excursions those don't (a flood of 200s isn't
+  an error spike but is still operationally meaningful).
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-6, IR-4, SC-5, SI-4"
+  fedramp_moderate: "AU-6, IR-4, SC-5"
+  pci_dss_v4.0: "10.4, 11.5"
+  soc2: "CC7.2, A1.1"
+  iso_27001_2022: "A.5.25, A.8.6, A.8.16"
+  ccm_v4: ["LOG-04", "BCR-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No alarm watches request count; volume spikes go unnoticed.
+  action: >
+    Create an alarm on the AWS/ApiGateway namespace Count
+    metric, dimensioned by ApiName/Stage, with a deviation-
+    from-baseline threshold (e.g., 5x rolling average over 5
+    minutes). aws cloudwatch put-metric-alarm with
+    --metric-name Count --threshold <baseline*5>. For accounts
+    with very dynamic traffic, anomaly detection alarms are
+    a better fit than fixed thresholds.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "alarms": {
+          "has_count_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.alarms.has_count_alarm
+      op: eq
+      value: false

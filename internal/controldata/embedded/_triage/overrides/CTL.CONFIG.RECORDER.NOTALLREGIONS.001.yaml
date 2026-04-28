@@ -1,0 +1,35 @@
+control: CTL.CONFIG.RECORDER.NOTALLREGIONS.001
+defect: >
+  AWS Config recorder is not running in every
+  active region in the account.
+infection: >
+  Config is regional — each region runs its
+  own recorder, evaluates its own rules, and
+  delivers its own configuration history.
+  Regions without a recorder don't capture
+  resource configurations at all; resources
+  created there don't appear in Config's
+  inventory, no rule evaluates them, no
+  compliance state applies. An attacker
+  with the ability to create resources in
+  any region (the typical AWS principal
+  permission scope) creates resources in a
+  region without a recorder to evade every
+  Config-based detection. The aggregator
+  doesn't show those resources — there's
+  nothing to aggregate. Compliance
+  dashboards show the recorded regions
+  only. The fix is to run a recorder in
+  every active region; the per-recorder
+  cost is small, and the recording itself
+  is cheap if few resources exist there.
+  For organizations, CloudFormation
+  StackSets or Control Tower's account
+  baseline deploys recorders to every
+  region of every member account
+  automatically.
+failure: >
+  Regional blind spots. Resources created
+  in unrecorded regions are invisible to
+  Config — no inventory, no rule evaluation,
+  no compliance state.

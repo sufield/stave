@@ -1,0 +1,129 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.CONFORMANCE.SCORE.UNMONITORED.001
+name: Conformance Pack Compliance Score Has No Alarm
+description: >
+  AWS Config conformance pack is deployed but
+  no CloudWatch alarm watches its compliance
+  score. The score is the percentage of
+  evaluated resources judged compliant against
+  the pack's rules — the headline metric for
+  framework alignment. Without an alarm,
+  score degradation (a rule starts producing
+  non-compliant results, the percentage drops)
+  is invisible until a human happens to view
+  the pack's dashboard. By then the
+  non-compliance has been live for whatever
+  the human-review interval is, which is
+  typically much longer than the operator
+  imagines.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC7.1, CC7.2, CC8.1"
+  nist_800_53_r5: "AU-6, CA-7, SI-4"
+  pci_dss_v4.0: "10.4, 12.4"
+  fedramp_moderate: "AU-6, CA-7, SI-4"
+  iso_27001_2022: "A.5.25, A.8.16"
+  ccm_v4: ["GRC-04", "LOG-04"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Conformance pack compliance score has no
+    monitoring; degradation surfaces only when
+    a human looks.
+  action: >
+    Create a CloudWatch alarm on the
+    AWS/Config namespace ComplianceByConfigRule
+    metric, dimensioned by ComplianceType=NON_COMPLIANT
+    and the conformance pack's rule names. Or
+    put a metric filter on the pack's
+    compliance score and alarm on threshold
+    breach: aws cloudwatch put-metric-alarm
+    with the pack-score metric. Alarm targets
+    should reach the team owning the pack —
+    pack owners are typically compliance or
+    security, not generic SRE.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_conformance_pack",
+        "config": {
+          "pack_name": "my-pack",
+          "pack_score_alarmed": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_conformance_pack
+    - field: properties.compliance.config.pack_score_alarmed
+      op: eq
+      value: false
+defect: >
+  Conformance pack compliance score is not
+  watched by any CloudWatch alarm.
+infection: >
+  Conformance packs publish per-rule
+  compliance status to the AWS/Config metric
+  namespace, and the pack's overall score is
+  derivable from the per-rule metrics. Without
+  an alarm on the score (or on the pack's
+  rule-level non-compliant counts),
+  degradation surfaces only when an operator
+  views the pack's dashboard or runs a
+  describe-conformance-pack-status call. The
+  human-review interval is typically much
+  longer than operators imagine — daily for
+  diligent teams, weekly or quarterly for
+  most. During that interval, a rule that
+  starts producing non-compliant results
+  (someone disabled S3 encryption on a new
+  bucket; someone created an IAM user
+  without MFA) has live non-compliance with
+  no signal reaching anyone. Same pattern as
+  CloudWatch unmonitored metrics elsewhere —
+  the metric is published, the alarm is the
+  delivery mechanism.
+failure: >
+  Silent compliance drift. Pack score
+  degrades, no alarm fires, the team
+  responsible for the framework doesn't know
+  until someone happens to look.
+tests:
+  - name: pack without score alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:conformance-pack/my-pack"
+      asset_type: aws_config_conformance_pack
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_conformance_pack
+          config:
+            pack_name: "my-pack"
+            pack_score_alarmed: false
+  - name: pack with score alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:conformance-pack/my-pack"
+      asset_type: aws_config_conformance_pack
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_conformance_pack
+          config:
+            pack_name: "my-pack"
+            pack_score_alarmed: true

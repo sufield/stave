@@ -1,0 +1,128 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.CONFORMANCE.PARAMS.WEAKENED.001
+name: Conformance Pack Parameter Overrides Weaken Pack Defaults
+description: >
+  AWS Config conformance pack is deployed with
+  parameter overrides that loosen the pack
+  template's default values. Common shapes:
+  the pack's password-age rule defaulted to
+  90 days but is overridden to 365; the
+  encryption rule defaulted to required-for-
+  S3 but is overridden to optional; the MFA
+  rule defaulted to required-for-all-IAM-users
+  but is overridden to required-for-root-only.
+  The pack name in the inventory still
+  matches the framework, but the actual rule
+  parameters no longer enforce the framework's
+  thresholds.
+domain: audit
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "CA-2, CA-7, CM-6, SI-4"
+  pci_dss_v4.0: "12.4"
+  fedramp_moderate: "CA-2, CA-7, CM-6"
+  iso_27001_2022: "A.5.36, A.8.9"
+  ccm_v4: ["GRC-04", "GRC-06"]
+scope_tags:
+  - aws
+  - config
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Conformance pack parameter overrides loosen
+    pack template defaults.
+  action: >
+    Audit the pack's input parameters against
+    the published template defaults: aws
+    configservice describe-conformance-packs
+    --conformance-pack-names <name>; compare
+    ConformancePackInputParameters against the
+    pack template values. Restore parameters
+    that match the framework's intent, or
+    redeploy the pack from the original
+    template: aws configservice
+    put-conformance-pack with the unmodified
+    template URI. Document any deliberately-
+    looser parameter as a triage override
+    with the operational rationale.
+  example: |
+    {
+      "compliance": {
+        "kind": "config_conformance_pack",
+        "config": {
+          "pack_name": "my-pack",
+          "pack_params_weakened": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compliance.kind
+      op: eq
+      value: config_conformance_pack
+    - field: properties.compliance.config.pack_params_weakened
+      op: eq
+      value: true
+defect: >
+  Conformance pack parameter overrides loosen
+  the pack template's defaults.
+infection: >
+  Conformance pack templates ship with default
+  parameter values that match the framework
+  the pack represents — CIS-aligned password
+  age thresholds, NIST-aligned encryption
+  requirements, PCI-aligned IAM MFA
+  requirements. The pack supports operator
+  overrides via ConformancePackInputParameters,
+  intended for legitimate variation (region-
+  specific role names, custom tag keys). The
+  same override mechanism can loosen
+  thresholds — extending password age from 90
+  to 365 days, downgrading encryption from
+  required to optional, narrowing MFA from
+  all-users to root-only. The pack name in
+  inventory still matches the framework, but
+  the rule parameters no longer enforce the
+  framework's intent. The operator who set
+  the override may have had a reason; the
+  framework auditor reading "we deploy the
+  CIS conformance pack" gets the wrong
+  picture unless the override is documented.
+failure: >
+  Compliance theatre. The pack's name claims
+  framework alignment; the parameter
+  overrides have weakened it from inside.
+tests:
+  - name: pack with weakened params fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:conformance-pack/my-pack"
+      asset_type: aws_config_conformance_pack
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_conformance_pack
+          config:
+            pack_name: "my-pack"
+            pack_params_weakened: true
+  - name: pack with default params passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:conformance-pack/my-pack"
+      asset_type: aws_config_conformance_pack
+      vendor: aws
+      properties:
+        compliance:
+          kind: config_conformance_pack
+          config:
+            pack_name: "my-pack"
+            pack_params_weakened: false

@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.METHOD.RESPONSE.MISSING.001
+name: REST API Method Has No Method Response Configured
+description: >
+  REST API method has no method response (no methodResponses
+  for any status code, or only the 200 response is declared).
+  Without method responses, API Gateway passes the integration's
+  raw response straight through to clients — including backend
+  error responses with stack traces, internal paths, ORM error
+  details, and any other exception detail the backend emits.
+  Method responses let the operator declare which status codes
+  are expected and what response models / parameter mappings
+  apply, transforming integration responses into a stable API
+  contract instead of a passthrough.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-11, SC-7"
+  fedramp_moderate: "SI-11, SC-7"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Method has no declared method responses; integration
+    responses pass through unfiltered.
+  action: >
+    Declare method responses for each expected status code:
+    aws apigateway put-method-response --status-code 200,
+    --status-code 400, --status-code 5XX, etc. Pair with
+    response models that constrain the body shape and
+    integration-response mappings that transform raw backend
+    output into the declared contract. The default integration
+    response (when present) catches anything the explicit
+    mappings don't.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_method",
+        "method": {
+          "method_response_count": 3
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_method
+    - field: properties.api.method.method_response_count
+      op: lt
+      value: 2

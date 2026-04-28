@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.MODEL.UNASSOCIATED.001
+name: Request Model Defined But Not Associated With Any Method
+description: >
+  REST API has request model resources defined (the JSON Schema
+  contracts API Gateway uses to validate request bodies), but
+  the model is not attached to any method's
+  requestModels[contentType]. The model exists in the API
+  inventory but never enforces anything — every method accepts
+  whatever the caller sends. Operators provisioning the model
+  often assume it's enforced because it appears in the API
+  definition; the actual enforcement requires an explicit
+  per-method association alongside a request validator that
+  includes body validation.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-10, CM-2"
+  fedramp_moderate: "SI-10, CM-2"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC6.6, CC8.1"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Request model defined but never attached to a method;
+    enforcement is silently absent.
+  action: >
+    Either associate the model with the method that should
+    enforce it: aws apigateway update-method with
+    --patch-operations
+    op=add,path=/requestModels/application~1json,value=<modelName>.
+    Or delete the orphan model if it's leftover from a partial
+    refactor: aws apigateway delete-model --model-name <name>.
+    Pair with a request validator that has --validate-request-body
+    set so the model actually gates traffic.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_rest_api",
+        "models": {
+          "unassociated_model_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_rest_api
+    - field: properties.api.models.unassociated_model_count
+      op: gt
+      value: 0

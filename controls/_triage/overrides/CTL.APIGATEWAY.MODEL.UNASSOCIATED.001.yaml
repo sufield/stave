@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.MODEL.UNASSOCIATED.001
+defect: >
+  REST API has request model resources defined but the model
+  is not attached to any method's requestModels.
+infection: >
+  Models are JSON Schema contracts API Gateway uses to
+  validate request bodies. Defining a model is one step;
+  attaching it to a method (via the method's requestModels
+  map keyed by content type) and pointing at it from a
+  request validator that has body-validation enabled is
+  another. Operators provisioning the model frequently assume
+  it's enforced because it appears in the API definition;
+  the actual enforcement requires the explicit per-method
+  association alongside a body-validating validator. Without
+  the association, the model is metadata — it ships with
+  exports, it shows up in describe-models, but no traffic
+  ever passes through it. The API accepts whatever the
+  caller sends. The same shape appears across many APIs
+  whose first iteration declared models for documentation
+  but the second iteration never wired the validators.
+failure: >
+  Model exists but doesn't enforce. Methods accept arbitrary
+  bodies; the contract the model declared is silent
+  documentation rather than runtime enforcement.

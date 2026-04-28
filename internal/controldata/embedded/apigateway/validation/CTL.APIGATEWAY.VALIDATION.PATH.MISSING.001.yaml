@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.VALIDATION.PATH.MISSING.001
+name: REST API Method Validator Doesn't Validate Path Parameters
+description: >
+  REST API method has a request validator attached but the
+  validator skips path parameter validation. Path parameters
+  ({userId} in /users/{userId}/orders) flow through to the
+  integration unchecked. Without validation, common issues
+  reach the backend: path-traversal sequences (../../../),
+  type-mismatched values (GUIDs where integers expected,
+  vice versa), oversized values that exceed downstream
+  query column lengths, injection payloads. Path parameters
+  are the most direct integration input on REST APIs —
+  unchecked, they amplify whatever input-handling weaknesses
+  the backend has.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-10, SC-7"
+  fedramp_moderate: "SI-10, SC-7"
+  pci_dss_v4.0: "6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Method validator skips path parameter validation; declared
+    path parameters reach the backend unchecked.
+  action: >
+    Use a request validator that includes parameter validation
+    and declare path parameters explicitly: aws apigateway
+    update-method-request-parameter with the path parameter
+    name and required=true. Validate with the OpenAPI / Swagger
+    schema if the API is exported from one — the model can
+    declare type, format, and pattern constraints API Gateway
+    enforces before invoking the integration.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_method",
+        "method": {
+          "validates_path_params": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_method
+    - field: properties.api.method.has_validator
+      op: eq
+      value: true
+    - field: properties.api.method.validates_path_params
+      op: eq
+      value: false

@@ -1,0 +1,37 @@
+control: CTL.CONFIG.ORG.AGGREGATOR.UNENCRYPTED.001
+defect: >
+  Cross-account Config aggregator storage is
+  encrypted with the AWS-managed key, not a
+  customer-managed KMS key.
+infection: >
+  Config aggregators concentrate the
+  configuration inventory of every member
+  account into one queryable view: IAM
+  identities, security group rules,
+  encryption configurations, network
+  topology, every API resource. The
+  aggregator's underlying storage is the
+  organization's most sensitive
+  configuration archive. AWS-managed
+  encryption is functional (data is at rest
+  encrypted) but opaque from a control
+  perspective — no per-key access policy,
+  no CloudTrail decrypt trail of who
+  decrypted what, no customer-side
+  revocation. For cross-account audit data,
+  customer-managed keys are the standard.
+  Customer-managed encryption gives the
+  audit team a key they own, an access
+  policy they control, and a CloudTrail
+  trail that shows every decryption.
+  Compliance frameworks that require
+  customer-controlled encryption (HIPAA,
+  FedRAMP High, several PCI interpretations)
+  don't accept the AWS-managed key for
+  this kind of cross-account audit
+  inventory.
+failure: >
+  Audit-grade data without audit-grade key
+  control. Aggregator storage encrypted with
+  AWS-managed key — no customer access
+  policy, no CloudTrail decrypt trail.
