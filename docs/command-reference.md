@@ -30,6 +30,7 @@ All commands ship in the standard `stave` binary. No build tags are required.
 | `explain` | Show how a specific control evaluates | `--controls` dir | Control description, fields needed, evaluation logic | When understanding why a control matched |
 | `trace` | Step-by-step predicate evaluation | `--controls` dir, `--control` ID, `--observation` file, `--asset-id` | Clause-by-clause PASS/FAIL tree | When a control produces unexpected results for one asset |
 | `verify` | Confirm a remediation resolved findings | `--before` eval JSON, `--after` eval JSON | Resolved/new/unchanged summary | After fixing infrastructure and re-running `apply` |
+| `expand` | Surface every control sharing a finding's structural defect archetype | `--archetype` ID, `--finding` control ID, or `--list` | Controls grouped by service with snapshot coverage | After a finding fires — find every other place the same defect class manifests |
 
 ## CI/CD
 

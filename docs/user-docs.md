@@ -213,6 +213,7 @@ Stave provides these commands:
 | `fmt` | Deterministic formatting | Canonicalize control YAML and observation JSON |
 | `lint` | Control quality | Validate control design quality rules |
 | `verify` | Before/after comparison | Confirm a fix resolved violations |
+| `expand` | Archetype pivot | Show every control sharing a finding's structural defect (ghost-reference, confused-deputy, etc.) |
 
 For snapshot operations, use the lifecycle command set:
 
