@@ -73,7 +73,8 @@ func Gate(ctx context.Context, req GateRequest, deps GateDeps) (GateResponse, er
 
 	// req.Now overrides everything (tests and reproducible runs);
 	// otherwise use the injected Clock; if neither is supplied, fall
-	// back to wall time so a nil Clock dependency doesn't panic.
+	// back to ports.RealClock so a nil Clock dependency doesn't panic
+	// while keeping wall-clock access behind the ports interface.
 	var now time.Time
 	switch {
 	case req.Now != nil:
@@ -81,7 +82,7 @@ func Gate(ctx context.Context, req GateRequest, deps GateDeps) (GateResponse, er
 	case deps.Clock != nil:
 		now = deps.Clock.Now().UTC()
 	default:
-		now = time.Now().UTC()
+		now = ports.RealClock{}.Now().UTC()
 	}
 
 	switch req.Policy {
