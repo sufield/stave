@@ -1,0 +1,25 @@
+control: CTL.COGNITO.SAML.CERTEXPIRED.001
+defect: >
+  Cognito SAML provider's cached signing
+  certificate has expired.
+infection: >
+  SAML assertion signatures are validated
+  against the IdP's signing certificate
+  published in the IdP metadata. When that
+  certificate expires (or is rotated by the
+  IdP and the Cognito-side cache is stale),
+  signature validation fails. Cognito treats
+  every incoming assertion as invalid; users
+  can authenticate at the IdP successfully
+  but Cognito rejects the resulting
+  assertion. The user-visible failure is
+  generic ('authentication failed'); the
+  actual cause requires CloudWatch log
+  inspection. The remediation requires both
+  fixing the immediate cert state and
+  ensuring future rotations don't recreate
+  the same break.
+failure: >
+  Federation broken at signature validation.
+  Expired or stale signing certificate
+  rejects every IdP assertion.

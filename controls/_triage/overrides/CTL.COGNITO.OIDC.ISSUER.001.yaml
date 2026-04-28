@@ -1,0 +1,20 @@
+control: CTL.COGNITO.OIDC.ISSUER.001
+defect: >
+  Cognito OIDC issuer URL is unreachable.
+infection: >
+  Cognito's OIDC integration discovers
+  endpoints (authorization, token, userinfo,
+  jwks_uri) by fetching the issuer's
+  /.well-known/openid-configuration document.
+  When the URL is unreachable (DNS failure,
+  IdP outage, URL changed without
+  notification), the discovery fails and
+  Cognito has no way to validate or exchange
+  tokens. Every federated login through this
+  provider fails. The user-visible error is
+  generic; the actual cause requires
+  Cognito-side log inspection.
+failure: >
+  OIDC federation broken at discovery.
+  Cognito cannot fetch the issuer's OpenID
+  Connect configuration document.

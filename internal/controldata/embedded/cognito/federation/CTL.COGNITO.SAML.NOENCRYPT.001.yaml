@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.SAML.NOENCRYPT.001
+name: Cognito SAML Assertion Encryption Not Enabled
+description: >
+  Cognito SAML identity provider does not
+  request encrypted SAML assertions. Assertions
+  travel through the user's browser in
+  plaintext, exposing IdP-issued attributes
+  (email, group memberships, custom claims)
+  to anyone who can intercept the response —
+  malicious browser extensions, network on-
+  path attackers, leaked browser history.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "IA-2, SC-8, SC-13"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "IA-2, SC-8, SC-13"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    SAML assertions transit unencrypted.
+    User attributes leak.
+  action: >
+    Enable assertion encryption: configure
+    EncryptedResponses on the IdP side and
+    upload Cognito's signing certificate to
+    the IdP. The assertion travels encrypted
+    end-to-end and only Cognito (with the
+    private key) can decrypt. Note that
+    HTTPS protects the channel between
+    browser and IdP / browser and Cognito,
+    but the assertion sits in the browser
+    as POST data — encryption keeps it
+    confidential at that layer too.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "saml_assertion_encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.saml_assertion_encrypted
+      op: eq
+      value: false
+defect: >
+  Cognito SAML provider does not require
+  encrypted assertions.
+infection: >
+  SAML assertions contain user identity
+  attributes the IdP releases to the relying
+  party — email, name, group membership,
+  custom claims like department, role,
+  permissions. Without encryption, the
+  assertion travels through the browser as
+  visible POST data: any browser extension
+  reading window state can extract it,
+  CSRF protections that don't include
+  encryption don't prevent attribute
+  leakage, and any logging or telemetry
+  that captures POST bodies records the
+  full assertion. Encryption is supported
+  by every major SAML IdP and is the
+  default-on configuration for compliance-
+  regulated deployments.
+failure: >
+  Attribute leakage. SAML assertions transit
+  in browser-visible plaintext.
+tests:
+  - name: unencrypted assertions fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_assertion_encrypted: false
+  - name: encrypted assertions pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_assertion_encrypted: true

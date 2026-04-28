@@ -1,0 +1,25 @@
+control: CTL.COGNITO.SAML.NOREFRESH.001
+defect: >
+  Cognito SAML provider uses static metadata
+  file rather than auto-refreshing URL.
+infection: >
+  SAML metadata documents include the IdP's
+  signing certificate. Most enterprise IdPs
+  rotate signing certificates on a schedule
+  (annually or quarterly) — the IdP
+  publishes new metadata at the same URL,
+  Cognito refetches and picks up the new
+  cert seamlessly. Static metadata uploads
+  break this flow: when the IdP rotates,
+  Cognito's cached cert no longer matches
+  IdP-signed assertions, and federation
+  fails. The failure is silent for users —
+  the SSO redirect completes, the IdP
+  authentication succeeds, the assertion
+  comes back to Cognito, and Cognito
+  rejects it as not-signed-by-trusted-cert.
+  The fix requires manual re-upload of
+  fresh metadata.
+failure: >
+  Brittle federation. IdP certificate
+  rotation breaks SSO with no auto-recovery.

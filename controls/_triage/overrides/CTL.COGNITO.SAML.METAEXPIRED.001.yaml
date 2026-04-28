@@ -1,0 +1,22 @@
+control: CTL.COGNITO.SAML.METAEXPIRED.001
+defect: >
+  Cognito SAML metadata cached document is
+  expired.
+infection: >
+  SAML metadata documents have a validUntil
+  attribute. Cognito treats expired metadata
+  as invalid; federation requests fail. The
+  IdP usually refreshes its metadata
+  document well before expiry, but the
+  Cognito-side cache only updates on refetch.
+  If the metadata source is a file (not URL),
+  no automatic refresh happens. Once the
+  cached document expires, every federated
+  login fails until someone manually
+  refreshes — and the failures look like
+  generic 'authentication failed' to users,
+  not 'metadata expired' to operators.
+failure: >
+  Federation broken silently. SAML metadata
+  cached past validity; logins fail with
+  ambiguous errors.

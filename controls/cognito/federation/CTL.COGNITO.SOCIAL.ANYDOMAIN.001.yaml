@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.SOCIAL.ANYDOMAIN.001
+name: Cognito Social Provider Allows Any Email Domain
+description: >
+  Cognito social identity provider has no
+  domain restriction — anyone with a Google,
+  Facebook, Apple, or Amazon account can
+  register, regardless of email domain. For
+  applications meant only for users with
+  corporate identities, this opens
+  registration to the entire internet
+  population on those providers.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-2, IA-2, IA-8"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "AC-2, IA-2"
+  iso_27001_2022: "A.5.16, A.5.18"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Social provider has no domain restriction
+    on registration.
+  action: >
+    Decide which email domains should be
+    permitted for federated registration.
+    For internal-only applications, restrict
+    to corporate domains. Use a pre-sign-up
+    Lambda trigger to inspect the email
+    domain on the incoming social-provider
+    profile and reject non-matching
+    registrations. Document the allow-list
+    so future expansions don't silently
+    bypass the gate.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "social_provider": "Google",
+          "social_allowed_domains": ["company.com"],
+          "social_allows_any_domain": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.social_allows_any_domain
+      op: eq
+      value: true
+defect: >
+  Cognito social provider permits registration
+  from any email domain.
+infection: >
+  Social-provider registration is the easiest
+  account-creation path on the internet —
+  anyone with a Google or Facebook account
+  can sign in. For applications intended for
+  a defined population (corporate users,
+  paid customers, partner organization
+  members), the implicit any-domain
+  registration is a major exposure. The
+  application may rely on Cognito groups or
+  application-side authorization to gate
+  features — but every registration creates
+  a Cognito user, consumes pool quota, and
+  generates audit trail. Bot-driven
+  registration sprees, spam account
+  creation, and account-takeover staging
+  all become possible because the front
+  door is wide open.
+failure: >
+  Open social registration. Anyone with a
+  social-provider account can create a
+  Cognito user; intended audience is not
+  enforced at registration.
+tests:
+  - name: open social registration fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            social_provider: "Google"
+            social_allowed_domains: []
+            social_allows_any_domain: true
+  - name: domain-restricted social passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            social_provider: "Google"
+            social_allowed_domains: ["company.com"]
+            social_allows_any_domain: false

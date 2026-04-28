@@ -1,0 +1,27 @@
+control: CTL.COGNITO.SOCIAL.ANYDOMAIN.001
+defect: >
+  Cognito social provider permits registration
+  from any email domain.
+infection: >
+  Social-provider registration is the easiest
+  account-creation path on the internet —
+  anyone with a Google or Facebook account
+  can sign in. For applications intended for
+  a defined population (corporate users,
+  paid customers, partner organization
+  members), the implicit any-domain
+  registration is a major exposure. The
+  application may rely on Cognito groups or
+  application-side authorization to gate
+  features — but every registration creates
+  a Cognito user, consumes pool quota, and
+  generates audit trail. Bot-driven
+  registration sprees, spam account
+  creation, and account-takeover staging
+  all become possible because the front
+  door is wide open.
+failure: >
+  Open social registration. Anyone with a
+  social-provider account can create a
+  Cognito user; intended audience is not
+  enforced at registration.

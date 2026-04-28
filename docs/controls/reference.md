@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1978
-**Pack hash:** `9070b6d79ad99bda66fbdff3b4aeae08726a09d225c41f30ea076ef588f462b2`
+**Total controls:** 1990
+**Pack hash:** `2d7d471ed4056ea875daa68b08699a7d7b5ba06d59bdbd9abba9dc7261a51667`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 228 |
-| high | 882 |
+| critical | 229 |
+| high | 887 |
 | info | 16 |
 | low | 130 |
-| medium | 722 |
+| medium | 728 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,10 +24,10 @@
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1049 |
-| governance | 257 |
+| exposure | 1052 |
+| governance | 258 |
 | hygiene | 16 |
-| identity | 346 |
+| identity | 354 |
 | network | 28 |
 | resilience | 18 |
 | secrets | 4 |
@@ -8309,6 +8309,51 @@ Cognito user pool has MFA enabled but only SMS is permitted as the second factor
 
 ---
 
+### CTL.COGNITO.OIDC.ISSUER.001
+
+**Cognito OIDC Provider Issuer URL Unreachable**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-2, IA-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-8; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito OIDC identity provider's issuer URL is unreachable. Cognito cannot fetch the OpenID Connect discovery document; OIDC- federated logins fail.
+
+**Remediation:** Verify the issuer URL responds at /.well-known/openid-configuration. If the IdP changed their issuer URL, update the provider configuration: aws cognito-idp update-identity-provider with corrected OIDC issuer. Test with curl from outside the VPC if the issuer is internet-facing, or from a Cognito-reachable network if the issuer is private.
+
+---
+
+### CTL.COGNITO.OIDC.SCOPEBROAD.001
+
+**Cognito OIDC Provider Requests Excessive Scopes**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3, AC-6; iso_27001_2022: A.5.15, A.8.5; nist_800_53_r5: AC-3, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+Cognito OIDC identity provider configuration requests scopes beyond `openid profile email`. Extra scopes (groups, offline_access, custom IdP scopes) request more authorization than the application needs and grant Cognito access to more user data than intended.
+
+**Remediation:** Update the Cognito OIDC provider to request only the minimum scopes (typically `openid profile email`): aws cognito-idp update-identity-provider with provider_details containing the narrowed authorize_scopes value. Any additional scope (groups, offline_access) should have a documented justification.
+
+---
+
+### CTL.COGNITO.OIDC.SECRETROT.001
+
+**Cognito OIDC Provider Client Secret Not Rotated**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-5; iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-5; pci_dss_v4.0: 8.6; soc2: CC6.1, CC8.1;
+
+Cognito OIDC identity provider's client secret has not been rotated in 90+ days. Long-lived OIDC client secrets become high-value credentials over time; compromise of a secret rotated infrequently yields long-term federated access.
+
+**Remediation:** Generate a new client secret at the IdP, update the Cognito provider with the new value: aws cognito-idp update-identity- provider with provider_details containing the new client_secret. Revoke the old secret at the IdP after a brief overlap window. For high-trust deployments, automate the rotation cycle on a quarterly cadence.
+
+---
+
 ### CTL.COGNITO.PASSWORD.001
 
 **Cognito User Pools Must Enforce a Strong Password Policy**
@@ -8354,6 +8399,96 @@ Cognito user pool enforces MFA but the account-recovery configuration permits re
 
 ---
 
+### CTL.COGNITO.SAML.ATTRMAP.001
+
+**Cognito SAML Attribute Mapping Missing Required Attributes**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-2, IA-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-8; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito SAML provider's attribute mapping doesn't include required attributes such as email or name. Federated users authenticate but their Cognito records lack the attributes the application expects. Application-side authorization (group lookups, profile rendering, recovery flows) fails because the data isn't there.
+
+**Remediation:** Update the SAML provider's attribute mapping to include at minimum email and name attributes from the IdP. Use aws cognito-idp update-identity-provider with --attribute-mapping email=mail,given_name=givenname,... matching the IdP's claim names. Verify by completing a federated login and checking that the resulting Cognito user's attributes are populated.
+
+---
+
+### CTL.COGNITO.SAML.CERTEXPIRED.001
+
+**Cognito SAML Provider Signing Certificate Expired**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, SC-12; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: IA-2, SC-12; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito SAML identity provider's signing certificate (in cached metadata) has expired. Signature verification fails on every incoming assertion; federation is broken until the cached cert is refreshed.
+
+**Remediation:** Refresh the metadata so Cognito picks up the IdP's current cert. For URL-based metadata, force a refresh by reapplying the configuration. For static metadata, fetch fresh metadata from the IdP and re-upload. Coordinate with the IdP team to confirm their current certificate rotation cadence — chronic cert-expiration failures suggest the metadata refresh path itself is broken.
+
+---
+
+### CTL.COGNITO.SAML.METAEXPIRED.001
+
+**Cognito SAML Provider Metadata Cached as Expired**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, IA-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-8, SC-12; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito SAML identity provider's cached metadata document is past its validUntil date. Cognito treats expired metadata as invalid; SAML federation begins to fail silently as the cached document ages out. Distinct from GHOST.SAMLMETA (URL unreachable) — here the metadata fetched successfully but has aged past validity.
+
+**Remediation:** Refresh the metadata: aws cognito-idp update-identity-provider with the same metadata URL forces Cognito to refetch. For static metadata (file upload rather than URL), pull fresh metadata from the IdP and re-upload. Long-term, prefer URL- based metadata so refresh is automatic.
+
+---
+
+### CTL.COGNITO.SAML.NOENCRYPT.001
+
+**Cognito SAML Assertion Encryption Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-2, SC-8, SC-13; iso_27001_2022: A.5.16, A.8.20; nist_800_53_r5: IA-2, SC-8, SC-13; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+Cognito SAML identity provider does not request encrypted SAML assertions. Assertions travel through the user's browser in plaintext, exposing IdP-issued attributes (email, group memberships, custom claims) to anyone who can intercept the response — malicious browser extensions, network on- path attackers, leaked browser history.
+
+**Remediation:** Enable assertion encryption: configure EncryptedResponses on the IdP side and upload Cognito's signing certificate to the IdP. The assertion travels encrypted end-to-end and only Cognito (with the private key) can decrypt. Note that HTTPS protects the channel between browser and IdP / browser and Cognito, but the assertion sits in the browser as POST data — encryption keeps it confidential at that layer too.
+
+---
+
+### CTL.COGNITO.SAML.NOREFRESH.001
+
+**Cognito SAML Provider Configured with Static Metadata File**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: CM-2, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, IA-2, IA-8; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito SAML identity provider is configured with a static metadata file rather than a metadata URL. Static metadata never auto- refreshes — IdP certificate rotation breaks federation until a human re-uploads. The failure mode is silent until the next IdP cert rotation.
+
+**Remediation:** Switch to URL-based metadata: aws cognito-idp update-identity-provider with provider_details containing MetadataURL pointing at the IdP's metadata endpoint. Cognito periodically refetches the URL, picking up certificate rotations automatically. Static-file uploads are reserved for tightly-controlled scenarios where the metadata URL isn't reachable from Cognito.
+
+---
+
+### CTL.COGNITO.SAML.NOSIGN.001
+
+**Cognito SAML Provider Does Not Require Signed Assertions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, SC-12, SC-13; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, SC-12, SC-13; pci_dss_v4.0: 8.3; soc2: CC6.1;
+
+Cognito SAML identity provider configuration does not require signed assertions. Cognito accepts assertions without verifying the signature — an attacker who can craft a SAML response (no infrastructure access required) can forge a federated identity.
+
+**Remediation:** Enable signature verification on the SAML provider: aws cognito-idp update-identity-provider with provider details requiring signed assertions. Verify by submitting an unsigned assertion to the SAML endpoint and confirming Cognito rejects it. Pair with encrypted assertions for full protection against tampering and eavesdropping.
+
+---
+
 ### CTL.COGNITO.SELFREG.001
 
 **Cognito User Pools Must Disable Unrestricted Self-Registration**
@@ -8366,6 +8501,51 @@ Cognito user pool enforces MFA but the account-recovery configuration permits re
 Cognito user pools should require administrator-created accounts (AllowAdminCreateUserOnly=true). Unrestricted self-registration lets anyone create an account and potentially access resources mapped through identity pools.
 
 **Remediation:** Set AllowAdminCreateUserOnly to true in AdminCreateUserConfig.
+
+---
+
+### CTL.COGNITO.SOCIAL.ANYDOMAIN.001
+
+**Cognito Social Provider Allows Any Email Domain**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-2, IA-2; iso_27001_2022: A.5.16, A.5.18; nist_800_53_r5: AC-2, IA-2, IA-8; pci_dss_v4.0: 8.3; soc2: CC6.1, CC6.3;
+
+Cognito social identity provider has no domain restriction — anyone with a Google, Facebook, Apple, or Amazon account can register, regardless of email domain. For applications meant only for users with corporate identities, this opens registration to the entire internet population on those providers.
+
+**Remediation:** Decide which email domains should be permitted for federated registration. For internal-only applications, restrict to corporate domains. Use a pre-sign-up Lambda trigger to inspect the email domain on the incoming social-provider profile and reject non-matching registrations. Document the allow-list so future expansions don't silently bypass the gate.
+
+---
+
+### CTL.COGNITO.SOCIAL.NOVERIFY.001
+
+**Cognito Social Provider Maps Email Without Marking It Verified**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-2, IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-5; pci_dss_v4.0: 8.2; soc2: CC6.1;
+
+Cognito social identity provider's attribute mapping passes email through but doesn't mark email_verified=true even though the social provider has already verified the email. Cognito treats the email as unverified and the application's verified- email checks block legitimate users while silently accepting spoofed inputs.
+
+**Remediation:** Update the social provider's attribute mapping to set email_verified=true based on the IdP's verified-email claim. Google, Apple, and Amazon all release email_verified in their token responses — map that claim through. Facebook treats email as verified by default after successful authentication; map a literal 'true' in that case. Test by completing a federated login and confirming the Cognito user's email_verified attribute is true.
+
+---
+
+### CTL.COGNITO.SOCIAL.TESTCREDS.001
+
+**Cognito Social Provider Configured with Test Credentials**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: CM-2, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito social identity provider (Google, Facebook, Apple, Amazon, etc.) is configured with credentials that match known test or sandbox app IDs — promotion to production without rotating credentials. Test app IDs often have different rate limits, distinct consent UX, and may permit registration patterns the production app intentionally blocks.
+
+**Remediation:** Create a production app at the social provider (Google Cloud Console, Meta for Developers, Apple Developer, etc.) and update the Cognito provider to use the production client_id and client_secret. The test app was probably created during initial integration and never rotated.
 
 ---
 

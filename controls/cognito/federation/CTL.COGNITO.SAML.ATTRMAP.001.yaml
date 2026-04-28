@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.SAML.ATTRMAP.001
+name: Cognito SAML Attribute Mapping Missing Required Attributes
+description: >
+  Cognito SAML provider's attribute mapping
+  doesn't include required attributes such as
+  email or name. Federated users authenticate
+  but their Cognito records lack the
+  attributes the application expects.
+  Application-side authorization (group
+  lookups, profile rendering, recovery flows)
+  fails because the data isn't there.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "IA-2, IA-8"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "IA-2, IA-8"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Required attributes missing from SAML
+    mapping.
+  action: >
+    Update the SAML provider's attribute
+    mapping to include at minimum email and
+    name attributes from the IdP. Use aws
+    cognito-idp update-identity-provider
+    with --attribute-mapping
+    email=mail,given_name=givenname,...
+    matching the IdP's claim names. Verify
+    by completing a federated login and
+    checking that the resulting Cognito
+    user's attributes are populated.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "saml_attribute_mapping_keys": ["email", "given_name", "family_name"],
+          "saml_attribute_mapping_complete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.saml_attribute_mapping_complete
+      op: eq
+      value: false
+defect: >
+  Cognito SAML provider attribute mapping is
+  incomplete.
+infection: >
+  Cognito stores user records based on the
+  attribute mapping that translates IdP-
+  asserted claims into Cognito attribute
+  names. With email missing from the mapping,
+  federated users sign in but Cognito records
+  no email — recovery flows break, profile
+  pages show blanks, group lookups that
+  pivot on email fail. With name attributes
+  missing, the user appears as 'unknown' in
+  the application. Worse, applications that
+  trust Cognito-side attribute presence can
+  break in subtle ways (a downstream
+  authorization rule that says 'allow if
+  email ends with @company.com' permits all
+  federated users when email is missing,
+  because the predicate compares an empty
+  string).
+failure: >
+  Federated user records incomplete. Required
+  attributes missing from SAML mapping;
+  downstream application logic produces
+  unexpected results.
+tests:
+  - name: incomplete attribute mapping fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_attribute_mapping_keys: ["family_name"]
+            saml_attribute_mapping_complete: false
+  - name: complete mapping passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_attribute_mapping_keys: ["email", "given_name", "family_name"]
+            saml_attribute_mapping_complete: true

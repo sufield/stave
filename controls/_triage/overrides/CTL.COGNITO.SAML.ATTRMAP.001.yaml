@@ -1,0 +1,27 @@
+control: CTL.COGNITO.SAML.ATTRMAP.001
+defect: >
+  Cognito SAML provider attribute mapping is
+  incomplete.
+infection: >
+  Cognito stores user records based on the
+  attribute mapping that translates IdP-
+  asserted claims into Cognito attribute
+  names. With email missing from the mapping,
+  federated users sign in but Cognito records
+  no email — recovery flows break, profile
+  pages show blanks, group lookups that
+  pivot on email fail. With name attributes
+  missing, the user appears as 'unknown' in
+  the application. Worse, applications that
+  trust Cognito-side attribute presence can
+  break in subtle ways (a downstream
+  authorization rule that says 'allow if
+  email ends with @company.com' permits all
+  federated users when email is missing,
+  because the predicate compares an empty
+  string).
+failure: >
+  Federated user records incomplete. Required
+  attributes missing from SAML mapping;
+  downstream application logic produces
+  unexpected results.

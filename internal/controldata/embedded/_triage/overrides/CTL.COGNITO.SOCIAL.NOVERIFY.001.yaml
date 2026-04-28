@@ -1,0 +1,31 @@
+control: CTL.COGNITO.SOCIAL.NOVERIFY.001
+defect: >
+  Cognito social provider doesn't mark email
+  as verified despite IdP verification.
+infection: >
+  Social providers verify email ownership
+  before account creation — Google and Apple
+  refuse to release email until the user
+  has confirmed it; Facebook performs its
+  own verification. The verified state is
+  available in the IdP's token response.
+  Cognito's attribute mapping must
+  explicitly mark email as verified at
+  user-creation time. When the mapping
+  passes email through but doesn't set
+  email_verified, federated users land in
+  Cognito with email but email_verified=
+  false. Application logic that checks
+  verified-email status (recovery flows,
+  sensitive operations, account merge)
+  treats federated users as unverified.
+  Worse, downstream password-reset flows
+  may send recovery codes to the unverified
+  address, accepting them as proof of
+  ownership when verification was already
+  performed by the IdP.
+failure: >
+  Federated users marked unverified.
+  Verified-email application logic blocks
+  legitimate users or accepts unverified
+  inputs.

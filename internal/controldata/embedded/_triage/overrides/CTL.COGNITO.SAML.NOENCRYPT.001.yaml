@@ -1,0 +1,24 @@
+control: CTL.COGNITO.SAML.NOENCRYPT.001
+defect: >
+  Cognito SAML provider does not require
+  encrypted assertions.
+infection: >
+  SAML assertions contain user identity
+  attributes the IdP releases to the relying
+  party — email, name, group membership,
+  custom claims like department, role,
+  permissions. Without encryption, the
+  assertion travels through the browser as
+  visible POST data: any browser extension
+  reading window state can extract it,
+  CSRF protections that don't include
+  encryption don't prevent attribute
+  leakage, and any logging or telemetry
+  that captures POST bodies records the
+  full assertion. Encryption is supported
+  by every major SAML IdP and is the
+  default-on configuration for compliance-
+  regulated deployments.
+failure: >
+  Attribute leakage. SAML assertions transit
+  in browser-visible plaintext.

@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.SOCIAL.TESTCREDS.001
+name: Cognito Social Provider Configured with Test Credentials
+description: >
+  Cognito social identity provider (Google,
+  Facebook, Apple, Amazon, etc.) is configured
+  with credentials that match known test or
+  sandbox app IDs — promotion to production
+  without rotating credentials. Test app IDs
+  often have different rate limits, distinct
+  consent UX, and may permit registration
+  patterns the production app intentionally
+  blocks.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, IA-2"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "CM-2, IA-2"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Social provider uses test/sandbox app
+    credentials in production.
+  action: >
+    Create a production app at the social
+    provider (Google Cloud Console, Meta for
+    Developers, Apple Developer, etc.) and
+    update the Cognito provider to use the
+    production client_id and client_secret.
+    The test app was probably created during
+    initial integration and never rotated.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "social_provider": "Google",
+          "social_uses_test_credentials": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.social_uses_test_credentials
+      op: eq
+      value: true
+defect: >
+  Cognito social provider uses test/sandbox
+  app credentials.
+infection: >
+  Social providers (Google, Facebook, Apple,
+  Amazon) issue separate app IDs for testing
+  and production. Test apps run with relaxed
+  policies — broader consent UI, different
+  rate limits, often allow self-registration
+  patterns the production app blocks. When a
+  Cognito provider continues using test
+  credentials in production: rate limits hit
+  faster than expected (test caps are
+  lower), users see consent screens
+  branded for the test app rather than the
+  production product, and any provider-side
+  abuse signal applies to the test app
+  rather than the real production project.
+  The integration works in casual testing,
+  so the misconfiguration goes unnoticed.
+failure: >
+  Production federation through a test app.
+  Operational and consent-UX
+  misconfiguration; rotation typically
+  required.
+tests:
+  - name: test creds in production fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            social_provider: "Google"
+            social_uses_test_credentials: true
+  - name: production creds pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            social_provider: "Google"
+            social_uses_test_credentials: false

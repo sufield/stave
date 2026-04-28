@@ -1,0 +1,25 @@
+control: CTL.COGNITO.SAML.NOSIGN.001
+defect: >
+  Cognito SAML provider does not require
+  signed assertions.
+infection: >
+  SAML assertions are XML documents asserting
+  user identity. The IdP signs the assertion
+  with a private key; the relying party
+  (Cognito) verifies the signature against
+  the IdP's metadata-published public key.
+  Without signature verification, Cognito
+  accepts any well-formed assertion. An
+  attacker writes a SAML response by hand,
+  populates it with a victim's email and
+  group memberships, posts it to Cognito's
+  SAML endpoint — Cognito accepts it and
+  issues tokens for the victim. This is the
+  classic SAML Response Injection attack.
+  Production SAML deployments universally
+  require signed assertions; the unsigned
+  state is typically a configuration error.
+failure: >
+  Identity forgery via crafted SAML response.
+  Cognito accepts assertions without
+  signature verification.

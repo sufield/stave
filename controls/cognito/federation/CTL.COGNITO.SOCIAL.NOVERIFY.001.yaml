@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.SOCIAL.NOVERIFY.001
+name: Cognito Social Provider Maps Email Without Marking It Verified
+description: >
+  Cognito social identity provider's attribute
+  mapping passes email through but doesn't
+  mark email_verified=true even though the
+  social provider has already verified the
+  email. Cognito treats the email as
+  unverified and the application's verified-
+  email checks block legitimate users while
+  silently accepting spoofed inputs.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-2, IA-5"
+  pci_dss_v4.0: "8.2"
+  fedramp_moderate: "IA-2, IA-5"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Social provider's verified email isn't
+    flagged verified in Cognito.
+  action: >
+    Update the social provider's attribute
+    mapping to set email_verified=true based
+    on the IdP's verified-email claim.
+    Google, Apple, and Amazon all release
+    email_verified in their token responses
+    — map that claim through. Facebook
+    treats email as verified by default after
+    successful authentication; map a literal
+    'true' in that case. Test by completing
+    a federated login and confirming the
+    Cognito user's email_verified attribute
+    is true.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "social_provider": "Google",
+          "social_email_marked_verified": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.social_email_marked_verified
+      op: eq
+      value: false
+defect: >
+  Cognito social provider doesn't mark email
+  as verified despite IdP verification.
+infection: >
+  Social providers verify email ownership
+  before account creation — Google and Apple
+  refuse to release email until the user
+  has confirmed it; Facebook performs its
+  own verification. The verified state is
+  available in the IdP's token response.
+  Cognito's attribute mapping must
+  explicitly mark email as verified at
+  user-creation time. When the mapping
+  passes email through but doesn't set
+  email_verified, federated users land in
+  Cognito with email but email_verified=
+  false. Application logic that checks
+  verified-email status (recovery flows,
+  sensitive operations, account merge)
+  treats federated users as unverified.
+  Worse, downstream password-reset flows
+  may send recovery codes to the unverified
+  address, accepting them as proof of
+  ownership when verification was already
+  performed by the IdP.
+failure: >
+  Federated users marked unverified.
+  Verified-email application logic blocks
+  legitimate users or accepts unverified
+  inputs.
+tests:
+  - name: social email not marked verified fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            social_provider: "Google"
+            social_email_marked_verified: false
+  - name: social email marked verified passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            social_provider: "Google"
+            social_email_marked_verified: true

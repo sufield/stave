@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.OIDC.SCOPEBROAD.001
+name: Cognito OIDC Provider Requests Excessive Scopes
+description: >
+  Cognito OIDC identity provider configuration
+  requests scopes beyond `openid profile
+  email`. Extra scopes (groups, offline_access,
+  custom IdP scopes) request more
+  authorization than the application needs
+  and grant Cognito access to more user data
+  than intended.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6, IA-2"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    OIDC scope request is broader than the
+    application needs.
+  action: >
+    Update the Cognito OIDC provider to
+    request only the minimum scopes
+    (typically `openid profile email`):
+    aws cognito-idp update-identity-provider
+    with provider_details containing the
+    narrowed authorize_scopes value. Any
+    additional scope (groups, offline_access)
+    should have a documented justification.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "oidc_authorize_scopes": ["openid", "email", "profile"],
+          "oidc_scopes_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.oidc_scopes_broad
+      op: eq
+      value: true
+defect: >
+  Cognito OIDC provider requests scopes beyond
+  the standard openid + profile + email.
+infection: >
+  OIDC scopes determine what the IdP shares
+  with Cognito and what the user grants
+  consent for. The standard combination
+  (openid + profile + email) covers identity
+  and basic claims. Adding scopes like
+  offline_access (refresh tokens at the IdP),
+  groups (full directory membership), or
+  custom IdP scopes (often containing
+  application-specific claims) widens both
+  what Cognito receives and what the
+  application implicitly trusts. A
+  compromised Cognito-side configuration
+  could exfiltrate offline_access tokens
+  and act as the user against the IdP for
+  weeks. Consent screens that list many
+  scopes also condition users to click
+  through wider grants — the broad-scope
+  default trains away healthy caution.
+failure: >
+  Excessive OIDC scope grant. Cognito
+  receives more user data than the
+  application needs; users consent to
+  broader permissions than expected.
+tests:
+  - name: broad OIDC scopes fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            oidc_authorize_scopes:
+              - "openid"
+              - "email"
+              - "profile"
+              - "offline_access"
+              - "groups"
+              - "directory.read.all"
+            oidc_scopes_broad: true
+  - name: narrow OIDC scopes pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            oidc_authorize_scopes: ["openid", "email", "profile"]
+            oidc_scopes_broad: false

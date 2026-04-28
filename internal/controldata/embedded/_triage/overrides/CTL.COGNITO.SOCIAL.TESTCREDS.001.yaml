@@ -1,0 +1,26 @@
+control: CTL.COGNITO.SOCIAL.TESTCREDS.001
+defect: >
+  Cognito social provider uses test/sandbox
+  app credentials.
+infection: >
+  Social providers (Google, Facebook, Apple,
+  Amazon) issue separate app IDs for testing
+  and production. Test apps run with relaxed
+  policies — broader consent UI, different
+  rate limits, often allow self-registration
+  patterns the production app blocks. When a
+  Cognito provider continues using test
+  credentials in production: rate limits hit
+  faster than expected (test caps are
+  lower), users see consent screens
+  branded for the test app rather than the
+  production product, and any provider-side
+  abuse signal applies to the test app
+  rather than the real production project.
+  The integration works in casual testing,
+  so the misconfiguration goes unnoticed.
+failure: >
+  Production federation through a test app.
+  Operational and consent-UX
+  misconfiguration; rotation typically
+  required.

@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.SAML.METAEXPIRED.001
+name: Cognito SAML Provider Metadata Cached as Expired
+description: >
+  Cognito SAML identity provider's cached
+  metadata document is past its validUntil
+  date. Cognito treats expired metadata as
+  invalid; SAML federation begins to fail
+  silently as the cached document ages out.
+  Distinct from GHOST.SAMLMETA (URL
+  unreachable) — here the metadata fetched
+  successfully but has aged past validity.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "IA-2, IA-8, SC-12"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "IA-2, IA-8"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Metadata cached document past validUntil.
+    Federation will fail.
+  action: >
+    Refresh the metadata: aws cognito-idp
+    update-identity-provider with the same
+    metadata URL forces Cognito to refetch.
+    For static metadata (file upload rather
+    than URL), pull fresh metadata from the
+    IdP and re-upload. Long-term, prefer URL-
+    based metadata so refresh is automatic.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "saml_metadata_valid_until_days": 90,
+          "saml_metadata_expired": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.saml_metadata_expired
+      op: eq
+      value: true
+defect: >
+  Cognito SAML metadata cached document is
+  expired.
+infection: >
+  SAML metadata documents have a validUntil
+  attribute. Cognito treats expired metadata
+  as invalid; federation requests fail. The
+  IdP usually refreshes its metadata
+  document well before expiry, but the
+  Cognito-side cache only updates on refetch.
+  If the metadata source is a file (not URL),
+  no automatic refresh happens. Once the
+  cached document expires, every federated
+  login fails until someone manually
+  refreshes — and the failures look like
+  generic 'authentication failed' to users,
+  not 'metadata expired' to operators.
+failure: >
+  Federation broken silently. SAML metadata
+  cached past validity; logins fail with
+  ambiguous errors.
+tests:
+  - name: expired metadata fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_metadata_valid_until_days: -3
+            saml_metadata_expired: true
+  - name: valid metadata passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_metadata_valid_until_days: 90
+            saml_metadata_expired: false

@@ -1,0 +1,28 @@
+control: CTL.COGNITO.OIDC.SCOPEBROAD.001
+defect: >
+  Cognito OIDC provider requests scopes beyond
+  the standard openid + profile + email.
+infection: >
+  OIDC scopes determine what the IdP shares
+  with Cognito and what the user grants
+  consent for. The standard combination
+  (openid + profile + email) covers identity
+  and basic claims. Adding scopes like
+  offline_access (refresh tokens at the IdP),
+  groups (full directory membership), or
+  custom IdP scopes (often containing
+  application-specific claims) widens both
+  what Cognito receives and what the
+  application implicitly trusts. A
+  compromised Cognito-side configuration
+  could exfiltrate offline_access tokens
+  and act as the user against the IdP for
+  weeks. Consent screens that list many
+  scopes also condition users to click
+  through wider grants — the broad-scope
+  default trains away healthy caution.
+failure: >
+  Excessive OIDC scope grant. Cognito
+  receives more user data than the
+  application needs; users consent to
+  broader permissions than expected.

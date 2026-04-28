@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.SAML.CERTEXPIRED.001
+name: Cognito SAML Provider Signing Certificate Expired
+description: >
+  Cognito SAML identity provider's signing
+  certificate (in cached metadata) has
+  expired. Signature verification fails on
+  every incoming assertion; federation is
+  broken until the cached cert is refreshed.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "IA-2, SC-12"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "IA-2, SC-12"
+  iso_27001_2022: "A.5.16, A.8.24"
+  ccm_v4: ["CEK-09", "IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 3.5
+remediation:
+  description: >
+    Cached signing certificate expired.
+    Federation breaks.
+  action: >
+    Refresh the metadata so Cognito picks up
+    the IdP's current cert. For URL-based
+    metadata, force a refresh by reapplying
+    the configuration. For static metadata,
+    fetch fresh metadata from the IdP and
+    re-upload. Coordinate with the IdP team
+    to confirm their current certificate
+    rotation cadence — chronic
+    cert-expiration failures suggest the
+    metadata refresh path itself is broken.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "saml_signing_cert_expires_days": 60,
+          "saml_signing_cert_expired": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.saml_signing_cert_expired
+      op: eq
+      value: true
+defect: >
+  Cognito SAML provider's cached signing
+  certificate has expired.
+infection: >
+  SAML assertion signatures are validated
+  against the IdP's signing certificate
+  published in the IdP metadata. When that
+  certificate expires (or is rotated by the
+  IdP and the Cognito-side cache is stale),
+  signature validation fails. Cognito treats
+  every incoming assertion as invalid; users
+  can authenticate at the IdP successfully
+  but Cognito rejects the resulting
+  assertion. The user-visible failure is
+  generic ('authentication failed'); the
+  actual cause requires CloudWatch log
+  inspection. The remediation requires both
+  fixing the immediate cert state and
+  ensuring future rotations don't recreate
+  the same break.
+failure: >
+  Federation broken at signature validation.
+  Expired or stale signing certificate
+  rejects every IdP assertion.
+tests:
+  - name: expired cert fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_signing_cert_expires_days: -10
+            saml_signing_cert_expired: true
+  - name: valid cert passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_signing_cert_expires_days: 60
+            saml_signing_cert_expired: false

@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.OIDC.ISSUER.001
+name: Cognito OIDC Provider Issuer URL Unreachable
+description: >
+  Cognito OIDC identity provider's issuer URL
+  is unreachable. Cognito cannot fetch the
+  OpenID Connect discovery document; OIDC-
+  federated logins fail.
+domain: identity
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "IA-2, IA-8"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "IA-2, IA-8"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    OIDC issuer URL doesn't respond.
+    Federation broken.
+  action: >
+    Verify the issuer URL responds at
+    /.well-known/openid-configuration. If the
+    IdP changed their issuer URL, update the
+    provider configuration: aws cognito-idp
+    update-identity-provider with corrected
+    OIDC issuer. Test with curl from outside
+    the VPC if the issuer is internet-facing,
+    or from a Cognito-reachable network if
+    the issuer is private.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "oidc_issuer_url": "https://idp.example.com",
+          "oidc_issuer_reachable": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.oidc_issuer_reachable
+      op: eq
+      value: false
+defect: >
+  Cognito OIDC issuer URL is unreachable.
+infection: >
+  Cognito's OIDC integration discovers
+  endpoints (authorization, token, userinfo,
+  jwks_uri) by fetching the issuer's
+  /.well-known/openid-configuration document.
+  When the URL is unreachable (DNS failure,
+  IdP outage, URL changed without
+  notification), the discovery fails and
+  Cognito has no way to validate or exchange
+  tokens. Every federated login through this
+  provider fails. The user-visible error is
+  generic; the actual cause requires
+  Cognito-side log inspection.
+failure: >
+  OIDC federation broken at discovery.
+  Cognito cannot fetch the issuer's OpenID
+  Connect configuration document.
+tests:
+  - name: unreachable OIDC issuer fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            oidc_issuer_url: "https://expired.example/"
+            oidc_issuer_reachable: false
+  - name: reachable OIDC issuer passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            oidc_issuer_url: "https://idp.example.com"
+            oidc_issuer_reachable: true

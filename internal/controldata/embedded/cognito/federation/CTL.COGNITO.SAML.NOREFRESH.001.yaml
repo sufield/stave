@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.SAML.NOREFRESH.001
+name: Cognito SAML Provider Configured with Static Metadata File
+description: >
+  Cognito SAML identity provider is configured
+  with a static metadata file rather than a
+  metadata URL. Static metadata never auto-
+  refreshes — IdP certificate rotation breaks
+  federation until a human re-uploads. The
+  failure mode is silent until the next IdP
+  cert rotation.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, IA-2, IA-8"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "CM-2, IA-2"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    SAML metadata is a static file, not a URL.
+    No auto-refresh on IdP cert rotation.
+  action: >
+    Switch to URL-based metadata: aws
+    cognito-idp update-identity-provider
+    with provider_details containing
+    MetadataURL pointing at the IdP's
+    metadata endpoint. Cognito periodically
+    refetches the URL, picking up
+    certificate rotations automatically.
+    Static-file uploads are reserved for
+    tightly-controlled scenarios where the
+    metadata URL isn't reachable from
+    Cognito.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "saml_metadata_source": "url",
+          "saml_metadata_static": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.saml_metadata_static
+      op: eq
+      value: true
+defect: >
+  Cognito SAML provider uses static metadata
+  file rather than auto-refreshing URL.
+infection: >
+  SAML metadata documents include the IdP's
+  signing certificate. Most enterprise IdPs
+  rotate signing certificates on a schedule
+  (annually or quarterly) — the IdP
+  publishes new metadata at the same URL,
+  Cognito refetches and picks up the new
+  cert seamlessly. Static metadata uploads
+  break this flow: when the IdP rotates,
+  Cognito's cached cert no longer matches
+  IdP-signed assertions, and federation
+  fails. The failure is silent for users —
+  the SSO redirect completes, the IdP
+  authentication succeeds, the assertion
+  comes back to Cognito, and Cognito
+  rejects it as not-signed-by-trusted-cert.
+  The fix requires manual re-upload of
+  fresh metadata.
+failure: >
+  Brittle federation. IdP certificate
+  rotation breaks SSO with no auto-recovery.
+tests:
+  - name: static metadata fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_metadata_source: "file"
+            saml_metadata_static: true
+  - name: URL metadata passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_metadata_source: "url"
+            saml_metadata_static: false
