@@ -1,0 +1,21 @@
+control: CTL.CLOUDWATCH.GHOST.SUBSCRIPTION.LAMBDA.001
+defect: >
+  CloudWatch Logs subscription filter delivers to a
+  deleted Lambda function.
+infection: >
+  Subscription filters can stream matching log events
+  to Lambda functions for real-time processing —
+  anomaly detection, log enrichment, alerting outside
+  the metric-filter pipeline. When the Lambda is
+  deleted: CloudWatch Logs invokes the Lambda for
+  matching events, the invocation fails with
+  ResourceNotFoundException, and the events are
+  dropped. The subscription filter remains in the
+  console showing the destination ARN. Only the
+  delivery silently fails. The downstream processing
+  pipeline that depended on this stream goes blind to
+  events from this log group.
+failure: >
+  Real-time processing broken. Matching log events
+  are silently dropped because the Lambda destination
+  was deleted.

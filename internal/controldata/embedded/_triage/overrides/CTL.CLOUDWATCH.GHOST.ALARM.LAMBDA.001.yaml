@@ -1,0 +1,24 @@
+control: CTL.CLOUDWATCH.GHOST.ALARM.LAMBDA.001
+defect: >
+  CloudWatch alarm action invokes a Lambda function
+  that has been deleted.
+infection: >
+  Some CloudWatch alarms invoke Lambda functions for
+  automated remediation: auto-scaling, incident
+  response, self-healing (restart failed service), or
+  security response (revoke compromised credentials,
+  isolate compromised instance). When the Lambda is
+  deleted: the alarm fires correctly (detection
+  works), the action attempts invocation (response
+  initiates), the invocation fails
+  (ResourceNotFoundException), and the remediation
+  doesn't execute. If the alarm also has an SNS
+  action, the team is notified — but the automated
+  remediation they expected doesn't happen. If the
+  alarm ONLY has the Lambda action (no SNS), the
+  alarm fires with no notification and no
+  remediation.
+failure: >
+  Automated remediation broken. Alarm detects the
+  problem and invokes a deleted Lambda — remediation
+  doesn't execute.

@@ -1,0 +1,149 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.SUBSCRIPTION.CROSSACCOUNT.NOENCRYPT.001
+name: Subscription Filter Delivers to Cross-Account Destination Without Encryption
+description: >
+  CloudWatch Logs subscription filter delivers log
+  events to a destination in an external account —
+  Kinesis stream, Lambda function, or Firehose —
+  without encryption in transit or at rest at the
+  destination. Log data crosses the account boundary
+  in plaintext: any PII, credentials, security event
+  details, or internal application data in the logs
+  is accessible to the receiving account.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "AU-9, SC-8, SC-13"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-8, SC-13"
+  hipaa: "164.312(e)(1), 164.312(e)(2)(ii)"
+  iso_27001_2022: "A.8.20, A.8.24"
+  ccm_v4: ["IVS-09", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: cross_account
+    multiplier: 3.0
+remediation:
+  description: >
+    Cross-account subscription delivers log events
+    in plaintext. Sensitive log content is exposed
+    to the receiving account.
+  action: >
+    Encrypt the destination: for Kinesis streams,
+    enable server-side encryption with a CMK whose
+    key policy is shared with the source account;
+    for Lambda destinations, ensure the function
+    encrypts its environment variables and any
+    onward storage with a CMK; for Firehose, enable
+    server-side encryption on the delivery stream
+    and on the downstream S3 bucket. If sensitive
+    fields can be redacted at the source, add a
+    CloudWatch Logs Insights query or Lambda
+    transformer that strips the fields before
+    cross-account delivery.
+  example: |
+    {
+      "monitoring": {
+        "kind": "subscription_filter",
+        "cloudwatch": {
+          "subscription_filter_name": "ToSecurityAccount",
+          "subscription_destination_arn": "arn:aws:kinesis:us-east-1:444455556666:stream/sec-logs",
+          "subscription_destination_type": "kinesis",
+          "subscription_cross_account": true,
+          "subscription_encrypted": true,
+          "subscription_destination_account": "444455556666"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: subscription_filter
+    - field: properties.monitoring.cloudwatch.subscription_cross_account
+      op: eq
+      value: true
+    - field: properties.monitoring.cloudwatch.subscription_encrypted
+      op: eq
+      value: false
+defect: >
+  Subscription filter delivers to a cross-account
+  destination without encryption.
+infection: >
+  Subscription filters stream log events in
+  near-real-time to destinations. When the
+  destination is in another account, log data
+  crosses the account boundary. Without encryption
+  at rest at the destination: the receiving account
+  accesses log data in plaintext — including any
+  PII, credentials, security events, or internal
+  application details that appear in the logs. If
+  the receiving account is compromised, the attacker
+  receives a real-time stream of the source account's
+  log data. For security log groups (CloudTrail
+  CW Logs, VPC Flow Logs), cross-account streaming
+  without encryption means security event data is
+  accessible to potentially compromised
+  infrastructure outside the source account's
+  control plane.
+failure: >
+  Log data in plaintext across accounts. Cross-account
+  subscription delivers unencrypted log events;
+  security data accessible to the external account.
+tests:
+  - name: cross-account unencrypted destination fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:ToSecurityAccount"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "ToSecurityAccount"
+            subscription_destination_arn: "arn:aws:kinesis:us-east-1:444455556666:stream/sec-logs"
+            subscription_destination_type: "kinesis"
+            subscription_cross_account: true
+            subscription_encrypted: false
+            subscription_destination_account: "444455556666"
+  - name: cross-account encrypted destination passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:ToSecurityAccount"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "ToSecurityAccount"
+            subscription_destination_arn: "arn:aws:kinesis:us-east-1:444455556666:stream/sec-logs"
+            subscription_destination_type: "kinesis"
+            subscription_cross_account: true
+            subscription_encrypted: true
+            subscription_destination_account: "444455556666"
+  - name: same-account subscription does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:Local"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "Local"
+            subscription_destination_arn: "arn:aws:lambda:us-east-1:111122223333:function:logProcessor"
+            subscription_destination_type: "lambda"
+            subscription_cross_account: false
+            subscription_encrypted: false
+            subscription_destination_account: "111122223333"

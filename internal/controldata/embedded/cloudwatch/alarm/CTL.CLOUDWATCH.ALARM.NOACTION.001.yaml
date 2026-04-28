@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ALARM.NOACTION.001
+name: CloudWatch Alarm Has No Action Configured
+description: >
+  CloudWatch alarm has no actions — no AlarmAction, no
+  OKAction, no InsufficientDataAction. The alarm
+  evaluates the metric and transitions states normally
+  but nobody is notified, no SNS topic receives a
+  message, no Lambda function runs, no auto-scaling
+  triggers. Detection without response: the alarm
+  exists in the console showing ALARM state, but the
+  console is not the audience.
+domain: governance
+severity: high
+archetype: false-protection
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, IR-4, IR-5, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Alarm has no actions. State transitions go
+    unnoticed.
+  action: >
+    Add an AlarmAction pointing at an SNS topic that
+    pages the relevant on-call (aws cloudwatch
+    put-metric-alarm --alarm-actions <sns-arn>). For
+    composite or aggregate alarms, OK and
+    InsufficientData actions can also be useful for
+    state-change auditing — but at minimum, every
+    alarm needs an AlarmAction.
+  example: |
+    {
+      "monitoring": {
+        "kind": "alarm",
+        "cloudwatch": {
+          "alarm_actions": ["arn:aws:sns:us-east-1:111122223333:oncall"],
+          "has_any_action": true,
+          "action_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: alarm
+    - field: properties.monitoring.cloudwatch.has_any_action
+      op: eq
+      value: false
+defect: >
+  CloudWatch alarm has no actions configured.
+infection: >
+  An alarm without actions is detection without
+  response. The metric is evaluated. The threshold is
+  checked. The alarm state transitions to ALARM when
+  the threshold is crossed. Nobody is notified. No
+  SNS topic receives a message. No Lambda function is
+  invoked. No auto-scaling action triggers. The alarm
+  exists in the CloudWatch console showing ALARM
+  state. An engineer who checks the console sees the
+  alarm. But alarms exist to NOTIFY — their value is
+  triggering a response, not changing state in a
+  console nobody watches in real time.
+failure: >
+  Detection without response. Alarm evaluates and
+  transitions to ALARM — nobody is notified, no
+  action is triggered.
+tests:
+  - name: alarm with zero actions fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:Orphan"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "Orphan"
+            alarm_actions: []
+            ok_actions: []
+            insufficient_data_actions: []
+            has_any_action: false
+            action_count: 0
+  - name: alarm with SNS action passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:HighCPU"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "HighCPU"
+            alarm_actions: ["arn:aws:sns:us-east-1:111122223333:oncall"]
+            has_any_action: true
+            action_count: 1

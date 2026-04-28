@@ -1,0 +1,121 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.GHOST.COMPOSITE.CHILD.001
+name: Composite Alarm References Deleted Child Alarm
+description: >
+  CloudWatch composite alarm references one or more
+  child alarms that have been deleted. The composite
+  alarm evaluates a rule combining child alarm states
+  (e.g., "ALARM(child1) AND ALARM(child2)"). When a
+  child is deleted, the composite cannot evaluate the
+  rule — it goes to INSUFFICIENT_DATA or evaluates
+  incorrectly. Composite alarms are commonly used for
+  high-fidelity production alerts that combine
+  multiple signals; a ghost child silently breaks the
+  combination.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, CM-2, CM-3, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Composite alarm rule references a deleted child
+    alarm. The composite cannot evaluate.
+  action: >
+    Either recreate the deleted child alarm with the
+    same name, or update the composite alarm's
+    AlarmRule to remove the deleted child reference.
+    The choice depends on whether the deleted child
+    represented an intentional simplification of the
+    composite rule or a mistaken cleanup. Audit the
+    composite's intended detection logic before
+    deciding.
+  example: |
+    {
+      "monitoring": {
+        "kind": "composite_alarm",
+        "cloudwatch": {
+          "composite_alarm_name": "ProductionHealth",
+          "child_alarm_names": ["DBHigh", "AppHigh", "QueueDepth"],
+          "deleted_child_alarms": [],
+          "has_ghost_child": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: composite_alarm
+    - field: properties.monitoring.cloudwatch.has_ghost_child
+      op: eq
+      value: true
+defect: >
+  Composite alarm references one or more deleted child
+  alarms.
+infection: >
+  Composite alarms combine the states of multiple
+  child alarms via boolean expressions — typically to
+  reduce alert noise (only page when multiple
+  conditions trigger together) or capture compound
+  failure modes that no single metric describes.
+  When a child alarm is deleted: the composite rule
+  references a non-existent alarm, the rule cannot
+  evaluate, and the composite's state becomes
+  INSUFFICIENT_DATA or evaluates the rule with the
+  missing child treated as one of OK/ALARM/MISSING
+  (depending on the rule's missing-data handling).
+  Either outcome means the composite no longer
+  represents the original detection logic — the
+  combined-signal alarm has lost a signal silently.
+failure: >
+  Composite detection broken. Combined-alarm logic
+  cannot evaluate because a referenced child alarm
+  was deleted.
+tests:
+  - name: composite alarm with deleted child fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:ProductionHealth"
+      asset_type: aws_cloudwatch_composite_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: composite_alarm
+          cloudwatch:
+            composite_alarm_name: "ProductionHealth"
+            composite_rule: "ALARM(DBHigh) AND ALARM(QueueDepth)"
+            child_alarm_names: ["DBHigh", "QueueDepth"]
+            deleted_child_alarms: ["QueueDepth"]
+            has_ghost_child: true
+  - name: composite alarm with all children present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:ProductionHealth"
+      asset_type: aws_cloudwatch_composite_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: composite_alarm
+          cloudwatch:
+            composite_alarm_name: "ProductionHealth"
+            composite_rule: "ALARM(DBHigh) AND ALARM(QueueDepth)"
+            child_alarm_names: ["DBHigh", "QueueDepth"]
+            deleted_child_alarms: []
+            has_ghost_child: false

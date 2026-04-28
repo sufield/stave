@@ -1,0 +1,22 @@
+id: cloudwatch_log_ungoverned
+description: >
+  Log group governance failures stack: no retention
+  policy plus either no CMK encryption or a public
+  resource policy. Logs accumulate indefinitely while
+  either the data is not encrypted with a controlled
+  key or anyone can inject log entries. Any one of
+  these in isolation is a governance gap; two
+  together is a log group nobody owns the integrity
+  of. Threshold of 2 because a log group missing
+  every governance setting indicates the controls
+  were never applied, not that one slipped.
+controls:
+  - CTL.CLOUDWATCH.RETENTION.001
+  - CTL.CLOUDWATCH.LOGGROUP.ENCRYPT.CMK.001
+  - CTL.CLOUDWATCH.LOGGROUP.POLICY.PUBLIC.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

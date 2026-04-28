@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ALARM.NOALARMACTION.001
+name: CloudWatch Alarm Has OK or InsufficientData Actions But No Alarm Action
+description: >
+  CloudWatch alarm has OKAction or
+  InsufficientDataAction configured but no
+  AlarmAction. The alarm notifies when things are
+  fine (OK) or when data is missing
+  (INSUFFICIENT_DATA) but not when the threshold is
+  breached (ALARM). Reversed-action misconfiguration:
+  the team is notified when the metric recovers but
+  not when it breaches.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Alarm has OK / InsufficientData actions but no
+    AlarmAction. ALARM-state transitions are silent.
+  action: >
+    Add an AlarmAction: aws cloudwatch
+    put-metric-alarm --alarm-actions <sns-arn>. The
+    OK and InsufficientData actions remain useful
+    for state-change auditing; the AlarmAction is
+    the one that actually pages on-call.
+  example: |
+    {
+      "monitoring": {
+        "kind": "alarm",
+        "cloudwatch": {
+          "has_alarm_action": true,
+          "has_ok_action": true,
+          "has_insufficient_action": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: alarm
+    - field: properties.monitoring.cloudwatch.has_alarm_action
+      op: eq
+      value: false
+    - field: properties.monitoring.cloudwatch.has_any_action
+      op: eq
+      value: true
+defect: >
+  CloudWatch alarm has actions but no AlarmAction.
+infection: >
+  Having only OK or InsufficientData actions is
+  unusual but happens — typically a misconfiguration
+  where the dropdowns were filled in the wrong row,
+  or a deliberate state-change-auditing setup that
+  forgot the alarm path. The team is notified when
+  things are fine (OK) or when data goes missing
+  (INSUFFICIENT_DATA), but not when the metric
+  breaches and the alarm transitions to ALARM. The
+  reversed-action surface is annoying rather than
+  dangerous, but does mean the actual alert path is
+  silent.
+failure: >
+  Reversed action surface. Alarm notifies on recovery
+  but not on breach.
+tests:
+  - name: alarm with OK action only fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:Reversed"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "Reversed"
+            has_alarm_action: false
+            has_ok_action: true
+            has_insufficient_action: false
+            has_any_action: true
+  - name: alarm with both AlarmAction + OKAction passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:Standard"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "Standard"
+            has_alarm_action: true
+            has_ok_action: true
+            has_insufficient_action: false
+            has_any_action: true

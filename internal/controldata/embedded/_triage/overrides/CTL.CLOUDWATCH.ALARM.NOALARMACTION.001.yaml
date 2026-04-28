@@ -1,0 +1,18 @@
+control: CTL.CLOUDWATCH.ALARM.NOALARMACTION.001
+defect: >
+  CloudWatch alarm has actions but no AlarmAction.
+infection: >
+  Having only OK or InsufficientData actions is
+  unusual but happens — typically a misconfiguration
+  where the dropdowns were filled in the wrong row,
+  or a deliberate state-change-auditing setup that
+  forgot the alarm path. The team is notified when
+  things are fine (OK) or when data goes missing
+  (INSUFFICIENT_DATA), but not when the metric
+  breaches and the alarm transitions to ALARM. The
+  reversed-action surface is annoying rather than
+  dangerous, but does mean the actual alert path is
+  silent.
+failure: >
+  Reversed action surface. Alarm notifies on recovery
+  but not on breach.

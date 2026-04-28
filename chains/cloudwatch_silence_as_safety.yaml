@@ -1,0 +1,26 @@
+id: cloudwatch_silence_as_safety
+description: >
+  Detection that interprets data-source silence as the
+  resource being safe. A security alarm with
+  TreatMissingData = notBreaching stays in OK when its
+  metric stops publishing; a CloudTrail trail in
+  stopped state means the audit log stream that feeds
+  many security alarms has gone silent; a metric filter
+  parsing a deleted log group has nothing to filter.
+  When two or more of these compound, the detection
+  plane is structurally biased toward silence — the
+  attacker's first move (stop the trail, delete the
+  log group, kill the Lambda that publishes the
+  metric) silences the alarm rather than triggering
+  it. Threshold of 2 because the dangerous pattern is
+  the compounding, not any single instance.
+controls:
+  - CTL.CLOUDWATCH.ALARM.MISSINGDATA.NOTBREACHING.001
+  - CTL.CLOUDTRAIL.STOP.DETECT.001
+  - CTL.CLOUDWATCH.GHOST.METRICFILTER.LOGGROUP.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

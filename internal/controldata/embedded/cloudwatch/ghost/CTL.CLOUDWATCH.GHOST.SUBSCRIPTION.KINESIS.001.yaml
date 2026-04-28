@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.GHOST.SUBSCRIPTION.KINESIS.001
+name: Subscription Filter References Deleted Kinesis Stream
+description: >
+  CloudWatch Logs subscription filter delivers log
+  events to a Kinesis Data Stream that has been
+  deleted. The filter matches events. The delivery
+  fails. Matched log events are silently dropped —
+  they don't reach the Kinesis consumer (SIEM,
+  analytics pipeline, security data lake). For
+  security-sensitive log groups, this is a silent
+  ingest gap into the SIEM.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, CM-2, CM-3"
+  pci_dss_v4.0: "10.5, 10.6"
+  fedramp_moderate: "AU-6"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Subscription filter delivers to a deleted Kinesis
+    stream. Matched log events are silently dropped.
+  action: >
+    Either recreate the Kinesis stream with the same
+    ARN and reattach (aws logs put-subscription-filter
+    --destination-arn <stream-arn>), or repoint the
+    filter at an existing stream, or delete the
+    subscription filter if the downstream consumer
+    is gone for good. Audit downstream — the SIEM /
+    analytics pipeline expecting these events has
+    been blind for the gap window.
+  example: |
+    {
+      "monitoring": {
+        "kind": "subscription_filter",
+        "cloudwatch": {
+          "subscription_destination_type": "kinesis",
+          "subscription_destination_arn": "arn:aws:kinesis:us-east-1:111122223333:stream/security-events",
+          "subscription_destination_exists": true,
+          "has_ghost_subscription_dest": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: subscription_filter
+    - field: properties.monitoring.cloudwatch.subscription_destination_type
+      op: eq
+      value: kinesis
+    - field: properties.monitoring.cloudwatch.has_ghost_subscription_dest
+      op: eq
+      value: true
+defect: >
+  CloudWatch Logs subscription filter delivers to a
+  deleted Kinesis stream.
+infection: >
+  Subscription filters stream matching log events to
+  destinations like Kinesis Data Streams (typical for
+  SIEM/security data ingest), Kinesis Firehose
+  (analytics), or Lambda (real-time processing). When
+  the destination is deleted, CloudWatch Logs cannot
+  deliver the events — they're discarded. The
+  subscription filter remains visible in the console
+  with its filter pattern and destination ARN; only
+  delivery quietly fails. For security log feeds,
+  this means the SIEM stops receiving events from
+  this log group while CloudWatch still shows the
+  ingest pipeline as configured.
+failure: >
+  SIEM ingest broken. Matching log events are silently
+  dropped because the Kinesis destination was deleted.
+tests:
+  - name: subscription with deleted Kinesis stream fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:SecurityEvents"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "SecurityEvents"
+            subscription_destination_type: "kinesis"
+            subscription_destination_arn: "arn:aws:kinesis:us-east-1:111122223333:stream/security-events-deleted"
+            subscription_destination_exists: false
+            has_ghost_subscription_dest: true
+  - name: subscription with active Kinesis stream passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:SecurityEvents"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "SecurityEvents"
+            subscription_destination_type: "kinesis"
+            subscription_destination_arn: "arn:aws:kinesis:us-east-1:111122223333:stream/security-events"
+            subscription_destination_exists: true
+            has_ghost_subscription_dest: false

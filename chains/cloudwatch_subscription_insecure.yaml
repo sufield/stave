@@ -1,0 +1,23 @@
+id: cloudwatch_subscription_insecure
+description: >
+  Cross-account log streaming is both unprotected
+  and ungoverned: log data flows cross-account
+  without encryption AND either any account can
+  receive the stream (no organizational boundary)
+  or the destination is unmonitored (events
+  silently dropped). Threshold of 2 because the
+  dangerous pattern is the compounding — encryption
+  alone or governance alone leaves one risk; both
+  together leave log data exposed in plaintext to
+  potentially-unknown receivers with no signal when
+  the path breaks.
+controls:
+  - CTL.CLOUDWATCH.SUBSCRIPTION.CROSSACCOUNT.NOENCRYPT.001
+  - CTL.CLOUDWATCH.SUBSCRIPTION.CROSSACCOUNT.NOORG.001
+  - CTL.CLOUDWATCH.SUBSCRIPTION.FILTER.NOALARM.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

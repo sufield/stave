@@ -1,0 +1,25 @@
+control: CTL.CLOUDWATCH.SUBSCRIPTION.CROSSACCOUNT.NOENCRYPT.001
+defect: >
+  Subscription filter delivers to a cross-account
+  destination without encryption.
+infection: >
+  Subscription filters stream log events in
+  near-real-time to destinations. When the
+  destination is in another account, log data
+  crosses the account boundary. Without encryption
+  at rest at the destination: the receiving account
+  accesses log data in plaintext — including any
+  PII, credentials, security events, or internal
+  application details that appear in the logs. If
+  the receiving account is compromised, the attacker
+  receives a real-time stream of the source account's
+  log data. For security log groups (CloudTrail
+  CW Logs, VPC Flow Logs), cross-account streaming
+  without encryption means security event data is
+  accessible to potentially compromised
+  infrastructure outside the source account's
+  control plane.
+failure: >
+  Log data in plaintext across accounts. Cross-account
+  subscription delivers unencrypted log events;
+  security data accessible to the external account.

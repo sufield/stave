@@ -69,11 +69,3 @@ func Builtin() policy.CapabilityRegistry {
 	}
 	return set
 }
-
-// Names returns the catalog's capability strings sorted
-// alphabetically. Useful for documentation generation and tests.
-func Names() []string {
-	out := make([]string, len(builtinNames))
-	copy(out, builtinNames)
-	return out
-}

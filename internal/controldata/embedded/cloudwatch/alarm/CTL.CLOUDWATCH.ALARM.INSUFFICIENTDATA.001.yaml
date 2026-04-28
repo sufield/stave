@@ -1,0 +1,136 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ALARM.INSUFFICIENTDATA.001
+name: CloudWatch Alarm in INSUFFICIENT_DATA State for 30+ Days
+description: >
+  CloudWatch alarm has been in INSUFFICIENT_DATA state
+  for more than 30 days. INSUFFICIENT_DATA means the
+  metric is not publishing data points — the alarm
+  cannot evaluate because there's nothing to evaluate.
+  Common causes: monitored resource was deleted,
+  metric namespace or dimensions changed, CloudTrail
+  or the metric filter's log group was deleted. The
+  alarm exists in the console as an active alarm in
+  a neutral state; brief INSUFFICIENT_DATA is normal
+  during metric-publication gaps but 30+ days means
+  the data source is permanently gone.
+domain: governance
+severity: high
+archetype: false-protection
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, SI-4, CM-3"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Alarm has not received metric data for 30+ days.
+    The alarm will never fire.
+  action: >
+    Investigate why the metric stopped publishing.
+    Common roots: the monitored resource was
+    deleted, dimensions changed, the metric filter's
+    log group is gone (see
+    CTL.CLOUDWATCH.GHOST.METRICFILTER.LOGGROUP.001),
+    or CloudTrail stopped logging. Either restore the
+    data source, repoint the alarm at the new metric
+    dimensions, or delete the dead alarm. A dead
+    alarm in the console creates the illusion of
+    monitoring coverage.
+  example: |
+    {
+      "monitoring": {
+        "kind": "alarm",
+        "cloudwatch": {
+          "alarm_state": "OK",
+          "alarm_state_days": 5,
+          "is_stale_insufficient": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: alarm
+    - field: properties.monitoring.cloudwatch.is_stale_insufficient
+      op: eq
+      value: true
+defect: >
+  CloudWatch alarm has been in INSUFFICIENT_DATA for
+  30+ days.
+infection: >
+  INSUFFICIENT_DATA means no metric data points exist
+  for the alarm to evaluate. The alarm cannot
+  determine whether the threshold is breached because
+  there's no data. For 30+ days: the monitored
+  resource may have been deleted (RDS instance
+  terminated — no more CPUUtilization data points),
+  the metric filter's log group may have been
+  deleted (no events to filter — no metric data), or
+  the metric dimensions may have changed (alarm
+  configured for dimension InstanceId=i-old, instance
+  replaced with i-new). The alarm exists. It
+  evaluates nothing. It will never fire. The team
+  believes they have monitoring. The monitoring is a
+  dead alarm.
+failure: >
+  Dead alarm. No metric data for 30+ days — alarm
+  will never fire. Detection coverage is illusory.
+tests:
+  - name: 45-day INSUFFICIENT_DATA fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:LegacyDB"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "LegacyDB"
+            alarm_state: "INSUFFICIENT_DATA"
+            alarm_state_days: 45
+            is_stale_insufficient: true
+            metric_namespace: "AWS/RDS"
+            metric_name: "CPUUtilization"
+  - name: alarm in OK state passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:CurrentDB"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "CurrentDB"
+            alarm_state: "OK"
+            alarm_state_days: 5
+            is_stale_insufficient: false
+  - name: 30-day boundary fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:Borderline"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "Borderline"
+            alarm_state: "INSUFFICIENT_DATA"
+            alarm_state_days: 30
+            is_stale_insufficient: true

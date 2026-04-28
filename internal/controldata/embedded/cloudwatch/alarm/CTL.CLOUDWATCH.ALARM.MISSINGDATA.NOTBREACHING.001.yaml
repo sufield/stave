@@ -1,0 +1,141 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ALARM.MISSINGDATA.NOTBREACHING.001
+name: CloudWatch Security Alarm Treats Missing Data as Not Breaching
+description: >
+  CloudWatch security alarm has TreatMissingData set
+  to "notBreaching." When metric data stops arriving
+  (resource deleted, CloudTrail stopped, application
+  crashed), the alarm treats the absence as OK. For
+  security alarms specifically, missing data is
+  dangerous: an attacker who stops the data source
+  silences the metric AND the alarm cooperates by
+  staying OK. Operational alarms (CPU, latency) often
+  legitimately use notBreaching when monitoring
+  potentially-terminated resources; security alarms
+  should use "breaching" or "missing" instead.
+domain: governance
+severity: high
+archetype: false-protection
+compliance:
+  cis_aws_v3.0: "4.1"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, AU-9, SI-4"
+  pci_dss_v4.0: "10.5, 10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Security alarm interprets missing data as OK. An
+    attacker who silences the data source silences the
+    alarm.
+  action: >
+    Change TreatMissingData on the alarm: aws
+    cloudwatch put-metric-alarm
+    --treat-missing-data breaching (preferred for
+    security — missing data is treated as ALARM) or
+    --treat-missing-data missing (alarm goes to
+    INSUFFICIENT_DATA which is observable). Pair
+    with CTL.CLOUDWATCH.ALARM.INSUFFICIENTDATA.001
+    so a permanently-INSUFFICIENT_DATA security alarm
+    surfaces.
+  example: |
+    {
+      "monitoring": {
+        "kind": "alarm",
+        "cloudwatch": {
+          "treat_missing_data": "breaching",
+          "is_security_alarm": true,
+          "metric_source": "cloudtrail"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: alarm
+    - field: properties.monitoring.cloudwatch.is_security_alarm
+      op: eq
+      value: true
+    - field: properties.monitoring.cloudwatch.treat_missing_data
+      op: eq
+      value: notBreaching
+defect: >
+  Security alarm treats missing data as notBreaching.
+infection: >
+  TreatMissingData controls what the alarm does when
+  no metric data arrives. With "notBreaching":
+  missing data is treated as OK — the alarm stays in
+  OK state. For operational metrics (CPU utilization
+  on a terminated instance), this is reasonable —
+  the instance is gone, there's nothing to alarm
+  about. For SECURITY metrics (CloudTrail
+  unauthorized API calls, KMS key deletion, root
+  login), missing data is DANGEROUS — it means the
+  data source stopped. If CloudTrail stops logging
+  (attacker disabled it), the metric filter has no
+  events, the metric publishes no data, and the
+  alarm says "OK" because missing data is not
+  breaching. The attacker's action (StopLogging)
+  silenced the detection, and the alarm cooperates
+  by staying OK. Security alarms should use
+  "breaching" or "missing" — NOT "notBreaching."
+failure: >
+  Silence treated as safety. Missing metric data
+  keeps the alarm in OK state — an attacker who
+  stops the data source silences the detection.
+tests:
+  - name: security alarm with notBreaching fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:RootLogin"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "RootLogin"
+            treat_missing_data: "notBreaching"
+            is_security_alarm: true
+            metric_source: "cloudtrail"
+  - name: security alarm with breaching passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:RootLogin"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "RootLogin"
+            treat_missing_data: "breaching"
+            is_security_alarm: true
+            metric_source: "cloudtrail"
+  - name: operational alarm with notBreaching does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:CPU"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "CPU"
+            treat_missing_data: "notBreaching"
+            is_security_alarm: false
+            metric_source: "ec2"

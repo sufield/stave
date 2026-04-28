@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.LOGGROUP.POLICY.PUBLIC.001
+name: CloudWatch Log Group Resource Policy Allows PutLogEvents from Any Account
+description: >
+  CloudWatch Logs log group resource policy allows
+  logs:PutLogEvents from Principal: * or from any
+  AWS account without an aws:PrincipalOrgID
+  condition. Any account on the internet can write
+  log entries — injecting fake events that mix with
+  legitimate entries. For security log groups (the
+  CloudTrail CW Logs target, VPC Flow Logs), injected
+  entries contaminate the audit trail and may
+  trigger or mask metric-filter alarms.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "3.4"
+  soc2: "CC6.1, CC7.1"
+  nist_800_53_r5: "AC-3, AU-9"
+  pci_dss_v4.0: "10.5"
+  fedramp_moderate: "AC-3, AU-9"
+  hipaa: "164.312(b), 164.312(c)(1)"
+  iso_27001_2022: "A.5.15, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Resource policy permits any account to write log
+    events. Audit-trail integrity is undermined.
+  action: >
+    Replace Principal: * with the specific service
+    principal that needs to write (e.g.,
+    cloudtrail.amazonaws.com,
+    vpc-flow-logs.amazonaws.com) and add an
+    aws:SourceArn condition limiting writes to a
+    specific resource. For cross-account writes,
+    enumerate Principal accounts explicitly or add an
+    aws:PrincipalOrgID condition. Apply the policy
+    via aws logs put-resource-policy
+    --policy-name <name> --policy-document <json>.
+  example: |
+    {
+      "monitoring": {
+        "kind": "log_group",
+        "cloudwatch": {
+          "log_group_name": "/aws/cloudtrail/org",
+          "has_resource_policy": true,
+          "resource_policy_public": false,
+          "resource_policy_principals": [
+            "cloudtrail.amazonaws.com"
+          ]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: log_group
+    - field: properties.monitoring.cloudwatch.resource_policy_public
+      op: eq
+      value: true
+defect: >
+  CloudWatch log group resource policy allows
+  PutLogEvents from any account.
+infection: >
+  A log group resource policy with Principal: * or
+  cross-account access without aws:PrincipalOrgID
+  allows any AWS account to write log events. An
+  attacker creates fake log events — entries that
+  look like legitimate application or security logs
+  but contain attacker-controlled content. For
+  security log groups: fake CloudTrail-like events
+  confuse incident investigation, fake VPC Flow Log
+  entries mask real traffic patterns. For application
+  log groups: fake entries corrupt log-based metrics
+  (metric filters count fake events), contaminate
+  dashboards, and may trigger false alarms or mask
+  real ones by diluting legitimate events.
+failure: >
+  Log injection possible. Any account can write fake
+  log events to the group — contaminating the audit
+  trail and corrupting log-based metrics.
+tests:
+  - name: log group with public policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/cloudtrail/org"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/cloudtrail/org"
+            has_resource_policy: true
+            resource_policy_public: true
+            resource_policy_principals: ["*"]
+  - name: log group with service principal and source ARN passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/cloudtrail/org"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/cloudtrail/org"
+            has_resource_policy: true
+            resource_policy_public: false
+            resource_policy_principals: ["cloudtrail.amazonaws.com"]
+  - name: log group without resource policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/checkout"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/lambda/checkout"
+            has_resource_policy: false
+            resource_policy_public: false

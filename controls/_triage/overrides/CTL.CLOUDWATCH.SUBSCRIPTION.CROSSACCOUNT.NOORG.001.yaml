@@ -1,0 +1,23 @@
+control: CTL.CLOUDWATCH.SUBSCRIPTION.CROSSACCOUNT.NOORG.001
+defect: >
+  Cross-account subscription destination has no
+  organizational boundary on its policy.
+infection: >
+  CloudWatch Logs cross-account subscription requires
+  the destination's resource policy to grant
+  logs.amazonaws.com permission to deliver. If the
+  policy permits this without an
+  aws:PrincipalOrgID condition or an explicit
+  account allow-list, any AWS account that knows
+  the destination ARN can establish a subscription.
+  An attacker who has discovered the destination
+  ARN — through a leaked configuration file, a
+  Stack Exchange answer, or social engineering —
+  can begin receiving the log stream from the
+  source account. The source account sees nothing
+  unusual; cross-account subscriptions are normal
+  CloudWatch Logs traffic.
+failure: >
+  Cross-account log streaming is ungoverned. Any
+  account can subscribe to the destination and
+  receive the source account's log data.

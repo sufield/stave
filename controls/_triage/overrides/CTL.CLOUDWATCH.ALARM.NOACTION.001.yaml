@@ -1,0 +1,19 @@
+control: CTL.CLOUDWATCH.ALARM.NOACTION.001
+defect: >
+  CloudWatch alarm has no actions configured.
+infection: >
+  An alarm without actions is detection without
+  response. The metric is evaluated. The threshold is
+  checked. The alarm state transitions to ALARM when
+  the threshold is crossed. Nobody is notified. No
+  SNS topic receives a message. No Lambda function
+  is invoked. No auto-scaling action triggers. The
+  alarm exists in the CloudWatch console showing
+  ALARM state. An engineer who checks the console
+  sees the alarm. But alarms exist to NOTIFY — their
+  value is triggering a response, not changing state
+  in a console nobody watches in real time.
+failure: >
+  Detection without response. Alarm evaluates and
+  transitions to ALARM — nobody is notified, no
+  action is triggered.

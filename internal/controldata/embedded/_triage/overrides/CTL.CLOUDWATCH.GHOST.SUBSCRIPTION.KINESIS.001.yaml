@@ -1,0 +1,21 @@
+control: CTL.CLOUDWATCH.GHOST.SUBSCRIPTION.KINESIS.001
+defect: >
+  CloudWatch Logs subscription filter delivers to a
+  deleted Kinesis stream.
+infection: >
+  Subscription filters stream matching log events to
+  destinations like Kinesis Data Streams (typical for
+  SIEM/security data ingest), Kinesis Firehose
+  (analytics), or Lambda (real-time processing).
+  When the destination is deleted, CloudWatch Logs
+  cannot deliver the events — they're discarded. The
+  subscription filter remains visible in the console
+  with its filter pattern and destination ARN; only
+  delivery quietly fails. For security log feeds,
+  this means the SIEM stops receiving events from
+  this log group while CloudWatch still shows the
+  ingest pipeline as configured.
+failure: >
+  SIEM ingest broken. Matching log events are
+  silently dropped because the Kinesis destination
+  was deleted.

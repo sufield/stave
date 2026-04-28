@@ -3,7 +3,6 @@ package graph
 import (
 	"bytes"
 	"fmt"
-	"io"
 )
 
 // FindingsGraph is the public alias the user named in the spec. It
@@ -72,18 +71,3 @@ var (
 	_ GraphExporter = (*JSONLDExporter)(nil)
 	_ GraphExporter = (*GraphMLExporter)(nil)
 )
-
-// EnsureWriter is a small helper for callers that have either a
-// GraphExporter (returns []byte) or a streaming MarshalX (writes to
-// io.Writer) and want to pick the better one for their I/O shape.
-// Buffered writes for small graphs, streaming for large ones.
-func EnsureWriter(format string, w io.Writer, g *FindingsGraph) error {
-	switch format {
-	case "jsonld":
-		return MarshalJSONLD(w, g)
-	case "graphml":
-		return MarshalGraphML(w, g)
-	default:
-		return fmt.Errorf("unsupported export format: %s", format)
-	}
-}

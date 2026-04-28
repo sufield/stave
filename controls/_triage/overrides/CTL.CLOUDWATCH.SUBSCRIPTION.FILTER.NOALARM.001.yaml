@@ -1,0 +1,27 @@
+control: CTL.CLOUDWATCH.SUBSCRIPTION.FILTER.NOALARM.001
+defect: >
+  Subscription filter destination has no monitoring;
+  throttle or error conditions cause silent log
+  loss.
+infection: >
+  Subscription filter delivery is best-effort. When
+  the destination cannot process an incoming event
+  — Kinesis stream throttled, Lambda function
+  erroring or rate-limited — the subscription
+  filter continues to match events but the
+  destination drops them. The filter has no
+  back-pressure mechanism to the source log group;
+  events accumulate in CW Logs (the source) while
+  flowing past the broken destination. Without a
+  destination-side alarm, this is invisible: the
+  subscription filter is configured, the destination
+  is configured, the source log group is fine, but
+  the data path between them silently loses
+  events. For security log groups whose downstream
+  processor is the only place enriched alerts are
+  generated, this is a detection blackout that
+  presents as healthy infrastructure.
+failure: >
+  Silent log loss between filter and destination.
+  Destination drops are not surfaced; downstream
+  processing sees an incomplete event stream.

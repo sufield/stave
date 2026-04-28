@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.SUBSCRIPTION.FILTER.NOALARM.001
+name: Subscription Filter Destination Has No Monitoring
+description: >
+  CloudWatch Logs subscription filter delivers to a
+  Kinesis stream or Lambda function, but the
+  destination has no monitoring — no alarm for
+  Kinesis throttling, no alarm for Lambda errors.
+  If the destination is throttled or erroring, log
+  events are silently dropped. The subscription
+  filter continues matching events; the destination
+  cannot process them; logs are lost between filter
+  and destination with no signal to anyone.
+domain: audit
+severity: medium
+archetype: silent-failure
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-5, SI-4"
+  pci_dss_v4.0: "10.7"
+  fedramp_moderate: "AU-5"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Subscription destination is unmonitored. Throttle
+    or error conditions cause silent log loss.
+  action: >
+    Add at least one alarm on the destination
+    appropriate to its type: for Kinesis,
+    WriteProvisionedThroughputExceeded > 0; for
+    Lambda, Errors > 0 and Throttles > 0; for
+    Firehose, DeliveryToS3.DataFreshness above the
+    expected processing window. Wire the alarms
+    into the same notification path used by other
+    operational alerts so destination drops surface
+    immediately rather than silently.
+  example: |
+    {
+      "monitoring": {
+        "kind": "subscription_filter",
+        "cloudwatch": {
+          "subscription_filter_name": "ToProcessor",
+          "subscription_destination_arn": "arn:aws:kinesis:us-east-1:111122223333:stream/log-processor",
+          "subscription_destination_type": "kinesis",
+          "subscription_destination_monitored": true,
+          "subscription_destination_alarm_count": 2
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: subscription_filter
+    - field: properties.monitoring.cloudwatch.subscription_destination_monitored
+      op: eq
+      value: false
+defect: >
+  Subscription filter destination has no monitoring;
+  throttle or error conditions cause silent log
+  loss.
+infection: >
+  Subscription filter delivery is best-effort. When
+  the destination cannot process an incoming event
+  — Kinesis stream throttled, Lambda function
+  erroring or rate-limited — the subscription
+  filter continues to match events but the
+  destination drops them. The filter has no
+  back-pressure mechanism to the source log group;
+  events accumulate in CW Logs (the source) while
+  flowing past the broken destination. Without a
+  destination-side alarm, this is invisible: the
+  subscription filter is configured, the destination
+  is configured, the source log group is fine, but
+  the data path between them silently loses
+  events. For security log groups whose downstream
+  processor is the only place enriched alerts are
+  generated, this is a detection blackout that
+  presents as healthy infrastructure.
+failure: >
+  Silent log loss between filter and destination.
+  Destination drops are not surfaced; downstream
+  processing sees an incomplete event stream.
+tests:
+  - name: destination with no monitoring fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:ToProcessor"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "ToProcessor"
+            subscription_destination_arn: "arn:aws:kinesis:us-east-1:111122223333:stream/log-processor"
+            subscription_destination_type: "kinesis"
+            subscription_destination_monitored: false
+            subscription_destination_alarm_count: 0
+  - name: destination with monitoring passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:ToProcessor"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "ToProcessor"
+            subscription_destination_arn: "arn:aws:kinesis:us-east-1:111122223333:stream/log-processor"
+            subscription_destination_type: "kinesis"
+            subscription_destination_monitored: true
+            subscription_destination_alarm_count: 2

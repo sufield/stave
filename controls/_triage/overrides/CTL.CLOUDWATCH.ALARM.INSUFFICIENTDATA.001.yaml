@@ -1,0 +1,22 @@
+control: CTL.CLOUDWATCH.ALARM.INSUFFICIENTDATA.001
+defect: >
+  CloudWatch alarm has been in INSUFFICIENT_DATA for
+  30+ days.
+infection: >
+  INSUFFICIENT_DATA means no metric data points
+  exist for the alarm to evaluate. The alarm cannot
+  determine whether the threshold is breached because
+  there's no data. For 30+ days: the monitored
+  resource may have been deleted (RDS instance
+  terminated — no more CPUUtilization data points),
+  the metric filter's log group may have been
+  deleted (no events to filter — no metric data), or
+  the metric dimensions may have changed (alarm
+  configured for dimension InstanceId=i-old, instance
+  replaced with i-new). The alarm exists. It
+  evaluates nothing. It will never fire. The team
+  believes they have monitoring. The monitoring is a
+  dead alarm.
+failure: >
+  Dead alarm. No metric data for 30+ days — alarm
+  will never fire. Detection coverage is illusory.

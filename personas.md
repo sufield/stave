@@ -1,1 +1,0 @@
-Replaced the colored header backgrounds with a neutral white background and a 4px colored left accent bar instead. All text now uses CSS variables that work in both light and dark mode — no more contrast issues.

@@ -1,0 +1,28 @@
+id: cloudwatch_ghost_cascade
+description: >
+  Multiple ghost references inside the CloudWatch
+  detection plane: metric filters parsing deleted log
+  groups, alarms targeting deleted Lambda functions,
+  composite alarms whose rules reference deleted child
+  alarms, and subscription filters writing to deleted
+  Kinesis streams or Lambda functions. Two or more of
+  these in the same observation indicate a systemic
+  decommission gap — when a log group, function, or
+  destination is deleted, nothing tears down the
+  CloudWatch wiring that pointed at it. The dangling
+  references stay in the console looking healthy.
+  Threshold of 2 because a single ghost is a cleanup
+  miss; multiple ghosts across categories is a process
+  problem.
+controls:
+  - CTL.CLOUDWATCH.GHOST.METRICFILTER.LOGGROUP.001
+  - CTL.CLOUDWATCH.GHOST.ALARM.LAMBDA.001
+  - CTL.CLOUDWATCH.GHOST.COMPOSITE.CHILD.001
+  - CTL.CLOUDWATCH.GHOST.SUBSCRIPTION.KINESIS.001
+  - CTL.CLOUDWATCH.GHOST.SUBSCRIPTION.LAMBDA.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

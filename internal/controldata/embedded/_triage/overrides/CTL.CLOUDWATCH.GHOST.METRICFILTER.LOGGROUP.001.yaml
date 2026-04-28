@@ -1,0 +1,23 @@
+control: CTL.CLOUDWATCH.GHOST.METRICFILTER.LOGGROUP.001
+defect: >
+  CloudWatch metric filter references a log group that
+  has been deleted.
+infection: >
+  A metric filter evaluates log events as they arrive
+  in a log group. When the log group is deleted: no
+  log events arrive, the filter pattern matches
+  nothing, the associated metric publishes no data
+  points, and every alarm based on the metric goes to
+  INSUFFICIENT_DATA. The metric filter exists in the
+  CloudWatch console — it has a name, a pattern, and
+  a metric. An auditor checking "do we have a metric
+  filter for root logins?" sees the filter and marks
+  it compliant. The filter evaluates nothing because
+  its source is gone. Every alarm downstream is
+  non-functional. The entire detection chain — filter
+  → metric → alarm → SNS → notification — is severed
+  at the first link.
+failure: >
+  Detection chain broken at source. Metric filter
+  evaluates nothing — every downstream alarm is
+  non-functional because the log group was deleted.

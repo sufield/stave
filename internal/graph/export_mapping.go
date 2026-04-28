@@ -2,6 +2,7 @@ package graph
 
 import (
 	"log/slog"
+	"maps"
 	"strings"
 )
 
@@ -275,9 +276,7 @@ func flattenNodeProperties(n *Node) map[string]any {
 func edgeProperties(e *Edge, fromKind, toKind string, g *GraphData) map[string]any {
 	props := map[string]any{}
 	if e.Properties != nil {
-		for k, v := range e.Properties {
-			props[k] = v
-		}
+		maps.Copy(props, e.Properties)
 	}
 	// If either endpoint is a Finding, propagate its severity weight
 	// so edges incident on findings carry a numeric weight.

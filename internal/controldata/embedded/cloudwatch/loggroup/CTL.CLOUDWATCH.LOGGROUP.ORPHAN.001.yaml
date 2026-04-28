@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.LOGGROUP.ORPHAN.001
+name: CloudWatch Log Group Has No Log Streams in 90+ Days
+description: >
+  CloudWatch Logs log group has not received any new
+  log events in 90+ days. The log group exists with
+  retention, encryption, and policy configuration —
+  but no service writes to it. Typically indicates
+  the writer service was deleted (Lambda function,
+  ECS task, API Gateway), the log group was created
+  for a service that was never deployed, or the
+  service's log configuration was changed to a
+  different log group. Dormant log groups continue
+  to accrue storage cost on whatever historical data
+  they hold.
+domain: governance
+severity: medium
+archetype: dormant-resource
+compliance:
+  soc2: "CC6.1, A1.2"
+  nist_800_53_r5: "CM-8, SI-12"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["DSP-04", "LOG-12"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Log group has been dormant for 90+ days. The
+    writer service has likely been removed but the
+    log group lingers.
+  action: >
+    Confirm no service still depends on the log group
+    (search Lambda function configurations, ECS task
+    definitions, API Gateway log destinations, custom
+    application code for the log group name). If
+    confirmed orphaned, archive any stored data to S3
+    via aws logs create-export-task and delete the
+    log group: aws logs delete-log-group
+    --log-group-name <name>. If the data is not
+    needed, delete directly. Stop paying storage cost
+    on data nothing reads.
+  example: |
+    {
+      "monitoring": {
+        "kind": "log_group",
+        "cloudwatch": {
+          "log_group_name": "/aws/lambda/old-function",
+          "last_event_days": 5,
+          "is_dormant": false,
+          "log_stream_count": 12,
+          "stored_bytes": 5242880
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: log_group
+    - field: properties.monitoring.cloudwatch.is_dormant
+      op: eq
+      value: true
+defect: >
+  CloudWatch log group has not received any log
+  events in 90+ days.
+infection: >
+  CloudWatch Logs log groups persist independently
+  from the services that write to them. When a
+  Lambda function is deleted, its log group is not
+  automatically removed; it stays with whatever log
+  events were written to it before deletion. The
+  same is true for ECS tasks, API Gateway stages,
+  and custom application log groups. After 90+ days
+  of no new events, the log group is functionally
+  dead — it stores historical data nobody reads, no
+  current service depends on it, and any retention
+  setting will eventually delete the historical data
+  too. The log group remains in the inventory,
+  consuming budget and adding noise to coverage
+  reports for a service that no longer exists.
+failure: >
+  Dormant log group. No log events for 90+ days,
+  storage cost accrues on data that no current
+  service generates.
+tests:
+  - name: log group with no events for 120 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/old-function"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/lambda/old-function"
+            last_event_days: 120
+            is_dormant: true
+            log_stream_count: 12
+            stored_bytes: 524288000
+  - name: log group with recent events passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/checkout"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/lambda/checkout"
+            last_event_days: 5
+            is_dormant: false
+            log_stream_count: 47
+            stored_bytes: 104857600

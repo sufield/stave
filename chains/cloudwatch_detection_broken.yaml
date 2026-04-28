@@ -1,0 +1,25 @@
+id: cloudwatch_detection_broken
+description: >
+  Detection pipeline broken at the metric-filter, alarm,
+  or alarm-action layer. A metric filter parses a deleted
+  log group (no events flow through), an alarm has its
+  ActionsEnabled flag set to false (the alarm evaluates
+  but actions are suppressed), or an alarm has zero
+  configured actions (the alarm fires into the void).
+  Any one of these breaks the detection pipeline end-to-
+  end — the team believes monitoring is in place because
+  the alarms exist in the console with the expected
+  names, but the path from log event to operator
+  notification is severed. Threshold of 1 reflects that
+  a single broken stage is enough to silence detection
+  for that signal.
+controls:
+  - CTL.CLOUDWATCH.GHOST.METRICFILTER.LOGGROUP.001
+  - CTL.CLOUDWATCH.ALARM.DISABLED.001
+  - CTL.CLOUDWATCH.ALARM.NOACTION.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

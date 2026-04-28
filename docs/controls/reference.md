@@ -3,29 +3,29 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1844
-**Pack hash:** `6ba4e640b01196c1c43596ae934b627053603e7b6c6c2646de5bda95500a13eb`
+**Total controls:** 1861
+**Pack hash:** `8e9215b888115422341ccbf98ca84fc54b1a644c255046dabc9eb255bd71c462`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 204 |
-| high | 818 |
+| critical | 206 |
+| high | 829 |
 | info | 16 |
 | low | 123 |
-| medium | 683 |
+| medium | 687 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 33 |
+| audit | 34 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 979 |
-| governance | 223 |
+| exposure | 987 |
+| governance | 231 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -6262,6 +6262,21 @@ CloudTrail must have log file integrity validation enabled. Without validation, 
 
 ---
 
+### CTL.CLOUDWATCH.ALARM.DISABLED.001
+
+**CloudWatch Alarm ActionsEnabled Is False**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 4.5; fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, IR-4, IR-5, SI-4; pci_dss_v4.0: 10.5, 10.6; soc2: CC7.1, CC7.2, CC7.3;
+
+CloudWatch alarm has ActionsEnabled set to false. The alarm evaluates the metric and transitions states normally; the actions exist (SNS topic, Lambda function); but ActionsEnabled is false so the actions don't fire. The most invisible alarm failure — actions ARE listed, the alarm appears fully configured. ActionsEnabled is a single boolean buried in the configuration. False- protection archetype: alarm looks functional, silently muted.
+
+**Remediation:** Re-enable actions: aws cloudwatch enable-alarm-actions --alarm-names <name>. Audit the historical reason for the disablement — common cause is a maintenance window where actions were silenced and never re-enabled. Add a follow-up alarm or process check that surfaces long-running ActionsEnabled=false states so the same lapse doesn't recur.
+
+---
+
 ### CTL.CLOUDWATCH.ALARM.GHOST.001
 
 **CloudWatch Alarm Actions Must Not Target Deleted SNS Topics**
@@ -6274,6 +6289,141 @@ CloudTrail must have log file integrity validation enabled. Without validation, 
 CloudWatch alarm notification actions must not reference deleted SNS topics. When the alarm fires, the notification goes nowhere. The security team is not alerted. The alarm appears configured and active in the console while notifications are silently broken.
 
 **Remediation:** Update the alarm action to reference an existing SNS topic.
+
+---
+
+### CTL.CLOUDWATCH.ALARM.INSUFFICIENTDATA.001
+
+**CloudWatch Alarm in INSUFFICIENT_DATA State for 30+ Days**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, SI-4, CM-3; pci_dss_v4.0: 10.6; soc2: CC7.1, CC7.2;
+
+CloudWatch alarm has been in INSUFFICIENT_DATA state for more than 30 days. INSUFFICIENT_DATA means the metric is not publishing data points — the alarm cannot evaluate because there's nothing to evaluate. Common causes: monitored resource was deleted, metric namespace or dimensions changed, CloudTrail or the metric filter's log group was deleted. The alarm exists in the console as an active alarm in a neutral state; brief INSUFFICIENT_DATA is normal during metric-publication gaps but 30+ days means the data source is permanently gone.
+
+**Remediation:** Investigate why the metric stopped publishing. Common roots: the monitored resource was deleted, dimensions changed, the metric filter's log group is gone (see CTL.CLOUDWATCH.GHOST.METRICFILTER.LOGGROUP.001), or CloudTrail stopped logging. Either restore the data source, repoint the alarm at the new metric dimensions, or delete the dead alarm. A dead alarm in the console creates the illusion of monitoring coverage.
+
+---
+
+### CTL.CLOUDWATCH.ALARM.MISSINGDATA.NOTBREACHING.001
+
+**CloudWatch Security Alarm Treats Missing Data as Not Breaching**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 4.1; fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, AU-9, SI-4; pci_dss_v4.0: 10.5, 10.6; soc2: CC7.1, CC7.2;
+
+CloudWatch security alarm has TreatMissingData set to "notBreaching." When metric data stops arriving (resource deleted, CloudTrail stopped, application crashed), the alarm treats the absence as OK. For security alarms specifically, missing data is dangerous: an attacker who stops the data source silences the metric AND the alarm cooperates by staying OK. Operational alarms (CPU, latency) often legitimately use notBreaching when monitoring potentially-terminated resources; security alarms should use "breaching" or "missing" instead.
+
+**Remediation:** Change TreatMissingData on the alarm: aws cloudwatch put-metric-alarm --treat-missing-data breaching (preferred for security — missing data is treated as ALARM) or --treat-missing-data missing (alarm goes to INSUFFICIENT_DATA which is observable). Pair with CTL.CLOUDWATCH.ALARM.INSUFFICIENTDATA.001 so a permanently-INSUFFICIENT_DATA security alarm surfaces.
+
+---
+
+### CTL.CLOUDWATCH.ALARM.NOACTION.001
+
+**CloudWatch Alarm Has No Action Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, IR-4, IR-5, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.1, CC7.2;
+
+CloudWatch alarm has no actions — no AlarmAction, no OKAction, no InsufficientDataAction. The alarm evaluates the metric and transitions states normally but nobody is notified, no SNS topic receives a message, no Lambda function runs, no auto-scaling triggers. Detection without response: the alarm exists in the console showing ALARM state, but the console is not the audience.
+
+**Remediation:** Add an AlarmAction pointing at an SNS topic that pages the relevant on-call (aws cloudwatch put-metric-alarm --alarm-actions <sns-arn>). For composite or aggregate alarms, OK and InsufficientData actions can also be useful for state-change auditing — but at minimum, every alarm needs an AlarmAction.
+
+---
+
+### CTL.CLOUDWATCH.ALARM.NOALARMACTION.001
+
+**CloudWatch Alarm Has OK or InsufficientData Actions But No Alarm Action**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.1, CC7.2;
+
+CloudWatch alarm has OKAction or InsufficientDataAction configured but no AlarmAction. The alarm notifies when things are fine (OK) or when data is missing (INSUFFICIENT_DATA) but not when the threshold is breached (ALARM). Reversed-action misconfiguration: the team is notified when the metric recovers but not when it breaches.
+
+**Remediation:** Add an AlarmAction: aws cloudwatch put-metric-alarm --alarm-actions <sns-arn>. The OK and InsufficientData actions remain useful for state-change auditing; the AlarmAction is the one that actually pages on-call.
+
+---
+
+### CTL.CLOUDWATCH.GHOST.ALARM.LAMBDA.001
+
+**CloudWatch Alarm Action References Deleted Lambda Function**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IR-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, IR-4, CM-2, CM-3; pci_dss_v4.0: 10.6, 12.10; soc2: CC7.1, CC7.2;
+
+CloudWatch alarm has an action invoking a Lambda function for automated remediation. The Lambda has been deleted. The alarm fires correctly. The invocation fails. The remediation doesn't happen. Distinct from CTL.CLOUDWATCH.ALARM.GHOST.001 (alarm action targets a deleted SNS topic) — this control covers Lambda action targets, the path most often used for automated remediation rather than human notification.
+
+**Remediation:** Either redeploy the Lambda function (same ARN) or repoint the alarm action at an active remediation function (aws cloudwatch put-metric-alarm --alarm-actions <new-lambda-arn>). If the automated remediation is no longer needed, replace with an SNS notification action so the alarm surfaces to humans instead of failing silently.
+
+---
+
+### CTL.CLOUDWATCH.GHOST.COMPOSITE.CHILD.001
+
+**Composite Alarm References Deleted Child Alarm**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, CM-2, CM-3, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.1, CC7.2;
+
+CloudWatch composite alarm references one or more child alarms that have been deleted. The composite alarm evaluates a rule combining child alarm states (e.g., "ALARM(child1) AND ALARM(child2)"). When a child is deleted, the composite cannot evaluate the rule — it goes to INSUFFICIENT_DATA or evaluates incorrectly. Composite alarms are commonly used for high-fidelity production alerts that combine multiple signals; a ghost child silently breaks the combination.
+
+**Remediation:** Either recreate the deleted child alarm with the same name, or update the composite alarm's AlarmRule to remove the deleted child reference. The choice depends on whether the deleted child represented an intentional simplification of the composite rule or a mistaken cleanup. Audit the composite's intended detection logic before deciding.
+
+---
+
+### CTL.CLOUDWATCH.GHOST.METRICFILTER.LOGGROUP.001
+
+**CloudWatch Metric Filter References Deleted Log Group**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.4, 4.1; fedramp_moderate: SI-4; hipaa: 164.312(b); iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-6, CM-2, CM-3, SI-4; pci_dss_v4.0: 10.5, 10.6; soc2: CC7.1, CC7.2, CC8.1;
+
+CloudWatch metric filter is associated with a log group that has been deleted. The metric filter exists in the console — pattern, namespace, and metric name are all configured — but the log group it parses no longer exists. The filter evaluates nothing, the metric publishes no data points, and every alarm based on the metric goes to INSUFFICIENT_DATA. One deleted log group can break N metric filters, and through them N alarms — the highest multiplier ghost reference in the catalog.
+
+**Remediation:** Either recreate the log group with the same name and recreate the metric filter on it, or repoint the metric filter at an existing log group, or delete the orphan filter if the monitoring is no longer needed. After fix, verify by triggering an event matching the filter pattern and confirming the metric publishes a data point. Audit other metric filters on the same deleted log group — they share the same fate.
+
+---
+
+### CTL.CLOUDWATCH.GHOST.SUBSCRIPTION.KINESIS.001
+
+**Subscription Filter References Deleted Kinesis Stream**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-6; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, CM-2, CM-3; pci_dss_v4.0: 10.5, 10.6; soc2: CC7.1, CC7.2;
+
+CloudWatch Logs subscription filter delivers log events to a Kinesis Data Stream that has been deleted. The filter matches events. The delivery fails. Matched log events are silently dropped — they don't reach the Kinesis consumer (SIEM, analytics pipeline, security data lake). For security-sensitive log groups, this is a silent ingest gap into the SIEM.
+
+**Remediation:** Either recreate the Kinesis stream with the same ARN and reattach (aws logs put-subscription-filter --destination-arn <stream-arn>), or repoint the filter at an existing stream, or delete the subscription filter if the downstream consumer is gone for good. Audit downstream — the SIEM / analytics pipeline expecting these events has been blind for the gap window.
+
+---
+
+### CTL.CLOUDWATCH.GHOST.SUBSCRIPTION.LAMBDA.001
+
+**Subscription Filter References Deleted Lambda Function**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-6; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, CM-2, CM-3; pci_dss_v4.0: 10.5, 10.6; soc2: CC7.1, CC7.2;
+
+CloudWatch Logs subscription filter delivers log events to a Lambda function that has been deleted. Same pattern as the Kinesis ghost (separate control) but for Lambda destinations. The filter matches events. The Lambda invocation fails. Matched log events are silently dropped. Common pattern: a real-time log processing Lambda (anomaly detection, log enrichment) that gets removed without updating the subscription filter.
+
+**Remediation:** Either redeploy the Lambda function (same ARN) or repoint the filter at an existing Lambda. If the downstream processing is no longer needed, delete the subscription filter so it doesn't accumulate drop-failures in CloudWatch Logs metrics.
 
 ---
 
@@ -6333,6 +6483,66 @@ CloudWatch log groups without retention policies retain logs indefinitely — cr
 CloudWatch log groups for cardholder data environment audit logs must retain logs for at least 365 days. PCI-DSS v4.0 requires 12 months of audit trail with at least 3 months immediately available.
 
 **Remediation:** Set retention to at least 365 days: aws logs put-retention-policy --log-group-name <name> --retention-in-days 365
+
+---
+
+### CTL.CLOUDWATCH.LOGGROUP.ENCRYPT.CMK.001
+
+**CloudWatch Log Group Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.7; fedramp_moderate: SC-13, SC-28; hipaa: 164.312(a)(2)(iv), 164.312(e)(2)(ii); iso_27001_2022: A.8.24; nist_800_53_r5: SC-13, SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1, CC6.7;
+
+CloudWatch Logs log group is not encrypted with a customer-managed KMS key. CW Logs encrypts data at rest by default with AWS-managed keys, but without a CMK there is no key policy control over which principals can decrypt log data, no usage audit trail in CloudTrail KMS events, and no key revocation capability. For log groups containing audit events, application logs, or security tool output, CMK encryption is the only way to bound decryption authority and revoke access.
+
+**Remediation:** Associate a customer-managed KMS key with the log group: aws logs associate-kms-key --log-group-name <name> --kms-key-id <cmk-arn>. The key policy must grant logs.<region>.amazonaws.com kms:Encrypt, kms:Decrypt, kms:ReEncrypt*, kms:GenerateDataKey*, and kms:Describe* with a kms:EncryptionContext condition scoping to the log group ARN. After association, only entries written after association are encrypted with the CMK; existing entries remain encrypted with the previous key.
+
+---
+
+### CTL.CLOUDWATCH.LOGGROUP.ORPHAN.001
+
+**CloudWatch Log Group Has No Log Streams in 90+ Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-8, SI-12; soc2: CC6.1, A1.2;
+
+CloudWatch Logs log group has not received any new log events in 90+ days. The log group exists with retention, encryption, and policy configuration — but no service writes to it. Typically indicates the writer service was deleted (Lambda function, ECS task, API Gateway), the log group was created for a service that was never deployed, or the service's log configuration was changed to a different log group. Dormant log groups continue to accrue storage cost on whatever historical data they hold.
+
+**Remediation:** Confirm no service still depends on the log group (search Lambda function configurations, ECS task definitions, API Gateway log destinations, custom application code for the log group name). If confirmed orphaned, archive any stored data to S3 via aws logs create-export-task and delete the log group: aws logs delete-log-group --log-group-name <name>. If the data is not needed, delete directly. Stop paying storage cost on data nothing reads.
+
+---
+
+### CTL.CLOUDWATCH.LOGGROUP.POLICY.PUBLIC.001
+
+**CloudWatch Log Group Resource Policy Allows PutLogEvents from Any Account**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.4; fedramp_moderate: AC-3, AU-9; hipaa: 164.312(b), 164.312(c)(1); iso_27001_2022: A.5.15, A.8.15; nist_800_53_r5: AC-3, AU-9; pci_dss_v4.0: 10.5; soc2: CC6.1, CC7.1;
+
+CloudWatch Logs log group resource policy allows logs:PutLogEvents from Principal: * or from any AWS account without an aws:PrincipalOrgID condition. Any account on the internet can write log entries — injecting fake events that mix with legitimate entries. For security log groups (the CloudTrail CW Logs target, VPC Flow Logs), injected entries contaminate the audit trail and may trigger or mask metric-filter alarms.
+
+**Remediation:** Replace Principal: * with the specific service principal that needs to write (e.g., cloudtrail.amazonaws.com, vpc-flow-logs.amazonaws.com) and add an aws:SourceArn condition limiting writes to a specific resource. For cross-account writes, enumerate Principal accounts explicitly or add an aws:PrincipalOrgID condition. Apply the policy via aws logs put-resource-policy --policy-name <name> --policy-document <json>.
+
+---
+
+### CTL.CLOUDWATCH.LOGGROUP.RETENTION.SHORT.001
+
+**CloudWatch Log Group Retention Too Short for Compliance**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.4; fedramp_moderate: AU-11; hipaa: 164.312(b), 164.316(b)(2)(i); iso_27001_2022: A.5.16, A.8.10; nist_800_53_r5: AU-9, AU-11; pci_dss_v4.0: 10.5.1, 10.7; soc2: CC7.1, A1.2;
+
+CloudWatch Logs log group has a retention period shorter than the applicable compliance requirement. Common requirements: HIPAA 6 years (2190 days), PCI-DSS 1 year (365 days), SOC2 1 year (365 days). When the configured retention is shorter than the required minimum, security investigation data and audit evidence are deleted before the audit window closes. Compliance-profile control: fires when retention is set AND retention_compliant is false for the active compliance tag set.
+
+**Remediation:** Update the log group retention to meet or exceed required_retention_days: aws logs put-retention-policy --log-group-name <name> --retention-in-days <days>. Allowed CW Logs retention values are discrete (1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653) — pick the smallest value that meets or exceeds the required minimum.
 
 ---
 
@@ -6792,6 +7002,51 @@ A CloudWatch metric filter and alarm must monitor vpc changes. VPC lifecycle cha
 CloudWatch Logs log groups must have a retention policy configured. Without a retention policy, logs are kept indefinitely (incurring cost) or may be deleted manually without audit trail.
 
 **Remediation:** Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365
+
+---
+
+### CTL.CLOUDWATCH.SUBSCRIPTION.CROSSACCOUNT.NOENCRYPT.001
+
+**Subscription Filter Delivers to Cross-Account Destination Without Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8, SC-13; hipaa: 164.312(e)(1), 164.312(e)(2)(ii); iso_27001_2022: A.8.20, A.8.24; nist_800_53_r5: AU-9, SC-8, SC-13; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+CloudWatch Logs subscription filter delivers log events to a destination in an external account — Kinesis stream, Lambda function, or Firehose — without encryption in transit or at rest at the destination. Log data crosses the account boundary in plaintext: any PII, credentials, security event details, or internal application data in the logs is accessible to the receiving account.
+
+**Remediation:** Encrypt the destination: for Kinesis streams, enable server-side encryption with a CMK whose key policy is shared with the source account; for Lambda destinations, ensure the function encrypts its environment variables and any onward storage with a CMK; for Firehose, enable server-side encryption on the delivery stream and on the downstream S3 bucket. If sensitive fields can be redacted at the source, add a CloudWatch Logs Insights query or Lambda transformer that strips the fields before cross-account delivery.
+
+---
+
+### CTL.CLOUDWATCH.SUBSCRIPTION.CROSSACCOUNT.NOORG.001
+
+**Subscription Filter Cross-Account Destination Without Organizational Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.4; fedramp_moderate: AC-3, AC-6; iso_27001_2022: A.5.15; nist_800_53_r5: AC-3, AC-6, AU-9; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.6;
+
+CloudWatch Logs subscription filter delivers to a destination in an external account whose policy does not include an aws:PrincipalOrgID condition or an explicit account allow-list. The destination accepts subscription deliveries from any account — meaning any AWS account, in or out of the organization, could establish a subscription to this destination and receive the log stream.
+
+**Remediation:** Add an aws:PrincipalOrgID condition to the destination's resource policy (Kinesis KeyPolicy, Lambda function policy, Firehose delivery stream policy) restricting deliveries to principals within the organization. If cross-org delivery is genuinely needed, enumerate the specific accounts as Principal rather than leaving the policy open.
+
+---
+
+### CTL.CLOUDWATCH.SUBSCRIPTION.FILTER.NOALARM.001
+
+**Subscription Filter Destination Has No Monitoring**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-5; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-5, SI-4; pci_dss_v4.0: 10.7; soc2: CC7.1, CC7.2;
+
+CloudWatch Logs subscription filter delivers to a Kinesis stream or Lambda function, but the destination has no monitoring — no alarm for Kinesis throttling, no alarm for Lambda errors. If the destination is throttled or erroring, log events are silently dropped. The subscription filter continues matching events; the destination cannot process them; logs are lost between filter and destination with no signal to anyone.
+
+**Remediation:** Add at least one alarm on the destination appropriate to its type: for Kinesis, WriteProvisionedThroughputExceeded > 0; for Lambda, Errors > 0 and Throttles > 0; for Firehose, DeliveryToS3.DataFreshness above the expected processing window. Wire the alarms into the same notification path used by other operational alerts so destination drops surface immediately rather than silently.
 
 ---
 

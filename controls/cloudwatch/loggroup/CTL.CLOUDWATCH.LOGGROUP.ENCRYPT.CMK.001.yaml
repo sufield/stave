@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.LOGGROUP.ENCRYPT.CMK.001
+name: CloudWatch Log Group Not Encrypted with Customer-Managed KMS Key
+description: >
+  CloudWatch Logs log group is not encrypted with a
+  customer-managed KMS key. CW Logs encrypts data at
+  rest by default with AWS-managed keys, but without
+  a CMK there is no key policy control over which
+  principals can decrypt log data, no usage audit
+  trail in CloudTrail KMS events, and no key
+  revocation capability. For log groups containing
+  audit events, application logs, or security tool
+  output, CMK encryption is the only way to bound
+  decryption authority and revoke access.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "3.7"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-13, SC-28"
+  pci_dss_v4.0: "3.5.1"
+  fedramp_moderate: "SC-13, SC-28"
+  hipaa: "164.312(a)(2)(iv), 164.312(e)(2)(ii)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "CEK-09"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Log group has no CMK encryption configured.
+    Default AWS-managed encryption applies but
+    decryption authority cannot be controlled.
+  action: >
+    Associate a customer-managed KMS key with the log
+    group: aws logs associate-kms-key --log-group-name
+    <name> --kms-key-id <cmk-arn>. The key policy
+    must grant logs.<region>.amazonaws.com kms:Encrypt,
+    kms:Decrypt, kms:ReEncrypt*, kms:GenerateDataKey*,
+    and kms:Describe* with a kms:EncryptionContext
+    condition scoping to the log group ARN. After
+    association, only entries written after
+    association are encrypted with the CMK; existing
+    entries remain encrypted with the previous key.
+  example: |
+    {
+      "monitoring": {
+        "kind": "log_group",
+        "cloudwatch": {
+          "log_group_name": "/aws/lambda/checkout",
+          "encrypted_cmk": true,
+          "kms_key_arn": "arn:aws:kms:us-east-1:111122223333:key/abc"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: log_group
+    - field: properties.monitoring.cloudwatch.encrypted_cmk
+      op: eq
+      value: false
+defect: >
+  CloudWatch log group is not encrypted with a
+  customer-managed KMS key.
+infection: >
+  CloudWatch Logs encrypts log data at rest by default
+  using AWS-managed keys. The log group appears
+  encrypted in audit reports — and it is — but the
+  key is in AWS's account, not the customer's. There
+  is no key policy to restrict which principals can
+  decrypt, no CloudTrail visibility into decryption
+  events, and no way to revoke access by deleting the
+  key. For log groups carrying sensitive content
+  (Lambda function output that may include request
+  bodies, API Gateway execution logs with
+  authentication tokens, application logs with PII),
+  CMK encryption with a tightly-scoped key policy is
+  the only way to limit decryption authority and
+  audit decryption access.
+failure: >
+  No key policy control over log data. Default
+  encryption protects against raw storage access but
+  not against compromised CW Logs read permissions.
+tests:
+  - name: log group without CMK fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/checkout"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/lambda/checkout"
+            encrypted_cmk: false
+  - name: log group with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/checkout"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/lambda/checkout"
+            encrypted_cmk: true
+            kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/abc-123"

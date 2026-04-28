@@ -1,0 +1,23 @@
+control: CTL.CLOUDWATCH.LOGGROUP.ORPHAN.001
+defect: >
+  CloudWatch log group has not received any log
+  events in 90+ days.
+infection: >
+  CloudWatch Logs log groups persist independently
+  from the services that write to them. When a
+  Lambda function is deleted, its log group is not
+  automatically removed; it stays with whatever log
+  events were written to it before deletion. The
+  same is true for ECS tasks, API Gateway stages,
+  and custom application log groups. After 90+ days
+  of no new events, the log group is functionally
+  dead — it stores historical data nobody reads, no
+  current service depends on it, and any retention
+  setting will eventually delete the historical data
+  too. The log group remains in the inventory,
+  consuming budget and adding noise to coverage
+  reports for a service that no longer exists.
+failure: >
+  Dormant log group. No log events for 90+ days,
+  storage cost accrues on data that no current
+  service generates.

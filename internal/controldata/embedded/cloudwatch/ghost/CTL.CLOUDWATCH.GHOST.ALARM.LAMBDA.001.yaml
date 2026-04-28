@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.GHOST.ALARM.LAMBDA.001
+name: CloudWatch Alarm Action References Deleted Lambda Function
+description: >
+  CloudWatch alarm has an action invoking a Lambda
+  function for automated remediation. The Lambda has
+  been deleted. The alarm fires correctly. The
+  invocation fails. The remediation doesn't happen.
+  Distinct from CTL.CLOUDWATCH.ALARM.GHOST.001 (alarm
+  action targets a deleted SNS topic) — this control
+  covers Lambda action targets, the path most often
+  used for automated remediation rather than human
+  notification.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, IR-4, CM-2, CM-3"
+  pci_dss_v4.0: "10.6, 12.10"
+  fedramp_moderate: "IR-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Alarm action targets a deleted Lambda. Automated
+    remediation cannot execute.
+  action: >
+    Either redeploy the Lambda function (same ARN) or
+    repoint the alarm action at an active remediation
+    function (aws cloudwatch put-metric-alarm
+    --alarm-actions <new-lambda-arn>). If the
+    automated remediation is no longer needed, replace
+    with an SNS notification action so the alarm
+    surfaces to humans instead of failing silently.
+  example: |
+    {
+      "monitoring": {
+        "kind": "alarm",
+        "cloudwatch": {
+          "alarm_action_arn": "arn:aws:lambda:us-east-1:111122223333:function:remediator",
+          "alarm_action_type": "lambda",
+          "alarm_action_exists": true,
+          "has_ghost_alarm_action": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: alarm
+    - field: properties.monitoring.cloudwatch.alarm_action_type
+      op: eq
+      value: lambda
+    - field: properties.monitoring.cloudwatch.has_ghost_alarm_action
+      op: eq
+      value: true
+defect: >
+  CloudWatch alarm action invokes a Lambda function
+  that has been deleted.
+infection: >
+  Some CloudWatch alarms invoke Lambda functions for
+  automated remediation: auto-scaling, incident
+  response, self-healing (restart failed service), or
+  security response (revoke compromised credentials,
+  isolate compromised instance). When the Lambda is
+  deleted: the alarm fires correctly (detection
+  works), the action attempts invocation (response
+  initiates), the invocation fails
+  (ResourceNotFoundException), and the remediation
+  doesn't execute. If the alarm also has an SNS
+  action, the team is notified — but the automated
+  remediation they expected doesn't happen. If the
+  alarm ONLY has the Lambda action (no SNS), the
+  alarm fires with no notification and no remediation.
+failure: >
+  Automated remediation broken. Alarm detects the
+  problem and invokes a deleted Lambda — remediation
+  doesn't execute.
+tests:
+  - name: alarm with deleted Lambda action fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:HighCPU"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "HighCPU"
+            alarm_action_arn: "arn:aws:lambda:us-east-1:111122223333:function:remediator-deleted"
+            alarm_action_type: "lambda"
+            alarm_action_exists: false
+            has_ghost_alarm_action: true
+  - name: alarm with active Lambda action passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:HighCPU"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "HighCPU"
+            alarm_action_arn: "arn:aws:lambda:us-east-1:111122223333:function:remediator"
+            alarm_action_type: "lambda"
+            alarm_action_exists: true
+            has_ghost_alarm_action: false

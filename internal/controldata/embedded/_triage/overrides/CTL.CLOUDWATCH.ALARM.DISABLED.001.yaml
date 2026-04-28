@@ -1,0 +1,24 @@
+control: CTL.CLOUDWATCH.ALARM.DISABLED.001
+defect: >
+  CloudWatch alarm has ActionsEnabled = false; actions
+  exist but are suppressed.
+infection: >
+  ActionsEnabled = false means the alarm evaluates
+  normally — metric data is checked against the
+  threshold, the alarm state transitions between OK,
+  ALARM, and INSUFFICIENT_DATA — but no actions fire.
+  The actions are configured: the SNS topic ARN is
+  listed, the Lambda function ARN is present. An
+  auditor checking the alarm sees: alarm name,
+  metric, threshold, period, actions (SNS topic
+  listed), state (OK or ALARM). Everything looks
+  correct. ActionsEnabled is a boolean that doesn't
+  appear in most console views without expanding the
+  alarm configuration. Common cause: someone
+  disabled actions during testing or maintenance and
+  forgot to re-enable. The alarm has been silently
+  muted since.
+failure: >
+  Silently muted alarm. Alarm evaluates and
+  transitions to ALARM but actions are suppressed —
+  the most invisible alarm failure.

@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.GHOST.SUBSCRIPTION.LAMBDA.001
+name: Subscription Filter References Deleted Lambda Function
+description: >
+  CloudWatch Logs subscription filter delivers log
+  events to a Lambda function that has been deleted.
+  Same pattern as the Kinesis ghost (separate control)
+  but for Lambda destinations. The filter matches
+  events. The Lambda invocation fails. Matched log
+  events are silently dropped. Common pattern: a
+  real-time log processing Lambda (anomaly detection,
+  log enrichment) that gets removed without updating
+  the subscription filter.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, CM-2, CM-3"
+  pci_dss_v4.0: "10.5, 10.6"
+  fedramp_moderate: "AU-6"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Subscription filter delivers to a deleted Lambda
+    function. Matched log events are silently
+    dropped.
+  action: >
+    Either redeploy the Lambda function (same ARN) or
+    repoint the filter at an existing Lambda. If the
+    downstream processing is no longer needed, delete
+    the subscription filter so it doesn't accumulate
+    drop-failures in CloudWatch Logs metrics.
+  example: |
+    {
+      "monitoring": {
+        "kind": "subscription_filter",
+        "cloudwatch": {
+          "subscription_destination_type": "lambda",
+          "subscription_destination_arn": "arn:aws:lambda:us-east-1:111122223333:function:log-processor",
+          "subscription_destination_exists": true,
+          "has_ghost_subscription_dest": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: subscription_filter
+    - field: properties.monitoring.cloudwatch.subscription_destination_type
+      op: eq
+      value: lambda
+    - field: properties.monitoring.cloudwatch.has_ghost_subscription_dest
+      op: eq
+      value: true
+defect: >
+  CloudWatch Logs subscription filter delivers to a
+  deleted Lambda function.
+infection: >
+  Subscription filters can stream matching log events
+  to Lambda functions for real-time processing —
+  anomaly detection, log enrichment, alerting outside
+  the metric-filter pipeline. When the Lambda is
+  deleted: CloudWatch Logs invokes the Lambda for
+  matching events, the invocation fails with
+  ResourceNotFoundException, and the events are
+  dropped. The subscription filter remains in the
+  console showing the destination ARN. Only the
+  delivery silently fails. The downstream processing
+  pipeline that depended on this stream goes blind to
+  events from this log group.
+failure: >
+  Real-time processing broken. Matching log events are
+  silently dropped because the Lambda destination was
+  deleted.
+tests:
+  - name: subscription with deleted Lambda fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:LogProcessor"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "LogProcessor"
+            subscription_destination_type: "lambda"
+            subscription_destination_arn: "arn:aws:lambda:us-east-1:111122223333:function:log-processor-deleted"
+            subscription_destination_exists: false
+            has_ghost_subscription_dest: true
+  - name: subscription with active Lambda passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:LogProcessor"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "LogProcessor"
+            subscription_destination_type: "lambda"
+            subscription_destination_arn: "arn:aws:lambda:us-east-1:111122223333:function:log-processor"
+            subscription_destination_exists: true
+            has_ghost_subscription_dest: false

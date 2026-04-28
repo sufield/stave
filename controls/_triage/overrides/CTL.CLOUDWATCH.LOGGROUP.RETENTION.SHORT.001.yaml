@@ -1,0 +1,23 @@
+control: CTL.CLOUDWATCH.LOGGROUP.RETENTION.SHORT.001
+defect: >
+  CloudWatch log group retention is shorter than the
+  applicable compliance retention requirement.
+infection: >
+  Retention policies on CloudWatch Logs control how
+  long log events persist before automatic deletion.
+  CTL.CLOUDWATCH.RETENTION.001 catches the absence of
+  any retention setting; this control catches a
+  retention period that's shorter than required —
+  30 days configured, 365 required for PCI. Real-time
+  alarms continue to work because they only need
+  recent events. But forensic queries (CloudWatch
+  Logs Insights across the past year) only see the
+  retention window. An incident discovered in month
+  9 with 30-day retention has 8 months of log data
+  gone — even though the log group exists and has a
+  retention policy that an auditor would mark
+  compliant on a casual review.
+failure: >
+  Audit evidence expires too early. Log retention is
+  shorter than the compliance window — forensic
+  queries see nothing past the configured horizon.

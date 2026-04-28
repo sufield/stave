@@ -1,0 +1,139 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ALARM.DISABLED.001
+name: CloudWatch Alarm ActionsEnabled Is False
+description: >
+  CloudWatch alarm has ActionsEnabled set to false.
+  The alarm evaluates the metric and transitions
+  states normally; the actions exist (SNS topic,
+  Lambda function); but ActionsEnabled is false so
+  the actions don't fire. The most invisible alarm
+  failure — actions ARE listed, the alarm appears
+  fully configured. ActionsEnabled is a single
+  boolean buried in the configuration. False-
+  protection archetype: alarm looks functional,
+  silently muted.
+domain: governance
+severity: critical
+archetype: false-protection
+compliance:
+  cis_aws_v3.0: "4.5"
+  soc2: "CC7.1, CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, IR-4, IR-5, SI-4"
+  pci_dss_v4.0: "10.5, 10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Alarm actions are suppressed (ActionsEnabled =
+    false). State transitions trigger nothing.
+  action: >
+    Re-enable actions: aws cloudwatch
+    enable-alarm-actions --alarm-names <name>. Audit
+    the historical reason for the disablement —
+    common cause is a maintenance window where
+    actions were silenced and never re-enabled. Add
+    a follow-up alarm or process check that surfaces
+    long-running ActionsEnabled=false states so the
+    same lapse doesn't recur.
+  example: |
+    {
+      "monitoring": {
+        "kind": "alarm",
+        "cloudwatch": {
+          "actions_enabled": true,
+          "alarm_actions": ["arn:aws:sns:us-east-1:111122223333:oncall"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: alarm
+    - field: properties.monitoring.cloudwatch.actions_enabled
+      op: eq
+      value: false
+    - field: properties.monitoring.cloudwatch.action_count
+      op: gt
+      value: 0
+defect: >
+  CloudWatch alarm has ActionsEnabled = false; actions
+  exist but are suppressed.
+infection: >
+  ActionsEnabled = false means the alarm evaluates
+  normally — metric data is checked against the
+  threshold, the alarm state transitions between OK,
+  ALARM, and INSUFFICIENT_DATA — but no actions fire.
+  The actions are configured: the SNS topic ARN is
+  listed, the Lambda function ARN is present. An
+  auditor checking the alarm sees: alarm name,
+  metric, threshold, period, actions (SNS topic
+  listed), state (OK or ALARM). Everything looks
+  correct. ActionsEnabled is a boolean that doesn't
+  appear in most console views without expanding the
+  alarm configuration. Common cause: someone
+  disabled actions during testing or maintenance and
+  forgot to re-enable. The alarm has been silently
+  muted since.
+failure: >
+  Silently muted alarm. Alarm evaluates and
+  transitions to ALARM but actions are suppressed —
+  the most invisible alarm failure.
+tests:
+  - name: alarm with ActionsEnabled=false fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:HighCPU"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "HighCPU"
+            actions_enabled: false
+            alarm_actions: ["arn:aws:sns:us-east-1:111122223333:oncall"]
+            action_count: 1
+            alarm_state: "OK"
+  - name: alarm with ActionsEnabled=true passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:HighCPU"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "HighCPU"
+            actions_enabled: true
+            alarm_actions: ["arn:aws:sns:us-east-1:111122223333:oncall"]
+            action_count: 1
+            alarm_state: "OK"
+  - name: alarm in ALARM state with disabled actions fires (severe)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:CriticalDB"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "CriticalDB"
+            actions_enabled: false
+            alarm_actions: ["arn:aws:sns:us-east-1:111122223333:oncall"]
+            action_count: 1
+            alarm_state: "ALARM"

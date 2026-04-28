@@ -1,0 +1,22 @@
+control: CTL.CLOUDWATCH.LOGGROUP.POLICY.PUBLIC.001
+defect: >
+  CloudWatch log group resource policy allows
+  PutLogEvents from any account.
+infection: >
+  A log group resource policy with Principal: * or
+  cross-account access without aws:PrincipalOrgID
+  allows any AWS account to write log events. An
+  attacker creates fake log events — entries that
+  look like legitimate application or security logs
+  but contain attacker-controlled content. For
+  security log groups: fake CloudTrail-like events
+  confuse incident investigation, fake VPC Flow Log
+  entries mask real traffic patterns. For application
+  log groups: fake entries corrupt log-based metrics
+  (metric filters count fake events), contaminate
+  dashboards, and may trigger false alarms or mask
+  real ones by diluting legitimate events.
+failure: >
+  Log injection possible. Any account can write fake
+  log events to the group — contaminating the audit
+  trail and corrupting log-based metrics.

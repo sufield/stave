@@ -1,0 +1,22 @@
+id: cloudwatch_log_contamination
+description: >
+  Log group integrity is compromised: either the
+  resource policy permits any account to write
+  events (contamination — fake entries mix with
+  legitimate ones), or a metric filter parses a
+  deleted log group (blindness — the detection
+  pipeline reads from a log group that no longer
+  exists). Both undermine trust in the log data:
+  contamination poisons the inputs, blindness
+  removes them. Threshold of 1 because either is
+  enough on its own to invalidate the audit value
+  of the affected log group.
+controls:
+  - CTL.CLOUDWATCH.LOGGROUP.POLICY.PUBLIC.001
+  - CTL.CLOUDWATCH.GHOST.METRICFILTER.LOGGROUP.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

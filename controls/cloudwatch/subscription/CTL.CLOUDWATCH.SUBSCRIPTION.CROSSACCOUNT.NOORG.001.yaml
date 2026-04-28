@@ -1,0 +1,138 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.SUBSCRIPTION.CROSSACCOUNT.NOORG.001
+name: Subscription Filter Cross-Account Destination Without Organizational Boundary
+description: >
+  CloudWatch Logs subscription filter delivers to a
+  destination in an external account whose policy
+  does not include an aws:PrincipalOrgID condition
+  or an explicit account allow-list. The
+  destination accepts subscription deliveries from
+  any account — meaning any AWS account, in or out
+  of the organization, could establish a
+  subscription to this destination and receive the
+  log stream.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "1.4"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6, AU-9"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15"
+  ccm_v4: ["IAM-09", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: cross_account
+    multiplier: 3.0
+remediation:
+  description: >
+    Destination policy lacks org-scoping. Any account
+    can subscribe and receive the log stream.
+  action: >
+    Add an aws:PrincipalOrgID condition to the
+    destination's resource policy (Kinesis
+    KeyPolicy, Lambda function policy, Firehose
+    delivery stream policy) restricting deliveries
+    to principals within the organization. If
+    cross-org delivery is genuinely needed,
+    enumerate the specific accounts as Principal
+    rather than leaving the policy open.
+  example: |
+    {
+      "monitoring": {
+        "kind": "subscription_filter",
+        "cloudwatch": {
+          "subscription_filter_name": "ToSecurityAccount",
+          "subscription_destination_arn": "arn:aws:kinesis:us-east-1:444455556666:stream/sec-logs",
+          "subscription_cross_account": true,
+          "subscription_destination_has_org": true,
+          "subscription_destination_policy": "PrincipalOrgID o-abc123"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: subscription_filter
+    - field: properties.monitoring.cloudwatch.subscription_cross_account
+      op: eq
+      value: true
+    - field: properties.monitoring.cloudwatch.subscription_destination_has_org
+      op: eq
+      value: false
+defect: >
+  Cross-account subscription destination has no
+  organizational boundary on its policy.
+infection: >
+  CloudWatch Logs cross-account subscription requires
+  the destination's resource policy to grant
+  logs.amazonaws.com permission to deliver. If the
+  policy permits this without an
+  aws:PrincipalOrgID condition or an explicit
+  account allow-list, any AWS account that knows
+  the destination ARN can establish a subscription.
+  An attacker who has discovered the destination
+  ARN — through a leaked configuration file, a
+  Stack Exchange answer, or social engineering —
+  can begin receiving the log stream from the
+  source account. The source account sees nothing
+  unusual; cross-account subscriptions are normal
+  CloudWatch Logs traffic.
+failure: >
+  Cross-account log streaming is ungoverned. Any
+  account can subscribe to the destination and
+  receive the source account's log data.
+tests:
+  - name: cross-account destination without OrgID fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:ToSecurityAccount"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "ToSecurityAccount"
+            subscription_destination_arn: "arn:aws:kinesis:us-east-1:444455556666:stream/sec-logs"
+            subscription_cross_account: true
+            subscription_destination_has_org: false
+            subscription_destination_policy: "Principal: *"
+  - name: cross-account destination with OrgID passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:ToSecurityAccount"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "ToSecurityAccount"
+            subscription_destination_arn: "arn:aws:kinesis:us-east-1:444455556666:stream/sec-logs"
+            subscription_cross_account: true
+            subscription_destination_has_org: true
+            subscription_destination_policy: "PrincipalOrgID o-abc123"
+  - name: same-account subscription does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:Local"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "Local"
+            subscription_destination_arn: "arn:aws:lambda:us-east-1:111122223333:function:logProcessor"
+            subscription_cross_account: false
+            subscription_destination_has_org: false

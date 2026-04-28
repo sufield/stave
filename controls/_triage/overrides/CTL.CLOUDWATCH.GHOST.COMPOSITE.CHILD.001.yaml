@@ -1,0 +1,23 @@
+control: CTL.CLOUDWATCH.GHOST.COMPOSITE.CHILD.001
+defect: >
+  Composite alarm references one or more deleted
+  child alarms.
+infection: >
+  Composite alarms combine the states of multiple
+  child alarms via boolean expressions — typically to
+  reduce alert noise (only page when multiple
+  conditions trigger together) or capture compound
+  failure modes that no single metric describes.
+  When a child alarm is deleted: the composite rule
+  references a non-existent alarm, the rule cannot
+  evaluate, and the composite's state becomes
+  INSUFFICIENT_DATA or evaluates the rule with the
+  missing child treated as one of OK/ALARM/MISSING
+  (depending on the rule's missing-data handling).
+  Either outcome means the composite no longer
+  represents the original detection logic — the
+  combined-signal alarm has lost a signal silently.
+failure: >
+  Composite detection broken. Combined-alarm logic
+  cannot evaluate because a referenced child alarm
+  was deleted.
