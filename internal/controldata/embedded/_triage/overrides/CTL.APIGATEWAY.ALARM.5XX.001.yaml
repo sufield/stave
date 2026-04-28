@@ -1,0 +1,20 @@
+control: CTL.APIGATEWAY.ALARM.5XX.001
+defect: >
+  No CloudWatch alarm watches the API Gateway 5xx error rate
+  metric.
+infection: >
+  AWS/ApiGateway publishes 5XXError to CloudWatch automatically
+  for every stage. The metric exists; the question is whether
+  anything alarms on it. 5xx errors mean the backend is failing,
+  the integration is timing out, Lambda concurrency is exhausted,
+  the authorizer is degraded, or some other operations
+  condition is preventing successful requests. Without an alarm,
+  problems surface only through user complaints or via dashboards
+  that someone happens to be watching. The metric is published
+  whether anyone is alarming on it; the cost of an alarm is
+  near-zero, the cost of unnoticed backend failure compounds
+  with time.
+failure: >
+  Silent backend failure. 5xx errors accumulate without
+  surfacing to on-call until users complain — minutes-to-hours
+  of lag during which customer impact is real.

@@ -1,0 +1,22 @@
+control: CTL.APIGATEWAY.ACCESSLOG.FORMAT.INCOMPLETE.001
+defect: >
+  API Gateway access log format omits at least one of the fields
+  needed for incident response: requestId, caller identity,
+  source IP, latency, status.
+infection: >
+  Access logging is enabled and the log lines flow into
+  CloudWatch or S3, so compliance reporting shows logging-on.
+  But the per-request log line is operator-customizable: any
+  field omitted from $context.* is missing from every log row.
+  An investigator looking at the logs after an incident cannot
+  answer questions the incident demands — who called the method,
+  from where, how long it took, what status returned, what the
+  cross-system correlation ID was. The log exists; its forensic
+  value is near zero. The fix is using the AWS-recommended JSON
+  format, which captures the full investigation-ready set, and
+  reviewing any operator-customized format against the
+  recommended template.
+failure: >
+  Logging-on without forensic value. Access logs flow but lack
+  the fields needed to answer incident-response questions —
+  per-request investigation isn't possible from the log alone.

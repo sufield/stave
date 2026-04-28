@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.ACCESSLOG.RETENTION.001
+defect: >
+  Access log destination CloudWatch log group has no retention
+  policy — logs accumulate indefinitely.
+infection: >
+  CloudWatch log groups default to "Never expire" — logs written
+  to the group remain forever unless an operator sets retention
+  explicitly. Log accumulation has two costs that compound month
+  over month: storage spend that grows linearly with traffic, and
+  regulatory liability — logs that exist must be produced under
+  subpoena, including whatever sensitive data leaks into the
+  access log format (API keys, PII in query parameters, internal
+  URLs in referers). Retention should be set to the period the
+  compliance framework requires plus operator-chosen headroom;
+  for periods longer than CloudWatch's pricing supports, logs
+  should ship to S3 with object lifecycle policies and Glacier
+  transitions.
+failure: >
+  Unbounded log growth. Storage cost climbs linearly; regulatory
+  exposure grows with every log retained beyond the compliance
+  window.

@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ACCESSLOG.FORMAT.INCOMPLETE.001
+name: API Gateway Access Log Format Missing Critical Fields
+description: >
+  Access logging is enabled but the configured access log format
+  omits at least one of the fields needed for incident response
+  and audit: $context.requestId, $context.identity.caller or
+  $context.identity.user, $context.identity.sourceIp,
+  $context.responseLatency, $context.status. With these fields
+  missing, an investigator looking at the logs cannot answer the
+  questions an incident demands: who called this method, from
+  where, how long did it take, what status did API Gateway
+  return, what was the request correlation ID for cross-system
+  tracing. The log line still exists and counts as "logging
+  enabled" in compliance reporting, but its forensic value is
+  near zero.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2, AU-3, AU-6"
+  fedramp_moderate: "AU-2, AU-3, AU-6"
+  pci_dss_v4.0: "10.2, 10.3"
+  soc2: "CC7.2, CC7.3"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-04", "LOG-08"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Access log format is missing at least one of: requestId,
+    caller identity, source IP, latency, status.
+  action: >
+    Update the stage's access log format to include the full
+    investigation-ready set: $context.requestId,
+    $context.identity.sourceIp, $context.identity.caller (or
+    $context.identity.user / $context.authorizer.principalId
+    depending on auth type), $context.requestTime,
+    $context.httpMethod, $context.resourcePath, $context.status,
+    $context.responseLatency, $context.responseLength. aws
+    apigateway update-stage with --patch-operations
+    op=replace,path=/accessLogSettings/format,value=<json-template>.
+    The AWS-recommended JSON format covers the full set; verify
+    nothing has been pruned.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "access_log": {
+          "format_complete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.access_log.format_complete
+      op: eq
+      value: false

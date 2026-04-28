@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.ALARM.THROTTLE.001
+defect: >
+  No CloudWatch alarm watches the API Gateway throttled (429)
+  request count for the stage.
+infection: >
+  429 responses are the customer-visible signal that traffic
+  exceeded the configured rate, burst, or quota. A spike has
+  two distinct causes that demand opposite responses:
+  legitimate traffic growth (raise the limit) or rate-based
+  attack (lower the limit further or shift to WAF rate-based
+  rules). Without an alarm, customer impact persists until the
+  affected user reports it. A baseline of zero throttled
+  requests is the typical safe state for most APIs; any
+  sustained non-zero rate is operationally meaningful. The
+  alarm pairs naturally with the WAF rate-limit rule: WAF
+  drops repeat offenders before they ever reach API Gateway,
+  the API Gateway throttle catches the rest.
+failure: >
+  Throttling goes unnoticed. Real customers see 429 and report
+  it; rate-attacks succeed at displacing legitimate traffic
+  without surfacing a signal until users complain.

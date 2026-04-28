@@ -1,0 +1,23 @@
+control: CTL.APIGATEWAY.ALARM.LATENCY.001
+defect: >
+  No CloudWatch alarm watches Latency or IntegrationLatency for
+  the API Gateway stage.
+infection: >
+  Latency excursions are how operators learn about degradation
+  before customers notice. Backend connection-pool exhaustion,
+  downstream dependency degradation, Lambda cold-start storms —
+  all of these surface as latency increase before they become
+  outright errors. The two metrics are complementary: Latency is
+  end-to-end (API Gateway overhead + authorizer time + backend
+  time); IntegrationLatency isolates the backend hop. Alarming
+  on both gives both customer-visible signal and root-cause
+  attribution. The right threshold is tied to the SLO — P99 at
+  the SLO ceiling is a standard pattern; P50 catches broader
+  degradation. Without either alarm, the operator hears about
+  slowness from a customer complaint or from a downstream
+  service that times out waiting on this API.
+failure: >
+  Slow degradation goes unnoticed. Backends slow down without
+  failing; latency rises through the SLO ceiling; customers
+  experience degraded service before any signal reaches on-
+  call.

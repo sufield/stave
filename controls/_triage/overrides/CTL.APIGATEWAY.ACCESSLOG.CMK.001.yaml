@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.ACCESSLOG.CMK.001
+defect: >
+  Access log destination CloudWatch log group is not encrypted
+  with a customer-managed KMS key.
+infection: >
+  CloudWatch log groups are encrypted at rest under either the
+  AWS-managed key (default) or a customer-managed KMS key. From
+  a "data is encrypted" perspective the two are equivalent; from
+  a control perspective they are not. The AWS-managed key has no
+  customer-controlled access policy, no customer-side audit
+  trail of decrypt calls, and cannot be revoked by the customer.
+  Customer-managed keys allow per-key access policies, separate
+  CloudTrail records of every decrypt, key-rotation cadence the
+  customer controls, and emergency revocation by disabling the
+  key. Compliance frameworks that require customer-controlled
+  encryption (HIPAA, FedRAMP High, several PCI interpretations)
+  don't accept the AWS-managed key.
+failure: >
+  No customer-controlled key for log encryption. AWS-managed
+  encryption is opaque to the customer — no per-key policy,
+  no CloudTrail decrypt trail, no customer-side revocation.

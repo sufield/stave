@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ALARM.5XX.001
+name: No CloudWatch Alarm on API Gateway 5xx Error Rate
+description: >
+  API Gateway stage emits the 5XXError metric to CloudWatch but
+  no alarm watches it. 5xx errors indicate backend failures,
+  integration timeouts, Lambda concurrency exhaustion,
+  authorizer outages — the operations conditions that need
+  on-call attention. Without an alarm, problems surface only
+  through user complaints or downstream dashboards that
+  someone happens to be watching. The metric is published
+  whether anyone is alarming on it; the cost of an alarm is
+  near-zero, the cost of unnoticed backend failure compounds
+  with time.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  fedramp_moderate: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.4, 10.7"
+  soc2: "CC7.2, CC7.3"
+  iso_27001_2022: "A.5.25, A.8.16"
+  ccm_v4: ["LOG-04", "LOG-05"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No CloudWatch alarm watches the API Gateway 5xx error rate.
+  action: >
+    Create an alarm on AWS/ApiGateway namespace, 5XXError metric,
+    dimensioned by ApiName/Stage. Threshold should reflect baseline
+    error rate plus operational headroom — a 1% sustained rate
+    over 5 minutes is a common starting point. aws cloudwatch
+    put-metric-alarm with --metric-name 5XXError --namespace
+    AWS/ApiGateway. Alarm targets should include the service-
+    owning team's pager / Slack channel.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "alarms": {
+          "has_5xx_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.alarms.has_5xx_alarm
+      op: eq
+      value: false

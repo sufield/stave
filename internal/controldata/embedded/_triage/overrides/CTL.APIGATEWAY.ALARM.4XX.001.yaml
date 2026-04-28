@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.ALARM.4XX.001
+defect: >
+  No CloudWatch alarm watches the API Gateway 4xx error rate
+  metric.
+infection: >
+  4xx errors are normally client mistakes — bad input, missing
+  auth, expired tokens — and a low baseline rate is healthy. A
+  sustained spike is the early signal of attack probing:
+  credential stuffing produces 401/403 spikes, parameter fuzzing
+  produces 400/422 spikes, authorizer-bypass attempts produce
+  401 spikes, scanning bots produce 404 spikes. Alarming on
+  baseline plus deviation gives early warning of reconnaissance
+  and active attack — well before the 5xx alarm fires from a
+  successful exploitation. The deviation-from-baseline shape is
+  more useful than a fixed threshold because the absolute rate
+  varies wildly by API.
+failure: >
+  Reconnaissance and attack probing go unnoticed. Credential-
+  stuffing spikes, parameter fuzzing, and scanning aren't
+  surfaced until they succeed and become a 5xx (or worse, a 200
+  exposure that reaches a backend the API author didn't intend).

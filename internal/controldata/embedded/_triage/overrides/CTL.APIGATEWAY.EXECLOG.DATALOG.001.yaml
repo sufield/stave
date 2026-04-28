@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.EXECLOG.DATALOG.001
+defect: >
+  Execution logging is configured to capture full request and
+  response bodies — sensitive payload data persists in CloudWatch
+  at rest.
+infection: >
+  Execution logs exist for debugging integration mappings: which
+  authorizer fired, what the integration sent to the backend,
+  what the backend returned, where in the response chain a
+  transformation went wrong. Data tracing (the data_trace_enabled
+  attribute) extends the log line to include the full request
+  body and full response body. This is appropriate during
+  development, where the operator needs the payload to diagnose
+  a mapping issue. In production it persists every payload the
+  API processes — credentials in request bodies, PII in response
+  bodies, payment details in either — to CloudWatch logs that
+  much wider sets of identities can read than the operator
+  imagined when they enabled the trace. The fix is to keep
+  data trace off by default; enable it briefly for incident
+  diagnosis and disable when the diagnosis is complete.
+failure: >
+  Wholesale payload exposure at rest. Every request and response
+  body, including credentials and sensitive content, persists in
+  CloudWatch under whatever access the log group permits.

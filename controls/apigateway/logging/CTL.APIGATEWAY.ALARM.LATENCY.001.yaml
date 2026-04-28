@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ALARM.LATENCY.001
+name: No CloudWatch Alarm on API Gateway Latency
+description: >
+  API Gateway stage emits the Latency and IntegrationLatency
+  metrics to CloudWatch but no alarm watches either. Latency
+  alarms are how operators learn the backend is slowing down
+  before customers notice. Latency excursions often precede
+  outages: backend connection-pool exhaustion, downstream
+  dependency degradation, Lambda cold-start storms. The two
+  metrics are complementary — Latency is end-to-end
+  (including API Gateway overhead and authorizer time);
+  IntegrationLatency isolates the backend hop. Alarming on
+  both gives both customer-visible signal and root-cause
+  attribution.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  fedramp_moderate: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.4"
+  soc2: "CC7.2, A1.1, A1.2"
+  iso_27001_2022: "A.5.25, A.8.6, A.8.16"
+  ccm_v4: ["LOG-04", "BCR-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No CloudWatch alarm watches Latency or IntegrationLatency.
+  action: >
+    Create alarms on AWS/ApiGateway namespace for both Latency
+    and IntegrationLatency, dimensioned by ApiName/Stage. P99
+    threshold tied to the SLO is the standard pattern; a P50
+    threshold flags broader degradation. aws cloudwatch
+    put-metric-alarm with --metric-name Latency
+    --extended-statistic p99 --threshold <ms>. Document the SLO
+    in the runbook so on-call has the right action when the
+    alarm fires.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "alarms": {
+          "has_latency_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.alarms.has_latency_alarm
+      op: eq
+      value: false

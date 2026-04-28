@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ACCESSLOG.CMK.001
+name: API Gateway Access Log Group Not Encrypted With Customer-Managed KMS Key
+description: >
+  Access log destination CloudWatch log group is encrypted with
+  the AWS-managed key (the default) instead of a customer-managed
+  KMS key. The log group is technically "encrypted at rest"
+  under either key, but the AWS-managed key cannot be revoked
+  by the customer, has no customer-side audit trail of who
+  decrypted what, and cannot be scoped by IAM policy distinct
+  from the broader CloudWatch service role. Customer-managed
+  keys allow per-key access policies, separate CloudTrail
+  records of decrypt calls, key rotation cadence the customer
+  controls, and emergency revocation by disabling the key.
+  Compliance frameworks that require customer-controlled
+  encryption (HIPAA, FedRAMP High, several PCI interpretations)
+  typically don't accept the AWS-managed key.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-9, SC-12, SC-13, SC-28"
+  fedramp_moderate: "AU-9, SC-12, SC-28"
+  pci_dss_v4.0: "3.5, 10.5"
+  soc2: "CC6.1, CC6.7"
+  hipaa: "164.312(a)(2)(iv), 164.312(e)(2)(ii)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "LOG-08"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Access log destination CloudWatch log group is not encrypted
+    with a customer-managed KMS key.
+  action: >
+    Associate a customer-managed KMS key with the log group: aws
+    logs associate-kms-key --log-group-name <name> --kms-key-id
+    arn:aws:kms:REGION:ACCOUNT:key/<id>. The key policy must
+    allow the CloudWatch Logs service principal in the appropriate
+    region to encrypt and decrypt; AWS publishes the required
+    policy snippet. New log streams are encrypted under the new
+    key; existing log streams remain encrypted under whatever
+    key was active when they were written.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "access_log": {
+          "log_group_kms_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.access_log.destination_type
+      op: eq
+      value: cloudwatch
+    - field: properties.api.access_log.log_group_kms_cmk
+      op: eq
+      value: false

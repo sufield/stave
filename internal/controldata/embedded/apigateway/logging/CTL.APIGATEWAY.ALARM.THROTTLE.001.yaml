@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ALARM.THROTTLE.001
+name: No CloudWatch Alarm on API Gateway Throttled (429) Responses
+description: >
+  API Gateway stage emits the ThrottleCount or 429 status
+  metric to CloudWatch but no alarm watches it. 429 responses
+  are the customer-visible signal that traffic exceeded the
+  configured rate, burst, or quota. A spike has two distinct
+  causes that demand different responses: legitimate traffic
+  growth (bump the limit) or rate-based attack (lower the
+  limit further or shift to WAF). Without an alarm, customer
+  impact persists until the affected user reports it. A
+  baseline of zero throttled requests is the typical safe
+  state; any sustained non-zero rate is operationally
+  meaningful.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-6, IR-4, SC-5, SI-4"
+  fedramp_moderate: "AU-6, IR-4, SC-5"
+  pci_dss_v4.0: "10.4"
+  soc2: "CC7.2, A1.1"
+  iso_27001_2022: "A.5.25, A.8.6, A.8.16"
+  ccm_v4: ["LOG-04", "BCR-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No CloudWatch alarm watches throttled-request count for the
+    stage.
+  action: >
+    Create an alarm on AWS/ApiGateway namespace, ThrottleCount
+    metric (or a metric filter on access logs filtering
+    status=429 if the stage has access logs and metric filters),
+    dimensioned by ApiName/Stage. Threshold should be very low
+    — a sustained non-zero rate is meaningful — paired with
+    a longer evaluation period to avoid alerting on incidental
+    bursts. aws cloudwatch put-metric-alarm with --metric-name
+    ThrottleCount --threshold 1.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "alarms": {
+          "has_throttle_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.alarms.has_throttle_alarm
+      op: eq
+      value: false

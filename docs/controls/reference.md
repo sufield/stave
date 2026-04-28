@@ -3,23 +3,23 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2060
-**Pack hash:** `0ce90e71340949ea5354e4b87aef15284d527e888231bdedfd293efc7064f918`
+**Total controls:** 2068
+**Pack hash:** `d44cc6f0be0e3db38700b6178ab3e3856f1e66cd681363ea0950c6cd568c8ef1`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 231 |
-| high | 915 |
+| high | 916 |
 | info | 16 |
 | low | 140 |
-| medium | 758 |
+| medium | 765 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 63 |
+| audit | 70 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 96 |
@@ -27,7 +27,7 @@
 | exposure | 1073 |
 | governance | 280 |
 | hygiene | 16 |
-| identity | 367 |
+| identity | 368 |
 | network | 28 |
 | resilience | 19 |
 | secrets | 4 |
@@ -680,6 +680,111 @@ External trusts must have SID filtering enabled to prevent SID history injection
 
 ---
 
+### CTL.APIGATEWAY.ACCESSLOG.CMK.001
+
+**API Gateway Access Log Group Not Encrypted With Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-9, SC-12, SC-28; hipaa: 164.312(a)(2)(iv), 164.312(e)(2)(ii); iso_27001_2022: A.8.24; nist_800_53_r5: AU-9, SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5, 10.5; soc2: CC6.1, CC6.7;
+
+Access log destination CloudWatch log group is encrypted with the AWS-managed key (the default) instead of a customer-managed KMS key. The log group is technically "encrypted at rest" under either key, but the AWS-managed key cannot be revoked by the customer, has no customer-side audit trail of who decrypted what, and cannot be scoped by IAM policy distinct from the broader CloudWatch service role. Customer-managed keys allow per-key access policies, separate CloudTrail records of decrypt calls, key rotation cadence the customer controls, and emergency revocation by disabling the key. Compliance frameworks that require customer-controlled encryption (HIPAA, FedRAMP High, several PCI interpretations) typically don't accept the AWS-managed key.
+
+**Remediation:** Associate a customer-managed KMS key with the log group: aws logs associate-kms-key --log-group-name <name> --kms-key-id arn:aws:kms:REGION:ACCOUNT:key/<id>. The key policy must allow the CloudWatch Logs service principal in the appropriate region to encrypt and decrypt; AWS publishes the required policy snippet. New log streams are encrypted under the new key; existing log streams remain encrypted under whatever key was active when they were written.
+
+---
+
+### CTL.APIGATEWAY.ACCESSLOG.FORMAT.INCOMPLETE.001
+
+**API Gateway Access Log Format Missing Critical Fields**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-2, AU-3, AU-6; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-3, AU-6; pci_dss_v4.0: 10.2, 10.3; soc2: CC7.2, CC7.3;
+
+Access logging is enabled but the configured access log format omits at least one of the fields needed for incident response and audit: $context.requestId, $context.identity.caller or $context.identity.user, $context.identity.sourceIp, $context.responseLatency, $context.status. With these fields missing, an investigator looking at the logs cannot answer the questions an incident demands: who called this method, from where, how long did it take, what status did API Gateway return, what was the request correlation ID for cross-system tracing. The log line still exists and counts as "logging enabled" in compliance reporting, but its forensic value is near zero.
+
+**Remediation:** Update the stage's access log format to include the full investigation-ready set: $context.requestId, $context.identity.sourceIp, $context.identity.caller (or $context.identity.user / $context.authorizer.principalId depending on auth type), $context.requestTime, $context.httpMethod, $context.resourcePath, $context.status, $context.responseLatency, $context.responseLength. aws apigateway update-stage with --patch-operations op=replace,path=/accessLogSettings/format,value=<json-template>. The AWS-recommended JSON format covers the full set; verify nothing has been pruned.
+
+---
+
+### CTL.APIGATEWAY.ACCESSLOG.RETENTION.001
+
+**API Gateway Access Log Group Has No Retention Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-4, AU-11; iso_27001_2022: A.5.33, A.8.10; nist_800_53_r5: AU-4, AU-11, SI-12; pci_dss_v4.0: 10.5, 10.7; soc2: CC7.2, A1.1;
+
+Access logging is enabled with a CloudWatch log group destination, but the log group has no retention policy configured (defaults to "Never expire"). Logs accumulate indefinitely. The cost grows month over month for data that most operators only need for the audit window the compliance framework prescribes (typically 90 days to 7 years depending on industry). The data also accumulates as a regulatory liability — logs that exist must be produced under subpoena, including whatever sensitive data leaks into the access log format.
+
+**Remediation:** Set the log group retention to the period the compliance framework requires (or the operator-chosen window, whichever is longer): aws logs put-retention-policy --log-group-name /aws/apigateway/<api> --retention-in-days 365. Common values: 90 (general security), 365 (SOC 2), 2557 (HIPAA 7 years). For longer-than-CloudWatch retention windows, configure subscription filters to ship into S3 with object lifecycle policies and Glacier transitions.
+
+---
+
+### CTL.APIGATEWAY.ALARM.4XX.001
+
+**No CloudWatch Alarm on API Gateway 4xx Error Rate**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, IR-4, SI-4; iso_27001_2022: A.5.25, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.4, 10.7, 11.5; soc2: CC7.2, CC7.3;
+
+API Gateway stage emits the 4XXError metric to CloudWatch but no alarm watches it. 4xx errors are usually client mistakes — bad input, missing auth — but a sustained spike is a strong signal of attack probing: credential stuffing produces 401/403 spikes, parameter fuzzing produces 400/422 spikes, authorizer-bypass attempts produce 401 spikes. Alarming on a 4xx baseline plus deviation gives early warning of reconnaissance and active attack — well before the 5xx alarm fires from a successful exploitation.
+
+**Remediation:** Create an alarm on AWS/ApiGateway namespace, 4XXError metric, dimensioned by ApiName/Stage. Threshold should reflect baseline plus reconnaissance headroom — a 5x increase over rolling baseline is a common attack-probing signal. aws cloudwatch put-metric-alarm with --metric-name 4XXError. Pair with a separate alarm on 401/403 specifically if the access log format breaks out status — credential-stuffing detection benefits from the narrower signal.
+
+---
+
+### CTL.APIGATEWAY.ALARM.5XX.001
+
+**No CloudWatch Alarm on API Gateway 5xx Error Rate**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, IR-4, SI-4; iso_27001_2022: A.5.25, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.4, 10.7; soc2: CC7.2, CC7.3;
+
+API Gateway stage emits the 5XXError metric to CloudWatch but no alarm watches it. 5xx errors indicate backend failures, integration timeouts, Lambda concurrency exhaustion, authorizer outages — the operations conditions that need on-call attention. Without an alarm, problems surface only through user complaints or downstream dashboards that someone happens to be watching. The metric is published whether anyone is alarming on it; the cost of an alarm is near-zero, the cost of unnoticed backend failure compounds with time.
+
+**Remediation:** Create an alarm on AWS/ApiGateway namespace, 5XXError metric, dimensioned by ApiName/Stage. Threshold should reflect baseline error rate plus operational headroom — a 1% sustained rate over 5 minutes is a common starting point. aws cloudwatch put-metric-alarm with --metric-name 5XXError --namespace AWS/ApiGateway. Alarm targets should include the service- owning team's pager / Slack channel.
+
+---
+
+### CTL.APIGATEWAY.ALARM.LATENCY.001
+
+**No CloudWatch Alarm on API Gateway Latency**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, IR-4, SI-4; iso_27001_2022: A.5.25, A.8.6, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.4; soc2: CC7.2, A1.1, A1.2;
+
+API Gateway stage emits the Latency and IntegrationLatency metrics to CloudWatch but no alarm watches either. Latency alarms are how operators learn the backend is slowing down before customers notice. Latency excursions often precede outages: backend connection-pool exhaustion, downstream dependency degradation, Lambda cold-start storms. The two metrics are complementary — Latency is end-to-end (including API Gateway overhead and authorizer time); IntegrationLatency isolates the backend hop. Alarming on both gives both customer-visible signal and root-cause attribution.
+
+**Remediation:** Create alarms on AWS/ApiGateway namespace for both Latency and IntegrationLatency, dimensioned by ApiName/Stage. P99 threshold tied to the SLO is the standard pattern; a P50 threshold flags broader degradation. aws cloudwatch put-metric-alarm with --metric-name Latency --extended-statistic p99 --threshold <ms>. Document the SLO in the runbook so on-call has the right action when the alarm fires.
+
+---
+
+### CTL.APIGATEWAY.ALARM.THROTTLE.001
+
+**No CloudWatch Alarm on API Gateway Throttled (429) Responses**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, IR-4, SC-5; iso_27001_2022: A.5.25, A.8.6, A.8.16; nist_800_53_r5: AU-6, IR-4, SC-5, SI-4; pci_dss_v4.0: 10.4; soc2: CC7.2, A1.1;
+
+API Gateway stage emits the ThrottleCount or 429 status metric to CloudWatch but no alarm watches it. 429 responses are the customer-visible signal that traffic exceeded the configured rate, burst, or quota. A spike has two distinct causes that demand different responses: legitimate traffic growth (bump the limit) or rate-based attack (lower the limit further or shift to WAF). Without an alarm, customer impact persists until the affected user reports it. A baseline of zero throttled requests is the typical safe state; any sustained non-zero rate is operationally meaningful.
+
+**Remediation:** Create an alarm on AWS/ApiGateway namespace, ThrottleCount metric (or a metric filter on access logs filtering status=429 if the stage has access logs and metric filters), dimensioned by ApiName/Stage. Threshold should be very low — a sustained non-zero rate is meaningful — paired with a longer evaluation period to avoid alerting on incidental bursts. aws cloudwatch put-metric-alarm with --metric-name ThrottleCount --threshold 1.
+
+---
+
 ### CTL.APIGATEWAY.APIKEY.SOURCE.HEADER.LOGGED.001
 
 **API Key Source HEADER While Access Log Captures the Key Header**
@@ -887,6 +992,21 @@ API Gateway custom domain names must enforce a minimum TLS version of 1.2. TLS 1
 The default execute-api endpoint (https://{api-id}.execute-api.{region}.amazonaws.com) is enabled on an API that also has a custom domain configured. The default endpoint is a direct path to the API that bypasses every control applied at the custom domain layer: WAF rules attached to CloudFront or an ALB in front of the custom domain do not apply to the default endpoint, mTLS configured on the custom domain does not apply, custom TLS policy (TLS 1.2 minimum) does not apply, and CloudFront geographic restrictions do not apply. Disabling the default endpoint forces all traffic through the custom domain where security controls are applied. The control does not fire when no custom domain exists — in that case the default endpoint is the intended access path.
 
 **Remediation:** Set DisableExecuteApiEndpoint=true on the API. For REST APIs this is the disableExecuteApiEndpoint property; for HTTP APIs it is the disableExecuteApiEndpoint setting on the API. After disabling, verify the custom domain still serves traffic and that no internal callers were using the default endpoint URL.
+
+---
+
+### CTL.APIGATEWAY.EXECLOG.DATALOG.001
+
+**API Gateway Execution Logging Captures Full Request and Response Bodies**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AU-9, SC-28; hipaa: 164.312(a)(2)(iv), 164.312(c)(1); iso_27001_2022: A.5.33, A.8.10, A.8.15; nist_800_53_r5: AU-9, SC-28, SI-12; pci_dss_v4.0: 3.5, 8.3, 10.5; soc2: CC6.1, CC6.7;
+
+Execution logging is enabled with data trace on — every request and response body that flows through the stage is written to CloudWatch as part of the API Gateway execution log. Data tracing exists for debugging integration mappings and is appropriate in development; in production it persists every payload the API processes. Request bodies carrying credentials, PII, PHI, payment data, or otherwise sensitive content end up at rest in CloudWatch. The same caveats as access-log API key capture apply, but the exposure surface is much broader: any data sent in any request body is logged.
+
+**Remediation:** Disable data tracing on production stages: aws apigateway update-stage with --patch-operations op=replace,path=/*/dataTraceEnabled,value=false. Keep execution logging enabled at level INFO or ERROR for integration troubleshooting without payload capture. If payload-level diagnostics are needed during an incident, enable data trace on a per-stage basis briefly, capture, then disable — leaving it on permanently is the unsafe state.
 
 ---
 

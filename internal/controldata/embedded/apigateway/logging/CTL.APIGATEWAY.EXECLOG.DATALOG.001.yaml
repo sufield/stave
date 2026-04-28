@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.EXECLOG.DATALOG.001
+name: API Gateway Execution Logging Captures Full Request and Response Bodies
+description: >
+  Execution logging is enabled with data trace on — every
+  request and response body that flows through the stage is
+  written to CloudWatch as part of the API Gateway execution
+  log. Data tracing exists for debugging integration mappings
+  and is appropriate in development; in production it
+  persists every payload the API processes. Request bodies
+  carrying credentials, PII, PHI, payment data, or otherwise
+  sensitive content end up at rest in CloudWatch. The same
+  caveats as access-log API key capture apply, but the
+  exposure surface is much broader: any data sent in any
+  request body is logged.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AU-9, SC-28, SI-12"
+  fedramp_moderate: "AU-9, SC-28"
+  pci_dss_v4.0: "3.5, 8.3, 10.5"
+  soc2: "CC6.1, CC6.7"
+  hipaa: "164.312(a)(2)(iv), 164.312(c)(1)"
+  iso_27001_2022: "A.5.33, A.8.10, A.8.15"
+  ccm_v4: ["LOG-08", "DSP-07"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Execution logging is configured to capture full request and
+    response bodies in CloudWatch — sensitive payload data
+    persists at rest.
+  action: >
+    Disable data tracing on production stages: aws apigateway
+    update-stage with --patch-operations
+    op=replace,path=/*/dataTraceEnabled,value=false. Keep
+    execution logging enabled at level INFO or ERROR for
+    integration troubleshooting without payload capture. If
+    payload-level diagnostics are needed during an incident,
+    enable data trace on a per-stage basis briefly, capture,
+    then disable — leaving it on permanently is the unsafe
+    state.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "execution_log": {
+          "data_trace_enabled": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.execution_log.data_trace_enabled
+      op: eq
+      value: true
