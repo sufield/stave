@@ -1,0 +1,22 @@
+control: CTL.CLOUDTRAIL.STATE.MGMT.WRITEONLY.001
+defect: >
+  CloudTrail trail logs only WriteOnly management events.
+  Read operations are not recorded.
+infection: >
+  Read management events include: DescribeInstances
+  (discovering EC2 inventory), ListBuckets (discovering
+  S3 buckets), GetSecretValue (reading credentials),
+  AssumeRole (assuming cross-account roles), GetKeyPolicy
+  (reading KMS key policies). An attacker performing
+  reconnaissance uses read operations to map the
+  environment before taking action. With WriteOnly
+  logging the reconnaissance phase is completely
+  invisible. The attacker discovers every resource, reads
+  every configuration, assumes every role — with no audit
+  record. The first visible event is the first write
+  action — by which time the attacker has full knowledge
+  of the environment.
+failure: >
+  Reconnaissance invisible. Read operations not logged —
+  attacker can map the entire environment without any
+  audit record.

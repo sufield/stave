@@ -8,6 +8,11 @@
 //	go run ./internal/tools/regengoldens -dry-run      # preview without writing
 //	go run ./internal/tools/regengoldens -filter s3    # regex filter on fixture name
 //
+// Workers default to runtime.NumCPU(). Override via REGEN_WORKERS=N for
+// CI tuning. Each fixture invocation is independent (own subprocess,
+// own output directory) so the only synchronization is collecting the
+// per-fixture reports — no fixture writes outside its own fixDir.
+//
 // Invoked from the `regenerate-goldens` Makefile target. The tool wraps
 // the existing `./stave apply` / `check` / `enforce` invocations — it
 // does not change the regeneration mechanism, it just batches and
@@ -16,15 +21,22 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
+	"strconv"
 	"strings"
+	"sync"
+
+	"golang.org/x/sync/errgroup"
 )
 
 const stavePath = "./stave"
@@ -77,7 +89,11 @@ func main() {
 		os.Exit(2)
 	}
 
-	var reports []fixtureReport
+	type workItem struct {
+		name   string
+		fixDir string
+	}
+	var work []workItem
 	for _, e := range entries {
 		if !e.IsDir() {
 			continue
@@ -86,12 +102,52 @@ func main() {
 		if filterRE != nil && !filterRE.MatchString(name) {
 			continue
 		}
-		fixDir := filepath.Join(*rootFlag, name)
-		r := processFixture(name, fixDir, *dryRun)
-		reports = append(reports, r)
+		work = append(work, workItem{name: name, fixDir: filepath.Join(*rootFlag, name)})
 	}
 
+	workers := resolveWorkers()
+	g, ctx := errgroup.WithContext(context.Background())
+	g.SetLimit(workers)
+
+	var (
+		mu      sync.Mutex
+		reports = make([]fixtureReport, 0, len(work))
+	)
+	for _, w := range work {
+		g.Go(func() error {
+			if ctx.Err() != nil {
+				return nil
+			}
+			r := processFixture(w.name, w.fixDir, *dryRun)
+			mu.Lock()
+			reports = append(reports, r)
+			mu.Unlock()
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil && !errors.Is(err, context.Canceled) {
+		fmt.Fprintf(os.Stderr, "regen: worker pool: %v\n", err)
+		os.Exit(2)
+	}
+
+	sort.Slice(reports, func(i, j int) bool { return reports[i].Fixture < reports[j].Fixture })
 	printReport(reports, *dryRun)
+}
+
+// resolveWorkers picks the regen concurrency from REGEN_WORKERS (env)
+// or falls back to runtime.NumCPU(). Out-of-range values are clamped
+// so a misconfigured env var doesn't disable parallelism silently.
+func resolveWorkers() int {
+	if v := os.Getenv("REGEN_WORKERS"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+		fmt.Fprintf(os.Stderr, "regen: ignoring invalid REGEN_WORKERS=%q\n", v)
+	}
+	if n := runtime.NumCPU(); n > 0 {
+		return n
+	}
+	return 1
 }
 
 // processFixture runs the correct stave invocation for the fixture, diffs

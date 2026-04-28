@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ALARM.RESOURCEDELETION.001
+name: No CloudWatch Alarm for Bulk Resource Deletion Events
+description: >
+  No CloudWatch metric filter and alarm monitors CloudTrail
+  for bulk resource deletion — multiple DeleteDBInstance,
+  TerminateInstances, DeleteFunction, DeleteTopic,
+  DeleteQueue, PurgeQueue, or DeleteBucket events within a
+  short window. Individual deletions are normal operations.
+  Multiple deletions across services within minutes
+  indicates ransomware, insider threat, compromised
+  automation, or runaway cleanup script. A composite
+  metric filter that counts deletion events across services
+  with a threshold (e.g., >=5 in 10 minutes) detects mass
+  destruction events.
+domain: detection
+severity: high
+compliance:
+  soc2: "CC7.2, CC7.3, A1.2"
+  nist_800_53_r5: "AU-6, IR-4, SI-4, CP-10"
+  pci_dss_v4.0: "10.6, 12.10"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    No composite alarm for cross-service bulk deletion.
+    Mass-destruction events go undetected.
+  action: >
+    Create a CloudTrail metric filter that matches the
+    union of destructive event names —
+    eventName IN (DeleteDBInstance, TerminateInstances,
+    DeleteFunction, DeleteTopic, DeleteQueue, PurgeQueue,
+    DeleteBucket, ScheduleKeyDeletion) — emitting a
+    counter. Wire a CloudWatch alarm with threshold >= 5
+    over a 10-minute period. Tune thresholds to baseline
+    operational deletion volume; production environments
+    rarely see 5+ deletions across services within
+    minutes.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "alarm_bulk_deletion": true,
+          "metric_filter_bulk_deletion": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.alarm_bulk_deletion
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors bulk resource deletion
+  events across services.
+infection: >
+  Individual resource deletion is normal — instances are
+  terminated, queues are decommissioned, functions are
+  removed. But multiple resource deletions across
+  different services within a short window (e.g., 5+
+  deletions in 10 minutes) is anomalous. Common
+  scenarios: ransomware (attacker deletes backups,
+  snapshots, and resources to force payment), insider
+  threat (disgruntled employee destroying infrastructure),
+  compromised credentials (attacker with admin access
+  cleaning up evidence), or runaway automation
+  (misconfigured cleanup script deleting production). A
+  composite metric filter that counts deletion events
+  across services and alarms when the count exceeds a
+  threshold in a time window detects mass destruction
+  events. Per-service alarms on individual deletes
+  (CTL.SQS.ALARM.DELETEQUEUE, etc.) catch single-service
+  destruction; this control catches the cross-service
+  pattern that those individual alarms miss.
+failure: >
+  Undetected mass destruction. Multiple resources deleted
+  across services without notification — ransomware,
+  insider, or automation failure.
+tests:
+  - name: trail without bulk-deletion alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_bulk_deletion: false
+  - name: trail with bulk-deletion alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_bulk_deletion: true
+            metric_filter_bulk_deletion: true

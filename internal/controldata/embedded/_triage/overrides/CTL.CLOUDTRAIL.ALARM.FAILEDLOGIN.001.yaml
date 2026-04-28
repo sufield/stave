@@ -1,0 +1,21 @@
+control: CTL.CLOUDTRAIL.ALARM.FAILEDLOGIN.001
+defect: >
+  No CloudWatch alarm monitors failed console login
+  attempts.
+infection: >
+  Failed console logins appear in CloudTrail as
+  ConsoleLogin events with an errorMessage field. Common
+  error messages: "Failed authentication" (wrong
+  password), "No username found" (user doesn't exist).
+  Without a metric filter and alarm: an attacker trying
+  100 passwords against the admin user generates 100
+  failed login events — nobody is notified. Password
+  spraying across 50 IAM users generates 50 failed events
+  — nobody is notified. The attacker continues until they
+  succeed (potentially triggering downstream alarms only
+  after success) or give up. The failed-login alarm
+  detects the attack DURING the attack — before success.
+failure: >
+  Undetected credential attacks. Failed login attempts —
+  brute force, credential stuffing, password spraying —
+  occur without notification.

@@ -1,0 +1,21 @@
+control: CTL.CLOUDTRAIL.ALARM.GUARDDUTY.001
+defect: >
+  No CloudWatch alarm monitors GuardDuty disablement
+  events.
+infection: >
+  GuardDuty is the AWS-native threat detection service.
+  Its findings cover credential exfiltration, anomalous
+  API usage, cryptomining, and known-bad-IP traffic. An
+  attacker with admin access disables GuardDuty
+  (DeleteDetector or UpdateDetector) before continuing
+  the attack so subsequent malicious activity is not
+  flagged. The sequence is well-known: disable
+  GuardDuty → disable CloudTrail (or narrow it) →
+  operate freely. Without an alarm, the GuardDuty
+  disablement is invisible. Findings stop being
+  reported, but the silence looks like a quiet account,
+  not a disabled detector.
+failure: >
+  Undetected threat-detection disablement. GuardDuty
+  can be turned off without notification — every
+  subsequent threat goes unflagged.

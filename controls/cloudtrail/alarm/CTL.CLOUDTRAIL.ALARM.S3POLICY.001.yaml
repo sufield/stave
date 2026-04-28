@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ALARM.S3POLICY.001
+name: No CloudWatch Alarm for S3 Bucket Policy Changes
+description: >
+  No CloudWatch metric filter and alarm monitors CloudTrail
+  for PutBucketPolicy, DeleteBucketPolicy, or PutBucketAcl
+  events. A single PutBucketPolicy call can make a bucket
+  public or grant cross-account access; PutBucketAcl can
+  add public-read or public-read-write. Without an alarm,
+  bucket access-control changes are invisible until the
+  next periodic security scan. This control fills the gap
+  between CTL.S3.PUBLIC.001 (detects the resulting state)
+  and the API event that produced it.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "4.7"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AC-3, AU-6, SI-4"
+  pci_dss_v4.0: "10.2, 10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    No alarm wired to S3 access-control change events.
+    PutBucketPolicy / DeleteBucketPolicy / PutBucketAcl
+    can flip a bucket to public without notification.
+  action: >
+    Create a CloudTrail metric filter matching
+    eventName IN (PutBucketPolicy, DeleteBucketPolicy,
+    PutBucketAcl) and a CloudWatch alarm with threshold 1
+    over a 5-minute period. Route to security on-call.
+    Pair with CTL.S3.PUBLIC.001 — the alarm catches the
+    event, the state control catches the resulting
+    public posture if the alarm response is delayed.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "alarm_s3_policy": true,
+          "metric_filter_s3_policy": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.alarm_s3_policy
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors S3 bucket policy changes
+  (PutBucketPolicy, DeleteBucketPolicy, PutBucketAcl).
+infection: >
+  S3 bucket policies are the primary access control for
+  buckets. A single PutBucketPolicy call can: add
+  Principal:* (make the bucket public), grant cross-
+  account read access, remove all Deny statements, or
+  replace the entire policy. DeleteBucketPolicy removes
+  all resource-level restrictions — access falls back to
+  IAM only (which may be broader). PutBucketAcl can grant
+  public-read or public-read-write. Without an alarm,
+  these changes are invisible until: the next automated
+  scan runs (hours/days), someone checks the bucket
+  manually, or the public bucket is discovered by an
+  external party.
+failure: >
+  Undetected bucket access-control change. S3 bucket
+  policies modified without notification — buckets can be
+  made public silently.
+tests:
+  - name: trail without S3 policy alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_s3_policy: false
+  - name: trail with S3 policy alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_s3_policy: true
+            metric_filter_s3_policy: true

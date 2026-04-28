@@ -1,0 +1,138 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.DATAEVENTS.S3.001
+name: CloudTrail Data Events Not Enabled for Sensitive S3 Buckets
+description: >
+  CloudTrail is not configured to log S3 data events
+  (GetObject, PutObject, DeleteObject) for buckets tagged
+  as sensitive, in compliance scope, or containing PII /
+  PHI. Without S3 data events on these buckets there is no
+  record of who accessed which objects — an attacker can
+  download an entire sensitive bucket without any audit
+  record. Enabling data events for ALL buckets is
+  expensive; this control checks only the buckets that
+  warrant the log volume.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "3.11"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-2, AU-3, AU-12"
+  pci_dss_v4.0: "10.1, 10.2, 10.3"
+  fedramp_moderate: "AU-2"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-02", "LOG-13"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    CloudTrail does not log S3 data events for sensitive
+    buckets. Object-level access is unrecorded.
+  action: >
+    Add an S3 data-event selector to the trail with
+    explicit ARN scope for the sensitive buckets:
+    aws cloudtrail put-event-selectors --trail-name
+    <trail> --advanced-event-selectors
+    '[{"Name":"S3 sensitive bucket data events",
+       "FieldSelectors":[
+         {"Field":"eventCategory","Equals":["Data"]},
+         {"Field":"resources.type","Equals":["AWS::S3::Object"]},
+         {"Field":"resources.ARN","StartsWith":["arn:aws:s3:::sensitive-bucket-1/","arn:aws:s3:::sensitive-bucket-2/"]}]}]'.
+    Identify sensitive buckets via tags
+    (data_classification: pii / phi / restricted) or a
+    catalog maintained alongside the trail config.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "data_events_s3": true,
+          "has_s3_data_event_gap": false,
+          "sensitive_buckets_without_data_events": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.has_s3_data_event_gap
+      op: eq
+      value: true
+defect: >
+  CloudTrail data events are not enabled for one or more
+  sensitive S3 buckets.
+infection: >
+  S3 management events (CreateBucket, PutBucketPolicy)
+  are logged by default. Data events (GetObject,
+  PutObject, DeleteObject) are NOT logged by default —
+  they must be explicitly enabled per trail. Without data
+  events on sensitive buckets: who downloaded the
+  customer database export is unknown, when the HIPAA
+  dataset was accessed is unrecorded, whether an attacker
+  exfiltrated data is unverifiable. For incident
+  response, data events answer: what was accessed, by
+  whom, when, and from where. Without them, the incident
+  investigation is blind to data access. Enabling data
+  events for ALL buckets is expensive — the control
+  targets the subset of buckets where the log volume
+  cost is justified by the sensitivity of the contents.
+failure: >
+  No data-access audit trail for sensitive S3 buckets.
+  Object-level operations are unrecorded; exfiltration
+  and unauthorized access cannot be reconstructed.
+tests:
+  - name: trail with sensitive buckets uncovered fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            data_events_s3: false
+            has_s3_data_event_gap: true
+            sensitive_buckets_without_data_events:
+              - "arn:aws:s3:::pii-customer-records"
+              - "arn:aws:s3:::phi-clinical-data"
+  - name: trail with sensitive buckets fully covered passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            data_events_s3: true
+            has_s3_data_event_gap: false
+            sensitive_buckets_without_data_events: []
+            data_events_s3_buckets:
+              - "arn:aws:s3:::pii-customer-records"
+              - "arn:aws:s3:::phi-clinical-data"
+  - name: trail with all buckets covered (broad but compliant) passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            data_events_s3: true
+            has_s3_data_event_gap: false
+            sensitive_buckets_without_data_events: []

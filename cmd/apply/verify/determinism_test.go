@@ -11,6 +11,7 @@ import (
 )
 
 func TestVerifyOutputByteIdentical(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping: builds CLI binary and runs determinism check")
 	}

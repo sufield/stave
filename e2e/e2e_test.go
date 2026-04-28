@@ -28,6 +28,7 @@ const e2eCaseTimeout = 90 * time.Second
 //	go test ./e2e/ -run E2E/e2e-h1     # HackerOne cases only
 //	go test -short ./e2e/              # skipped (e2e is CI-only)
 func TestE2E(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping e2e tests in short mode (CI-only — see Makefile test-ci target)")
 	}
@@ -45,6 +46,7 @@ func TestE2E(t *testing.T) {
 		}
 		name := entry.Name()
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			runE2ECase(t, bin, filepath.Join(root, name))
 		})
 	}

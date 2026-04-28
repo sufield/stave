@@ -1,0 +1,125 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.GHOST.SNSTOPIC.001
+name: CloudTrail Trail SNS Notification Topic Does Not Exist
+description: >
+  CloudTrail trail is configured to publish notifications
+  to an SNS topic when new log files arrive in S3. The SNS
+  topic has been deleted. Log file delivery notifications
+  are silently lost. Downstream consumers — Lambda
+  functions, SQS queues, SIEM ingestion pipelines — never
+  receive the notification, so they never process the
+  newly delivered logs.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, CM-2, CM-3, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudTrail trail references a deleted SNS topic for
+    log-file notifications. Downstream log-processing
+    pipelines never trigger.
+  action: >
+    Either (a) recreate the SNS topic with the same name
+    and reattach (aws cloudtrail update-trail --name
+    <trail> --sns-topic-name <topic>) plus subscribers,
+    or (b) repoint the trail at an existing notification
+    topic, or (c) clear the SNS configuration if the
+    notifications are no longer needed
+    (aws cloudtrail update-trail --name <trail>
+    --no-sns-topic-name) and switch downstream consumers
+    to S3 EventBridge notifications instead.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "sns_topic_arn": "arn:aws:sns:us-east-1:111122223333:cloudtrail-deliveries",
+          "sns_topic_exists": true,
+          "has_ghost_sns_topic": false,
+          "sns_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.sns_configured
+      op: eq
+      value: true
+    - field: properties.audit.cloudtrail.has_ghost_sns_topic
+      op: eq
+      value: true
+defect: >
+  CloudTrail trail references a deleted SNS notification
+  topic for log-file deliveries.
+infection: >
+  CloudTrail can publish to SNS each time it delivers a
+  log file to S3. The SNS message is the trigger for
+  downstream processing — Lambda functions ingest the
+  log file, SQS queues fan out to multiple consumers,
+  SIEM pipelines pull the new content. When the SNS
+  topic is deleted, the notifications fail. Log files
+  still land in S3. Downstream consumers don't know
+  they're there. The lag between delivery and processing
+  goes from seconds to whatever-poll-interval the
+  consumers fall back to — often hours, often never.
+failure: >
+  Log-delivery notifications silently lost. Downstream
+  log-processing pipelines never trigger; ingest pauses
+  until consumers re-list S3 (if they do).
+tests:
+  - name: trail with deleted SNS topic fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            sns_topic_arn: "arn:aws:sns:us-east-1:111122223333:cloudtrail-deliveries-deleted"
+            sns_topic_exists: false
+            has_ghost_sns_topic: true
+            sns_configured: true
+  - name: trail with active SNS topic passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            sns_topic_arn: "arn:aws:sns:us-east-1:111122223333:cloudtrail-deliveries"
+            sns_topic_exists: true
+            has_ghost_sns_topic: false
+            sns_configured: true
+  - name: trail with no SNS configured does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            sns_configured: false
+            has_ghost_sns_topic: false

@@ -1,0 +1,21 @@
+control: CTL.CLOUDTRAIL.ALARM.S3POLICY.001
+defect: >
+  No CloudWatch alarm monitors S3 bucket policy changes
+  (PutBucketPolicy, DeleteBucketPolicy, PutBucketAcl).
+infection: >
+  S3 bucket policies are the primary access control for
+  buckets. A single PutBucketPolicy call can: add
+  Principal:* (make the bucket public), grant
+  cross-account read access, remove all Deny statements,
+  or replace the entire policy. DeleteBucketPolicy
+  removes all resource-level restrictions — access falls
+  back to IAM only (which may be broader). PutBucketAcl
+  can grant public-read or public-read-write. Without an
+  alarm, these changes are invisible until: the next
+  automated scan runs (hours/days), someone checks the
+  bucket manually, or the public bucket is discovered by
+  an external party.
+failure: >
+  Undetected bucket access-control change. S3 bucket
+  policies modified without notification — buckets can
+  be made public silently.

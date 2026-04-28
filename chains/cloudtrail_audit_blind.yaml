@@ -1,0 +1,20 @@
+id: cloudtrail_audit_blind
+description: >
+  Any audit blindness — trail S3 bucket deleted, CW Logs
+  group deleted, or trail stopped. Each independently
+  means the audit trail is non-functional. No API calls
+  are recorded (S3 ghost or stopped) or no real-time
+  detection works (CW Logs ghost). The detection
+  infrastructure for every service is blind. Threshold
+  of 1 fires whenever any single audit-layer failure is
+  present.
+controls:
+  - CTL.CLOUDTRAIL.GHOST.S3BUCKET.001
+  - CTL.CLOUDTRAIL.GHOST.CWLOGS.001
+  - CTL.CLOUDTRAIL.STOP.DETECT.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

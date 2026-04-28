@@ -1,0 +1,20 @@
+control: CTL.CLOUDTRAIL.ALARM.DELETETRAIL.001
+defect: >
+  No CloudWatch alarm monitors DeleteTrail API calls.
+infection: >
+  DeleteTrail removes the trail configuration permanently.
+  Unlike StopLogging, which leaves the trail in place
+  with IsLogging set to false, DeleteTrail erases the
+  trail entirely — S3 bucket reference, CW Logs
+  configuration, event selectors, all gone. To resume
+  logging the team must recreate the trail and rebuild
+  every metric filter / alarm pinned to that trail. An
+  attacker who has admin access and wants more than a
+  brief logging gap can call DeleteTrail to remove the
+  audit infrastructure outright. Without an alarm, the
+  deletion is invisible until someone tries to inspect
+  the trail.
+failure: >
+  Undetected audit trail removal. The trail can be
+  deleted without notification — recreating it doesn't
+  recover the gap during deletion.

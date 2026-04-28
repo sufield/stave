@@ -1,0 +1,129 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.S3.OBJECTLOCK.001
+name: CloudTrail Trail S3 Bucket Does Not Have Object Lock Enabled
+description: >
+  CloudTrail trail S3 bucket does not have S3 Object Lock
+  enabled. Without Object Lock, log files can be deleted
+  or overwritten after delivery. An attacker who gains
+  access to the trail S3 bucket can erase specific log
+  files (removing evidence) or overwrite log files with
+  modified versions (altering the audit record). Object
+  Lock in Compliance mode provides WORM (Write Once Read
+  Many) protection — log files cannot be deleted or
+  overwritten for the retention period, even by the root
+  account.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC7.1, A1.2"
+  nist_800_53_r5: "AU-9, AU-11, SC-28"
+  pci_dss_v4.0: "10.5, 10.5.2"
+  fedramp_moderate: "AU-9"
+  hipaa: "164.312(c)(1)"
+  iso_27001_2022: "A.8.15, A.8.10"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    CloudTrail trail S3 bucket has no Object Lock. Log
+    files can be deleted or overwritten after delivery.
+  action: >
+    Recreate the audit bucket with Object Lock enabled
+    (S3 requires Object Lock to be set at bucket creation
+    time) and migrate log files to it; update the trail's
+    S3BucketName. Configure a default Object Lock
+    retention rule in Compliance mode for the audit
+    horizon (e.g., 365 days for typical compliance, 7
+    years for highly regulated workloads). Compliance
+    mode is preferred over Governance — Governance
+    allows privileged users to override the lock.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "s3_object_lock_enabled": true,
+          "s3_object_lock_mode": "COMPLIANCE"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.s3_object_lock_enabled
+      op: eq
+      value: false
+defect: >
+  CloudTrail trail S3 bucket does not have Object Lock
+  enabled.
+infection: >
+  Without Object Lock, CloudTrail log files in S3 can be:
+  deleted (s3:DeleteObject removes the log file — the
+  audit record is gone), overwritten (s3:PutObject
+  replaces the log file with a modified version — the
+  audit record is falsified), or purged (lifecycle
+  policy or manual deletion removes log files before the
+  intended retention period). An attacker who
+  compromises the trail S3 bucket can erase their tracks
+  — deleting log files that contain evidence of their
+  activity. Object Lock in Compliance mode prevents
+  deletion and overwriting for the lock retention period
+  — even the root account cannot delete locked objects.
+  Governance mode allows privileged users to override —
+  Compliance mode is recommended for audit logs.
+failure: >
+  Audit log tampering possible. Log files can be deleted
+  or overwritten — the audit record can be altered or
+  destroyed.
+tests:
+  - name: trail bucket without Object Lock fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_bucket_name: "org-cloudtrail-logs"
+            s3_object_lock_enabled: false
+  - name: trail bucket with Compliance-mode Object Lock passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_bucket_name: "org-cloudtrail-logs"
+            s3_object_lock_enabled: true
+            s3_object_lock_mode: "COMPLIANCE"
+  - name: trail bucket with Governance-mode Object Lock passes (weaker but acceptable)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_bucket_name: "org-cloudtrail-logs"
+            s3_object_lock_enabled: true
+            s3_object_lock_mode: "GOVERNANCE"

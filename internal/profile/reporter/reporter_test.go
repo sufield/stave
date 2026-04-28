@@ -86,6 +86,7 @@ func fixtureReport() profile.Report {
 }
 
 func TestTextReporter_Golden(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 	err := TextReporter{}.Write(&buf, fixtureReport(), fixtureMeta())
 	if err != nil {
@@ -98,6 +99,7 @@ func TestTextReporter_Golden(t *testing.T) {
 }
 
 func TestJSONReporter(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 	err := JSONReporter{}.Write(&buf, fixtureReport(), fixtureMeta())
 	if err != nil {
@@ -134,6 +136,7 @@ func TestJSONReporter(t *testing.T) {
 }
 
 func TestTextReporter_Disclaimer(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 	_ = TextReporter{}.Write(&buf, fixtureReport(), fixtureMeta())
 	if !strings.Contains(buf.String(), "BAA with AWS") {

@@ -78,6 +78,7 @@ func stripStaveVersion(v any) {
 
 // TestApplyProfileE2E runs e2e golden file tests for apply --profile aws-s3.
 func TestApplyProfileE2E(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping: builds CLI binary and runs e2e golden-file checks")
 	}
@@ -106,6 +107,7 @@ func TestApplyProfileE2E(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			baseDir := filepath.Join(projectRoot, "testdata", "e2e", tc.dir)
 			inputFile := filepath.Join(baseDir, "observations.json")
 			goldenFile := filepath.Join(baseDir, "golden.json")

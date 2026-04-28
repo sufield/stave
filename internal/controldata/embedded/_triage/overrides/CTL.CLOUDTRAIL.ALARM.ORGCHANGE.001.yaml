@@ -1,0 +1,19 @@
+control: CTL.CLOUDTRAIL.ALARM.ORGCHANGE.001
+defect: >
+  No CloudWatch alarm monitors AWS Organizations changes.
+infection: >
+  Organizations membership changes the organizational
+  trust boundary. LeaveOrganization removes an account
+  from the organization — SCPs no longer apply, but
+  resource policies referencing the account ID continue
+  to grant access. RemoveAccountFromOrganization is the
+  master-account-initiated equivalent. CreateAccount and
+  CloseAccount add or remove accounts. An attacker who
+  compromises a master-account principal can create a
+  new account under attacker control, invite it into the
+  organization, and use cross-account trust to access
+  resources elsewhere — without detection.
+failure: >
+  Undetected boundary change. Organization membership
+  modified without notification — cross-account trust
+  surface changes silently.

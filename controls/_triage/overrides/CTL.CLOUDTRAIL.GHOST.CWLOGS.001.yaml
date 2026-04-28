@@ -1,0 +1,22 @@
+control: CTL.CLOUDTRAIL.GHOST.CWLOGS.001
+defect: >
+  CloudTrail trail delivers to a CloudWatch Logs group
+  that has been deleted.
+infection: >
+  CloudWatch Logs delivery is the real-time path. Events
+  arrive in the log group within seconds. Metric filters
+  parse the events as they arrive. Alarms evaluate metric
+  filter data continuously. When the log group is
+  deleted: metric filters have no data source, alarms
+  based on those filters never fire, and every ALARM.*
+  control in the catalog — root login, unauthorized API
+  calls, VPC changes, security group changes, IAM policy
+  changes, CloudTrail changes, Config changes — is
+  non-functional. Events may still be delivered to S3
+  (if the bucket exists), but S3 delivery is batch (every
+  5 minutes) and doesn't feed metric filters. The
+  real-time detection layer depends on CW Logs delivery.
+failure: >
+  Real-time detection blind. CloudWatch metric filters
+  and alarms have no data source. Every real-time alarm
+  control is non-functional.

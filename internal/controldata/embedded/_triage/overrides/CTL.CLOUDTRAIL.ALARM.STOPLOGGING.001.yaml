@@ -1,0 +1,22 @@
+control: CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001
+defect: >
+  No CloudWatch alarm monitors StopLogging API calls.
+infection: >
+  StopLogging is the single most dangerous CloudTrail API
+  call. It turns off the audit trail. Every API call
+  after StopLogging is unrecorded — the attacker
+  operates in the dark. StopLogging is the attacker's
+  first action after gaining admin access because it
+  blinds the defender. Without an alarm: the trail stops
+  at 2am. Nobody is notified. The attacker creates IAM
+  users, modifies security groups, accesses data,
+  exfiltrates — all between 2am and 8am. At 8am, someone
+  notices the trail is stopped (if they check). Six
+  hours of activity are permanently unrecorded. A
+  StopLogging alarm provides seconds-to-minutes
+  notification — the team can re-enable logging and
+  investigate immediately.
+failure: >
+  Undetected audit trail disablement. The trail can be
+  stopped without notification — every subsequent API
+  call is unrecorded.

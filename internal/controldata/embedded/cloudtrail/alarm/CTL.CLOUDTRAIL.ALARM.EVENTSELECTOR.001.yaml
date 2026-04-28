@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ALARM.EVENTSELECTOR.001
+name: No CloudWatch Alarm for CloudTrail PutEventSelectors
+description: >
+  No CloudWatch alarm monitors CloudTrail for
+  PutEventSelectors API calls. PutEventSelectors changes
+  which events the trail records. An attacker can narrow
+  the scope (switch to WriteOnly, drop data events for
+  specific services) without stopping or deleting the
+  trail. The trail keeps running. IsLogging stays true.
+  The console shows an active trail. But the events that
+  cover the attacker's actions are no longer captured.
+  This is the stealthy form of trail tampering.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "4.5"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-9, AU-12, SI-4"
+  pci_dss_v4.0: "10.5, 10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    No alarm wired to CloudTrail PutEventSelectors events.
+    Trail scope can be narrowed without notification.
+  action: >
+    Create a CloudTrail metric filter on
+    eventName = PutEventSelectors and a CloudWatch alarm
+    with threshold 1 and a 60-second period. Route to
+    security on-call. Pair with a daily diff against the
+    last-known-good selector configuration so any
+    modification triggers immediate review.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "alarm_put_event_selectors": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.alarm_put_event_selectors
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors PutEventSelectors API
+  calls.
+infection: >
+  PutEventSelectors is the stealthy alternative to
+  StopLogging. Instead of stopping the trail (which is
+  obvious — IsLogging changes to false), the attacker
+  narrows the event selectors: switches from All to
+  WriteOnly (read operations become invisible), removes
+  data events for specific services (GetSecretValue no
+  longer logged), or excludes specific event sources
+  (KMS events excluded). The trail continues running.
+  IsLogging is true. The console shows an active trail.
+  But the trail is logging a narrower set of events than
+  configured — the attacker's activity falls outside the
+  narrowed scope.
+failure: >
+  Stealthy event scope narrowing. The trail appears
+  active but records fewer events — attacker activity
+  excluded from the audit trail.
+tests:
+  - name: trail without PutEventSelectors alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_put_event_selectors: false
+  - name: trail with PutEventSelectors alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_put_event_selectors: true

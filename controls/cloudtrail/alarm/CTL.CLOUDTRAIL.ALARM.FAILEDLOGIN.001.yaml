@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ALARM.FAILEDLOGIN.001
+name: No CloudWatch Alarm for Failed Console Logins
+description: >
+  No CloudWatch metric filter and alarm monitors CloudTrail
+  for failed ConsoleLogin events (events with errorMessage
+  set). Failed logins indicate brute force, credential
+  stuffing, or password spraying. Detection during the
+  attack — before the attacker succeeds — enables MFA
+  enforcement, lockout, or credential rotation in time.
+  Companion to monitoring of successful logins (catches the
+  attempts in flight, not the breach after).
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "4.6"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AC-7, AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "8.3, 10.2, 10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["IAM-01", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    No alarm wired to CloudTrail failed-ConsoleLogin events.
+    Brute-force and credential-stuffing attacks proceed
+    undetected.
+  action: >
+    Create a CloudTrail metric filter on
+    eventName = ConsoleLogin AND errorMessage IS NOT NULL,
+    then a CloudWatch alarm with a threshold tuned to
+    baseline noise (e.g., 5 failures per 5 minutes; tune
+    by environment) and route to security on-call. Pair
+    with IAM password policy lockout so repeated failures
+    trigger account lockout in addition to alerting.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "alarm_failed_login": true,
+          "metric_filter_failed_login": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.alarm_failed_login
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors failed console login
+  attempts.
+infection: >
+  Failed console logins appear in CloudTrail as
+  ConsoleLogin events with an errorMessage field. Common
+  error messages: "Failed authentication" (wrong
+  password), "No username found" (user doesn't exist).
+  Without a metric filter and alarm: an attacker trying
+  100 passwords against the admin user generates 100
+  failed login events — nobody is notified. Password
+  spraying across 50 IAM users generates 50 failed events
+  — nobody is notified. The attacker continues until they
+  succeed (potentially triggering downstream alarms only
+  after success) or give up. The failed-login alarm
+  detects the attack DURING the attack — before success.
+failure: >
+  Undetected credential attacks. Failed login attempts —
+  brute force, credential stuffing, password spraying —
+  occur without notification.
+tests:
+  - name: trail without failed-login alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_failed_login: false
+            metric_filter_failed_login: false
+  - name: trail with failed-login alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_failed_login: true
+            metric_filter_failed_login: true

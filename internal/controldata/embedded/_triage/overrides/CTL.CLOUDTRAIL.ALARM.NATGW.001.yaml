@@ -1,0 +1,20 @@
+control: CTL.CLOUDTRAIL.ALARM.NATGW.001
+defect: >
+  No CloudWatch alarm monitors NAT gateway create/delete
+  events.
+infection: >
+  NAT gateways grant outbound internet access from
+  private subnets. CreateNatGateway in an unexpected VPC
+  indicates egress topology has changed — possibly: an
+  attacker setting up exfiltration (provision NAT, route
+  private-subnet traffic out, transfer data), an
+  operator granting unauthorized internet access for
+  debugging, or automation creating ad-hoc connectivity.
+  DeleteNatGateway in a production VPC breaks legitimate
+  egress for every resource in the affected subnets — a
+  fast notification enables recovery before downstream
+  services time out.
+failure: >
+  Undetected egress topology change. NAT gateway
+  provisioning or removal is invisible — exfiltration
+  setup or production egress loss goes unnoticed.

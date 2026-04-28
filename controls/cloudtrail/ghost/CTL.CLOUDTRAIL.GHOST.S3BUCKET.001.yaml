@@ -1,0 +1,144 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.GHOST.S3BUCKET.001
+name: CloudTrail Trail S3 Bucket Does Not Exist
+description: >
+  CloudTrail trail is configured to deliver log files to an
+  S3 bucket that has been deleted. The trail is running —
+  IsLogging is true, the configuration is intact — but
+  every log-file delivery fails. Events are processed and
+  dropped. The trail appears configured; the audit log is
+  empty. This is the meta-infrastructure ghost: the audit
+  layer itself has a broken reference, so every API call
+  across every service goes unrecorded and every metric
+  filter / alarm based on CloudTrail events is starved.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+compliance:
+  cis_aws_v3.0: "3.1, 3.4"
+  soc2: "CC7.1, CC7.2, CC8.1"
+  nist_800_53_r5: "AU-2, AU-3, AU-6, CM-2, CM-3"
+  pci_dss_v4.0: "10.1, 10.5"
+  fedramp_moderate: "AU-2"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-02", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    CloudTrail trail references a deleted S3 bucket. Log
+    file delivery silently fails for every event.
+  action: >
+    Either (a) recreate the S3 bucket with a name matching
+    the trail's S3BucketName and restore the original
+    bucket policy granting cloudtrail.amazonaws.com
+    s3:PutObject and s3:GetBucketAcl, or (b) repoint the
+    trail at an existing audit bucket
+    (aws cloudtrail update-trail --name <trail>
+    --s3-bucket-name <existing-audit-bucket>). After
+    repointing, verify delivery by triggering an API call
+    and confirming a new log file appears in the bucket
+    within five minutes. Audit S3 CloudTrail events for
+    the period the bucket was missing — those events are
+    permanently lost.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "s3_bucket_name": "org-cloudtrail-logs",
+          "s3_bucket_exists": true,
+          "has_ghost_s3_bucket": false,
+          "is_logging": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.has_ghost_s3_bucket
+      op: eq
+      value: true
+defect: >
+  CloudTrail trail delivers to an S3 bucket that has been
+  deleted. Log file delivery fails for every event.
+infection: >
+  CloudTrail processes API events and writes log files to
+  the configured S3 bucket. When the bucket is deleted,
+  every log file delivery fails. CloudTrail continues
+  processing events — the trail appears active
+  (IsLogging = true). But no log files are stored. The S3
+  bucket name is visible in the trail configuration. An
+  auditor sees "Trail: enabled, S3 bucket:
+  my-trail-bucket." The bucket doesn't exist. No logs are
+  written. Every API call across every service — EC2, RDS,
+  Lambda, IAM, KMS, S3, SQS, SNS, Secrets Manager, Route
+  53, CloudFront, DynamoDB, API Gateway, ECS, VPC — is
+  unrecorded. Every CloudWatch metric filter that parses
+  CloudTrail events has no data. Every alarm that triggers
+  on metric-filter thresholds never fires. The entire
+  detection pipeline is severed at the source.
+failure: >
+  Complete audit blindness. The audit trail itself is
+  broken. No API calls are recorded. Every detection
+  control across every service is blind.
+tests:
+  - name: trail with deleted S3 bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            trail_arn: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+            s3_bucket_name: "org-cloudtrail-logs-deleted"
+            s3_bucket_exists: false
+            has_ghost_s3_bucket: true
+            is_logging: true
+  - name: trail with active S3 bucket passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            trail_arn: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+            s3_bucket_name: "org-cloudtrail-logs"
+            s3_bucket_exists: true
+            has_ghost_s3_bucket: false
+            is_logging: true
+  - name: ghost S3 bucket with CW Logs still working fires (partial blindness)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            trail_arn: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+            s3_bucket_name: "org-cloudtrail-logs-deleted"
+            s3_bucket_exists: false
+            has_ghost_s3_bucket: true
+            is_logging: true
+            cw_logs_delivery_configured: true
+            cw_logs_group_exists: true

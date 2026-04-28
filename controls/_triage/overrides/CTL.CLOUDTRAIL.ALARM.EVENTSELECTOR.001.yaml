@@ -1,0 +1,21 @@
+control: CTL.CLOUDTRAIL.ALARM.EVENTSELECTOR.001
+defect: >
+  No CloudWatch alarm monitors PutEventSelectors API
+  calls.
+infection: >
+  PutEventSelectors is the stealthy alternative to
+  StopLogging. Instead of stopping the trail (which is
+  obvious — IsLogging changes to false), the attacker
+  narrows the event selectors: switches from All to
+  WriteOnly (read operations become invisible), removes
+  data events for specific services (GetSecretValue no
+  longer logged), or excludes specific event sources
+  (KMS events excluded). The trail continues running.
+  IsLogging is true. The console shows an active trail.
+  But the trail is logging a narrower set of events than
+  configured — the attacker's activity falls outside the
+  narrowed scope.
+failure: >
+  Stealthy event scope narrowing. The trail appears
+  active but records fewer events — attacker activity
+  excluded from the audit trail.

@@ -1,0 +1,28 @@
+control: CTL.CLOUDTRAIL.ALARM.RESOURCEDELETION.001
+defect: >
+  No CloudWatch alarm monitors bulk resource deletion
+  events across services.
+infection: >
+  Individual resource deletion is normal — instances are
+  terminated, queues are decommissioned, functions are
+  removed. But multiple resource deletions across
+  different services within a short window (e.g., 5+
+  deletions in 10 minutes) is anomalous. Common
+  scenarios: ransomware (attacker deletes backups,
+  snapshots, and resources to force payment), insider
+  threat (disgruntled employee destroying
+  infrastructure), compromised credentials (attacker
+  with admin access cleaning up evidence), or runaway
+  automation (misconfigured cleanup script deleting
+  production). A composite metric filter that counts
+  deletion events across services and alarms when the
+  count exceeds a threshold in a time window detects
+  mass destruction events. Per-service alarms on
+  individual deletes (CTL.SQS.ALARM.DELETEQUEUE, etc.)
+  catch single-service destruction; this control catches
+  the cross-service pattern that those individual alarms
+  miss.
+failure: >
+  Undetected mass destruction. Multiple resources
+  deleted across services without notification —
+  ransomware, insider, or automation failure.

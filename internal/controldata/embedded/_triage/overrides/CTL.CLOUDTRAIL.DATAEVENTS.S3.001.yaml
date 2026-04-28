@@ -1,0 +1,23 @@
+control: CTL.CLOUDTRAIL.DATAEVENTS.S3.001
+defect: >
+  CloudTrail data events are not enabled for one or more
+  sensitive S3 buckets.
+infection: >
+  S3 management events (CreateBucket, PutBucketPolicy)
+  are logged by default. Data events (GetObject,
+  PutObject, DeleteObject) are NOT logged by default —
+  they must be explicitly enabled per trail. Without data
+  events on sensitive buckets: who downloaded the
+  customer database export is unknown, when the HIPAA
+  dataset was accessed is unrecorded, whether an attacker
+  exfiltrated data is unverifiable. For incident
+  response, data events answer: what was accessed, by
+  whom, when, and from where. Without them, the incident
+  investigation is blind to data access. Enabling data
+  events for ALL buckets is expensive — the control
+  targets the subset of buckets where the log volume
+  cost is justified by the sensitivity of the contents.
+failure: >
+  No data-access audit trail for sensitive S3 buckets.
+  Object-level operations are unrecorded; exfiltration
+  and unauthorized access cannot be reconstructed.

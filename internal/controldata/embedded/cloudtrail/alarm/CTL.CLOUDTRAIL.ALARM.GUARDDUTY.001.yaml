@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ALARM.GUARDDUTY.001
+name: No CloudWatch Alarm for GuardDuty Disablement
+description: >
+  No CloudWatch metric filter and alarm monitors CloudTrail
+  for GuardDuty management events that disable detection —
+  DeleteDetector, DisableOrganizationAdminAccount,
+  StopMonitoringMembers, UpdateDetector with Enable=false.
+  An attacker's first move after gaining admin access is
+  often to disable GuardDuty so subsequent malicious
+  activity is not flagged. Without an alarm, the
+  disablement is invisible until threats stop being
+  reported.
+domain: detection
+severity: high
+compliance:
+  cis_aws_v3.0: "4.5"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, AU-9, IR-4, SI-4"
+  pci_dss_v4.0: "10.5, 10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08", "TVM-04"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    No alarm wired to GuardDuty disablement events. Threat
+    detection can be turned off without notification.
+  action: >
+    Create a CloudTrail metric filter matching
+    eventSource = guardduty.amazonaws.com AND eventName
+    IN (DeleteDetector, DisableOrganizationAdminAccount,
+    StopMonitoringMembers, UpdateDetector). CloudWatch
+    alarm with threshold 1 and a 60-second period. Route
+    to security on-call. Treat any GuardDuty disablement
+    as a P0 — the attacker has admin and is preparing for
+    further action.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "alarm_guardduty": true,
+          "metric_filter_guardduty": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.alarm_guardduty
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors GuardDuty disablement
+  events.
+infection: >
+  GuardDuty is the AWS-native threat detection service.
+  Its findings cover credential exfiltration, anomalous
+  API usage, cryptomining, and known-bad-IP traffic. An
+  attacker with admin access disables GuardDuty
+  (DeleteDetector or UpdateDetector) before continuing
+  the attack so subsequent malicious activity is not
+  flagged. The sequence is well-known: disable
+  GuardDuty → disable CloudTrail (or narrow it) → operate
+  freely. Without an alarm, the GuardDuty disablement is
+  invisible. Findings stop being reported, but the
+  silence looks like a quiet account, not a disabled
+  detector.
+failure: >
+  Undetected threat-detection disablement. GuardDuty can
+  be turned off without notification — every subsequent
+  threat goes unflagged.
+tests:
+  - name: trail without GuardDuty alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_guardduty: false
+  - name: trail with GuardDuty alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_guardduty: true
+            metric_filter_guardduty: true

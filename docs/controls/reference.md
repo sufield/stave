@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1784
-**Pack hash:** `60a82207cbd4d8dfd0af0de273165eb6a448b28e301693fcfeb803758f5c30d3`
+**Total controls:** 1800
+**Pack hash:** `367f7a6aa9d51027209fb0f063f04af107edc0ca5822d8f3d421b29282fc548c`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 194 |
-| high | 786 |
+| critical | 199 |
+| high | 796 |
 | info | 16 |
 | low | 123 |
-| medium | 665 |
+| medium | 666 |
 
 | Domain | Count |
 |--------|-------|
@@ -22,10 +22,10 @@
 | audit | 33 |
 | availability | 2 |
 | cryptography | 3 |
-| detection | 80 |
+| detection | 90 |
 | encryption | 92 |
-| exposure | 965 |
-| governance | 193 |
+| exposure | 969 |
+| governance | 195 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -5536,6 +5536,141 @@ CloudFront distribution has a WAF web ACL but the ACL contains no rate-based rul
 
 ---
 
+### CTL.CLOUDTRAIL.ALARM.DELETETRAIL.001
+
+**No CloudWatch Alarm for CloudTrail DeleteTrail**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.5; fedramp_moderate: SI-4; hipaa: 164.312(b); iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-9, AU-12, IR-4, SI-4; pci_dss_v4.0: 10.5, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm monitors CloudTrail for DeleteTrail API calls. DeleteTrail permanently removes the trail configuration — S3 bucket reference, CW Logs reference, event selectors, everything. Unlike StopLogging (which preserves configuration), DeleteTrail requires recreating the entire trail to resume logging.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = DeleteTrail and a CloudWatch alarm with threshold 1 and a 60-second period; route to the same high-priority channel as the StopLogging alarm. DeleteTrail is rare in legitimate operations — any occurrence warrants immediate investigation.
+
+---
+
+### CTL.CLOUDTRAIL.ALARM.EVENTSELECTOR.001
+
+**No CloudWatch Alarm for CloudTrail PutEventSelectors**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.5; fedramp_moderate: SI-4; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-9, AU-12, SI-4; pci_dss_v4.0: 10.5, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm monitors CloudTrail for PutEventSelectors API calls. PutEventSelectors changes which events the trail records. An attacker can narrow the scope (switch to WriteOnly, drop data events for specific services) without stopping or deleting the trail. The trail keeps running. IsLogging stays true. The console shows an active trail. But the events that cover the attacker's actions are no longer captured. This is the stealthy form of trail tampering.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = PutEventSelectors and a CloudWatch alarm with threshold 1 and a 60-second period. Route to security on-call. Pair with a daily diff against the last-known-good selector configuration so any modification triggers immediate review.
+
+---
+
+### CTL.CLOUDTRAIL.ALARM.FAILEDLOGIN.001
+
+**No CloudWatch Alarm for Failed Console Logins**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.6; fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AC-7, AU-6, IR-4, SI-4; pci_dss_v4.0: 8.3, 10.2, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch metric filter and alarm monitors CloudTrail for failed ConsoleLogin events (events with errorMessage set). Failed logins indicate brute force, credential stuffing, or password spraying. Detection during the attack — before the attacker succeeds — enables MFA enforcement, lockout, or credential rotation in time. Companion to monitoring of successful logins (catches the attempts in flight, not the breach after).
+
+**Remediation:** Create a CloudTrail metric filter on eventName = ConsoleLogin AND errorMessage IS NOT NULL, then a CloudWatch alarm with a threshold tuned to baseline noise (e.g., 5 failures per 5 minutes; tune by environment) and route to security on-call. Pair with IAM password policy lockout so repeated failures trigger account lockout in addition to alerting.
+
+---
+
+### CTL.CLOUDTRAIL.ALARM.GUARDDUTY.001
+
+**No CloudWatch Alarm for GuardDuty Disablement**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.5; fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, AU-9, IR-4, SI-4; pci_dss_v4.0: 10.5, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch metric filter and alarm monitors CloudTrail for GuardDuty management events that disable detection — DeleteDetector, DisableOrganizationAdminAccount, StopMonitoringMembers, UpdateDetector with Enable=false. An attacker's first move after gaining admin access is often to disable GuardDuty so subsequent malicious activity is not flagged. Without an alarm, the disablement is invisible until threats stop being reported.
+
+**Remediation:** Create a CloudTrail metric filter matching eventSource = guardduty.amazonaws.com AND eventName IN (DeleteDetector, DisableOrganizationAdminAccount, StopMonitoringMembers, UpdateDetector). CloudWatch alarm with threshold 1 and a 60-second period. Route to security on-call. Treat any GuardDuty disablement as a P0 — the attacker has admin and is preparing for further action.
+
+---
+
+### CTL.CLOUDTRAIL.ALARM.NATGW.001
+
+**No CloudWatch Alarm for NAT Gateway Changes**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.16; nist_800_53_r5: AU-6, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.2;
+
+No CloudWatch metric filter and alarm monitors CloudTrail for CreateNatGateway or DeleteNatGateway events. NAT gateway creation in unexpected VPCs can indicate a data exfiltration setup (an attacker provisioning a NAT to route private-subnet traffic out) or unauthorized internet egress from sensitive subnets. Deletion can break legitimate egress unintentionally; either change warrants attention.
+
+**Remediation:** Create a CloudTrail metric filter matching eventName IN (CreateNatGateway, DeleteNatGateway). CloudWatch alarm with threshold 1 over a 5-minute period; route to network on-call. Pair with a list of expected NAT gateway VPCs so the alarm response can quickly distinguish legitimate operations from suspicious provisioning.
+
+---
+
+### CTL.CLOUDTRAIL.ALARM.ORGCHANGE.001
+
+**No CloudWatch Alarm for AWS Organizations Changes**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: SI-4; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-2, AU-6, SI-4, IR-4; pci_dss_v4.0: 10.2, 10.6; soc2: CC7.2, CC7.3, CC8.1;
+
+No CloudWatch metric filter and alarm monitors CloudTrail for Organizations management events — LeaveOrganization, RemoveAccountFromOrganization, InviteAccountToOrganization, CreateAccount, CloseAccount. These events change the organizational boundary. An account that leaves the organization retains cross-account access (resource policies still grant by account ID) but escapes organizational governance (SCPs no longer apply).
+
+**Remediation:** Create a CloudTrail metric filter matching eventSource = organizations.amazonaws.com AND eventName IN (LeaveOrganization, RemoveAccountFromOrganization, InviteAccountToOrganization, CreateAccount, CloseAccount). CloudWatch alarm with threshold 1 over a 60-second period; route to the organization administrator on-call. Pair with SCP enforcement so LeaveOrganization is denied except by a small privileged role.
+
+---
+
+### CTL.CLOUDTRAIL.ALARM.RESOURCEDELETION.001
+
+**No CloudWatch Alarm for Bulk Resource Deletion Events**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4, CP-10; pci_dss_v4.0: 10.6, 12.10; soc2: CC7.2, CC7.3, A1.2;
+
+No CloudWatch metric filter and alarm monitors CloudTrail for bulk resource deletion — multiple DeleteDBInstance, TerminateInstances, DeleteFunction, DeleteTopic, DeleteQueue, PurgeQueue, or DeleteBucket events within a short window. Individual deletions are normal operations. Multiple deletions across services within minutes indicates ransomware, insider threat, compromised automation, or runaway cleanup script. A composite metric filter that counts deletion events across services with a threshold (e.g., >=5 in 10 minutes) detects mass destruction events.
+
+**Remediation:** Create a CloudTrail metric filter that matches the union of destructive event names — eventName IN (DeleteDBInstance, TerminateInstances, DeleteFunction, DeleteTopic, DeleteQueue, PurgeQueue, DeleteBucket, ScheduleKeyDeletion) — emitting a counter. Wire a CloudWatch alarm with threshold >= 5 over a 10-minute period. Tune thresholds to baseline operational deletion volume; production environments rarely see 5+ deletions across services within minutes.
+
+---
+
+### CTL.CLOUDTRAIL.ALARM.S3POLICY.001
+
+**No CloudWatch Alarm for S3 Bucket Policy Changes**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.7; fedramp_moderate: SI-4; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, AU-6, SI-4; pci_dss_v4.0: 10.2, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch metric filter and alarm monitors CloudTrail for PutBucketPolicy, DeleteBucketPolicy, or PutBucketAcl events. A single PutBucketPolicy call can make a bucket public or grant cross-account access; PutBucketAcl can add public-read or public-read-write. Without an alarm, bucket access-control changes are invisible until the next periodic security scan. This control fills the gap between CTL.S3.PUBLIC.001 (detects the resulting state) and the API event that produced it.
+
+**Remediation:** Create a CloudTrail metric filter matching eventName IN (PutBucketPolicy, DeleteBucketPolicy, PutBucketAcl) and a CloudWatch alarm with threshold 1 over a 5-minute period. Route to security on-call. Pair with CTL.S3.PUBLIC.001 — the alarm catches the event, the state control catches the resulting public posture if the alarm response is delayed.
+
+---
+
+### CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001
+
+**No CloudWatch Alarm for CloudTrail StopLogging**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 4.5; fedramp_moderate: SI-4; hipaa: 164.312(b); iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-9, AU-12, IR-4, SI-4; pci_dss_v4.0: 10.5, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm monitors CloudTrail for StopLogging API calls. StopLogging is the single most dangerous CloudTrail API call: it disables the audit trail immediately, every API call afterward is unrecorded, and the trail's configuration remains intact (the console still shows the trail). Without an alarm, the audit infrastructure can be silently turned off. Companion to CTL.CLOUDTRAIL.STOP.DETECT.001 (which detects the resulting state); this control detects the EVENT, enabling minutes-level response.
+
+**Remediation:** Create a CloudTrail metric filter on eventName = StopLogging and a CloudWatch alarm with threshold 1 over a 60-second period: aws logs put-metric-filter --filter-pattern '{ ($.eventName = "StopLogging") }' followed by aws cloudwatch put-metric-alarm. Route the alarm to a high-priority on-call channel; treat StopLogging as a P0 incident until proven otherwise.
+
+---
+
 ### CTL.CLOUDTRAIL.CWLOGS.001
 
 **CloudTrail Trails Must Be Integrated with CloudWatch Logs**
@@ -5578,6 +5713,26 @@ CloudTrail trails must include DynamoDB data events to log table-level operation
 CloudTrail trails must include Lambda data events to log function invocations. Without this, attacker execution via Lambda is invisible.
 
 **Remediation:** Add Lambda data event selector to the trail: event category Data, resource type AWS::Lambda::Function, read/write type All.
+
+---
+
+### CTL.CLOUDTRAIL.DATAEVENTS.S3.001
+
+**CloudTrail Data Events Not Enabled for Sensitive S3 Buckets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** cis_aws_v3.0: 3.11; fedramp_moderate: AU-2; hipaa: 164.312(b); iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-3, AU-12; pci_dss_v4.0: 10.1, 10.2, 10.3; soc2: CC7.1, CC7.2;
+
+CloudTrail is not configured to log S3 data events (GetObject, PutObject, DeleteObject) for buckets tagged as sensitive, in compliance scope, or containing PII / PHI. Without S3 data events on these buckets there is no record of who accessed which objects — an attacker can download an entire sensitive bucket without any audit record. Enabling data events for ALL buckets is expensive; this control checks only the buckets that warrant the log volume.
+
+**Remediation:** Add an S3 data-event selector to the trail with explicit ARN scope for the sensitive buckets: aws cloudtrail put-event-selectors --trail-name <trail> --advanced-event-selectors '[{"Name":"S3 sensitive bucket data events",
+   "FieldSelectors":[
+     {"Field":"eventCategory","Equals":["Data"]},
+     {"Field":"resources.type","Equals":["AWS::S3::Object"]},
+     {"Field":"resources.ARN","StartsWith":["arn:aws:s3:::sensitive-bucket-1/","arn:aws:s3:::sensitive-bucket-2/"]}]}]'.
+Identify sensitive buckets via tags (data_classification: pii / phi / restricted) or a catalog maintained alongside the trail config.
 
 ---
 
@@ -5653,6 +5808,66 @@ CloudTrail must be configured as a multi-region trail. A single-region trail mis
 CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Default S3 encryption (SSE-S3) does not provide key revocation capability needed for breach response.
 
 **Remediation:** Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:...
+
+---
+
+### CTL.CLOUDTRAIL.GHOST.CWLOGS.001
+
+**CloudTrail Trail CloudWatch Logs Group Does Not Exist**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.4; fedramp_moderate: SI-4; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-2, AU-6, CM-2, CM-3, SI-4; pci_dss_v4.0: 10.1, 10.6; soc2: CC7.1, CC7.2;
+
+CloudTrail trail is configured to deliver events to a CloudWatch Logs log group that has been deleted. The trail may still deliver to S3 (batch, ~5-minute delay) but real-time metric filters and alarms break — they depend on events arriving in the log group within seconds. Every ALARM.* control in the catalog (root login, unauthorized API calls, VPC/SG/IAM/CT/Config changes, secret access failures, KMS key disablement) becomes non-functional because its data source is gone.
+
+**Remediation:** Recreate the log group (aws logs create-log-group --log-group-name <name>) and reattach to the trail (aws cloudtrail update-trail --name <trail> --cloud-watch-logs-log-group-arn <arn> --cloud-watch-logs-role-arn <delivery-role>). Recreate every metric filter on the new log group — log groups don't preserve filters across recreation. Audit the recovery window: events between log group deletion and recreation never reached real-time detection, so any incident in that window must be reconstructed from the S3 logs (if they exist).
+
+---
+
+### CTL.CLOUDTRAIL.GHOST.CWROLE.001
+
+**CloudTrail CloudWatch Logs Delivery Role Does Not Exist**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.3; nist_800_53_r5: AU-6, AC-3, CM-2, CM-3, SI-4; pci_dss_v4.0: 10.1, 10.5, 10.6; soc2: CC7.1, CC7.2;
+
+CloudTrail trail is configured to deliver to CloudWatch Logs using an IAM role that has been deleted. The log group may exist; the trail may be running. But the delivery role — the credential CloudTrail uses to write to the log group — is gone. CW Logs delivery fails silently. Same effect as a deleted log group, different root cause: the log group still has its data path and retention; only the credential is missing. Recreating the role restores delivery without data loss.
+
+**Remediation:** Recreate the role with a trust policy allowing cloudtrail.amazonaws.com to assume it and an inline policy granting logs:CreateLogStream and logs:PutLogEvents on the target log group, then update the trail to reference the new role (aws cloudtrail update-trail --name <trail> --cloud-watch-logs-role-arn <new-role-arn>). Verify delivery by triggering an API call and confirming new events arrive in the log group within a minute.
+
+---
+
+### CTL.CLOUDTRAIL.GHOST.S3BUCKET.001
+
+**CloudTrail Trail S3 Bucket Does Not Exist**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.1, 3.4; fedramp_moderate: AU-2; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-2, AU-3, AU-6, CM-2, CM-3; pci_dss_v4.0: 10.1, 10.5; soc2: CC7.1, CC7.2, CC8.1;
+
+CloudTrail trail is configured to deliver log files to an S3 bucket that has been deleted. The trail is running — IsLogging is true, the configuration is intact — but every log-file delivery fails. Events are processed and dropped. The trail appears configured; the audit log is empty. This is the meta-infrastructure ghost: the audit layer itself has a broken reference, so every API call across every service goes unrecorded and every metric filter / alarm based on CloudTrail events is starved.
+
+**Remediation:** Either (a) recreate the S3 bucket with a name matching the trail's S3BucketName and restore the original bucket policy granting cloudtrail.amazonaws.com s3:PutObject and s3:GetBucketAcl, or (b) repoint the trail at an existing audit bucket (aws cloudtrail update-trail --name <trail> --s3-bucket-name <existing-audit-bucket>). After repointing, verify delivery by triggering an API call and confirming a new log file appears in the bucket within five minutes. Audit S3 CloudTrail events for the period the bucket was missing — those events are permanently lost.
+
+---
+
+### CTL.CLOUDTRAIL.GHOST.SNSTOPIC.001
+
+**CloudTrail Trail SNS Notification Topic Does Not Exist**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, CM-2, CM-3, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.1, CC7.2;
+
+CloudTrail trail is configured to publish notifications to an SNS topic when new log files arrive in S3. The SNS topic has been deleted. Log file delivery notifications are silently lost. Downstream consumers — Lambda functions, SQS queues, SIEM ingestion pipelines — never receive the notification, so they never process the newly delivered logs.
+
+**Remediation:** Either (a) recreate the SNS topic with the same name and reattach (aws cloudtrail update-trail --name <trail> --sns-topic-name <topic>) plus subscribers, or (b) repoint the trail at an existing notification topic, or (c) clear the SNS configuration if the notifications are no longer needed (aws cloudtrail update-trail --name <trail> --no-sns-topic-name) and switch downstream consumers to S3 EventBridge notifications instead.
 
 ---
 
@@ -5775,6 +5990,21 @@ CloudTrail trail must deliver logs to an S3 bucket or CloudWatch Logs group with
 
 ---
 
+### CTL.CLOUDTRAIL.S3.OBJECTLOCK.001
+
+**CloudTrail Trail S3 Bucket Does Not Have Object Lock Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: AU-9; hipaa: 164.312(c)(1); iso_27001_2022: A.8.15, A.8.10; nist_800_53_r5: AU-9, AU-11, SC-28; pci_dss_v4.0: 10.5, 10.5.2; soc2: CC7.1, A1.2;
+
+CloudTrail trail S3 bucket does not have S3 Object Lock enabled. Without Object Lock, log files can be deleted or overwritten after delivery. An attacker who gains access to the trail S3 bucket can erase specific log files (removing evidence) or overwrite log files with modified versions (altering the audit record). Object Lock in Compliance mode provides WORM (Write Once Read Many) protection — log files cannot be deleted or overwritten for the retention period, even by the root account.
+
+**Remediation:** Recreate the audit bucket with Object Lock enabled (S3 requires Object Lock to be set at bucket creation time) and migrate log files to it; update the trail's S3BucketName. Configure a default Object Lock retention rule in Compliance mode for the audit horizon (e.g., 365 days for typical compliance, 7 years for highly regulated workloads). Compliance mode is preferred over Governance — Governance allows privileged users to override the lock.
+
+---
+
 ### CTL.CLOUDTRAIL.S3LOG.001
 
 **CloudTrail S3 Bucket Must Have Access Logging**
@@ -5787,6 +6017,21 @@ CloudTrail trail must deliver logs to an S3 bucket or CloudWatch Logs group with
 The S3 bucket receiving CloudTrail logs must have server access logging enabled. Without it, access to the audit logs themselves is not auditable.
 
 **Remediation:** Enable access logging on the trail S3 bucket: aws s3api put-bucket-logging --bucket <trail-bucket> --bucket-logging-status '{"LoggingEnabled":{"TargetBucket":"<log-bucket>"}}'
+
+---
+
+### CTL.CLOUDTRAIL.STATE.MGMT.WRITEONLY.001
+
+**CloudTrail Trail Logs Only Write Management Events**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.1; fedramp_moderate: AU-2; hipaa: 164.312(b); iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-12; pci_dss_v4.0: 10.1, 10.2; soc2: CC7.1, CC7.2;
+
+CloudTrail trail event selectors are configured to log only WriteOnly management events. Read events — DescribeInstances, GetSecretValue, ListBuckets, AssumeRole — are not recorded. An attacker performing reconnaissance is invisible: only write actions appear in the audit trail. The reconnaissance phase, where the attacker maps the environment before acting, has no audit record at all.
+
+**Remediation:** Update the trail's event selectors to include both Read and Write management events (aws cloudtrail put-event-selectors --trail-name <trail> --event-selectors '[{"ReadWriteType":"All", "IncludeManagementEvents":true,"DataResources":[]}]'). The volume increase is real but the cost is bounded — management events are far less frequent than data events.
 
 ---
 

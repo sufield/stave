@@ -11,6 +11,7 @@ import (
 // validates every .json file against the observation schema. If a file exists
 // in the golden directory but the validator rejects it, the test fails.
 func TestGoldenSchemaFiles_ObservationsAccepted(t *testing.T) {
+	t.Parallel()
 	root := findRepoRoot(t)
 	dir := filepath.Join(root, "testdata", "schemas", "obs")
 
@@ -27,6 +28,7 @@ func TestGoldenSchemaFiles_ObservationsAccepted(t *testing.T) {
 		}
 		found++
 		t.Run(entry.Name(), func(t *testing.T) {
+			t.Parallel()
 			data, err := os.ReadFile(filepath.Join(dir, entry.Name()))
 			if err != nil {
 				t.Fatalf("read %s: %v", entry.Name(), err)
@@ -48,6 +50,7 @@ func TestGoldenSchemaFiles_ObservationsAccepted(t *testing.T) {
 // TestGoldenSchemaFiles_ControlsAccepted walks testdata/schemas/ctrl/ and
 // validates every .yaml file against the control schema.
 func TestGoldenSchemaFiles_ControlsAccepted(t *testing.T) {
+	t.Parallel()
 	root := findRepoRoot(t)
 	dir := filepath.Join(root, "testdata", "schemas", "ctrl")
 
@@ -64,6 +67,7 @@ func TestGoldenSchemaFiles_ControlsAccepted(t *testing.T) {
 		}
 		found++
 		t.Run(entry.Name(), func(t *testing.T) {
+			t.Parallel()
 			data, err := os.ReadFile(filepath.Join(dir, entry.Name()))
 			if err != nil {
 				t.Fatalf("read %s: %v", entry.Name(), err)
@@ -85,6 +89,7 @@ func TestGoldenSchemaFiles_ControlsAccepted(t *testing.T) {
 // TestGhostSchemaVersions_Rejected ensures deprecated, future, and malformed
 // schema versions are correctly rejected with UNSUPPORTED_SCHEMA_VERSION.
 func TestGhostSchemaVersions_Rejected(t *testing.T) {
+	t.Parallel()
 	v := New()
 
 	obsGhosts := []struct {
@@ -104,6 +109,7 @@ func TestGhostSchemaVersions_Rejected(t *testing.T) {
 
 	for _, tc := range obsGhosts {
 		t.Run("obs/"+tc.name, func(t *testing.T) {
+			t.Parallel()
 			doc := []byte(`{"schema_version":"` + tc.version + `","captured_at":"2026-01-15T00:00:00Z","assets":[]}`)
 			result, err := v.ValidateObservationJSON(doc)
 			if err != nil {
@@ -129,6 +135,7 @@ func TestGhostSchemaVersions_Rejected(t *testing.T) {
 
 	for _, tc := range ctrlGhosts {
 		t.Run("ctrl/"+tc.name, func(t *testing.T) {
+			t.Parallel()
 			doc := []byte("dsl_version: " + tc.version + "\nid: CTL.GHOST.001\nname: Ghost\ndescription: Ghost control\ntype: unsafe_state\nunsafe_predicate:\n  any:\n    - field: properties.x\n      op: eq\n      value: true\n")
 			result, err := v.ValidateControlYAML(doc)
 			if err != nil {

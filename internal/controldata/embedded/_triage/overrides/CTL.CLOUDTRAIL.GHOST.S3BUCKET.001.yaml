@@ -1,0 +1,24 @@
+control: CTL.CLOUDTRAIL.GHOST.S3BUCKET.001
+defect: >
+  CloudTrail trail delivers to an S3 bucket that has been
+  deleted. Log file delivery fails for every event.
+infection: >
+  CloudTrail processes API events and writes log files to
+  the configured S3 bucket. When the bucket is deleted,
+  every log file delivery fails. CloudTrail continues
+  processing events — the trail appears active
+  (IsLogging = true). But no log files are stored. The S3
+  bucket name is visible in the trail configuration. An
+  auditor sees "Trail: enabled, S3 bucket:
+  my-trail-bucket." The bucket doesn't exist. No logs are
+  written. Every API call across every service — EC2, RDS,
+  Lambda, IAM, KMS, S3, SQS, SNS, Secrets Manager, Route
+  53, CloudFront, DynamoDB, API Gateway, ECS, VPC — is
+  unrecorded. Every CloudWatch metric filter that parses
+  CloudTrail events has no data. Every alarm that
+  triggers on metric-filter thresholds never fires. The
+  entire detection pipeline is severed at the source.
+failure: >
+  Complete audit blindness. The audit trail itself is
+  broken. No API calls are recorded. Every detection
+  control across every service is blind.

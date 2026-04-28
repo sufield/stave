@@ -11,6 +11,7 @@ import (
 )
 
 func TestEvaluationMetadata_ToMap_Golden(t *testing.T) {
+	t.Parallel()
 	meta := Metadata{
 		ContextName: "prod-check",
 		ControlSource: ControlSourceInfo{

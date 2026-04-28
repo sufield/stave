@@ -1,0 +1,23 @@
+control: CTL.CLOUDTRAIL.S3.OBJECTLOCK.001
+defect: >
+  CloudTrail trail S3 bucket does not have Object Lock
+  enabled.
+infection: >
+  Without Object Lock, CloudTrail log files in S3 can be:
+  deleted (s3:DeleteObject removes the log file — the
+  audit record is gone), overwritten (s3:PutObject
+  replaces the log file with a modified version — the
+  audit record is falsified), or purged (lifecycle
+  policy or manual deletion removes log files before the
+  intended retention period). An attacker who
+  compromises the trail S3 bucket can erase their tracks
+  — deleting log files that contain evidence of their
+  activity. Object Lock in Compliance mode prevents
+  deletion and overwriting for the lock retention period
+  — even the root account cannot delete locked objects.
+  Governance mode allows privileged users to override —
+  Compliance mode is recommended for audit logs.
+failure: >
+  Audit log tampering possible. Log files can be deleted
+  or overwritten — the audit record can be altered or
+  destroyed.

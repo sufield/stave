@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ALARM.DELETETRAIL.001
+name: No CloudWatch Alarm for CloudTrail DeleteTrail
+description: >
+  No CloudWatch alarm monitors CloudTrail for DeleteTrail
+  API calls. DeleteTrail permanently removes the trail
+  configuration — S3 bucket reference, CW Logs reference,
+  event selectors, everything. Unlike StopLogging (which
+  preserves configuration), DeleteTrail requires
+  recreating the entire trail to resume logging.
+domain: detection
+severity: critical
+compliance:
+  cis_aws_v3.0: "4.5"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-9, AU-12, IR-4, SI-4"
+  pci_dss_v4.0: "10.5, 10.6"
+  fedramp_moderate: "SI-4"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    No alarm wired to CloudTrail DeleteTrail events. The
+    trail can be removed without notification.
+  action: >
+    Create a CloudTrail metric filter on
+    eventName = DeleteTrail and a CloudWatch alarm with
+    threshold 1 and a 60-second period; route to the
+    same high-priority channel as the StopLogging alarm.
+    DeleteTrail is rare in legitimate operations — any
+    occurrence warrants immediate investigation.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "alarm_delete_trail": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.alarm_delete_trail
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors DeleteTrail API calls.
+infection: >
+  DeleteTrail removes the trail configuration permanently.
+  Unlike StopLogging, which leaves the trail in place
+  with IsLogging set to false, DeleteTrail erases the
+  trail entirely — S3 bucket reference, CW Logs
+  configuration, event selectors, all gone. To resume
+  logging the team must recreate the trail and rebuild
+  every metric filter / alarm pinned to that trail. An
+  attacker who has admin access and wants more than a
+  brief logging gap can call DeleteTrail to remove the
+  audit infrastructure outright. Without an alarm, the
+  deletion is invisible until someone tries to inspect
+  the trail.
+failure: >
+  Undetected audit trail removal. The trail can be
+  deleted without notification — recreating it doesn't
+  recover the gap during deletion.
+tests:
+  - name: trail without DeleteTrail alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_delete_trail: false
+  - name: trail with DeleteTrail alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_delete_trail: true

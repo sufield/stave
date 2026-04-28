@@ -1,0 +1,19 @@
+control: CTL.CLOUDTRAIL.GHOST.SNSTOPIC.001
+defect: >
+  CloudTrail trail references a deleted SNS notification
+  topic for log-file deliveries.
+infection: >
+  CloudTrail can publish to SNS each time it delivers a
+  log file to S3. The SNS message is the trigger for
+  downstream processing — Lambda functions ingest the
+  log file, SQS queues fan out to multiple consumers,
+  SIEM pipelines pull the new content. When the SNS
+  topic is deleted, the notifications fail. Log files
+  still land in S3. Downstream consumers don't know
+  they're there. The lag between delivery and processing
+  goes from seconds to whatever-poll-interval the
+  consumers fall back to — often hours, often never.
+failure: >
+  Log-delivery notifications silently lost. Downstream
+  log-processing pipelines never trigger; ingest pauses
+  until consumers re-list S3 (if they do).

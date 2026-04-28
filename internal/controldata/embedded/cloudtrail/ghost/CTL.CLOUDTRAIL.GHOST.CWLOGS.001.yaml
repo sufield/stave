@@ -1,0 +1,138 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.GHOST.CWLOGS.001
+name: CloudTrail Trail CloudWatch Logs Group Does Not Exist
+description: >
+  CloudTrail trail is configured to deliver events to a
+  CloudWatch Logs log group that has been deleted. The
+  trail may still deliver to S3 (batch, ~5-minute delay)
+  but real-time metric filters and alarms break — they
+  depend on events arriving in the log group within
+  seconds. Every ALARM.* control in the catalog (root
+  login, unauthorized API calls, VPC/SG/IAM/CT/Config
+  changes, secret access failures, KMS key disablement)
+  becomes non-functional because its data source is gone.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+compliance:
+  cis_aws_v3.0: "3.4"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-2, AU-6, CM-2, CM-3, SI-4"
+  pci_dss_v4.0: "10.1, 10.6"
+  fedramp_moderate: "SI-4"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    CloudTrail trail references a deleted CloudWatch Logs
+    group. Real-time metric filters and alarms have no data
+    source.
+  action: >
+    Recreate the log group (aws logs create-log-group
+    --log-group-name <name>) and reattach to the trail
+    (aws cloudtrail update-trail --name <trail>
+    --cloud-watch-logs-log-group-arn <arn>
+    --cloud-watch-logs-role-arn <delivery-role>). Recreate
+    every metric filter on the new log group — log groups
+    don't preserve filters across recreation. Audit the
+    recovery window: events between log group deletion
+    and recreation never reached real-time detection, so
+    any incident in that window must be reconstructed
+    from the S3 logs (if they exist).
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "cw_logs_group_arn": "arn:aws:logs:us-east-1:111122223333:log-group:/aws/cloudtrail/org",
+          "cw_logs_group_exists": true,
+          "has_ghost_cw_logs": false,
+          "cw_logs_delivery_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.has_ghost_cw_logs
+      op: eq
+      value: true
+defect: >
+  CloudTrail trail delivers to a CloudWatch Logs group that
+  has been deleted.
+infection: >
+  CloudWatch Logs delivery is the real-time path. Events
+  arrive in the log group within seconds. Metric filters
+  parse the events as they arrive. Alarms evaluate metric
+  filter data continuously. When the log group is
+  deleted: metric filters have no data source, alarms
+  based on those filters never fire, and every ALARM.*
+  control in the catalog — root login, unauthorized API
+  calls, VPC changes, security group changes, IAM policy
+  changes, CloudTrail changes, Config changes — is
+  non-functional. Events may still be delivered to S3 (if
+  the bucket exists), but S3 delivery is batch (every 5
+  minutes) and doesn't feed metric filters. The real-time
+  detection layer depends on CW Logs delivery.
+failure: >
+  Real-time detection blind. CloudWatch metric filters
+  and alarms have no data source. Every real-time alarm
+  control is non-functional.
+tests:
+  - name: trail with deleted CW Logs group fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            cw_logs_group_arn: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/cloudtrail/org-deleted"
+            cw_logs_group_exists: false
+            has_ghost_cw_logs: true
+            cw_logs_delivery_configured: true
+  - name: trail with active CW Logs group passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            cw_logs_group_arn: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/cloudtrail/org"
+            cw_logs_group_exists: true
+            has_ghost_cw_logs: false
+            cw_logs_delivery_configured: true
+  - name: ghost CW Logs + S3 bucket also deleted fires (compound)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            cw_logs_group_exists: false
+            has_ghost_cw_logs: true
+            cw_logs_delivery_configured: true
+            s3_bucket_exists: false
+            has_ghost_s3_bucket: true

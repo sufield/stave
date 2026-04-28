@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001
+name: No CloudWatch Alarm for CloudTrail StopLogging
+description: >
+  No CloudWatch alarm monitors CloudTrail for StopLogging
+  API calls. StopLogging is the single most dangerous
+  CloudTrail API call: it disables the audit trail
+  immediately, every API call afterward is unrecorded,
+  and the trail's configuration remains intact (the
+  console still shows the trail). Without an alarm, the
+  audit infrastructure can be silently turned off.
+  Companion to CTL.CLOUDTRAIL.STOP.DETECT.001 (which
+  detects the resulting state); this control detects the
+  EVENT, enabling minutes-level response.
+domain: detection
+severity: critical
+compliance:
+  cis_aws_v3.0: "4.5"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-9, AU-12, IR-4, SI-4"
+  pci_dss_v4.0: "10.5, 10.6"
+  fedramp_moderate: "SI-4"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    No alarm wired to CloudTrail StopLogging events. The
+    audit trail can be disabled without notification.
+  action: >
+    Create a CloudTrail metric filter on
+    eventName = StopLogging and a CloudWatch alarm with
+    threshold 1 over a 60-second period:
+    aws logs put-metric-filter --filter-pattern
+    '{ ($.eventName = "StopLogging") }' followed by
+    aws cloudwatch put-metric-alarm. Route the alarm to a
+    high-priority on-call channel; treat StopLogging as
+    a P0 incident until proven otherwise.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "alarm_stop_logging": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.alarm_stop_logging
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors StopLogging API calls.
+infection: >
+  StopLogging is the single most dangerous CloudTrail API
+  call. It turns off the audit trail. Every API call
+  after StopLogging is unrecorded — the attacker
+  operates in the dark. StopLogging is the attacker's
+  first action after gaining admin access because it
+  blinds the defender. Without an alarm: the trail stops
+  at 2am. Nobody is notified. The attacker creates IAM
+  users, modifies security groups, accesses data,
+  exfiltrates — all between 2am and 8am. At 8am, someone
+  notices the trail is stopped (if they check). Six
+  hours of activity are permanently unrecorded. A
+  StopLogging alarm provides seconds-to-minutes
+  notification — the team can re-enable logging and
+  investigate immediately.
+failure: >
+  Undetected audit trail disablement. The trail can be
+  stopped without notification — every subsequent API
+  call is unrecorded.
+tests:
+  - name: trail without StopLogging alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_stop_logging: false
+  - name: trail with StopLogging alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_stop_logging: true

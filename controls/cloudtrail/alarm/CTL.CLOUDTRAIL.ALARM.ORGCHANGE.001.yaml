@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ALARM.ORGCHANGE.001
+name: No CloudWatch Alarm for AWS Organizations Changes
+description: >
+  No CloudWatch metric filter and alarm monitors CloudTrail
+  for Organizations management events — LeaveOrganization,
+  RemoveAccountFromOrganization, InviteAccountToOrganization,
+  CreateAccount, CloseAccount. These events change the
+  organizational boundary. An account that leaves the
+  organization retains cross-account access (resource
+  policies still grant by account ID) but escapes
+  organizational governance (SCPs no longer apply).
+domain: detection
+severity: critical
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3, CC8.1"
+  nist_800_53_r5: "AC-2, AU-6, SI-4, IR-4"
+  pci_dss_v4.0: "10.2, 10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IAM-09", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: prevention
+    scope: organization
+    multiplier: 5.0
+remediation:
+  description: >
+    No alarm wired to AWS Organizations API events.
+    Membership changes can occur without notification.
+  action: >
+    Create a CloudTrail metric filter matching
+    eventSource = organizations.amazonaws.com AND
+    eventName IN (LeaveOrganization,
+    RemoveAccountFromOrganization,
+    InviteAccountToOrganization, CreateAccount,
+    CloseAccount). CloudWatch alarm with threshold 1
+    over a 60-second period; route to the organization
+    administrator on-call. Pair with SCP enforcement so
+    LeaveOrganization is denied except by a small
+    privileged role.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "alarm_org_change": true,
+          "metric_filter_org_change": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.alarm_org_change
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors AWS Organizations changes.
+infection: >
+  Organizations membership changes the organizational
+  trust boundary. LeaveOrganization removes an account
+  from the organization — SCPs no longer apply, but
+  resource policies referencing the account ID continue
+  to grant access. RemoveAccountFromOrganization is the
+  master-account-initiated equivalent. CreateAccount and
+  CloseAccount add or remove accounts. An attacker who
+  compromises a master-account principal can create a
+  new account under attacker control, invite it into the
+  organization, and use cross-account trust to access
+  resources elsewhere — without detection.
+failure: >
+  Undetected boundary change. Organization membership
+  modified without notification — cross-account trust
+  surface changes silently.
+tests:
+  - name: trail without org-change alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_org_change: false
+  - name: trail with org-change alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_org_change: true
+            metric_filter_org_change: true

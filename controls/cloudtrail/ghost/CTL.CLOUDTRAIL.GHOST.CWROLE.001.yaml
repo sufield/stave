@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.GHOST.CWROLE.001
+name: CloudTrail CloudWatch Logs Delivery Role Does Not Exist
+description: >
+  CloudTrail trail is configured to deliver to CloudWatch
+  Logs using an IAM role that has been deleted. The log
+  group may exist; the trail may be running. But the
+  delivery role — the credential CloudTrail uses to write
+  to the log group — is gone. CW Logs delivery fails
+  silently. Same effect as a deleted log group, different
+  root cause: the log group still has its data path and
+  retention; only the credential is missing. Recreating
+  the role restores delivery without data loss.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, AC-3, CM-2, CM-3, SI-4"
+  pci_dss_v4.0: "10.1, 10.5, 10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.16, A.8.3"
+  ccm_v4: ["IAM-04", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    CloudTrail trail references a deleted IAM role for
+    CloudWatch Logs delivery. Events are not reaching the
+    log group.
+  action: >
+    Recreate the role with a trust policy allowing
+    cloudtrail.amazonaws.com to assume it and an inline
+    policy granting logs:CreateLogStream and
+    logs:PutLogEvents on the target log group, then
+    update the trail to reference the new role
+    (aws cloudtrail update-trail --name <trail>
+    --cloud-watch-logs-role-arn <new-role-arn>).
+    Verify delivery by triggering an API call and
+    confirming new events arrive in the log group within
+    a minute.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "cw_logs_role_arn": "arn:aws:iam::111122223333:role/CloudTrailToCWLogs",
+          "cw_logs_role_exists": true,
+          "has_ghost_cw_role": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.has_ghost_cw_role
+      op: eq
+      value: true
+defect: >
+  CloudTrail trail references a deleted IAM role for
+  CloudWatch Logs delivery.
+infection: >
+  CloudTrail uses the configured CloudWatchLogsRoleArn to
+  obtain temporary credentials when writing events to the
+  log group. When the role is deleted, every assume-role
+  attempt fails. CloudTrail cannot deliver to CW Logs.
+  The log group is still there — its retention and
+  filters are intact — but no new events arrive. Metric
+  filters evaluate an empty stream. Alarms based on those
+  filters never fire. Distinct from
+  CTL.CLOUDTRAIL.GHOST.CWLOGS.001 (log group itself
+  deleted): here the data path is intact but the
+  credential to use it is missing.
+failure: >
+  Delivery role missing. CloudWatch Logs receives no new
+  events; real-time metric filters and alarms are
+  silently starved.
+tests:
+  - name: trail with deleted CW Logs role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            cw_logs_role_arn: "arn:aws:iam::111122223333:role/CloudTrailToCWLogs-deleted"
+            cw_logs_role_exists: false
+            has_ghost_cw_role: true
+  - name: trail with active CW Logs role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            cw_logs_role_arn: "arn:aws:iam::111122223333:role/CloudTrailToCWLogs"
+            cw_logs_role_exists: true
+            has_ghost_cw_role: false

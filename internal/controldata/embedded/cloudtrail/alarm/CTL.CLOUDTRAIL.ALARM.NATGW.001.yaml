@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ALARM.NATGW.001
+name: No CloudWatch Alarm for NAT Gateway Changes
+description: >
+  No CloudWatch metric filter and alarm monitors CloudTrail
+  for CreateNatGateway or DeleteNatGateway events. NAT
+  gateway creation in unexpected VPCs can indicate a data
+  exfiltration setup (an attacker provisioning a NAT to
+  route private-subnet traffic out) or unauthorized
+  internet egress from sensitive subnets. Deletion can
+  break legitimate egress unintentionally; either change
+  warrants attention.
+domain: detection
+severity: medium
+compliance:
+  soc2: "CC7.2"
+  nist_800_53_r5: "AU-6, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    No alarm wired to NAT gateway create/delete events.
+    Egress topology can change without notification.
+  action: >
+    Create a CloudTrail metric filter matching
+    eventName IN (CreateNatGateway, DeleteNatGateway).
+    CloudWatch alarm with threshold 1 over a 5-minute
+    period; route to network on-call. Pair with a list
+    of expected NAT gateway VPCs so the alarm response
+    can quickly distinguish legitimate operations from
+    suspicious provisioning.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "alarm_natgw": true,
+          "metric_filter_natgw": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.alarm_natgw
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors NAT gateway create/delete
+  events.
+infection: >
+  NAT gateways grant outbound internet access from private
+  subnets. CreateNatGateway in an unexpected VPC indicates
+  egress topology has changed — possibly: an attacker
+  setting up exfiltration (provision NAT, route private-
+  subnet traffic out, transfer data), an operator
+  granting unauthorized internet access for debugging,
+  or automation creating ad-hoc connectivity. DeleteNatGateway
+  in a production VPC breaks legitimate egress for every
+  resource in the affected subnets — a fast notification
+  enables recovery before downstream services time out.
+failure: >
+  Undetected egress topology change. NAT gateway
+  provisioning or removal is invisible — exfiltration
+  setup or production egress loss goes unnoticed.
+tests:
+  - name: trail without NAT-gateway alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_natgw: false
+  - name: trail with NAT-gateway alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            alarm_natgw: true
+            metric_filter_natgw: true

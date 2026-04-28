@@ -7,7 +7,7 @@
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "4a98e2bfddeb1eaca8f7769613458014ce02046c6680aecf9dfbc8e6e808b6e7",
+    "policy_fingerprint": "55bf9b009c1bc606971fc92b6fc3d792bec0d5deaa183f86353f9e4405d1e090",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -3617,6 +3617,7 @@
       "defect": "Encryption customer managed key is not enabled.",
       "infection": "Secrets Manager misconfigurations weaken secret lifecycle management. Missing automatic rotation, overly permissive resource policies, or absent encryption allow secrets to become stale, broadly accessible, or stored without cryptographic protection.\n",
       "failure": "Managed secret exposure. Secrets stored in Secrets Manager are accessible to unauthorized principals, not rotated on schedule, or stored without encryption.\n",
+      "archetype": "encryption-gap",
       "delta": [
         {
           "property_label": "encryption customer managed key",

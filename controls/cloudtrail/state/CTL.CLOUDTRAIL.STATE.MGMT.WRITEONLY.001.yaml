@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.STATE.MGMT.WRITEONLY.001
+name: CloudTrail Trail Logs Only Write Management Events
+description: >
+  CloudTrail trail event selectors are configured to log
+  only WriteOnly management events. Read events —
+  DescribeInstances, GetSecretValue, ListBuckets,
+  AssumeRole — are not recorded. An attacker performing
+  reconnaissance is invisible: only write actions appear
+  in the audit trail. The reconnaissance phase, where
+  the attacker maps the environment before acting, has
+  no audit record at all.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.1"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-2, AU-12"
+  pci_dss_v4.0: "10.1, 10.2"
+  fedramp_moderate: "AU-2"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-02", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Trail logs only WriteOnly management events. Read
+    operations (reconnaissance) are not recorded.
+  action: >
+    Update the trail's event selectors to include both
+    Read and Write management events
+    (aws cloudtrail put-event-selectors --trail-name
+    <trail> --event-selectors '[{"ReadWriteType":"All",
+    "IncludeManagementEvents":true,"DataResources":[]}]').
+    The volume increase is real but the cost is bounded —
+    management events are far less frequent than data
+    events.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "mgmt_event_read_write": "All",
+          "mgmt_logs_reads": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.mgmt_logs_reads
+      op: eq
+      value: false
+defect: >
+  CloudTrail trail logs only WriteOnly management events.
+  Read operations are not recorded.
+infection: >
+  Read management events include: DescribeInstances
+  (discovering EC2 inventory), ListBuckets (discovering
+  S3 buckets), GetSecretValue (reading credentials),
+  AssumeRole (assuming cross-account roles), GetKeyPolicy
+  (reading KMS key policies). An attacker performing
+  reconnaissance uses read operations to map the
+  environment before taking action. With WriteOnly
+  logging the reconnaissance phase is completely
+  invisible. The attacker discovers every resource, reads
+  every configuration, assumes every role — with no audit
+  record. The first visible event is the first write
+  action — by which time the attacker has full knowledge
+  of the environment.
+failure: >
+  Reconnaissance invisible. Read operations not logged —
+  attacker can map the entire environment without any
+  audit record.
+tests:
+  - name: trail with WriteOnly management events fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            mgmt_event_read_write: "WriteOnly"
+            mgmt_logs_reads: false
+  - name: trail with All management events passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            mgmt_event_read_write: "All"
+            mgmt_logs_reads: true

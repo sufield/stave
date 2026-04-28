@@ -1,0 +1,20 @@
+control: CTL.CLOUDTRAIL.GHOST.CWROLE.001
+defect: >
+  CloudTrail trail references a deleted IAM role for
+  CloudWatch Logs delivery.
+infection: >
+  CloudTrail uses the configured CloudWatchLogsRoleArn to
+  obtain temporary credentials when writing events to the
+  log group. When the role is deleted, every assume-role
+  attempt fails. CloudTrail cannot deliver to CW Logs.
+  The log group is still there — its retention and
+  filters are intact — but no new events arrive. Metric
+  filters evaluate an empty stream. Alarms based on those
+  filters never fire. Distinct from
+  CTL.CLOUDTRAIL.GHOST.CWLOGS.001 (log group itself
+  deleted): here the data path is intact but the
+  credential to use it is missing.
+failure: >
+  Delivery role missing. CloudWatch Logs receives no new
+  events; real-time metric filters and alarms are
+  silently starved.
