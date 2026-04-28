@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.LOCALHOST.001
+name: Cognito App Client Has Localhost Callback URL in Production
+description: >
+  Cognito app client lists a callback URL
+  containing localhost or 127.0.0.1. Localhost
+  callbacks are valid during development but
+  should not appear in production app clients
+  — they hint that the client is mis-promoted
+  from a development environment, and an
+  attacker controlling local DNS or running
+  a local server can intercept callbacks.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "IA-2, CM-2"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "IA-2, CM-2"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Localhost callback in production app
+    client.
+  action: >
+    Remove localhost / 127.0.0.1 entries from
+    the app client's callback_urls. Maintain
+    separate app clients for development (with
+    localhost) and production (with the
+    deployed domain only). Cognito does not
+    itself enforce 'production-only' — the
+    discipline lives in the app client
+    configuration.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "callback_urls": ["https://app.example.com/callback"],
+          "callback_has_localhost": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.callback_has_localhost
+      op: eq
+      value: true
+defect: >
+  Cognito app client has a localhost callback
+  URL.
+infection: >
+  Localhost callbacks are normal during
+  development — the developer needs the
+  redirect to reach a server running on
+  their machine. In production app clients,
+  localhost entries indicate either a
+  development client that was promoted to
+  production without cleanup or an
+  intentional choice with thin justification.
+  Practical risks: an attacker running a
+  service on the user's machine can receive
+  the auth code (less common); a malicious
+  package on the developer's machine can
+  exploit a still-trusted localhost callback;
+  and the broader hygiene issue — the app
+  client's allow-list is loose enough to
+  include localhost, which suggests it may
+  include other broad entries.
+failure: >
+  Production app client trusts localhost.
+  Suggests promotion-without-cleanup; widens
+  the legitimate-callback set.
+tests:
+  - name: localhost in callback list fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            callback_urls:
+              - "https://app.example.com/callback"
+              - "http://localhost:3000/callback"
+            callback_has_localhost: true
+  - name: production-only callbacks pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            callback_urls: ["https://app.example.com/callback"]
+            callback_has_localhost: false

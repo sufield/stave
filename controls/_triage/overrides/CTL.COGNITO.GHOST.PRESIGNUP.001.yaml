@@ -1,0 +1,25 @@
+control: CTL.COGNITO.GHOST.PRESIGNUP.001
+defect: >
+  Cognito pre-sign-up trigger references a
+  deleted Lambda function.
+infection: >
+  The pre-sign-up trigger fires before Cognito
+  finalizes a new user registration. Common
+  uses: domain-restriction logic, captcha
+  validation, custom username normalization,
+  invitation-code verification. When the
+  trigger Lambda is deleted, every signup
+  call invokes a function that doesn't exist;
+  Cognito returns an error to the client.
+  Self-service signup stops working entirely.
+  Admin-create-user may still work depending
+  on configuration, but any consumer-facing
+  app flow that depends on signup is broken.
+  The user pool console shows the trigger as
+  configured (the Lambda ARN is still present);
+  only the actual invocation surfaces the
+  failure.
+failure: >
+  Signup flow broken. Every new user signup
+  fails because the configured trigger Lambda
+  has been deleted.

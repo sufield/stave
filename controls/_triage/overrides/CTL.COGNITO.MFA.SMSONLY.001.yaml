@@ -1,0 +1,26 @@
+control: CTL.COGNITO.MFA.SMSONLY.001
+defect: >
+  Cognito user pool MFA permits only SMS as
+  the second factor.
+infection: >
+  SMS as the only MFA channel collapses MFA
+  security to 'whoever controls the phone
+  number can sign in.' SIM-swap attacks
+  (social-engineering the carrier to port the
+  number to an attacker-controlled SIM) are
+  cheap and well-documented; SS7 interception
+  attacks (intercepting SMS in transit) are
+  available to capable adversaries; carrier
+  insider threats round out the surface. NIST
+  800-63B explicitly deprecated SMS as a
+  preferred MFA channel for these reasons.
+  TOTP authenticator apps (Google
+  Authenticator, Authy, 1Password) defeat all
+  three attack patterns because the secret
+  never leaves the device. A pool offering
+  only SMS is offering something an attacker
+  can frequently bypass.
+failure: >
+  Weak MFA channel. SMS-only second factor is
+  defeatable by SIM swap, SS7 interception,
+  and carrier social engineering.

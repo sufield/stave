@@ -1,0 +1,24 @@
+control: CTL.COGNITO.GHOST.DOMAINDNS.001
+defect: >
+  Cognito custom domain CNAME does not resolve
+  to the configured distribution.
+infection: >
+  Cognito custom domains require a CNAME from
+  the chosen domain (auth.example.com) to the
+  CloudFront distribution Cognito provisions
+  (d1234.cloudfront.net). When that CNAME is
+  removed or repointed, requests to
+  auth.example.com no longer reach Cognito's
+  hosted UI. Browsers see DNS NXDOMAIN, a
+  parking page, or the wrong service entirely.
+  The user pool config still shows the custom
+  domain as configured. The DNS layer is the
+  silent break. Common cause: hosted zone
+  deletion during account cleanup, or a CNAME
+  flip during a domain refresh that didn't
+  account for Cognito's dependency.
+failure: >
+  Hosted UI unreachable on custom domain. The
+  CNAME was deleted or repointed; Cognito's
+  distribution is no longer addressable
+  through the configured domain.

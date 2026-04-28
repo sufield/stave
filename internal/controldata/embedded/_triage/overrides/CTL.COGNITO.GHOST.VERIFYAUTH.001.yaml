@@ -1,0 +1,22 @@
+control: CTL.COGNITO.GHOST.VERIFYAUTH.001
+defect: >
+  Cognito verify-auth-challenge-response trigger
+  references a deleted Lambda function.
+infection: >
+  Verify-auth-challenge-response is the trigger
+  that decides whether the user's submitted
+  answer is correct. With the Lambda deleted,
+  custom auth flows that issue a challenge
+  cannot validate the user's response — the
+  RespondToAuthChallenge call fails. The
+  authentication flow leaves users in an
+  unresolved state: they completed the
+  challenge but Cognito can't verify it. From
+  the user's perspective, MFA codes don't
+  work, magic links don't unlock, CAPTCHAs
+  don't pass — nothing they do completes
+  authentication.
+failure: >
+  Custom auth flow broken at response
+  validation. Verify-auth-challenge Lambda is
+  deleted; user answers cannot be checked.

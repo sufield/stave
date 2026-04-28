@@ -1,0 +1,23 @@
+control: CTL.COGNITO.GHOST.DOMAINCERT.001
+defect: >
+  Cognito custom domain references an ACM
+  certificate that has been deleted or expired.
+infection: >
+  Cognito custom domains require an ACM
+  certificate in us-east-1. The certificate
+  serves TLS for the hosted UI on
+  auth.example.com. When the certificate is
+  deleted from ACM (manual cleanup,
+  StackSets pruning, account hygiene), the
+  domain stops serving HTTPS — every browser
+  request gets a TLS error. Login flows that
+  redirect through the hosted UI break.
+  Mobile apps that resolve to the custom
+  domain fail to fetch the OAuth endpoints.
+  Recovery requires reissuing a certificate
+  and reconfiguring the custom domain — there
+  is no way to undelete an ACM certificate.
+failure: >
+  Hosted UI broken on custom domain. ACM
+  certificate is gone or expired; the domain
+  cannot serve TLS.

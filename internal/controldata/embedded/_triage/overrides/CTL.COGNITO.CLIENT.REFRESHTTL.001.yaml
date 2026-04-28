@@ -1,0 +1,25 @@
+control: CTL.COGNITO.CLIENT.REFRESHTTL.001
+defect: >
+  Cognito app client refresh-token validity
+  exceeds 30 days.
+infection: >
+  Refresh tokens are the long-lived credential
+  in the OAuth model — they exchange for new
+  access tokens without re-authenticating the
+  user. A 365-day refresh token gives a year-
+  long session: log in once, never need to
+  re-auth for a year. This is convenient and
+  dangerous. A device-stolen refresh token,
+  an XSS that exfiltrates the refresh token,
+  or a malicious browser extension that reads
+  storage — any of these gives the attacker
+  the same year-long session. Without refresh-
+  token rotation, the same token works the
+  entire year. With rotation, only the most
+  recent token works, but the attacker rotates
+  along with the user. Bounding the lifetime
+  to 30 days bounds the worst-case exposure
+  window to one month.
+failure: >
+  Multi-month refresh tokens. A stolen refresh
+  token grants long-term session access.

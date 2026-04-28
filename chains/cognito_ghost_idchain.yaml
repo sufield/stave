@@ -1,0 +1,23 @@
+id: cognito_ghost_idchain
+description: >
+  Identity exchange chain is broken at multiple
+  links: the identity pool's linked user pool is
+  deleted, plus the SAML identity provider
+  metadata is unreachable or the custom domain
+  is unusable (cert deleted or DNS gone). The
+  identity pool advertises authentication paths
+  that cannot resolve. Threshold of 2 because
+  one broken path may be transient; multiple
+  broken paths describe an identity layer that
+  no application can reliably reach.
+controls:
+  - CTL.COGNITO.GHOST.IDPOOL.001
+  - CTL.COGNITO.GHOST.SAMLMETA.001
+  - CTL.COGNITO.GHOST.DOMAINCERT.001
+  - CTL.COGNITO.GHOST.DOMAINDNS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

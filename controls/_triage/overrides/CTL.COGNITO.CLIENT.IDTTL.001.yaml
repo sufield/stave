@@ -1,0 +1,24 @@
+control: CTL.COGNITO.CLIENT.IDTTL.001
+defect: >
+  Cognito app client ID-token validity exceeds
+  one hour.
+infection: >
+  ID tokens are bearer tokens carrying user-
+  identity claims signed by Cognito.
+  Applications that read the token's claims
+  to decide what the user can do effectively
+  cache the user's identity for the token's
+  validity window. With a 24-hour ID token,
+  group changes, role updates, or
+  deprovisioning don't propagate until the
+  token expires. A user whose
+  group=admin membership was revoked at
+  09:00 still presents an ID token saying
+  group=admin until 09:00 the next day. A
+  one-hour validity bounds the staleness to
+  a manageable window without forcing
+  pathological re-auth frequency.
+failure: >
+  Stale identity claims. ID tokens valid 24+
+  hours mean group/role changes don't
+  propagate for a day.

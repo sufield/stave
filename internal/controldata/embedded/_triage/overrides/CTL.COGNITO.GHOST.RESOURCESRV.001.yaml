@@ -1,0 +1,24 @@
+control: CTL.COGNITO.GHOST.RESOURCESRV.001
+defect: >
+  Cognito app client references scopes from a
+  deleted resource server.
+infection: >
+  Resource servers in Cognito define custom
+  OAuth scopes that an app client can request.
+  When a resource server is deleted, app
+  clients that listed its scopes are left with
+  references to scopes that no longer exist.
+  The app client configuration looks intact;
+  only at runtime do specific token requests
+  fail. The application code is unaware that
+  some scopes are valid and some are not until
+  the failing flow surfaces an invalid_scope
+  OAuth error. Pinning down which scope
+  doesn't exist requires comparing the app
+  client's scope list against the current
+  resource server inventory.
+failure: >
+  App client has invalid scope references.
+  Some OAuth flows fail with invalid_scope
+  because the underlying resource server was
+  deleted.

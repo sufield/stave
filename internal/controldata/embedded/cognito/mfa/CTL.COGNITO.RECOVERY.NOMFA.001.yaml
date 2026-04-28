@@ -1,0 +1,141 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.RECOVERY.NOMFA.001
+name: Cognito Account Recovery Bypasses MFA
+description: >
+  Cognito user pool enforces MFA but the
+  account-recovery configuration permits
+  recovery via email or phone without
+  challenging MFA. An attacker who controls
+  the user's email or SMS recovery channel
+  can reset the password and complete
+  authentication without ever encountering
+  the second factor. MFA becomes effectively
+  optional through the recovery path.
+domain: identity
+severity: high
+archetype: false-protection
+compliance:
+  cis_aws_v3.0: "1.5"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "IA-2, IA-5, AC-7"
+  pci_dss_v4.0: "8.4, 8.5"
+  fedramp_moderate: "IA-2, IA-5"
+  hipaa: "164.308(a)(5)(ii)(D), 164.312(a)(2)(i)"
+  iso_27001_2022: "A.5.17, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Recovery flow doesn't challenge MFA. The
+    second factor is bypassable.
+  action: >
+    Configure the account-recovery setting so
+    the recovery flow re-challenges MFA after
+    the user proves control of the email or
+    phone. AdminResetUserPassword and
+    self-service password reset both need to
+    re-issue the MFA challenge before
+    completing. If the user pool uses
+    advanced security features, configure the
+    recovery risk decision to require step-up
+    auth.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "auth": { "mfa_enforced": true },
+        "cognito": {
+          "recovery_requires_mfa": true,
+          "recovery_bypasses_mfa": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.auth.mfa_enforced
+      op: eq
+      value: true
+    - field: properties.identity.cognito.recovery_bypasses_mfa
+      op: eq
+      value: true
+defect: >
+  Cognito user pool recovery flow bypasses
+  MFA.
+infection: >
+  Account recovery is the under-tested
+  authentication path. The pool admin
+  configures MFA, sees 'MFA: required' on
+  every login screenshot, and considers the
+  pool secure. The recovery path — typically
+  reachable via the 'forgot password' link —
+  validates only the recovery channel (an
+  email or SMS code), accepts a new password,
+  and authenticates the user. MFA never
+  appears in the flow. An attacker who
+  compromises the user's email account or
+  SIMs the phone number completes recovery
+  and signs in without facing the second
+  factor. The MFA enforcement is real for
+  the happy-path login and theatre for the
+  recovery path; an attacker uses the path
+  that doesn't enforce.
+failure: >
+  Recovery path defeats MFA. Password reset
+  via email or phone authenticates the user
+  without re-challenging MFA.
+tests:
+  - name: recovery bypasses MFA fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          auth:
+            mfa_enforced: true
+          cognito:
+            recovery_requires_mfa: false
+            recovery_bypasses_mfa: true
+  - name: recovery requires MFA passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          auth:
+            mfa_enforced: true
+          cognito:
+            recovery_requires_mfa: true
+            recovery_bypasses_mfa: false
+  - name: pool without MFA does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          auth:
+            mfa_enforced: false
+          cognito:
+            recovery_requires_mfa: false
+            recovery_bypasses_mfa: true

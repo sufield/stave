@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.PREAUTH.001
+name: Cognito Pre-Authentication Lambda Trigger References Deleted Function
+description: >
+  Cognito user pool has a pre-authentication
+  Lambda trigger configured but the Lambda has
+  been deleted. Every login attempt invokes a
+  function that doesn't exist; the
+  authentication call returns an error. The
+  most disruptive trigger ghost — login is
+  the most-used pool operation.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1, A1.1, A1.2"
+  nist_800_53_r5: "CM-2, CM-3, IA-2"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "CM-3, IA-2"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    Pre-authentication Lambda is gone; login
+    fails for every user.
+  action: >
+    Redeploy the Lambda with the same ARN, or
+    remove pre_authentication from
+    lambda_config: aws cognito-idp
+    update-user-pool. Pre-authentication
+    triggers commonly enforce IP allow-lists,
+    risk gates, or device fingerprinting —
+    confirm that intent is preserved through
+    another control surface before removing.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "user_pool_id": "us-east-1_abcdefg",
+          "trigger_type": "pre_authentication",
+          "trigger_lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:cog-preauth",
+          "trigger_lambda_exists": true,
+          "has_ghost_trigger": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.trigger_type
+      op: eq
+      value: pre_authentication
+    - field: properties.identity.cognito.has_ghost_trigger
+      op: eq
+      value: true
+defect: >
+  Cognito pre-authentication trigger references
+  a deleted Lambda function.
+infection: >
+  The pre-authentication trigger fires on every
+  login attempt before Cognito validates
+  credentials. Use cases: IP allow-listing,
+  device-binding gates, custom risk scoring,
+  user-state checks. With the Lambda deleted,
+  every InitiateAuth call invokes a function
+  that returns ResourceNotFoundException;
+  Cognito surfaces an internal error to the
+  client; the user can't log in. Unlike pre-
+  sign-up (which only blocks new users), pre-
+  authentication blocks all existing users.
+  Every active session that needs to refresh
+  via re-auth, every new login from a new
+  device, every login after token expiry —
+  all fail.
+failure: >
+  Login broken for all users. Pre-authentication
+  trigger Lambda has been deleted; every
+  authentication attempt fails.
+tests:
+  - name: ghost pre-auth trigger fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            user_pool_id: "us-east-1_abcdefg"
+            trigger_type: "pre_authentication"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:deleted-fn"
+            trigger_lambda_exists: false
+            has_ghost_trigger: true
+  - name: live pre-auth trigger passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            user_pool_id: "us-east-1_abcdefg"
+            trigger_type: "pre_authentication"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:cog-preauth"
+            trigger_lambda_exists: true
+            has_ghost_trigger: false

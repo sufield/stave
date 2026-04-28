@@ -1,0 +1,26 @@
+control: CTL.COGNITO.IDPOOL.UNAUTH.IAM.001
+defect: >
+  Cognito unauthenticated role has IAM
+  administration privileges.
+infection: >
+  iam:* on the unauthenticated role is the
+  worst single configuration in this catalog.
+  An anonymous client calls
+  GetCredentialsForIdentity, gets short-lived
+  credentials authorized for iam:CreateUser,
+  iam:CreateAccessKey, iam:AttachUserPolicy
+  with AdministratorAccess, and now has
+  permanent admin credentials in the account
+  — completely outside the Cognito session
+  lifecycle. Even iam:PassRole on the
+  unauthenticated role is enough for anonymous
+  escalation: the attacker launches an EC2
+  instance with a different role attached and
+  takes over via the instance metadata service.
+  The control fires when any IAM administrative
+  action appears in the unauth role's policy
+  set.
+failure: >
+  Anonymous IAM administration. The internet
+  has IAM admin credentials through the
+  unauthenticated identity pool role.

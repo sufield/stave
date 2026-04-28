@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDPOOL.UNAUTH.DDB.001
+name: Cognito Identity Pool Unauthenticated Role Has DynamoDB Access
+description: >
+  Cognito identity pool allows unauthenticated
+  access AND the unauthenticated role grants
+  DynamoDB actions (GetItem, Query, Scan,
+  PutItem, or wildcard dynamodb actions) on
+  one or more tables. Anonymous clients can
+  read from or write to DynamoDB through the
+  Cognito session.
+domain: exposure
+severity: critical
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6, IA-2"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  hipaa: "164.308(a)(4)(ii)(B), 164.312(a)(1)"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-09", "DSP-04"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    Unauthenticated role has DynamoDB access.
+    Tables are publicly addressable through
+    anonymous Cognito credentials.
+  action: >
+    Remove DynamoDB actions from the
+    unauthenticated role. If anonymous read of
+    specific items is genuinely required,
+    front the table with an authenticated API
+    rather than expose dynamodb:GetItem
+    directly. Audit CloudTrail for dynamodb
+    API calls under the unauth role — those
+    are anonymous reads or writes that may
+    have already touched the table.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "access": { "allow_unauthenticated": true },
+        "cognito": {
+          "unauth_role_ddb_actions": [],
+          "unauth_role_ddb_tables": [],
+          "unauth_role_has_ddb": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.access.allow_unauthenticated
+      op: eq
+      value: true
+    - field: properties.identity.cognito.unauth_role_has_ddb
+      op: eq
+      value: true
+defect: >
+  Cognito unauthenticated role has DynamoDB
+  access.
+infection: >
+  DynamoDB tables are commonly used for user
+  data — profiles, sessions, leaderboards,
+  application state. dynamodb:Scan or
+  dynamodb:GetItem on the unauthenticated role
+  lets anyone read every item in scope; Query
+  reveals data ordered by partition key (often
+  reveals user IDs and patterns). PutItem,
+  UpdateItem, DeleteItem on the unauth role
+  allow anonymous writes — data destruction,
+  data injection, leaderboard manipulation,
+  anything within the scope. The internet is
+  the database client.
+failure: >
+  Anonymous DynamoDB access. Tables accessible
+  to the unauthenticated role are publicly
+  readable or writable through Cognito.
+tests:
+  - name: unauth role with DynamoDB fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-id-pool"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          access:
+            allow_unauthenticated: true
+          cognito:
+            unauth_role_ddb_actions: ["dynamodb:Scan", "dynamodb:GetItem"]
+            unauth_role_ddb_tables: ["arn:aws:dynamodb:us-east-1:111122223333:table/Users"]
+            unauth_role_has_ddb: true
+  - name: unauth role without DynamoDB passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-id-pool"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          access:
+            allow_unauthenticated: true
+          cognito:
+            unauth_role_ddb_actions: []
+            unauth_role_ddb_tables: []
+            unauth_role_has_ddb: false

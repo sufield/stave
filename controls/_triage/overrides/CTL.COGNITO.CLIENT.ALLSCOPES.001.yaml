@@ -1,0 +1,25 @@
+control: CTL.COGNITO.CLIENT.ALLSCOPES.001
+defect: >
+  Cognito app client has every available OAuth
+  scope enabled.
+infection: >
+  Scopes are the OAuth access-control surface.
+  Each scope grants a specific kind of access
+  (openid: identity claims; email: email
+  attribute; aws.cognito.signin.user.admin:
+  Cognito user-admin API; custom scopes:
+  whatever the resource server defines). Apps
+  that enable everything ask Cognito to sign
+  off on token requests for any scope —
+  the only filter is what the requesting
+  client actually asks for. An attacker who
+  can persuade the user (phishing, malicious
+  link) to authorize a wider scope gets
+  it; a compromised application that escalates
+  its own scopes from openid to
+  user-admin gets that access too. Narrow
+  allowed_o_auth_scopes locks the ceiling.
+failure: >
+  Over-permissioned scope ceiling. App client
+  can issue tokens for scopes the application
+  doesn't legitimately need.

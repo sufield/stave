@@ -1,0 +1,20 @@
+control: CTL.COGNITO.GHOST.CREATEAUTH.001
+defect: >
+  Cognito create-auth-challenge trigger
+  references a deleted Lambda function.
+infection: >
+  The create-auth-challenge trigger generates
+  the challenge content the user must respond
+  to — a CAPTCHA, a one-time code, a magic-link
+  token, an attestation. With the Lambda
+  deleted, define-auth-challenge may run
+  successfully (saying 'next: CUSTOM_CHALLENGE')
+  and then create-auth-challenge invocation
+  fails. Authentication breaks mid-flow with a
+  cryptic error to the client. Users who
+  previously logged in successfully now can't
+  receive the challenge they need to complete.
+failure: >
+  Custom auth flow broken at challenge
+  creation. Create-auth-challenge Lambda is
+  deleted; users get errors mid-authentication.

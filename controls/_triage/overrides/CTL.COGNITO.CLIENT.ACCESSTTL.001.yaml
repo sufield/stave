@@ -1,0 +1,23 @@
+control: CTL.COGNITO.CLIENT.ACCESSTTL.001
+defect: >
+  Cognito app client access-token validity
+  exceeds one hour.
+infection: >
+  An access token with 24-hour validity is
+  usable for 24 hours after theft. The OAuth
+  refresh-token model exists precisely to keep
+  access tokens short — a stolen access token
+  ages out in minutes; the refresh token is
+  the longer-lived credential, and refresh
+  tokens can be revoked centrally. Apps that
+  bump access-token validity to reduce
+  refresh frequency are trading silent
+  re-authentication latency for a longer
+  exposure window. For sensitive operations
+  (financial transactions, healthcare data),
+  one hour is already long; for lower-risk
+  data it's a reasonable upper bound.
+failure: >
+  Long-lived access tokens. Stolen tokens
+  remain usable beyond the standard hour
+  window.

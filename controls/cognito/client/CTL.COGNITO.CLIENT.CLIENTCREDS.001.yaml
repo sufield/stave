@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.CLIENTCREDS.001
+name: Cognito App Client Mixes User-Facing and Client-Credentials Flows
+description: >
+  Cognito app client allows the
+  client_credentials OAuth flow alongside
+  user-facing flows (code or implicit).
+  client_credentials is for machine-to-machine
+  authentication — there is no user. Mixing it
+  with user flows on the same client creates
+  ambiguous security boundaries: the client
+  can issue tokens as itself or on behalf of a
+  user.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "IA-2, IA-3"
+  pci_dss_v4.0: "7.2, 8.3"
+  fedramp_moderate: "IA-2, IA-3"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.5
+remediation:
+  description: >
+    User flows and client_credentials should be
+    on separate clients.
+  action: >
+    Split into two app clients: one for the
+    user-facing flow (code with PKCE) and a
+    separate one for machine-to-machine
+    workloads (client_credentials only).
+    Remove client_credentials from the user
+    client and remove user flows from the M2M
+    client. Keep their secrets and scopes
+    independent.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "allowed_oauth_flows": ["code"],
+          "mixes_user_and_m2m": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.mixes_user_and_m2m
+      op: eq
+      value: true
+defect: >
+  Cognito app client mixes user-facing flows
+  with client_credentials.
+infection: >
+  client_credentials authenticates a service
+  to Cognito with no user identity — the
+  resulting access token represents the
+  application itself. Authorization-code (or
+  implicit) authenticates a user, with the
+  application acting on the user's behalf. The
+  same app client supporting both means
+  whatever scopes are granted to the
+  user-facing flow are also reachable via
+  client_credentials, and vice versa. An
+  attacker who compromises the client secret
+  can issue tokens as the application without
+  any user; an attacker who compromises a
+  user's credentials can request scopes the
+  M2M side was supposed to own. The boundary
+  between human and machine identity is
+  collapsed onto one client.
+failure: >
+  Ambiguous identity boundary. Same client
+  issues tokens both as itself and on behalf
+  of users.
+tests:
+  - name: client mixing flows fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            allowed_oauth_flows: ["code", "client_credentials"]
+            mixes_user_and_m2m: true
+  - name: user-only client passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            allowed_oauth_flows: ["code"]
+            mixes_user_and_m2m: false

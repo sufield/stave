@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.MFA.SMSONLY.001
+name: Cognito User Pool MFA Allows Only SMS
+description: >
+  Cognito user pool has MFA enabled but only
+  SMS is permitted as the second factor. SMS
+  MFA is the weakest standard MFA channel —
+  vulnerable to SIM swap, SS7 interception,
+  and social engineering against carriers. A
+  pool that requires SMS for MFA is requiring
+  something many attackers can defeat.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.5"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "IA-2, IA-5"
+  pci_dss_v4.0: "8.4, 8.5"
+  fedramp_moderate: "IA-2, IA-5"
+  hipaa: "164.308(a)(5)(ii)(D), 164.312(a)(2)(i)"
+  iso_27001_2022: "A.5.17, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    MFA is enforced but only via SMS. The
+    second factor is the weakest available.
+  action: >
+    Enable software_token_mfa_configuration
+    (TOTP) on the user pool: aws cognito-idp
+    set-user-pool-mfa-config with
+    SoftwareTokenMfaConfiguration.Enabled=true.
+    Encourage or require users to enroll an
+    authenticator app (TOTP). Keep SMS as a
+    fallback if needed but make TOTP the
+    preferred path during enrollment. For
+    populations whose threat model includes
+    SIM-swap (executives, finance, security
+    teams), make TOTP the only acceptable MFA.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "mfa_sms_enabled": true,
+          "mfa_totp_enabled": true,
+          "mfa_sms_only": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.mfa_sms_only
+      op: eq
+      value: true
+defect: >
+  Cognito user pool MFA permits only SMS as
+  the second factor.
+infection: >
+  SMS as the only MFA channel collapses MFA
+  security to 'whoever controls the phone
+  number can sign in.' SIM-swap attacks
+  (social-engineering the carrier to port the
+  number to an attacker-controlled SIM) are
+  cheap and well-documented; SS7 interception
+  attacks (intercepting SMS in transit) are
+  available to capable adversaries; carrier
+  insider threats round out the surface. NIST
+  800-63B explicitly deprecated SMS as a
+  preferred MFA channel for these reasons.
+  TOTP authenticator apps (Google
+  Authenticator, Authy, 1Password) defeat all
+  three attack patterns because the secret
+  never leaves the device. A pool offering
+  only SMS is offering something an attacker
+  can frequently bypass.
+failure: >
+  Weak MFA channel. SMS-only second factor is
+  defeatable by SIM swap, SS7 interception,
+  and carrier social engineering.
+tests:
+  - name: SMS-only MFA fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            mfa_sms_enabled: true
+            mfa_totp_enabled: false
+            mfa_sms_only: true
+  - name: TOTP available passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            mfa_sms_enabled: true
+            mfa_totp_enabled: true
+            mfa_sms_only: false

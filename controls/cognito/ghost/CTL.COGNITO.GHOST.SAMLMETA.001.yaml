@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.SAMLMETA.001
+name: Cognito SAML Identity Provider Metadata Unreachable
+description: >
+  Cognito user pool has a SAML identity provider
+  configured with a metadata URL that is no
+  longer reachable. SAML federation fails
+  because Cognito cannot fetch the IdP
+  certificate or endpoints. Federated logins
+  break.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-3, CM-2, IA-2, IA-8"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "AC-3, IA-2, IA-8"
+  iso_27001_2022: "A.5.16, A.5.17"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 3.5
+remediation:
+  description: >
+    SAML metadata endpoint is unreachable.
+    Federation fails for users from this IdP.
+  action: >
+    Verify the IdP metadata URL responds with
+    valid metadata XML. If the IdP changed
+    their endpoint, update the Cognito
+    provider: aws cognito-idp
+    update-identity-provider with corrected
+    metadata URL or refreshed metadata file.
+    For static metadata configurations, fetch
+    fresh metadata from the IdP and re-upload.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "saml_provider_name": "Okta",
+          "saml_metadata_url": "https://example.okta.com/metadata",
+          "saml_metadata_reachable": true,
+          "has_ghost_saml_metadata": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.has_ghost_saml_metadata
+      op: eq
+      value: true
+defect: >
+  SAML identity provider metadata URL is
+  unreachable.
+infection: >
+  Cognito federates with SAML IdPs by reading
+  the IdP's metadata document — endpoints,
+  signing certificates, supported bindings.
+  When the metadata URL is unreachable (DNS
+  failure, IdP-side outage, URL changed
+  without notification), Cognito cannot
+  validate incoming SAML assertions. Federated
+  users redirect to the IdP, log in
+  successfully on the IdP side, and are
+  redirected back to Cognito with a SAML
+  assertion that Cognito then fails to verify.
+  From the user's perspective: 'Authentication
+  succeeded but the application broke.' Most
+  common cause: certificate rotation at the
+  IdP. The metadata URL still works but the
+  cached metadata in Cognito is stale.
+failure: >
+  SAML federation broken. Cognito cannot fetch
+  IdP metadata; federated logins fail at
+  assertion validation.
+tests:
+  - name: unreachable SAML metadata fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_provider_name: "Okta"
+            saml_metadata_url: "https://expired.example/metadata"
+            saml_metadata_reachable: false
+            has_ghost_saml_metadata: true
+  - name: reachable SAML metadata passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            saml_provider_name: "Okta"
+            saml_metadata_url: "https://example.okta.com/metadata"
+            saml_metadata_reachable: true
+            has_ghost_saml_metadata: false

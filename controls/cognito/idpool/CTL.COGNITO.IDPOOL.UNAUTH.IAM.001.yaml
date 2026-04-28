@@ -1,0 +1,121 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDPOOL.UNAUTH.IAM.001
+name: Cognito Identity Pool Unauthenticated Role Has IAM Privileges
+description: >
+  Cognito identity pool allows unauthenticated
+  access AND the unauthenticated IAM role has
+  IAM privileges (iam:* or admin-level IAM
+  actions like CreateRole, PutRolePolicy,
+  AttachRolePolicy, PassRole). Anonymous clients
+  can escalate privileges through IAM —
+  publicly available IAM administration.
+domain: exposure
+severity: critical
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6, IA-2"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  hipaa: "164.308(a)(4)(ii)(B)"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    Unauthenticated role has IAM privileges.
+    Anonymous escalation is one API call away.
+  action: >
+    Remove all iam:* actions from the
+    unauthenticated role immediately. There is
+    no legitimate reason for an anonymous
+    client to administer IAM. After removal,
+    audit CloudTrail for any iam: API calls
+    performed under the role's session — those
+    were anonymous calls.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "access": { "allow_unauthenticated": true },
+        "cognito": {
+          "unauth_role_iam_actions": [],
+          "unauth_role_has_iam": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.access.allow_unauthenticated
+      op: eq
+      value: true
+    - field: properties.identity.cognito.unauth_role_has_iam
+      op: eq
+      value: true
+defect: >
+  Cognito unauthenticated role has IAM
+  administration privileges.
+infection: >
+  iam:* on the unauthenticated role is the
+  worst single configuration in this catalog.
+  An anonymous client calls
+  GetCredentialsForIdentity, gets short-lived
+  credentials authorized for iam:CreateUser,
+  iam:CreateAccessKey, iam:AttachUserPolicy
+  with AdministratorAccess, and now has
+  permanent admin credentials in the account
+  — completely outside the Cognito session
+  lifecycle. Even iam:PassRole on the
+  unauthenticated role is enough for anonymous
+  escalation: the attacker launches an EC2
+  instance with a different role attached and
+  takes over via the instance metadata service.
+  The control fires when any IAM administrative
+  action appears in the unauth role's policy
+  set.
+failure: >
+  Anonymous IAM administration. The internet
+  has IAM admin credentials through the
+  unauthenticated identity pool role.
+tests:
+  - name: unauth role with iam:* fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-id-pool"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          access:
+            allow_unauthenticated: true
+          cognito:
+            unauth_role_iam_actions: ["iam:*"]
+            unauth_role_has_iam: true
+  - name: unauth role without IAM passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-id-pool"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          access:
+            allow_unauthenticated: true
+          cognito:
+            unauth_role_iam_actions: []
+            unauth_role_has_iam: false

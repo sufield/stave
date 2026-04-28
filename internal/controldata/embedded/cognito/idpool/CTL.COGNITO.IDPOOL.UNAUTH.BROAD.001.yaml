@@ -1,0 +1,150 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDPOOL.UNAUTH.BROAD.001
+name: Cognito Identity Pool Unauthenticated Role Has Broad Permissions
+description: >
+  Cognito identity pool allows unauthenticated
+  access AND the unauthenticated IAM role has
+  broad permissions (more than ten allowed
+  actions, or wildcard actions). Anonymous
+  clients receive AWS credentials with
+  excessive privileges — every action allowed
+  by the role is publicly invocable on the
+  internet.
+domain: exposure
+severity: critical
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6, IA-2"
+  pci_dss_v4.0: "7.1, 7.2, 8.3"
+  fedramp_moderate: "AC-3, AC-6"
+  hipaa: "164.308(a)(4)(ii)(B)"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-09", "IAM-16", "IVS-03"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    Unauthenticated role has too many or too
+    broad actions. Anonymous credentials are
+    over-privileged.
+  action: >
+    Either disable unauthenticated access
+    entirely (most cases — see GUEST control)
+    or scope the unauthenticated role to a
+    handful of specific read-only actions
+    against narrow resources. Replace wildcard
+    actions with explicit action lists. The
+    unauthenticated role should typically have
+    fewer than five distinct actions, all
+    against tightly-scoped resources.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "access": {
+          "allow_unauthenticated": true
+        },
+        "cognito": {
+          "unauth_role_action_count": 3,
+          "unauth_role_has_wildcard_action": false,
+          "unauth_role_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.access.allow_unauthenticated
+      op: eq
+      value: true
+    - field: properties.identity.cognito.unauth_role_broad
+      op: eq
+      value: true
+defect: >
+  Cognito identity pool allows unauthenticated
+  access and the unauthenticated role has broad
+  permissions.
+infection: >
+  Identity pools that allow unauthenticated
+  access exchange anonymous client requests for
+  short-lived AWS credentials backed by a
+  configured IAM role. When that role has
+  wildcard actions or a long list of allowed
+  actions, anyone on the internet can call
+  GetCredentialsForIdentity, get fresh
+  credentials, and invoke any of those actions
+  with no login. The 'unauthenticated' label
+  refers to the user identity (none), not to
+  the AWS API surface — the API surface is
+  fully authenticated by AWS using the role's
+  short-lived credentials. Every action allowed
+  on the role is the public's action. With
+  more than ten actions or a wildcard, the
+  blast radius is wide enough that exhaustive
+  triage is impractical; the safer default is
+  to scope the role narrowly or remove
+  unauthenticated access.
+failure: >
+  Anonymous AWS access at scale. Anyone on the
+  internet receives credentials authorized for
+  many AWS actions; data and compute are
+  publicly addressable through the
+  unauthenticated role.
+tests:
+  - name: broad unauth role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-id-pool"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          access:
+            allow_unauthenticated: true
+          cognito:
+            unauth_role_action_count: 24
+            unauth_role_has_wildcard_action: true
+            unauth_role_broad: true
+  - name: scoped unauth role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-id-pool"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          access:
+            allow_unauthenticated: true
+          cognito:
+            unauth_role_action_count: 3
+            unauth_role_has_wildcard_action: false
+            unauth_role_broad: false
+  - name: unauth disabled does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-id-pool"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          access:
+            allow_unauthenticated: false
+          cognito:
+            unauth_role_action_count: 24
+            unauth_role_has_wildcard_action: true
+            unauth_role_broad: true

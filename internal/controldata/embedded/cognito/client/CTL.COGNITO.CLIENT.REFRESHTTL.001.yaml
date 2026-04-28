@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.REFRESHTTL.001
+name: Cognito App Client Refresh Token Validity Exceeds 30 Days
+description: >
+  Cognito app client issues refresh tokens with
+  validity longer than 30 days. Refresh tokens
+  are the long-lived authentication credential
+  — a 365-day refresh token is effectively a
+  year-long session. Combined with absent
+  rotation, a single stolen refresh token gives
+  the attacker a year of access.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-2, IA-5"
+  pci_dss_v4.0: "8.6"
+  fedramp_moderate: "IA-2, IA-5"
+  iso_27001_2022: "A.5.17, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Refresh-token lifetime is too long.
+  action: >
+    Set refresh_token_validity to 30 days or
+    less for typical applications: aws
+    cognito-idp update-user-pool-client
+    --refresh-token-validity 30
+    --token-validity-units RefreshToken=days.
+    For sensitive workloads (financial,
+    health), consider seven days or shorter.
+    Pair with refresh-token rotation enabled
+    so tokens rotate on use rather than
+    persisting unchanged.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "refresh_token_validity_seconds": 2592000,
+          "refresh_token_too_long": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.refresh_token_too_long
+      op: eq
+      value: true
+defect: >
+  Cognito app client refresh-token validity
+  exceeds 30 days.
+infection: >
+  Refresh tokens are the long-lived credential
+  in the OAuth model — they exchange for new
+  access tokens without re-authenticating the
+  user. A 365-day refresh token gives a year-
+  long session: log in once, never need to
+  re-auth for a year. This is convenient and
+  dangerous. A device-stolen refresh token,
+  an XSS that exfiltrates the refresh token,
+  or a malicious browser extension that reads
+  storage — any of these gives the attacker
+  the same year-long session. Without refresh-
+  token rotation, the same token works the
+  entire year. With rotation, only the most
+  recent token works, but the attacker rotates
+  along with the user. Bounding the lifetime
+  to 30 days bounds the worst-case exposure
+  window to one month.
+failure: >
+  Multi-month refresh tokens. A stolen refresh
+  token grants long-term session access.
+tests:
+  - name: 365-day refresh token fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            refresh_token_validity_seconds: 31536000
+            refresh_token_too_long: true
+  - name: 30-day refresh token passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            refresh_token_validity_seconds: 2592000
+            refresh_token_too_long: false

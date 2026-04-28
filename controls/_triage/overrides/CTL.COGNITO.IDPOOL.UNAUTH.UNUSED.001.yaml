@@ -1,0 +1,27 @@
+control: CTL.COGNITO.IDPOOL.UNAUTH.UNUSED.001
+defect: >
+  Cognito identity pool allows unauthenticated
+  access but no application references it.
+infection: >
+  Identity pools are commonly created via
+  console wizards or Terraform modules with
+  defaults including allow_unauthenticated:
+  true. If the pool was never wired into an
+  application — or if the application that
+  used it was decommissioned — the identity
+  pool sits in the account exposing anonymous
+  credentials backed by whatever IAM role
+  was attached. The role may be tightly
+  scoped or may be wide; either way, the
+  exposure has no offsetting business
+  purpose. Default-on misconfiguration
+  combined with no use makes this pure
+  governance debt that may have already been
+  exploited without anyone noticing — there's
+  no application monitoring the pool, so
+  anonymous credential issuance produces no
+  signal.
+failure: >
+  Default-on anonymous access without purpose.
+  Identity pool exposes credentials nobody
+  asked for.

@@ -1,0 +1,23 @@
+control: CTL.COGNITO.GHOST.USERMIGRATE.001
+defect: >
+  Cognito user-migration trigger references a
+  deleted Lambda function.
+infection: >
+  The user-migration trigger fires when a user
+  not yet in the Cognito pool attempts to log
+  in — typically because they exist in a
+  legacy directory the team is migrating from.
+  The Lambda authenticates against the legacy
+  source and, on success, instructs Cognito to
+  create the user. With the Lambda deleted,
+  any legacy user who tries to sign in for the
+  first time fails — Cognito has no record of
+  them and no way to look them up. Migration
+  stops dead. Users who never signed in to
+  the old system since migration began are
+  permanently locked out until the trigger is
+  restored.
+failure: >
+  User migration broken. Legacy users cannot
+  sign in to the new pool because the
+  migration trigger Lambda was deleted.

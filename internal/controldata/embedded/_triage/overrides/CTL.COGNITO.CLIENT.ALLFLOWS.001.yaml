@@ -1,0 +1,25 @@
+control: CTL.COGNITO.CLIENT.ALLFLOWS.001
+defect: >
+  Cognito app client has all OAuth flows
+  enabled.
+infection: >
+  An app client with code, implicit, and
+  client_credentials all enabled is a client
+  configured for every shape of application
+  the OAuth spec supports. Real applications
+  are one shape. Enabling all three means an
+  attacker who steals the client_id can
+  attempt whichever flow gives them the easiest
+  path — implicit if they want to bypass code
+  exchange, client_credentials if they have
+  the secret, code with PKCE if they want
+  user impersonation. The flow the
+  application doesn't use is still available
+  to attackers. The pattern is symptomatic
+  of console-wizard provisioning where every
+  checkbox is enabled by default; production
+  apps should narrow the list.
+failure: >
+  Multi-flow client. App client supports every
+  OAuth flow shape; attack surface includes
+  flows the application doesn't use.

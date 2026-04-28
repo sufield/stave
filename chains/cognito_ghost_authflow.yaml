@@ -1,0 +1,25 @@
+id: cognito_ghost_authflow
+description: >
+  Custom authentication flow is structurally
+  broken: pre-authentication trigger Lambda is
+  deleted plus one or more of the three custom-
+  auth challenge triggers (define, create,
+  verify) is also deleted. Each individually
+  blocks an authentication path; together they
+  describe a custom-auth pipeline that cannot
+  begin or cannot complete. Threshold of 2
+  because partial breakage in custom auth is
+  the dangerous compound — half the flow
+  works and the other half fails mid-
+  authentication.
+controls:
+  - CTL.COGNITO.GHOST.PREAUTH.001
+  - CTL.COGNITO.GHOST.DEFINEAUTH.001
+  - CTL.COGNITO.GHOST.CREATEAUTH.001
+  - CTL.COGNITO.GHOST.VERIFYAUTH.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

@@ -3,31 +3,31 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1929
-**Pack hash:** `dc039306b752482c6f130296295046146a4a519a0c7d8f8ea3c76fb3a8a999e4`
+**Total controls:** 1966
+**Pack hash:** `4173f393777307bd40d3d1af8ce25b5ff163c28f6acedcc9757d15c82d8c5fd2`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 214 |
-| high | 859 |
+| critical | 226 |
+| high | 876 |
 | info | 16 |
 | low | 130 |
-| medium | 710 |
+| medium | 718 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 48 |
+| audit | 50 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1018 |
-| governance | 254 |
+| exposure | 1047 |
+| governance | 256 |
 | hygiene | 16 |
-| identity | 333 |
+| identity | 337 |
 | network | 28 |
 | resilience | 18 |
 | secrets | 4 |
@@ -7500,6 +7500,81 @@ Cognito Advanced Security Features detects and responds to compromised credentia
 
 ---
 
+### CTL.COGNITO.CLIENT.ACCESSTTL.001
+
+**Cognito App Client Access Token Validity Exceeds One Hour**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, IA-5; iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-2, IA-5, SC-12; pci_dss_v4.0: 8.6; soc2: CC6.1, CC6.3;
+
+Cognito app client issues access tokens with validity longer than one hour. Long-lived access tokens widen the window during which a stolen token can be used; the refresh-token model is designed to keep access tokens short-lived (5–60 minutes) while refresh tokens carry longevity.
+
+**Remediation:** Set access_token_validity to one hour (3600 seconds) or less: aws cognito-idp update-user-pool-client with --access-token-validity 60 and --token-validity-units AccessToken=minutes. Refresh tokens carry longevity and rotate on use; access tokens should be short.
+
+---
+
+### CTL.COGNITO.CLIENT.ALLFLOWS.001
+
+**Cognito App Client Enables All OAuth Flows Indiscriminately**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, SA-10; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito app client has all three OAuth flows enabled simultaneously (authorization code, implicit, and client credentials). A real application uses one flow; allowing all three multiplies the attack surface and indicates the app client was provisioned without thinking about the use case.
+
+**Remediation:** Determine which flow the application uses (authorization-code with PKCE for almost all modern apps; client_credentials only for machine-to-machine workloads) and remove the others from allowed_o_auth_flows. Each disabled flow closes a parallel authentication path.
+
+---
+
+### CTL.COGNITO.CLIENT.ALLSCOPES.001
+
+**Cognito App Client Has All OAuth Scopes Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, AC-6; iso_27001_2022: A.5.15, A.8.5; nist_800_53_r5: AC-3, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+Cognito app client has every available OAuth scope enabled (openid, email, profile, phone, aws.cognito.signin.user.admin, plus every custom scope from every resource server). The client can request any scope the user pool defines — over-permissioned by default.
+
+**Remediation:** List the scopes the application requires, then update allowed_o_auth_scopes to that list only: aws cognito-idp update-user-pool-client. Most apps need only openid + email + profile; adding aws.cognito.signin.user.admin enables the user-admin API surface (often a much larger surface than the app needs).
+
+---
+
+### CTL.COGNITO.CLIENT.ATTRRW.001
+
+**Cognito App Client Can Read and Write All User Attributes**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6; hipaa: 164.308(a)(4)(ii)(B); iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.1, 7.2, 8.3; soc2: CC6.1, CC6.3;
+
+Cognito app client has all user attributes in both read_attributes and write_attributes. The client can read every attribute Cognito stores (including sensitive ones like phone, ssn-bearing custom attributes, internal flags) and write every attribute (including admin-only attributes that should be immutable from the client side).
+
+**Remediation:** Narrow read_attributes to what the application actually displays and write_attributes to what the user is allowed to self-modify (typically just profile fields like preferred_username, given_name, family_name, picture). Admin- only attributes (groups, custom:role, internal flags) should not be in write_attributes for any user-facing client.
+
+---
+
+### CTL.COGNITO.CLIENT.CLIENTCREDS.001
+
+**Cognito App Client Mixes User-Facing and Client-Credentials Flows**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-2, IA-3; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-3; pci_dss_v4.0: 7.2, 8.3; soc2: CC6.1, CC6.3;
+
+Cognito app client allows the client_credentials OAuth flow alongside user-facing flows (code or implicit). client_credentials is for machine-to-machine authentication — there is no user. Mixing it with user flows on the same client creates ambiguous security boundaries: the client can issue tokens as itself or on behalf of a user.
+
+**Remediation:** Split into two app clients: one for the user-facing flow (code with PKCE) and a separate one for machine-to-machine workloads (client_credentials only). Remove client_credentials from the user client and remove user flows from the M2M client. Keep their secrets and scopes independent.
+
+---
+
 ### CTL.COGNITO.CLIENT.ENUMERATION.001
 
 **Cognito App Clients Must Prevent User Existence Disclosure**
@@ -7515,6 +7590,111 @@ Cognito app clients must enable PreventUserExistenceErrors to suppress user-exis
 
 ---
 
+### CTL.COGNITO.CLIENT.HTTPCALLBACK.001
+
+**Cognito App Client Callback URL Uses HTTP**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, SC-8; iso_27001_2022: A.5.16, A.8.20; nist_800_53_r5: IA-2, SC-8; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+Cognito app client lists a callback URL with http:// scheme rather than https://. The authorization-code or token returned from Cognito traverses the network in plaintext on the redirect — observable by any on-path attacker.
+
+**Remediation:** Replace http:// callback URLs with https:// in the app client configuration: aws cognito-idp update-user-pool-client with corrected callback_urls. Ensure the application's web server has a valid TLS certificate at the new URL before flipping the configuration. Localhost callbacks during development are tracked separately by the LOCALHOST control.
+
+---
+
+### CTL.COGNITO.CLIENT.IDTTL.001
+
+**Cognito App Client ID Token Validity Exceeds One Hour**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-2, IA-5; iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-2, IA-5; pci_dss_v4.0: 8.6; soc2: CC6.1;
+
+Cognito app client issues ID tokens with validity longer than one hour. ID tokens carry user-identity claims (sub, email, groups, custom attributes); long validity means stale claims persist long after the source data changes (e.g., user's group membership was revoked, but the ID token still says they're an admin).
+
+**Remediation:** Set id_token_validity to one hour or less: aws cognito-idp update-user-pool-client --id-token-validity 60 --token-validity-units IdToken=minutes. Apps that use ID tokens for authorization decisions (which is itself questionable — use access tokens for authorization) benefit doubly from short ID-token lifetimes.
+
+---
+
+### CTL.COGNITO.CLIENT.IMPLICITFLOW.001
+
+**Cognito App Client Allows OAuth Implicit Flow**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, SC-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, SC-8; pci_dss_v4.0: 4.2, 8.3; soc2: CC6.1;
+
+Cognito app client lists `implicit` in its allowed OAuth flows. The implicit flow returns access tokens in URL fragments — observable in browser history, server logs, and referer headers. OAuth 2.1 explicitly removes implicit; modern clients should use authorization-code with PKCE.
+
+**Remediation:** Remove `implicit` from allowed_o_auth_flows on the app client. Migrate any client still using implicit to authorization-code with PKCE — the modern equivalent for browser apps that retains the same UX without the URL-fragment token leak. SPAs that need public-client behavior get auth code via the BFF (backend-for-frontend) pattern or direct PKCE in the browser.
+
+---
+
+### CTL.COGNITO.CLIENT.LOCALHOST.001
+
+**Cognito App Client Has Localhost Callback URL in Production**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-2, CM-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, CM-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito app client lists a callback URL containing localhost or 127.0.0.1. Localhost callbacks are valid during development but should not appear in production app clients — they hint that the client is mis-promoted from a development environment, and an attacker controlling local DNS or running a local server can intercept callbacks.
+
+**Remediation:** Remove localhost / 127.0.0.1 entries from the app client's callback_urls. Maintain separate app clients for development (with localhost) and production (with the deployed domain only). Cognito does not itself enforce 'production-only' — the discipline lives in the app client configuration.
+
+---
+
+### CTL.COGNITO.CLIENT.NOLOGOUT.001
+
+**Cognito App Client Has No Logout URL Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-12; iso_27001_2022: A.5.17; nist_800_53_r5: AC-12, IA-2; pci_dss_v4.0: 8.6; soc2: CC6.1, CC8.1;
+
+Cognito app client has no logout URLs configured. Users cannot complete the hosted-UI logout flow back to the application's logout-confirmation page. Sessions become harder to terminate cleanly — users either remain logged in via refresh tokens or land on a generic page after logout.
+
+**Remediation:** Add a logout URL pointing at the application's signed-out landing page: aws cognito-idp update-user-pool-client with --logout-urls including https://app.example.com/signed-out. The application should also call the Cognito logout endpoint (auth.example.com/logout) and use revoke token revocation to invalidate refresh tokens server-side.
+
+---
+
+### CTL.COGNITO.CLIENT.NOSECRET.001
+
+**Cognito App Client Has No Client Secret**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, IA-3; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-3, IA-5; pci_dss_v4.0: 8.3; soc2: CC6.1, CC6.3;
+
+Cognito app client is configured without a client secret while serving as the authentication credential for a server-side application. Public clients (browser SPAs, mobile apps) intentionally have no secret; server-side clients should always have one. A confidential application without a secret has no client-level authentication — anybody can pretend to be the application to Cognito.
+
+**Remediation:** Generate a secret on the app client (aws cognito-idp create-user-pool-client with --generate-secret) and rotate the application's stored credential through Secrets Manager. Only intentionally public clients (SPA, mobile) should remain secret-less; document why each public client is public so future audits don't re-flag.
+
+---
+
+### CTL.COGNITO.CLIENT.REFRESHTTL.001
+
+**Cognito App Client Refresh Token Validity Exceeds 30 Days**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: IA-2, IA-5; iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-2, IA-5; pci_dss_v4.0: 8.6; soc2: CC6.1;
+
+Cognito app client issues refresh tokens with validity longer than 30 days. Refresh tokens are the long-lived authentication credential — a 365-day refresh token is effectively a year-long session. Combined with absent rotation, a single stolen refresh token gives the attacker a year of access.
+
+**Remediation:** Set refresh_token_validity to 30 days or less for typical applications: aws cognito-idp update-user-pool-client --refresh-token-validity 30 --token-validity-units RefreshToken=days. For sensitive workloads (financial, health), consider seven days or shorter. Pair with refresh-token rotation enabled so tokens rotate on use rather than persisting unchanged.
+
+---
+
 ### CTL.COGNITO.CLIENT.TOKEN.REVOCATION.001
 
 **Cognito App Clients Must Enable Token Revocation**
@@ -7527,6 +7707,21 @@ Cognito app clients must enable PreventUserExistenceErrors to suppress user-exis
 Cognito app clients must enable token revocation so revoked refresh tokens and their derived access/ID tokens are immediately invalidated. Without revocation, compromised tokens remain valid until expiry.
 
 **Remediation:** Set EnableTokenRevocation to true on the app client.
+
+---
+
+### CTL.COGNITO.CLIENT.WILDCARDCB.001
+
+**Cognito App Client Callback URL Uses Wildcard**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, SC-7; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, SC-7; pci_dss_v4.0: 8.3; soc2: CC6.1, CC6.7;
+
+Cognito app client has a callback URL containing a wildcard (*) or other broad pattern. Wildcards in callback URLs enable open-redirect attacks: an attacker crafts an authorization request with a callback matching the wildcard but pointing to an attacker-controlled origin, and Cognito redirects the auth code there.
+
+**Remediation:** Remove all wildcard entries from callback_urls. Replace with explicit, full URLs for every callback the app legitimately needs. If multiple subdomains need the same client, list each subdomain explicitly rather than using *.example.com — Cognito callback URLs must match the registered list exactly.
 
 ---
 
@@ -7560,6 +7755,231 @@ Cognito user pools must have deletion protection set to ACTIVE. Without protecti
 
 ---
 
+### CTL.COGNITO.GHOST.CREATEAUTH.001
+
+**Cognito Create Auth Challenge Lambda Trigger References Deleted Function**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
+
+Cognito create-auth-challenge Lambda has been deleted. The trigger that materializes the challenge payload (CAPTCHA, code, magic link) is gone — custom auth flows that pass define-auth fail immediately at challenge creation.
+
+**Remediation:** Redeploy the create-auth-challenge Lambda along with the matching define-auth and verify-auth handlers. Custom auth state must be coherent across the three triggers.
+
+---
+
+### CTL.COGNITO.GHOST.CUSTOMMSG.001
+
+**Cognito Custom Message Lambda Trigger References Deleted Function**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3, IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-3, IA-5; pci_dss_v4.0: 8.2; soc2: CC6.1, CC7.1, CC8.1;
+
+Cognito custom message Lambda trigger has been deleted. Verification messages, MFA codes, and reset notifications fall back to default templates or fail entirely depending on the flow. Branded user communications break.
+
+**Remediation:** Redeploy the Lambda, or remove custom_message from lambda_config and rely on Cognito's default templates. Default templates send verification codes but with the AWS-default sender and branding — typically not acceptable for production user communications.
+
+---
+
+### CTL.COGNITO.GHOST.DEFINEAUTH.001
+
+**Cognito Define Auth Challenge Lambda Trigger References Deleted Function**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
+
+Cognito define-auth-challenge Lambda has been deleted while the user pool still uses custom authentication. The pool advertises CUSTOM_AUTH flows but the trigger that decides the next challenge is gone — every custom auth flow fails.
+
+**Remediation:** Custom auth typically uses three triggers together (define, create, verify). Redeploy all three together or migrate the pool back to standard authentication flows. Partial redeployment can produce inconsistent behavior — flows that get past define-auth then fail at create-auth.
+
+---
+
+### CTL.COGNITO.GHOST.DOMAINCERT.001
+
+**Cognito Custom Domain Certificate Deleted from ACM**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3, SC-12; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: CM-2, CM-3, SC-12; pci_dss_v4.0: 4.2; soc2: CC6.1, CC8.1, A1.1;
+
+Cognito user pool custom domain references an ACM certificate that has been deleted or has expired. The hosted UI domain stops serving HTTPS traffic. Login flows that route through the custom domain break.
+
+**Remediation:** Either request a new ACM certificate for the custom domain (must be in us-east-1 for Cognito custom domains) and update the user pool's custom domain configuration, or remove the custom domain and fall back to the default Cognito domain. ACM certificate deletion is permanent — the original certificate cannot be restored.
+
+---
+
+### CTL.COGNITO.GHOST.DOMAINDNS.001
+
+**Cognito Custom Domain DNS Record Missing**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.5.16, A.8.2; nist_800_53_r5: CM-2, CM-3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
+
+Cognito user pool has a custom domain configured but the DNS CNAME no longer points at the Cognito CloudFront distribution. Users hitting auth.example.com get DNS resolution failures or are routed to a different endpoint entirely.
+
+**Remediation:** Recreate the CNAME record pointing at the distribution_domain_name returned by DescribeUserPoolDomain. If the original Route 53 hosted zone or DNS provider record was deleted, recreate it; if the record now points elsewhere, restore the correct target. Cognito's distribution domain is stable for the life of the custom domain.
+
+---
+
+### CTL.COGNITO.GHOST.IDPOOL.001
+
+**Cognito Identity Pool References Deleted User Pool**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, CM-3, IA-2; iso_27001_2022: A.5.16, A.8.2; nist_800_53_r5: AC-3, CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3, 7.2; soc2: CC6.1, CC8.1;
+
+Cognito identity pool has a Cognito identity provider entry pointing at a user pool that has been deleted. The identity pool advertises authenticated identity exchange but cannot validate tokens from a non-existent user pool. Authenticated AWS-credential exchange fails.
+
+**Remediation:** Either recreate the user pool with the same ID (impossible — pool IDs are unique and not reusable) or repoint the identity pool at the current authenticating user pool: aws cognito-identity update-identity-pool --identity-pool-id <id> with corrected cognito_identity_providers list. Audit applications that depended on the original user pool — they are now silently broken.
+
+---
+
+### CTL.COGNITO.GHOST.POSTAUTH.001
+
+**Cognito Post-Authentication Lambda Trigger References Deleted Function**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, CM-3; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, CM-2, CM-3, SI-4; pci_dss_v4.0: 10.2; soc2: CC7.1, CC8.1;
+
+Cognito post-authentication trigger Lambda has been deleted. The login itself succeeds, but post-login processing — analytics, audit logging, session state writes — fails. Authentication succeeds; downstream side effects are silently dropped.
+
+**Remediation:** Redeploy the Lambda or remove post_authentication from lambda_config. Post-auth triggers commonly write to audit pipelines or update last-login timestamps — if those records are missing, the audit trail has gaps you'll need to backfill.
+
+---
+
+### CTL.COGNITO.GHOST.POSTCONFIRM.001
+
+**Cognito Post-Confirmation Lambda Trigger References Deleted Function**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3; pci_dss_v4.0: 8.2; soc2: CC6.1, CC7.1, CC8.1;
+
+Cognito post-confirmation Lambda trigger has been deleted. Confirmation succeeds (the user is verified) but post-confirmation processing — user provisioning, group assignment, downstream account creation — fails silently.
+
+**Remediation:** Redeploy the Lambda or remove post_confirmation. Audit recently confirmed users for missing downstream state (group membership, profile records, role assignments) and backfill.
+
+---
+
+### CTL.COGNITO.GHOST.PREAUTH.001
+
+**Cognito Pre-Authentication Lambda Trigger References Deleted Function**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1, A1.2;
+
+Cognito user pool has a pre-authentication Lambda trigger configured but the Lambda has been deleted. Every login attempt invokes a function that doesn't exist; the authentication call returns an error. The most disruptive trigger ghost — login is the most-used pool operation.
+
+**Remediation:** Redeploy the Lambda with the same ARN, or remove pre_authentication from lambda_config: aws cognito-idp update-user-pool. Pre-authentication triggers commonly enforce IP allow-lists, risk gates, or device fingerprinting — confirm that intent is preserved through another control surface before removing.
+
+---
+
+### CTL.COGNITO.GHOST.PRESIGNUP.001
+
+**Cognito Pre-Sign-Up Lambda Trigger References Deleted Function**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.2;
+
+Cognito user pool has a pre-sign-up Lambda trigger configured but the Lambda function has been deleted. Every user signup attempt fails because the trigger Lambda invocation errors. The pool appears configured; the signup flow is broken.
+
+**Remediation:** Either redeploy the Lambda with the same ARN (preserving the trigger configuration) or remove the pre-sign-up trigger from the user pool: aws cognito-idp update-user-pool --user-pool-id <id> with lambda_config omitting pre_sign_up. After fix, validate by completing a signup in a sandbox.
+
+---
+
+### CTL.COGNITO.GHOST.PRETOKEN.001
+
+**Cognito Pre-Token Generation Lambda Trigger References Deleted Function**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3, IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-5; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito pre-token-generation Lambda has been deleted. Custom claim injection, token-time authorization decisions, and dynamic scope customization all stop working. Tokens are issued without the customizations the application expects.
+
+**Remediation:** Redeploy the Lambda. After deployment, inspect a freshly issued token to confirm the expected custom claims are present. Until repair, downstream services that authorize using custom claims may fall back to default behavior — review whether the fallback is safe (deny by default) or permissive (allow by default).
+
+---
+
+### CTL.COGNITO.GHOST.RESOURCESRV.001
+
+**Cognito App Client References Deleted Resource Server Scope**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, CM-3; iso_27001_2022: A.5.16, A.8.2; nist_800_53_r5: AC-3, CM-2, CM-3; pci_dss_v4.0: 7.2; soc2: CC6.1, CC8.1;
+
+Cognito user pool app client lists allowed OAuth scopes that include scopes from a resource server that has been deleted. Token requests that ask for those scopes return invalid_scope errors. The app client appears configured; some OAuth flows fail.
+
+**Remediation:** Either recreate the resource server with the same identifier and scopes (preserving the app client configuration) or update the app client to remove the orphaned scopes: aws cognito-idp update-user-pool-client with allowed_o_auth_scopes filtered.
+
+---
+
+### CTL.COGNITO.GHOST.SAMLMETA.001
+
+**Cognito SAML Identity Provider Metadata Unreachable**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, IA-2, IA-8; iso_27001_2022: A.5.16, A.5.17; nist_800_53_r5: AC-3, CM-2, IA-2, IA-8; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito user pool has a SAML identity provider configured with a metadata URL that is no longer reachable. SAML federation fails because Cognito cannot fetch the IdP certificate or endpoints. Federated logins break.
+
+**Remediation:** Verify the IdP metadata URL responds with valid metadata XML. If the IdP changed their endpoint, update the Cognito provider: aws cognito-idp update-identity-provider with corrected metadata URL or refreshed metadata file. For static metadata configurations, fetch fresh metadata from the IdP and re-upload.
+
+---
+
+### CTL.COGNITO.GHOST.USERMIGRATE.001
+
+**Cognito User Migration Lambda Trigger References Deleted Function**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3; pci_dss_v4.0: 8.2; soc2: CC6.1, CC8.1;
+
+Cognito user-migration Lambda has been deleted while the pool still uses migration- on-sign-in. Users from the legacy directory cannot be migrated and cannot sign in to the new pool — the migration path is broken.
+
+**Remediation:** Redeploy the Lambda or, if migration is complete, remove user_migration from lambda_config. If migration is partial, audit which legacy users have not yet signed in — those users are now blocked until the trigger is restored.
+
+---
+
+### CTL.COGNITO.GHOST.VERIFYAUTH.001
+
+**Cognito Verify Auth Challenge Response Lambda Trigger References Deleted Function**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
+
+Cognito verify-auth-challenge-response Lambda has been deleted. Even when define-auth and create-auth produce a challenge, the response cannot be validated — users complete the challenge correctly but their answer is never confirmed.
+
+**Remediation:** Redeploy the verify-auth-challenge-response Lambda. Verify after deployment by running a complete custom-auth flow end-to-end in a sandbox.
+
+---
+
 ### CTL.COGNITO.IDENTITY.GUEST.001
 
 **Cognito Identity Pools Must Not Allow Guest Access**
@@ -7575,6 +7995,96 @@ Cognito identity pools must disable unauthenticated (guest) identities. When ena
 
 ---
 
+### CTL.COGNITO.IDPOOL.UNAUTH.BROAD.001
+
+**Cognito Identity Pool Unauthenticated Role Has Broad Permissions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6; hipaa: 164.308(a)(4)(ii)(B); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2, 8.3; soc2: CC6.1, CC6.3;
+
+Cognito identity pool allows unauthenticated access AND the unauthenticated IAM role has broad permissions (more than ten allowed actions, or wildcard actions). Anonymous clients receive AWS credentials with excessive privileges — every action allowed by the role is publicly invocable on the internet.
+
+**Remediation:** Either disable unauthenticated access entirely (most cases — see GUEST control) or scope the unauthenticated role to a handful of specific read-only actions against narrow resources. Replace wildcard actions with explicit action lists. The unauthenticated role should typically have fewer than five distinct actions, all against tightly-scoped resources.
+
+---
+
+### CTL.COGNITO.IDPOOL.UNAUTH.DDB.001
+
+**Cognito Identity Pool Unauthenticated Role Has DynamoDB Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6; hipaa: 164.308(a)(4)(ii)(B), 164.312(a)(1); iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-3, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3, CC6.6;
+
+Cognito identity pool allows unauthenticated access AND the unauthenticated role grants DynamoDB actions (GetItem, Query, Scan, PutItem, or wildcard dynamodb actions) on one or more tables. Anonymous clients can read from or write to DynamoDB through the Cognito session.
+
+**Remediation:** Remove DynamoDB actions from the unauthenticated role. If anonymous read of specific items is genuinely required, front the table with an authenticated API rather than expose dynamodb:GetItem directly. Audit CloudTrail for dynamodb API calls under the unauth role — those are anonymous reads or writes that may have already touched the table.
+
+---
+
+### CTL.COGNITO.IDPOOL.UNAUTH.IAM.001
+
+**Cognito Identity Pool Unauthenticated Role Has IAM Privileges**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6; hipaa: 164.308(a)(4)(ii)(B); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+Cognito identity pool allows unauthenticated access AND the unauthenticated IAM role has IAM privileges (iam:* or admin-level IAM actions like CreateRole, PutRolePolicy, AttachRolePolicy, PassRole). Anonymous clients can escalate privileges through IAM — publicly available IAM administration.
+
+**Remediation:** Remove all iam:* actions from the unauthenticated role immediately. There is no legitimate reason for an anonymous client to administer IAM. After removal, audit CloudTrail for any iam: API calls performed under the role's session — those were anonymous calls.
+
+---
+
+### CTL.COGNITO.IDPOOL.UNAUTH.LAMBDA.001
+
+**Cognito Identity Pool Unauthenticated Role Has Lambda Invoke Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-6; hipaa: 164.308(a)(4)(ii)(B); iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-3, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+Cognito identity pool allows unauthenticated access AND the unauthenticated role grants lambda:InvokeFunction on one or more Lambda functions. Anonymous clients can invoke Lambdas — turning the function into a publicly callable endpoint regardless of the function's intended access pattern.
+
+**Remediation:** Remove lambda:InvokeFunction from the unauthenticated role. If anonymous invocation is genuinely required, front the Lambda with API Gateway or Lambda function URL with their own throttling and authentication, rather than expose direct Invoke through Cognito.
+
+---
+
+### CTL.COGNITO.IDPOOL.UNAUTH.S3.001
+
+**Cognito Identity Pool Unauthenticated Role Has S3 Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-3, AC-4, AC-6; hipaa: 164.308(a)(4)(ii)(B), 164.312(a)(1); iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-3, AC-4, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3, CC6.6;
+
+Cognito identity pool allows unauthenticated access AND the unauthenticated role grants S3 actions (GetObject, PutObject, ListBucket, or wildcard s3 actions) on one or more buckets. Anonymous clients can read from or write to S3 by exchanging Cognito identities for AWS credentials.
+
+**Remediation:** Remove S3 actions from the unauthenticated role unless the bucket is intentionally public (and even then, prefer making the bucket itself public via bucket policy rather than threading anonymous access through Cognito). Audit CloudTrail for s3 API calls performed under the unauthenticated role's session — those are anonymous reads or writes that may have already exfiltrated or modified data.
+
+---
+
+### CTL.COGNITO.IDPOOL.UNAUTH.UNUSED.001
+
+**Cognito Identity Pool Allows Unauthenticated Access But No Application Uses It**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3, CM-8; iso_27001_2022: A.5.9, A.5.18; nist_800_53_r5: AC-3, CM-2, CM-8, SA-22; pci_dss_v4.0: 7.1; soc2: CC6.1, CC8.1;
+
+Cognito identity pool allows unauthenticated identities but no application references this identity pool. The default-on configuration exposes anonymous AWS credentials with no matching legitimate use. Either clean up the pool or disable unauthenticated access.
+
+**Remediation:** Either delete the identity pool entirely (no application uses it — it's pure governance debt) or disable unauthenticated access if the pool will be wired into an application later. Default-on unauthenticated access is exposure without purpose.
+
+---
+
 ### CTL.COGNITO.INCOMPLETE.001
 
 **Complete Data Required for Cognito Assessment**
@@ -7586,6 +8096,21 @@ Cognito identity pools must disable unauthenticated (guest) identities. When ena
 The observation snapshot is missing required Cognito user pool properties.
 
 **Remediation:** Ensure the extractor calls aws cognito-idp describe-user-pool and maps MfaConfiguration to the identity observation properties.
+
+---
+
+### CTL.COGNITO.LOCKOUT.NONE.001
+
+**Cognito User Pool Has No Brute-Force Lockout**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.6; fedramp_moderate: AC-7; hipaa: 164.308(a)(5)(ii)(D); iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: AC-7, IA-2; pci_dss_v4.0: 8.3.4; soc2: CC6.1, CC6.6;
+
+Cognito user pool has neither account-level lockout configured nor advanced security features enabled to provide adaptive auth. Failed-login attempts can continue indefinitely with no throttling beyond Cognito's per-account rate limits. Brute- force and credential-stuffing attacks face no application-side resistance.
+
+**Remediation:** Enable advanced security features on the user pool with risk_configuration set so high-risk events block authentication and medium-risk events require step-up authentication: aws cognito-idp set-risk-configuration with appropriate actions on Compromised Credentials and Account Takeover Risk decisions. Advanced security adds adaptive throttling that detects brute-force patterns and locks the offending IP / username combination.
 
 ---
 
@@ -7619,6 +8144,21 @@ Cognito user pools without MFA enforcement are vulnerable to credential stuffing
 
 ---
 
+### CTL.COGNITO.MFA.SMSONLY.001
+
+**Cognito User Pool MFA Allows Only SMS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.5; fedramp_moderate: IA-2, IA-5; hipaa: 164.308(a)(5)(ii)(D), 164.312(a)(2)(i); iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-2, IA-5; pci_dss_v4.0: 8.4, 8.5; soc2: CC6.1, CC6.6;
+
+Cognito user pool has MFA enabled but only SMS is permitted as the second factor. SMS MFA is the weakest standard MFA channel — vulnerable to SIM swap, SS7 interception, and social engineering against carriers. A pool that requires SMS for MFA is requiring something many attackers can defeat.
+
+**Remediation:** Enable software_token_mfa_configuration (TOTP) on the user pool: aws cognito-idp set-user-pool-mfa-config with SoftwareTokenMfaConfiguration.Enabled=true. Encourage or require users to enroll an authenticator app (TOTP). Keep SMS as a fallback if needed but make TOTP the preferred path during enrollment. For populations whose threat model includes SIM-swap (executives, finance, security teams), make TOTP the only acceptable MFA.
+
+---
+
 ### CTL.COGNITO.PASSWORD.001
 
 **Cognito User Pools Must Enforce a Strong Password Policy**
@@ -7646,6 +8186,21 @@ Cognito user pools must enforce a minimum password length of 12 characters and r
 Weak Cognito password policies enable brute force and dictionary attacks against user accounts. A minimum length of 12 characters with complexity requirements significantly increases the effort required for credential attacks. Temporary passwords with long validity windows allow attackers to reuse intercepted temporary passwords for extended periods.
 
 **Remediation:** aws cognito-idp update-user-pool --user-pool-id <id> --policies PasswordPolicy='{MinimumLength=12, RequireUppercase=true,RequireLowercase=true, RequireNumbers=true,RequireSymbols=true, TemporaryPasswordValidityDays=3}'
+
+---
+
+### CTL.COGNITO.RECOVERY.NOMFA.001
+
+**Cognito Account Recovery Bypasses MFA**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.5; fedramp_moderate: IA-2, IA-5; hipaa: 164.308(a)(5)(ii)(D), 164.312(a)(2)(i); iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-2, IA-5, AC-7; pci_dss_v4.0: 8.4, 8.5; soc2: CC6.1, CC6.6;
+
+Cognito user pool enforces MFA but the account-recovery configuration permits recovery via email or phone without challenging MFA. An attacker who controls the user's email or SMS recovery channel can reset the password and complete authentication without ever encountering the second factor. MFA becomes effectively optional through the recovery path.
+
+**Remediation:** Configure the account-recovery setting so the recovery flow re-challenges MFA after the user proves control of the email or phone. AdminResetUserPassword and self-service password reset both need to re-issue the MFA challenge before completing. If the user pool uses advanced security features, configure the recovery risk decision to require step-up auth.
 
 ---
 

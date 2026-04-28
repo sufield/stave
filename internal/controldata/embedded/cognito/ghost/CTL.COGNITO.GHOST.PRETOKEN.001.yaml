@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.PRETOKEN.001
+name: Cognito Pre-Token Generation Lambda Trigger References Deleted Function
+description: >
+  Cognito pre-token-generation Lambda has been
+  deleted. Custom claim injection, token-time
+  authorization decisions, and dynamic scope
+  customization all stop working. Tokens are
+  issued without the customizations the
+  application expects.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, IA-5"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "CM-3, IA-5"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 3.5
+remediation:
+  description: >
+    Pre-token-generation Lambda is gone. Tokens
+    no longer carry custom claims.
+  action: >
+    Redeploy the Lambda. After deployment,
+    inspect a freshly issued token to confirm
+    the expected custom claims are present.
+    Until repair, downstream services that
+    authorize using custom claims may fall back
+    to default behavior — review whether the
+    fallback is safe (deny by default) or
+    permissive (allow by default).
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "trigger_type": "pre_token_generation",
+          "trigger_lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:cog-pretoken",
+          "trigger_lambda_exists": true,
+          "has_ghost_trigger": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.trigger_type
+      op: eq
+      value: pre_token_generation
+    - field: properties.identity.cognito.has_ghost_trigger
+      op: eq
+      value: true
+defect: >
+  Cognito pre-token-generation trigger
+  references a deleted Lambda function.
+infection: >
+  The pre-token-generation trigger fires before
+  Cognito issues access and ID tokens, allowing
+  the Lambda to inject custom claims, override
+  group memberships, or modify scope strings.
+  Common uses: tenant-ID claim injection for
+  multi-tenant apps, role mapping based on
+  user attributes, dynamic scope assignment.
+  With the Lambda deleted, tokens are issued
+  without customization. Downstream services
+  that read custom claims to make
+  authorization decisions either fall back
+  (potentially permissive) or fail (potentially
+  blocking legitimate users). Both directions
+  create incidents.
+failure: >
+  Tokens issued without custom claims.
+  Pre-token-generation Lambda was deleted;
+  downstream authorization may misroute.
+tests:
+  - name: ghost pre-token trigger fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "pre_token_generation"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:deleted-fn"
+            trigger_lambda_exists: false
+            has_ghost_trigger: true
+  - name: live pre-token trigger passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "pre_token_generation"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:cog-pretoken"
+            trigger_lambda_exists: true
+            has_ghost_trigger: false

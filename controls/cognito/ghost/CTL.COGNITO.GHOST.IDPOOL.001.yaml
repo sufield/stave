@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.IDPOOL.001
+name: Cognito Identity Pool References Deleted User Pool
+description: >
+  Cognito identity pool has a Cognito identity
+  provider entry pointing at a user pool that
+  has been deleted. The identity pool advertises
+  authenticated identity exchange but cannot
+  validate tokens from a non-existent user pool.
+  Authenticated AWS-credential exchange fails.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-3, CM-2, CM-3, IA-2"
+  pci_dss_v4.0: "8.3, 7.2"
+  fedramp_moderate: "AC-3, CM-3, IA-2"
+  iso_27001_2022: "A.5.16, A.8.2"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Identity pool's user-pool reference points
+    at a deleted resource.
+  action: >
+    Either recreate the user pool with the same
+    ID (impossible — pool IDs are unique and
+    not reusable) or repoint the identity pool
+    at the current authenticating user pool:
+    aws cognito-identity update-identity-pool
+    --identity-pool-id <id> with corrected
+    cognito_identity_providers list. Audit
+    applications that depended on the original
+    user pool — they are now silently broken.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_identity_pool",
+        "cognito": {
+          "identity_pool_id": "us-east-1:abc-id-pool",
+          "linked_user_pool_id": "us-east-1_abcdefg",
+          "linked_user_pool_exists": true,
+          "has_ghost_user_pool": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_identity_pool
+    - field: properties.identity.cognito.has_ghost_user_pool
+      op: eq
+      value: true
+defect: >
+  Cognito identity pool references a deleted
+  user pool.
+infection: >
+  The identity pool's cognito_identity_providers
+  list names the user pools whose tokens can be
+  exchanged for AWS credentials. When one of
+  those user pools is deleted, the identity
+  pool cannot validate tokens it issued — the
+  GetCredentialsForIdentity call returns
+  NotAuthorizedException for any user
+  authenticating via that pool. Applications
+  that obtain tokens from the deleted user
+  pool, then try to exchange them for AWS
+  credentials, fail. The deletion is silent
+  from the identity pool's surface — the
+  reference remains in configuration; only
+  the runtime exchange fails.
+failure: >
+  Identity exchange broken. Tokens from the
+  referenced user pool cannot be exchanged for
+  AWS credentials because the user pool has
+  been deleted.
+tests:
+  - name: identity pool with deleted user pool fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-id-pool"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            identity_pool_id: "us-east-1:abc-id-pool"
+            linked_user_pool_id: "us-east-1_deleted"
+            linked_user_pool_exists: false
+            has_ghost_user_pool: true
+  - name: identity pool with valid user pool passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-id-pool"
+      asset_type: aws_cognito_identity_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_identity_pool
+          cognito:
+            identity_pool_id: "us-east-1:abc-id-pool"
+            linked_user_pool_id: "us-east-1_abcdefg"
+            linked_user_pool_exists: true
+            has_ghost_user_pool: false

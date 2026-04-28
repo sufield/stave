@@ -1,0 +1,25 @@
+control: CTL.COGNITO.LOCKOUT.NONE.001
+defect: >
+  Cognito user pool has no lockout or adaptive
+  authentication.
+infection: >
+  Cognito enforces a base rate limit on
+  authentication API calls, but it doesn't
+  apply per-username brute-force lockout
+  unless advanced security features are on.
+  Without per-username throttling, an attacker
+  with a username and a credential dump can
+  cycle through passwords against a single
+  account at the rate limit ceiling — for a
+  weak password, the cycle completes in
+  hours. With advanced security features
+  enabled, Cognito's adaptive auth detects
+  the brute-force pattern (failed attempts
+  from one IP, varied passwords against one
+  username) and blocks or step-ups. Without
+  it, the attack succeeds against any user
+  whose password is in the wordlist.
+failure: >
+  No brute-force lockout. Credential stuffing
+  and password spraying succeed against any
+  user whose password is in the wordlist.

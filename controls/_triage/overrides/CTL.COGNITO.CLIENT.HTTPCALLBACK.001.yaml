@@ -1,0 +1,25 @@
+control: CTL.COGNITO.CLIENT.HTTPCALLBACK.001
+defect: >
+  Cognito app client has a plaintext-HTTP
+  callback URL.
+infection: >
+  After the user authenticates at Cognito's
+  hosted UI, Cognito redirects the browser to
+  the callback URL with an authorization code
+  in the query string. With http:// the
+  redirect URL traverses the network in
+  plaintext — coffee-shop wifi, hotel
+  networks, ISPs, anyone on path can observe
+  the code. The auth code is short-lived
+  but reusable until exchanged; an observer
+  who races the legitimate client can
+  exchange it first and become the
+  authenticated user. With implicit flow on
+  the same client, the http callback also
+  leaks the access token directly. The fix is
+  https everywhere — there is no production
+  use case for http callbacks.
+failure: >
+  OAuth credential leakage on the redirect.
+  Auth codes (and tokens, if implicit is on)
+  transit in plaintext URLs.

@@ -1,0 +1,26 @@
+control: CTL.COGNITO.RECOVERY.NOMFA.001
+defect: >
+  Cognito user pool recovery flow bypasses
+  MFA.
+infection: >
+  Account recovery is the under-tested
+  authentication path. The pool admin
+  configures MFA, sees 'MFA: required' on
+  every login screenshot, and considers the
+  pool secure. The recovery path — typically
+  reachable via the 'forgot password' link —
+  validates only the recovery channel (an
+  email or SMS code), accepts a new password,
+  and authenticates the user. MFA never
+  appears in the flow. An attacker who
+  compromises the user's email account or
+  SIMs the phone number completes recovery
+  and signs in without facing the second
+  factor. The MFA enforcement is real for
+  the happy-path login and theatre for the
+  recovery path; an attacker uses the path
+  that doesn't enforce.
+failure: >
+  Recovery path defeats MFA. Password reset
+  via email or phone authenticates the user
+  without re-challenging MFA.

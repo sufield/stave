@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.WILDCARDCB.001
+name: Cognito App Client Callback URL Uses Wildcard
+description: >
+  Cognito app client has a callback URL
+  containing a wildcard (*) or other broad
+  pattern. Wildcards in callback URLs enable
+  open-redirect attacks: an attacker crafts
+  an authorization request with a callback
+  matching the wildcard but pointing to an
+  attacker-controlled origin, and Cognito
+  redirects the auth code there.
+domain: exposure
+severity: critical
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "IA-2, SC-7"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "IA-2, SC-7"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Wildcard callback URL is an open-redirect
+    primitive.
+  action: >
+    Remove all wildcard entries from
+    callback_urls. Replace with explicit, full
+    URLs for every callback the app legitimately
+    needs. If multiple subdomains need the
+    same client, list each subdomain
+    explicitly rather than using
+    *.example.com — Cognito callback URLs
+    must match the registered list exactly.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "callback_urls": ["https://app.example.com/callback"],
+          "callback_has_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.callback_has_wildcard
+      op: eq
+      value: true
+defect: >
+  Cognito app client has a wildcard callback
+  URL.
+infection: >
+  Cognito normally enforces exact matches on
+  callback URLs — the redirect_uri parameter
+  in the authorization request must be in the
+  registered list. Wildcards subvert this:
+  any URL matching the wildcard pattern is
+  accepted. An attacker crafts a phishing
+  authorization URL with redirect_uri set to
+  attacker.example.com (matching *.example.com)
+  and tricks the user into clicking. The user
+  authenticates at Cognito (legitimately —
+  it's the real Cognito), and Cognito
+  redirects the auth code to the attacker's
+  domain. The attacker exchanges the auth
+  code for tokens at the token endpoint and
+  becomes the user. This is the classic
+  open-redirect-via-OAuth attack.
+failure: >
+  Open-redirect token theft. Wildcard callback
+  lets attackers receive auth codes by
+  manipulating the redirect_uri.
+tests:
+  - name: wildcard callback fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            callback_urls:
+              - "https://*.example.com/callback"
+            callback_has_wildcard: true
+  - name: explicit callbacks pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            callback_urls: ["https://app.example.com/callback"]
+            callback_has_wildcard: false

@@ -1,0 +1,24 @@
+control: CTL.COGNITO.IDPOOL.UNAUTH.S3.001
+defect: >
+  Cognito unauthenticated role has S3 access.
+infection: >
+  S3 access on the unauthenticated role makes
+  the targeted buckets publicly addressable
+  through Cognito. An anonymous client calls
+  GetCredentialsForIdentity, gets credentials
+  with s3:GetObject on the bucket, calls
+  s3:GetObject, and reads the data. The bucket
+  itself does not need to be public — anonymous
+  access flows through Cognito's session
+  credentials, not through bucket policy.
+  Common scenarios: image hosts, public file
+  drops, mobile-app asset buckets where the
+  developer added s3:GetObject for read access
+  without realizing that means GLOBAL read.
+  PutObject on the unauthenticated role lets
+  anyone upload — anonymous file write,
+  storage abuse, malware staging.
+failure: >
+  Anonymous S3 access. Buckets accessible to
+  the unauthenticated role are publicly
+  addressable through Cognito.

@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.VERIFYAUTH.001
+name: Cognito Verify Auth Challenge Response Lambda Trigger References Deleted Function
+description: >
+  Cognito verify-auth-challenge-response Lambda
+  has been deleted. Even when define-auth and
+  create-auth produce a challenge, the response
+  cannot be validated — users complete the
+  challenge correctly but their answer is
+  never confirmed.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, CM-3, IA-2"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "CM-3, IA-2"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Verify-auth-challenge Lambda is gone. Users
+    can answer the challenge but cannot complete
+    auth.
+  action: >
+    Redeploy the verify-auth-challenge-response
+    Lambda. Verify after deployment by running
+    a complete custom-auth flow end-to-end in a
+    sandbox.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "trigger_type": "verify_auth_challenge_response",
+          "trigger_lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:cog-verifyauth",
+          "trigger_lambda_exists": true,
+          "has_ghost_trigger": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.trigger_type
+      op: eq
+      value: verify_auth_challenge_response
+    - field: properties.identity.cognito.has_ghost_trigger
+      op: eq
+      value: true
+defect: >
+  Cognito verify-auth-challenge-response trigger
+  references a deleted Lambda function.
+infection: >
+  Verify-auth-challenge-response is the trigger
+  that decides whether the user's submitted
+  answer is correct. With the Lambda deleted,
+  custom auth flows that issue a challenge
+  cannot validate the user's response — the
+  RespondToAuthChallenge call fails. The
+  authentication flow leaves users in an
+  unresolved state: they completed the
+  challenge but Cognito can't verify it. From
+  the user's perspective, MFA codes don't
+  work, magic links don't unlock, CAPTCHAs
+  don't pass — nothing they do completes
+  authentication.
+failure: >
+  Custom auth flow broken at response
+  validation. Verify-auth-challenge Lambda is
+  deleted; user answers cannot be checked.
+tests:
+  - name: ghost verify-auth trigger fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "verify_auth_challenge_response"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:deleted-fn"
+            trigger_lambda_exists: false
+            has_ghost_trigger: true
+  - name: live verify-auth trigger passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "verify_auth_challenge_response"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:cog-verifyauth"
+            trigger_lambda_exists: true
+            has_ghost_trigger: false

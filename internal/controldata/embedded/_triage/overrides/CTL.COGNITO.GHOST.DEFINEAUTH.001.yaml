@@ -1,0 +1,22 @@
+control: CTL.COGNITO.GHOST.DEFINEAUTH.001
+defect: >
+  Cognito define-auth-challenge trigger
+  references a deleted Lambda function.
+infection: >
+  The define-auth-challenge trigger is the
+  state machine of custom authentication —
+  Cognito invokes it on each step to decide
+  what challenge comes next (CAPTCHA, SRP,
+  passwordless code, anything custom). With
+  the Lambda deleted, every InitiateAuth call
+  with AuthFlow=CUSTOM_AUTH errors out at the
+  first step. Pools relying on custom auth
+  for passwordless login, magic-link flows,
+  or step-up authentication stop working
+  entirely. Users see a generic error; admins
+  trace it to ResourceNotFoundException on
+  the trigger Lambda.
+failure: >
+  Custom auth flow broken at orchestration.
+  Define-auth-challenge Lambda is deleted; no
+  custom auth flow can begin.

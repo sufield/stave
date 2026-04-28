@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.ACCESSTTL.001
+name: Cognito App Client Access Token Validity Exceeds One Hour
+description: >
+  Cognito app client issues access tokens with
+  validity longer than one hour. Long-lived
+  access tokens widen the window during which
+  a stolen token can be used; the
+  refresh-token model is designed to keep
+  access tokens short-lived (5–60 minutes)
+  while refresh tokens carry longevity.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "IA-2, IA-5, SC-12"
+  pci_dss_v4.0: "8.6"
+  fedramp_moderate: "IA-2, IA-5"
+  iso_27001_2022: "A.5.17, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Access token validity is too long.
+  action: >
+    Set access_token_validity to one hour
+    (3600 seconds) or less: aws cognito-idp
+    update-user-pool-client with
+    --access-token-validity 60 and
+    --token-validity-units AccessToken=minutes.
+    Refresh tokens carry longevity and rotate
+    on use; access tokens should be short.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "access_token_validity_seconds": 3600,
+          "access_token_too_long": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.access_token_too_long
+      op: eq
+      value: true
+defect: >
+  Cognito app client access-token validity
+  exceeds one hour.
+infection: >
+  An access token with 24-hour validity is
+  usable for 24 hours after theft. The OAuth
+  refresh-token model exists precisely to keep
+  access tokens short — a stolen access token
+  ages out in minutes; the refresh token is
+  the longer-lived credential, and refresh
+  tokens can be revoked centrally. Apps that
+  bump access-token validity to reduce
+  refresh frequency are trading silent
+  re-authentication latency for a longer
+  exposure window. For sensitive operations
+  (financial transactions, healthcare data),
+  one hour is already long; for lower-risk
+  data it's a reasonable upper bound.
+failure: >
+  Long-lived access tokens. Stolen tokens
+  remain usable beyond the standard hour
+  window.
+tests:
+  - name: 24-hour access token fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            access_token_validity_seconds: 86400
+            access_token_too_long: true
+  - name: 1-hour access token passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            access_token_validity_seconds: 3600
+            access_token_too_long: false

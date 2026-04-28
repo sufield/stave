@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.HTTPCALLBACK.001
+name: Cognito App Client Callback URL Uses HTTP
+description: >
+  Cognito app client lists a callback URL with
+  http:// scheme rather than https://. The
+  authorization-code or token returned from
+  Cognito traverses the network in plaintext
+  on the redirect — observable by any
+  on-path attacker.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "IA-2, SC-8"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "IA-2, SC-8"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Callback URL is plaintext HTTP. OAuth
+    secrets transit unencrypted.
+  action: >
+    Replace http:// callback URLs with https://
+    in the app client configuration: aws
+    cognito-idp update-user-pool-client with
+    corrected callback_urls. Ensure the
+    application's web server has a valid TLS
+    certificate at the new URL before flipping
+    the configuration. Localhost callbacks
+    during development are tracked separately
+    by the LOCALHOST control.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "callback_urls": ["https://app.example.com/callback"],
+          "callback_has_http": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.callback_has_http
+      op: eq
+      value: true
+defect: >
+  Cognito app client has a plaintext-HTTP
+  callback URL.
+infection: >
+  After the user authenticates at Cognito's
+  hosted UI, Cognito redirects the browser to
+  the callback URL with an authorization code
+  in the query string. With http:// the
+  redirect URL traverses the network in
+  plaintext — coffee-shop wifi, hotel
+  networks, ISPs, anyone on path can observe
+  the code. The auth code is short-lived
+  but reusable until exchanged; an observer
+  who races the legitimate client can
+  exchange it first and become the
+  authenticated user. With implicit flow on
+  the same client, the http callback also
+  leaks the access token directly. The fix is
+  https everywhere — there is no production
+  use case for http callbacks.
+failure: >
+  OAuth credential leakage on the redirect.
+  Auth codes (and tokens, if implicit is on)
+  transit in plaintext URLs.
+tests:
+  - name: http callback fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            callback_urls:
+              - "http://app.example.com/callback"
+              - "https://app.example.com/callback"
+            callback_has_http: true
+  - name: https-only callbacks pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            callback_urls: ["https://app.example.com/callback"]
+            callback_has_http: false

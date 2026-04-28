@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.CUSTOMMSG.001
+name: Cognito Custom Message Lambda Trigger References Deleted Function
+description: >
+  Cognito custom message Lambda trigger has been
+  deleted. Verification messages, MFA codes, and
+  reset notifications fall back to default
+  templates or fail entirely depending on the
+  flow. Branded user communications break.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC7.1, CC8.1"
+  nist_800_53_r5: "CM-3, IA-5"
+  pci_dss_v4.0: "8.2"
+  fedramp_moderate: "CM-3, IA-5"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Custom message Lambda is gone. Branded
+    verification messages fall back or fail.
+  action: >
+    Redeploy the Lambda, or remove custom_message
+    from lambda_config and rely on Cognito's
+    default templates. Default templates send
+    verification codes but with the AWS-default
+    sender and branding — typically not
+    acceptable for production user
+    communications.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "trigger_type": "custom_message",
+          "trigger_lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:cog-msg",
+          "trigger_lambda_exists": true,
+          "has_ghost_trigger": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.trigger_type
+      op: eq
+      value: custom_message
+    - field: properties.identity.cognito.has_ghost_trigger
+      op: eq
+      value: true
+defect: >
+  Cognito custom message trigger references a
+  deleted Lambda function.
+infection: >
+  The custom message trigger fires when Cognito
+  needs to send a verification email or SMS,
+  an MFA code, or a forgot-password message.
+  The Lambda receives the message context and
+  returns the customized message body. With
+  the Lambda deleted, Cognito can either
+  fall back to default templates or surface
+  an error depending on the flow. Either way,
+  branded customer-facing communications stop.
+  Users receive emails from no-reply@
+  amazonaws.com (default sender) or fail to
+  receive verification codes at all. Forgot-
+  password flows can break entirely if the
+  Lambda was the only path to a working
+  message.
+failure: >
+  Verification and notification messages broken
+  or stripped of branding. The custom message
+  Lambda was deleted.
+tests:
+  - name: ghost custom message trigger fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "custom_message"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:deleted-fn"
+            trigger_lambda_exists: false
+            has_ghost_trigger: true
+  - name: live custom message trigger passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "custom_message"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:cog-msg"
+            trigger_lambda_exists: true
+            has_ghost_trigger: false

@@ -1,0 +1,21 @@
+control: CTL.COGNITO.GHOST.POSTCONFIRM.001
+defect: >
+  Cognito post-confirmation trigger references a
+  deleted Lambda function.
+infection: >
+  Post-confirmation triggers fire after a user
+  completes verification (email or phone code).
+  Common uses: writing the user record into the
+  application database, assigning Cognito groups
+  based on signup attributes, sending welcome
+  emails, granting initial entitlements. With
+  the Lambda deleted, the user is confirmed in
+  Cognito but the downstream side effects don't
+  fire. The user logs in successfully but
+  finds no profile, no group, no entitlement.
+  The application breaks for that user even
+  though Cognito reports success.
+failure: >
+  Confirmed users stuck without downstream
+  provisioning. The post-confirmation Lambda
+  was deleted; user records are partial.

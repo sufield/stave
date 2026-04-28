@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.IDTTL.001
+name: Cognito App Client ID Token Validity Exceeds One Hour
+description: >
+  Cognito app client issues ID tokens with
+  validity longer than one hour. ID tokens
+  carry user-identity claims (sub, email,
+  groups, custom attributes); long validity
+  means stale claims persist long after the
+  source data changes (e.g., user's group
+  membership was revoked, but the ID token
+  still says they're an admin).
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-2, IA-5"
+  pci_dss_v4.0: "8.6"
+  fedramp_moderate: "IA-2, IA-5"
+  iso_27001_2022: "A.5.17, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    ID token validity is too long.
+  action: >
+    Set id_token_validity to one hour or less:
+    aws cognito-idp update-user-pool-client
+    --id-token-validity 60
+    --token-validity-units IdToken=minutes.
+    Apps that use ID tokens for authorization
+    decisions (which is itself questionable —
+    use access tokens for authorization)
+    benefit doubly from short ID-token
+    lifetimes.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "id_token_validity_seconds": 3600,
+          "id_token_too_long": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.id_token_too_long
+      op: eq
+      value: true
+defect: >
+  Cognito app client ID-token validity exceeds
+  one hour.
+infection: >
+  ID tokens are bearer tokens carrying user-
+  identity claims signed by Cognito.
+  Applications that read the token's claims
+  to decide what the user can do effectively
+  cache the user's identity for the token's
+  validity window. With a 24-hour ID token,
+  group changes, role updates, or
+  deprovisioning don't propagate until the
+  token expires. A user whose
+  group=admin membership was revoked at
+  09:00 still presents an ID token saying
+  group=admin until 09:00 the next day. A
+  one-hour validity bounds the staleness to
+  a manageable window without forcing
+  pathological re-auth frequency.
+failure: >
+  Stale identity claims. ID tokens valid 24+
+  hours mean group/role changes don't
+  propagate for a day.
+tests:
+  - name: 24-hour ID token fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            id_token_validity_seconds: 86400
+            id_token_too_long: true
+  - name: 1-hour ID token passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            id_token_validity_seconds: 3600
+            id_token_too_long: false

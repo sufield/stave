@@ -1,0 +1,26 @@
+control: CTL.COGNITO.CLIENT.CLIENTCREDS.001
+defect: >
+  Cognito app client mixes user-facing flows
+  with client_credentials.
+infection: >
+  client_credentials authenticates a service
+  to Cognito with no user identity — the
+  resulting access token represents the
+  application itself. Authorization-code (or
+  implicit) authenticates a user, with the
+  application acting on the user's behalf. The
+  same app client supporting both means
+  whatever scopes are granted to the
+  user-facing flow are also reachable via
+  client_credentials, and vice versa. An
+  attacker who compromises the client secret
+  can issue tokens as the application without
+  any user; an attacker who compromises a
+  user's credentials can request scopes the
+  M2M side was supposed to own. The boundary
+  between human and machine identity is
+  collapsed onto one client.
+failure: >
+  Ambiguous identity boundary. Same client
+  issues tokens both as itself and on behalf
+  of users.

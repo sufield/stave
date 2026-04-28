@@ -1,0 +1,26 @@
+control: CTL.COGNITO.CLIENT.LOCALHOST.001
+defect: >
+  Cognito app client has a localhost callback
+  URL.
+infection: >
+  Localhost callbacks are normal during
+  development — the developer needs the
+  redirect to reach a server running on
+  their machine. In production app clients,
+  localhost entries indicate either a
+  development client that was promoted to
+  production without cleanup or an
+  intentional choice with thin justification.
+  Practical risks: an attacker running a
+  service on the user's machine can receive
+  the auth code (less common); a malicious
+  package on the developer's machine can
+  exploit a still-trusted localhost callback;
+  and the broader hygiene issue — the app
+  client's allow-list is loose enough to
+  include localhost, which suggests it may
+  include other broad entries.
+failure: >
+  Production app client trusts localhost.
+  Suggests promotion-without-cleanup; widens
+  the legitimate-callback set.

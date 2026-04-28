@@ -1,0 +1,24 @@
+control: CTL.COGNITO.GHOST.CUSTOMMSG.001
+defect: >
+  Cognito custom message trigger references a
+  deleted Lambda function.
+infection: >
+  The custom message trigger fires when Cognito
+  needs to send a verification email or SMS,
+  an MFA code, or a forgot-password message.
+  The Lambda receives the message context and
+  returns the customized message body. With
+  the Lambda deleted, Cognito can either
+  fall back to default templates or surface
+  an error depending on the flow. Either way,
+  branded customer-facing communications stop.
+  Users receive emails from no-reply@
+  amazonaws.com (default sender) or fail to
+  receive verification codes at all. Forgot-
+  password flows can break entirely if the
+  Lambda was the only path to a working
+  message.
+failure: >
+  Verification and notification messages broken
+  or stripped of branding. The custom message
+  Lambda was deleted.

@@ -1,0 +1,21 @@
+control: CTL.COGNITO.IDPOOL.UNAUTH.DDB.001
+defect: >
+  Cognito unauthenticated role has DynamoDB
+  access.
+infection: >
+  DynamoDB tables are commonly used for user
+  data — profiles, sessions, leaderboards,
+  application state. dynamodb:Scan or
+  dynamodb:GetItem on the unauthenticated role
+  lets anyone read every item in scope; Query
+  reveals data ordered by partition key (often
+  reveals user IDs and patterns). PutItem,
+  UpdateItem, DeleteItem on the unauth role
+  allow anonymous writes — data destruction,
+  data injection, leaderboard manipulation,
+  anything within the scope. The internet is
+  the database client.
+failure: >
+  Anonymous DynamoDB access. Tables accessible
+  to the unauthenticated role are publicly
+  readable or writable through Cognito.

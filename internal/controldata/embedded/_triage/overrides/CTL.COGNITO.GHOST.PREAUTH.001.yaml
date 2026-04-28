@@ -1,0 +1,24 @@
+control: CTL.COGNITO.GHOST.PREAUTH.001
+defect: >
+  Cognito pre-authentication trigger references
+  a deleted Lambda function.
+infection: >
+  The pre-authentication trigger fires on every
+  login attempt before Cognito validates
+  credentials. Use cases: IP allow-listing,
+  device-binding gates, custom risk scoring,
+  user-state checks. With the Lambda deleted,
+  every InitiateAuth call invokes a function
+  that returns ResourceNotFoundException;
+  Cognito surfaces an internal error to the
+  client; the user can't log in. Unlike pre-
+  sign-up (which only blocks new users), pre-
+  authentication blocks all existing users.
+  Every active session that needs to refresh
+  via re-auth, every new login from a new
+  device, every login after token expiry —
+  all fail.
+failure: >
+  Login broken for all users. Pre-authentication
+  trigger Lambda has been deleted; every
+  authentication attempt fails.

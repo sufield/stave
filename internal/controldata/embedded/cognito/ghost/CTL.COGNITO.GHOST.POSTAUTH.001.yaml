@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.POSTAUTH.001
+name: Cognito Post-Authentication Lambda Trigger References Deleted Function
+description: >
+  Cognito post-authentication trigger Lambda has
+  been deleted. The login itself succeeds, but
+  post-login processing — analytics, audit
+  logging, session state writes — fails.
+  Authentication succeeds; downstream side
+  effects are silently dropped.
+domain: audit
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "AU-6, CM-2, CM-3, SI-4"
+  pci_dss_v4.0: "10.2"
+  fedramp_moderate: "AU-6, CM-3"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Post-authentication Lambda is gone. Login
+    succeeds; post-login side effects don't.
+  action: >
+    Redeploy the Lambda or remove
+    post_authentication from lambda_config.
+    Post-auth triggers commonly write to audit
+    pipelines or update last-login timestamps —
+    if those records are missing, the audit
+    trail has gaps you'll need to backfill.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "trigger_type": "post_authentication",
+          "trigger_lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:cog-postauth",
+          "trigger_lambda_exists": true,
+          "has_ghost_trigger": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.trigger_type
+      op: eq
+      value: post_authentication
+    - field: properties.identity.cognito.has_ghost_trigger
+      op: eq
+      value: true
+defect: >
+  Cognito post-authentication trigger references
+  a deleted Lambda function.
+infection: >
+  Post-authentication triggers fire after a
+  successful login. Common uses: audit-log
+  writes, last-login timestamp updates,
+  analytics events, downstream profile sync.
+  When the Lambda is deleted, login still
+  succeeds — the user gets tokens — but the
+  trigger invocation fails. Cognito does not
+  fail the login on post-auth errors. The
+  side effects silently disappear: no audit
+  record, no analytics event, no profile
+  sync. The team learns about the gap when
+  someone audits the login record and finds
+  none.
+failure: >
+  Silent post-login side-effect loss.
+  Authentication succeeds; downstream
+  processing fails without surfacing an error.
+tests:
+  - name: ghost post-auth trigger fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "post_authentication"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:deleted-fn"
+            trigger_lambda_exists: false
+            has_ghost_trigger: true
+  - name: live post-auth trigger passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "post_authentication"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:cog-postauth"
+            trigger_lambda_exists: true
+            has_ghost_trigger: false

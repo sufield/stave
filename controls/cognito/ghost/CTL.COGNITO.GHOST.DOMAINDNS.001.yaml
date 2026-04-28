@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.DOMAINDNS.001
+name: Cognito Custom Domain DNS Record Missing
+description: >
+  Cognito user pool has a custom domain
+  configured but the DNS CNAME no longer points
+  at the Cognito CloudFront distribution. Users
+  hitting auth.example.com get DNS resolution
+  failures or are routed to a different
+  endpoint entirely.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, CM-3"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.5.16, A.8.2"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Custom domain DNS doesn't resolve to the
+    Cognito CloudFront distribution.
+  action: >
+    Recreate the CNAME record pointing at the
+    distribution_domain_name returned by
+    DescribeUserPoolDomain. If the original
+    Route 53 hosted zone or DNS provider
+    record was deleted, recreate it; if the
+    record now points elsewhere, restore the
+    correct target. Cognito's distribution
+    domain is stable for the life of the
+    custom domain.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "custom_domain": "auth.example.com",
+          "custom_domain_target": "d1234.cloudfront.net",
+          "custom_domain_dns_resolves": true,
+          "has_ghost_domain_dns": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.has_ghost_domain_dns
+      op: eq
+      value: true
+defect: >
+  Cognito custom domain CNAME does not resolve
+  to the configured distribution.
+infection: >
+  Cognito custom domains require a CNAME from
+  the chosen domain (auth.example.com) to the
+  CloudFront distribution Cognito provisions
+  (d1234.cloudfront.net). When that CNAME is
+  removed or repointed, requests to
+  auth.example.com no longer reach Cognito's
+  hosted UI. Browsers see DNS NXDOMAIN, a
+  parking page, or the wrong service entirely.
+  The user pool config still shows the custom
+  domain as configured. The DNS layer is the
+  silent break. Common cause: hosted zone
+  deletion during account cleanup, or a CNAME
+  flip during a domain refresh that didn't
+  account for Cognito's dependency.
+failure: >
+  Hosted UI unreachable on custom domain. The
+  CNAME was deleted or repointed; Cognito's
+  distribution is no longer addressable
+  through the configured domain.
+tests:
+  - name: custom domain DNS missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            custom_domain: "auth.example.com"
+            custom_domain_target: "d1234.cloudfront.net"
+            custom_domain_dns_resolves: false
+            has_ghost_domain_dns: true
+  - name: custom domain DNS resolves passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            custom_domain: "auth.example.com"
+            custom_domain_target: "d1234.cloudfront.net"
+            custom_domain_dns_resolves: true
+            has_ghost_domain_dns: false

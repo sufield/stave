@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.USERMIGRATE.001
+name: Cognito User Migration Lambda Trigger References Deleted Function
+description: >
+  Cognito user-migration Lambda has been
+  deleted while the pool still uses migration-
+  on-sign-in. Users from the legacy directory
+  cannot be migrated and cannot sign in to
+  the new pool — the migration path is broken.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3"
+  pci_dss_v4.0: "8.2"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    User-migration Lambda is gone. Legacy users
+    cannot migrate or sign in.
+  action: >
+    Redeploy the Lambda or, if migration is
+    complete, remove user_migration from
+    lambda_config. If migration is partial,
+    audit which legacy users have not yet
+    signed in — those users are now blocked
+    until the trigger is restored.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "trigger_type": "user_migration",
+          "trigger_lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:cog-migrate",
+          "trigger_lambda_exists": true,
+          "has_ghost_trigger": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.trigger_type
+      op: eq
+      value: user_migration
+    - field: properties.identity.cognito.has_ghost_trigger
+      op: eq
+      value: true
+defect: >
+  Cognito user-migration trigger references a
+  deleted Lambda function.
+infection: >
+  The user-migration trigger fires when a user
+  not yet in the Cognito pool attempts to log
+  in — typically because they exist in a
+  legacy directory the team is migrating from.
+  The Lambda authenticates against the legacy
+  source and, on success, instructs Cognito to
+  create the user. With the Lambda deleted,
+  any legacy user who tries to sign in for the
+  first time fails — Cognito has no record of
+  them and no way to look them up. Migration
+  stops dead. Users who never signed in to
+  the old system since migration began are
+  permanently locked out until the trigger is
+  restored.
+failure: >
+  User migration broken. Legacy users cannot
+  sign in to the new pool because the
+  migration trigger Lambda was deleted.
+tests:
+  - name: ghost user-migration trigger fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "user_migration"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:deleted-fn"
+            trigger_lambda_exists: false
+            has_ghost_trigger: true
+  - name: live user-migration trigger passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "user_migration"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:cog-migrate"
+            trigger_lambda_exists: true
+            has_ghost_trigger: false

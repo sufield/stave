@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.DEFINEAUTH.001
+name: Cognito Define Auth Challenge Lambda Trigger References Deleted Function
+description: >
+  Cognito define-auth-challenge Lambda has been
+  deleted while the user pool still uses custom
+  authentication. The pool advertises CUSTOM_AUTH
+  flows but the trigger that decides the next
+  challenge is gone — every custom auth flow
+  fails.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, CM-3, IA-2"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "CM-3, IA-2"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Define-auth-challenge Lambda is gone.
+    Custom auth flows fail end-to-end.
+  action: >
+    Custom auth typically uses three triggers
+    together (define, create, verify). Redeploy
+    all three together or migrate the pool back
+    to standard authentication flows. Partial
+    redeployment can produce inconsistent
+    behavior — flows that get past define-auth
+    then fail at create-auth.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "trigger_type": "define_auth_challenge",
+          "trigger_lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:cog-defineauth",
+          "trigger_lambda_exists": true,
+          "has_ghost_trigger": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.trigger_type
+      op: eq
+      value: define_auth_challenge
+    - field: properties.identity.cognito.has_ghost_trigger
+      op: eq
+      value: true
+defect: >
+  Cognito define-auth-challenge trigger
+  references a deleted Lambda function.
+infection: >
+  The define-auth-challenge trigger is the
+  state machine of custom authentication —
+  Cognito invokes it on each step to decide
+  what challenge comes next (CAPTCHA, SRP,
+  passwordless code, anything custom). With
+  the Lambda deleted, every InitiateAuth call
+  with AuthFlow=CUSTOM_AUTH errors out at the
+  first step. Pools relying on custom auth
+  for passwordless login, magic-link flows,
+  or step-up authentication stop working
+  entirely. Users see a generic error; admins
+  trace it to ResourceNotFoundException on
+  the trigger Lambda.
+failure: >
+  Custom auth flow broken at orchestration.
+  Define-auth-challenge Lambda is deleted; no
+  custom auth flow can begin.
+tests:
+  - name: ghost define-auth trigger fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "define_auth_challenge"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:deleted-fn"
+            trigger_lambda_exists: false
+            has_ghost_trigger: true
+  - name: live define-auth trigger passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "define_auth_challenge"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:cog-defineauth"
+            trigger_lambda_exists: true
+            has_ghost_trigger: false

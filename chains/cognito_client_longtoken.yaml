@@ -1,0 +1,25 @@
+id: cognito_client_longtoken
+description: >
+  A stolen token stays usable for a long time:
+  access-token validity exceeds one hour AND
+  refresh-token validity exceeds 30 days AND
+  the catalog's existing token-revocation
+  detection fires (the app client doesn't
+  have token revocation enabled). The
+  combination means a compromised token has
+  no expiry-driven mitigation and no
+  revocation-driven mitigation — it works
+  until the long natural validity expires.
+  Threshold of 2 because the dangerous shape
+  is when length stacks with absent
+  revocation.
+controls:
+  - CTL.COGNITO.CLIENT.ACCESSTTL.001
+  - CTL.COGNITO.CLIENT.REFRESHTTL.001
+  - CTL.COGNITO.CLIENT.TOKEN.REVOCATION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - iam_credential_theft

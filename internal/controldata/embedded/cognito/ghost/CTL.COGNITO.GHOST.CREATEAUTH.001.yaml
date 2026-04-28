@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.CREATEAUTH.001
+name: Cognito Create Auth Challenge Lambda Trigger References Deleted Function
+description: >
+  Cognito create-auth-challenge Lambda has been
+  deleted. The trigger that materializes the
+  challenge payload (CAPTCHA, code, magic
+  link) is gone — custom auth flows that pass
+  define-auth fail immediately at challenge
+  creation.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, CM-3, IA-2"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "CM-3, IA-2"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Create-auth-challenge Lambda is gone. Custom
+    auth flows fail when challenges are issued.
+  action: >
+    Redeploy the create-auth-challenge Lambda
+    along with the matching define-auth and
+    verify-auth handlers. Custom auth state
+    must be coherent across the three triggers.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "trigger_type": "create_auth_challenge",
+          "trigger_lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:cog-createauth",
+          "trigger_lambda_exists": true,
+          "has_ghost_trigger": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.trigger_type
+      op: eq
+      value: create_auth_challenge
+    - field: properties.identity.cognito.has_ghost_trigger
+      op: eq
+      value: true
+defect: >
+  Cognito create-auth-challenge trigger
+  references a deleted Lambda function.
+infection: >
+  The create-auth-challenge trigger generates
+  the challenge content the user must respond
+  to — a CAPTCHA, a one-time code, a magic-link
+  token, an attestation. With the Lambda
+  deleted, define-auth-challenge may run
+  successfully (saying 'next: CUSTOM_CHALLENGE')
+  and then create-auth-challenge invocation
+  fails. Authentication breaks mid-flow with a
+  cryptic error to the client. Users who
+  previously logged in successfully now can't
+  receive the challenge they need to complete.
+failure: >
+  Custom auth flow broken at challenge
+  creation. Create-auth-challenge Lambda is
+  deleted; users get errors mid-authentication.
+tests:
+  - name: ghost create-auth trigger fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "create_auth_challenge"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:deleted-fn"
+            trigger_lambda_exists: false
+            has_ghost_trigger: true
+  - name: live create-auth trigger passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            trigger_type: "create_auth_challenge"
+            trigger_lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:cog-createauth"
+            trigger_lambda_exists: true
+            has_ghost_trigger: false

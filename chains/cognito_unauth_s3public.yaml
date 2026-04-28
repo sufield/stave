@@ -1,0 +1,24 @@
+id: cognito_unauth_s3public
+description: >
+  The catalog's existing identity-pool guest-
+  access detection plus broad action surface
+  on the unauthenticated role plus S3 access
+  on the unauthenticated role. Together these
+  describe an identity pool whose anonymous
+  credentials read or write S3 buckets at
+  scale — the most direct
+  internet-to-bucket path through Cognito.
+  Threshold of 2 because one finding may be
+  intentional (a tightly scoped public asset
+  bucket); two together describe a shape
+  that's almost never deliberate.
+controls:
+  - CTL.COGNITO.IDENTITY.GUEST.001
+  - CTL.COGNITO.IDPOOL.UNAUTH.BROAD.001
+  - CTL.COGNITO.IDPOOL.UNAUTH.S3.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_access

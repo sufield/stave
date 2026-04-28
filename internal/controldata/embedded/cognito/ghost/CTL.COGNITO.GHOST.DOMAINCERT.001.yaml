@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.DOMAINCERT.001
+name: Cognito Custom Domain Certificate Deleted from ACM
+description: >
+  Cognito user pool custom domain references an
+  ACM certificate that has been deleted or has
+  expired. The hosted UI domain stops serving
+  HTTPS traffic. Login flows that route through
+  the custom domain break.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, CM-3, SC-12"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "CM-3, SC-12"
+  iso_27001_2022: "A.5.16, A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Custom domain certificate has been removed
+    from ACM. Hosted UI breaks for any browser.
+  action: >
+    Either request a new ACM certificate for
+    the custom domain (must be in us-east-1 for
+    Cognito custom domains) and update the
+    user pool's custom domain configuration,
+    or remove the custom domain and fall back
+    to the default Cognito domain. ACM
+    certificate deletion is permanent — the
+    original certificate cannot be restored.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "custom_domain": "auth.example.com",
+          "custom_domain_cert_arn": "arn:aws:acm:us-east-1:111122223333:certificate/abc",
+          "custom_domain_cert_exists": true,
+          "has_ghost_domain_cert": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.has_ghost_domain_cert
+      op: eq
+      value: true
+defect: >
+  Cognito custom domain references an ACM
+  certificate that has been deleted or expired.
+infection: >
+  Cognito custom domains require an ACM
+  certificate in us-east-1. The certificate
+  serves TLS for the hosted UI on
+  auth.example.com. When the certificate is
+  deleted from ACM (manual cleanup,
+  StackSets pruning, account hygiene), the
+  domain stops serving HTTPS — every browser
+  request gets a TLS error. Login flows that
+  redirect through the hosted UI break.
+  Mobile apps that resolve to the custom
+  domain fail to fetch the OAuth endpoints.
+  Recovery requires reissuing a certificate
+  and reconfiguring the custom domain — there
+  is no way to undelete an ACM certificate.
+failure: >
+  Hosted UI broken on custom domain. ACM
+  certificate is gone or expired; the domain
+  cannot serve TLS.
+tests:
+  - name: deleted custom domain cert fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            custom_domain: "auth.example.com"
+            custom_domain_cert_arn: "arn:aws:acm:us-east-1:111122223333:certificate/deleted"
+            custom_domain_cert_exists: false
+            has_ghost_domain_cert: true
+  - name: live custom domain cert passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            custom_domain: "auth.example.com"
+            custom_domain_cert_arn: "arn:aws:acm:us-east-1:111122223333:certificate/abc"
+            custom_domain_cert_exists: true
+            has_ghost_domain_cert: false

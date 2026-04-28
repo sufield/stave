@@ -1,0 +1,25 @@
+control: CTL.COGNITO.CLIENT.IMPLICITFLOW.001
+defect: >
+  Cognito app client allows the OAuth implicit
+  flow.
+infection: >
+  Implicit flow returns the access token in the
+  URL fragment of the redirect URI:
+  https://app.example.com/callback#access_token=...
+  URL fragments aren't sent to servers in HTTP
+  requests, but they are visible in browser
+  history, observable in browser extensions,
+  preserved in some logs (referer headers from
+  subsequent navigation can leak the parent
+  URL), and exposable through any XSS that can
+  read window.location. Authorization-code with
+  PKCE keeps the token out of the URL entirely
+  — the auth code is exchanged for a token
+  server-side or via PKCE-backed direct
+  exchange. OAuth 2.1 deprecates implicit
+  entirely; AWS keeps it for backward
+  compatibility but lists it as discouraged.
+failure: >
+  Tokens transit in URL fragments. Implicit
+  flow exposes access tokens to any party that
+  can read browser state.

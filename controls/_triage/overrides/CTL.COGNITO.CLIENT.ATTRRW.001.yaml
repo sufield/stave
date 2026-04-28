@@ -1,0 +1,27 @@
+control: CTL.COGNITO.CLIENT.ATTRRW.001
+defect: >
+  Cognito app client can read and write every
+  user attribute.
+infection: >
+  read_attributes and write_attributes on the
+  app client define which user attributes the
+  application can access via the OAuth
+  identity flows. With both lists set to all
+  attributes, the application can read
+  internal data the user shouldn't expose to
+  it (custom:internal_role, custom:risk_score,
+  email_verified status overrides) and write
+  fields the user shouldn't be able to
+  modify (custom:role, custom:tenant_id,
+  email_verified). A compromised client (or a
+  malicious user who reverse-engineers the
+  app) can self-promote by writing to
+  custom:role, change tenant boundaries by
+  writing to custom:tenant_id, or
+  pre-confirm contact info to bypass
+  verification. The fix is least-privilege
+  attribute access.
+failure: >
+  Attribute-level over-permissioning. App
+  client reads and writes every attribute
+  including admin-only fields.

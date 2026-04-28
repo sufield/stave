@@ -1,0 +1,24 @@
+control: CTL.COGNITO.GHOST.IDPOOL.001
+defect: >
+  Cognito identity pool references a deleted
+  user pool.
+infection: >
+  The identity pool's cognito_identity_providers
+  list names the user pools whose tokens can be
+  exchanged for AWS credentials. When one of
+  those user pools is deleted, the identity
+  pool cannot validate tokens it issued — the
+  GetCredentialsForIdentity call returns
+  NotAuthorizedException for any user
+  authenticating via that pool. Applications
+  that obtain tokens from the deleted user
+  pool, then try to exchange them for AWS
+  credentials, fail. The deletion is silent
+  from the identity pool's surface — the
+  reference remains in configuration; only
+  the runtime exchange fails.
+failure: >
+  Identity exchange broken. Tokens from the
+  referenced user pool cannot be exchanged for
+  AWS credentials because the user pool has
+  been deleted.

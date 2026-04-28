@@ -1,0 +1,24 @@
+control: CTL.COGNITO.CLIENT.NOLOGOUT.001
+defect: >
+  Cognito app client has no logout URL.
+infection: >
+  Cognito's hosted UI provides a logout
+  endpoint that ends the Cognito session and
+  redirects to a configured logout URL. With
+  no logout URL configured, the application
+  can sign the user out locally (clearing
+  cookies, dropping tokens) but the Cognito
+  session persists — the next visit to the
+  hosted UI may auto-sign-in via the still-
+  valid Cognito session. Combined with long
+  refresh-token lifetimes, this defeats the
+  user's expectation of 'sign out means
+  signed out.' The fix is straightforward
+  configuration; the cost of skipping it is
+  silent session leakage that surfaces only
+  when a user expects logout to mean logout.
+failure: >
+  Logout flow incomplete. Users can't be
+  properly signed out from the Cognito side;
+  hosted-UI sessions persist beyond
+  application logout.

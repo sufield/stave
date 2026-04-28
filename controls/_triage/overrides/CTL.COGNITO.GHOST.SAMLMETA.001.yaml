@@ -1,0 +1,25 @@
+control: CTL.COGNITO.GHOST.SAMLMETA.001
+defect: >
+  SAML identity provider metadata URL is
+  unreachable.
+infection: >
+  Cognito federates with SAML IdPs by reading
+  the IdP's metadata document — endpoints,
+  signing certificates, supported bindings.
+  When the metadata URL is unreachable (DNS
+  failure, IdP-side outage, URL changed
+  without notification), Cognito cannot
+  validate incoming SAML assertions. Federated
+  users redirect to the IdP, log in
+  successfully on the IdP side, and are
+  redirected back to Cognito with a SAML
+  assertion that Cognito then fails to verify.
+  From the user's perspective: 'Authentication
+  succeeded but the application broke.' Most
+  common cause: certificate rotation at the
+  IdP. The metadata URL still works but the
+  cached metadata in Cognito is stale.
+failure: >
+  SAML federation broken. Cognito cannot fetch
+  IdP metadata; federated logins fail at
+  assertion validation.

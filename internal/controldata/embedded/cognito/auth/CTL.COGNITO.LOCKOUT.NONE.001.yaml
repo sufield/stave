@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.LOCKOUT.NONE.001
+name: Cognito User Pool Has No Brute-Force Lockout
+description: >
+  Cognito user pool has neither account-level
+  lockout configured nor advanced security
+  features enabled to provide adaptive auth.
+  Failed-login attempts can continue
+  indefinitely with no throttling beyond
+  Cognito's per-account rate limits. Brute-
+  force and credential-stuffing attacks face
+  no application-side resistance.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.6"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-7, IA-2"
+  pci_dss_v4.0: "8.3.4"
+  fedramp_moderate: "AC-7"
+  hipaa: "164.308(a)(5)(ii)(D)"
+  iso_27001_2022: "A.5.17, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    No lockout or adaptive auth. Brute force
+    is throttled only by AWS-side global
+    rate limits.
+  action: >
+    Enable advanced security features on the
+    user pool with risk_configuration set so
+    high-risk events block authentication and
+    medium-risk events require step-up
+    authentication: aws cognito-idp
+    set-risk-configuration with appropriate
+    actions on Compromised Credentials and
+    Account Takeover Risk decisions.
+    Advanced security adds adaptive
+    throttling that detects brute-force
+    patterns and locks the offending IP /
+    username combination.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "advanced_security_enabled": true,
+          "lockout_configured": true,
+          "has_brute_force_protection": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.has_brute_force_protection
+      op: eq
+      value: false
+defect: >
+  Cognito user pool has no lockout or adaptive
+  authentication.
+infection: >
+  Cognito enforces a base rate limit on
+  authentication API calls, but it doesn't
+  apply per-username brute-force lockout
+  unless advanced security features are on.
+  Without per-username throttling, an attacker
+  with a username and a credential dump can
+  cycle through passwords against a single
+  account at the rate limit ceiling — for a
+  weak password, the cycle completes in
+  hours. With advanced security features
+  enabled, Cognito's adaptive auth detects
+  the brute-force pattern (failed attempts
+  from one IP, varied passwords against one
+  username) and blocks or step-ups. Without
+  it, the attack succeeds against any user
+  whose password is in the wordlist.
+failure: >
+  No brute-force lockout. Credential stuffing
+  and password spraying succeed against any
+  user whose password is in the wordlist.
+tests:
+  - name: pool without lockout fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            advanced_security_enabled: false
+            lockout_configured: false
+            has_brute_force_protection: false
+  - name: pool with adaptive auth passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            advanced_security_enabled: true
+            lockout_configured: true
+            has_brute_force_protection: true

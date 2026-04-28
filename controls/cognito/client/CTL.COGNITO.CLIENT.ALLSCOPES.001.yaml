@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.ALLSCOPES.001
+name: Cognito App Client Has All OAuth Scopes Enabled
+description: >
+  Cognito app client has every available OAuth
+  scope enabled (openid, email, profile,
+  phone, aws.cognito.signin.user.admin, plus
+  every custom scope from every resource
+  server). The client can request any scope
+  the user pool defines — over-permissioned
+  by default.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6, IA-2"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    All OAuth scopes enabled — narrow to what
+    the application actually needs.
+  action: >
+    List the scopes the application requires,
+    then update allowed_o_auth_scopes to that
+    list only: aws cognito-idp
+    update-user-pool-client. Most apps need
+    only openid + email + profile; adding
+    aws.cognito.signin.user.admin enables the
+    user-admin API surface (often a much
+    larger surface than the app needs).
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "allowed_oauth_scopes": ["openid", "email", "profile"],
+          "allows_all_scopes": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.allows_all_scopes
+      op: eq
+      value: true
+defect: >
+  Cognito app client has every available OAuth
+  scope enabled.
+infection: >
+  Scopes are the OAuth access-control surface.
+  Each scope grants a specific kind of access
+  (openid: identity claims; email: email
+  attribute; aws.cognito.signin.user.admin:
+  Cognito user-admin API; custom scopes:
+  whatever the resource server defines). Apps
+  that enable everything ask Cognito to sign
+  off on token requests for any scope —
+  the only filter is what the requesting
+  client actually asks for. An attacker who
+  can persuade the user (phishing, malicious
+  link) to authorize a wider scope gets
+  it; a compromised application that escalates
+  its own scopes from openid to
+  user-admin gets that access too. Narrow
+  allowed_o_auth_scopes locks the ceiling.
+failure: >
+  Over-permissioned scope ceiling. App client
+  can issue tokens for scopes the application
+  doesn't legitimately need.
+tests:
+  - name: all scopes enabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            allowed_oauth_scopes:
+              - "openid"
+              - "email"
+              - "profile"
+              - "phone"
+              - "aws.cognito.signin.user.admin"
+              - "custom-api/read"
+              - "custom-api/write"
+              - "custom-api/admin"
+            allows_all_scopes: true
+  - name: scoped client passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            allowed_oauth_scopes: ["openid", "email", "profile"]
+            allows_all_scopes: false

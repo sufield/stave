@@ -1,0 +1,25 @@
+control: CTL.COGNITO.CLIENT.WILDCARDCB.001
+defect: >
+  Cognito app client has a wildcard callback
+  URL.
+infection: >
+  Cognito normally enforces exact matches on
+  callback URLs — the redirect_uri parameter
+  in the authorization request must be in the
+  registered list. Wildcards subvert this:
+  any URL matching the wildcard pattern is
+  accepted. An attacker crafts a phishing
+  authorization URL with redirect_uri set to
+  attacker.example.com (matching *.example.com)
+  and tricks the user into clicking. The user
+  authenticates at Cognito (legitimately —
+  it's the real Cognito), and Cognito
+  redirects the auth code to the attacker's
+  domain. The attacker exchanges the auth
+  code for tokens at the token endpoint and
+  becomes the user. This is the classic
+  open-redirect-via-OAuth attack.
+failure: >
+  Open-redirect token theft. Wildcard callback
+  lets attackers receive auth codes by
+  manipulating the redirect_uri.

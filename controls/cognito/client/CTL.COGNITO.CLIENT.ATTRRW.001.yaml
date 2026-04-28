@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.ATTRRW.001
+name: Cognito App Client Can Read and Write All User Attributes
+description: >
+  Cognito app client has all user attributes in
+  both read_attributes and write_attributes.
+  The client can read every attribute Cognito
+  stores (including sensitive ones like phone,
+  ssn-bearing custom attributes, internal
+  flags) and write every attribute (including
+  admin-only attributes that should be
+  immutable from the client side).
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.1, 7.2, 8.3"
+  fedramp_moderate: "AC-3, AC-6"
+  hipaa: "164.308(a)(4)(ii)(B)"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    App client can read and write every user
+    attribute.
+  action: >
+    Narrow read_attributes to what the
+    application actually displays and
+    write_attributes to what the user is
+    allowed to self-modify (typically just
+    profile fields like preferred_username,
+    given_name, family_name, picture). Admin-
+    only attributes (groups, custom:role,
+    internal flags) should not be in
+    write_attributes for any user-facing
+    client.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "read_attributes": ["email", "given_name", "family_name"],
+          "write_attributes": ["given_name", "family_name"],
+          "client_attribute_rw_all": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.client_attribute_rw_all
+      op: eq
+      value: true
+defect: >
+  Cognito app client can read and write every
+  user attribute.
+infection: >
+  read_attributes and write_attributes on the
+  app client define which user attributes the
+  application can access via the OAuth
+  identity flows. With both lists set to all
+  attributes, the application can read
+  internal data the user shouldn't expose to
+  it (custom:internal_role, custom:risk_score,
+  email_verified status overrides) and write
+  fields the user shouldn't be able to
+  modify (custom:role, custom:tenant_id,
+  email_verified). A compromised client (or a
+  malicious user who reverse-engineers the
+  app) can self-promote by writing to
+  custom:role, change tenant boundaries by
+  writing to custom:tenant_id, or
+  pre-confirm contact info to bypass
+  verification. The fix is least-privilege
+  attribute access.
+failure: >
+  Attribute-level over-permissioning. App
+  client reads and writes every attribute
+  including admin-only fields.
+tests:
+  - name: client with all attributes RW fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            read_attributes:
+              - "email"
+              - "phone_number"
+              - "given_name"
+              - "family_name"
+              - "custom:role"
+              - "custom:tenant_id"
+              - "custom:risk_score"
+            write_attributes:
+              - "email"
+              - "phone_number"
+              - "given_name"
+              - "family_name"
+              - "custom:role"
+              - "custom:tenant_id"
+              - "custom:risk_score"
+            client_attribute_rw_all: true
+  - name: scoped attribute access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            read_attributes: ["email", "given_name", "family_name"]
+            write_attributes: ["given_name", "family_name"]
+            client_attribute_rw_all: false

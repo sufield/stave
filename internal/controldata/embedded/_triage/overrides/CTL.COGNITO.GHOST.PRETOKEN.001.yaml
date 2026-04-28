@@ -1,0 +1,23 @@
+control: CTL.COGNITO.GHOST.PRETOKEN.001
+defect: >
+  Cognito pre-token-generation trigger
+  references a deleted Lambda function.
+infection: >
+  The pre-token-generation trigger fires before
+  Cognito issues access and ID tokens, allowing
+  the Lambda to inject custom claims, override
+  group memberships, or modify scope strings.
+  Common uses: tenant-ID claim injection for
+  multi-tenant apps, role mapping based on
+  user attributes, dynamic scope assignment.
+  With the Lambda deleted, tokens are issued
+  without customization. Downstream services
+  that read custom claims to make
+  authorization decisions either fall back
+  (potentially permissive) or fail (potentially
+  blocking legitimate users). Both directions
+  create incidents.
+failure: >
+  Tokens issued without custom claims.
+  Pre-token-generation Lambda was deleted;
+  downstream authorization may misroute.

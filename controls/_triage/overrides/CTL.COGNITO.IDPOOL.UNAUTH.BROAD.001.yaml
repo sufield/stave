@@ -1,0 +1,31 @@
+control: CTL.COGNITO.IDPOOL.UNAUTH.BROAD.001
+defect: >
+  Cognito identity pool allows unauthenticated
+  access and the unauthenticated role has broad
+  permissions.
+infection: >
+  Identity pools that allow unauthenticated
+  access exchange anonymous client requests for
+  short-lived AWS credentials backed by a
+  configured IAM role. When that role has
+  wildcard actions or a long list of allowed
+  actions, anyone on the internet can call
+  GetCredentialsForIdentity, get fresh
+  credentials, and invoke any of those actions
+  with no login. The 'unauthenticated' label
+  refers to the user identity (none), not to
+  the AWS API surface — the API surface is
+  fully authenticated by AWS using the role's
+  short-lived credentials. Every action allowed
+  on the role is the public's action. With
+  more than ten actions or a wildcard, the
+  blast radius is wide enough that exhaustive
+  triage is impractical; the safer default is
+  to scope the role narrowly or remove
+  unauthenticated access.
+failure: >
+  Anonymous AWS access at scale. Anyone on the
+  internet receives credentials authorized for
+  many AWS actions; data and compute are
+  publicly addressable through the
+  unauthenticated role.

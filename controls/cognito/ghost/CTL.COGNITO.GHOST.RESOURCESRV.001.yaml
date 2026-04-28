@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.GHOST.RESOURCESRV.001
+name: Cognito App Client References Deleted Resource Server Scope
+description: >
+  Cognito user pool app client lists allowed
+  OAuth scopes that include scopes from a
+  resource server that has been deleted. Token
+  requests that ask for those scopes return
+  invalid_scope errors. The app client appears
+  configured; some OAuth flows fail.
+domain: exposure
+severity: medium
+archetype: ghost-reference
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-3, CM-2, CM-3"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, CM-3"
+  iso_27001_2022: "A.5.16, A.8.2"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    App client references scopes from a deleted
+    resource server.
+  action: >
+    Either recreate the resource server with
+    the same identifier and scopes (preserving
+    the app client configuration) or update the
+    app client to remove the orphaned scopes:
+    aws cognito-idp update-user-pool-client
+    with allowed_o_auth_scopes filtered.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool_client",
+        "cognito": {
+          "client_id": "abc123",
+          "allowed_oauth_scopes": ["custom-api/read", "custom-api/write"],
+          "missing_resource_servers": [],
+          "has_ghost_resource_server": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool_client
+    - field: properties.identity.cognito.has_ghost_resource_server
+      op: eq
+      value: true
+defect: >
+  Cognito app client references scopes from a
+  deleted resource server.
+infection: >
+  Resource servers in Cognito define custom
+  OAuth scopes that an app client can request.
+  When a resource server is deleted, app
+  clients that listed its scopes are left with
+  references to scopes that no longer exist.
+  The app client configuration looks intact;
+  only at runtime do specific token requests
+  fail. The application code is unaware that
+  some scopes are valid and some are not until
+  the failing flow surfaces an invalid_scope
+  OAuth error. Pinning down which scope
+  doesn't exist requires comparing the app
+  client's scope list against the current
+  resource server inventory.
+failure: >
+  App client has invalid scope references.
+  Some OAuth flows fail with invalid_scope
+  because the underlying resource server was
+  deleted.
+tests:
+  - name: ghost resource server reference fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool_client
+          cognito:
+            client_id: "abc123"
+            allowed_oauth_scopes: ["deleted-api/read", "valid-api/read"]
+            missing_resource_servers: ["deleted-api"]
+            has_ghost_resource_server: true
+  - name: app client with valid scopes passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abcdefg/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool_client
+          cognito:
+            client_id: "abc123"
+            allowed_oauth_scopes: ["custom-api/read", "custom-api/write"]
+            missing_resource_servers: []
+            has_ghost_resource_server: false

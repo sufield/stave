@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.ALLFLOWS.001
+name: Cognito App Client Enables All OAuth Flows Indiscriminately
+description: >
+  Cognito app client has all three OAuth flows
+  enabled simultaneously (authorization code,
+  implicit, and client credentials). A real
+  application uses one flow; allowing all
+  three multiplies the attack surface and
+  indicates the app client was provisioned
+  without thinking about the use case.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "IA-2, SA-10"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "IA-2"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    All three OAuth flows enabled — pick the
+    one the application actually uses.
+  action: >
+    Determine which flow the application uses
+    (authorization-code with PKCE for almost
+    all modern apps; client_credentials only
+    for machine-to-machine workloads) and
+    remove the others from
+    allowed_o_auth_flows. Each disabled flow
+    closes a parallel authentication path.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "allowed_oauth_flows": ["code"],
+          "allows_all_flows": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.allows_all_flows
+      op: eq
+      value: true
+defect: >
+  Cognito app client has all OAuth flows
+  enabled.
+infection: >
+  An app client with code, implicit, and
+  client_credentials all enabled is a client
+  configured for every shape of application
+  the OAuth spec supports. Real applications
+  are one shape. Enabling all three means an
+  attacker who steals the client_id can
+  attempt whichever flow gives them the easiest
+  path — implicit if they want to bypass code
+  exchange, client_credentials if they have
+  the secret, code with PKCE if they want
+  user impersonation. The flow the
+  application doesn't use is still available
+  to attackers. The pattern is symptomatic
+  of console-wizard provisioning where every
+  checkbox is enabled by default; production
+  apps should narrow the list.
+failure: >
+  Multi-flow client. App client supports every
+  OAuth flow shape; attack surface includes
+  flows the application doesn't use.
+tests:
+  - name: all flows enabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            allowed_oauth_flows: ["code", "implicit", "client_credentials"]
+            allows_all_flows: true
+  - name: single flow passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc123"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            allowed_oauth_flows: ["code"]
+            allows_all_flows: false

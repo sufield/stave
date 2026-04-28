@@ -1,0 +1,26 @@
+control: CTL.COGNITO.IDPOOL.UNAUTH.LAMBDA.001
+defect: >
+  Cognito unauthenticated role has
+  lambda:InvokeFunction.
+infection: >
+  Lambda invocation through Cognito anonymous
+  credentials makes the targeted function a
+  publicly invokable endpoint. The function
+  may have been written assuming it's only
+  called by a trusted internal pipeline,
+  trusting its inputs and skipping
+  authorization checks. Through the
+  unauthenticated role, anyone on the internet
+  invokes the function with attacker-controlled
+  parameters. If the function takes a SQL
+  query or a shell command parameter (common
+  in admin tools that were never meant to be
+  externally invoked), the attacker has remote
+  code execution. If the function does
+  anything sensitive — read user data, send
+  email, charge cards, modify state — it now
+  does that on behalf of any internet caller.
+failure: >
+  Anonymous Lambda invocation. Functions
+  accessible to the unauthenticated role are
+  publicly callable through Cognito.
