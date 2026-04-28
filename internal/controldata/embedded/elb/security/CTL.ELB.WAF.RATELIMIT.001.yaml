@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.WAF.RATELIMIT.001
+name: ELB WAF Has No Rate-Based Rule
+description: >
+  ALB has a WAF web ACL associated but the
+  ACL contains no rate-based rule. Application-
+  layer DDoS, credential-stuffing storms, and
+  scraping bots aren't throttled at the WAF —
+  attacks pass through to the application.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC7.2, A1.1"
+  nist_800_53_r5: "SC-5, SI-4"
+  pci_dss_v4.0: "6.4.2"
+  fedramp_moderate: "SC-5, SI-4"
+  hipaa: "164.312(c)(1)"
+  iso_27001_2022: "A.8.7, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    No rate-based rule in the WAF web ACL.
+  action: >
+    Add a rate-based rule: aws wafv2
+    update-web-acl with a Rule of type
+    RateBasedStatement. Typical thresholds
+    start at 2000 requests per 5-minute
+    window per source IP for general
+    application traffic; tighter (500–1000)
+    for sign-in endpoints and high-cost API
+    paths. Layer multiple rate-based rules
+    if different paths warrant different
+    thresholds.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "waf_rate_based_rule_count": 2,
+          "waf_has_rate_limit": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.waf_has_rate_limit
+      op: eq
+      value: false
+defect: >
+  ELB WAF web ACL has no rate-based rule.
+infection: >
+  Rate-based rules are the WAF mechanism
+  for application-layer DDoS protection,
+  credential-stuffing throttling, and
+  scraping mitigation. Without one, every
+  request passes through to the
+  application regardless of velocity.
+  AWS Shield Standard (free, applied to
+  every WAF-protected ALB) protects
+  against network-layer DDoS but not
+  application-layer; the application-layer
+  defense lives in WAF rules. A single
+  rate-based rule with a moderate
+  threshold blocks the most common
+  flood patterns; tightening per-path
+  rules adds protection without
+  meaningful cost.
+failure: >
+  No application-layer DDoS protection.
+  Credential stuffing, scraping, and
+  flood patterns reach the application
+  unthrottled.
+tests:
+  - name: WAF without rate limit fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            waf_rate_based_rule_count: 0
+            waf_has_rate_limit: false
+  - name: WAF with rate limit passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            waf_rate_based_rule_count: 2
+            waf_has_rate_limit: true

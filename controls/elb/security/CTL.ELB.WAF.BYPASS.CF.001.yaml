@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.WAF.BYPASS.CF.001
+name: CloudFront-Fronted ALB Without Custom Header Verification
+description: >
+  ALB sits behind a CloudFront distribution
+  but the ALB does not require a
+  CloudFront-set custom header. Direct
+  internet requests to the ALB DNS name
+  reach the application without traversing
+  CloudFront — bypassing CloudFront's WAF,
+  caching, and Shield Advanced protection.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "SC-7, SC-8"
+  pci_dss_v4.0: "1.3"
+  fedramp_moderate: "SC-7, SC-8"
+  iso_27001_2022: "A.8.20, A.8.22"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    CloudFront-fronted ALB is reachable
+    without traversing CloudFront.
+  action: >
+    Configure CloudFront to set a custom
+    request header (e.g., X-Origin-Verify
+    with a long random secret stored in
+    Secrets Manager) and add a WAF rule on
+    the ALB requiring that header on every
+    request. Direct ALB requests fail; only
+    requests from the configured CloudFront
+    distribution succeed. Rotate the header
+    value periodically. The pattern is
+    standard CloudFront-to-ALB origin
+    protection.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "is_cloudfront_origin": true,
+          "waf_requires_cf_header": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.is_cloudfront_origin
+      op: eq
+      value: true
+    - field: properties.compute.elb.waf_requires_cf_header
+      op: eq
+      value: false
+defect: >
+  CloudFront-fronted ALB doesn't require a
+  CloudFront-set header.
+infection: >
+  CloudFront sits in front of the ALB to
+  provide caching, edge-WAF, and Shield
+  Advanced. The intent is that all client
+  traffic flows
+  client→CloudFront→ALB→application.
+  Without a header check on the ALB,
+  attackers who learn the ALB's DNS name
+  (via DNS history, CloudFront origin
+  config leaks, or scanning) bypass
+  CloudFront entirely — they hit the ALB
+  directly. The bypass evades all the
+  edge protections that justified
+  putting CloudFront in front in the
+  first place: edge WAF rules don't fire,
+  caching is bypassed (cost
+  amplification), Shield Advanced
+  protections don't apply. The verify-
+  header pattern closes the bypass.
+failure: >
+  CloudFront protections bypassable. Direct
+  ALB access avoids edge-WAF, caching, and
+  Shield Advanced.
+tests:
+  - name: CF-fronted ALB without header check fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            is_cloudfront_origin: true
+            waf_requires_cf_header: false
+  - name: CF-fronted ALB with header check passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            is_cloudfront_origin: true
+            waf_requires_cf_header: true
+  - name: non-CF ALB does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            is_cloudfront_origin: false
+            waf_requires_cf_header: false

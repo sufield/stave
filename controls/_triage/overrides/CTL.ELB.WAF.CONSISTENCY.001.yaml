@@ -1,0 +1,24 @@
+control: CTL.ELB.WAF.CONSISTENCY.001
+defect: >
+  WAF coverage inconsistent across the
+  account's ALBs.
+infection: >
+  Mixed WAF posture across an account creates
+  a discoverable weakest link. An attacker
+  enumerates ALBs (each ALB has a stable DNS
+  name; CloudTrail history is searchable;
+  Route 53 alias targets are public for
+  internet-facing apps), tries each one,
+  and identifies the unprotected ALB. The
+  account's WAF coverage on the other ALBs
+  is irrelevant if one ALB has none —
+  attackers route through the gap. The
+  discipline is uniform coverage, with
+  documented exceptions where genuinely
+  warranted. Firewall Manager is the AWS-
+  native tool for enforcing the discipline
+  organization-wide.
+failure: >
+  Discoverable gap. Mixed WAF coverage
+  presents a weakest-link surface across
+  the account.

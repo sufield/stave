@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.WAF.CONSISTENCY.001
+name: WAF Coverage Inconsistent Across Account's ALBs
+description: >
+  Some ALBs in the account have a WAF web
+  ACL associated and others don't. Mixed
+  WAF posture means an attacker who
+  identifies an unprotected ALB sidesteps
+  the entire perimeter defense — finding
+  the gap is enumeration rather than
+  exploitation work.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, SC-7, SI-4"
+  pci_dss_v4.0: "6.4.2"
+  fedramp_moderate: "CM-2, SC-7"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Inconsistent WAF coverage across ALBs in
+    the account.
+  action: >
+    Either attach a web ACL to every ALB or
+    document why specific ALBs are exempt
+    (internal-only, non-production with
+    limited reach, etc.). Use AWS Firewall
+    Manager to enforce uniform WAF
+    association across the organization;
+    Firewall Manager flags non-compliant
+    resources and can auto-remediate.
+  example: |
+    {
+      "compute": {
+        "kind": "elb_account",
+        "elb": {
+          "alb_count": 4,
+          "alb_with_waf_count": 4,
+          "waf_coverage_consistent": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb_account
+    - field: properties.compute.elb.waf_coverage_consistent
+      op: eq
+      value: false
+defect: >
+  WAF coverage inconsistent across the
+  account's ALBs.
+infection: >
+  Mixed WAF posture across an account creates
+  a discoverable weakest link. An attacker
+  enumerates ALBs (each ALB has a stable DNS
+  name; CloudTrail history is searchable;
+  Route 53 alias targets are public for
+  internet-facing apps), tries each one,
+  and identifies the unprotected ALB. The
+  account's WAF coverage on the other ALBs
+  is irrelevant if one ALB has none —
+  attackers route through the gap. The
+  discipline is uniform coverage, with
+  documented exceptions where genuinely
+  warranted. Firewall Manager is the AWS-
+  native tool for enforcing the discipline
+  organization-wide.
+failure: >
+  Discoverable gap. Mixed WAF coverage
+  presents a weakest-link surface across
+  the account.
+tests:
+  - name: inconsistent WAF coverage fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:account"
+      asset_type: aws_elb_account
+      vendor: aws
+      properties:
+        compute:
+          kind: elb_account
+          elb:
+            alb_count: 4
+            alb_with_waf_count: 2
+            waf_coverage_consistent: false
+  - name: uniform WAF coverage passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:account"
+      asset_type: aws_elb_account
+      vendor: aws
+      properties:
+        compute:
+          kind: elb_account
+          elb:
+            alb_count: 4
+            alb_with_waf_count: 4
+            waf_coverage_consistent: true

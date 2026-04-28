@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2040
-**Pack hash:** `534ccf43e93a127cfb0631ad44983ce93623db83b90741ffda725698ffa13167`
+**Total controls:** 2044
+**Pack hash:** `aee0c1a97ccc776e141185bd50cdf9db4ec516c31fdaf486de16122ad9fb1eb8`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 231 |
-| high | 905 |
+| high | 908 |
 | info | 16 |
 | low | 140 |
-| medium | 748 |
+| medium | 749 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1063 |
-| governance | 279 |
+| exposure | 1066 |
+| governance | 280 |
 | hygiene | 16 |
 | identity | 360 |
 | network | 28 |
@@ -14029,6 +14029,21 @@ Internet-facing ALBs must have an AWS WAF web ACL associated.
 
 ---
 
+### CTL.ELB.WAF.BYPASS.CF.001
+
+**CloudFront-Fronted ALB Without Custom Header Verification**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-7, SC-8; iso_27001_2022: A.8.20, A.8.22; nist_800_53_r5: SC-7, SC-8; pci_dss_v4.0: 1.3; soc2: CC6.1, CC6.6;
+
+ALB sits behind a CloudFront distribution but the ALB does not require a CloudFront-set custom header. Direct internet requests to the ALB DNS name reach the application without traversing CloudFront — bypassing CloudFront's WAF, caching, and Shield Advanced protection.
+
+**Remediation:** Configure CloudFront to set a custom request header (e.g., X-Origin-Verify with a long random secret stored in Secrets Manager) and add a WAF rule on the ALB requiring that header on every request. Direct ALB requests fail; only requests from the configured CloudFront distribution succeed. Rotate the header value periodically. The pattern is standard CloudFront-to-ALB origin protection.
+
+---
+
 ### CTL.ELB.WAF.BYPASS.DIRECT.001
 
 **Backend Targets Are Directly Accessible Bypassing ALB and WAF**
@@ -14044,6 +14059,21 @@ Backend targets behind an ALB have security groups that allow inbound traffic fr
 
 ---
 
+### CTL.ELB.WAF.CONSISTENCY.001
+
+**WAF Coverage Inconsistent Across Account's ALBs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, SC-7; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: CM-2, SC-7, SI-4; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC8.1;
+
+Some ALBs in the account have a WAF web ACL associated and others don't. Mixed WAF posture means an attacker who identifies an unprotected ALB sidesteps the entire perimeter defense — finding the gap is enumeration rather than exploitation work.
+
+**Remediation:** Either attach a web ACL to every ALB or document why specific ALBs are exempt (internal-only, non-production with limited reach, etc.). Use AWS Firewall Manager to enforce uniform WAF association across the organization; Firewall Manager flags non-compliant resources and can auto-remediate.
+
+---
+
 ### CTL.ELB.WAF.COUNTONLY.001
 
 **ALB WAF Web ACL Rules Are in COUNT Mode Only**
@@ -14056,6 +14086,21 @@ Backend targets behind an ALB have security groups that allow inbound traffic fr
 ALB WAF web ACL has rules but every rule is in COUNT mode. COUNT mode evaluates requests and records matches but takes no action — the request continues to the backend. SQL injection payloads, known-bad IPs, bot traffic — all matched, all logged, all forwarded. COUNT is intended for testing new rules before enabling BLOCK; production-deployed COUNT-only WAF detects threats without preventing them. Same false- protection class as no-rule WAF — slightly less invisible (logs exist) but no actual blocking.
 
 **Remediation:** Switch rules from COUNT to BLOCK after a brief bake-in window. Use the WAF console (Override statement → none) or aws wafv2 update-web-acl with the rule's Action set to Block instead of Override+Count. Move one rule group at a time, watch the WAF logs for false positives between transitions, and revert if legitimate traffic gets blocked. The common failure: rules deployed in COUNT for testing, testing completed, nobody switched to BLOCK.
+
+---
+
+### CTL.ELB.WAF.MANAGED.001
+
+**ELB WAF Has No AWS Managed Rule Groups**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-7, SI-3; hipaa: 164.312(c)(1); iso_27001_2022: A.8.7, A.8.16; nist_800_53_r5: SC-7, SI-3, SI-4; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.6;
+
+ALB has a WAF web ACL associated but the ACL contains no AWS managed rule groups. The team has assembled the WAF surface themselves without the OWASP-aligned baseline AWS provides for free. Common attacks (SQLi, XSS, command injection, known-bad IPs) may not be covered.
+
+**Remediation:** Add AWS managed rule groups to the web ACL: aws wafv2 update-web-acl with rules including AWSManagedRulesCommonRuleSet (OWASP Top 10), AWSManagedRulesKnownBadInputsRuleSet, AWSManagedRulesAmazonIpReputationList, and protocol-specific groups (LinuxRuleSet, WindowsRuleSet, SQLiRuleSet) where appropriate. Managed rules are free per WCU; the only cost is WCU consumption against the ACL's capacity.
 
 ---
 
@@ -14086,6 +14131,21 @@ ALB has a WAF web ACL associated and the web ACL exists, but WAF logging is not 
 ALB has a WAF web ACL associated and the web ACL exists, but the web ACL contains zero rules — no managed rule groups, no custom rules, no rate-based rules. The WAF evaluates nothing. Every request passes through the default action (typically Allow). An auditor checking "is WAF configured?" sees the association and marks it compliant. The WAF provides the appearance of application-layer filtering without any filtering. Same false-protection class as DMARC p=none and rotation-enabled-but-Lambda-deleted.
 
 **Remediation:** Add at minimum the AWS managed core rule set (AWSManagedRulesCommonRuleSet), the SQL injection rule set (AWSManagedRulesSQLiRuleSet), and a rate-based rule for IP-level throttling. Use the AWS WAF console or aws wafv2 update-web-acl. Run rules in COUNT mode initially (CTL.ELB.WAF.COUNTONLY.001 catches leaving them in COUNT) to surface false positives before flipping to BLOCK.
+
+---
+
+### CTL.ELB.WAF.RATELIMIT.001
+
+**ELB WAF Has No Rate-Based Rule**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-5, SI-4; hipaa: 164.312(c)(1); iso_27001_2022: A.8.7, A.8.16; nist_800_53_r5: SC-5, SI-4; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC7.2, A1.1;
+
+ALB has a WAF web ACL associated but the ACL contains no rate-based rule. Application- layer DDoS, credential-stuffing storms, and scraping bots aren't throttled at the WAF — attacks pass through to the application.
+
+**Remediation:** Add a rate-based rule: aws wafv2 update-web-acl with a Rule of type RateBasedStatement. Typical thresholds start at 2000 requests per 5-minute window per source IP for general application traffic; tighter (500–1000) for sign-in endpoints and high-cost API paths. Layer multiple rate-based rules if different paths warrant different thresholds.
 
 ---
 

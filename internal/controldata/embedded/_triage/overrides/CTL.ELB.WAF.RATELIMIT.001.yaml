@@ -1,0 +1,25 @@
+control: CTL.ELB.WAF.RATELIMIT.001
+defect: >
+  ELB WAF web ACL has no rate-based rule.
+infection: >
+  Rate-based rules are the WAF mechanism
+  for application-layer DDoS protection,
+  credential-stuffing throttling, and
+  scraping mitigation. Without one, every
+  request passes through to the
+  application regardless of velocity.
+  AWS Shield Standard (free, applied to
+  every WAF-protected ALB) protects
+  against network-layer DDoS but not
+  application-layer; the application-layer
+  defense lives in WAF rules. A single
+  rate-based rule with a moderate
+  threshold blocks the most common
+  flood patterns; tightening per-path
+  rules adds protection without
+  meaningful cost.
+failure: >
+  No application-layer DDoS protection.
+  Credential stuffing, scraping, and
+  flood patterns reach the application
+  unthrottled.

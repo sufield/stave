@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.WAF.MANAGED.001
+name: ELB WAF Has No AWS Managed Rule Groups
+description: >
+  ALB has a WAF web ACL associated but the
+  ACL contains no AWS managed rule groups.
+  The team has assembled the WAF surface
+  themselves without the OWASP-aligned
+  baseline AWS provides for free. Common
+  attacks (SQLi, XSS, command injection,
+  known-bad IPs) may not be covered.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "SC-7, SI-3, SI-4"
+  pci_dss_v4.0: "6.4.2"
+  fedramp_moderate: "SC-7, SI-3"
+  hipaa: "164.312(c)(1)"
+  iso_27001_2022: "A.8.7, A.8.16"
+  ccm_v4: ["TVM-04", "IVS-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    WAF lacks AWS managed rule groups. OWASP
+    baseline absent.
+  action: >
+    Add AWS managed rule groups to the web
+    ACL: aws wafv2 update-web-acl with rules
+    including AWSManagedRulesCommonRuleSet
+    (OWASP Top 10),
+    AWSManagedRulesKnownBadInputsRuleSet,
+    AWSManagedRulesAmazonIpReputationList,
+    and protocol-specific groups
+    (LinuxRuleSet, WindowsRuleSet,
+    SQLiRuleSet) where appropriate. Managed
+    rules are free per WCU; the only cost is
+    WCU consumption against the ACL's
+    capacity.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "waf_managed_rule_count": 3,
+          "waf_has_managed_rules": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.waf_has_managed_rules
+      op: eq
+      value: false
+defect: >
+  ELB WAF web ACL has no AWS managed rule
+  groups.
+infection: >
+  AWS publishes free managed rule groups
+  covering the OWASP Top 10, known-bad
+  inputs, IP reputation, and a handful of
+  platform-specific rule sets. They're
+  maintained by AWS — when a new attack
+  pattern emerges, the managed rules
+  update automatically. A web ACL without
+  any managed rule groups means the team
+  has authored every rule themselves; for
+  the common attacks (SQLi, XSS,
+  command-injection, path-traversal),
+  custom rules rarely match the coverage
+  of the maintained AWS baseline. The
+  control fires when zero managed groups
+  appear in the ACL — even one common
+  group meaningfully closes the gap.
+failure: >
+  No OWASP baseline. Common attack
+  patterns (SQLi, XSS) may bypass the WAF
+  because no maintained rule covers them.
+tests:
+  - name: WAF without managed rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            waf_managed_rule_count: 0
+            waf_has_managed_rules: false
+  - name: WAF with managed rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            waf_managed_rule_count: 3
+            waf_has_managed_rules: true

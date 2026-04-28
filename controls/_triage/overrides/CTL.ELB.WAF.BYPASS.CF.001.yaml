@@ -1,0 +1,27 @@
+control: CTL.ELB.WAF.BYPASS.CF.001
+defect: >
+  CloudFront-fronted ALB doesn't require a
+  CloudFront-set header.
+infection: >
+  CloudFront sits in front of the ALB to
+  provide caching, edge-WAF, and Shield
+  Advanced. The intent is that all client
+  traffic flows
+  client→CloudFront→ALB→application.
+  Without a header check on the ALB,
+  attackers who learn the ALB's DNS name
+  (via DNS history, CloudFront origin
+  config leaks, or scanning) bypass
+  CloudFront entirely — they hit the ALB
+  directly. The bypass evades all the
+  edge protections that justified
+  putting CloudFront in front in the
+  first place: edge WAF rules don't fire,
+  caching is bypassed (cost
+  amplification), Shield Advanced
+  protections don't apply. The verify-
+  header pattern closes the bypass.
+failure: >
+  CloudFront protections bypassable. Direct
+  ALB access avoids edge-WAF, caching, and
+  Shield Advanced.

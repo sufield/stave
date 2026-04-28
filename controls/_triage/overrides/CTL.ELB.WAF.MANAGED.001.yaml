@@ -1,0 +1,25 @@
+control: CTL.ELB.WAF.MANAGED.001
+defect: >
+  ELB WAF web ACL has no AWS managed rule
+  groups.
+infection: >
+  AWS publishes free managed rule groups
+  covering the OWASP Top 10, known-bad
+  inputs, IP reputation, and a handful of
+  platform-specific rule sets. They're
+  maintained by AWS — when a new attack
+  pattern emerges, the managed rules
+  update automatically. A web ACL without
+  any managed rule groups means the team
+  has authored every rule themselves; for
+  the common attacks (SQLi, XSS,
+  command-injection, path-traversal),
+  custom rules rarely match the coverage
+  of the maintained AWS baseline. The
+  control fires when zero managed groups
+  appear in the ACL — even one common
+  group meaningfully closes the gap.
+failure: >
+  No OWASP baseline. Common attack
+  patterns (SQLi, XSS) may bypass the WAF
+  because no maintained rule covers them.
