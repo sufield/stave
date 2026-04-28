@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.MOCK.PRODUCTION.001
+defect: >
+  Production-stage method uses a MOCK integration instead of
+  a real backend integration.
+infection: >
+  Mock integrations return hardcoded responses without invoking
+  any backend. Their legitimate uses: testing the API wiring
+  before the backend is ready (the integration returns a
+  canned shape so frontend developers can build against it),
+  stub endpoints for not-yet-implemented operations, and
+  forced-response paths during rollouts. None of those
+  reasons applies to a stable production stage. Mock
+  integrations on production either return canned data that
+  may be stale or inappropriate for live traffic, or return
+  generic 200 responses that mask backend issues from
+  monitoring. The 5xx and integration-latency alarms can't
+  fire on a mock — there's no integration to fail. The fix
+  is to replace the MOCK with the appropriate AWS / AWS_PROXY
+  / HTTP / HTTP_PROXY integration before considering the
+  stage production-ready.
+failure: >
+  Hollow production endpoint. Mock returns canned data;
+  monitoring shows healthy responses while the actual
+  capability the API claims to provide isn't running.

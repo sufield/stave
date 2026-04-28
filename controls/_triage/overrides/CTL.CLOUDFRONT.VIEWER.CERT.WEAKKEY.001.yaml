@@ -1,0 +1,26 @@
+control: CTL.CLOUDFRONT.VIEWER.CERT.WEAKKEY.001
+defect: >
+  CloudFront viewer certificate's RSA key is 1024 bits or
+  smaller — below current NIST guidance.
+infection: >
+  RSA key size sets the asymmetric-crypto resistance of the
+  certificate. RSA-1024 has been below NIST's recommended
+  minimum since 2014; modern browsers and CA / Browser Forum
+  baseline requirements treat it as deprecated. The
+  certificate still works for TLS handshakes — viewers don't
+  reject it outright — but the asymmetric crypto can be
+  broken by sufficiently-resourced attackers (academic
+  papers and cryptanalysis history give recommendations of
+  decades-of-resources, but the trend is downward as
+  computing power grows). Certificates issued today should
+  use RSA-2048 minimum, with RSA-3072 / RSA-4096 for higher-
+  trust use cases or ECDSA P-256 / P-384 for shorter
+  handshakes and smaller certificates. ACM-issued
+  certificates default to RSA-2048 since 2017; this control
+  catches imported certs from older CAs and legacy
+  certificates that haven't been rotated through a modern
+  issuance path.
+failure: >
+  Substandard asymmetric crypto. The certificate is below
+  current NIST and browser-industry minimum key sizes;
+  RSA-1024 is deprecated.

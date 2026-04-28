@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ORIGIN.S3.WEBSITE.001
+name: CloudFront S3 Origin Uses Website-Hosting Endpoint, OAC Incompatible
+description: >
+  CloudFront distribution has an S3 origin pointing at the
+  bucket's static-website endpoint
+  (bucket-name.s3-website-region.amazonaws.com) rather than
+  the REST API endpoint (bucket-name.s3.region.amazonaws.com).
+  Origin Access Control and Origin Access Identity both
+  require the REST API endpoint — they don't function with
+  website-hosting endpoints. Operators using the website
+  endpoint either accept that the bucket must be public (so
+  CloudFront can reach it) or attempt to combine OAC with
+  the website endpoint and find that signed requests are
+  silently ignored. The CloudFront access pattern collapses
+  to "public S3 bucket fronted by CloudFront" — anyone who
+  knows the bucket's website hostname bypasses CloudFront
+  entirely.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "2.1.5"
+  nist_800_53_r5: "AC-3, SC-7"
+  pci_dss_v4.0: "1.2, 6.4.2"
+  fedramp_moderate: "AC-3, SC-7"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    S3 origin is the website-hosting endpoint; OAC / OAI
+    cannot sign requests, so the bucket must be public.
+  action: >
+    Repoint the CloudFront origin at the bucket's REST API
+    endpoint (bucket-name.s3.region.amazonaws.com or just
+    bucket-name.s3.amazonaws.com), then enable OAC and apply
+    a bucket policy that grants only the OAC's signed
+    requests. Migrate website-hosting features (index docs,
+    error docs) to CloudFront default-root-object and
+    custom-error-responses configuration. After the migration,
+    disable static website hosting on the bucket and tighten
+    the bucket policy to deny public access.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "origin_type": "s3",
+          "origin_uses_s3_website_endpoint": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.origin_type
+      op: eq
+      value: s3
+    - field: properties.cdn.cloudfront.origin_uses_s3_website_endpoint
+      op: eq
+      value: true
+defect: >
+  CloudFront S3 origin points at the bucket's static-website
+  endpoint instead of the REST API endpoint.
+infection: >
+  S3 buckets expose two distinct endpoints: the REST API
+  endpoint (bucket.s3.region.amazonaws.com) and the static-
+  website endpoint (bucket.s3-website-region.amazonaws.com)
+  when website hosting is enabled. The two endpoints behave
+  differently — the REST API endpoint speaks the standard
+  S3 protocol and supports signed requests; the website
+  endpoint serves like a web server with index docs, error
+  docs, and HTTP-style routing, but it doesn't accept
+  signed requests. Origin Access Control and the legacy
+  Origin Access Identity both depend on signed requests to
+  let CloudFront prove it's the legitimate caller; neither
+  works with the website endpoint. Operators using the
+  website endpoint either set the bucket to allow public
+  access (so CloudFront can reach it without signing) or
+  attempt to combine OAC with the website endpoint and find
+  the signing is silently ineffective. The CloudFront
+  access pattern collapses to public-bucket-fronted-by-
+  CloudFront — anyone who finds the bucket's website
+  hostname bypasses CloudFront entirely, hitting S3
+  directly with no edge protections.
+failure: >
+  CloudFront becomes optional. The bucket is public and
+  reachable directly via the website hostname; CloudFront's
+  edge protections are bypassable.
+tests:
+  - name: S3 website endpoint origin fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            origin_type: "s3"
+            origin_uses_s3_website_endpoint: true
+  - name: S3 REST endpoint origin passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            origin_type: "s3"
+            origin_uses_s3_website_endpoint: false

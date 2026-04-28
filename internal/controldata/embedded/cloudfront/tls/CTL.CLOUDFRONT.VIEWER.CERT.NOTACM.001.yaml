@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.VIEWER.CERT.NOTACM.001
+name: CloudFront Viewer Certificate Imported Manually Instead of ACM-Issued
+description: >
+  CloudFront viewer certificate is imported into ACM (or into
+  IAM, the legacy alternative) rather than issued by ACM.
+  Imported certificates are valid TLS certificates and ACM
+  holds them, but ACM cannot auto-renew them — the operator
+  must request a new certificate from the issuing CA, import
+  the renewed cert, and re-associate it with the distribution
+  before the existing cert expires. ACM-issued certificates
+  renew automatically (provided DNS validation records remain
+  valid) and the operator is notified before expiry.
+  Manually-imported certs are a recurring operational
+  burden; the manual step is precisely where renewals get
+  missed.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12, SC-17, CM-2"
+  fedramp_moderate: "SC-12, SC-17"
+  pci_dss_v4.0: "4.2"
+  soc2: "CC6.7, CC8.1"
+  iso_27001_2022: "A.5.16, A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    CloudFront viewer certificate is imported, not ACM-issued
+    — no auto-renewal.
+  action: >
+    Migrate to an ACM-issued certificate when feasible:
+    aws acm request-certificate with the same SAN list,
+    complete DNS validation, then update the distribution's
+    ViewerCertificate to point at the new ACM-issued ARN.
+    ACM-issued certificates handle renewal silently. For
+    cases where imported certs are required (third-party CA
+    contracts, EV certificates, internal CA chains), document
+    the rationale and implement an external monitor that
+    alerts well before expiry.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "viewer_cert_issued_by_acm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.viewer_cert_issued_by_acm
+      op: eq
+      value: false
+defect: >
+  CloudFront viewer certificate is imported into ACM rather
+  than issued by ACM.
+infection: >
+  Imported certificates are valid TLS certificates: ACM holds
+  them, presents them, the TLS handshake works the same. But
+  ACM cannot auto-renew imported certs. The operator must
+  request a new certificate from the issuing CA, complete
+  whatever validation the CA requires, import the renewed
+  cert into ACM, and update the distribution's
+  ViewerCertificate to point at the new ARN — all before the
+  existing cert expires. Renewal becomes recurring
+  operational burden, and the manual step is precisely where
+  renewals get missed. ACM-issued certificates renew
+  automatically when DNS validation records remain valid.
+  The migration from imported to ACM-issued is a one-time
+  effort that eliminates the recurring manual step. Cases
+  where imported certs are required (third-party CA
+  contracts, EV certs, internal CA chains) should document
+  the rationale and add external monitoring against expiry.
+failure: >
+  Recurring renewal exposure. Auto-renewal isn't available;
+  every renewal cycle is a manual step where missing the
+  window causes a CloudFront-wide TLS outage.
+tests:
+  - name: imported cert fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            viewer_cert_issued_by_acm: false
+  - name: ACM-issued cert passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            viewer_cert_issued_by_acm: true

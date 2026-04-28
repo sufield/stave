@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.INTEGRATION.HTTP.SENSITIVE.HEADERS.001
+name: HTTP Integration Forwards Authorization or Cookie Headers Unconditionally
+description: >
+  HTTP / HTTP_PROXY integration is configured without explicit
+  request parameter mappings to strip sensitive headers
+  (Authorization, Cookie, Set-Cookie, X-Api-Key) before
+  forwarding to the backend. The default behavior of HTTP
+  proxy integration is to pass every request header through.
+  When the backend is internal or third-party and doesn't
+  itself need the API Gateway-layer credentials (a Cognito
+  bearer token meant only for API Gateway, an API key meant
+  only for usage-plan throttling), forwarding the header to
+  the backend unnecessarily exposes the credential. The
+  backend may log it, may proxy it onward, may have weaker
+  IAM than expected — none of which the operator considered
+  when designing API Gateway-layer auth.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, IA-5, SC-7"
+  fedramp_moderate: "AC-3, IA-5, SC-7"
+  pci_dss_v4.0: "8.3, 6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.10, A.5.16, A.8.16"
+  ccm_v4: ["IAM-13", "IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    HTTP integration forwards Authorization / Cookie / X-Api-Key
+    headers to the backend unconditionally.
+  action: >
+    Map integration.request.header.* to drop or rename
+    sensitive headers before forwarding. aws apigateway
+    update-integration with --patch-operations
+    op=remove,path=/requestParameters/integration.request.header.Authorization,
+    or replace with a backend-specific token. The mapping
+    explicitly enumerates which headers reach the backend; the
+    default (forward everything) is the unsafe state.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_integration",
+        "integration": {
+          "type": "HTTP_PROXY",
+          "strips_sensitive_headers": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_integration
+    - field: properties.api.integration.type
+      op: in
+      value: ["HTTP", "HTTP_PROXY"]
+    - field: properties.api.integration.strips_sensitive_headers
+      op: eq
+      value: false

@@ -1,0 +1,25 @@
+control: CTL.APIGATEWAY.CORS.NOTCONFIGURED.001
+defect: >
+  Browser-facing API has no CORS configuration declared at
+  the API level.
+infection: >
+  CORS preflight requests (OPTIONS with Origin /
+  Access-Control-Request-Method headers) decide whether
+  browsers will let JavaScript on a foreign origin make a
+  cross-origin request to the API. Without CORS configured
+  at all, every preflight fails — the API responds with no
+  Access-Control-Allow-Origin header and the browser blocks
+  the actual request. Operators sometimes work around this
+  by adding ad-hoc per-method CORS headers in mapping
+  templates, but the proper layer is the API-level CORS
+  configuration (CorsConfiguration on HTTP APIs, the
+  Enable-CORS helper on REST APIs). The complement —
+  CORS configured but with wildcard origins, methods, or
+  headers — is already covered by CTL.APIGATEWAY.CORS.001;
+  this control catches the absent-altogether case. Both are
+  unsafe; the safe state is explicitly allow-listed origins
+  matching the operator's expected browser clients.
+failure: >
+  Browser cross-origin requests fail preflight. Browser-side
+  clients can't reach the API; the missing configuration
+  blocks legitimate use.

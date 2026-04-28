@@ -1,0 +1,27 @@
+control: CTL.CLOUDFRONT.CACHE.AUTHORIZATION.001
+defect: >
+  CloudFront cache behavior caches responses to requests
+  carrying an Authorization header without including the
+  header in the cache key.
+infection: >
+  Authorization headers identify the requesting principal:
+  Bearer tokens, API keys, signed-request tokens, basic-auth
+  credentials. Backends personalize responses based on the
+  Authorization — different users see different data even
+  on the same URL. CloudFront's default cache policies do
+  not include Authorization in the cache key, so the first
+  authenticated request's response gets cached against the
+  URL alone and served to every subsequent request for that
+  URL — regardless of who they are or what Authorization
+  they carry. The next request, even with a different
+  Authorization or no Authorization, receives the original
+  user's personalized response. The pattern is the
+  Authorization-header counterpart to the Set-Cookie
+  caching pattern, and the fix is the same shape: disable
+  caching on authenticated routes (cleanest), or include
+  Authorization in the cache key (more complex but
+  preserves caching value).
+failure: >
+  Cross-user data leakage on authenticated paths. The first
+  authenticated request's response — including personalized
+  content — is served to every subsequent caller.

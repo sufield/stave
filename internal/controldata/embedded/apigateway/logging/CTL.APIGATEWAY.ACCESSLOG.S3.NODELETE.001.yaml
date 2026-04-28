@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ACCESSLOG.S3.NODELETE.001
+name: Access Log S3 Destination Bucket Allows DeleteObject
+description: >
+  REST or HTTP API stage delivers access logs to an S3
+  destination, but the bucket policy or default IAM allows
+  s3:DeleteObject for principals beyond the operator's
+  intended retention boundary. An attacker who reaches the
+  destination bucket can delete log objects to erase the
+  audit trail of their activity. Access log buckets should
+  enforce object-level immutability via a deny-DeleteObject
+  bucket policy (or S3 Object Lock with appropriate
+  retention), so logs persist for the audit window
+  regardless of who has bucket access.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "3.6"
+  nist_800_53_r5: "AU-9, AU-11"
+  fedramp_moderate: "AU-9, AU-11"
+  pci_dss_v4.0: "10.5, 10.7"
+  soc2: "CC6.1, CC7.2, CC8.1"
+  iso_27001_2022: "A.5.33, A.8.10, A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Access-log destination bucket allows DeleteObject; an
+    attacker who reaches the bucket can erase logs.
+  action: >
+    Add a bucket policy that denies s3:DeleteObject (and
+    s3:DeleteObjectVersion if versioning is enabled) for all
+    principals except a tightly-scoped lifecycle role: aws
+    s3api put-bucket-policy with a Deny statement on
+    DeleteObject. Or enable S3 Object Lock with Compliance
+    mode and a retention period matching the audit window —
+    Object Lock prevents deletion even from the bucket
+    owner during the retention period.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "access_log": {
+          "destination_type": "s3",
+          "s3_delete_protected": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.access_log.destination_type
+      op: eq
+      value: s3
+    - field: properties.api.access_log.s3_delete_protected
+      op: eq
+      value: false

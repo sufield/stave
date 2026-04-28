@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.ORPHAN.VPCLINK.001
+defect: >
+  VPC Link exists but no integration references it.
+infection: >
+  VPC Links are the bridge between API Gateway and a private
+  NLB target inside a VPC. Provisioning a link allocates ENIs
+  in the configured subnets (occupying IP-address space), ties
+  the link to a specific target NLB (which itself accrues
+  cost and infrastructure footprint), and produces ongoing
+  billing. When no integration references the link, all of
+  that footprint is paid for nothing. Common cause: API
+  migration where the new integration uses a different VPC
+  Link and the old one wasn't decommissioned; experimental
+  integration that was rolled back without removing the link.
+  Cleanup audit: confirm no current or pending integration
+  uses the link, then delete; audit the target NLB and its
+  security group during cleanup since they may need
+  independent decommissioning.
+failure: >
+  Inert VPC Link. ENI footprint, NLB-side cost, and ongoing
+  billing accrue without any integration consuming the link.

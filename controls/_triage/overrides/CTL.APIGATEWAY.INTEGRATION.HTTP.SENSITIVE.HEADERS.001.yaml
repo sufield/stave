@@ -1,0 +1,26 @@
+control: CTL.APIGATEWAY.INTEGRATION.HTTP.SENSITIVE.HEADERS.001
+defect: >
+  HTTP / HTTP_PROXY integration is configured without explicit
+  request-parameter mappings to strip Authorization, Cookie,
+  Set-Cookie, or X-Api-Key headers before forwarding to the
+  backend.
+infection: >
+  HTTP proxy integration's default behavior is pass-everything
+  for request headers. When the API's authentication is at
+  the API Gateway layer (Cognito authorizer, Lambda
+  authorizer, IAM auth, API key for usage-plan throttling),
+  the credentials accompany the request only because the
+  client needed them to reach API Gateway — they don't
+  necessarily belong forward of the gateway. Unconditionally
+  forwarding them: leaks credentials to backend code that
+  may log them, may proxy them onward to systems with
+  weaker IAM, may persist them in error logs or APM tools,
+  or may have weaker access controls than the API Gateway
+  layer assumed. The mapping layer (integration.request.header)
+  is where the operator explicitly enumerates which headers
+  reach the backend; the default forward-everything is the
+  unsafe state.
+failure: >
+  Credential exposure to downstream backends. Auth tokens and
+  API keys forwarded to backends that don't need them, where
+  they may be logged, persisted, or proxied further.

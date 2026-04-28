@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.ACCESSLOG.S3.NODELETE.001
+defect: >
+  Access-log destination S3 bucket allows DeleteObject for
+  principals beyond the operator's intended retention boundary.
+infection: >
+  Access logs persisted to S3 are the durable record of every
+  request the API received. An attacker who reaches the
+  destination bucket — through a misconfigured bucket policy,
+  through an IAM identity with overly-broad S3 access, or
+  through a compromised role — can delete log objects to
+  erase the audit trail of their activity. Without
+  delete-protection, the audit trail is only as durable as
+  the bucket's access controls. Access log buckets should
+  enforce object-level immutability via a deny-DeleteObject
+  bucket policy (the operator-controlled approach) or via S3
+  Object Lock with a retention period matching the audit
+  window (the strongest approach — Object Lock prevents
+  deletion even from the bucket owner during the retention
+  period). The pattern is the same as CloudTrail log
+  immutability: logs that can be deleted are logs that can
+  be tampered with.
+failure: >
+  Tamperable audit trail. An attacker with bucket access can
+  erase log objects to hide their activity.

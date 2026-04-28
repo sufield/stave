@@ -1,0 +1,25 @@
+control: CTL.APIGATEWAY.ORPHAN.CUSTOMDOMAIN.001
+defect: >
+  Custom domain has no base path mapping pointing it at any
+  API and stage.
+infection: >
+  REST and HTTP API custom domains can exist independently of
+  any API mapping. The domain holds its own ACM certificate,
+  DNS configuration, and TLS policy; the mapping (the
+  base-path-mapping for REST, the api-mapping for HTTP)
+  associates the domain with a specific API and stage.
+  Without a mapping, the domain is functional from the
+  network perspective: DNS resolves, TLS handshakes complete
+  with the configured cert. But every request returns a
+  default API Gateway response (typically Forbidden / Missing
+  Authentication). The domain accumulates ACM and DNS
+  coordination cost, and cert auto-renewal stays active even
+  though no traffic flows. Common cause: stage migration
+  where the new mapping was added but the old domain wasn't
+  cleaned up; an experimental domain that never reached
+  production. Either map the domain or delete it; auditing
+  Route 53 alias records during cleanup avoids leaving
+  dangling DNS entries.
+failure: >
+  Inert domain accumulating cost. DNS resolves, cert renews,
+  no traffic flows; cleanup is incomplete.

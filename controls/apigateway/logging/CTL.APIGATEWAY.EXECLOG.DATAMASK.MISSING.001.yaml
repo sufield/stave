@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.EXECLOG.DATAMASK.MISSING.001
+name: Execution Logging With Data Trace But No Parameter Masking
+description: >
+  REST API stage has data trace enabled in execution logs
+  (full request and response bodies captured) without any
+  parameter masking declared. When data trace is on and a
+  legitimate diagnostic window justifies the exposure, masking
+  rules can redact known-sensitive parameter names (password,
+  token, ssn, credit_card, authorization) before logs are
+  written. Without masking, every body field — including
+  credentials in form-style POSTs, PII in user-update
+  payloads, payment data — persists at rest in CloudWatch.
+  The existing DATALOG control flags data trace being on at
+  all; this control catches the case where data trace is
+  legitimately needed but masking isn't applied alongside.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-9, SC-28, SI-12"
+  fedramp_moderate: "AU-9, SC-28, SI-12"
+  pci_dss_v4.0: "3.5, 8.3, 10.5"
+  soc2: "CC6.1, CC6.7"
+  hipaa: "164.312(a)(2)(iv), 164.312(c)(1)"
+  iso_27001_2022: "A.5.33, A.8.10, A.8.15"
+  ccm_v4: ["LOG-08", "DSP-07"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Data trace is on without masking; sensitive fields persist
+    at rest in CloudWatch.
+  action: >
+    Configure parameter masking via stage variables or method-
+    level mapping templates that redact known-sensitive field
+    names before the body reaches the execution log. For
+    deeper data-leak prevention, integrate CloudWatch Logs
+    with a data-classification pipeline (Amazon Macie,
+    custom Lambda subscriber) that scrubs detected
+    credentials and PII from the log stream after-the-fact.
+    The cleanest fix is still to disable data trace on
+    production stages — the existing
+    CTL.APIGATEWAY.EXECLOG.DATALOG.001 covers the on-by-default
+    case; this control catches the data-trace-needed-and-
+    no-masking case.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "execution_log": {
+          "data_trace_enabled": true,
+          "parameter_masking_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.execution_log.data_trace_enabled
+      op: eq
+      value: true
+    - field: properties.api.execution_log.parameter_masking_configured
+      op: eq
+      value: false

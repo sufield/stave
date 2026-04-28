@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ORPHAN.CUSTOMDOMAIN.001
+name: Custom Domain Has No Active API Mapping
+description: >
+  REST or HTTP API custom domain exists with a valid certificate
+  and TLS configuration, but no base path mapping points the
+  domain at any API and stage. The custom domain is effectively
+  orphaned: the DNS record may resolve, the TLS handshake may
+  succeed, but every request returns a default API Gateway
+  response (typically Forbidden / Missing Authentication). The
+  domain accumulates ACM and DNS coordination cost, and the
+  cert auto-renewal stays active even though the domain serves
+  no traffic. Common cause: stage migration where the new
+  mapping was added but the old domain wasn't cleaned up; an
+  experimental domain that never reached production.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2, CM-8"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.10, A.8.9"
+  ccm_v4: ["GRC-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Custom domain has no API mapping; the domain is inert
+    configuration.
+  action: >
+    Either map the domain to the API and stage that should
+    serve it: aws apigateway create-base-path-mapping
+    --domain-name <name> --rest-api-id <id> --stage <stage>.
+    Or delete the orphan domain: aws apigateway
+    delete-domain-name --domain-name <name>. Inspect Route 53
+    alias records pointing at the domain — they should be
+    cleaned up alongside.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_custom_domain",
+        "domain": {
+          "base_path_mapping_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_custom_domain
+    - field: properties.api.domain.base_path_mapping_count
+      op: eq
+      value: 0

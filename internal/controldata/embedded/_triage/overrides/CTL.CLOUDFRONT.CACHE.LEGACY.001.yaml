@@ -1,0 +1,30 @@
+control: CTL.CLOUDFRONT.CACHE.LEGACY.001
+defect: >
+  CloudFront cache behavior uses the legacy ForwardedValues
+  block instead of a cache policy.
+infection: >
+  CloudFront's original caching configuration bundled cache-
+  key computation, cookie / header / query-string forwarding,
+  and TTL settings into a single ForwardedValues block on
+  each cache behavior. AWS introduced cache policies (and
+  origin-request and response-headers policies) in 2020 to
+  separate concerns: cache policies define what's in the
+  cache key and TTLs, origin-request policies define what's
+  forwarded to the origin, response-headers policies define
+  what's added to responses. The split lets operators
+  express modern patterns cleanly: cookie / Authorization
+  in the cache key without coupling that to origin-
+  forwarding decisions. Behaviors still using the legacy
+  block carry forward the older limitations and are harder
+  to audit. The legacy block also has subtle behaviors
+  around when CloudFront ignores headers / query strings
+  for caching purposes that catch operators by surprise.
+  Migrating to cache policies improves clarity and
+  consistency, particularly for behaviors that need to
+  cache authenticated content (where header inclusion in
+  the cache key is critical).
+failure: >
+  Configuration drift exposure. Legacy block bundles
+  concerns; modern caching patterns are harder to express
+  cleanly; operator errors on cache key composition are
+  more likely.

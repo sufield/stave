@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.CACHE.AUTHORIZATION.001
+name: Cache Behavior Caches Responses to Requests With Authorization Header
+description: >
+  CloudFront cache behavior caches responses to requests that
+  carry an Authorization header without including the
+  Authorization header in the cache key. Authenticated
+  responses get cached and served to any subsequent request
+  for the same URL — regardless of whether that request
+  carries a different Authorization or no Authorization at
+  all. The first authenticated user's response, including
+  any per-user content the backend personalizes, becomes
+  the response for everyone else hitting the same URL.
+  Caching authenticated content is sometimes intentional
+  (per-user content where the cache key includes
+  Authorization), but the default cache policy doesn't
+  include Authorization in the key — operators have to
+  enable it explicitly.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, IA-2, SC-7"
+  fedramp_moderate: "AC-3, IA-2, SC-7"
+  pci_dss_v4.0: "8.2, 8.3"
+  soc2: "CC6.1, CC6.6"
+  hipaa: "164.312(a)(1), 164.312(c)(1)"
+  iso_27001_2022: "A.5.10, A.5.16, A.8.16"
+  ccm_v4: ["IAM-13", "DSP-07"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Cache behavior caches responses to authenticated
+    requests without including Authorization in the cache
+    key.
+  action: >
+    Either disable caching on authenticated routes (point
+    the cache behavior at the AWS-managed CachingDisabled
+    cache policy) or configure a custom cache policy that
+    includes Authorization in HeadersConfig with HeaderBehavior
+    set to "whitelist" and Authorization in the included
+    headers. For paths that mix authenticated and
+    unauthenticated requests, the safer pattern is two
+    behaviors: one for authenticated, one for not, on
+    distinct path patterns.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "cache_caches_authorization": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.cache_caches_authorization
+      op: eq
+      value: true
+defect: >
+  CloudFront cache behavior caches responses to requests
+  carrying an Authorization header without including the
+  header in the cache key.
+infection: >
+  Authorization headers identify the requesting principal:
+  Bearer tokens, API keys, signed-request tokens, basic-auth
+  credentials. Backends personalize responses based on the
+  Authorization — different users see different data even
+  on the same URL. CloudFront's default cache policies do
+  not include Authorization in the cache key, so the first
+  authenticated request's response gets cached against the
+  URL alone and served to every subsequent request for that
+  URL — regardless of who they are or what Authorization
+  they carry. The next request, even with a different
+  Authorization or no Authorization, receives the original
+  user's personalized response. The pattern is the
+  Authorization-header counterpart to the Set-Cookie
+  caching pattern, and the fix is the same shape: disable
+  caching on authenticated routes (cleanest), or include
+  Authorization in the cache key (more complex but
+  preserves caching value).
+failure: >
+  Cross-user data leakage on authenticated paths. The first
+  authenticated request's response — including personalized
+  content — is served to every subsequent caller.
+tests:
+  - name: cache caches authorization fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            cache_caches_authorization: true
+  - name: cache excludes authorization passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            cache_caches_authorization: false

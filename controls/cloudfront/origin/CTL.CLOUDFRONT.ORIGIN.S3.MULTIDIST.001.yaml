@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ORIGIN.S3.MULTIDIST.001
+name: S3 Origin Bucket Reachable From Multiple CloudFront Distributions
+description: >
+  S3 origin bucket policy grants OAC signed access from
+  multiple CloudFront distributions (the AWS:SourceArn
+  condition lists multiple distribution ARNs, or omits the
+  condition entirely so any CloudFront distribution in any
+  account can sign). The bucket has more than one
+  CloudFront-shaped front door — content fronted by
+  distribution A is also reachable via distribution B,
+  potentially with different WAF / security-headers / signed-
+  URL configurations. Operators provisioning the second
+  distribution typically don't realize the first
+  distribution's access path still works; the edge
+  protections of distribution A become bypassable via
+  distribution B if B has weaker configuration.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "2.1.5"
+  nist_800_53_r5: "AC-3, CM-2"
+  pci_dss_v4.0: "1.2, 6.4.2"
+  fedramp_moderate: "AC-3, CM-2"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    S3 origin bucket grants OAC access from multiple
+    distributions; weakest-link edge configuration governs.
+  action: >
+    Tighten the bucket policy's AWS:SourceArn condition to
+    list only the specific distribution ARN that should
+    front this bucket. Identify the other distributions
+    using the bucket and either decommission them or split
+    them onto distinct origin buckets so each distribution
+    has a single bucket and each bucket has a single
+    distribution.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "origin_type": "s3",
+          "origin_bucket_distribution_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.origin_type
+      op: eq
+      value: s3
+    - field: properties.cdn.cloudfront.origin_bucket_distribution_count
+      op: gt
+      value: 1
+defect: >
+  S3 origin bucket is fronted by more than one CloudFront
+  distribution.
+infection: >
+  When two CloudFront distributions share an origin bucket,
+  every object in the bucket has two front doors. The two
+  distributions can have different WAF web ACLs (one with
+  rate-based rules, the other without), different response
+  headers policies (one with HSTS, the other not), different
+  signed-URL requirements (one requires signing, the other
+  doesn't), different geo-restrictions, and different
+  custom-error responses. Whichever distribution has the
+  weaker configuration becomes the de facto front door for
+  attackers who find both. Operators typically provision
+  the second distribution for legitimate reasons —
+  experimental config, dev-vs-prod, regional preference —
+  without realizing the first distribution's protections
+  are bypassable via the second. The shape is the multi-
+  dist parallel of the WAF-bypass pattern: same backend,
+  multiple paths to it, the weakest path wins.
+failure: >
+  Weakest-link edge configuration. The bucket's protections
+  collapse to whichever fronting distribution has the
+  loosest WAF / signing / geo-restriction.
+tests:
+  - name: multi-distribution access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            origin_type: "s3"
+            origin_bucket_distribution_count: 3
+  - name: single-distribution access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            origin_type: "s3"
+            origin_bucket_distribution_count: 1

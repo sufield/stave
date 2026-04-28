@@ -1,0 +1,23 @@
+control: CTL.APIGATEWAY.NETWORK.CLIENTCERT.STALE.001
+defect: >
+  REST API stage client certificate is older than the rotation
+  policy threshold (default: 365 days).
+infection: >
+  Stage client certificates authenticate API Gateway to its
+  backend during integration calls — backends that trust the
+  client cert verify the cert chain before accepting the
+  request. Long-lived client certificates accumulate the same
+  drift problems as long-lived credentials elsewhere: if the
+  private key is compromised (operator backed up the cert to
+  a misconfigured S3 bucket, the cert leaked through an
+  exfiltration attack, an internal user copied it for testing
+  and never deleted), every backend that trusts the cert is
+  reachable as if from API Gateway. Rotation cadence limits
+  the blast radius; the typical policy is annual rotation.
+  This control catches stale-but-not-yet-expired certs;
+  CTL.APIGATEWAY.NETWORK.CLIENTCERT.EXPIRY.001 catches certs
+  approaching their natural expiry.
+failure: >
+  Long-lived authentication credential. Cert age exceeds
+  rotation policy; if the key has been compromised, the
+  blast radius is unbounded by rotation.

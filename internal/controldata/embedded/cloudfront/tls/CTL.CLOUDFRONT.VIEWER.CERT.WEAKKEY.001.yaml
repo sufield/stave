@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.VIEWER.CERT.WEAKKEY.001
+name: CloudFront Viewer Certificate Uses Weak Key (RSA-1024 or Smaller)
+description: >
+  CloudFront viewer certificate's public key is RSA-1024 or
+  smaller. RSA-1024 has been below NIST's recommended
+  minimum since 2014 and is treated as deprecated by
+  browsers and standards bodies. The certificate still works
+  for TLS handshakes but the asymmetric crypto can be broken
+  by determined attackers with sufficient resources;
+  certificates issued today should use RSA-2048 minimum
+  (RSA-3072 / RSA-4096 for higher-trust use cases) or
+  ECDSA P-256 / P-384. Most ACM-issued certificates use
+  RSA-2048 by default; this control catches imported or
+  legacy certs that haven't kept pace.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-12, SC-13"
+  fedramp_moderate: "SC-12, SC-13"
+  pci_dss_v4.0: "4.2"
+  soc2: "CC6.1, CC6.7"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "CEK-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Viewer certificate uses RSA-1024 or smaller; below
+    current NIST and browser-industry guidance.
+  action: >
+    Request a replacement certificate with RSA-2048 minimum
+    (or ECDSA P-256): aws acm request-certificate (which
+    issues RSA-2048 by default), complete DNS validation,
+    and update the distribution's ViewerCertificate to point
+    at the new ARN. For imported certificates, request the
+    new key from the issuing CA at RSA-2048 or stronger.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "viewer_cert_key_algorithm": "RSA",
+          "viewer_cert_key_bits": 2048
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.viewer_cert_key_algorithm
+      op: eq
+      value: RSA
+    - field: properties.cdn.cloudfront.viewer_cert_key_bits
+      op: lt
+      value: 2048
+defect: >
+  CloudFront viewer certificate's RSA key is 1024 bits or
+  smaller — below current NIST guidance.
+infection: >
+  RSA key size sets the asymmetric-crypto resistance of the
+  certificate. RSA-1024 has been below NIST's recommended
+  minimum since 2014; modern browsers and CA / Browser Forum
+  baseline requirements treat it as deprecated. The
+  certificate still works for TLS handshakes — viewers don't
+  reject it outright — but the asymmetric crypto can be
+  broken by sufficiently-resourced attackers (academic
+  papers and cryptanalysis history give recommendations of
+  decades-of-resources, but the trend is downward as
+  computing power grows). Certificates issued today should
+  use RSA-2048 minimum, with RSA-3072 / RSA-4096 for higher-
+  trust use cases or ECDSA P-256 / P-384 for shorter
+  handshakes and smaller certificates. ACM-issued
+  certificates default to RSA-2048 since 2017; this control
+  catches imported certs from older CAs and legacy
+  certificates that haven't been rotated through a modern
+  issuance path.
+failure: >
+  Substandard asymmetric crypto. The certificate is below
+  current NIST and browser-industry minimum key sizes;
+  RSA-1024 is deprecated.
+tests:
+  - name: RSA-1024 cert fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            viewer_cert_key_algorithm: "RSA"
+            viewer_cert_key_bits: 1024
+  - name: RSA-2048 cert passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            viewer_cert_key_algorithm: "RSA"
+            viewer_cert_key_bits: 2048

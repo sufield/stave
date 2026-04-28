@@ -1,0 +1,26 @@
+control: CTL.CLOUDFRONT.ORIGIN.S3.DUALACCESS.001
+defect: >
+  S3 origin bucket allows both OAC signed access and direct
+  public access.
+infection: >
+  Origin Access Control is the AWS-recommended way to ensure
+  S3 origins serve only CloudFront-signed requests — the
+  bucket is otherwise private. The OAC pattern depends on
+  the bucket being non-public for everyone except the OAC
+  signer. When the bucket is also publicly readable (legacy
+  configuration that wasn't tightened, broad bucket ACL,
+  Principal=* in a separate statement, or PublicAccessBlock
+  that doesn't deny public-bucket-policies), the OAC is
+  technically working but redundant: every object the OAC
+  signs to read is also reachable directly at the bucket's
+  S3 hostname with no CloudFront involvement. The dual-
+  access state is common during migrations from public
+  bucket to OAC — operators add OAC to CloudFront, redirect
+  traffic through CloudFront, and forget to tighten the
+  bucket policy and PublicAccessBlock. CloudFront's edge
+  protections (WAF, signed URLs, geo-restriction, security
+  headers, response-headers policy) all become bypassable.
+failure: >
+  Edge protections bypassable. CloudFront serves with WAF
+  and signed URLs; the same content is also reachable
+  directly at S3 with none of those protections.

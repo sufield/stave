@@ -3,31 +3,31 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2117
-**Pack hash:** `8e5972794a9e13865f6e1e341c66142767e9ae4a2c3bfea96062de961727d16a`
+**Total controls:** 2137
+**Pack hash:** `4a13891be6e76e8d46d15be472e96647c288284a164796af47be36711290ac41`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 232 |
-| high | 931 |
+| high | 937 |
 | info | 16 |
-| low | 144 |
-| medium | 794 |
+| low | 149 |
+| medium | 803 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 78 |
+| audit | 79 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1094 |
-| governance | 295 |
+| exposure | 1102 |
+| governance | 304 |
 | hygiene | 16 |
-| identity | 372 |
+| identity | 374 |
 | network | 28 |
 | resilience | 20 |
 | secrets | 4 |
@@ -725,6 +725,21 @@ Access logging is enabled with a CloudWatch log group destination, but the log g
 
 ---
 
+### CTL.APIGATEWAY.ACCESSLOG.S3.NODELETE.001
+
+**Access Log S3 Destination Bucket Allows DeleteObject**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.6; fedramp_moderate: AU-9, AU-11; iso_27001_2022: A.5.33, A.8.10, A.8.15; nist_800_53_r5: AU-9, AU-11; pci_dss_v4.0: 10.5, 10.7; soc2: CC6.1, CC7.2, CC8.1;
+
+REST or HTTP API stage delivers access logs to an S3 destination, but the bucket policy or default IAM allows s3:DeleteObject for principals beyond the operator's intended retention boundary. An attacker who reaches the destination bucket can delete log objects to erase the audit trail of their activity. Access log buckets should enforce object-level immutability via a deny-DeleteObject bucket policy (or S3 Object Lock with appropriate retention), so logs persist for the audit window regardless of who has bucket access.
+
+**Remediation:** Add a bucket policy that denies s3:DeleteObject (and s3:DeleteObjectVersion if versioning is enabled) for all principals except a tightly-scoped lifecycle role: aws s3api put-bucket-policy with a Deny statement on DeleteObject. Or enable S3 Object Lock with Compliance mode and a retention period matching the audit window — Object Lock prevents deletion even from the bucket owner during the retention period.
+
+---
+
 ### CTL.APIGATEWAY.ACCOUNT.THROTTLE.DEFAULT.001
 
 **API Gateway Account-Level Throttle At AWS Default Without Operator Review**
@@ -842,6 +857,21 @@ No CloudWatch alarm fires when an API Gateway resource policy is modified (Updat
 API Gateway stage emits the ThrottleCount or 429 status metric to CloudWatch but no alarm watches it. 429 responses are the customer-visible signal that traffic exceeded the configured rate, burst, or quota. A spike has two distinct causes that demand different responses: legitimate traffic growth (bump the limit) or rate-based attack (lower the limit further or shift to WAF). Without an alarm, customer impact persists until the affected user reports it. A baseline of zero throttled requests is the typical safe state; any sustained non-zero rate is operationally meaningful.
 
 **Remediation:** Create an alarm on AWS/ApiGateway namespace, ThrottleCount metric (or a metric filter on access logs filtering status=429 if the stage has access logs and metric filters), dimensioned by ApiName/Stage. Threshold should be very low — a sustained non-zero rate is meaningful — paired with a longer evaluation period to avoid alerting on incidental bursts. aws cloudwatch put-metric-alarm with --metric-name ThrottleCount --threshold 1.
+
+---
+
+### CTL.APIGATEWAY.API.NOCUSTOMDOMAIN.001
+
+**REST API Has No Custom Domain Mapped to Any Stage**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, SC-7; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: CM-2, SC-7; soc2: CC6.1, CC6.6, CC8.1;
+
+REST API serves traffic only on the default execute-api domain (e.g., abcdef.execute-api.us-east-1.amazonaws.com) with no custom domain mapped to any of its stages. The default execute-api domain is a public AWS-managed name — it appears in URLs clients see, it changes if the API is recreated, and it doesn't carry the operator's TLS policy / WAF / mutual-TLS configuration that custom domains enable. APIs serving production-shaped traffic should publish at a custom domain the operator owns; the default endpoint is suitable for development and quick prototypes but not for long-lived public-facing services.
+
+**Remediation:** Provision a custom domain with an ACM certificate matching the operator's preferred hostname: aws apigateway create-domain-name --domain-name api.example.com --regional-certificate-arn <arn> --endpoint-configuration types=REGIONAL. Map it to the API stage: aws apigateway create-base-path-mapping --domain-name api.example.com --rest-api-id <id> --stage <stage>. Pair with the existing CTL.APIGATEWAY.ENDPOINT.DEFAULT.001 control which flags whether the default endpoint is also disabled.
 
 ---
 
@@ -1040,6 +1070,21 @@ API Gateway v2 HTTP APIs expose CORS configuration at the API level. Setting All
 
 ---
 
+### CTL.APIGATEWAY.CORS.NOTCONFIGURED.001
+
+**Browser-Facing API Has No CORS Configuration At All**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, SC-7; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: CM-2, SC-7; soc2: CC6.1, CC6.6;
+
+REST or HTTP API serves traffic that includes browser-origin requests (the API has documented browser clients, the hosting setup implies SPA / single-page-app traffic, or CloudFront fronts the API for browsers), but no CORS configuration is declared on the API. Without CORS, every cross-origin request from a browser fails the preflight check — legitimate browser-side clients can't reach the API. Operators sometimes add ad-hoc per-method CORS headers in mapping templates as a workaround, but the proper layer is the API-level CORS configuration. The control's complement (CORS configured but with wildcard origins) is already covered by CTL.APIGATEWAY.CORS.001; this control catches the absent-altogether case.
+
+**Remediation:** Configure CORS at the API level: aws apigatewayv2 update-api --cors-configuration with the appropriate AllowOrigins, AllowMethods, AllowHeaders, MaxAge. For REST APIs, configure CORS via per-resource OPTIONS method definitions or via the console's "Enable CORS" helper. Pair with the CORS wildcard control — neither "no CORS at all" nor "CORS allows everything" is the safe state; explicit allow-listed origins are.
+
+---
+
 ### CTL.APIGATEWAY.DOMAIN.CERT.EXPIRY.WARN.001
 
 **API Gateway Custom Domain Certificate Expires Within 30 Days**
@@ -1142,6 +1187,21 @@ The default execute-api endpoint (https://{api-id}.execute-api.{region}.amazonaw
 Execution logging is enabled with data trace on — every request and response body that flows through the stage is written to CloudWatch as part of the API Gateway execution log. Data tracing exists for debugging integration mappings and is appropriate in development; in production it persists every payload the API processes. Request bodies carrying credentials, PII, PHI, payment data, or otherwise sensitive content end up at rest in CloudWatch. The same caveats as access-log API key capture apply, but the exposure surface is much broader: any data sent in any request body is logged.
 
 **Remediation:** Disable data tracing on production stages: aws apigateway update-stage with --patch-operations op=replace,path=/*/dataTraceEnabled,value=false. Keep execution logging enabled at level INFO or ERROR for integration troubleshooting without payload capture. If payload-level diagnostics are needed during an incident, enable data trace on a per-stage basis briefly, capture, then disable — leaving it on permanently is the unsafe state.
+
+---
+
+### CTL.APIGATEWAY.EXECLOG.DATAMASK.MISSING.001
+
+**Execution Logging With Data Trace But No Parameter Masking**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AU-9, SC-28, SI-12; hipaa: 164.312(a)(2)(iv), 164.312(c)(1); iso_27001_2022: A.5.33, A.8.10, A.8.15; nist_800_53_r5: AU-9, SC-28, SI-12; pci_dss_v4.0: 3.5, 8.3, 10.5; soc2: CC6.1, CC6.7;
+
+REST API stage has data trace enabled in execution logs (full request and response bodies captured) without any parameter masking declared. When data trace is on and a legitimate diagnostic window justifies the exposure, masking rules can redact known-sensitive parameter names (password, token, ssn, credit_card, authorization) before logs are written. Without masking, every body field — including credentials in form-style POSTs, PII in user-update payloads, payment data — persists at rest in CloudWatch. The existing DATALOG control flags data trace being on at all; this control catches the case where data trace is legitimately needed but masking isn't applied alongside.
+
+**Remediation:** Configure parameter masking via stage variables or method- level mapping templates that redact known-sensitive field names before the body reaches the execution log. For deeper data-leak prevention, integrate CloudWatch Logs with a data-classification pipeline (Amazon Macie, custom Lambda subscriber) that scrubs detected credentials and PII from the log stream after-the-fact. The cleanest fix is still to disable data trace on production stages — the existing CTL.APIGATEWAY.EXECLOG.DATALOG.001 covers the on-by-default case; this control catches the data-trace-needed-and- no-masking case.
 
 ---
 
@@ -1354,6 +1414,21 @@ API Gateway integration forwards requests to a backend over plain HTTP, not HTTP
 
 ---
 
+### CTL.APIGATEWAY.INTEGRATION.HTTP.SENSITIVE.HEADERS.001
+
+**HTTP Integration Forwards Authorization or Cookie Headers Unconditionally**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3, IA-5, SC-7; iso_27001_2022: A.5.10, A.5.16, A.8.16; nist_800_53_r5: AC-3, IA-5, SC-7; pci_dss_v4.0: 8.3, 6.4.2; soc2: CC6.1, CC6.6;
+
+HTTP / HTTP_PROXY integration is configured without explicit request parameter mappings to strip sensitive headers (Authorization, Cookie, Set-Cookie, X-Api-Key) before forwarding to the backend. The default behavior of HTTP proxy integration is to pass every request header through. When the backend is internal or third-party and doesn't itself need the API Gateway-layer credentials (a Cognito bearer token meant only for API Gateway, an API key meant only for usage-plan throttling), forwarding the header to the backend unnecessarily exposes the credential. The backend may log it, may proxy it onward, may have weaker IAM than expected — none of which the operator considered when designing API Gateway-layer auth.
+
+**Remediation:** Map integration.request.header.* to drop or rename sensitive headers before forwarding. aws apigateway update-integration with --patch-operations op=remove,path=/requestParameters/integration.request.header.Authorization, or replace with a backend-specific token. The mapping explicitly enumerates which headers reach the backend; the default (forward everything) is the unsafe state.
+
+---
+
 ### CTL.APIGATEWAY.INTEGRATION.HTTP.TLS.UNVALIDATED.001
 
 **HTTP Integration Doesn't Validate Backend TLS Certificate**
@@ -1474,6 +1549,21 @@ Sensitive REST API method (login, signup, password reset, payment, search, file 
 
 ---
 
+### CTL.APIGATEWAY.MOCK.PRODUCTION.001
+
+**Mock Integration on Production Stage**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, CM-3; iso_27001_2022: A.8.9, A.8.32; nist_800_53_r5: CM-2, CM-3, SI-7; pci_dss_v4.0: 6.4.1, 6.4.2; soc2: CC6.1, CC8.1;
+
+REST API method on a production stage uses a MOCK integration type. Mock integrations return hardcoded responses that bypass the backend entirely — they exist for testing wiring before the backend is ready, for stub endpoints, or for forced-response paths during rollouts. In production, mock integrations either return canned data that may be stale or inappropriate for live traffic, or return generic success status codes that mask backend issues from monitoring. A mock on production is almost always either leftover testing artifact or an unintended deployment. The fix is to replace with a real integration before the stage is considered production.
+
+**Remediation:** Replace the MOCK integration with the appropriate AWS, AWS_PROXY, HTTP, or HTTP_PROXY integration: aws apigateway update-integration with --patch-operations op=replace,path=/type,value=AWS_PROXY (or appropriate type) plus the integration URI / role / parameters. Audit the method's response mappings and stage variables for any references that assumed mock behavior.
+
+---
+
 ### CTL.APIGATEWAY.MODEL.ADDITIONAL.PROPERTIES.001
 
 **Request Model Permits additionalProperties (Schema Not Closed)**
@@ -1534,6 +1624,21 @@ REST API stage has a client certificate configured for backend authentication, b
 
 ---
 
+### CTL.APIGATEWAY.NETWORK.CLIENTCERT.STALE.001
+
+**REST API Stage Client Certificate Older Than Rotation Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: IA-5, SC-12, SC-17; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: IA-5, SC-12, SC-17; pci_dss_v4.0: 3.7, 8.3; soc2: CC6.1, CC6.7;
+
+REST API stage uses a client certificate (the certificate API Gateway presents to backends to authenticate itself during integration calls), and the certificate is older than the rotation policy threshold (default: 365 days). Client certificates that aren't rotated accumulate the same drift problems as long-lived credentials elsewhere — if the private key is compromised, every backend that trusts the cert is reachable; rotation cadence limits the blast radius. The expiry control (CTL.APIGATEWAY.NETWORK.CLIENTCERT.EXPIRY.001) catches imminent expiry; this control catches stale-but- not-yet-expired certs that are overdue for rotation.
+
+**Remediation:** Generate a new client certificate, distribute it to the backends that trust it, and update the stage to use the new certificate: aws apigateway generate-client-certificate followed by aws apigateway update-stage with --patch-operations op=replace,path=/clientCertificateId,value=<new-cert-id>. Plan rotation in advance — backends typically need a deployment to trust the new certificate before the stage flips. Once rotation is complete, delete the old certificate.
+
+---
+
 ### CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001
 
 **Private API Resource Policy Does Not Restrict VPC Access**
@@ -1564,6 +1669,21 @@ API Gateway has no custom domain associated and has not been deployed in the las
 
 ---
 
+### CTL.APIGATEWAY.ORPHAN.APIKEY.001
+
+**API Key Not Associated With Any Usage Plan**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-2, CM-8, IA-5; iso_27001_2022: A.5.16, A.8.9; nist_800_53_r5: AC-2, CM-8, IA-5; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+REST API key exists but is not associated with any usage plan. API keys only enforce throttling and quota when attached to a usage plan; an unassociated key is a credential that authenticates but has no rate / burst / quota constraint. The key still works for any method that has apiKeyRequired=true on the underlying API — it just bypasses the per-consumer limits the operator likely intended. Orphan keys also clutter the audit view: rotation policies don't apply consistently, who-uses-which-key gets ambiguous.
+
+**Remediation:** Either associate the key with the usage plan that should govern it: aws apigateway create-usage-plan-key --usage-plan-id <id> --key-id <key-id> --key-type API_KEY. Or delete the orphan key: aws apigateway delete-api-key --api-key <key-id>. Audit the consumer using the key first — deleting in production breaks legitimate clients.
+
+---
+
 ### CTL.APIGATEWAY.ORPHAN.AUTHORIZER.001
 
 **API Gateway Authorizer Not Referenced by Any Route**
@@ -1576,6 +1696,21 @@ API Gateway has no custom domain associated and has not been deployed in the las
 API Gateway has an authorizer configured but no route or method references it. The authorizer exists in the API's configuration but is enforcing authentication on nothing. Three causes produce this state. First, an authorizer that was attached to routes earlier was detached during a configuration change — the routes are now unauthenticated and the authorizer is a vestigial artifact. Second, an authorizer was created during initial setup and the routes that were supposed to use it were never updated to reference it — the authorizer's existence masks the fact that nothing is authenticated. Third, the routes that referenced the authorizer were deleted but the authorizer wasn't cleaned up. The control is low severity — the authorizer's existence is not itself a vulnerability — but the orphan signal indicates one of the three causes above warrants investigation.
 
 **Remediation:** Determine which of the three causes applies. If routes were detached, re-attach the authorizer (or confirm the detachment was intentional and the routes are deliberately unauthenticated). If routes were never attached, attach the authorizer to the intended routes. If the authorizer is truly unused, delete it so the API's configuration accurately reflects what it enforces.
+
+---
+
+### CTL.APIGATEWAY.ORPHAN.CUSTOMDOMAIN.001
+
+**Custom Domain Has No Active API Mapping**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, CM-8; iso_27001_2022: A.5.10, A.8.9; nist_800_53_r5: CM-2, CM-8; soc2: CC6.1, CC8.1;
+
+REST or HTTP API custom domain exists with a valid certificate and TLS configuration, but no base path mapping points the domain at any API and stage. The custom domain is effectively orphaned: the DNS record may resolve, the TLS handshake may succeed, but every request returns a default API Gateway response (typically Forbidden / Missing Authentication). The domain accumulates ACM and DNS coordination cost, and the cert auto-renewal stays active even though the domain serves no traffic. Common cause: stage migration where the new mapping was added but the old domain wasn't cleaned up; an experimental domain that never reached production.
+
+**Remediation:** Either map the domain to the API and stage that should serve it: aws apigateway create-base-path-mapping --domain-name <name> --rest-api-id <id> --stage <stage>. Or delete the orphan domain: aws apigateway delete-domain-name --domain-name <name>. Inspect Route 53 alias records pointing at the domain — they should be cleaned up alongside.
 
 ---
 
@@ -1606,6 +1741,21 @@ REST API resource exists with method definitions, integrations, and authorizers 
 Usage plan exists with rate, burst, and quota settings, but it is not associated with any API stage. The plan is inert — no API consumes its limits, no API key tied to the plan enforces anything against any traffic. Common cause: development experiment that never got cleaned up; a stage that was migrated and the old plan wasn't retired; a usage plan provisioned ahead of an API that never launched. Orphan usage plans clutter the operational view, complicate audits ("which plan governs which API?"), and accumulate configuration drift — when an operator later associates the plan with a stage, its limits are whatever they drifted to, often without recent review.
 
 **Remediation:** Either associate the plan with the API stage that should use it (aws apigateway create-usage-plan-key followed by update-usage-plan adding apiStages) or delete the plan if it's leftover: aws apigateway delete-usage-plan --usage-plan-id <id>. Inspect any API keys associated with the plan first — they may need re-association with a different plan or independent cleanup.
+
+---
+
+### CTL.APIGATEWAY.ORPHAN.VPCLINK.001
+
+**VPC Link Not Used By Any Integration**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, CM-8; iso_27001_2022: A.5.10, A.8.9; nist_800_53_r5: CM-2, CM-8; soc2: CC6.1, CC8.1;
+
+REST or HTTP API VPC Link exists but no integration references it. The VPC Link is provisioned (charges accrue, ENIs occupy IP addresses in the configured subnets, NLB capacity remains allocated to the link) but doesn't serve any traffic. Common cause: API migration where the new integration uses a different VPC Link and the old one wasn't decommissioned; experimental integration that was rolled back without removing the link.
+
+**Remediation:** Audit the VPC Link to confirm no current or pending integration uses it. Either repoint a current integration at the link or delete the link: aws apigateway delete-vpc-link --vpc-link-id <id>. Audit the target NLB and its security group during cleanup — they may need independent decommissioning.
 
 ---
 
@@ -5746,6 +5896,51 @@ No CloudWatch alarm monitors the CloudFront Requests metric. A sudden traffic sp
 
 ---
 
+### CTL.CLOUDFRONT.CACHE.AUTHORIZATION.001
+
+**Cache Behavior Caches Responses to Requests With Authorization Header**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, IA-2, SC-7; hipaa: 164.312(a)(1), 164.312(c)(1); iso_27001_2022: A.5.10, A.5.16, A.8.16; nist_800_53_r5: AC-3, IA-2, SC-7; pci_dss_v4.0: 8.2, 8.3; soc2: CC6.1, CC6.6;
+
+CloudFront cache behavior caches responses to requests that carry an Authorization header without including the Authorization header in the cache key. Authenticated responses get cached and served to any subsequent request for the same URL — regardless of whether that request carries a different Authorization or no Authorization at all. The first authenticated user's response, including any per-user content the backend personalizes, becomes the response for everyone else hitting the same URL. Caching authenticated content is sometimes intentional (per-user content where the cache key includes Authorization), but the default cache policy doesn't include Authorization in the key — operators have to enable it explicitly.
+
+**Remediation:** Either disable caching on authenticated routes (point the cache behavior at the AWS-managed CachingDisabled cache policy) or configure a custom cache policy that includes Authorization in HeadersConfig with HeaderBehavior set to "whitelist" and Authorization in the included headers. For paths that mix authenticated and unauthenticated requests, the safer pattern is two behaviors: one for authenticated, one for not, on distinct path patterns.
+
+---
+
+### CTL.CLOUDFRONT.CACHE.LEGACY.001
+
+**CloudFront Distribution Uses Legacy Cache Settings Instead of Cache Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2, SC-7; iso_27001_2022: A.5.10, A.8.9; nist_800_53_r5: CM-2, SC-7; soc2: CC6.1, CC8.1;
+
+CloudFront cache behavior is configured with the legacy ForwardedValues / MinTTL / MaxTTL / DefaultTTL block rather than referencing a cache policy via CachePolicyId. The legacy block was the original CloudFront caching configuration; AWS introduced cache policies (and the related origin-request and response-headers policies) in 2020 to provide cleaner separation of concerns and reusable configurations. Behaviors that still use the legacy block carry forward the older limitations: cookie / header / query-string forwarding is bundled with cache-key computation, the configuration can't be reused across behaviors or distributions, and it's harder to express modern patterns like cookie / Authorization in the cache key. New behaviors should use cache policies; existing legacy behaviors should be migrated when convenient.
+
+**Remediation:** Migrate the behavior to use a cache policy: aws cloudfront create-cache-policy with the equivalent parameters as the legacy block, then update-distribution to set CachePolicyId on the behavior. AWS provides several managed cache policies (CachingOptimized, CachingDisabled, CachingOptimizedForUncompressedObjects) that cover most use cases. Custom cache policies allow operators to express cookie / Authorization / header inclusion in the cache key cleanly. After migration, the legacy ForwardedValues block can be removed.
+
+---
+
+### CTL.CLOUDFRONT.CACHE.SETCOOKIE.001
+
+**Cache Behavior Caches Responses Containing Set-Cookie Headers**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, IA-2, SC-7; hipaa: 164.312(a)(1), 164.312(c)(1); iso_27001_2022: A.5.10, A.5.16, A.8.16; nist_800_53_r5: AC-3, IA-2, SC-7; pci_dss_v4.0: 8.2, 8.3; soc2: CC6.1, CC6.6;
+
+CloudFront cache behavior is configured with a cache policy whose ResponseHeadersInCacheKey or origin-response handling caches responses that contain Set-Cookie headers without per-user cache key partitioning. Set-Cookie headers carry session tokens, CSRF tokens, and login state — when CloudFront caches one user's Set-Cookie response and serves it to a different user requesting the same path, the second user receives the first user's session. The pattern is the most common form of cross-user cache leakage on authenticated paths. Cache policies should either exclude Set-Cookie from cached responses, partition cache keys by cookie / Authorization, or disable caching entirely on authenticated routes.
+
+**Remediation:** Configure the cache policy to either exclude Set-Cookie from cacheable responses (cache only static, non- personalized content) or partition cache keys by cookie / Authorization header / signed-cookie value so each user sees their own cached response. For authenticated routes, the cleanest pattern is to disable caching entirely (CachePolicyId pointing at the AWS-managed CachingDisabled policy). Audit which paths are authenticated and ensure their cache behaviors have appropriate partitioning or are excluded from caching.
+
+---
+
 ### CTL.CLOUDFRONT.CONFIG.CNAME.NODNS.001
 
 **CloudFront Distribution CNAME Has No DNS Record**
@@ -6151,6 +6346,21 @@ CloudFront distributions with S3 origins must have Origin Access Control (OAC) o
 
 ---
 
+### CTL.CLOUDFRONT.ORIGIN.NOCUSTOMHEADER.001
+
+**Custom Origin Has No CloudFront-Verification Custom Header**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, IA-3, SC-7; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, IA-3, SC-7; pci_dss_v4.0: 1.2, 6.4.2; soc2: CC6.1, CC6.6;
+
+CloudFront custom origin (ALB, API Gateway, EC2, custom HTTP endpoint) is configured without a CustomOriginHeaders entry containing a secret token that the origin verifies. The origin can't tell whether a request came through CloudFront or arrived directly from the public internet. An attacker who finds the origin's hostname or IP can bypass CloudFront entirely — bypassing WAF, signed URLs, geo-restriction, security headers, and rate-based rules. CloudFront supports adding origin headers per-distribution whose value is a secret; the origin checks for the secret and refuses requests that don't carry it. Pair with the existing ORIGIN.BYPASS.001 control which catches the origin-publicly-reachable side; this control catches the no-shared-secret-verification side.
+
+**Remediation:** Add a CustomOriginHeader to the CloudFront origin configuration with a name like X-Origin-Verify and a secret-grade value (rotated periodically and stored as a secret on the origin side). Configure the origin to reject any request that doesn't carry the header with the expected value. For ALB origins, implement the check in target-group rules or the application; for API Gateway, use a Lambda authorizer.
+
+---
+
 ### CTL.CLOUDFRONT.ORIGIN.OAI.LEGACY.001
 
 **CloudFront S3 Origin Uses Legacy Origin Access Identity**
@@ -6163,6 +6373,51 @@ CloudFront distributions with S3 origins must have Origin Access Control (OAC) o
 CloudFront S3 origin uses the legacy Origin Access Identity (OAI) mechanism instead of the current Origin Access Control (OAC). OAI is a legacy authentication mechanism that pre-dates SigV4 — it uses a special IAM user identity that CloudFront manages internally. OAI has critical limitations: it cannot read S3 objects encrypted with a customer-managed KMS key (CloudFront cannot assume the KMS Decrypt permission through the OAI identity), it does not support S3 Object Lambda access points, it does not support S3 in opt-in regions (GovCloud, China), and AWS has stated it is being deprecated. OAC uses SigV4 for request signing (the same standard AWS authentication used by all services) and supports all S3 features including SSE-KMS. Migration from OAI to OAC is non-disruptive and requires only a configuration change. Complements CTL.S3.CDN.OAC.001 (S3 bucket side) — this control fires on the CloudFront distribution side.
 
 **Remediation:** Create an OAC for the distribution via CreateOriginAccessControl with OriginAccessControlOriginType=s3 and SigningBehavior=always. Update the distribution's S3 origin to reference the OAC. Update the S3 bucket policy to allow Principal: cloudfront.amazonaws.com with Condition: StringEquals aws:SourceArn to the distribution ARN. Remove the old OAI bucket policy statement. The migration is non-disruptive — no TTL or cache invalidation required.
+
+---
+
+### CTL.CLOUDFRONT.ORIGIN.S3.DUALACCESS.001
+
+**S3 Origin Bucket Allows OAC Signed Access AND Direct Public Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1.5; fedramp_moderate: AC-3, SC-7; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, SC-7; pci_dss_v4.0: 1.2, 6.4.2; soc2: CC6.1, CC6.6;
+
+S3 origin bucket policy grants access to the CloudFront Origin Access Control (or legacy OAI) — meaning CloudFront can read the bucket — AND separately allows public access via Principal=* or via a missing PublicAccessBlock. The OAC is still functional but redundant: every object is also reachable directly at the S3 hostname with no CloudFront protections. Common cause: legacy bucket that was public before CloudFront was added; bucket policy that wasn't tightened after OAC was configured; ACL allowing public reads alongside the OAC-friendly bucket policy.
+
+**Remediation:** Remove public access from the S3 bucket: aws s3api put-public-access-block with all four flags set to true, then tighten the bucket policy to allow only the OAC service principal (cloudfront.amazonaws.com) with the AWS:SourceArn condition matching the distribution ARN. Audit any remaining ACLs that grant AllUsers or AuthenticatedUsers read. Pair with the existing CTL.S3.PUBLIC.001 control which catches the public- access side of the issue.
+
+---
+
+### CTL.CLOUDFRONT.ORIGIN.S3.MULTIDIST.001
+
+**S3 Origin Bucket Reachable From Multiple CloudFront Distributions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1.5; fedramp_moderate: AC-3, CM-2; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, CM-2; pci_dss_v4.0: 1.2, 6.4.2; soc2: CC6.1, CC8.1;
+
+S3 origin bucket policy grants OAC signed access from multiple CloudFront distributions (the AWS:SourceArn condition lists multiple distribution ARNs, or omits the condition entirely so any CloudFront distribution in any account can sign). The bucket has more than one CloudFront-shaped front door — content fronted by distribution A is also reachable via distribution B, potentially with different WAF / security-headers / signed- URL configurations. Operators provisioning the second distribution typically don't realize the first distribution's access path still works; the edge protections of distribution A become bypassable via distribution B if B has weaker configuration.
+
+**Remediation:** Tighten the bucket policy's AWS:SourceArn condition to list only the specific distribution ARN that should front this bucket. Identify the other distributions using the bucket and either decommission them or split them onto distinct origin buckets so each distribution has a single bucket and each bucket has a single distribution.
+
+---
+
+### CTL.CLOUDFRONT.ORIGIN.S3.WEBSITE.001
+
+**CloudFront S3 Origin Uses Website-Hosting Endpoint, OAC Incompatible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1.5; fedramp_moderate: AC-3, SC-7; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, SC-7; pci_dss_v4.0: 1.2, 6.4.2; soc2: CC6.1, CC6.6;
+
+CloudFront distribution has an S3 origin pointing at the bucket's static-website endpoint (bucket-name.s3-website-region.amazonaws.com) rather than the REST API endpoint (bucket-name.s3.region.amazonaws.com). Origin Access Control and Origin Access Identity both require the REST API endpoint — they don't function with website-hosting endpoints. Operators using the website endpoint either accept that the bucket must be public (so CloudFront can reach it) or attempt to combine OAC with the website endpoint and find that signed requests are silently ignored. The CloudFront access pattern collapses to "public S3 bucket fronted by CloudFront" — anyone who knows the bucket's website hostname bypasses CloudFront entirely.
+
+**Remediation:** Repoint the CloudFront origin at the bucket's REST API endpoint (bucket-name.s3.region.amazonaws.com or just bucket-name.s3.amazonaws.com), then enable OAC and apply a bucket policy that grants only the OAC's signed requests. Migrate website-hosting features (index docs, error docs) to CloudFront default-root-object and custom-error-responses configuration. After the migration, disable static website hosting on the bucket and tighten the bucket policy to deny public access.
 
 ---
 
@@ -6238,6 +6493,51 @@ CloudFront distributions using TLSv1 or TLSv1.1 security policies accept connect
 CloudFront distribution has alternate domain names (CNAMEs) that are not covered by the ACM certificate's Subject Alternative Names (SANs). When a viewer connects via an uncovered CNAME, the TLS handshake presents a certificate for a different domain — the browser shows a certificate mismatch error and the connection is rejected or warned. The distribution partially works: CNAMEs matching the certificate's SANs or wildcard succeed; CNAMEs not covered by the certificate fail. For wildcard certificates (*.example.com), only one level of subdomain is covered — a wildcard on *.example.com does not cover sub.sub.example.com. All CNAMEs configured on the distribution must be explicitly listed in the certificate's SANs or matched by a wildcard in the certificate.
 
 **Remediation:** Either expand the ACM certificate to include the uncovered CNAMEs as additional SANs (request a new certificate with all required names, or add SANs to the existing certificate if not yet issued), or use a wildcard certificate (*.example.com) that covers all required subdomains. Wildcard certificates cover only one level of subdomain — *.example.com does not cover sub.sub.example.com. After updating the certificate, associate it with the CloudFront distribution.
+
+---
+
+### CTL.CLOUDFRONT.VIEWER.CERT.EXPIRY.WARN.001
+
+**CloudFront Viewer Certificate Expires Within 30 Days**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 2.1.5; fedramp_moderate: SC-12, SC-17; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: SC-12, SC-17; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7, CC8.1;
+
+CloudFront distribution viewer certificate (the certificate presented to browsers / clients connecting to the distribution's CNAMEs) expires within 30 days. ACM-issued certificates auto-renew when their DNS validation records are healthy; imported certificates do not. The 30-day window catches both auto-renewal failures (DNS validation records were deleted, validation broke) and imported-cert renewal oversights. Expired certificates produce hard TLS failures the moment the timestamp passes — every viewer sees a certificate-not-valid error, every cache miss fails, and the operator finds out from customer reports.
+
+**Remediation:** For ACM-managed certificates, verify auto-renewal is healthy: aws acm describe-certificate to inspect RenewalSummary; failed renewal usually indicates a DNS validation record was deleted or moved. For imported certificates, request and import a renewal: aws acm import-certificate with --certificate, --private-key, --certificate-chain, replacing the existing certificate ARN. Verify the new ARN is associated with the distribution's ViewerCertificate after import.
+
+---
+
+### CTL.CLOUDFRONT.VIEWER.CERT.NOTACM.001
+
+**CloudFront Viewer Certificate Imported Manually Instead of ACM-Issued**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-12, SC-17; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: SC-12, SC-17, CM-2; pci_dss_v4.0: 4.2; soc2: CC6.7, CC8.1;
+
+CloudFront viewer certificate is imported into ACM (or into IAM, the legacy alternative) rather than issued by ACM. Imported certificates are valid TLS certificates and ACM holds them, but ACM cannot auto-renew them — the operator must request a new certificate from the issuing CA, import the renewed cert, and re-associate it with the distribution before the existing cert expires. ACM-issued certificates renew automatically (provided DNS validation records remain valid) and the operator is notified before expiry. Manually-imported certs are a recurring operational burden; the manual step is precisely where renewals get missed.
+
+**Remediation:** Migrate to an ACM-issued certificate when feasible: aws acm request-certificate with the same SAN list, complete DNS validation, then update the distribution's ViewerCertificate to point at the new ACM-issued ARN. ACM-issued certificates handle renewal silently. For cases where imported certs are required (third-party CA contracts, EV certificates, internal CA chains), document the rationale and implement an external monitor that alerts well before expiry.
+
+---
+
+### CTL.CLOUDFRONT.VIEWER.CERT.WEAKKEY.001
+
+**CloudFront Viewer Certificate Uses Weak Key (RSA-1024 or Smaller)**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12, SC-13; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-13; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+CloudFront viewer certificate's public key is RSA-1024 or smaller. RSA-1024 has been below NIST's recommended minimum since 2014 and is treated as deprecated by browsers and standards bodies. The certificate still works for TLS handshakes but the asymmetric crypto can be broken by determined attackers with sufficient resources; certificates issued today should use RSA-2048 minimum (RSA-3072 / RSA-4096 for higher-trust use cases) or ECDSA P-256 / P-384. Most ACM-issued certificates use RSA-2048 by default; this control catches imported or legacy certs that haven't kept pace.
+
+**Remediation:** Request a replacement certificate with RSA-2048 minimum (or ECDSA P-256): aws acm request-certificate (which issues RSA-2048 by default), complete DNS validation, and update the distribution's ViewerCertificate to point at the new ARN. For imported certificates, request the new key from the issuing CA at RSA-2048 or stronger.
 
 ---
 

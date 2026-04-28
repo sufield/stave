@@ -1,0 +1,27 @@
+control: CTL.APIGATEWAY.EXECLOG.DATAMASK.MISSING.001
+defect: >
+  Execution logging has data trace enabled but no parameter
+  masking is configured.
+infection: >
+  Data trace captures full request and response bodies in
+  execution logs. The existing
+  CTL.APIGATEWAY.EXECLOG.DATALOG.001 control flags data
+  trace being on at all — the cleanest fix is to disable it
+  on production. Some workloads have legitimate reasons to
+  keep data trace enabled (vendor-required transaction
+  detail capture, fraud-investigation requirements,
+  regulatory mandates that require full payload retention).
+  In those cases, the next-best mitigation is parameter
+  masking — redact known-sensitive field names (password,
+  token, ssn, credit_card, authorization) before bodies
+  reach CloudWatch. Without masking, every body field
+  persists at rest, including credentials in form-style
+  POSTs, PII in user-update payloads, payment data, and
+  every other field the operator didn't deliberately
+  flagged as sensitive. Masking is the second layer for
+  workloads that can't disable data trace; the absence of
+  it is the unsafe state alongside data trace being on.
+failure: >
+  Sensitive payload data persists at rest. Credentials, PII,
+  and payment data in request and response bodies stored in
+  CloudWatch with no redaction.

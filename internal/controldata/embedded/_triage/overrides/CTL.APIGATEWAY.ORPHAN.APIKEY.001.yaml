@@ -1,0 +1,23 @@
+control: CTL.APIGATEWAY.ORPHAN.APIKEY.001
+defect: >
+  REST API key exists but is not associated with any usage
+  plan.
+infection: >
+  API keys only enforce throttling and quota when attached to
+  a usage plan via create-usage-plan-key. An unassociated key
+  is a credential that authenticates (the key value still
+  matches what the API expects when apiKeyRequired=true on
+  the method) but has no rate / burst / quota constraint —
+  the key bypasses the per-consumer limits the operator
+  likely intended when they issued it. Orphan keys also
+  clutter the audit view: rotation policies don't apply
+  consistently because the key isn't tied to a plan that
+  defines rotation; who-uses-which-key gets ambiguous;
+  cost-attribution falls back to the no-plan fallback.
+  Cleanup: associate the key with the plan that should
+  govern it, or delete the orphan key after auditing the
+  consumer using it (deleting in production breaks
+  legitimate clients).
+failure: >
+  Authenticating credential without enforcement. Key still
+  authenticates, no per-consumer throttling or quota applies.

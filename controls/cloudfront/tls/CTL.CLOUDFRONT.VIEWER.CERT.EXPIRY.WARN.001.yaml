@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.VIEWER.CERT.EXPIRY.WARN.001
+name: CloudFront Viewer Certificate Expires Within 30 Days
+description: >
+  CloudFront distribution viewer certificate (the certificate
+  presented to browsers / clients connecting to the
+  distribution's CNAMEs) expires within 30 days. ACM-issued
+  certificates auto-renew when their DNS validation records
+  are healthy; imported certificates do not. The 30-day
+  window catches both auto-renewal failures (DNS validation
+  records were deleted, validation broke) and imported-cert
+  renewal oversights. Expired certificates produce hard TLS
+  failures the moment the timestamp passes — every viewer
+  sees a certificate-not-valid error, every cache miss
+  fails, and the operator finds out from customer reports.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "2.1.5"
+  nist_800_53_r5: "SC-12, SC-17"
+  fedramp_moderate: "SC-12, SC-17"
+  pci_dss_v4.0: "4.2"
+  soc2: "CC6.1, CC6.7, CC8.1"
+  iso_27001_2022: "A.5.16, A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Distribution viewer certificate expires within 30 days.
+  action: >
+    For ACM-managed certificates, verify auto-renewal is
+    healthy: aws acm describe-certificate to inspect
+    RenewalSummary; failed renewal usually indicates a DNS
+    validation record was deleted or moved. For imported
+    certificates, request and import a renewal: aws acm
+    import-certificate with --certificate, --private-key,
+    --certificate-chain, replacing the existing certificate
+    ARN. Verify the new ARN is associated with the
+    distribution's ViewerCertificate after import.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "viewer_cert_days_until_expiry": 90
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.viewer_cert_days_until_expiry
+      op: lt
+      value: 30
+defect: >
+  CloudFront viewer certificate expires within 30 days.
+infection: >
+  Certificates expire on a fixed timestamp. ACM-managed
+  certificates auto-renew when they're attached to a
+  supported AWS service and DNS validation records are
+  healthy; imported certificates require operator
+  intervention to renew. The 30-day window is meaningful
+  for two scenarios: ACM certificates whose auto-renewal
+  failed silently (most often because the DNS validation
+  record was deleted, moved, or its zone was decommissioned),
+  and imported certificates the operator forgot to renew.
+  Expired CloudFront certificates fail hard the moment the
+  timestamp passes — every viewer sees a certificate-not-
+  valid TLS error, every cache miss fails, customer impact
+  is total. The 30-day buffer gives time to inspect ACM
+  auto-renewal status, fix DNS validation if needed,
+  request and validate a replacement, and roll forward
+  without the outage window.
+failure: >
+  Imminent TLS outage. Certificate is days from expiry;
+  without intervention every viewer connection will fail
+  when the timestamp passes.
+tests:
+  - name: cert expiring within 30 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            viewer_cert_days_until_expiry: 12
+  - name: cert with healthy buffer passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            viewer_cert_days_until_expiry: 90

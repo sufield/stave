@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ORIGIN.S3.DUALACCESS.001
+name: S3 Origin Bucket Allows OAC Signed Access AND Direct Public Access
+description: >
+  S3 origin bucket policy grants access to the CloudFront
+  Origin Access Control (or legacy OAI) — meaning CloudFront
+  can read the bucket — AND separately allows public access
+  via Principal=* or via a missing PublicAccessBlock. The OAC
+  is still functional but redundant: every object is also
+  reachable directly at the S3 hostname with no CloudFront
+  protections. Common cause: legacy bucket that was public
+  before CloudFront was added; bucket policy that wasn't
+  tightened after OAC was configured; ACL allowing public
+  reads alongside the OAC-friendly bucket policy.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "2.1.5"
+  nist_800_53_r5: "AC-3, SC-7"
+  pci_dss_v4.0: "1.2, 6.4.2"
+  fedramp_moderate: "AC-3, SC-7"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    S3 origin bucket allows both OAC and direct public
+    access; CloudFront's protections are bypassable via
+    direct S3.
+  action: >
+    Remove public access from the S3 bucket: aws s3api
+    put-public-access-block with all four flags set to true,
+    then tighten the bucket policy to allow only the OAC
+    service principal (cloudfront.amazonaws.com) with the
+    AWS:SourceArn condition matching the distribution ARN.
+    Audit any remaining ACLs that grant AllUsers or
+    AuthenticatedUsers read. Pair with the existing
+    CTL.S3.PUBLIC.001 control which catches the public-
+    access side of the issue.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "origin_type": "s3",
+          "origin_bucket_dual_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.origin_type
+      op: eq
+      value: s3
+    - field: properties.cdn.cloudfront.origin_bucket_dual_access
+      op: eq
+      value: true
+defect: >
+  S3 origin bucket allows both OAC signed access and direct
+  public access.
+infection: >
+  Origin Access Control is the AWS-recommended way to ensure
+  S3 origins serve only CloudFront-signed requests — the
+  bucket is otherwise private. The OAC pattern depends on
+  the bucket being non-public for everyone except the OAC
+  signer. When the bucket is also publicly readable (legacy
+  configuration that wasn't tightened, broad bucket ACL,
+  Principal=* in a separate statement, or PublicAccessBlock
+  that doesn't deny public-bucket-policies), the OAC is
+  technically working but redundant: every object the OAC
+  signs to read is also reachable directly at the bucket's
+  S3 hostname with no CloudFront involvement. The dual-
+  access state is common during migrations from public
+  bucket to OAC — operators add OAC to CloudFront, redirect
+  traffic through CloudFront, and forget to tighten the
+  bucket policy and PublicAccessBlock. CloudFront's edge
+  protections (WAF, signed URLs, geo-restriction, security
+  headers, response-headers policy) all become bypassable.
+failure: >
+  Edge protections bypassable. CloudFront serves with WAF
+  and signed URLs; the same content is also reachable
+  directly at S3 with none of those protections.
+tests:
+  - name: bucket with dual access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            origin_type: "s3"
+            origin_bucket_dual_access: true
+  - name: bucket with OAC-only access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            origin_type: "s3"
+            origin_bucket_dual_access: false

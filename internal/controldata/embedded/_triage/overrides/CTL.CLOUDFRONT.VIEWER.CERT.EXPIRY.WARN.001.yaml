@@ -1,0 +1,24 @@
+control: CTL.CLOUDFRONT.VIEWER.CERT.EXPIRY.WARN.001
+defect: >
+  CloudFront viewer certificate expires within 30 days.
+infection: >
+  Certificates expire on a fixed timestamp. ACM-managed
+  certificates auto-renew when they're attached to a
+  supported AWS service and DNS validation records are
+  healthy; imported certificates require operator
+  intervention to renew. The 30-day window is meaningful
+  for two scenarios: ACM certificates whose auto-renewal
+  failed silently (most often because the DNS validation
+  record was deleted, moved, or its zone was decommissioned),
+  and imported certificates the operator forgot to renew.
+  Expired CloudFront certificates fail hard the moment the
+  timestamp passes — every viewer sees a certificate-not-
+  valid TLS error, every cache miss fails, customer impact
+  is total. The 30-day buffer gives time to inspect ACM
+  auto-renewal status, fix DNS validation if needed,
+  request and validate a replacement, and roll forward
+  without the outage window.
+failure: >
+  Imminent TLS outage. Certificate is days from expiry;
+  without intervention every viewer connection will fail
+  when the timestamp passes.

@@ -1,0 +1,25 @@
+control: CTL.CLOUDFRONT.ORIGIN.S3.MULTIDIST.001
+defect: >
+  S3 origin bucket is fronted by more than one CloudFront
+  distribution.
+infection: >
+  When two CloudFront distributions share an origin bucket,
+  every object in the bucket has two front doors. The two
+  distributions can have different WAF web ACLs (one with
+  rate-based rules, the other without), different response
+  headers policies (one with HSTS, the other not), different
+  signed-URL requirements (one requires signing, the other
+  doesn't), different geo-restrictions, and different
+  custom-error responses. Whichever distribution has the
+  weaker configuration becomes the de facto front door for
+  attackers who find both. Operators typically provision
+  the second distribution for legitimate reasons —
+  experimental config, dev-vs-prod, regional preference —
+  without realizing the first distribution's protections
+  are bypassable via the second. The shape is the multi-
+  dist parallel of the WAF-bypass pattern: same backend,
+  multiple paths to it, the weakest path wins.
+failure: >
+  Weakest-link edge configuration. The bucket's protections
+  collapse to whichever fronting distribution has the
+  loosest WAF / signing / geo-restriction.

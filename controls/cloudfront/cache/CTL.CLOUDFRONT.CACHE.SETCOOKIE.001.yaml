@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.CACHE.SETCOOKIE.001
+name: Cache Behavior Caches Responses Containing Set-Cookie Headers
+description: >
+  CloudFront cache behavior is configured with a cache policy
+  whose ResponseHeadersInCacheKey or origin-response handling
+  caches responses that contain Set-Cookie headers without
+  per-user cache key partitioning. Set-Cookie headers carry
+  session tokens, CSRF tokens, and login state — when
+  CloudFront caches one user's Set-Cookie response and serves
+  it to a different user requesting the same path, the
+  second user receives the first user's session. The pattern
+  is the most common form of cross-user cache leakage on
+  authenticated paths. Cache policies should either exclude
+  Set-Cookie from cached responses, partition cache keys by
+  cookie / Authorization, or disable caching entirely on
+  authenticated routes.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, IA-2, SC-7"
+  fedramp_moderate: "AC-3, IA-2, SC-7"
+  pci_dss_v4.0: "8.2, 8.3"
+  soc2: "CC6.1, CC6.6"
+  hipaa: "164.312(a)(1), 164.312(c)(1)"
+  iso_27001_2022: "A.5.10, A.5.16, A.8.16"
+  ccm_v4: ["IAM-13", "DSP-07"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Cache behavior caches responses containing Set-Cookie
+    without per-user partitioning; cross-user session
+    leakage possible.
+  action: >
+    Configure the cache policy to either exclude Set-Cookie
+    from cacheable responses (cache only static, non-
+    personalized content) or partition cache keys by cookie
+    / Authorization header / signed-cookie value so each
+    user sees their own cached response. For authenticated
+    routes, the cleanest pattern is to disable caching
+    entirely (CachePolicyId pointing at the AWS-managed
+    CachingDisabled policy). Audit which paths are
+    authenticated and ensure their cache behaviors have
+    appropriate partitioning or are excluded from caching.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "cache_caches_set_cookie": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.cache_caches_set_cookie
+      op: eq
+      value: true
+defect: >
+  CloudFront cache behavior caches responses with Set-Cookie
+  headers without per-user partitioning.
+infection: >
+  Set-Cookie headers carry session tokens, CSRF tokens, and
+  login state — they're the primary mechanism by which
+  servers convey authentication and per-user identity to
+  browsers. CloudFront caching is keyed by URL plus whatever
+  the cache policy includes (specific headers, cookies,
+  query strings). When the cache key doesn't include the
+  per-user identifier (the user's existing session cookie,
+  the Authorization header, the signed cookie), one user's
+  response — including their Set-Cookie — gets cached and
+  served to anyone else requesting the same path. The next
+  user receives the first user's session: their browser
+  stores the first user's cookies and authenticates as that
+  user on subsequent requests. The pattern is the most
+  common cross-user cache leakage shape on authenticated
+  paths. The fix is to disable caching on authenticated
+  routes (the cleanest pattern) or to partition cache keys
+  by cookie / Authorization / signed-cookie value (the
+  more complex pattern that needs careful auditing).
+failure: >
+  Cross-user session theft. One user's Set-Cookie is served
+  to others; the receiver's browser authenticates as the
+  original user.
+tests:
+  - name: cache caches Set-Cookie fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            cache_caches_set_cookie: true
+  - name: cache excludes Set-Cookie passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            cache_caches_set_cookie: false

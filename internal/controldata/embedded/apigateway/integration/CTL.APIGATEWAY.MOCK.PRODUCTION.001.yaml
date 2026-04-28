@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.MOCK.PRODUCTION.001
+name: Mock Integration on Production Stage
+description: >
+  REST API method on a production stage uses a MOCK integration
+  type. Mock integrations return hardcoded responses that
+  bypass the backend entirely — they exist for testing wiring
+  before the backend is ready, for stub endpoints, or for
+  forced-response paths during rollouts. In production, mock
+  integrations either return canned data that may be stale or
+  inappropriate for live traffic, or return generic success
+  status codes that mask backend issues from monitoring. A
+  mock on production is almost always either leftover testing
+  artifact or an unintended deployment. The fix is to
+  replace with a real integration before the stage is
+  considered production.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2, CM-3, SI-7"
+  fedramp_moderate: "CM-2, CM-3"
+  pci_dss_v4.0: "6.4.1, 6.4.2"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.8.9, A.8.32"
+  ccm_v4: ["GRC-04", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Production stage method uses a MOCK integration instead of
+    a real backend integration.
+  action: >
+    Replace the MOCK integration with the appropriate AWS,
+    AWS_PROXY, HTTP, or HTTP_PROXY integration: aws apigateway
+    update-integration with --patch-operations
+    op=replace,path=/type,value=AWS_PROXY (or appropriate type)
+    plus the integration URI / role / parameters. Audit the
+    method's response mappings and stage variables for any
+    references that assumed mock behavior.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_integration",
+        "integration": {
+          "type": "AWS_PROXY",
+          "is_production_stage": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_integration
+    - field: properties.api.integration.type
+      op: eq
+      value: MOCK
+    - field: properties.api.integration.is_production_stage
+      op: eq
+      value: true

@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ORPHAN.VPCLINK.001
+name: VPC Link Not Used By Any Integration
+description: >
+  REST or HTTP API VPC Link exists but no integration
+  references it. The VPC Link is provisioned (charges accrue,
+  ENIs occupy IP addresses in the configured subnets, NLB
+  capacity remains allocated to the link) but doesn't serve
+  any traffic. Common cause: API migration where the new
+  integration uses a different VPC Link and the old one
+  wasn't decommissioned; experimental integration that was
+  rolled back without removing the link.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2, CM-8"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.10, A.8.9"
+  ccm_v4: ["GRC-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    VPC Link is unused; cost and IP-address footprint accrue
+    without any integration consuming them.
+  action: >
+    Audit the VPC Link to confirm no current or pending
+    integration uses it. Either repoint a current integration
+    at the link or delete the link: aws apigateway
+    delete-vpc-link --vpc-link-id <id>. Audit the target NLB
+    and its security group during cleanup — they may need
+    independent decommissioning.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_vpc_link",
+        "vpc_link": {
+          "integration_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_vpc_link
+    - field: properties.api.vpc_link.integration_count
+      op: eq
+      value: 0

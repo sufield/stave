@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.ORIGIN.NOCUSTOMHEADER.001
+name: Custom Origin Has No CloudFront-Verification Custom Header
+description: >
+  CloudFront custom origin (ALB, API Gateway, EC2, custom
+  HTTP endpoint) is configured without a CustomOriginHeaders
+  entry containing a secret token that the origin verifies.
+  The origin can't tell whether a request came through
+  CloudFront or arrived directly from the public internet.
+  An attacker who finds the origin's hostname or IP can
+  bypass CloudFront entirely — bypassing WAF, signed URLs,
+  geo-restriction, security headers, and rate-based rules.
+  CloudFront supports adding origin headers per-distribution
+  whose value is a secret; the origin checks for the secret
+  and refuses requests that don't carry it. Pair with the
+  existing ORIGIN.BYPASS.001 control which catches the
+  origin-publicly-reachable side; this control catches the
+  no-shared-secret-verification side.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, IA-3, SC-7"
+  fedramp_moderate: "AC-3, IA-3, SC-7"
+  pci_dss_v4.0: "1.2, 6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IAM-04", "IVS-09"]
+scope_tags:
+  - aws
+  - cloudfront
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Custom origin has no shared-secret header for CloudFront-
+    only verification.
+  action: >
+    Add a CustomOriginHeader to the CloudFront origin
+    configuration with a name like X-Origin-Verify and a
+    secret-grade value (rotated periodically and stored as a
+    secret on the origin side). Configure the origin to
+    reject any request that doesn't carry the header with
+    the expected value. For ALB origins, implement the check
+    in target-group rules or the application; for API
+    Gateway, use a Lambda authorizer.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "cloudfront": {
+          "origin_type": "alb",
+          "origin_has_verification_header": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.cloudfront.origin_type
+      op: in
+      value: ["alb", "apigateway", "ec2", "http"]
+    - field: properties.cdn.cloudfront.origin_has_verification_header
+      op: eq
+      value: false
+defect: >
+  Custom origin has no CloudFront-verification custom header
+  to distinguish CloudFront traffic from direct origin
+  access.
+infection: >
+  CloudFront's edge protections work only when traffic
+  actually goes through CloudFront. A custom origin (ALB,
+  API Gateway, EC2, generic HTTP endpoint) typically has a
+  publicly resolvable hostname or IP. An attacker who finds
+  the origin's address — through DNS history, certificate
+  transparency logs, IP scanning, or operator disclosure —
+  can send requests directly to the origin, bypassing
+  CloudFront's WAF, signed URLs, geo-restriction, security
+  headers, and rate-based rules. The defense is a shared-
+  secret header: CloudFront adds X-Origin-Verify (or any
+  custom name) with a secret value to every request it
+  forwards; the origin rejects any request that doesn't
+  carry the matching value. Direct requests to the origin
+  arrive without the header (or with the wrong value) and
+  are refused. The pattern complements the existing
+  ORIGIN.BYPASS control — that one catches the origin
+  being publicly reachable at the network level; this one
+  catches the missing application-layer verification that
+  would still detect a bypass attempt even if network-
+  layer protection somehow held.
+failure: >
+  CloudFront protections bypassable. Direct origin requests
+  succeed; WAF / signed URLs / geo-restriction / response
+  headers all skipped.
+tests:
+  - name: origin without verification header fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            origin_type: "alb"
+            origin_has_verification_header: false
+  - name: origin with verification header passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/E1ABCDEFG"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          cloudfront:
+            origin_type: "alb"
+            origin_has_verification_header: true

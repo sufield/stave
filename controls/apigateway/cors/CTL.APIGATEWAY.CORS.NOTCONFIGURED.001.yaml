@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.CORS.NOTCONFIGURED.001
+name: Browser-Facing API Has No CORS Configuration At All
+description: >
+  REST or HTTP API serves traffic that includes browser-origin
+  requests (the API has documented browser clients, the
+  hosting setup implies SPA / single-page-app traffic, or
+  CloudFront fronts the API for browsers), but no CORS
+  configuration is declared on the API. Without CORS, every
+  cross-origin request from a browser fails the preflight
+  check — legitimate browser-side clients can't reach the
+  API. Operators sometimes add ad-hoc per-method CORS
+  headers in mapping templates as a workaround, but the
+  proper layer is the API-level CORS configuration. The
+  control's complement (CORS configured but with wildcard
+  origins) is already covered by CTL.APIGATEWAY.CORS.001;
+  this control catches the absent-altogether case.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2, SC-7"
+  fedramp_moderate: "CM-2, SC-7"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    API has no CORS configuration; browser cross-origin
+    requests fail preflight.
+  action: >
+    Configure CORS at the API level: aws apigatewayv2
+    update-api --cors-configuration with the appropriate
+    AllowOrigins, AllowMethods, AllowHeaders, MaxAge. For
+    REST APIs, configure CORS via per-resource OPTIONS
+    method definitions or via the console's "Enable CORS"
+    helper. Pair with the CORS wildcard control — neither
+    "no CORS at all" nor "CORS allows everything" is the
+    safe state; explicit allow-listed origins are.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_api",
+        "cors": {
+          "is_browser_facing": true,
+          "configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_api
+    - field: properties.api.cors.is_browser_facing
+      op: eq
+      value: true
+    - field: properties.api.cors.configured
+      op: eq
+      value: false

@@ -1,0 +1,25 @@
+control: CTL.CLOUDFRONT.VIEWER.CERT.NOTACM.001
+defect: >
+  CloudFront viewer certificate is imported into ACM rather
+  than issued by ACM.
+infection: >
+  Imported certificates are valid TLS certificates: ACM holds
+  them, presents them, the TLS handshake works the same. But
+  ACM cannot auto-renew imported certs. The operator must
+  request a new certificate from the issuing CA, complete
+  whatever validation the CA requires, import the renewed
+  cert into ACM, and update the distribution's
+  ViewerCertificate to point at the new ARN — all before the
+  existing cert expires. Renewal becomes recurring
+  operational burden, and the manual step is precisely where
+  renewals get missed. ACM-issued certificates renew
+  automatically when DNS validation records remain valid.
+  The migration from imported to ACM-issued is a one-time
+  effort that eliminates the recurring manual step. Cases
+  where imported certs are required (third-party CA
+  contracts, EV certs, internal CA chains) should document
+  the rationale and add external monitoring against expiry.
+failure: >
+  Recurring renewal exposure. Auto-renewal isn't available;
+  every renewal cycle is a manual step where missing the
+  window causes a CloudFront-wide TLS outage.

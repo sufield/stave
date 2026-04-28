@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ORPHAN.APIKEY.001
+name: API Key Not Associated With Any Usage Plan
+description: >
+  REST API key exists but is not associated with any usage
+  plan. API keys only enforce throttling and quota when
+  attached to a usage plan; an unassociated key is a
+  credential that authenticates but has no rate / burst /
+  quota constraint. The key still works for any method that
+  has apiKeyRequired=true on the underlying API — it just
+  bypasses the per-consumer limits the operator likely
+  intended. Orphan keys also clutter the audit view: rotation
+  policies don't apply consistently, who-uses-which-key gets
+  ambiguous.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "AC-2, CM-8, IA-5"
+  fedramp_moderate: "AC-2, CM-8, IA-5"
+  pci_dss_v4.0: "8.3"
+  soc2: "CC6.1, CC8.1"
+  iso_27001_2022: "A.5.16, A.8.9"
+  ccm_v4: ["IAM-13", "GRC-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    API key has no usage plan association; the key
+    authenticates without any throttling or quota gating.
+  action: >
+    Either associate the key with the usage plan that should
+    govern it: aws apigateway create-usage-plan-key
+    --usage-plan-id <id> --key-id <key-id> --key-type
+    API_KEY. Or delete the orphan key: aws apigateway
+    delete-api-key --api-key <key-id>. Audit the consumer
+    using the key first — deleting in production breaks
+    legitimate clients.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_api_key",
+        "apikey": {
+          "usage_plan_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_api_key
+    - field: properties.api.apikey.usage_plan_count
+      op: eq
+      value: 0

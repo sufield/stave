@@ -1,0 +1,25 @@
+control: CTL.APIGATEWAY.API.NOCUSTOMDOMAIN.001
+defect: >
+  REST API serves traffic only on the default execute-api
+  domain with no custom domain mapped to any of its stages.
+infection: >
+  The default execute-api domain (e.g.,
+  abcdef.execute-api.us-east-1.amazonaws.com) is a public
+  AWS-managed name. It appears in URLs clients see — that
+  hostname leaks the fact that the service runs on API
+  Gateway, the AWS account ID prefix, and the region. The
+  domain changes if the API is recreated, breaking every
+  client that hard-coded it. The default endpoint doesn't
+  carry the operator's TLS policy / WAF web ACL / mutual TLS
+  configuration that custom domains enable — those
+  configurations attach at the custom-domain layer. APIs
+  serving production-shaped traffic should publish at a
+  custom domain the operator owns. Pair with the existing
+  ENDPOINT.DEFAULT.001 control which catches the case where
+  the default endpoint is left enabled even after a custom
+  domain exists; this control catches the upstream case
+  where no custom domain exists at all.
+failure: >
+  Public execute-api hostname only. URLs leak account ID and
+  region; TLS / WAF / mTLS configuration that custom domains
+  enable is unavailable.

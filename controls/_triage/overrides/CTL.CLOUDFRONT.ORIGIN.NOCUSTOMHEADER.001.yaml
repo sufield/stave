@@ -1,0 +1,30 @@
+control: CTL.CLOUDFRONT.ORIGIN.NOCUSTOMHEADER.001
+defect: >
+  Custom origin has no CloudFront-verification custom header
+  to distinguish CloudFront traffic from direct origin
+  access.
+infection: >
+  CloudFront's edge protections work only when traffic
+  actually goes through CloudFront. A custom origin (ALB,
+  API Gateway, EC2, generic HTTP endpoint) typically has a
+  publicly resolvable hostname or IP. An attacker who finds
+  the origin's address — through DNS history, certificate
+  transparency logs, IP scanning, or operator disclosure —
+  can send requests directly to the origin, bypassing
+  CloudFront's WAF, signed URLs, geo-restriction, security
+  headers, and rate-based rules. The defense is a shared-
+  secret header: CloudFront adds X-Origin-Verify (or any
+  custom name) with a secret value to every request it
+  forwards; the origin rejects any request that doesn't
+  carry the matching value. Direct requests to the origin
+  arrive without the header (or with the wrong value) and
+  are refused. The pattern complements the existing
+  ORIGIN.BYPASS control — that one catches the origin
+  being publicly reachable at the network level; this one
+  catches the missing application-layer verification that
+  would still detect a bypass attempt even if network-
+  layer protection somehow held.
+failure: >
+  CloudFront protections bypassable. Direct origin requests
+  succeed; WAF / signed URLs / geo-restriction / response
+  headers all skipped.
