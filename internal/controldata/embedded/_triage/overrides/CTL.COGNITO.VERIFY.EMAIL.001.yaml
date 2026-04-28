@@ -1,0 +1,25 @@
+control: CTL.COGNITO.VERIFY.EMAIL.001
+defect: >
+  Cognito user pool does not auto-verify
+  email.
+infection: >
+  Without email auto-verification, signup
+  accepts whatever email the user types and
+  the account becomes usable immediately.
+  Two failure modes follow. First,
+  impersonation: an attacker registers with
+  a victim's email; the victim later tries
+  to register with the same email and gets
+  'already exists' — the attacker holds the
+  account. Second, recovery breakage:
+  account-recovery flows send codes to the
+  registered email, which the listed user
+  may not control if they used a typo, a
+  shared address, or an attacker's address.
+  Auto-verification ties the account to a
+  controllable email at registration time.
+failure: >
+  Account-to-email binding unverified.
+  Recovery flows and impersonation paths
+  go through addresses the listed user may
+  not control.

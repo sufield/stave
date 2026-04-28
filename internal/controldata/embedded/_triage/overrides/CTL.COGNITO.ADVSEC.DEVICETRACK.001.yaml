@@ -1,0 +1,23 @@
+control: CTL.COGNITO.ADVSEC.DEVICETRACK.001
+defect: >
+  Cognito user pool has no device tracking.
+infection: >
+  Device tracking lets Cognito remember which
+  devices a user has signed in from. Without
+  it, every sign-in looks identical to the
+  pool — there is no 'new device' signal,
+  so adaptive auth can't apply higher
+  scrutiny to logins from devices the user
+  has never used. The most common detection
+  signal for account takeover (login from a
+  device the user has never used, especially
+  from a new geography) becomes unavailable.
+  The pool may have advanced security
+  features enabled, but without device
+  tracking the risk decisions degrade to
+  weaker IP-based heuristics.
+failure: >
+  No device-aware risk decisions. Adaptive
+  auth can't tell a new device from a known
+  one — the strongest takeover signal is
+  unavailable.

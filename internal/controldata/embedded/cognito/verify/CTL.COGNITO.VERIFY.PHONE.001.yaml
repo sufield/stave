@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.VERIFY.PHONE.001
+name: Cognito User Pool Uses SMS MFA Without Phone Verification
+description: >
+  Cognito user pool has SMS MFA enabled but
+  the phone_number attribute is not
+  auto-verified. MFA codes are sent to
+  unverified phone numbers — the listed
+  number may not actually belong to the user.
+  An attacker who registers with a victim's
+  phone (typo, social engineering) receives
+  the victim's MFA codes.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.5"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "IA-2, IA-5"
+  pci_dss_v4.0: "8.4, 8.5"
+  fedramp_moderate: "IA-2, IA-5"
+  hipaa: "164.308(a)(5)(ii)(D)"
+  iso_27001_2022: "A.5.17, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    SMS MFA active but phone unverified. MFA
+    codes go to numbers the listed user may
+    not control.
+  action: >
+    Add phone_number to
+    auto_verified_attributes on the user
+    pool: aws cognito-idp update-user-pool
+    --auto-verified-attributes
+    email phone_number (preserve any other
+    auto-verified attributes). Before SMS MFA
+    can be used, the user must complete the
+    phone-verification flow proving they
+    receive SMS at the registered number.
+    For existing users with unverified phone,
+    require a one-time re-verification at
+    next login.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "mfa_sms_enabled": true,
+          "phone_auto_verified": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.mfa_sms_enabled
+      op: eq
+      value: true
+    - field: properties.identity.cognito.phone_auto_verified
+      op: eq
+      value: false
+defect: >
+  Cognito user pool uses SMS MFA without
+  verifying phone numbers.
+infection: >
+  SMS MFA delivers a code to the registered
+  phone number. If the phone isn't verified
+  at registration, the registered number
+  may not belong to the listed user — they
+  fat-fingered, used a friend's number, or
+  the attacker registered with a victim's
+  number on their behalf. The MFA code is
+  sent to whoever owns the listed phone.
+  An attacker who pre-registers with a
+  victim's phone receives any MFA code
+  generated for that account; the listed
+  user can't even sign in because the
+  attacker controls the second-factor
+  channel. Verification at registration
+  time eliminates this gap by requiring
+  the user to demonstrate control of the
+  number before MFA can use it.
+failure: >
+  MFA codes to unverified phones. The phone
+  number receiving second-factor codes may
+  not belong to the listed user.
+tests:
+  - name: SMS MFA without phone verification fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            mfa_sms_enabled: true
+            phone_auto_verified: false
+  - name: SMS MFA with phone verification passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            mfa_sms_enabled: true
+            phone_auto_verified: true
+  - name: pool without SMS MFA does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            mfa_sms_enabled: false
+            phone_auto_verified: false

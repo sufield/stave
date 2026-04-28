@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.DOMAIN.CERTEXPIRY.001
+name: Cognito Custom Domain Certificate Has Expired
+description: >
+  Cognito user pool custom domain references
+  an ACM certificate that has expired. The
+  hosted UI fails TLS handshake; OAuth flows
+  that route through the custom domain
+  break. Different from
+  GHOST.DOMAINCERT (cert deleted from ACM)
+  — here the cert exists but is past
+  validity.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.7, A1.1"
+  nist_800_53_r5: "SC-12, SC-23"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-12, SC-23"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Custom domain certificate has expired.
+    Hosted UI is unreachable.
+  action: >
+    Request a new ACM certificate for the
+    custom domain (must be in us-east-1) and
+    update the user pool's custom domain to
+    use the new certificate ARN. ACM
+    certificates issued by AWS auto-renew if
+    DNS validation remains in place; an
+    expired ACM cert typically means DNS
+    validation failed (Route 53 record was
+    removed, the domain was transferred
+    without re-validating). Fix the DNS
+    validation, then request renewal.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "custom_domain_cert_arn": "arn:aws:acm:us-east-1:111122223333:certificate/abc",
+          "custom_domain_cert_expired": false,
+          "custom_domain_cert_days_remaining": 90
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.custom_domain_cert_expired
+      op: eq
+      value: true
+defect: >
+  Cognito custom domain ACM certificate has
+  expired.
+infection: >
+  ACM certificates issued by AWS auto-renew
+  through DNS validation as long as the
+  DNS validation records remain in place.
+  When DNS validation breaks (validation
+  CNAMEs deleted, domain transferred to a
+  different DNS provider that wasn't
+  configured with the validation records,
+  Route 53 hosted zone deleted), ACM cannot
+  renew. The certificate continues serving
+  until its current expiry, then expires
+  with no replacement. Browsers reject the
+  TLS handshake; the hosted UI returns
+  certificate errors; OAuth flows fail.
+  Different from the deleted-certificate
+  case (GHOST.DOMAINCERT) — here the
+  certificate object still exists in ACM,
+  it just isn't valid.
+failure: >
+  TLS broken on the custom domain. Browsers
+  reject the hosted-UI certificate; OAuth
+  flows fail.
+tests:
+  - name: expired domain certificate fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            custom_domain_cert_arn: "arn:aws:acm:us-east-1:111122223333:certificate/expired"
+            custom_domain_cert_expired: true
+            custom_domain_cert_days_remaining: -5
+  - name: valid domain certificate passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            custom_domain_cert_arn: "arn:aws:acm:us-east-1:111122223333:certificate/abc"
+            custom_domain_cert_expired: false
+            custom_domain_cert_days_remaining: 90

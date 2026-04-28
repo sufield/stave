@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.DOMAIN.HTTPS.001
+name: Cognito Custom Domain Does Not Enforce HTTPS
+description: >
+  Cognito user pool custom domain does not
+  enforce HTTPS — the hosted UI is reachable
+  over plaintext HTTP, or HTTPS is configured
+  but redirects are not enforced. OAuth flows
+  that should always be HTTPS may transit in
+  plaintext.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-8, SC-23"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-8, SC-23"
+  iso_27001_2022: "A.8.20, A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Hosted UI reachable on HTTP. OAuth flows
+    can leak credentials in transit.
+  action: >
+    Cognito's CloudFront distribution serves
+    the hosted UI on HTTPS by default; if
+    HTTP traffic is reaching the custom
+    domain, check whether a CloudFront
+    distribution in front of it has been
+    configured with viewer protocol policy
+    set to allow HTTP. Set
+    ViewerProtocolPolicy to redirect-to-https
+    or https-only on any CDN layer in front
+    of the Cognito domain. Remove A records
+    pointing at IPs that don't enforce HTTPS.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "custom_domain": "auth.example.com",
+          "domain_enforces_https": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.domain_enforces_https
+      op: eq
+      value: false
+defect: >
+  Cognito custom domain doesn't enforce HTTPS.
+infection: >
+  OAuth and OpenID Connect specify HTTPS for
+  every endpoint that handles credentials,
+  tokens, or session state. A custom domain
+  that allows HTTP exposes the hosted UI's
+  login form, the redirect URI flow, the
+  token endpoint, and the userinfo endpoint
+  to on-path attackers — coffee-shop wifi,
+  hotel networks, corporate proxies that
+  do TLS inspection without proper
+  forwarding. Cognito's underlying
+  distribution serves HTTPS; the misconfiguration
+  is typically in a customer-controlled CDN
+  layer placed in front of the Cognito
+  distribution. Even one HTTP-allowing entry
+  point in the chain breaks the security
+  guarantee.
+failure: >
+  OAuth flows over plaintext. Authentication
+  endpoints reachable on HTTP expose
+  credentials and tokens in transit.
+tests:
+  - name: domain not enforcing HTTPS fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            custom_domain: "auth.example.com"
+            domain_enforces_https: false
+  - name: HTTPS-only domain passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            custom_domain: "auth.example.com"
+            domain_enforces_https: true

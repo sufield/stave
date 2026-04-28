@@ -1,0 +1,26 @@
+control: CTL.COGNITO.VERIFY.PHONE.001
+defect: >
+  Cognito user pool uses SMS MFA without
+  verifying phone numbers.
+infection: >
+  SMS MFA delivers a code to the registered
+  phone number. If the phone isn't verified
+  at registration, the registered number
+  may not belong to the listed user — they
+  fat-fingered, used a friend's number, or
+  the attacker registered with a victim's
+  number on their behalf. The MFA code is
+  sent to whoever owns the listed phone.
+  An attacker who pre-registers with a
+  victim's phone receives any MFA code
+  generated for that account; the listed
+  user can't even sign in because the
+  attacker controls the second-factor
+  channel. Verification at registration
+  time eliminates this gap by requiring
+  the user to demonstrate control of the
+  number before MFA can use it.
+failure: >
+  MFA codes to unverified phones. The phone
+  number receiving second-factor codes may
+  not belong to the listed user.

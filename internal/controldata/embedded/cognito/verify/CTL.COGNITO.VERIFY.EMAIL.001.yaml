@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.VERIFY.EMAIL.001
+name: Cognito User Pool Does Not Auto-Verify Email
+description: >
+  Cognito user pool does not auto-verify the
+  email attribute. Users register with
+  whatever email they type, including emails
+  they don't control. Account recovery flows
+  that target the email send recovery codes
+  to the unverified address — the listed
+  owner may never receive the message.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.5"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "IA-2, IA-5"
+  pci_dss_v4.0: "8.2"
+  fedramp_moderate: "IA-2, IA-5"
+  hipaa: "164.308(a)(5)(ii)(D)"
+  iso_27001_2022: "A.5.17, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Email not in auto-verified attributes.
+    Users may register with emails they
+    don't control.
+  action: >
+    Add email to auto_verified_attributes on
+    the user pool: aws cognito-idp
+    update-user-pool with
+    --auto-verified-attributes email. After
+    this, signup requires the user to
+    receive and submit a verification code
+    sent to the email — confirming control
+    of the address before the account is
+    usable. Existing users with unverified
+    email need a separate backfill or
+    re-confirmation flow.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "auto_verified_attributes": ["email"],
+          "email_auto_verified": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.email_auto_verified
+      op: eq
+      value: false
+defect: >
+  Cognito user pool does not auto-verify
+  email.
+infection: >
+  Without email auto-verification, signup
+  accepts whatever email the user types and
+  the account becomes usable immediately.
+  Two failure modes follow. First,
+  impersonation: an attacker registers with
+  a victim's email; the victim later tries
+  to register with the same email and gets
+  'already exists' — the attacker holds the
+  account. Second, recovery breakage:
+  account-recovery flows send codes to the
+  registered email, which the listed user
+  may not control if they used a typo, a
+  shared address, or an attacker's address.
+  Auto-verification ties the account to a
+  controllable email at registration time.
+failure: >
+  Account-to-email binding unverified.
+  Recovery flows and impersonation paths
+  go through addresses the listed user may
+  not control.
+tests:
+  - name: email not auto-verified fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            auto_verified_attributes: []
+            email_auto_verified: false
+  - name: email auto-verified passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            auto_verified_attributes: ["email"]
+            email_auto_verified: true

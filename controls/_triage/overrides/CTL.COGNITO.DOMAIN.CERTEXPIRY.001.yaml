@@ -1,0 +1,26 @@
+control: CTL.COGNITO.DOMAIN.CERTEXPIRY.001
+defect: >
+  Cognito custom domain ACM certificate has
+  expired.
+infection: >
+  ACM certificates issued by AWS auto-renew
+  through DNS validation as long as the
+  DNS validation records remain in place.
+  When DNS validation breaks (validation
+  CNAMEs deleted, domain transferred to a
+  different DNS provider that wasn't
+  configured with the validation records,
+  Route 53 hosted zone deleted), ACM cannot
+  renew. The certificate continues serving
+  until its current expiry, then expires
+  with no replacement. Browsers reject the
+  TLS handshake; the hosted UI returns
+  certificate errors; OAuth flows fail.
+  Different from the deleted-certificate
+  case (GHOST.DOMAINCERT) — here the
+  certificate object still exists in ACM,
+  it just isn't valid.
+failure: >
+  TLS broken on the custom domain. Browsers
+  reject the hosted-UI certificate; OAuth
+  flows fail.

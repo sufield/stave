@@ -191,6 +191,13 @@ var DefaultFieldRegistry = FieldRegistry{ //nolint:gosec // G101 false positive:
 	"identity.cognito.allow_classic_flow":                "the identity pool allows the classic OpenID-token flow",
 	"identity.cognito.provider_audiences":                "audiences validated by the identity pool's identity providers",
 	"identity.cognito.provider_validates_audience":       "the identity pool validates token audience against the provider's expected aud",
+	"identity.cognito.device_tracking_enabled":           "device tracking is configured on the user pool",
+	"identity.cognito.auto_verified_attributes":          "user attributes auto-verified at signup time",
+	"identity.cognito.email_auto_verified":               "email is in the user pool's auto-verified attribute set",
+	"identity.cognito.phone_auto_verified":               "phone_number is in the user pool's auto-verified attribute set",
+	"identity.cognito.domain_enforces_https":             "the custom domain enforces HTTPS for the hosted UI",
+	"identity.cognito.custom_domain_cert_expired":        "the custom domain ACM certificate has passed its validity",
+	"identity.cognito.custom_domain_cert_days_remaining": "days remaining before the custom domain certificate expires",
 
 	// --- cryptography (KMS) ---
 	"cryptography.policy.has_wildcard_principal":            "the KMS key policy grants to Principal \"*\"",

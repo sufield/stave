@@ -1,0 +1,24 @@
+control: CTL.COGNITO.DOMAIN.HTTPS.001
+defect: >
+  Cognito custom domain doesn't enforce HTTPS.
+infection: >
+  OAuth and OpenID Connect specify HTTPS for
+  every endpoint that handles credentials,
+  tokens, or session state. A custom domain
+  that allows HTTP exposes the hosted UI's
+  login form, the redirect URI flow, the
+  token endpoint, and the userinfo endpoint
+  to on-path attackers — coffee-shop wifi,
+  hotel networks, corporate proxies that
+  do TLS inspection without proper
+  forwarding. Cognito's underlying
+  distribution serves HTTPS; the misconfiguration
+  is typically in a customer-controlled CDN
+  layer placed in front of the Cognito
+  distribution. Even one HTTP-allowing entry
+  point in the chain breaks the security
+  guarantee.
+failure: >
+  OAuth flows over plaintext. Authentication
+  endpoints reachable on HTTP expose
+  credentials and tokens in transit.

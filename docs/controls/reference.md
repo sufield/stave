@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1973
-**Pack hash:** `29899aa7d336f963f506b12ee0cd4fcf482559238d29f7741a10fe364599c192`
+**Total controls:** 1978
+**Pack hash:** `9070b6d79ad99bda66fbdff3b4aeae08726a09d225c41f30ea076ef588f462b2`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 228 |
-| high | 879 |
+| high | 882 |
 | info | 16 |
 | low | 130 |
-| medium | 720 |
+| medium | 722 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,10 +24,10 @@
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1047 |
+| exposure | 1049 |
 | governance | 257 |
 | hygiene | 16 |
-| identity | 343 |
+| identity | 346 |
 | network | 28 |
 | resilience | 18 |
 | secrets | 4 |
@@ -7500,6 +7500,21 @@ Cognito Advanced Security Features detects and responds to compromised credentia
 
 ---
 
+### CTL.COGNITO.ADVSEC.DEVICETRACK.001
+
+**Cognito User Pool Has No Device Tracking Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.5; fedramp_moderate: IA-2, SI-4; iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-2, SI-4; pci_dss_v4.0: 8.3; soc2: CC6.1, CC7.2;
+
+Cognito user pool has no device tracking configured. The pool can't recognize when a user signs in from a new device versus a known device, can't apply step-up auth on new devices, and can't issue device-bound refresh tokens. Adaptive auth's device-aware risk decisions don't function.
+
+**Remediation:** Configure device_configuration on the user pool: aws cognito-idp update-user-pool --device-configuration ChallengeRequiredOnNewDevice=true,DeviceOnlyRememberedOnUserPrompt=true. Combined with advanced security features, this enables device-aware risk scoring — sign-ins from a new device trigger step-up auth or block decisions automatically.
+
+---
+
 ### CTL.COGNITO.CLIENT.ACCESSTTL.001
 
 **Cognito App Client Access Token Validity Exceeds One Hour**
@@ -7752,6 +7767,36 @@ Cognito user pools with advanced security must block sign-in attempts using cred
 Cognito user pools must have deletion protection set to ACTIVE. Without protection, accidental or malicious deletion destroys the user directory and all authentication state.
 
 **Remediation:** Set deletion protection to ACTIVE on the user pool.
+
+---
+
+### CTL.COGNITO.DOMAIN.CERTEXPIRY.001
+
+**Cognito Custom Domain Certificate Has Expired**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12, SC-23; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7, A1.1;
+
+Cognito user pool custom domain references an ACM certificate that has expired. The hosted UI fails TLS handshake; OAuth flows that route through the custom domain break. Different from GHOST.DOMAINCERT (cert deleted from ACM) — here the cert exists but is past validity.
+
+**Remediation:** Request a new ACM certificate for the custom domain (must be in us-east-1) and update the user pool's custom domain to use the new certificate ARN. ACM certificates issued by AWS auto-renew if DNS validation remains in place; an expired ACM cert typically means DNS validation failed (Route 53 record was removed, the domain was transferred without re-validating). Fix the DNS validation, then request renewal.
+
+---
+
+### CTL.COGNITO.DOMAIN.HTTPS.001
+
+**Cognito Custom Domain Does Not Enforce HTTPS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-8, SC-23; iso_27001_2022: A.8.20, A.8.24; nist_800_53_r5: SC-8, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+Cognito user pool custom domain does not enforce HTTPS — the hosted UI is reachable over plaintext HTTP, or HTTPS is configured but redirects are not enforced. OAuth flows that should always be HTTPS may transit in plaintext.
+
+**Remediation:** Cognito's CloudFront distribution serves the hosted UI on HTTPS by default; if HTTP traffic is reaching the custom domain, check whether a CloudFront distribution in front of it has been configured with viewer protocol policy set to allow HTTP. Set ViewerProtocolPolicy to redirect-to-https or https-only on any CDN layer in front of the Cognito domain. Remove A records pointing at IPs that don't enforce HTTPS.
 
 ---
 
@@ -8336,6 +8381,36 @@ Cognito user pools should require administrator-created accounts (AllowAdminCrea
 Cognito user pool temporary password validity must not exceed 7 days. Long-lived temporary passwords increase the window for credential interception or misuse.
 
 **Remediation:** Set TemporaryPasswordValidityDays to 7 or less.
+
+---
+
+### CTL.COGNITO.VERIFY.EMAIL.001
+
+**Cognito User Pool Does Not Auto-Verify Email**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.5; fedramp_moderate: IA-2, IA-5; hipaa: 164.308(a)(5)(ii)(D); iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-2, IA-5; pci_dss_v4.0: 8.2; soc2: CC6.1, CC6.6;
+
+Cognito user pool does not auto-verify the email attribute. Users register with whatever email they type, including emails they don't control. Account recovery flows that target the email send recovery codes to the unverified address — the listed owner may never receive the message.
+
+**Remediation:** Add email to auto_verified_attributes on the user pool: aws cognito-idp update-user-pool with --auto-verified-attributes email. After this, signup requires the user to receive and submit a verification code sent to the email — confirming control of the address before the account is usable. Existing users with unverified email need a separate backfill or re-confirmation flow.
+
+---
+
+### CTL.COGNITO.VERIFY.PHONE.001
+
+**Cognito User Pool Uses SMS MFA Without Phone Verification**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.5; fedramp_moderate: IA-2, IA-5; hipaa: 164.308(a)(5)(ii)(D); iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-2, IA-5; pci_dss_v4.0: 8.4, 8.5; soc2: CC6.1, CC6.6;
+
+Cognito user pool has SMS MFA enabled but the phone_number attribute is not auto-verified. MFA codes are sent to unverified phone numbers — the listed number may not actually belong to the user. An attacker who registers with a victim's phone (typo, social engineering) receives the victim's MFA codes.
+
+**Remediation:** Add phone_number to auto_verified_attributes on the user pool: aws cognito-idp update-user-pool --auto-verified-attributes email phone_number (preserve any other auto-verified attributes). Before SMS MFA can be used, the user must complete the phone-verification flow proving they receive SMS at the registered number. For existing users with unverified phone, require a one-time re-verification at next login.
 
 ---
 
