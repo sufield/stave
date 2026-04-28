@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.METRICS.LOGINS.001
+name: No CloudWatch Metrics for Cognito Login Success or Failure
+description: >
+  No CloudWatch metrics capture login success
+  and failure rates for the user pool. The
+  team has no baseline to detect anomalies
+  against — no graph of 'what's normal,'
+  no alert when the curve diverges, no
+  data feed for SIEM ingestion.
+domain: audit
+severity: medium
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, AU-12, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    No login success/failure metrics tracked.
+  action: >
+    Configure CloudWatch metric filters on
+    CloudTrail events for InitiateAuth
+    success / failure, RespondToAuthChallenge
+    outcomes, and SignUp success. Publish
+    them as CloudWatch metrics so they're
+    chartable, alarmable, and exportable to
+    SIEM. Without this base layer of
+    metrics, the alarm controls in this
+    iteration have nothing to alarm on.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_account",
+        "cognito": {
+          "metrics_logins_tracked": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_account
+    - field: properties.identity.cognito.metrics_logins_tracked
+      op: eq
+      value: false
+defect: >
+  No CloudWatch metrics for Cognito login
+  success or failure.
+infection: >
+  Detection at scale needs metrics — a graph
+  of login attempts, a baseline of expected
+  rate, an alert when the curve breaks.
+  Without metrics, the team relies on
+  CloudTrail event search (slow, hard to
+  baseline) or after-the-fact incident
+  response (the breach is already in
+  progress). Cognito doesn't publish login
+  success/failure metrics by default; the
+  team has to set up metric filters on
+  CloudTrail events. The volume of
+  Cognito API events makes this a one-time
+  setup with ongoing value — every alarm
+  control in COG-8 alarm assumes these
+  metrics exist.
+failure: >
+  No quantitative login signal. Authentication
+  patterns are invisible to monitoring;
+  alarms have no metric to read.
+tests:
+  - name: account without login metrics fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            metrics_logins_tracked: false
+  - name: account with metrics passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            metrics_logins_tracked: true

@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ALARM.MFAFAIL.001
+name: No CloudWatch Alarm for Cognito MFA Challenge Failure Spike
+description: >
+  No CloudWatch alarm watches the MFA challenge
+  failure rate. Spikes in MFA failures indicate
+  brute-force MFA attacks (SMS code guessing,
+  TOTP brute force) or stolen-session
+  attempts to satisfy MFA after credential
+  compromise.
+domain: audit
+severity: medium
+archetype: silent-failure
+compliance:
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, IA-2, SI-4"
+  pci_dss_v4.0: "10.6, 8.4"
+  fedramp_moderate: "AU-6, IA-2"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    No alarm fires on MFA challenge failure
+    spikes.
+  action: >
+    Create a CloudWatch alarm on Cognito's
+    MFA failure metrics (or build one from
+    CloudTrail RespondToAuthChallenge
+    failures with SMS_MFA / SOFTWARE_TOKEN_MFA
+    challenge types). Threshold > N over a
+    short window. MFA failures should be
+    rare in legitimate use — most users
+    enter the right code on the first try.
+    A spike indicates either a UX problem
+    or an attack.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_account",
+        "cognito": {
+          "alarm_mfa_failure_spike": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_account
+    - field: properties.identity.cognito.alarm_mfa_failure_spike
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors MFA challenge
+  failure spikes.
+infection: >
+  MFA challenge failures distinguish two
+  failure modes for an attacker who has
+  obtained the user's password. SMS MFA:
+  the attacker doesn't have the phone, but
+  may try guessing the 6-digit code (10^6
+  attempts). TOTP MFA: similar guessing
+  surface, though the time-window
+  rotation makes it harder. With Cognito's
+  rate limits, the attacker can't realistically
+  brute-force the code, but they can try
+  enough times to be visible. An alarm on
+  MFA failures surfaces credential-stuffing
+  attacks that survived the password-only
+  brute force and are now attempting to
+  bypass MFA.
+failure: >
+  MFA brute-force visibility absent. Attempts
+  to bypass MFA after credential compromise
+  go unnoticed.
+tests:
+  - name: account without MFA-fail alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_mfa_failure_spike: false
+  - name: account with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_mfa_failure_spike: true

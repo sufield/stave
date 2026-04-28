@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ALARM.DELETEPOOL.001
+name: No CloudWatch Alarm for Cognito DeleteUserPool
+description: >
+  No CloudWatch alarm watches CloudTrail for
+  DeleteUserPool API calls. Pool deletion
+  destroys all users — every authentication
+  in every dependent application breaks.
+  Real-time notification is essential.
+domain: audit
+severity: critical
+archetype: silent-failure
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3, A1.2"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.2, 10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  hipaa: "164.308(a)(1)(ii)(D)"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 5.0
+remediation:
+  description: >
+    No alarm fires when a user pool is
+    deleted.
+  action: >
+    Create a metric filter matching
+    eventSource=cognito-idp.amazonaws.com AND
+    eventName=DeleteUserPool, with a
+    CloudWatch alarm on > 0 events. Wire to
+    the highest-priority paging topic — pool
+    deletion is unrecoverable through normal
+    channels, so the response time matters.
+    Combine with deletion protection on the
+    pool itself (the existing
+    CTL.COGNITO.DELETEPROT.001) for prevention.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_account",
+        "cognito": {
+          "alarm_delete_user_pool": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_account
+    - field: properties.identity.cognito.alarm_delete_user_pool
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors DeleteUserPool
+  API calls.
+infection: >
+  Pool deletion is the most disruptive
+  Cognito event possible. Every user
+  disappears; every application that
+  authenticated against the pool breaks
+  immediately; every refresh token is
+  invalidated; every federation tied to the
+  pool stops working. Recovery requires
+  recreating the pool, repopulating users,
+  and reconfiguring every consumer. Deletion
+  protection (DELETEPROT.001) prevents the
+  call. An alarm catches it if deletion
+  protection is bypassed or disabled
+  beforehand. Combined, the two layers
+  provide both prevention and detection.
+failure: >
+  Silent pool destruction. DeleteUserPool
+  events go unnoticed; the next consumer
+  request reveals the pool is gone.
+tests:
+  - name: account without delete-pool alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_delete_user_pool: false
+  - name: account with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_delete_user_pool: true

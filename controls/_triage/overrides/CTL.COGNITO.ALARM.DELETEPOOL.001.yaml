@@ -1,0 +1,23 @@
+control: CTL.COGNITO.ALARM.DELETEPOOL.001
+defect: >
+  No CloudWatch alarm monitors DeleteUserPool
+  API calls.
+infection: >
+  Pool deletion is the most disruptive
+  Cognito event possible. Every user
+  disappears; every application that
+  authenticated against the pool breaks
+  immediately; every refresh token is
+  invalidated; every federation tied to the
+  pool stops working. Recovery requires
+  recreating the pool, repopulating users,
+  and reconfiguring every consumer. Deletion
+  protection (DELETEPROT.001) prevents the
+  call. An alarm catches it if deletion
+  protection is bypassed or disabled
+  beforehand. Combined, the two layers
+  provide both prevention and detection.
+failure: >
+  Silent pool destruction. DeleteUserPool
+  events go unnoticed; the next consumer
+  request reveals the pool is gone.

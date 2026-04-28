@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ALARM.ADMINPWD.001
+name: No CloudWatch Alarm for Cognito AdminSetUserPassword
+description: >
+  No CloudWatch alarm watches CloudTrail for
+  AdminSetUserPassword API calls. Admin-side
+  password resets bypass the user's own
+  recovery flow — a compromised admin can
+  set any user's password without involving
+  the user. Notification at the API call
+  level catches misuse early.
+domain: audit
+severity: high
+archetype: silent-failure
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.2, 10.6, 8.2"
+  fedramp_moderate: "AU-6, SI-4"
+  hipaa: "164.308(a)(1)(ii)(D)"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    No alarm fires when an admin resets a
+    user's password.
+  action: >
+    Create a metric filter matching
+    eventSource=cognito-idp.amazonaws.com AND
+    eventName=AdminSetUserPassword. Wire to
+    the security paging topic.
+    AdminSetUserPassword bypasses the user's
+    own recovery flow entirely — a single
+    API call can hijack any account. The
+    alarm should fire on every event so any
+    use is reviewed.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_account",
+        "cognito": {
+          "alarm_admin_set_user_password": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_account
+    - field: properties.identity.cognito.alarm_admin_set_user_password
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors
+  AdminSetUserPassword API calls.
+infection: >
+  AdminSetUserPassword sets a user's password
+  directly, without any verification of the
+  user's identity. Legitimate uses include
+  programmatic onboarding flows where the
+  application sets a temporary password as
+  part of automation. Adversarial uses
+  include account takeover by a compromised
+  admin: the attacker calls
+  AdminSetUserPassword on a victim's account
+  with --permanent and a chosen password,
+  then signs in as that user. The user
+  may not even notice — their password
+  manager still has the old value, so they
+  hit a 'wrong password' error and assume
+  it's a typo. An alarm on the API call
+  catches the takeover within minutes.
+failure: >
+  Silent admin password resets. Admin-side
+  account takeover proceeds without
+  notification.
+tests:
+  - name: account without admin-pwd alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_admin_set_user_password: false
+  - name: account with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_admin_set_user_password: true

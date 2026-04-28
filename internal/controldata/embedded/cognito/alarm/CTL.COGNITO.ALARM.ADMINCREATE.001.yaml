@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ALARM.ADMINCREATE.001
+name: No CloudWatch Alarm for Cognito AdminCreateUser
+description: >
+  No CloudWatch alarm watches CloudTrail for
+  AdminCreateUser API calls. Admin-created
+  users bypass self-registration (and the
+  validation it triggers) — silent admin
+  account creation should generate a
+  notification, not an audit-log entry that
+  nobody reads.
+domain: audit
+severity: high
+archetype: silent-failure
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.2, 10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    No alarm fires when admins create users
+    directly.
+  action: >
+    Create a CloudWatch alarm on a metric
+    filter matching CloudTrail events with
+    eventSource=cognito-idp.amazonaws.com
+    AND eventName=AdminCreateUser. Wire it
+    to the security paging topic. Test by
+    triggering an AdminCreateUser in a
+    sandbox and confirming the alarm fires.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_account",
+        "cognito": {
+          "alarm_admin_create_user": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_account
+    - field: properties.identity.cognito.alarm_admin_create_user
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors AdminCreateUser
+  API calls.
+infection: >
+  AdminCreateUser bypasses every signup
+  policy: it skips self-registration
+  validation, ignores Lambda triggers like
+  pre-sign-up, and creates the user with
+  whatever attributes the admin supplies.
+  Legitimate uses include programmatic
+  user provisioning, but adversarial uses
+  include backdoor-account creation by a
+  compromised admin or a misconfigured
+  automation. Without an alarm, the
+  CloudTrail event is recorded but not
+  surfaced — operators only discover the
+  account during the next audit. The same
+  pattern as IAM CreateUser without alarm:
+  the account exists, possibly with elevated
+  privileges, before anyone notices.
+failure: >
+  Silent admin user creation. AdminCreateUser
+  events go unnoticed; backdoor accounts can
+  be created without triggering a
+  notification.
+tests:
+  - name: account without admin-create alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_admin_create_user: false
+  - name: account with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_admin_create_user: true

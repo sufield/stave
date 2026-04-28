@@ -1,0 +1,24 @@
+control: CTL.COGNITO.ALARM.MFAFAIL.001
+defect: >
+  No CloudWatch alarm monitors MFA challenge
+  failure spikes.
+infection: >
+  MFA challenge failures distinguish two
+  failure modes for an attacker who has
+  obtained the user's password. SMS MFA:
+  the attacker doesn't have the phone, but
+  may try guessing the 6-digit code (10^6
+  attempts). TOTP MFA: similar guessing
+  surface, though the time-window
+  rotation makes it harder. With Cognito's
+  rate limits, the attacker can't realistically
+  brute-force the code, but they can try
+  enough times to be visible. An alarm on
+  MFA failures surfaces credential-stuffing
+  attacks that survived the password-only
+  brute force and are now attempting to
+  bypass MFA.
+failure: >
+  MFA brute-force visibility absent. Attempts
+  to bypass MFA after credential compromise
+  go unnoticed.

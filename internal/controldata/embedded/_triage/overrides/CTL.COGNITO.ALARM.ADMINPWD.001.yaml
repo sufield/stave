@@ -1,0 +1,25 @@
+control: CTL.COGNITO.ALARM.ADMINPWD.001
+defect: >
+  No CloudWatch alarm monitors
+  AdminSetUserPassword API calls.
+infection: >
+  AdminSetUserPassword sets a user's password
+  directly, without any verification of the
+  user's identity. Legitimate uses include
+  programmatic onboarding flows where the
+  application sets a temporary password as
+  part of automation. Adversarial uses
+  include account takeover by a compromised
+  admin: the attacker calls
+  AdminSetUserPassword on a victim's account
+  with --permanent and a chosen password,
+  then signs in as that user. The user
+  may not even notice — their password
+  manager still has the old value, so they
+  hit a 'wrong password' error and assume
+  it's a typo. An alarm on the API call
+  catches the takeover within minutes.
+failure: >
+  Silent admin password resets. Admin-side
+  account takeover proceeds without
+  notification.

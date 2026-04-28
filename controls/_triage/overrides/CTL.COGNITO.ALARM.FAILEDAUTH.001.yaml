@@ -1,0 +1,24 @@
+control: CTL.COGNITO.ALARM.FAILEDAUTH.001
+defect: >
+  No CloudWatch alarm monitors authentication
+  failure spikes.
+infection: >
+  Failed authentication metrics are the
+  leading indicator of brute-force and
+  credential-stuffing attacks. Cognito's
+  per-account rate limits eventually
+  throttle the attempts, but throttling
+  doesn't fail the attack — it just slows
+  it. Without an alarm, an attacker
+  cycling through a leaked credential
+  dump generates a high SignInThrottle rate
+  that nobody sees. With an alarm, the
+  pattern is detected within minutes,
+  letting the team take blocking actions
+  (IP allow-listing, advanced security mode,
+  password rotations).
+failure: >
+  Brute-force visibility absent. Authentication
+  failure spikes go unnoticed; credential
+  stuffing proceeds within the rate-limit
+  ceiling.

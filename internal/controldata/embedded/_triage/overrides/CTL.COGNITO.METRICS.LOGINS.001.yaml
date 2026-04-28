@@ -1,0 +1,24 @@
+control: CTL.COGNITO.METRICS.LOGINS.001
+defect: >
+  No CloudWatch metrics for Cognito login
+  success or failure.
+infection: >
+  Detection at scale needs metrics — a graph
+  of login attempts, a baseline of expected
+  rate, an alert when the curve breaks.
+  Without metrics, the team relies on
+  CloudTrail event search (slow, hard to
+  baseline) or after-the-fact incident
+  response (the breach is already in
+  progress). Cognito doesn't publish login
+  success/failure metrics by default; the
+  team has to set up metric filters on
+  CloudTrail events. The volume of
+  Cognito API events makes this a one-time
+  setup with ongoing value — every alarm
+  control in COG-8 alarm assumes these
+  metrics exist.
+failure: >
+  No quantitative login signal. Authentication
+  patterns are invisible to monitoring;
+  alarms have no metric to read.

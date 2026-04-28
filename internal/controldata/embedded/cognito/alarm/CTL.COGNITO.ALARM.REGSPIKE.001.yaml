@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ALARM.REGSPIKE.001
+name: No CloudWatch Alarm for Cognito Registration Spike
+description: >
+  No CloudWatch alarm watches the SignUpRequest
+  rate. Bot-driven registration sprees and
+  spam-account creation campaigns produce a
+  characteristic spike that should generate
+  an alert; without one, the abuse fills the
+  pool with bot accounts before anyone
+  notices.
+domain: audit
+severity: medium
+archetype: silent-failure
+compliance:
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    No alarm fires on registration spikes.
+  action: >
+    Create a CloudWatch alarm on the
+    SignUpRequest rate with threshold > N
+    over a short window. Baseline against
+    normal registration patterns; tune N to
+    match expected daily peaks plus a margin.
+    Wire to operations paging or a queue
+    for follow-up review.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_account",
+        "cognito": {
+          "alarm_registration_spike": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_account
+    - field: properties.identity.cognito.alarm_registration_spike
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors registration
+  rate spikes.
+infection: >
+  Bot-driven registration sprees fill user
+  pools with accounts that have no
+  legitimate user behind them. The accounts
+  consume pool quota, may pass through
+  email-verification flows for SMS-cost-
+  abuse attacks, and pollute analytics. A
+  spike in SignUpRequest rate distinguishes
+  legitimate organic growth from abuse;
+  without monitoring, the spike is visible
+  only retrospectively in the user count.
+  Captcha and pre-sign-up Lambda triggers
+  reduce the volume but don't eliminate it;
+  the alarm closes the loop by surfacing
+  spikes that survive other defenses.
+failure: >
+  Registration abuse visibility absent. Bot
+  signup sprees go unnoticed.
+tests:
+  - name: account without reg-spike alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_registration_spike: false
+  - name: account with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_registration_spike: true

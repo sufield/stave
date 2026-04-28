@@ -1,0 +1,26 @@
+control: CTL.COGNITO.ALARM.UPDATEPOOL.001
+defect: >
+  No CloudWatch alarm monitors UpdateUserPool
+  API calls.
+infection: >
+  UpdateUserPool is the API for changing the
+  pool's security configuration: MFA settings,
+  password policy, account recovery options,
+  Lambda triggers, advanced security mode.
+  All of the controls in COG-1 through COG-7
+  describe states that can be flipped by a
+  single UpdateUserPool call. Without an
+  alarm, an attacker (or compromised admin)
+  weakens the pool's posture and the
+  weakening goes unnoticed until the next
+  manual audit. Detection-side, the
+  CloudTrail event is the leading signal;
+  the resulting state change is the lagging
+  signal seen by drift checks. An alarm on
+  the API call surfaces the change in real
+  time.
+failure: >
+  Silent pool configuration changes. MFA can
+  be turned off, password policy weakened,
+  or Lambda triggers swapped without anyone
+  being notified.

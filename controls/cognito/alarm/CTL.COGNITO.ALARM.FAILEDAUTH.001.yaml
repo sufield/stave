@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ALARM.FAILEDAUTH.001
+name: No CloudWatch Alarm for Cognito Failed Authentication Spike
+description: >
+  No CloudWatch alarm watches the SignInThrottles
+  / failed-authentication metric for the user
+  pool. Brute-force and credential-stuffing
+  attacks proceed without throttling visibility
+  — an attacker hitting the rate-limit ceiling
+  doesn't trigger any alert.
+domain: audit
+severity: high
+archetype: silent-failure
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.6, 8.3.4"
+  fedramp_moderate: "AU-6, IR-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    No alarm fires on authentication failure
+    spikes.
+  action: >
+    Create a CloudWatch alarm on the
+    AWS/Cognito SignInThrottles metric (or
+    the equivalent failed-auth metric for
+    the pool's auth flow) with threshold
+    > N over a short window. Tune N based
+    on baseline traffic. Wire to security
+    paging.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_account",
+        "cognito": {
+          "alarm_failed_auth_spike": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_account
+    - field: properties.identity.cognito.alarm_failed_auth_spike
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors authentication
+  failure spikes.
+infection: >
+  Failed authentication metrics are the
+  leading indicator of brute-force and
+  credential-stuffing attacks. Cognito's
+  per-account rate limits eventually
+  throttle the attempts, but throttling
+  doesn't fail the attack — it just slows
+  it. Without an alarm, an attacker
+  cycling through a leaked credential
+  dump generates a high SignInThrottle rate
+  that nobody sees. With an alarm, the
+  pattern is detected within minutes,
+  letting the team take blocking actions
+  (IP allow-listing, advanced security mode,
+  password rotations).
+failure: >
+  Brute-force visibility absent. Authentication
+  failure spikes go unnoticed; credential
+  stuffing proceeds within the rate-limit
+  ceiling.
+tests:
+  - name: account without failed-auth alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_failed_auth_spike: false
+  - name: account with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_failed_auth_spike: true

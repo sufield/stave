@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ALARM.RISKCONFIG.001
+name: No CloudWatch Alarm for Cognito SetRiskConfiguration
+description: >
+  No CloudWatch alarm watches CloudTrail for
+  SetRiskConfiguration API calls. Advanced
+  security configuration changes (turning off
+  adaptive auth, weakening risk thresholds,
+  disabling compromised-credentials checks)
+  should generate notifications, not silent
+  state changes.
+domain: audit
+severity: high
+archetype: silent-failure
+compliance:
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, CM-3, SI-4"
+  pci_dss_v4.0: "10.2, 10.6"
+  fedramp_moderate: "AU-6, CM-3"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    No alarm fires when advanced security
+    config changes.
+  action: >
+    Create a metric filter matching
+    eventSource=cognito-idp.amazonaws.com AND
+    eventName=SetRiskConfiguration. Wire to
+    the security topic. Advanced security
+    settings determine whether risky sign-ins
+    are blocked, whether compromised
+    credentials are blocked, and whether
+    adaptive auth is in audit or enforced
+    mode — every change matters.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_account",
+        "cognito": {
+          "alarm_set_risk_config": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_account
+    - field: properties.identity.cognito.alarm_set_risk_config
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors
+  SetRiskConfiguration API calls.
+infection: >
+  Advanced security risk configuration
+  controls whether Cognito blocks sign-ins
+  that match compromised credentials, blocks
+  high-risk login patterns, and enforces
+  adaptive authentication. SetRiskConfiguration
+  is the API that flips these. An attacker
+  with the right Cognito permissions (or a
+  misconfigured automation) can downgrade
+  enforced to audit-only, set the
+  compromised-credentials action to NO_ACTION,
+  or disable the entire feature. The downgrade
+  doesn't show in user-visible login flows;
+  it surfaces only when the attacker exploits
+  the now-allowed pattern. An alarm catches
+  the configuration change immediately.
+failure: >
+  Silent advanced-security downgrade. Risk
+  configuration can be weakened without
+  notification.
+tests:
+  - name: account without risk-config alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_set_risk_config: false
+  - name: account with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_set_risk_config: true

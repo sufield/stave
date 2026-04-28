@@ -1,0 +1,24 @@
+control: CTL.COGNITO.ALARM.CREATEIDPOOL.001
+defect: >
+  No CloudWatch alarm monitors creation of
+  identity pools with anonymous access.
+infection: >
+  Identity pools that allow unauthenticated
+  identities expose AWS credentials to anyone
+  on the internet — the unauthenticated role
+  is the public's permission set. The
+  highest-impact misconfiguration in the
+  Cognito surface (covered by
+  CTL.COGNITO.IDENTITY.GUEST.001 and the
+  COG-2 unauth-role-action controls)
+  typically appears via console or CLI
+  defaults that flip allow_unauthenticated
+  on. An alarm at creation time catches the
+  misconfiguration during its first hour
+  rather than after the next periodic
+  Stave run.
+failure: >
+  Silent introduction of anonymous AWS
+  credential surface. New identity pools
+  with allow_unauthenticated=true go
+  unnoticed at creation.

@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ALARM.UPDATEPOOL.001
+name: No CloudWatch Alarm for Cognito UpdateUserPool
+description: >
+  No CloudWatch alarm watches CloudTrail for
+  UpdateUserPool API calls. User pool
+  configuration changes — MFA settings,
+  password policy, Lambda triggers — happen
+  without notification, leaving the security
+  team unaware until the next audit.
+domain: audit
+severity: high
+archetype: silent-failure
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3, CC8.1"
+  nist_800_53_r5: "AU-6, CM-3, SI-4"
+  pci_dss_v4.0: "10.2, 10.6"
+  fedramp_moderate: "AU-6, CM-3, SI-4"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.5
+remediation:
+  description: >
+    No alarm fires when user pool config
+    changes.
+  action: >
+    Create a metric filter matching
+    eventSource=cognito-idp.amazonaws.com AND
+    eventName=UpdateUserPool, with a
+    CloudWatch alarm on > 0 events. Wire to
+    the security topic. Pool configuration
+    is the wide attack surface — MFA flips,
+    password-policy weakening, Lambda trigger
+    swaps all happen via UpdateUserPool.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_account",
+        "cognito": {
+          "alarm_update_user_pool": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_account
+    - field: properties.identity.cognito.alarm_update_user_pool
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors UpdateUserPool
+  API calls.
+infection: >
+  UpdateUserPool is the API for changing the
+  pool's security configuration: MFA settings,
+  password policy, account recovery options,
+  Lambda triggers, advanced security mode.
+  All of the controls in COG-1 through COG-7
+  describe states that can be flipped by a
+  single UpdateUserPool call. Without an
+  alarm, an attacker (or compromised admin)
+  weakens the pool's posture and the
+  weakening goes unnoticed until the next
+  manual audit. Detection-side, the
+  CloudTrail event is the leading signal;
+  the resulting state change is the lagging
+  signal seen by drift checks. An alarm on
+  the API call surfaces the change in real
+  time.
+failure: >
+  Silent pool configuration changes. MFA can
+  be turned off, password policy weakened,
+  or Lambda triggers swapped without anyone
+  being notified.
+tests:
+  - name: account without update-pool alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_update_user_pool: false
+  - name: account with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_update_user_pool: true

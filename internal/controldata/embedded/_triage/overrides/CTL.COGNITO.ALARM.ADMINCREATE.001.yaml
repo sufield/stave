@@ -1,0 +1,26 @@
+control: CTL.COGNITO.ALARM.ADMINCREATE.001
+defect: >
+  No CloudWatch alarm monitors AdminCreateUser
+  API calls.
+infection: >
+  AdminCreateUser bypasses every signup
+  policy: it skips self-registration
+  validation, ignores Lambda triggers like
+  pre-sign-up, and creates the user with
+  whatever attributes the admin supplies.
+  Legitimate uses include programmatic
+  user provisioning, but adversarial uses
+  include backdoor-account creation by a
+  compromised admin or a misconfigured
+  automation. Without an alarm, the
+  CloudTrail event is recorded but not
+  surfaced — operators only discover the
+  account during the next audit. The same
+  pattern as IAM CreateUser without alarm:
+  the account exists, possibly with elevated
+  privileges, before anyone notices.
+failure: >
+  Silent admin user creation. AdminCreateUser
+  events go unnoticed; backdoor accounts can
+  be created without triggering a
+  notification.

@@ -219,6 +219,16 @@ var DefaultFieldRegistry = FieldRegistry{ //nolint:gosec // G101 false positive:
 	"identity.cognito.social_email_marked_verified":      "social provider attribute mapping marks email as verified",
 	"identity.cognito.social_allowed_domains":            "email domains permitted by the social provider configuration",
 	"identity.cognito.social_allows_any_domain":          "the social provider allows registration from any email domain",
+	"identity.cognito.alarm_admin_create_user":           "CloudWatch alarm covers AdminCreateUser events",
+	"identity.cognito.alarm_update_user_pool":            "CloudWatch alarm covers UpdateUserPool events",
+	"identity.cognito.alarm_delete_user_pool":            "CloudWatch alarm covers DeleteUserPool events",
+	"identity.cognito.alarm_create_identity_pool_unauth": "CloudWatch alarm covers CreateIdentityPool with anonymous access",
+	"identity.cognito.alarm_set_risk_config":             "CloudWatch alarm covers SetRiskConfiguration events",
+	"identity.cognito.alarm_admin_set_user_password":     "CloudWatch alarm covers AdminSetUserPassword events",
+	"identity.cognito.alarm_failed_auth_spike":           "CloudWatch alarm covers authentication failure rate spikes",
+	"identity.cognito.alarm_registration_spike":          "CloudWatch alarm covers registration rate spikes",
+	"identity.cognito.alarm_mfa_failure_spike":           "CloudWatch alarm covers MFA challenge failure spikes",
+	"identity.cognito.metrics_logins_tracked":            "CloudWatch metrics capture login success and failure rates",
 
 	// --- cryptography (KMS) ---
 	"cryptography.policy.has_wildcard_principal":            "the KMS key policy grants to Principal \"*\"",

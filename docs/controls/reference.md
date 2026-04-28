@@ -3,23 +3,23 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1990
-**Pack hash:** `2d7d471ed4056ea875daa68b08699a7d7b5ba06d59bdbd9abba9dc7261a51667`
+**Total controls:** 2000
+**Pack hash:** `fa9fb6aa9ed9723da528d8ff993827e5f9fec7624ffdd3b6427839c23a3b8752`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 229 |
-| high | 887 |
+| critical | 231 |
+| high | 892 |
 | info | 16 |
 | low | 130 |
-| medium | 728 |
+| medium | 731 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 50 |
+| audit | 60 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 96 |
@@ -7515,6 +7515,141 @@ Cognito user pool has no device tracking configured. The pool can't recognize wh
 
 ---
 
+### CTL.COGNITO.ALARM.ADMINCREATE.001
+
+**No CloudWatch Alarm for Cognito AdminCreateUser**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: AU-6, SI-4; hipaa: 164.312(b); iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.2, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm watches CloudTrail for AdminCreateUser API calls. Admin-created users bypass self-registration (and the validation it triggers) — silent admin account creation should generate a notification, not an audit-log entry that nobody reads.
+
+**Remediation:** Create a CloudWatch alarm on a metric filter matching CloudTrail events with eventSource=cognito-idp.amazonaws.com AND eventName=AdminCreateUser. Wire it to the security paging topic. Test by triggering an AdminCreateUser in a sandbox and confirming the alarm fires.
+
+---
+
+### CTL.COGNITO.ALARM.ADMINPWD.001
+
+**No CloudWatch Alarm for Cognito AdminSetUserPassword**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: AU-6, SI-4; hipaa: 164.308(a)(1)(ii)(D); iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.2, 10.6, 8.2; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm watches CloudTrail for AdminSetUserPassword API calls. Admin-side password resets bypass the user's own recovery flow — a compromised admin can set any user's password without involving the user. Notification at the API call level catches misuse early.
+
+**Remediation:** Create a metric filter matching eventSource=cognito-idp.amazonaws.com AND eventName=AdminSetUserPassword. Wire to the security paging topic. AdminSetUserPassword bypasses the user's own recovery flow entirely — a single API call can hijack any account. The alarm should fire on every event so any use is reviewed.
+
+---
+
+### CTL.COGNITO.ALARM.CREATEIDPOOL.001
+
+**No CloudWatch Alarm for Cognito CreateIdentityPool with Unauthenticated Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: AU-6, SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.2, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm watches CloudTrail for CreateIdentityPool API calls that include AllowUnauthenticatedIdentities=true. New identity pools that grant anonymous AWS credentials should be flagged at creation time, not discovered later by drift checks.
+
+**Remediation:** Create a metric filter matching eventSource=cognito-identity.amazonaws.com AND eventName=CreateIdentityPool AND requestParameters.allowUnauthenticatedIdentities=true. Wire to the security topic. New identity pools with anonymous access are rare in production deployments and should always trigger investigation.
+
+---
+
+### CTL.COGNITO.ALARM.DELETEPOOL.001
+
+**No CloudWatch Alarm for Cognito DeleteUserPool**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: AU-6, SI-4; hipaa: 164.308(a)(1)(ii)(D); iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.2, 10.6; soc2: CC7.2, CC7.3, A1.2;
+
+No CloudWatch alarm watches CloudTrail for DeleteUserPool API calls. Pool deletion destroys all users — every authentication in every dependent application breaks. Real-time notification is essential.
+
+**Remediation:** Create a metric filter matching eventSource=cognito-idp.amazonaws.com AND eventName=DeleteUserPool, with a CloudWatch alarm on > 0 events. Wire to the highest-priority paging topic — pool deletion is unrecoverable through normal channels, so the response time matters. Combine with deletion protection on the pool itself (the existing CTL.COGNITO.DELETEPROT.001) for prevention.
+
+---
+
+### CTL.COGNITO.ALARM.FAILEDAUTH.001
+
+**No CloudWatch Alarm for Cognito Failed Authentication Spike**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: AU-6, IR-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.6, 8.3.4; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm watches the SignInThrottles / failed-authentication metric for the user pool. Brute-force and credential-stuffing attacks proceed without throttling visibility — an attacker hitting the rate-limit ceiling doesn't trigger any alert.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/Cognito SignInThrottles metric (or the equivalent failed-auth metric for the pool's auth flow) with threshold > N over a short window. Tune N based on baseline traffic. Wire to security paging.
+
+---
+
+### CTL.COGNITO.ALARM.MFAFAIL.001
+
+**No CloudWatch Alarm for Cognito MFA Challenge Failure Spike**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, IA-2; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IA-2, SI-4; pci_dss_v4.0: 10.6, 8.4; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm watches the MFA challenge failure rate. Spikes in MFA failures indicate brute-force MFA attacks (SMS code guessing, TOTP brute force) or stolen-session attempts to satisfy MFA after credential compromise.
+
+**Remediation:** Create a CloudWatch alarm on Cognito's MFA failure metrics (or build one from CloudTrail RespondToAuthChallenge failures with SMS_MFA / SOFTWARE_TOKEN_MFA challenge types). Threshold > N over a short window. MFA failures should be rare in legitimate use — most users enter the right code on the first try. A spike indicates either a UX problem or an attack.
+
+---
+
+### CTL.COGNITO.ALARM.REGSPIKE.001
+
+**No CloudWatch Alarm for Cognito Registration Spike**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm watches the SignUpRequest rate. Bot-driven registration sprees and spam-account creation campaigns produce a characteristic spike that should generate an alert; without one, the abuse fills the pool with bot accounts before anyone notices.
+
+**Remediation:** Create a CloudWatch alarm on the SignUpRequest rate with threshold > N over a short window. Baseline against normal registration patterns; tune N to match expected daily peaks plus a margin. Wire to operations paging or a queue for follow-up review.
+
+---
+
+### CTL.COGNITO.ALARM.RISKCONFIG.001
+
+**No CloudWatch Alarm for Cognito SetRiskConfiguration**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, CM-3; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, CM-3, SI-4; pci_dss_v4.0: 10.2, 10.6; soc2: CC7.2, CC7.3;
+
+No CloudWatch alarm watches CloudTrail for SetRiskConfiguration API calls. Advanced security configuration changes (turning off adaptive auth, weakening risk thresholds, disabling compromised-credentials checks) should generate notifications, not silent state changes.
+
+**Remediation:** Create a metric filter matching eventSource=cognito-idp.amazonaws.com AND eventName=SetRiskConfiguration. Wire to the security topic. Advanced security settings determine whether risky sign-ins are blocked, whether compromised credentials are blocked, and whether adaptive auth is in audit or enforced mode — every change matters.
+
+---
+
+### CTL.COGNITO.ALARM.UPDATEPOOL.001
+
+**No CloudWatch Alarm for Cognito UpdateUserPool**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.13; fedramp_moderate: AU-6, CM-3, SI-4; hipaa: 164.312(b); iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, CM-3, SI-4; pci_dss_v4.0: 10.2, 10.6; soc2: CC7.2, CC7.3, CC8.1;
+
+No CloudWatch alarm watches CloudTrail for UpdateUserPool API calls. User pool configuration changes — MFA settings, password policy, Lambda triggers — happen without notification, leaving the security team unaware until the next audit.
+
+**Remediation:** Create a metric filter matching eventSource=cognito-idp.amazonaws.com AND eventName=UpdateUserPool, with a CloudWatch alarm on > 0 events. Wire to the security topic. Pool configuration is the wide attack surface — MFA flips, password-policy weakening, Lambda trigger swaps all happen via UpdateUserPool.
+
+---
+
 ### CTL.COGNITO.CLIENT.ACCESSTTL.001
 
 **Cognito App Client Access Token Validity Exceeds One Hour**
@@ -8261,6 +8396,21 @@ The observation snapshot is missing required Cognito user pool properties.
 Cognito user pool has neither account-level lockout configured nor advanced security features enabled to provide adaptive auth. Failed-login attempts can continue indefinitely with no throttling beyond Cognito's per-account rate limits. Brute- force and credential-stuffing attacks face no application-side resistance.
 
 **Remediation:** Enable advanced security features on the user pool with risk_configuration set so high-risk events block authentication and medium-risk events require step-up authentication: aws cognito-idp set-risk-configuration with appropriate actions on Compromised Credentials and Account Takeover Risk decisions. Advanced security adds adaptive throttling that detects brute-force patterns and locks the offending IP / username combination.
+
+---
+
+### CTL.COGNITO.METRICS.LOGINS.001
+
+**No CloudWatch Metrics for Cognito Login Success or Failure**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-6, SI-4; iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, AU-12, SI-4; pci_dss_v4.0: 10.6; soc2: CC7.1, CC7.2;
+
+No CloudWatch metrics capture login success and failure rates for the user pool. The team has no baseline to detect anomalies against — no graph of 'what's normal,' no alert when the curve diverges, no data feed for SIEM ingestion.
+
+**Remediation:** Configure CloudWatch metric filters on CloudTrail events for InitiateAuth success / failure, RespondToAuthChallenge outcomes, and SignUp success. Publish them as CloudWatch metrics so they're chartable, alarmable, and exportable to SIEM. Without this base layer of metrics, the alarm controls in this iteration have nothing to alarm on.
 
 ---
 

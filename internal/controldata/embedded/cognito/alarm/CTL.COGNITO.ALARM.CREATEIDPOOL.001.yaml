@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ALARM.CREATEIDPOOL.001
+name: No CloudWatch Alarm for Cognito CreateIdentityPool with Unauthenticated Access
+description: >
+  No CloudWatch alarm watches CloudTrail for
+  CreateIdentityPool API calls that include
+  AllowUnauthenticatedIdentities=true. New
+  identity pools that grant anonymous AWS
+  credentials should be flagged at creation
+  time, not discovered later by drift checks.
+domain: audit
+severity: critical
+archetype: silent-failure
+compliance:
+  cis_aws_v3.0: "4.13"
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.2, 10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    No alarm fires when an identity pool is
+    created with anonymous access enabled.
+  action: >
+    Create a metric filter matching
+    eventSource=cognito-identity.amazonaws.com
+    AND eventName=CreateIdentityPool AND
+    requestParameters.allowUnauthenticatedIdentities=true.
+    Wire to the security topic. New
+    identity pools with anonymous access
+    are rare in production deployments and
+    should always trigger investigation.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_account",
+        "cognito": {
+          "alarm_create_identity_pool_unauth": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_account
+    - field: properties.identity.cognito.alarm_create_identity_pool_unauth
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors creation of
+  identity pools with anonymous access.
+infection: >
+  Identity pools that allow unauthenticated
+  identities expose AWS credentials to anyone
+  on the internet — the unauthenticated role
+  is the public's permission set. The
+  highest-impact misconfiguration in the
+  Cognito surface (covered by
+  CTL.COGNITO.IDENTITY.GUEST.001 and the
+  COG-2 unauth-role-action controls)
+  typically appears via console or CLI
+  defaults that flip allow_unauthenticated
+  on. An alarm at creation time catches the
+  misconfiguration during its first hour
+  rather than after the next periodic
+  Stave run.
+failure: >
+  Silent introduction of anonymous AWS
+  credential surface. New identity pools
+  with allow_unauthenticated=true go
+  unnoticed at creation.
+tests:
+  - name: account without create-id-pool alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_create_identity_pool_unauth: false
+  - name: account with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:account"
+      asset_type: aws_cognito_account
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_account
+          cognito:
+            alarm_create_identity_pool_unauth: true
