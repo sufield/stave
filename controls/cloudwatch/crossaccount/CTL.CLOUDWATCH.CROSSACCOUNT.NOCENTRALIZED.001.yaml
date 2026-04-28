@@ -1,0 +1,139 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.CROSSACCOUNT.NOCENTRALIZED.001
+name: AWS Organizations Has No Centralized CloudWatch Logging Account
+description: >
+  AWS Organizations is in use but CloudWatch Logs
+  are not aggregated to a centralized logging
+  account. Each member account stores its own
+  logs independently. Security investigations
+  require querying logs in each account
+  individually; there is no single view of the
+  organization's log data for incident response,
+  compliance audit, or operational analysis.
+domain: governance
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.4, 3.1"
+  soc2: "CC6.1, CC7.1"
+  nist_800_53_r5: "AU-4, AU-6, AU-9"
+  pci_dss_v4.0: "10.5"
+  fedramp_moderate: "AU-4, AU-9"
+  iso_27001_2022: "A.5.36, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: detection
+    scope: organization
+    multiplier: 2.5
+remediation:
+  description: >
+    Organizations is in use but CloudWatch Logs
+    aggregation is not centralized.
+  action: >
+    Designate a logging-account in the
+    organization (typically a dedicated security/
+    audit account) and configure cross-account
+    subscription filters from member accounts to
+    a destination in that account, OR enable
+    CloudWatch cross-account observability with
+    the logging account as the monitoring
+    account. SCPs can prevent member accounts
+    from disabling the cross-account
+    subscriptions once configured.
+  example: |
+    {
+      "monitoring": {
+        "kind": "org_logging",
+        "cloudwatch": {
+          "is_org_account": true,
+          "has_centralized_logging": true,
+          "member_account_count": 12,
+          "accounts_with_subscriptions": 12
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: org_logging
+    - field: properties.monitoring.cloudwatch.is_org_account
+      op: eq
+      value: true
+    - field: properties.monitoring.cloudwatch.has_centralized_logging
+      op: eq
+      value: false
+defect: >
+  AWS Organizations with member accounts has no
+  centralized CloudWatch Logs aggregation.
+infection: >
+  Without centralized logging, each member
+  account stores its own logs (Lambda logs in
+  account A, ECS logs in account B, API Gateway
+  logs in account C). Security investigation
+  requires logging into each account, querying
+  each account's log groups, correlating
+  timestamps across accounts manually, and
+  assembling the complete picture from N
+  separate data sources. Compliance audit and
+  incident response both suffer the same
+  fragmentation. A centralized logging account
+  aggregates logs from all member accounts via
+  cross-account subscription filters or
+  CloudWatch cross-account observability,
+  providing a single location for organization-
+  wide queries and a single retention surface
+  to govern.
+failure: >
+  Fragmented logging. Each account stores its
+  own logs — no single view for security
+  investigation or compliance audit.
+tests:
+  - name: org without centralized logging fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_org_logging
+      vendor: aws
+      properties:
+        monitoring:
+          kind: org_logging
+          cloudwatch:
+            is_org_account: true
+            has_centralized_logging: false
+            member_account_count: 12
+            accounts_with_subscriptions: 0
+  - name: org with centralized logging passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_org_logging
+      vendor: aws
+      properties:
+        monitoring:
+          kind: org_logging
+          cloudwatch:
+            is_org_account: true
+            has_centralized_logging: true
+            member_account_count: 12
+            accounts_with_subscriptions: 12
+  - name: standalone account does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:root"
+      asset_type: aws_org_logging
+      vendor: aws
+      properties:
+        monitoring:
+          kind: org_logging
+          cloudwatch:
+            is_org_account: false
+            has_centralized_logging: false
+            member_account_count: 1
+            accounts_with_subscriptions: 0

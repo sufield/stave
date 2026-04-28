@@ -1,0 +1,28 @@
+control: CTL.CLOUDWATCH.LOGGROUP.POLICY.CROSSACCOUNT.001
+defect: >
+  Log group resource policy grants cross-account
+  access without aws:PrincipalOrgID.
+infection: >
+  Cross-account log group access without
+  organizational boundary means the external
+  account interacts with the log group regardless
+  of current org membership. For PutLogEvents,
+  the external account can write log entries —
+  injecting data into the log group, the same
+  injection failure mode as
+  LOGGROUP.POLICY.PUBLIC.001 but scoped to a
+  specific external account. For GetLogEvents,
+  the external account can read log data —
+  potentially containing PII, credentials in
+  application output, security events, or
+  internal system details. PrincipalOrgID
+  ensures only accounts currently in the
+  organization can access the log group; if an
+  account leaves the organization, its access
+  ends automatically rather than persisting in
+  a forgotten policy entry.
+failure: >
+  Log group access outside org boundary.
+  External accounts can write to or read from
+  the log group without organizational
+  membership verification.

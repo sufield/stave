@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ALARM.DECOMMISSIONED.001
+name: CloudWatch Alarm Monitors Decommissioned Resource
+description: >
+  CloudWatch alarm monitors a metric for a
+  resource that has been decommissioned — an EC2
+  instance terminated, an RDS instance deleted, a
+  Lambda function removed. The metric stops
+  publishing, the alarm enters INSUFFICIENT_DATA
+  permanently, and the alarm clutters the
+  inventory while monitoring nothing. Different
+  from ALARM.INSUFFICIENTDATA.001 which checks
+  the symptom (current state); this checks the
+  root cause (the monitored resource is gone).
+domain: governance
+severity: medium
+archetype: dormant-resource
+compliance:
+  soc2: "CC7.2, CC7.3, CC8.1"
+  nist_800_53_r5: "AU-6, CM-8, IR-4, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.5.9, A.8.16"
+  ccm_v4: ["DSP-04", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Alarm monitors a deleted resource. Its
+    INSUFFICIENT_DATA state is structural, not
+    transient.
+  action: >
+    Confirm the dimensioned resource is gone
+    (e.g., the InstanceId is not in the EC2
+    inventory, the FunctionName is not in
+    Lambda). Delete the alarm: aws cloudwatch
+    delete-alarms --alarm-names <name>. If the
+    resource was replaced (new InstanceId for
+    the same logical role), update the alarm's
+    dimensions to the new resource rather than
+    leaving the old alarm dead.
+  example: |
+    {
+      "monitoring": {
+        "kind": "alarm",
+        "cloudwatch": {
+          "alarm_name": "i-12345-CPU-High",
+          "alarm_metric_name": "CPUUtilization",
+          "alarm_metric_namespace": "AWS/EC2",
+          "alarm_metric_dimensions": [
+            { "Name": "InstanceId", "Value": "i-12345" }
+          ],
+          "monitored_resource_exists": false,
+          "is_decommissioned_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: alarm
+    - field: properties.monitoring.cloudwatch.is_decommissioned_alarm
+      op: eq
+      value: true
+defect: >
+  CloudWatch alarm monitors a metric for a
+  decommissioned resource.
+infection: >
+  Alarms in CloudWatch reference metrics by name
+  plus a set of dimensions (e.g., InstanceId,
+  DBInstanceIdentifier, FunctionName). When the
+  underlying resource is deleted, the metric
+  stops publishing — EC2 metrics stop on
+  termination, RDS metrics stop on deletion,
+  Lambda metrics stop accumulating. The alarm
+  enters INSUFFICIENT_DATA and stays there. It
+  exists in the console with name, threshold,
+  and actions intact. It monitors nothing. With
+  hundreds of alarms in an account, decommissioned
+  alarms dilute attention: a real INSUFFICIENT_DATA
+  (a metric pipeline broken upstream of a live
+  resource) is hidden in a list of structurally
+  dead alarms.
+failure: >
+  Dead alarm. Alarm monitors a deleted resource —
+  permanent INSUFFICIENT_DATA, no possible
+  recovery, attention dilution across the alarm
+  fleet.
+tests:
+  - name: alarm on decommissioned EC2 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:i-12345-CPU-High"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "i-12345-CPU-High"
+            alarm_metric_name: "CPUUtilization"
+            alarm_metric_namespace: "AWS/EC2"
+            alarm_metric_dimensions:
+              - Name: "InstanceId"
+                Value: "i-12345"
+            monitored_resource_exists: false
+            is_decommissioned_alarm: true
+  - name: alarm on live EC2 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:i-67890-CPU-High"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "i-67890-CPU-High"
+            alarm_metric_name: "CPUUtilization"
+            alarm_metric_namespace: "AWS/EC2"
+            alarm_metric_dimensions:
+              - Name: "InstanceId"
+                Value: "i-67890"
+            monitored_resource_exists: true
+            is_decommissioned_alarm: false

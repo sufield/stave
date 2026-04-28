@@ -1,0 +1,127 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.CROSSACCOUNT.DESTINATION.OPEN.001
+name: CloudWatch Logs Cross-Account Destination Allows Any Account
+description: >
+  CloudWatch Logs cross-account destination has
+  an access policy that allows subscription
+  filters from any AWS account. Without account
+  restriction or aws:PrincipalOrgID, any account
+  can stream log events to this destination,
+  contaminating the centralized log aggregation
+  with attacker-controlled streams that mix into
+  the legitimate log flow.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.4"
+  soc2: "CC6.1, CC6.6, CC7.1"
+  nist_800_53_r5: "AC-3, AC-4, AU-9"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AU-9"
+  iso_27001_2022: "A.5.15, A.8.15"
+  ccm_v4: ["IAM-09", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: cross_account
+    multiplier: 3.0
+remediation:
+  description: >
+    Cross-account destination accepts streams
+    from any account. Centralized logging is
+    contaminable.
+  action: >
+    Replace the destination policy with an
+    explicit account allow-list, or add an
+    aws:PrincipalOrgID condition restricting
+    sources to the organization. Apply via
+    aws logs put-destination-policy
+    --destination-name <name> --access-policy
+    <json>. Audit any subscription filters
+    already targeting the destination from
+    accounts not currently expected — those
+    streams may have been established while the
+    policy was open.
+  example: |
+    {
+      "monitoring": {
+        "kind": "log_destination",
+        "cloudwatch": {
+          "destination_name": "central-security-logs",
+          "destination_arn": "arn:aws:logs:us-east-1:444455556666:destination:central-security-logs",
+          "destination_policy_public": false,
+          "destination_allowed_accounts": ["111122223333", "777788889999"],
+          "destination_has_org_condition": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: log_destination
+    - field: properties.monitoring.cloudwatch.destination_policy_public
+      op: eq
+      value: true
+defect: >
+  CloudWatch Logs destination allows subscription
+  filters from any AWS account.
+infection: >
+  Cross-account destinations receive log streams
+  from subscription filters in other accounts.
+  The destination's access policy determines
+  which accounts can send logs. Without account
+  restriction or PrincipalOrgID, any AWS account
+  can create a subscription filter targeting
+  this destination — the attacker's account
+  streams logs alongside legitimate accounts,
+  mixing attacker-controlled events with real
+  security and operational data. If the
+  destination feeds a SIEM or analytics
+  pipeline, the attacker injects data into the
+  organization's security analysis. If the
+  destination is a centralized logging account,
+  the contamination spans the audit trail
+  across the org.
+failure: >
+  Cross-account log injection. Any account can
+  stream logs to the centralized destination —
+  contaminating the organization's log
+  aggregation.
+tests:
+  - name: open destination policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:444455556666:destination:central-security-logs"
+      asset_type: aws_log_destination
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_destination
+          cloudwatch:
+            destination_name: "central-security-logs"
+            destination_arn: "arn:aws:logs:us-east-1:444455556666:destination:central-security-logs"
+            destination_policy_public: true
+            destination_allowed_accounts: ["*"]
+            destination_has_org_condition: false
+  - name: org-restricted destination passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:444455556666:destination:central-security-logs"
+      asset_type: aws_log_destination
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_destination
+          cloudwatch:
+            destination_name: "central-security-logs"
+            destination_arn: "arn:aws:logs:us-east-1:444455556666:destination:central-security-logs"
+            destination_policy_public: false
+            destination_allowed_accounts: ["111122223333", "777788889999"]
+            destination_has_org_condition: true

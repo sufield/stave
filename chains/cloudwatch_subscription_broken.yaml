@@ -1,0 +1,21 @@
+id: cloudwatch_subscription_broken
+description: >
+  Subscription filter ghost references at any of
+  the three destination types: deleted Kinesis
+  stream, deleted Lambda function, or deleted
+  Firehose delivery stream. Each independently
+  means matched log events are silently dropped
+  before reaching the downstream consumer.
+  Threshold of 1 because a single ghost
+  destination breaks an entire log streaming
+  pipeline at the destination link.
+controls:
+  - CTL.CLOUDWATCH.GHOST.SUBSCRIPTION.KINESIS.001
+  - CTL.CLOUDWATCH.GHOST.SUBSCRIPTION.LAMBDA.001
+  - CTL.CLOUDWATCH.SUBSCRIPTION.GHOST.FIREHOSE.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

@@ -1,0 +1,131 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.SUBSCRIPTION.GHOST.FIREHOSE.001
+name: Subscription Filter References Deleted Kinesis Firehose
+description: >
+  CloudWatch Logs subscription filter delivers
+  log events to a Kinesis Data Firehose delivery
+  stream that has been deleted. The filter
+  matches log events; delivery fails; events are
+  silently dropped before reaching the downstream
+  destination (S3, Redshift, OpenSearch, Splunk).
+  Extends the ghost reference family alongside
+  the deleted-Kinesis and deleted-Lambda
+  subscription destination controls.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  cis_aws_v3.0: "3.4"
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "AU-9, CM-2, CM-3, SI-4"
+  pci_dss_v4.0: "10.5, 10.6"
+  fedramp_moderate: "AU-9, SI-4"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Subscription filter targets a deleted
+    Firehose. Matched log events are silently
+    dropped.
+  action: >
+    Either recreate the Firehose delivery stream
+    with the same ARN, repoint the subscription
+    filter at an existing Firehose, or delete
+    the orphan filter: aws logs
+    delete-subscription-filter --log-group-name
+    <name> --filter-name <filter>. After fix,
+    confirm by triggering a matching log event
+    and verifying it lands in the Firehose's
+    downstream destination.
+  example: |
+    {
+      "monitoring": {
+        "kind": "subscription_filter",
+        "cloudwatch": {
+          "subscription_filter_name": "ToFirehose",
+          "subscription_destination_arn": "arn:aws:firehose:us-east-1:111122223333:deliverystream/sec-archive",
+          "subscription_destination_type": "firehose",
+          "subscription_destination_exists": true,
+          "has_ghost_subscription_dest": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: subscription_filter
+    - field: properties.monitoring.cloudwatch.subscription_destination_type
+      op: eq
+      value: firehose
+    - field: properties.monitoring.cloudwatch.has_ghost_subscription_dest
+      op: eq
+      value: true
+defect: >
+  Subscription filter delivers to a deleted
+  Kinesis Firehose delivery stream.
+infection: >
+  Firehose is a common subscription destination
+  for SIEM ingestion (S3 archival, Redshift
+  analytics, OpenSearch indexing, Splunk
+  forwarding). When the Firehose stream is
+  deleted, the subscription filter has no
+  delivery target. Matched events are silently
+  dropped — the filter continues to evaluate
+  log events, the metric filter pattern
+  continues to match, but the subscription
+  pipeline drops everything past the deletion.
+  No error is surfaced to the source log group.
+  Downstream consumers stop receiving data;
+  whether they notice depends on whether they
+  have their own freshness alarms. For SIEM
+  pipelines whose only data feed is the
+  subscription, the detection blackout is
+  total.
+failure: >
+  Logs lost between filter and SIEM. Subscription
+  filter targets a deleted Firehose; matched
+  events silently dropped before reaching
+  downstream archival or analysis.
+tests:
+  - name: subscription filter on deleted Firehose fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:ToFirehose"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "ToFirehose"
+            subscription_destination_arn: "arn:aws:firehose:us-east-1:111122223333:deliverystream/sec-archive"
+            subscription_destination_type: "firehose"
+            subscription_destination_exists: false
+            has_ghost_subscription_dest: true
+  - name: subscription filter on live Firehose passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:subscription-filter:ToFirehose"
+      asset_type: aws_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription_filter_name: "ToFirehose"
+            subscription_destination_arn: "arn:aws:firehose:us-east-1:111122223333:deliverystream/sec-archive"
+            subscription_destination_type: "firehose"
+            subscription_destination_exists: true
+            has_ghost_subscription_dest: false

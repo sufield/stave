@@ -1,0 +1,144 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.CROSSACCOUNT.RETENTION.INCONSISTENT.001
+name: Cross-Account Log Aggregation Has Inconsistent Retention
+description: >
+  CloudWatch Logs are aggregated from member
+  accounts to a centralized logging account, but
+  source and destination retention periods
+  disagree. Source may retain longer than
+  destination (logs disappear earlier in the
+  centralized account than the source intended)
+  or destination may retain longer than source
+  (data minimization violated, logs persist
+  beyond the source's policy).
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC7.1"
+  nist_800_53_r5: "AU-11, SI-12"
+  pci_dss_v4.0: "10.5.1, 10.7"
+  hipaa: "164.312(b), 164.316(b)(2)(i)"
+  iso_27001_2022: "A.5.16, A.8.10"
+  ccm_v4: ["LOG-12"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: governance
+    scope: cross_account
+    multiplier: 1.5
+remediation:
+  description: >
+    Source and destination log group retentions
+    do not match. Centralized aggregation has
+    a different retention horizon than the
+    source.
+  action: >
+    Decide on the canonical retention horizon
+    for the data class (security audit, ops
+    debug, application access) and apply it
+    consistently to source and destination log
+    groups: aws logs put-retention-policy
+    --log-group-name <name> --retention-in-days
+    <days>. Use Organizations SCPs or
+    config-as-code to keep retention aligned
+    automatically as new log groups are
+    provisioned.
+  example: |
+    {
+      "monitoring": {
+        "kind": "crossaccount_aggregation",
+        "cloudwatch": {
+          "source_log_group": "/aws/lambda/checkout",
+          "source_retention_days": 365,
+          "destination_retention_days": 365,
+          "retention_inconsistent": false,
+          "retention_gap_days": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: crossaccount_aggregation
+    - field: properties.monitoring.cloudwatch.retention_inconsistent
+      op: eq
+      value: true
+defect: >
+  Cross-account log aggregation source and
+  destination retention disagree.
+infection: >
+  When logs flow from a source account to a
+  centralized destination, two retention
+  policies apply: the source log group's policy
+  governs how long the source keeps the data,
+  and the destination log group's policy governs
+  how long the centralized account keeps it.
+  If the destination retains less than the
+  source, investigation queries against the
+  centralized account miss data that's still
+  available in the source — the centralized
+  view is incomplete. If the destination
+  retains longer than the source, data
+  minimization commitments are violated: the
+  source committed to deleting after N days
+  but the destination keeps the data longer.
+  Both directions are governance findings; the
+  fix is to align retention or document the
+  intentional gap.
+failure: >
+  Retention horizons disagree across the
+  aggregation. Centralized investigation either
+  misses available data or retains data beyond
+  the source's commitment.
+tests:
+  - name: destination retains less than source fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/checkout/aggregation"
+      asset_type: aws_crossaccount_aggregation
+      vendor: aws
+      properties:
+        monitoring:
+          kind: crossaccount_aggregation
+          cloudwatch:
+            source_log_group: "/aws/lambda/checkout"
+            source_retention_days: 365
+            destination_retention_days: 30
+            retention_inconsistent: true
+            retention_gap_days: 335
+  - name: matching retention passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/checkout/aggregation"
+      asset_type: aws_crossaccount_aggregation
+      vendor: aws
+      properties:
+        monitoring:
+          kind: crossaccount_aggregation
+          cloudwatch:
+            source_log_group: "/aws/lambda/checkout"
+            source_retention_days: 365
+            destination_retention_days: 365
+            retention_inconsistent: false
+            retention_gap_days: 0
+  - name: destination retains longer than source fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/checkout/aggregation"
+      asset_type: aws_crossaccount_aggregation
+      vendor: aws
+      properties:
+        monitoring:
+          kind: crossaccount_aggregation
+          cloudwatch:
+            source_log_group: "/aws/lambda/checkout"
+            source_retention_days: 30
+            destination_retention_days: 365
+            retention_inconsistent: true
+            retention_gap_days: 335

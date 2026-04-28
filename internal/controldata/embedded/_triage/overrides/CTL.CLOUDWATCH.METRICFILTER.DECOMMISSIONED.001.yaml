@@ -1,0 +1,24 @@
+control: CTL.CLOUDWATCH.METRICFILTER.DECOMMISSIONED.001
+defect: >
+  Metric filter monitors a log group whose source
+  service has been decommissioned.
+infection: >
+  Metric filters survive their writer services.
+  When a Lambda function is deleted, the metric
+  filter on /aws/lambda/<function-name> remains.
+  The log group may still exist (with historical
+  data) or may have been deleted, but the filter
+  is configured against a service that no longer
+  operates. The filter contributes nothing — no
+  events arrive, no metric data is published —
+  but it consumes governance attention,
+  contributes to filter-quota usage, and may
+  produce confusing metric histories if the log
+  group is reused for a different service. Pure
+  governance clutter rather than a security
+  failure.
+failure: >
+  Filter evaluates nothing. The service that
+  wrote to the monitored log group has been
+  decommissioned; the filter is stale
+  configuration with no functional purpose.

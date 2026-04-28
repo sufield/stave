@@ -1,0 +1,143 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.LOGGROUP.POLICY.CROSSACCOUNT.001
+name: Log Group Resource Policy Grants Cross-Account Access Without Org Boundary
+description: >
+  CloudWatch Logs log group resource policy
+  grants logs:PutLogEvents or logs:GetLogEvents
+  to principals in external accounts without
+  aws:PrincipalOrgID condition. External accounts
+  can write to or read from the log group
+  regardless of current organizational
+  membership.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.4"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, AU-9"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AU-9"
+  iso_27001_2022: "A.5.15, A.8.15"
+  ccm_v4: ["IAM-09", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: cross_account
+    multiplier: 2.5
+remediation:
+  description: >
+    Log group resource policy grants cross-
+    account access without organizational
+    boundary verification.
+  action: >
+    Add an aws:PrincipalOrgID condition to the
+    resource policy restricting access to the
+    organization. If specific external accounts
+    legitimately need access, enumerate them as
+    Principal and document the exception.
+    Replace the policy via aws logs
+    put-resource-policy --policy-name <name>
+    --policy-document <json>.
+  example: |
+    {
+      "monitoring": {
+        "kind": "log_group",
+        "cloudwatch": {
+          "log_group_name": "/aws/lambda/checkout",
+          "resource_policy_cross_account": true,
+          "resource_policy_has_org": true,
+          "resource_policy_external_accounts": ["111122223333"],
+          "resource_policy_actions": ["logs:GetLogEvents"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: log_group
+    - field: properties.monitoring.cloudwatch.resource_policy_cross_account
+      op: eq
+      value: true
+    - field: properties.monitoring.cloudwatch.resource_policy_has_org
+      op: eq
+      value: false
+defect: >
+  Log group resource policy grants cross-account
+  access without aws:PrincipalOrgID.
+infection: >
+  Cross-account log group access without
+  organizational boundary means the external
+  account interacts with the log group regardless
+  of current org membership. For PutLogEvents,
+  the external account can write log entries —
+  injecting data into the log group, the same
+  injection failure mode as
+  LOGGROUP.POLICY.PUBLIC.001 but scoped to a
+  specific external account. For GetLogEvents,
+  the external account can read log data —
+  potentially containing PII, credentials in
+  application output, security events, or
+  internal system details. PrincipalOrgID
+  ensures only accounts currently in the
+  organization can access the log group; if an
+  account leaves the organization, its access
+  ends automatically rather than persisting in
+  a forgotten policy entry.
+failure: >
+  Log group access outside org boundary.
+  External accounts can write to or read from
+  the log group without organizational
+  membership verification.
+tests:
+  - name: cross-account without OrgID fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/checkout"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/lambda/checkout"
+            resource_policy_cross_account: true
+            resource_policy_has_org: false
+            resource_policy_external_accounts: ["444455556666"]
+            resource_policy_actions: ["logs:GetLogEvents"]
+  - name: cross-account with OrgID passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/checkout"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/lambda/checkout"
+            resource_policy_cross_account: true
+            resource_policy_has_org: true
+            resource_policy_external_accounts: ["444455556666"]
+            resource_policy_actions: ["logs:GetLogEvents"]
+  - name: same-account log group does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/checkout"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/lambda/checkout"
+            resource_policy_cross_account: false
+            resource_policy_has_org: false
+            resource_policy_external_accounts: []
+            resource_policy_actions: []

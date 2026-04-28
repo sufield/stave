@@ -1,0 +1,25 @@
+control: CTL.CLOUDWATCH.ALARM.EMAILONLY.001
+defect: >
+  Critical CloudWatch alarm uses an SNS topic
+  with email-only subscribers.
+infection: >
+  Email is a best-effort notification channel.
+  Delivery delays, spam filtering, full inboxes,
+  and off-hours-only-checked accounts all reduce
+  the probability of timely receipt. For
+  informational and low-severity alarms, email
+  is fine — the response time tolerance is
+  measured in days. For critical security
+  alarms (root login, KMS deletion, CloudTrail
+  StopLogging), the response window is minutes
+  to hours; email is not reliable enough. The
+  alarm fires, the email is sent, and the
+  message sits unread in an inbox while the
+  attacker continues. Adding even one paging-
+  grade channel (PagerDuty, OpsGenie) shifts
+  the worst-case detection-to-response time
+  from "next business day" to "minutes."
+failure: >
+  Critical alert delivered only by email. Time-
+  sensitive notifications depend on someone
+  reading their inbox.

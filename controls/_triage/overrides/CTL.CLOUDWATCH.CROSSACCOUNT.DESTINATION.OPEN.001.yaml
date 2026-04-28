@@ -1,0 +1,26 @@
+control: CTL.CLOUDWATCH.CROSSACCOUNT.DESTINATION.OPEN.001
+defect: >
+  CloudWatch Logs destination allows subscription
+  filters from any AWS account.
+infection: >
+  Cross-account destinations receive log streams
+  from subscription filters in other accounts.
+  The destination's access policy determines
+  which accounts can send logs. Without account
+  restriction or PrincipalOrgID, any AWS account
+  can create a subscription filter targeting
+  this destination — the attacker's account
+  streams logs alongside legitimate accounts,
+  mixing attacker-controlled events with real
+  security and operational data. If the
+  destination feeds a SIEM or analytics
+  pipeline, the attacker injects data into the
+  organization's security analysis. If the
+  destination is a centralized logging account,
+  the contamination spans the audit trail
+  across the org.
+failure: >
+  Cross-account log injection. Any account can
+  stream logs to the centralized destination —
+  contaminating the organization's log
+  aggregation.

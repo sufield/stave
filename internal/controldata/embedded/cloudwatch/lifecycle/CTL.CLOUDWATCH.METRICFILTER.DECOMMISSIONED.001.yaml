@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.METRICFILTER.DECOMMISSIONED.001
+name: Metric Filter Monitors Decommissioned Service
+description: >
+  CloudWatch metric filter is on a log group whose
+  source service has been decommissioned — the
+  Lambda function was deleted, the ECS service
+  was removed, the API Gateway was shut down. The
+  log group may still exist (orphaned) or may
+  have been recreated for a different service.
+  The filter evaluates events from a service that
+  no longer runs.
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8, SA-22"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Metric filter monitors a log group whose
+    writer service was deleted. The filter
+    evaluates nothing useful.
+  action: >
+    Confirm the source service is gone and not
+    being recreated under a different name.
+    Delete the metric filter (aws logs
+    delete-metric-filter --log-group-name <name>
+    --filter-name <filter>) and any alarms that
+    used the metric. If the log group itself is
+    also orphaned, delete it (LOGGROUP.ORPHAN
+    catches that separately).
+  example: |
+    {
+      "monitoring": {
+        "kind": "metric_filter",
+        "cloudwatch": {
+          "metric_filter_name": "OldFunctionErrors",
+          "log_group_name": "/aws/lambda/old-function",
+          "log_group_service": "lambda",
+          "log_group_service_exists": false,
+          "is_decommissioned_filter": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: metric_filter
+    - field: properties.monitoring.cloudwatch.is_decommissioned_filter
+      op: eq
+      value: true
+defect: >
+  Metric filter monitors a log group whose source
+  service has been decommissioned.
+infection: >
+  Metric filters survive their writer services.
+  When a Lambda function is deleted, the metric
+  filter on /aws/lambda/<function-name> remains.
+  The log group may still exist (with historical
+  data) or may have been deleted, but the filter
+  is configured against a service that no longer
+  operates. The filter contributes nothing — no
+  events arrive, no metric data is published —
+  but it consumes governance attention,
+  contributes to filter-quota usage, and may
+  produce confusing metric histories if the log
+  group is reused for a different service. Pure
+  governance clutter rather than a security
+  failure.
+failure: >
+  Filter evaluates nothing. The service that
+  wrote to the monitored log group has been
+  decommissioned; the filter is stale
+  configuration with no functional purpose.
+tests:
+  - name: filter on decommissioned service fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:metric-filter:OldFunctionErrors"
+      asset_type: aws_metric_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: metric_filter
+          cloudwatch:
+            metric_filter_name: "OldFunctionErrors"
+            log_group_name: "/aws/lambda/old-function"
+            log_group_service: "lambda"
+            log_group_service_exists: false
+            is_decommissioned_filter: true
+  - name: filter on active service passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:metric-filter:CheckoutErrors"
+      asset_type: aws_metric_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: metric_filter
+          cloudwatch:
+            metric_filter_name: "CheckoutErrors"
+            log_group_name: "/aws/lambda/checkout"
+            log_group_service: "lambda"
+            log_group_service_exists: true
+            is_decommissioned_filter: false

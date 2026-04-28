@@ -1,0 +1,27 @@
+control: CTL.CLOUDWATCH.METRICFILTER.NODEFAULT.001
+defect: >
+  Metric filter has no default value; quiet
+  periods publish no data point.
+infection: >
+  CloudWatch metric filters publish a data point
+  only when at least one log event matches in the
+  evaluation period. Without a default value,
+  quiet periods produce no metric data. The alarm
+  reading the metric has nothing to evaluate and
+  enters INSUFFICIENT_DATA. With
+  TreatMissingData: notBreaching (a frequent
+  default and the subject of CW-1's
+  ALARM.MISSINGDATA.NOTBREACHING control), the
+  alarm stays in OK state — a quiet metric is
+  treated the same as a healthy metric. Setting
+  a default value of 0 lets the filter publish
+  during quiet periods, alarms evaluate normally,
+  and the OK state actually means "evaluated and
+  below threshold" rather than "no data, assumed
+  fine."
+failure: >
+  Quiet metric publishes no data. Downstream
+  alarm cannot evaluate; combined with
+  notBreaching missing-data treatment, the
+  detection silently produces a permanent OK
+  state.

@@ -1,0 +1,24 @@
+control: CTL.CLOUDWATCH.ORPHAN.LOGGROUP.SERVICE.001
+defect: >
+  CloudWatch log group exists for a service
+  resource that has been deleted.
+infection: >
+  AWS service-managed log groups follow naming
+  conventions: /aws/lambda/<function-name>,
+  /aws/ecs/<cluster-name>, /aws/apigateway/
+  <api-id>, /aws/codebuild/<project-name>. When
+  the underlying resource is deleted, the log
+  group is not auto-removed. The historical log
+  data persists, the log group counts toward
+  service quotas, and storage cost continues to
+  accrue. CTL.CLOUDWATCH.LOGGROUP.ORPHAN.001
+  catches dormancy by no recent events; this
+  control catches the structural orphan pattern
+  by name correlation. Both can fire on the
+  same log group — different framings of the
+  same problem at different timescales.
+failure: >
+  Service-prefix log group with a deleted
+  source. Log group is structurally orphaned
+  even if it has not yet hit the dormancy
+  threshold.

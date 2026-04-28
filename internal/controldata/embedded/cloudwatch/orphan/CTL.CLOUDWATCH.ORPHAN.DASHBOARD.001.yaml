@@ -1,0 +1,121 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ORPHAN.DASHBOARD.001
+name: CloudWatch Dashboard Not Viewed in 90+ Days
+description: >
+  CloudWatch dashboard exists but has not been
+  viewed in 90+ days. The dashboard auto-refreshes
+  on each load (API calls drive cost), shows
+  metrics nobody consults, and may reference
+  deleted alarms or metrics (ghost widgets that
+  display empty panels). A dashboard nobody
+  watches is governance clutter and a small but
+  steady operational expense.
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, SA-22"
+  iso_27001_2022: "A.5.9"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Dashboard has not been viewed in 90+ days.
+    Either it was created for a one-off
+    investigation and never deleted, or its
+    audience moved on without removing it.
+  action: >
+    Confirm no team or process depends on the
+    dashboard (search internal documentation,
+    on-call runbooks, and team wikis for the
+    dashboard name or URL). If unused, delete:
+    aws cloudwatch delete-dashboards
+    --dashboard-names <name>. If the dashboard
+    is still relevant but underused, surface it
+    in team standups so the audience knows it
+    exists.
+  example: |
+    {
+      "monitoring": {
+        "kind": "dashboard",
+        "cloudwatch": {
+          "dashboard_name": "old-product-metrics",
+          "dashboard_last_viewed_days": 5,
+          "is_dormant_dashboard": false,
+          "dashboard_widget_count": 12
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: dashboard
+    - field: properties.monitoring.cloudwatch.is_dormant_dashboard
+      op: eq
+      value: true
+defect: >
+  CloudWatch dashboard has not been viewed in
+  90+ days.
+infection: >
+  Dashboards are created during launches,
+  incidents, and roadshows. Their audience
+  rarely outlives the moment that motivated
+  them: an incident dashboard outlasts the
+  incident, a launch dashboard outlasts the
+  launch, an investigation dashboard outlasts
+  the investigation. Once nobody is watching,
+  the dashboard becomes governance clutter —
+  it appears in dashboard listings, contributes
+  to dashboard quotas, and incurs API cost on
+  the rare automated refresh. Widgets may
+  reference deleted alarms or removed metrics,
+  showing empty panels that nobody notices
+  because nobody is looking. The 90-day
+  threshold matches the dormancy convention
+  used elsewhere in the catalog (Lambda, IAM,
+  KMS, log groups).
+failure: >
+  Dormant dashboard. Nobody watches the metrics;
+  governance attention and minor cost accrue
+  with no offsetting value.
+tests:
+  - name: dashboard not viewed for 120 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch::111122223333:dashboard/old-product-metrics"
+      asset_type: aws_cloudwatch_dashboard
+      vendor: aws
+      properties:
+        monitoring:
+          kind: dashboard
+          cloudwatch:
+            dashboard_name: "old-product-metrics"
+            dashboard_last_viewed_days: 120
+            is_dormant_dashboard: true
+            dashboard_widget_count: 12
+  - name: actively viewed dashboard passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch::111122223333:dashboard/checkout-overview"
+      asset_type: aws_cloudwatch_dashboard
+      vendor: aws
+      properties:
+        monitoring:
+          kind: dashboard
+          cloudwatch:
+            dashboard_name: "checkout-overview"
+            dashboard_last_viewed_days: 5
+            is_dormant_dashboard: false
+            dashboard_widget_count: 18

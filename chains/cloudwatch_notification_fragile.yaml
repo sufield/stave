@@ -1,0 +1,27 @@
+id: cloudwatch_notification_fragile
+description: >
+  Notification path is both fragile and weak:
+  many critical alarms share one SNS topic
+  (single point of failure), the topic is
+  already a ghost reference (deletion has
+  already happened), or alarms use email-only
+  notification (best-effort delivery for
+  time-sensitive alerts). Two or more of these
+  together describe a fleet whose alarm-to-
+  operator path may not deliver — either
+  because a single deletion silences all
+  alarms simultaneously or because the
+  remaining channel can't be relied on for
+  paging-grade response. Threshold of 2 because
+  one issue is a configuration choice; two is
+  a structural reliability gap.
+controls:
+  - CTL.CLOUDWATCH.ALARM.SAMETOPIC.BLAST.001
+  - CTL.SNS.GHOST.ALARM.001
+  - CTL.CLOUDWATCH.ALARM.EMAILONLY.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

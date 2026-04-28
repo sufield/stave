@@ -1,0 +1,125 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.METRICFILTER.NODEFAULT.001
+name: Metric Filter Has No Default Value
+description: >
+  CloudWatch metric filter does not have a default
+  value configured. When no log events match the
+  filter pattern in an evaluation period, the
+  metric publishes NO data point — not zero, no
+  data. Alarms based on the metric enter
+  INSUFFICIENT_DATA instead of evaluating the
+  threshold. Combined with TreatMissingData:
+  notBreaching (CW-1), the alarm stays in OK
+  state silently. Combined with
+  TreatMissingData: missing, the alarm enters
+  INSUFFICIENT_DATA permanently if no events
+  ever match.
+domain: audit
+severity: medium
+compliance:
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Metric filter has no default value. Quiet
+    periods publish no data and the downstream
+    alarm cannot evaluate.
+  action: >
+    Set a default value of 0 on the metric
+    filter: aws logs put-metric-filter
+    --metric-transformations
+    metricName=...,metricNamespace=...,metricValue=1,defaultValue=0.
+    This way the metric publishes 0 when no
+    events match, the alarm has data to evaluate,
+    and threshold logic works as expected. After
+    update, validate the metric data shows a
+    continuous series rather than gaps.
+  example: |
+    {
+      "monitoring": {
+        "kind": "metric_filter",
+        "cloudwatch": {
+          "metric_filter_name": "RootLoginFilter",
+          "metric_name": "RootLogin",
+          "metric_default_value": 0,
+          "has_default_value": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: metric_filter
+    - field: properties.monitoring.cloudwatch.has_default_value
+      op: eq
+      value: false
+defect: >
+  Metric filter has no default value; quiet
+  periods publish no data point.
+infection: >
+  CloudWatch metric filters publish a data point
+  only when at least one log event matches in the
+  evaluation period. Without a default value,
+  quiet periods produce no metric data. The alarm
+  reading the metric has nothing to evaluate and
+  enters INSUFFICIENT_DATA. With
+  TreatMissingData: notBreaching (a frequent
+  default and the subject of CW-1's
+  ALARM.MISSINGDATA.NOTBREACHING control), the
+  alarm stays in OK state — a quiet metric is
+  treated the same as a healthy metric. Setting
+  a default value of 0 lets the filter publish
+  during quiet periods, alarms evaluate normally,
+  and the OK state actually means "evaluated and
+  below threshold" rather than "no data, assumed
+  fine."
+failure: >
+  Quiet metric publishes no data. Downstream
+  alarm cannot evaluate; combined with
+  notBreaching missing-data treatment, the
+  detection silently produces a permanent OK
+  state.
+tests:
+  - name: metric filter without default value fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:metric-filter:RootLoginFilter"
+      asset_type: aws_metric_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: metric_filter
+          cloudwatch:
+            metric_filter_name: "RootLoginFilter"
+            metric_name: "RootLogin"
+            has_default_value: false
+  - name: metric filter with default value 0 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:metric-filter:RootLoginFilter"
+      asset_type: aws_metric_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: metric_filter
+          cloudwatch:
+            metric_filter_name: "RootLoginFilter"
+            metric_name: "RootLogin"
+            metric_default_value: 0
+            has_default_value: true

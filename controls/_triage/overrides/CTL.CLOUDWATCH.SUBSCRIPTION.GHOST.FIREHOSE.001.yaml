@@ -1,0 +1,27 @@
+control: CTL.CLOUDWATCH.SUBSCRIPTION.GHOST.FIREHOSE.001
+defect: >
+  Subscription filter delivers to a deleted
+  Kinesis Firehose delivery stream.
+infection: >
+  Firehose is a common subscription destination
+  for SIEM ingestion (S3 archival, Redshift
+  analytics, OpenSearch indexing, Splunk
+  forwarding). When the Firehose stream is
+  deleted, the subscription filter has no
+  delivery target. Matched events are silently
+  dropped — the filter continues to evaluate
+  log events, the metric filter pattern
+  continues to match, but the subscription
+  pipeline drops everything past the deletion.
+  No error is surfaced to the source log group.
+  Downstream consumers stop receiving data;
+  whether they notice depends on whether they
+  have their own freshness alarms. For SIEM
+  pipelines whose only data feed is the
+  subscription, the detection blackout is
+  total.
+failure: >
+  Logs lost between filter and SIEM. Subscription
+  filter targets a deleted Firehose; matched
+  events silently dropped before reaching
+  downstream archival or analysis.

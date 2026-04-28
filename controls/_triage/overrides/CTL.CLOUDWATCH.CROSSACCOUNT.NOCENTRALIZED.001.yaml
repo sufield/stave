@@ -1,0 +1,26 @@
+control: CTL.CLOUDWATCH.CROSSACCOUNT.NOCENTRALIZED.001
+defect: >
+  AWS Organizations with member accounts has no
+  centralized CloudWatch Logs aggregation.
+infection: >
+  Without centralized logging, each member
+  account stores its own logs (Lambda logs in
+  account A, ECS logs in account B, API Gateway
+  logs in account C). Security investigation
+  requires logging into each account, querying
+  each account's log groups, correlating
+  timestamps across accounts manually, and
+  assembling the complete picture from N
+  separate data sources. Compliance audit and
+  incident response both suffer the same
+  fragmentation. A centralized logging account
+  aggregates logs from all member accounts via
+  cross-account subscription filters or
+  CloudWatch cross-account observability,
+  providing a single location for organization-
+  wide queries and a single retention surface
+  to govern.
+failure: >
+  Fragmented logging. Each account stores its
+  own logs — no single view for security
+  investigation or compliance audit.

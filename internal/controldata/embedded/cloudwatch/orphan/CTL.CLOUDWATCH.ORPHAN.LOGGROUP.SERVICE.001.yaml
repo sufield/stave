@@ -1,0 +1,133 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ORPHAN.LOGGROUP.SERVICE.001
+name: Log Group Exists for Decommissioned Service
+description: >
+  CloudWatch Logs log group follows a standard
+  service prefix (/aws/lambda/<function-name>,
+  /aws/ecs/<cluster>, /aws/apigateway/<api>) but
+  the corresponding service resource has been
+  deleted. The log group keeps historical events
+  from the deleted service and persists
+  indefinitely unless explicitly deleted. Cost
+  accrues, governance attention scales with the
+  number of orphans, and the log group may be
+  reused for an unrelated service later
+  (confusing log content).
+domain: governance
+severity: low
+archetype: dormant-resource
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8, SA-22"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Log group named for a deleted service. The
+    log group remains while the writer is gone.
+  action: >
+    Confirm the service resource (Lambda
+    function, ECS cluster, API Gateway) was
+    intentionally decommissioned. If logs are
+    needed for compliance, archive to S3 (aws
+    logs create-export-task) before deleting.
+    Then delete: aws logs delete-log-group
+    --log-group-name <name>. Note that the
+    different service prefixes have different
+    deletion patterns — Lambda log groups can
+    auto-recreate when a function with the same
+    name is redeployed, so deleting must
+    coincide with confirming the function will
+    not return.
+  example: |
+    {
+      "monitoring": {
+        "kind": "log_group",
+        "cloudwatch": {
+          "log_group_name": "/aws/lambda/old-function",
+          "log_group_service_prefix": "lambda",
+          "log_group_service_resource": "old-function",
+          "service_resource_exists": false,
+          "has_orphan_service": true,
+          "stored_bytes": 524288000
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: log_group
+    - field: properties.monitoring.cloudwatch.has_orphan_service
+      op: eq
+      value: true
+defect: >
+  CloudWatch log group exists for a service
+  resource that has been deleted.
+infection: >
+  AWS service-managed log groups follow naming
+  conventions: /aws/lambda/<function-name>,
+  /aws/ecs/<cluster-name>, /aws/apigateway/
+  <api-id>, /aws/codebuild/<project-name>. When
+  the underlying resource is deleted, the log
+  group is not auto-removed. The historical log
+  data persists, the log group counts toward
+  service quotas, and storage cost continues to
+  accrue. CTL.CLOUDWATCH.LOGGROUP.ORPHAN.001
+  catches dormancy by no recent events; this
+  control catches the structural orphan pattern
+  by name correlation. Both can fire on the
+  same log group — different framings of the
+  same problem at different timescales (a
+  service deleted yesterday with weeks of
+  recent events: this control fires now,
+  ORPHAN.001 fires after 90 days).
+failure: >
+  Service-prefix log group with a deleted
+  source. Log group is structurally orphaned
+  even if it has not yet hit the dormancy
+  threshold.
+tests:
+  - name: log group for deleted Lambda fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/old-function"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/lambda/old-function"
+            log_group_service_prefix: "lambda"
+            log_group_service_resource: "old-function"
+            service_resource_exists: false
+            has_orphan_service: true
+            stored_bytes: 524288000
+  - name: log group for live Lambda passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/checkout"
+      asset_type: aws_log_group
+      vendor: aws
+      properties:
+        monitoring:
+          kind: log_group
+          cloudwatch:
+            log_group_name: "/aws/lambda/checkout"
+            log_group_service_prefix: "lambda"
+            log_group_service_resource: "checkout"
+            service_resource_exists: true
+            has_orphan_service: false
+            stored_bytes: 104857600

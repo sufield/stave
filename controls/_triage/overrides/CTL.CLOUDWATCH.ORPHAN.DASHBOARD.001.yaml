@@ -1,0 +1,25 @@
+control: CTL.CLOUDWATCH.ORPHAN.DASHBOARD.001
+defect: >
+  CloudWatch dashboard has not been viewed in
+  90+ days.
+infection: >
+  Dashboards are created during launches,
+  incidents, and roadshows. Their audience
+  rarely outlives the moment that motivated
+  them: an incident dashboard outlasts the
+  incident, a launch dashboard outlasts the
+  launch, an investigation dashboard outlasts
+  the investigation. Once nobody is watching,
+  the dashboard becomes governance clutter —
+  it appears in dashboard listings, contributes
+  to dashboard quotas, and incurs API cost on
+  the rare automated refresh. Widgets may
+  reference deleted alarms or removed metrics,
+  showing empty panels that nobody notices
+  because nobody is looking. The 90-day
+  threshold matches the dormancy convention
+  used elsewhere in the catalog.
+failure: >
+  Dormant dashboard. Nobody watches the metrics;
+  governance attention and minor cost accrue
+  with no offsetting value.

@@ -1,0 +1,140 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ALARM.EMAILONLY.001
+name: Critical CloudWatch Alarm Notifies Only by Email
+description: >
+  Critical or high-severity CloudWatch alarm
+  references an SNS topic whose only subscribers
+  are email addresses — no Slack/HTTPS webhook,
+  no PagerDuty integration, no Lambda function
+  for automation, no SQS for downstream
+  processing. Email delivery is best-effort:
+  delays, spam filters, full inboxes, and
+  off-hours all degrade response time on alerts
+  that need urgent attention.
+domain: audit
+severity: medium
+compliance:
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-5, IR-4, IR-6, SI-4"
+  pci_dss_v4.0: "12.10"
+  fedramp_moderate: "IR-4, IR-6"
+  iso_27001_2022: "A.5.24, A.5.30"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Critical alarm relies on email-only
+    notification. Time-sensitive alerts may be
+    missed.
+  action: >
+    Add at least one non-email subscriber to the
+    SNS topic: a Slack incoming-webhook HTTPS
+    endpoint, a PagerDuty integration URL, a
+    Lambda subscription for automation, or an
+    SQS queue feeding an on-call rotation. Keep
+    the email subscriber for audit trail; add
+    the high-availability channel for response.
+    For paging-grade alerts, prefer PagerDuty or
+    OpsGenie HTTPS endpoints over Slack
+    (Slack's reliability for paging is worse
+    than its perceived UX suggests).
+  example: |
+    {
+      "monitoring": {
+        "kind": "alarm",
+        "cloudwatch": {
+          "alarm_name": "RootLogin",
+          "alarm_action_arn": "arn:aws:sns:us-east-1:111122223333:critical-alerts",
+          "alarm_severity": "critical",
+          "alarm_sns_email_only": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: alarm
+    - field: properties.monitoring.cloudwatch.alarm_severity
+      op: in
+      value: ["critical", "high"]
+    - field: properties.monitoring.cloudwatch.alarm_sns_email_only
+      op: eq
+      value: true
+defect: >
+  Critical CloudWatch alarm uses an SNS topic
+  with email-only subscribers.
+infection: >
+  Email is a best-effort notification channel.
+  Delivery delays, spam filtering, full inboxes,
+  and off-hours-only-checked accounts all reduce
+  the probability of timely receipt. For
+  informational and low-severity alarms, email
+  is fine — the response time tolerance is
+  measured in days. For critical security
+  alarms (root login, KMS deletion, CloudTrail
+  StopLogging), the response window is minutes
+  to hours; email is not reliable enough. The
+  alarm fires, the email is sent, and the
+  message sits unread in an inbox while the
+  attacker continues. Adding even one paging-
+  grade channel (PagerDuty, OpsGenie) shifts
+  the worst-case detection-to-response time
+  from "next business day" to "minutes."
+failure: >
+  Critical alert delivered only by email. Time-
+  sensitive notifications depend on someone
+  reading their inbox.
+tests:
+  - name: critical alarm with email-only SNS fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:RootLogin"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "RootLogin"
+            alarm_action_arn: "arn:aws:sns:us-east-1:111122223333:critical-alerts"
+            alarm_severity: "critical"
+            alarm_sns_email_only: true
+  - name: critical alarm with HTTPS subscription passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:RootLogin"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "RootLogin"
+            alarm_action_arn: "arn:aws:sns:us-east-1:111122223333:critical-alerts"
+            alarm_severity: "critical"
+            alarm_sns_email_only: false
+  - name: low-severity email-only alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:DiskUsageWarning"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm
+          cloudwatch:
+            alarm_name: "DiskUsageWarning"
+            alarm_action_arn: "arn:aws:sns:us-east-1:111122223333:operational-alerts"
+            alarm_severity: "low"
+            alarm_sns_email_only: true

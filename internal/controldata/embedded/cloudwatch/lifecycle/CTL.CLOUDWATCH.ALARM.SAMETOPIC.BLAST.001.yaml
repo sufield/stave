@@ -1,0 +1,136 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ALARM.SAMETOPIC.BLAST.001
+name: Multiple Critical Alarms Share One SNS Topic
+description: >
+  More than five critical or high-severity
+  CloudWatch alarms reference the same SNS topic
+  for their alarm action. The topic is a single
+  point of failure for the entire group: one
+  topic deletion (or ghost — SNS.GHOST.ALARM)
+  silences all of those alarms simultaneously.
+  Blast radius scales with the number of alarms
+  sharing the topic.
+domain: audit
+severity: high
+compliance:
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "AU-6, IR-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Many critical alarms share one notification
+    topic. A single topic failure silences the
+    entire fleet.
+  action: >
+    Either split the alarms across multiple SNS
+    topics by severity or by domain (one topic
+    for security alarms, one for operational
+    alarms, one per service team), or add a
+    secondary backup topic to each critical
+    alarm so notifications survive a primary
+    topic deletion. Centralizing on one topic is
+    acceptable for low-severity alarms; critical
+    alarms should have at least two notification
+    paths.
+  example: |
+    {
+      "monitoring": {
+        "kind": "alarm_topic_aggregate",
+        "cloudwatch": {
+          "sns_topic_arn": "arn:aws:sns:us-east-1:111122223333:critical-alerts",
+          "alarms_referencing_topic": [
+            "RootLogin", "KMSKeyDeletion", "CloudTrailStop",
+            "S3PublicAccess", "ConsoleLogin", "UnauthorizedAPI",
+            "VPCRoutChange", "SGChange", "NACLChange", "FailedAuth"
+          ],
+          "alarm_count_for_topic": 10,
+          "has_single_topic_blast": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: alarm_topic_aggregate
+    - field: properties.monitoring.cloudwatch.has_single_topic_blast
+      op: eq
+      value: true
+defect: >
+  Many critical CloudWatch alarms reference the
+  same SNS topic for their alarm action.
+infection: >
+  Every alarm's notification depends on its SNS
+  topic. When N alarms reference the same topic:
+  a single topic deletion (or ghost reference —
+  SNS.GHOST.ALARM.001) breaks notification for
+  all N alarms simultaneously. The topic is a
+  single point of failure for the entire alarm
+  fleet. If the topic is deleted: all N alarms
+  fire silently. The team is blind to every
+  metric monitored by those alarms. Blast
+  radius is proportional to the number of
+  alarms — 10 alarms on one topic means one
+  deletion blinds 10 monitoring points. Critical
+  alarms should use at least 2 SNS topics
+  (primary + backup) or each alarm should have
+  an independent topic per domain.
+failure: >
+  Notification single point of failure. N alarms
+  share one SNS topic — topic deletion silences
+  all of them simultaneously.
+tests:
+  - name: ten critical alarms on one topic fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:critical-alerts"
+      asset_type: aws_alarm_topic_aggregate
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm_topic_aggregate
+          cloudwatch:
+            sns_topic_arn: "arn:aws:sns:us-east-1:111122223333:critical-alerts"
+            alarms_referencing_topic:
+              - "RootLogin"
+              - "KMSKeyDeletion"
+              - "CloudTrailStop"
+              - "S3PublicAccess"
+              - "ConsoleLogin"
+              - "UnauthorizedAPI"
+              - "VPCRouteChange"
+              - "SGChange"
+              - "NACLChange"
+              - "FailedAuth"
+            alarm_count_for_topic: 10
+            has_single_topic_blast: true
+  - name: alarms split across topics passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:security-alerts"
+      asset_type: aws_alarm_topic_aggregate
+      vendor: aws
+      properties:
+        monitoring:
+          kind: alarm_topic_aggregate
+          cloudwatch:
+            sns_topic_arn: "arn:aws:sns:us-east-1:111122223333:security-alerts"
+            alarms_referencing_topic:
+              - "RootLogin"
+              - "KMSKeyDeletion"
+            alarm_count_for_topic: 2
+            has_single_topic_blast: false

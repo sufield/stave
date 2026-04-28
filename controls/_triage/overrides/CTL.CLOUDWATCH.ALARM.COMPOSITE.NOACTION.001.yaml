@@ -1,0 +1,22 @@
+control: CTL.CLOUDWATCH.ALARM.COMPOSITE.NOACTION.001
+defect: >
+  Composite alarm has no actions configured.
+infection: >
+  Composite alarms exist to detect correlated
+  failures — multiple signals that individually
+  may be noise but together indicate a systemic
+  problem. A composite alarm without actions
+  detects the correlation but doesn't notify
+  anyone. The composite evaluates its rule. The
+  rule matches (e.g., two child alarms are both
+  in ALARM state). The composite transitions to
+  ALARM. Nobody is notified. Nobody is paged.
+  The systemic problem continues. Individual
+  child alarms may have their own actions —
+  but the composite alarm's value is the
+  CORRELATED detection. Without an action, the
+  correlation is detected and discarded.
+failure: >
+  Correlated detection without response.
+  Composite alarm detects systemic failure
+  across multiple signals — nobody is notified.

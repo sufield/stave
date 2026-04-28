@@ -1,0 +1,24 @@
+control: CTL.CLOUDWATCH.ALARM.SAMETOPIC.BLAST.001
+defect: >
+  Many critical CloudWatch alarms reference the
+  same SNS topic for their alarm action.
+infection: >
+  Every alarm's notification depends on its SNS
+  topic. When N alarms reference the same topic:
+  a single topic deletion (or ghost reference —
+  SNS.GHOST.ALARM.001) breaks notification for
+  all N alarms simultaneously. The topic is a
+  single point of failure for the entire alarm
+  fleet. If the topic is deleted: all N alarms
+  fire silently. The team is blind to every
+  metric monitored by those alarms. Blast
+  radius is proportional to the number of
+  alarms — 10 alarms on one topic means one
+  deletion blinds 10 monitoring points. Critical
+  alarms should use at least 2 SNS topics
+  (primary + backup) or each alarm should have
+  an independent topic per domain.
+failure: >
+  Notification single point of failure. N alarms
+  share one SNS topic — topic deletion silences
+  all of them simultaneously.

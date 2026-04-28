@@ -1,0 +1,23 @@
+control: CTL.CLOUDWATCH.METRICFILTER.NOALARM.001
+defect: >
+  Metric filter publishes a metric that no
+  CloudWatch alarm watches.
+infection: >
+  A metric filter without an alarm is a counter
+  without a reader. The filter evaluates every
+  log event against its pattern. Matching events
+  increment the metric. The metric value
+  increases. Nobody is notified when it crosses
+  a threshold. For security metric filters
+  (unauthorized API calls, root logins, KMS
+  deletions), this means security events are
+  COUNTED but not ALERTED. The data exists. The
+  detection is technically happening. The
+  response chain is severed at the alarm link —
+  no threshold evaluation, no action, no
+  notification.
+failure: >
+  Detection without alerting. Metric filter
+  counts events but no alarm evaluates the
+  count; security events never trigger a
+  notification.

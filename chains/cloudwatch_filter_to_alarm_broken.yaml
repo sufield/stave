@@ -1,0 +1,25 @@
+id: cloudwatch_filter_to_alarm_broken
+description: >
+  The metric-filter-to-alarm pipeline fails at
+  multiple points: the filter has no alarm
+  watching its metric, the filter publishes no
+  default value during quiet periods, or the
+  filter's log group has been deleted entirely.
+  Two or more of these together mean the chain
+  from log event to operator notification is
+  severed at multiple links — even if one link
+  were repaired, others would still block the
+  signal. Threshold of 2 because the dangerous
+  pattern is the compounding; one broken link
+  is a configuration miss, two is a process
+  problem.
+controls:
+  - CTL.CLOUDWATCH.METRICFILTER.NOALARM.001
+  - CTL.CLOUDWATCH.METRICFILTER.NODEFAULT.001
+  - CTL.CLOUDWATCH.GHOST.METRICFILTER.LOGGROUP.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

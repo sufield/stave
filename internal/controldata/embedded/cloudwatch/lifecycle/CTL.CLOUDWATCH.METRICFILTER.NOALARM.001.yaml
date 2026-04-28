@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.METRICFILTER.NOALARM.001
+name: Metric Filter Has No Alarm Watching Its Metric
+description: >
+  CloudWatch metric filter exists and matches log
+  events into a metric, but no CloudWatch alarm
+  watches the metric. Events accumulate as metric
+  data points; nothing reads them. The filter is
+  detection without alerting. For security metric
+  filters (root logins, unauthorized API calls,
+  KMS deletions), this means the events are
+  counted in CloudWatch metrics but never trigger
+  a notification.
+domain: audit
+severity: medium
+archetype: silent-failure
+compliance:
+  cis_aws_v3.0: "3.4, 4.1"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "AU-6, SI-4"
+  pci_dss_v4.0: "10.6"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Metric filter publishes a metric that no
+    alarm reads. The detection chain stops at
+    the metric.
+  action: >
+    Either create a CloudWatch alarm against the
+    metric (aws cloudwatch put-metric-alarm) or
+    delete the orphan filter (aws logs
+    delete-metric-filter). If the metric is
+    consumed by an external system (Datadog,
+    CloudWatch Logs Insights queries,
+    dashboards), document the external consumer
+    so future audits don't re-flag it.
+  example: |
+    {
+      "monitoring": {
+        "kind": "metric_filter",
+        "cloudwatch": {
+          "metric_filter_name": "RootLoginFilter",
+          "metric_namespace": "CISBenchmark",
+          "metric_name": "RootLogin",
+          "log_group_name": "/aws/cloudtrail/org",
+          "metric_has_alarm": true,
+          "alarm_count_for_metric": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: metric_filter
+    - field: properties.monitoring.cloudwatch.metric_has_alarm
+      op: eq
+      value: false
+defect: >
+  Metric filter publishes a metric that no
+  CloudWatch alarm watches.
+infection: >
+  A metric filter without an alarm is a counter
+  without a reader. The filter evaluates every
+  log event against its pattern. Matching events
+  increment the metric. The metric value
+  increases. Nobody is notified when it crosses
+  a threshold. For security metric filters
+  (unauthorized API calls, root logins, KMS
+  deletions), this means security events are
+  COUNTED but not ALERTED. The data exists. The
+  detection is technically happening. The
+  response chain is severed at the alarm link —
+  no threshold evaluation, no action, no
+  notification.
+failure: >
+  Detection without alerting. Metric filter
+  counts events but no alarm evaluates the
+  count; security events never trigger a
+  notification.
+tests:
+  - name: metric filter without alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:metric-filter:RootLoginFilter"
+      asset_type: aws_metric_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: metric_filter
+          cloudwatch:
+            metric_filter_name: "RootLoginFilter"
+            metric_namespace: "CISBenchmark"
+            metric_name: "RootLogin"
+            log_group_name: "/aws/cloudtrail/org"
+            metric_has_alarm: false
+            alarm_count_for_metric: 0
+  - name: metric filter with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:metric-filter:RootLoginFilter"
+      asset_type: aws_metric_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: metric_filter
+          cloudwatch:
+            metric_filter_name: "RootLoginFilter"
+            metric_namespace: "CISBenchmark"
+            metric_name: "RootLogin"
+            log_group_name: "/aws/cloudtrail/org"
+            metric_has_alarm: true
+            alarm_count_for_metric: 1

@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.ALARM.COMPOSITE.NOACTION.001
+name: Composite Alarm Has No Action Configured
+description: >
+  CloudWatch composite alarm evaluates a rule
+  combining multiple child alarm states but has
+  no AlarmAction, OKAction, or
+  InsufficientDataAction configured. The
+  composite alarm exists for high-value
+  correlated detection — multiple signals that
+  together indicate a systemic problem. Without
+  actions, the correlation is detected and
+  discarded.
+domain: audit
+severity: high
+archetype: false-protection
+compliance:
+  soc2: "CC7.1, CC7.2, CC7.3"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.6, 12.10"
+  fedramp_moderate: "AU-6, IR-4"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - cloudwatch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Composite alarm fires correlated detection
+    into the void. Children may notify
+    individually but the correlation is not
+    surfaced.
+  action: >
+    Add at least one AlarmAction to the composite
+    alarm pointing at the team's alert SNS topic:
+    aws cloudwatch put-composite-alarm
+    --alarm-name <name> --alarm-rule <rule>
+    --alarm-actions <topic-arn>. Composite alarms
+    typically warrant a higher-priority
+    notification channel than individual child
+    alarms (paging vs ticketing) because the
+    correlation indicates a more severe
+    condition than any single child.
+  example: |
+    {
+      "monitoring": {
+        "kind": "composite_alarm",
+        "cloudwatch": {
+          "composite_alarm_name": "DBOverloadCascade",
+          "composite_rule": "ALARM(ALB-5xx) AND ALARM(RDS-CPU) AND ALARM(Lambda-Errors)",
+          "composite_child_count": 3,
+          "composite_has_action": true,
+          "composite_action_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: composite_alarm
+    - field: properties.monitoring.cloudwatch.composite_has_action
+      op: eq
+      value: false
+defect: >
+  Composite alarm has no actions configured.
+infection: >
+  Composite alarms exist to detect correlated
+  failures — multiple signals that individually
+  may be noise but together indicate a systemic
+  problem. A composite alarm without actions
+  detects the correlation but doesn't notify
+  anyone. The composite evaluates its rule. The
+  rule matches (e.g., two child alarms are both
+  in ALARM state). The composite transitions to
+  ALARM. Nobody is notified. Nobody is paged.
+  The systemic problem continues. Individual
+  child alarms may have their own actions —
+  but the composite alarm's value is the
+  CORRELATED detection. Without an action, the
+  correlation is detected and discarded.
+failure: >
+  Correlated detection without response.
+  Composite alarm detects systemic failure
+  across multiple signals — nobody is notified.
+tests:
+  - name: composite without actions fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:DBOverloadCascade"
+      asset_type: aws_composite_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: composite_alarm
+          cloudwatch:
+            composite_alarm_name: "DBOverloadCascade"
+            composite_rule: "ALARM(ALB-5xx) AND ALARM(RDS-CPU) AND ALARM(Lambda-Errors)"
+            composite_child_count: 3
+            composite_has_action: false
+            composite_action_count: 0
+  - name: composite with action passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:DBOverloadCascade"
+      asset_type: aws_composite_alarm
+      vendor: aws
+      properties:
+        monitoring:
+          kind: composite_alarm
+          cloudwatch:
+            composite_alarm_name: "DBOverloadCascade"
+            composite_rule: "ALARM(ALB-5xx) AND ALARM(RDS-CPU) AND ALARM(Lambda-Errors)"
+            composite_child_count: 3
+            composite_has_action: true
+            composite_action_count: 1

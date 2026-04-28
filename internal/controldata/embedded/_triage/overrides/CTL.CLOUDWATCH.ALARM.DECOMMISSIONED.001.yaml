@@ -1,0 +1,25 @@
+control: CTL.CLOUDWATCH.ALARM.DECOMMISSIONED.001
+defect: >
+  CloudWatch alarm monitors a metric for a
+  decommissioned resource.
+infection: >
+  Alarms in CloudWatch reference metrics by name
+  plus a set of dimensions (e.g., InstanceId,
+  DBInstanceIdentifier, FunctionName). When the
+  underlying resource is deleted, the metric
+  stops publishing — EC2 metrics stop on
+  termination, RDS metrics stop on deletion,
+  Lambda metrics stop accumulating. The alarm
+  enters INSUFFICIENT_DATA and stays there. It
+  exists in the console with name, threshold,
+  and actions intact. It monitors nothing. With
+  hundreds of alarms in an account, decommissioned
+  alarms dilute attention: a real INSUFFICIENT_DATA
+  (a metric pipeline broken upstream of a live
+  resource) is hidden in a list of structurally
+  dead alarms.
+failure: >
+  Dead alarm. Alarm monitors a deleted resource —
+  permanent INSUFFICIENT_DATA, no possible
+  recovery, attention dilution across the alarm
+  fleet.

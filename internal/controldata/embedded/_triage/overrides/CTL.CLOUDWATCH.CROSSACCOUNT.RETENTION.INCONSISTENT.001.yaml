@@ -1,0 +1,28 @@
+control: CTL.CLOUDWATCH.CROSSACCOUNT.RETENTION.INCONSISTENT.001
+defect: >
+  Cross-account log aggregation source and
+  destination retention disagree.
+infection: >
+  When logs flow from a source account to a
+  centralized destination, two retention
+  policies apply: the source log group's policy
+  governs how long the source keeps the data,
+  and the destination log group's policy governs
+  how long the centralized account keeps it.
+  If the destination retains less than the
+  source, investigation queries against the
+  centralized account miss data that's still
+  available in the source — the centralized
+  view is incomplete. If the destination
+  retains longer than the source, data
+  minimization commitments are violated: the
+  source committed to deleting after N days
+  but the destination keeps the data longer.
+  Both directions are governance findings; the
+  fix is to align retention or document the
+  intentional gap.
+failure: >
+  Retention horizons disagree across the
+  aggregation. Centralized investigation either
+  misses available data or retains data beyond
+  the source's commitment.
