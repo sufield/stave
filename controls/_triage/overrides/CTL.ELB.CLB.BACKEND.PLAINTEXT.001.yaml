@@ -1,0 +1,25 @@
+control: CTL.ELB.CLB.BACKEND.PLAINTEXT.001
+defect: >
+  Classic Load Balancer backend listener
+  uses HTTP.
+infection: >
+  CLBs decouple front-end protocol from
+  backend protocol. A common configuration
+  is HTTPS on port 443 in front,
+  re-encoded to HTTP on the backend port.
+  The CLB-to-backend hop is plaintext —
+  any party with VPC network visibility
+  (lateral-movement attacker, compromised
+  same-VPC instance, AWS-internal observer
+  with theoretical visibility) reads
+  request and response content. For HIPAA
+  workloads, the regulatory baseline
+  treats VPC traffic as untrusted; end-
+  to-end encryption (HTTPS to the
+  backend) is the typical compliance
+  posture. The CLB is also legacy —
+  migrating to ALB or NLB unlocks
+  modern features.
+failure: >
+  Plaintext over VPC. Backend traffic
+  unencrypted between CLB and instance.

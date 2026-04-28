@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.BACKEND.DIRECT.ACCESS.001
+name: ELB Backend Reachable Bypassing the Load Balancer
+description: >
+  Target group's backend security groups
+  allow inbound traffic on the application
+  port from sources other than the ALB's
+  security group. Direct internet or
+  cross-VPC access reaches the backend
+  without traversing the ALB — the WAF,
+  TLS termination, and access logging at
+  the ALB are all bypassed.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.2"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, SC-7"
+  pci_dss_v4.0: "1.2, 1.3, 6.4.2"
+  fedramp_moderate: "AC-3, SC-7"
+  hipaa: "164.312(c)(1)"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Backend SG allows direct access bypassing
+    the ALB.
+  action: >
+    Tighten backend security groups to allow
+    inbound on the application port from
+    only the ALB's security group: aws ec2
+    authorize-security-group-ingress with
+    SourceSecurityGroupId pointing at the
+    ALB's SG. Remove broader rules
+    (0.0.0.0/0, broad CIDRs, other SGs that
+    don't serve as ALBs).
+  example: |
+    {
+      "compute": {
+        "kind": "elb_target_group",
+        "elb": {
+          "backend_sg_sources": ["sg-alb-abc"],
+          "backend_direct_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb_target_group
+    - field: properties.compute.elb.backend_direct_access
+      op: eq
+      value: true
+defect: >
+  ELB backend reachable from sources other
+  than the ALB.
+infection: >
+  ALBs serve as the single ingress point
+  for traffic to backends — TLS terminates
+  at the ALB, WAF rules apply at the ALB,
+  access logs record at the ALB. Backend
+  SGs that allow inbound from 0.0.0.0/0,
+  broad internal CIDRs, or unrelated SGs
+  on the application port let traffic
+  reach the backend without traversing
+  the ALB. The bypass invalidates every
+  ALB-layer protection: WAF rules don't
+  fire, requests aren't logged, TLS may
+  be plaintext. Discovery is enumeration
+  work — backend instances frequently
+  have public IPs (or reachable VPC peer
+  routes). The fix is standard SG hygiene:
+  backend ports reachable only from the
+  ALB's SG.
+failure: >
+  ALB-layer protections bypassable.
+  Backend reachable directly; WAF, TLS
+  termination, and access logging
+  ineffective.
+tests:
+  - name: backend with broad SG fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/abc/123"
+      asset_type: aws_elb_target_group
+      vendor: aws
+      properties:
+        compute:
+          kind: elb_target_group
+          elb:
+            backend_sg_sources: ["0.0.0.0/0", "sg-alb-abc"]
+            backend_direct_access: true
+  - name: backend behind ALB SG passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/abc/123"
+      asset_type: aws_elb_target_group
+      vendor: aws
+      properties:
+        compute:
+          kind: elb_target_group
+          elb:
+            backend_sg_sources: ["sg-alb-abc"]
+            backend_direct_access: false

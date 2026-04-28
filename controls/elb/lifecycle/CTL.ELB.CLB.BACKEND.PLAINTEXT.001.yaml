@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CLB.BACKEND.PLAINTEXT.001
+name: Classic Load Balancer Backend Listener Uses HTTP
+description: >
+  Classic Load Balancer's backend instance
+  protocol is HTTP rather than HTTPS. The
+  CLB-to-backend hop transits unencrypted
+  over the VPC network, even when client-
+  to-CLB is HTTPS. End-to-end encryption
+  isn't preserved.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-8, SC-23"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-8, SC-23"
+  hipaa: "164.312(e)(1)"
+  iso_27001_2022: "A.8.20, A.8.24"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    CLB backend listener uses HTTP.
+  action: >
+    Either migrate the CLB to ALB or NLB
+    (recommended — CLB is legacy; the
+    existing CTL.ELB.LIFECYCLE.CLB.MIGRATION
+    control flags this), or update the CLB
+    backend to HTTPS: aws elb
+    create-load-balancer-listeners with
+    InstanceProtocol=HTTPS and the
+    appropriate backend cert. Migration to
+    ALB or NLB unlocks every modern feature
+    the CLB lacks.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "lb_type": "classic",
+          "clb_backend_protocol": "HTTPS",
+          "clb_backend_plaintext": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.lb_type
+      op: eq
+      value: classic
+    - field: properties.compute.elb.clb_backend_plaintext
+      op: eq
+      value: true
+defect: >
+  Classic Load Balancer backend listener
+  uses HTTP.
+infection: >
+  CLBs decouple front-end protocol from
+  backend protocol. A common configuration
+  is HTTPS on port 443 in front,
+  re-encoded to HTTP on the backend port.
+  The CLB-to-backend hop is plaintext —
+  any party with VPC network visibility
+  (lateral-movement attacker, compromised
+  same-VPC instance, AWS-internal observer
+  with theoretical visibility) reads
+  request and response content. For HIPAA
+  workloads, the regulatory baseline
+  treats VPC traffic as untrusted; end-
+  to-end encryption (HTTPS to the
+  backend) is the typical compliance
+  posture. The CLB is also legacy —
+  migrating to ALB or NLB unlocks
+  modern features.
+failure: >
+  Plaintext over VPC. Backend traffic
+  unencrypted between CLB and instance.
+tests:
+  - name: CLB with HTTP backend fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/abc"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "classic"
+            clb_backend_protocol: "HTTP"
+            clb_backend_plaintext: true
+  - name: CLB with HTTPS backend passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/abc"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "classic"
+            clb_backend_protocol: "HTTPS"
+            clb_backend_plaintext: false

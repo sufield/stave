@@ -3,28 +3,28 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2044
-**Pack hash:** `aee0c1a97ccc776e141185bd50cdf9db4ec516c31fdaf486de16122ad9fb1eb8`
+**Total controls:** 2048
+**Pack hash:** `e151c6ee7e8a021627196605797261d3d0e7afd5d969bcc055fbaeb65abd484e`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 231 |
-| high | 908 |
+| high | 910 |
 | info | 16 |
 | low | 140 |
-| medium | 749 |
+| medium | 751 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 62 |
+| audit | 63 |
 | availability | 2 |
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1066 |
+| exposure | 1069 |
 | governance | 280 |
 | hygiene | 16 |
 | identity | 360 |
@@ -13310,6 +13310,21 @@ ALB or NLB has multiple subnets configured but they all map to the same AZ. The 
 
 ---
 
+### CTL.ELB.BACKEND.DIRECT.ACCESS.001
+
+**ELB Backend Reachable Bypassing the Load Balancer**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.2; fedramp_moderate: AC-3, SC-7; hipaa: 164.312(c)(1); iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-3, SC-7; pci_dss_v4.0: 1.2, 1.3, 6.4.2; soc2: CC6.1, CC6.6;
+
+Target group's backend security groups allow inbound traffic on the application port from sources other than the ALB's security group. Direct internet or cross-VPC access reaches the backend without traversing the ALB — the WAF, TLS termination, and access logging at the ALB are all bypassed.
+
+**Remediation:** Tighten backend security groups to allow inbound on the application port from only the ALB's security group: aws ec2 authorize-security-group-ingress with SourceSecurityGroupId pointing at the ALB's SG. Remove broader rules (0.0.0.0/0, broad CIDRs, other SGs that don't serve as ALBs).
+
+---
+
 ### CTL.ELB.CERT.CHAIN.INCOMPLETE.001
 
 **ELB Listener Certificate Chain Missing Intermediate CA**
@@ -13460,6 +13475,21 @@ ELB listener certificate uses RSA-1024 (or weaker) key. RSA-1024 has been consid
 
 ---
 
+### CTL.ELB.CLB.BACKEND.PLAINTEXT.001
+
+**Classic Load Balancer Backend Listener Uses HTTP**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-8, SC-23; hipaa: 164.312(e)(1); iso_27001_2022: A.8.20, A.8.24; nist_800_53_r5: SC-8, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+Classic Load Balancer's backend instance protocol is HTTP rather than HTTPS. The CLB-to-backend hop transits unencrypted over the VPC network, even when client- to-CLB is HTTPS. End-to-end encryption isn't preserved.
+
+**Remediation:** Either migrate the CLB to ALB or NLB (recommended — CLB is legacy; the existing CTL.ELB.LIFECYCLE.CLB.MIGRATION control flags this), or update the CLB backend to HTTPS: aws elb create-load-balancer-listeners with InstanceProtocol=HTTPS and the appropriate backend cert. Migration to ALB or NLB unlocks every modern feature the CLB lacks.
+
+---
+
 ### CTL.ELB.CLB.DRAINING.001
 
 **Classic Load Balancer Connection Draining Not Enabled**
@@ -13487,6 +13517,21 @@ Classic Load Balancer does not have connection draining enabled. When an instanc
 Classic Load Balancer has no health check configured (or has health checks disabled). The CLB cannot detect unhealthy instances — every registered instance receives traffic regardless of health. An instance with a crashed application, hung process, or network failure still gets 1/N of the traffic; every request to that instance fails for the client.
 
 **Remediation:** Configure a health check on the CLB: aws elb configure-health-check --load-balancer-name <name> --health-check Target=HTTP:80/health,Interval=30, Timeout=5,UnhealthyThreshold=2,HealthyThreshold=2. Pick a target endpoint that exercises the application's basic functionality (database reachability, dependency check) rather than a static OK page. Better long-term: migrate to ALB (CTL.ELB.LIFECYCLE.CLB.MIGRATION.001) — ALB target-group health checks are richer (matcher codes, multiple paths, advanced options).
+
+---
+
+### CTL.ELB.CONNLOG.GHOST.BUCKET.001
+
+**NLB Connection Log References Deleted S3 Bucket**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: AU-2, AU-9, CM-3; iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-2, AU-9, CM-2, CM-3; pci_dss_v4.0: 10.5; soc2: CC7.1, CC7.2, CC8.1;
+
+Network Load Balancer connection logging is configured with an S3 bucket name that doesn't exist. NLB writes silently fail; TLS handshake forensics are lost despite the configuration showing logging enabled.
+
+**Remediation:** Either recreate the bucket with the same name and the appropriate Config- delivery / ELB-write bucket policy, or repoint the NLB connection log destination at an existing bucket: aws elbv2 modify-load-balancer-attributes with connection_logs.s3.bucket=<new>. Pair with the existing CTL.ELB.GHOST.ACCESSLOG.001 control that catches the same shape on access logs.
 
 ---
 
@@ -13876,6 +13921,21 @@ ALB listener rule redirect action sends HTTP traffic to another HTTP target rath
 Load balancer is associated with one or more security groups that have been deleted. The SG reference remains on the load balancer but evaluates against a non-existent resource. The effective access-control state is undefined — depending on how AWS resolves the deleted reference, the load balancer may become unreachable or behave as if no rule applies at the SG layer. Either way, the load balancer is in an inconsistent state relative to the firewall policy it was deployed with.
 
 **Remediation:** Replace the deleted SG references with intended live SGs. If the deletion was deliberate, update the load balancer's SG association explicitly rather than leaving the stale reference. Investigate the deletion path that did not update the LB — a proper SG decommissioning runbook should update all dependents before deleting.
+
+---
+
+### CTL.ELB.SG.NONSTANDARD.PORTS.001
+
+**ELB Security Group Allows Inbound on Non-Standard Ports**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.2; fedramp_moderate: AC-3, SC-7; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-3, SC-7; pci_dss_v4.0: 1.2, 1.3; soc2: CC6.1, CC6.6;
+
+ALB or NLB security group allows inbound traffic on ports other than 80 and 443 (or the configured listener ports). The extra open ports may have been left from early development, debugging tools, or test listeners — they widen the attack surface beyond what the load balancer's listeners require.
+
+**Remediation:** Reconcile the SG inbound rules with the load balancer's listener ports. Remove SG rules for ports that don't correspond to a listener: aws ec2 revoke-security-group-ingress with the extra port. Standard production ALB SGs typically need only 80 and 443 inbound from 0.0.0.0/0 for internet- facing or from internal CIDRs for internal LBs.
 
 ---
 

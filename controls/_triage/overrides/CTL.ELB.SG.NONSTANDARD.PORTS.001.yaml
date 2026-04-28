@@ -1,0 +1,25 @@
+control: CTL.ELB.SG.NONSTANDARD.PORTS.001
+defect: >
+  ELB security group allows inbound on ports
+  beyond the listener ports.
+infection: >
+  ELB security groups should reflect listener
+  configuration: ports the LB serves on,
+  reachable from sources that legitimately
+  send traffic. Extra open ports — 8080
+  from a debugging session, 22 from a
+  forgotten lab, 9090 from a metrics
+  experiment — widen the attack surface
+  without serving any current purpose.
+  Even if no listener answers on those
+  ports, the SG advertises the port as
+  reachable; scanners catalog it; the
+  open port becomes a target if a future
+  listener accidentally lands on it. The
+  control reconciles SG inbound rules
+  with the LB's actual listener ports
+  and flags the delta.
+failure: >
+  Surface-area drift. SG opens ports the
+  LB doesn't serve; cleanup debt becomes
+  attack surface.

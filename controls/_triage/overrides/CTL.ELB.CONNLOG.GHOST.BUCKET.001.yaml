@@ -1,0 +1,24 @@
+control: CTL.ELB.CONNLOG.GHOST.BUCKET.001
+defect: >
+  NLB connection log target bucket has been
+  deleted.
+infection: >
+  NLB connection logs (introduced 2024)
+  capture TLS handshake outcomes and per-
+  connection metadata. The configuration
+  references an S3 bucket by name; if that
+  bucket is deleted, NLB attempts to
+  deliver logs and silently fails. The
+  configuration in the console still shows
+  connection logging as 'enabled'; only
+  the absence of objects in S3 reveals
+  the breakage. Same ghost-reference
+  pattern as the existing
+  CTL.ELB.GHOST.ACCESSLOG.001 (ALB access
+  log bucket gone) and the CW-2 / CFG-1
+  delivery-bucket ghost controls.
+failure: >
+  Silent loss of connection logs. NLB
+  reports logging-enabled but the
+  destination is gone; TLS forensics
+  data isn't being written.

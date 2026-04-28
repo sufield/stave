@@ -1,0 +1,27 @@
+control: CTL.ELB.BACKEND.DIRECT.ACCESS.001
+defect: >
+  ELB backend reachable from sources other
+  than the ALB.
+infection: >
+  ALBs serve as the single ingress point
+  for traffic to backends — TLS terminates
+  at the ALB, WAF rules apply at the ALB,
+  access logs record at the ALB. Backend
+  SGs that allow inbound from 0.0.0.0/0,
+  broad internal CIDRs, or unrelated SGs
+  on the application port let traffic
+  reach the backend without traversing
+  the ALB. The bypass invalidates every
+  ALB-layer protection: WAF rules don't
+  fire, requests aren't logged, TLS may
+  be plaintext. Discovery is enumeration
+  work — backend instances frequently
+  have public IPs (or reachable VPC peer
+  routes). The fix is standard SG hygiene:
+  backend ports reachable only from the
+  ALB's SG.
+failure: >
+  ALB-layer protections bypassable.
+  Backend reachable directly; WAF, TLS
+  termination, and access logging
+  ineffective.

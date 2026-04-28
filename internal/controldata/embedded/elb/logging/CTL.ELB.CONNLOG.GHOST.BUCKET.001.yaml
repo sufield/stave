@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.CONNLOG.GHOST.BUCKET.001
+name: NLB Connection Log References Deleted S3 Bucket
+description: >
+  Network Load Balancer connection logging
+  is configured with an S3 bucket name that
+  doesn't exist. NLB writes silently fail;
+  TLS handshake forensics are lost despite
+  the configuration showing logging
+  enabled.
+domain: audit
+severity: high
+archetype: ghost-reference
+compliance:
+  soc2: "CC7.1, CC7.2, CC8.1"
+  nist_800_53_r5: "AU-2, AU-9, CM-2, CM-3"
+  pci_dss_v4.0: "10.5"
+  fedramp_moderate: "AU-2, AU-9, CM-3"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Connection log destination bucket is
+    gone.
+  action: >
+    Either recreate the bucket with the
+    same name and the appropriate Config-
+    delivery / ELB-write bucket policy, or
+    repoint the NLB connection log
+    destination at an existing bucket: aws
+    elbv2 modify-load-balancer-attributes
+    with connection_logs.s3.bucket=<new>.
+    Pair with the existing
+    CTL.ELB.GHOST.ACCESSLOG.001 control
+    that catches the same shape on access
+    logs.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "lb_type": "network",
+          "connection_log_bucket": "nlb-connlog-111122223333",
+          "connection_log_bucket_exists": true,
+          "has_ghost_connlog_bucket": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.lb_type
+      op: eq
+      value: network
+    - field: properties.compute.elb.has_ghost_connlog_bucket
+      op: eq
+      value: true
+defect: >
+  NLB connection log target bucket has been
+  deleted.
+infection: >
+  NLB connection logs (introduced 2024)
+  capture TLS handshake outcomes and per-
+  connection metadata. The configuration
+  references an S3 bucket by name; if that
+  bucket is deleted, NLB attempts to
+  deliver logs and silently fails. The
+  configuration in the console still shows
+  connection logging as 'enabled'; only
+  the absence of objects in S3 reveals
+  the breakage. Same ghost-reference
+  pattern as the existing
+  CTL.ELB.GHOST.ACCESSLOG.001 (ALB access
+  log bucket gone) and the CW-2 / CFG-1
+  delivery-bucket ghost controls.
+failure: >
+  Silent loss of connection logs. NLB
+  reports logging-enabled but the
+  destination is gone; TLS forensics
+  data isn't being written.
+tests:
+  - name: ghost connection-log bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "network"
+            connection_log_bucket: "deleted-connlog-bucket"
+            connection_log_bucket_exists: false
+            has_ghost_connlog_bucket: true
+  - name: live connection-log bucket passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "network"
+            connection_log_bucket: "nlb-connlog-111122223333"
+            connection_log_bucket_exists: true
+            has_ghost_connlog_bucket: false

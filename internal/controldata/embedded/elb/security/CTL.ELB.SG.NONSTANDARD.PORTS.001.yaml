@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.SG.NONSTANDARD.PORTS.001
+name: ELB Security Group Allows Inbound on Non-Standard Ports
+description: >
+  ALB or NLB security group allows inbound
+  traffic on ports other than 80 and 443
+  (or the configured listener ports). The
+  extra open ports may have been left from
+  early development, debugging tools, or
+  test listeners — they widen the attack
+  surface beyond what the load balancer's
+  listeners require.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.2"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, SC-7"
+  pci_dss_v4.0: "1.2, 1.3"
+  fedramp_moderate: "AC-3, SC-7"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    ELB SG opens ports beyond the listener
+    requirements.
+  action: >
+    Reconcile the SG inbound rules with the
+    load balancer's listener ports. Remove
+    SG rules for ports that don't correspond
+    to a listener: aws ec2
+    revoke-security-group-ingress with the
+    extra port. Standard production ALB
+    SGs typically need only 80 and 443
+    inbound from 0.0.0.0/0 for internet-
+    facing or from internal CIDRs for
+    internal LBs.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "sg_inbound_ports": [80, 443],
+          "sg_listener_ports": [80, 443],
+          "sg_has_nonstandard_ports": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.sg_has_nonstandard_ports
+      op: eq
+      value: true
+defect: >
+  ELB security group allows inbound on ports
+  beyond the listener ports.
+infection: >
+  ELB security groups should reflect listener
+  configuration: ports the LB serves on,
+  reachable from sources that legitimately
+  send traffic. Extra open ports — 8080
+  from a debugging session, 22 from a
+  forgotten lab, 9090 from a metrics
+  experiment — widen the attack surface
+  without serving any current purpose.
+  Even if no listener answers on those
+  ports, the SG advertises the port as
+  reachable; scanners catalog it; the
+  open port becomes a target if a future
+  listener accidentally lands on it. The
+  control reconciles SG inbound rules
+  with the LB's actual listener ports
+  and flags the delta.
+failure: >
+  Surface-area drift. SG opens ports the
+  LB doesn't serve; cleanup debt becomes
+  attack surface.
+tests:
+  - name: nonstandard ports fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            sg_inbound_ports: [80, 443, 8080, 9090]
+            sg_listener_ports: [80, 443]
+            sg_has_nonstandard_ports: true
+  - name: matching ports pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            sg_inbound_ports: [80, 443]
+            sg_listener_ports: [80, 443]
+            sg_has_nonstandard_ports: false
