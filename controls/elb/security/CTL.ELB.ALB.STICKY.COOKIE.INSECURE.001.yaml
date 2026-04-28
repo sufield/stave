@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ALB.STICKY.COOKIE.INSECURE.001
+name: ALB Application-Controlled Sticky Cookie Missing Secure Flag
+description: >
+  Target group is configured with
+  application-controlled sticky session
+  cookies, but the upstream application's
+  cookie response doesn't set the Secure
+  flag. The cookie is transmitted over
+  plain HTTP whenever a user
+  inadvertently lands on the http://
+  scheme, exposing the session affinity
+  identifier to any party on the path.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-8, SC-23, AC-12"
+  pci_dss_v4.0: "4.2, 8.3"
+  fedramp_moderate: "SC-8, SC-23"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["IVS-09", "IAM-13"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Application-controlled sticky cookie
+    is sent without Secure flag.
+  action: >
+    Update the application emitting the
+    sticky cookie to set Secure (and
+    HttpOnly + SameSite as appropriate).
+    Set-Cookie: AWSALBAPP-X=...; Path=/;
+    Secure; HttpOnly; SameSite=Strict.
+    For load-balancer-controlled stickiness
+    (the default cookie name AWSALB), AWS
+    sets Secure automatically when the
+    listener is HTTPS — this control
+    flags the application-managed
+    variant where the operator owns the
+    Set-Cookie header.
+  example: |
+    {
+      "compute": {
+        "kind": "elb_target_group",
+        "elb": {
+          "stickiness_type": "app_cookie",
+          "sticky_cookie_secure": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb_target_group
+    - field: properties.compute.elb.stickiness_type
+      op: eq
+      value: app_cookie
+    - field: properties.compute.elb.sticky_cookie_secure
+      op: eq
+      value: false
+defect: >
+  Application-controlled sticky cookie is
+  emitted without the Secure flag.
+infection: >
+  ALB target groups support two stickiness
+  modes: load-balancer-generated cookie
+  (AWSALB / AWSALBCORS), which AWS marks
+  Secure automatically when the front-end
+  is HTTPS, and application-controlled
+  cookie (custom cookie name), where the
+  application is responsible for setting
+  cookie attributes. The session-affinity
+  identifier in the sticky cookie isn't
+  sensitive in the same way as an auth
+  token, but it links a user to a specific
+  backend instance. Combined with logs
+  exposed in another channel, the
+  affinity identifier helps an attacker
+  pin a session to instance metadata,
+  amplifying targeted attacks. The
+  Secure flag is cheap; the Set-Cookie
+  header is application-controlled here,
+  so the discipline is application-owned.
+failure: >
+  Sticky session identifier leaks over
+  HTTP. Anyone on the path between
+  client and server reads the affinity
+  cookie value.
+tests:
+  - name: app cookie without secure flag fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/abc/123"
+      asset_type: aws_elb_target_group
+      vendor: aws
+      properties:
+        compute:
+          kind: elb_target_group
+          elb:
+            stickiness_type: "app_cookie"
+            sticky_cookie_secure: false
+  - name: app cookie with secure flag passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/abc/123"
+      asset_type: aws_elb_target_group
+      vendor: aws
+      properties:
+        compute:
+          kind: elb_target_group
+          elb:
+            stickiness_type: "app_cookie"
+            sticky_cookie_secure: true

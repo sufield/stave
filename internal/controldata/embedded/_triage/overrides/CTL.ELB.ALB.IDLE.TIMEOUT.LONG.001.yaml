@@ -1,0 +1,27 @@
+control: CTL.ELB.ALB.IDLE.TIMEOUT.LONG.001
+defect: >
+  ALB idle timeout exceeds 300 seconds.
+infection: >
+  Slowloris and slow-read attacks open
+  many connections, then trickle data
+  slowly enough that each request stays
+  alive without violating per-request
+  timeouts. The longer the idle timeout,
+  the more concurrent slow connections
+  the attacker can hold before the LB
+  reaps them. ALB has a hard maximum of
+  4000 seconds; default is 60. Some
+  applications legitimately need long
+  idle timeouts (long-poll APIs, server-
+  sent events, WebSocket-style flows on
+  HTTP/1.1) — those should be documented
+  exceptions, not the default. The 300-
+  second threshold catches both
+  accidentally-long settings and
+  workloads that need design review:
+  pair with WAF rate-based rules and a
+  per-source connection quota.
+failure: >
+  Slowloris amplification. Long-held
+  idle connections magnify the impact
+  of slow-attack resource exhaustion.

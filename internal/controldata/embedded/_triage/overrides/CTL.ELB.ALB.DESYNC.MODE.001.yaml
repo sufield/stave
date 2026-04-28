@@ -1,0 +1,32 @@
+control: CTL.ELB.ALB.DESYNC.MODE.001
+defect: >
+  ALB desync mitigation mode is set to
+  monitor rather than defensive or
+  strictest.
+infection: >
+  HTTP request smuggling exploits
+  disagreement between front-end and back-
+  end about how to interpret request
+  boundaries. The classic vector is
+  Transfer-Encoding versus Content-Length:
+  the ALB sees one request, the backend
+  sees two. Smuggled requests bypass auth,
+  hijack other users' sessions, and poison
+  caches. AWS introduced desync_mitigation_
+  mode in response to published research.
+  Defensive mode normalizes ambiguous
+  requests so the backend sees what the
+  ALB saw. Strictest rejects ambiguous
+  requests outright. Monitor mode lets
+  the ambiguous request through and only
+  emits a CloudWatch metric — the
+  smuggled-request shape passes through
+  the ALB unchanged. Monitor was the
+  initial default to avoid surprise
+  breakage on legacy clients; defensive
+  is the current default for new ALBs.
+failure: >
+  Request-smuggling exposure. Ambiguous
+  HTTP requests pass through the ALB
+  unmodified; back-end interprets them
+  differently than the LB.

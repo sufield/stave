@@ -1,0 +1,134 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ALB.IDLE.TIMEOUT.LONG.001
+name: ALB Idle Timeout Exceeds Reasonable Ceiling
+description: >
+  ALB idle_timeout is configured for more
+  than 300 seconds. Long-held idle
+  connections amplify the impact of
+  slowloris-style resource exhaustion —
+  each open connection consumes an ALB
+  connection slot and (if forwarded) a
+  backend connection slot until the
+  timeout fires.
+domain: resilience
+severity: medium
+compliance:
+  soc2: "CC6.6, A1.1, A1.2"
+  nist_800_53_r5: "SC-5, SC-7"
+  pci_dss_v4.0: "6.4.2"
+  fedramp_moderate: "SC-5"
+  iso_27001_2022: "A.8.6, A.8.16"
+  ccm_v4: ["IVS-09", "BCR-04"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: availability
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    ALB idle timeout is too generous,
+    amplifying slow-attack impact.
+  action: >
+    Lower the ALB attribute
+    idle_timeout.timeout_seconds to 60-300
+    seconds depending on application
+    profile: aws elbv2 modify-load-balancer-
+    attributes --attributes
+    Key=idle_timeout.timeout_seconds,Value=60.
+    The default is 60 seconds. Workloads
+    that need long-held connections
+    (server-sent events, long-poll APIs)
+    should explicitly justify the longer
+    timeout in code review and pair it
+    with WAF rate limiting and connection
+    quotas.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "lb_type": "application",
+          "idle_timeout_seconds": 60
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.lb_type
+      op: eq
+      value: application
+    - field: properties.compute.elb.idle_timeout_seconds
+      op: gt
+      value: 300
+defect: >
+  ALB idle timeout exceeds 300 seconds.
+infection: >
+  Slowloris and slow-read attacks open
+  many connections, then trickle data
+  slowly enough that each request stays
+  alive without violating per-request
+  timeouts. The longer the idle timeout,
+  the more concurrent slow connections
+  the attacker can hold before the LB
+  reaps them. ALB has a hard maximum of
+  4000 seconds; default is 60. Some
+  applications legitimately need long
+  idle timeouts (long-poll APIs, server-
+  sent events, WebSocket-style flows on
+  HTTP/1.1) — those should be documented
+  exceptions, not the default. The 300-
+  second threshold catches both
+  accidentally-long settings and
+  workloads that need design review:
+  pair with WAF rate-based rules and a
+  per-source connection quota.
+failure: >
+  Slowloris amplification. Long-held
+  idle connections magnify the impact
+  of slow-attack resource exhaustion.
+tests:
+  - name: idle timeout 600s fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "application"
+            idle_timeout_seconds: 600
+  - name: idle timeout 60s passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "application"
+            idle_timeout_seconds: 60
+  - name: idle timeout 300s passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "application"
+            idle_timeout_seconds: 300

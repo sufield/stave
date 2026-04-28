@@ -1,0 +1,140 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ALB.DESYNC.MODE.001
+name: ALB Desync Mitigation Mode Set to Monitor
+description: >
+  ALB desync mitigation mode is set to
+  "monitor" rather than "defensive" or
+  "strictest". Monitor mode lets ambiguous
+  HTTP requests through unchanged — only
+  logging — instead of normalizing or
+  rejecting them. Request-smuggling
+  payloads that exploit Content-Length /
+  Transfer-Encoding ambiguity reach the
+  backend.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.4"
+  soc2: "CC6.1, CC6.7, CC7.2"
+  nist_800_53_r5: "SC-7, SI-3, SI-10"
+  pci_dss_v4.0: "6.4.2"
+  fedramp_moderate: "SC-7, SI-10"
+  iso_27001_2022: "A.8.16, A.8.26"
+  ccm_v4: ["IVS-09", "TVM-02"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    ALB is in monitor-only desync mode.
+  action: >
+    Set the ALB attribute
+    routing.http.desync_mitigation_mode to
+    "defensive" (the default for new ALBs)
+    or "strictest" for hardened workloads:
+    aws elbv2 modify-load-balancer-
+    attributes --attributes
+    Key=routing.http.desync_mitigation_mode,Value=defensive.
+    Defensive normalizes ambiguous requests;
+    strictest rejects them outright. Monitor
+    mode is appropriate only as a temporary
+    rollout step when validating that a
+    defensive switch won't break legitimate
+    clients.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "lb_type": "application",
+          "desync_mitigation_mode": "defensive"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.lb_type
+      op: eq
+      value: application
+    - field: properties.compute.elb.desync_mitigation_mode
+      op: eq
+      value: monitor
+defect: >
+  ALB desync mitigation mode is set to
+  monitor rather than defensive or
+  strictest.
+infection: >
+  HTTP request smuggling exploits
+  disagreement between front-end and back-
+  end about how to interpret request
+  boundaries. The classic vector is
+  Transfer-Encoding versus Content-Length:
+  the ALB sees one request, the backend
+  sees two. Smuggled requests bypass auth,
+  hijack other users' sessions, and poison
+  caches. AWS introduced desync_mitigation_
+  mode in response to published research.
+  Defensive mode normalizes ambiguous
+  requests so the backend sees what the
+  ALB saw. Strictest rejects ambiguous
+  requests outright. Monitor mode lets
+  the ambiguous request through and only
+  emits a CloudWatch metric — the
+  smuggled-request shape passes through
+  the ALB unchanged. Monitor was the
+  initial default to avoid surprise
+  breakage on legacy clients; defensive
+  is the current default for new ALBs.
+failure: >
+  Request-smuggling exposure. Ambiguous
+  HTTP requests pass through the ALB
+  unmodified; back-end interprets them
+  differently than the LB.
+tests:
+  - name: monitor mode fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "application"
+            desync_mitigation_mode: "monitor"
+  - name: defensive mode passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "application"
+            desync_mitigation_mode: "defensive"
+  - name: strictest mode passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "application"
+            desync_mitigation_mode: "strictest"

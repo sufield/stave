@@ -1,0 +1,29 @@
+control: CTL.ELB.ALB.STICKY.COOKIE.INSECURE.001
+defect: >
+  Application-controlled sticky cookie is
+  emitted without the Secure flag.
+infection: >
+  ALB target groups support two stickiness
+  modes: load-balancer-generated cookie
+  (AWSALB / AWSALBCORS), which AWS marks
+  Secure automatically when the front-end
+  is HTTPS, and application-controlled
+  cookie (custom cookie name), where the
+  application is responsible for setting
+  cookie attributes. The session-affinity
+  identifier in the sticky cookie isn't
+  sensitive in the same way as an auth
+  token, but it links a user to a specific
+  backend instance. Combined with logs
+  exposed in another channel, the
+  affinity identifier helps an attacker
+  pin a session to instance metadata,
+  amplifying targeted attacks. The
+  Secure flag is cheap; the Set-Cookie
+  header is application-controlled here,
+  so the discipline is application-owned.
+failure: >
+  Sticky session identifier leaks over
+  HTTP. Anyone on the path between
+  client and server reads the affinity
+  cookie value.

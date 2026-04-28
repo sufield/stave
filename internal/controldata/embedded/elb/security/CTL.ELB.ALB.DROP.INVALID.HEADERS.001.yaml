@@ -1,0 +1,121 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ALB.DROP.INVALID.HEADERS.001
+name: ALB Forwards Invalid HTTP Header Fields to Backend
+description: >
+  ALB attribute drop_invalid_header_fields
+  is disabled. Headers that don't conform
+  to RFC 7230 (control characters, invalid
+  whitespace, malformed names) are
+  forwarded to the backend instead of
+  being stripped. Header-injection and
+  parser-disagreement attacks reach the
+  application layer.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-7, SI-10"
+  pci_dss_v4.0: "6.4.2"
+  fedramp_moderate: "SC-7, SI-10"
+  iso_27001_2022: "A.8.16, A.8.26"
+  ccm_v4: ["IVS-09", "TVM-02"]
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    ALB is forwarding invalid HTTP headers
+    to backends.
+  action: >
+    Enable the ALB attribute
+    routing.http.drop_invalid_header_fields.enabled:
+    aws elbv2 modify-load-balancer-attributes
+    --attributes
+    Key=routing.http.drop_invalid_header_fields.enabled,Value=true.
+    The ALB will then strip headers that
+    don't conform to RFC 7230 before
+    forwarding to the backend. Some legacy
+    clients send technically-invalid
+    headers; validate against expected
+    traffic before flipping in production.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "lb_type": "application",
+          "drop_invalid_header_fields": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.lb_type
+      op: eq
+      value: application
+    - field: properties.compute.elb.drop_invalid_header_fields
+      op: eq
+      value: false
+defect: >
+  ALB drop_invalid_header_fields attribute
+  is disabled.
+infection: >
+  RFC 7230 defines what makes an HTTP header
+  field valid: name characters, value
+  characters, allowed whitespace. Real-world
+  attacks abuse parser disagreement on
+  invalid headers — front-end strips a
+  malformed Host header, back-end uses it;
+  front-end ignores an embedded newline,
+  back-end treats it as a header
+  separator; client smuggles two values
+  for X-Forwarded-For. AWS exposes the
+  drop_invalid_header_fields toggle so the
+  ALB can normalize the request before
+  forwarding. Default is disabled (legacy
+  ALB compatibility), so most accounts
+  inherit the unsafe posture unless an
+  operator flipped it explicitly. Pair
+  with the desync mitigation mode control
+  for end-to-end HTTP request normalization.
+failure: >
+  Header injection / parser disagreement
+  exposure. Malformed headers reach the
+  backend; application-layer parsers see
+  shapes the ALB ignores.
+tests:
+  - name: drop_invalid_header_fields disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "application"
+            drop_invalid_header_fields: false
+  - name: drop_invalid_header_fields enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/abc/123"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            lb_type: "application"
+            drop_invalid_header_fields: true

@@ -1,0 +1,28 @@
+control: CTL.ELB.ALB.DROP.INVALID.HEADERS.001
+defect: >
+  ALB drop_invalid_header_fields attribute
+  is disabled.
+infection: >
+  RFC 7230 defines what makes an HTTP header
+  field valid: name characters, value
+  characters, allowed whitespace. Real-world
+  attacks abuse parser disagreement on
+  invalid headers — front-end strips a
+  malformed Host header, back-end uses it;
+  front-end ignores an embedded newline,
+  back-end treats it as a header
+  separator; client smuggles two values
+  for X-Forwarded-For. AWS exposes the
+  drop_invalid_header_fields toggle so the
+  ALB can normalize the request before
+  forwarding. Default is disabled (legacy
+  ALB compatibility), so most accounts
+  inherit the unsafe posture unless an
+  operator flipped it explicitly. Pair
+  with the desync mitigation mode control
+  for end-to-end HTTP request normalization.
+failure: >
+  Header injection / parser disagreement
+  exposure. Malformed headers reach the
+  backend; application-layer parsers see
+  shapes the ALB ignores.

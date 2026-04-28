@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2048
-**Pack hash:** `e151c6ee7e8a021627196605797261d3d0e7afd5d969bcc055fbaeb65abd484e`
+**Total controls:** 2052
+**Pack hash:** `107e14db31ff959817a6063f8b3c82d06ea83fc8dd25baf6a1e9fc35c7f565b0`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 231 |
-| high | 910 |
+| high | 911 |
 | info | 16 |
 | low | 140 |
-| medium | 751 |
+| medium | 754 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,12 +24,12 @@
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1069 |
+| exposure | 1072 |
 | governance | 280 |
 | hygiene | 16 |
 | identity | 360 |
 | network | 28 |
-| resilience | 18 |
+| resilience | 19 |
 | secrets | 4 |
 | storage | 8 |
 
@@ -13232,6 +13232,66 @@ No CloudWatch alarm monitors ClientTLSNegotiationErrorCount. TLS errors mean cli
 No CloudWatch alarm monitors UnHealthyHostCount. Rising unhealthy host count is the leading indicator of backend degradation — it precedes the zero-healthy state caught by CTL.ELB.TARGET.NOHEALTHY.001. Early detection (alarm at threshold 1) flags the first unhealthy target; by the time TARGET.NOHEALTHY fires, every target is unhealthy and the service is down.
 
 **Remediation:** Create a CloudWatch alarm on UnHealthyHostCount per target group with threshold >= 1 over a 5-minute period. Route to on-call. Pair with HealthyHostCount alarm at threshold 0 so total-failure (NOHEALTHY) is caught even if UnHealthyHostCount stays at 0 (e.g., all targets deregistered).
+
+---
+
+### CTL.ELB.ALB.DESYNC.MODE.001
+
+**ALB Desync Mitigation Mode Set to Monitor**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.4; fedramp_moderate: SC-7, SI-10; iso_27001_2022: A.8.16, A.8.26; nist_800_53_r5: SC-7, SI-3, SI-10; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.7, CC7.2;
+
+ALB desync mitigation mode is set to "monitor" rather than "defensive" or "strictest". Monitor mode lets ambiguous HTTP requests through unchanged — only logging — instead of normalizing or rejecting them. Request-smuggling payloads that exploit Content-Length / Transfer-Encoding ambiguity reach the backend.
+
+**Remediation:** Set the ALB attribute routing.http.desync_mitigation_mode to "defensive" (the default for new ALBs) or "strictest" for hardened workloads: aws elbv2 modify-load-balancer- attributes --attributes Key=routing.http.desync_mitigation_mode,Value=defensive. Defensive normalizes ambiguous requests; strictest rejects them outright. Monitor mode is appropriate only as a temporary rollout step when validating that a defensive switch won't break legitimate clients.
+
+---
+
+### CTL.ELB.ALB.DROP.INVALID.HEADERS.001
+
+**ALB Forwards Invalid HTTP Header Fields to Backend**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7, SI-10; iso_27001_2022: A.8.16, A.8.26; nist_800_53_r5: SC-7, SI-10; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC6.7;
+
+ALB attribute drop_invalid_header_fields is disabled. Headers that don't conform to RFC 7230 (control characters, invalid whitespace, malformed names) are forwarded to the backend instead of being stripped. Header-injection and parser-disagreement attacks reach the application layer.
+
+**Remediation:** Enable the ALB attribute routing.http.drop_invalid_header_fields.enabled: aws elbv2 modify-load-balancer-attributes --attributes Key=routing.http.drop_invalid_header_fields.enabled,Value=true. The ALB will then strip headers that don't conform to RFC 7230 before forwarding to the backend. Some legacy clients send technically-invalid headers; validate against expected traffic before flipping in production.
+
+---
+
+### CTL.ELB.ALB.IDLE.TIMEOUT.LONG.001
+
+**ALB Idle Timeout Exceeds Reasonable Ceiling**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** fedramp_moderate: SC-5; iso_27001_2022: A.8.6, A.8.16; nist_800_53_r5: SC-5, SC-7; pci_dss_v4.0: 6.4.2; soc2: CC6.6, A1.1, A1.2;
+
+ALB idle_timeout is configured for more than 300 seconds. Long-held idle connections amplify the impact of slowloris-style resource exhaustion — each open connection consumes an ALB connection slot and (if forwarded) a backend connection slot until the timeout fires.
+
+**Remediation:** Lower the ALB attribute idle_timeout.timeout_seconds to 60-300 seconds depending on application profile: aws elbv2 modify-load-balancer- attributes --attributes Key=idle_timeout.timeout_seconds,Value=60. The default is 60 seconds. Workloads that need long-held connections (server-sent events, long-poll APIs) should explicitly justify the longer timeout in code review and pair it with WAF rate limiting and connection quotas.
+
+---
+
+### CTL.ELB.ALB.STICKY.COOKIE.INSECURE.001
+
+**ALB Application-Controlled Sticky Cookie Missing Secure Flag**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8, SC-23; iso_27001_2022: A.5.16, A.8.20; nist_800_53_r5: SC-8, SC-23, AC-12; pci_dss_v4.0: 4.2, 8.3; soc2: CC6.1, CC6.7;
+
+Target group is configured with application-controlled sticky session cookies, but the upstream application's cookie response doesn't set the Secure flag. The cookie is transmitted over plain HTTP whenever a user inadvertently lands on the http:// scheme, exposing the session affinity identifier to any party on the path.
+
+**Remediation:** Update the application emitting the sticky cookie to set Secure (and HttpOnly + SameSite as appropriate). Set-Cookie: AWSALBAPP-X=...; Path=/; Secure; HttpOnly; SameSite=Strict. For load-balancer-controlled stickiness (the default cookie name AWSALB), AWS sets Secure automatically when the listener is HTTPS — this control flags the application-managed variant where the operator owns the Set-Cookie header.
 
 ---
 
