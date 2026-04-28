@@ -1,0 +1,22 @@
+control: CTL.APIGATEWAY.DOMAIN.TLS.POLICY.STALE.001
+defect: >
+  Custom domain TLS security policy is older than the current
+  AWS-recommended policy.
+infection: >
+  AWS publishes named TLS security policies for API Gateway
+  custom domains: TLS_1_2_2018, TLS_1_2_2021, etc. Newer
+  policies remove cipher suites that have weakened over time
+  and add modern AEAD ciphers. The TLS minimum version may
+  still be 1.2 — passing the basic version-floor check — but
+  the cipher list is the older recommendation. Clients
+  negotiating with an older policy can pick up cipher suites
+  AWS has since deprecated; the cumulative cipher mix is
+  weaker than what current guidance recommends. The policy
+  should be updated when AWS announces a new recommendation;
+  the migration path is one config change with verification
+  that all clients negotiate successfully against the new
+  cipher list.
+failure: >
+  Cipher list lags current guidance. Clients negotiate
+  against deprecated cipher suites that the current policy
+  has retired.

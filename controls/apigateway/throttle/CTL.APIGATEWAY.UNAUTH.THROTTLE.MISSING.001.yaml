@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.UNAUTH.THROTTLE.MISSING.001
+name: Unauthenticated Routes Lack Per-Method Throttling
+description: >
+  REST API has methods with NONE authorization (intentionally
+  public — health check, signup, contact form) and no method-
+  level throttle is configured for them. Authenticated routes
+  benefit from per-API-key throttling via usage plans;
+  unauthenticated routes do not — every request is anonymous,
+  every request shares the stage-level limit. Public-facing
+  unauthenticated routes are the highest-throughput attack
+  surface on most APIs: bots, scrapers, abuse traffic, DDoS
+  vectors. They warrant the tightest method-level throttle the
+  use case tolerates, paired with WAF rate-based rules at the
+  edge.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-5, AC-7"
+  fedramp_moderate: "SC-5, AC-7"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "A1.1, CC6.6"
+  iso_27001_2022: "A.5.30, A.8.6, A.8.16"
+  ccm_v4: ["AIS-01", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Unauthenticated method has no per-method throttle; relies on
+    stage-level limit only.
+  action: >
+    Add method-level throttle on every NONE-authorized method:
+    aws apigateway update-stage with --patch-operations
+    op=replace,path=/<method-selector>/throttling/rateLimit,
+    value=<rps>. Pair with WAF rate-based rules to drop abusive
+    sources at the edge before they reach API Gateway. For
+    signup or other identity-creation routes, also consider
+    CAPTCHA or proof-of-work to raise the abuse cost.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_method",
+        "method": {
+          "authorization_type": "NONE",
+          "throttle_overridden": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_method
+    - field: properties.api.method.authorization_type
+      op: eq
+      value: NONE
+    - field: properties.api.method.throttle_overridden
+      op: eq
+      value: false

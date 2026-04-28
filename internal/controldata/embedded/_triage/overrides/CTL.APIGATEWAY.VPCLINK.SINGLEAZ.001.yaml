@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.VPCLINK.SINGLEAZ.001
+defect: >
+  VPC Link target NLB has subnets in a single availability zone.
+infection: >
+  NLB only routes to targets in the AZs where the NLB has
+  subnets configured. A single-AZ NLB has a single point of
+  failure tied to the health of that AZ. AZ-failure events
+  are rare but real — and when they happen, single-AZ
+  resources go offline until the AZ recovers. For the VPC
+  Link case, that means every API call routed through the
+  link fails until the AZ is healthy again. The standard
+  production posture is at least two AZs, ideally three; the
+  cost is minimal — additional subnets and a few more
+  targets — and the resilience benefit is meaningful.
+  Development VPC Links and non-production scenarios where
+  AZ redundancy isn't required can document the rationale,
+  but the production default should be multi-AZ.
+failure: >
+  AZ-tied availability. AZ outages take the API integration
+  offline; resilience the NLB layer was supposed to provide
+  doesn't exist.

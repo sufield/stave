@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.WAF.BYPASS.CF.001
+name: WAF Applied Only at CloudFront — Direct API Gateway Access Bypasses It
+description: >
+  REST API stage is fronted by CloudFront with a WAF web ACL
+  attached at the CloudFront layer, but no WAF web ACL is
+  attached at the API Gateway stage layer. The API Gateway
+  execute-api domain (and any custom domain pointed directly
+  at API Gateway rather than at CloudFront) is reachable on
+  the public internet — clients that resolve those endpoints
+  bypass CloudFront entirely, never see the CloudFront-layer
+  WAF, and reach API Gateway directly. Discovery is straight-
+  forward: dig +short, search Censys for the AWS API Gateway
+  certificate, follow CNAMEs through DNS history. The
+  CloudFront-only WAF posture is the false-protection pattern
+  in WAF deployments — appears to provide protection,
+  bypassable at one DNS lookup remove.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, SC-7, SI-4"
+  fedramp_moderate: "AC-3, SC-7, SI-4"
+  pci_dss_v4.0: "1.2, 6.4.2"
+  soc2: "CC6.1, CC6.6, CC8.1"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    WAF is applied at CloudFront but not at API Gateway;
+    direct execute-api access bypasses the WAF.
+  action: >
+    Either disable the default execute-api endpoint and
+    require all clients to traverse CloudFront (the
+    CTL.APIGATEWAY.ENDPOINT.DEFAULT.001 control flags this
+    case), or attach a WAF web ACL at the API Gateway stage
+    level so direct access still flows through WAF: aws
+    wafv2 associate-web-acl with --resource-arn pointing at
+    the API Gateway stage. WAF rules can be attached at
+    multiple layers; the same web ACL ARN can be associated
+    with both CloudFront and API Gateway stages so the rule
+    set stays consistent.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "waf": {
+          "associated_at_cloudfront": true,
+          "associated_at_apigateway": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.waf.associated_at_cloudfront
+      op: eq
+      value: true
+    - field: properties.api.waf.associated_at_apigateway
+      op: eq
+      value: false

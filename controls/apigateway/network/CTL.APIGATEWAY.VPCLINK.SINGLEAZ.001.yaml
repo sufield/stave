@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.VPCLINK.SINGLEAZ.001
+name: VPC Link Target NLB Provisioned in a Single Availability Zone
+description: >
+  REST API VPC Link points at a Network Load Balancer
+  configured with subnets in a single availability zone. NLB
+  cross-zone load balancing aside, the NLB itself only
+  routes to targets in the AZs where the NLB has subnets —
+  a single-AZ NLB has a single point of failure tied to the
+  health of that AZ. AZ-failure events (rare but real) take
+  the entire VPC Link integration offline. Multi-AZ NLB
+  configuration with subnets in at least two AZs (ideally
+  three) is the standard production posture for HA-relevant
+  backends; the cost is minimal — a few subnets and the
+  same NLB.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-2, CP-7, SC-7"
+  fedramp_moderate: "CP-2, CP-7, SC-7"
+  pci_dss_v4.0: "1.2"
+  soc2: "A1.1, A1.2, CC6.6"
+  iso_27001_2022: "A.5.30, A.8.14, A.8.16"
+  ccm_v4: ["BCR-04", "BCR-05"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    VPC Link target NLB has subnets in a single availability
+    zone — AZ failure takes the integration offline.
+  action: >
+    Add subnets in at least one additional availability zone
+    to the NLB: aws elbv2 set-subnets --load-balancer-arn
+    <nlb-arn> --subnets subnet-A subnet-B subnet-C. Provision
+    backend targets in the additional AZs so the NLB has
+    healthy targets to route to. Update the VPC Link
+    configuration if it pins specific subnet IDs. For
+    development or non-production VPC Links where AZ
+    redundancy isn't required, document the rationale in the
+    triage override.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_vpc_link",
+        "vpc_link": {
+          "nlb_az_count": 3
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_vpc_link
+    - field: properties.api.vpc_link.nlb_az_count
+      op: lt
+      value: 2

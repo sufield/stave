@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.USAGEPLAN.RATE.EXCESSIVE.001
+defect: >
+  Usage plan rate limit is set above 10000 RPS — at or above
+  the AWS account-level default ceiling.
+infection: >
+  AWS REST APIs default to a 10000 RPS account-level throttle.
+  A usage plan that sets per-consumer rate at 10000 or higher
+  exerts no effective constraint — every consumer is allowed
+  to burst all the way to the account ceiling. One badly-
+  behaved or compromised client absorbs the entire account's
+  API Gateway capacity. The number is often left at the
+  console-form maximum during initial setup and never tuned;
+  or copied from a high-traffic template without operator
+  review. Most legitimate consumers need 10s-100s of RPS.
+  High-traffic consumers may genuinely need 1000+, but that
+  should be a deliberate operator decision recorded somewhere,
+  not a default.
+failure: >
+  Per-consumer rate is effectively unbounded. The usage plan's
+  rate limit is so high it exerts no real constraint against
+  the account-level ceiling.

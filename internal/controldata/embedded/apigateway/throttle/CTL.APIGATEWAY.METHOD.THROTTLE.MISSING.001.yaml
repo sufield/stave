@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.METHOD.THROTTLE.MISSING.001
+name: REST API Method Lacks Per-Method Throttle Override
+description: >
+  Sensitive REST API method (login, signup, password reset,
+  payment, search, file upload) has no method-level throttle
+  override. The method inherits the stage-level rate, which is
+  typically tuned for normal-flow methods. Sensitive methods
+  warrant tighter limits — login at 5 RPS rather than 1000 RPS
+  drops credential-stuffing throughput by 200x without
+  affecting legitimate users (who login once per session).
+  Method-level overrides are the surgical layer; stage-level
+  is the broad layer; usage plans are the per-consumer layer.
+  All three combine to bound an attacker's effective throughput.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5, AC-7"
+  fedramp_moderate: "SC-5, AC-7"
+  pci_dss_v4.0: "6.4.1, 8.3.4"
+  soc2: "A1.1, CC6.6"
+  iso_27001_2022: "A.5.30, A.8.6, A.8.16"
+  ccm_v4: ["AIS-01", "IAM-13"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Sensitive method inherits stage-level throttle; method-
+    specific tightening is missing.
+  action: >
+    Add method-level throttle on sensitive methods via the stage
+    methodSettings: aws apigateway update-stage with
+    --patch-operations
+    op=replace,path=/~1users~1login/POST/throttling/rateLimit,
+    value=5. The path encoding uses ~1 for / in the method
+    selector. Identify sensitive methods by reviewing the API's
+    operation list — any operation that gates auth, mutates
+    sensitive resources, or has a meaningful per-user upper
+    bound on legitimate frequency is a candidate.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_method",
+        "method": {
+          "is_sensitive": true,
+          "throttle_overridden": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_method
+    - field: properties.api.method.is_sensitive
+      op: eq
+      value: true
+    - field: properties.api.method.throttle_overridden
+      op: eq
+      value: false

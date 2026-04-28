@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.DOMAIN.CERT.EXPIRY.WARN.001
+defect: >
+  Custom domain certificate expires within 30 days.
+infection: >
+  ACM-issued certificates auto-renew when they're attached to a
+  supported AWS service and DNS validation records remain
+  valid; imported certificates do not — the operator is
+  responsible for re-importing before the expiry timestamp.
+  The 30-day window catches both auto-renewal failures (DNS
+  validation records were deleted, the validation broke) and
+  imported-cert renewal oversights. Expired certificates fail
+  hard the moment the timestamp passes: clients see
+  certificate-not-valid TLS errors, every API call fails,
+  and the operator usually finds out from the customer or
+  the on-call alarm. The 30-day buffer gives time to inspect
+  ACM auto-renewal status, request and validate a new cert
+  if needed, and roll forward without an outage.
+failure: >
+  Imminent TLS outage. The cert is days from expiry; without
+  intervention every client connection will fail when the
+  timestamp passes.

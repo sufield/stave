@@ -1,0 +1,21 @@
+control: CTL.APIGATEWAY.USAGEPLAN.QUOTA.MISSING.001
+defect: >
+  Usage plan defines rate and burst limits but no daily or
+  monthly quota.
+infection: >
+  Rate and burst constrain the instantaneous flow of requests;
+  quota constrains the aggregate consumption over a period
+  (DAY, WEEK, MONTH). A consumer that respects the rate limit
+  for 24 straight hours generates orders of magnitude more
+  requests than the operator likely intended — Lambda
+  invocation costs spike, downstream backends absorb sustained
+  load, database read/write spend climbs. APIs that handle
+  business operations (signup, password reset, payment, search,
+  any cost-bearing call) need a quota that matches the
+  consumer's expected aggregate behavior. Quota is the time-
+  bounded ceiling; rate is the instantaneous flow cap. Both
+  are needed for cost containment; one alone is incomplete.
+failure: >
+  Aggregate consumption is unbounded. A consumer that respects
+  the rate limit can still drive Denial-of-Wallet costs by
+  hammering for hours.

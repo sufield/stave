@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.DOMAIN.TLS.POLICY.STALE.001
+name: API Gateway Custom Domain Uses Stale TLS Security Policy
+description: >
+  API Gateway custom domain is configured with a TLS security
+  policy older than the current AWS-recommended policy (e.g.,
+  TLS_1_2_2018 instead of TLS_1_2_2021). Newer policies remove
+  weaker cipher suites and add modern AEAD ciphers. The TLS
+  minimum version itself may be 1.2 — passing the basic
+  minimum-version check — but the cipher list is the older
+  recommendation. Clients negotiating with an older policy
+  pick up cipher suites AWS has since deprecated; the
+  cumulative cipher mix has weakened relative to current
+  guidance.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8, SC-13"
+  fedramp_moderate: "SC-8, SC-13"
+  pci_dss_v4.0: "4.2"
+  soc2: "CC6.1, CC6.7"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "DSP-10"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Custom domain TLS security policy is the older AWS
+    recommendation; current policy includes only modern AEAD
+    ciphers.
+  action: >
+    Update the custom domain security policy to the current AWS
+    recommendation (TLS_1_2_2021 at the time of writing): aws
+    apigateway update-domain-name --domain-name <name>
+    --patch-operations
+    op=replace,path=/securityPolicy,value=TLS_1_2_2021. Track
+    AWS announcements for newer policy releases and update
+    in step. Verify that all clients negotiate successfully
+    after the change; older clients may need TLS-stack
+    upgrades to negotiate with the modern cipher list.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_custom_domain",
+        "tls": {
+          "policy": "TLS_1_2_2021",
+          "policy_is_current": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_custom_domain
+    - field: properties.api.tls.policy_is_current
+      op: eq
+      value: false

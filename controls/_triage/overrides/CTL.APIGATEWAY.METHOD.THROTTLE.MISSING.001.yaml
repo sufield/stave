@@ -1,0 +1,23 @@
+control: CTL.APIGATEWAY.METHOD.THROTTLE.MISSING.001
+defect: >
+  Sensitive REST API method (login, signup, password reset,
+  payment, search, file upload) inherits the stage-level rate
+  with no method-level override.
+infection: >
+  Stage-level throttling is tuned for normal-flow methods —
+  catalog reads, status checks, low-frequency CRUD. Sensitive
+  methods don't share the normal-flow profile and warrant
+  tighter limits: login at 5 RPS rather than the stage's
+  1000 RPS drops credential-stuffing throughput by 200x
+  without affecting legitimate users (who login once per
+  session). Method-level overrides are the surgical layer;
+  stage-level is broad; usage plans are per-consumer. All
+  three combine to bound an attacker's effective throughput
+  on the methods that matter — without the method-level
+  layer, the broad stage rate is what guards every method
+  including the most attractive targets.
+failure: >
+  Sensitive methods aren't tightly throttled. Credential-
+  stuffing, payment-flooding, and other targeted abuse runs
+  at the broad stage rate rather than a sensitive-operation-
+  appropriate ceiling.

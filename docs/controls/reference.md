@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2068
-**Pack hash:** `d44cc6f0be0e3db38700b6178ab3e3856f1e66cd681363ea0950c6cd568c8ef1`
+**Total controls:** 2084
+**Pack hash:** `b8444b56ff4aadfe4783a1e243990de26b9c27fdecf2c9fe80d87566b245587a`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 231 |
-| high | 916 |
+| high | 921 |
 | info | 16 |
-| low | 140 |
-| medium | 765 |
+| low | 141 |
+| medium | 775 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1073 |
-| governance | 280 |
+| exposure | 1085 |
+| governance | 284 |
 | hygiene | 16 |
 | identity | 368 |
 | network | 28 |
@@ -725,6 +725,21 @@ Access logging is enabled with a CloudWatch log group destination, but the log g
 
 ---
 
+### CTL.APIGATEWAY.ACCOUNT.THROTTLE.DEFAULT.001
+
+**API Gateway Account-Level Throttle At AWS Default Without Operator Review**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-5, CM-2; iso_27001_2022: A.5.30, A.8.6; nist_800_53_r5: SC-5, CM-2; pci_dss_v4.0: 6.4.1; soc2: A1.1, CC6.6, CC8.1;
+
+Account-level API Gateway throttle is at the AWS default (10000 RPS, 5000 burst) and no operator-recorded review exists in the account's configuration history. The account- level throttle is the ceiling against which every stage and every usage plan competes — one runaway stage can absorb the entire account's capacity, denying service to every other API in the account. The default value isn't inherently wrong; it's the absence of operator review that matters. Accounts hosting only a few low-traffic APIs should be far below 10000; accounts hosting high-traffic production workloads may legitimately request quota increases from AWS and should record the rationale.
+
+**Remediation:** Either record an operator review confirming the default is appropriate (annotate via account tags or an SSM parameter documenting the review date and reviewer), or adjust the account-level throttle to match the portfolio. aws apigateway update-account with --patch-operations op=replace,path=/throttleSettings/rateLimit,value=<rps>. For accounts hosting public APIs, lower bounds force per- stage throttling decisions to be deliberate; for backend- integration accounts, much lower limits often suit the actual traffic profile.
+
+---
+
 ### CTL.APIGATEWAY.ALARM.4XX.001
 
 **No CloudWatch Alarm on API Gateway 4xx Error Rate**
@@ -935,6 +950,21 @@ API Gateway REST API stages with caching enabled must encrypt cached responses a
 
 ---
 
+### CTL.APIGATEWAY.CACHE.KEY.MISSING.001
+
+**API Gateway Caching Enabled Without Cache Key Parameters**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5, SI-10; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: SC-5, SI-10; pci_dss_v4.0: 6.4.2; soc2: CC6.1, CC7.1;
+
+REST API stage has caching enabled but no cache key parameters are configured. With no key parameters, every request to a given resource+method receives the same cached response regardless of query string, path parameter, or header variation. A user query for /products?id=5 returns the cached response for /products?id=42. The cache turns from a performance accelerator into a correctness hazard — users see other users' data, search results unrelated to the query, responses for resource IDs that aren't theirs. Cache key parameters tell API Gateway which request attributes partition the cache; for any non-trivial endpoint, at least the query string and path parameters that vary the response must be in the key.
+
+**Remediation:** Configure cache key parameters on the method that match the request attributes which legitimately vary the response. aws apigateway put-method with cacheKeyParameters listing method.request.querystring.<name>, method.request.path.<name>, method.request.header.<name>. For per-user caches, key on the auth-derived caller (method.request.header.Authorization or a custom header). For endpoints whose response should not be cached at all, disable caching on the method instead of caching with no keys.
+
+---
+
 ### CTL.APIGATEWAY.CACHE.TTL.001
 
 **REST API Cache TTL At Default Maximum**
@@ -965,6 +995,36 @@ API Gateway v2 HTTP APIs expose CORS configuration at the API level. Setting All
 
 ---
 
+### CTL.APIGATEWAY.DOMAIN.CERT.EXPIRY.WARN.001
+
+**API Gateway Custom Domain Certificate Expires Within 30 Days**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8, SC-12, SC-17; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: SC-8, SC-12, SC-17; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7, CC8.1;
+
+Custom domain certificate is approaching expiry. ACM-issued certificates auto-renew when they're attached to a supported AWS service and DNS validation records remain valid; imported certificates do not — the operator is responsible for re-importing before expiry. The 30-day window catches both auto-renewal failures (DNS records changed, validation broke) and imported-cert renewal oversights. Expired certificates produce hard TLS failures the moment the expiration timestamp passes — clients see certificate-not-valid errors, every API call fails, and the operator finds out from customer reports.
+
+**Remediation:** For ACM-managed certificates, verify auto-renewal is healthy: aws acm describe-certificate to inspect RenewalSummary; failed renewal usually indicates a DNS validation record was deleted. For imported certificates, request and import a renewal: aws acm import-certificate with --certificate, --private-key, --certificate-chain, and the existing certificate ARN to replace in place. Verify the new ARN is associated with the custom domain after import.
+
+---
+
+### CTL.APIGATEWAY.DOMAIN.CERT.NOTACM.001
+
+**API Gateway Custom Domain Certificate Imported Manually Instead of ACM-Issued**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-12, SC-17; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: SC-12, SC-17, CM-2; pci_dss_v4.0: 4.2; soc2: CC6.7, CC8.1;
+
+Custom domain certificate is imported into ACM rather than issued by ACM. Imported certificates are valid TLS certificates and ACM holds them, but ACM cannot auto-renew them — the operator must request a new certificate from the issuing CA, import the renewed cert, and re-associate with the custom domain before the existing cert expires. ACM-issued certificates renew automatically (provided DNS validation records remain valid) and the operator is notified before expiry. Manually-imported certs are a recurring operational burden; the manual step is precisely where renewals get missed.
+
+**Remediation:** Migrate to an ACM-issued certificate when feasible: aws acm request-certificate with the same SAN list, complete DNS validation, then update the custom domain to use the new ACM-issued ARN. ACM-issued certificates handle renewal silently. Migration is a one-time effort that eliminates the recurring manual renewal step. For cases where imported certs are required (third-party CA requirements, EV certificates, internal CA chains), document the rationale and implement an external monitor that alerts well before expiry.
+
+---
+
 ### CTL.APIGATEWAY.DOMAIN.TLS.001
 
 **API Gateway Custom Domains Must Enforce TLS 1.2+**
@@ -977,6 +1037,36 @@ API Gateway v2 HTTP APIs expose CORS configuration at the API level. Setting All
 API Gateway custom domain names must enforce a minimum TLS version of 1.2. TLS 1.0 and 1.1 have known protocol-level vulnerabilities including BEAST, POODLE, and weak cipher suites that enable man-in-the-middle attacks. When a custom domain allows TLS below 1.2, an attacker on the network path can downgrade the connection and intercept API credentials, session tokens, or request payloads in transit. AWS API Gateway supports TLS 1.2 as the minimum security policy. Custom domains configured with older TLS versions expose every API behind that domain to protocol downgrade attacks regardless of the application-layer security controls in place.
 
 **Remediation:** Update the custom domain security policy to TLS_1_2. In the API Gateway console or via the AWS CLI, set the security policy on the domain name to TLS_1_2. Verify that all API clients support TLS 1.2 before applying the change. Monitor CloudWatch access logs for connection failures after the update to identify clients that need upgrading.
+
+---
+
+### CTL.APIGATEWAY.DOMAIN.TLS.POLICY.STALE.001
+
+**API Gateway Custom Domain Uses Stale TLS Security Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-8, SC-13; iso_27001_2022: A.8.24; nist_800_53_r5: SC-8, SC-13; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+API Gateway custom domain is configured with a TLS security policy older than the current AWS-recommended policy (e.g., TLS_1_2_2018 instead of TLS_1_2_2021). Newer policies remove weaker cipher suites and add modern AEAD ciphers. The TLS minimum version itself may be 1.2 — passing the basic minimum-version check — but the cipher list is the older recommendation. Clients negotiating with an older policy pick up cipher suites AWS has since deprecated; the cumulative cipher mix has weakened relative to current guidance.
+
+**Remediation:** Update the custom domain security policy to the current AWS recommendation (TLS_1_2_2021 at the time of writing): aws apigateway update-domain-name --domain-name <name> --patch-operations op=replace,path=/securityPolicy,value=TLS_1_2_2021. Track AWS announcements for newer policy releases and update in step. Verify that all clients negotiate successfully after the change; older clients may need TLS-stack upgrades to negotiate with the modern cipher list.
+
+---
+
+### CTL.APIGATEWAY.EDGE.NOCLOUDFRONT.001
+
+**REST API With EDGE Endpoint Type Lacks CloudFront Origin Configuration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-7, CM-2; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: SC-7, CM-2; pci_dss_v4.0: 1.2, 6.4.2; soc2: CC6.1, CC6.6;
+
+REST API is configured with EDGE endpoint type but is not fronted by an operator-managed CloudFront distribution. EDGE endpoint type uses a CloudFront distribution that AWS manages on the customer's behalf — it provides geographic edge termination but is not customer-configurable for WAF, custom error pages, geo-restriction, signed URLs, or origin shield. Most production APIs warrant a customer-managed CloudFront in front of REGIONAL endpoints rather than the EDGE convenience type, because customer-managed CloudFront exposes the full configuration surface. EDGE without a customer CloudFront in front loses the ability to apply WAF, custom origin headers, and per-PoP routing decisions.
+
+**Remediation:** Switch to REGIONAL endpoint type and front the API with a customer-managed CloudFront distribution: aws apigateway update-rest-api with --patch-operations op=replace,path=/endpointConfiguration/types,value=REGIONAL, then create a CloudFront distribution with the API Gateway domain as origin and configure WAF, custom error responses, and any other CloudFront-managed surfaces. EDGE endpoint type is appropriate for low-traffic APIs that legitimately don't need any of the customer- CloudFront features, but those should be the exception.
 
 ---
 
@@ -1159,6 +1249,21 @@ The observation snapshot is missing required API Gateway properties.
 
 ---
 
+### CTL.APIGATEWAY.INTEGRATION.HTTP.BACKEND.PUBLIC.001
+
+**HTTP Integration Backend Is Public Internet URL Instead of Private Endpoint**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7, AC-4; iso_27001_2022: A.5.10, A.8.16; nist_800_53_r5: SC-7, AC-4; pci_dss_v4.0: 1.2, 1.3, 4.2; soc2: CC6.1, CC6.6;
+
+REST API method has an HTTP_PROXY or HTTP integration whose backend URL resolves to a public internet endpoint rather than a private resource (VPC endpoint, private DNS, internal IP). API Gateway routes traffic over the public internet to reach the backend — adding a public-internet hop between API Gateway (an AWS service in the same region, often the same account as the backend) and the backend itself. That hop is unnecessary egress, increases attack surface (the backend has a public listener that must accept traffic from arbitrary AWS API Gateway IP ranges), and removes the private-network blast-radius containment that VPC isolation provides.
+
+**Remediation:** Replace the public URL with a VPC Link integration to a private NLB or with a private DNS name resolved within the VPC: aws apigateway update-integration with --patch-operations op=replace,path=/connectionType,value=VPC_LINK and the appropriate connectionId. For backends that are inherently third-party (an external SaaS API), document the rationale in the triage override — third-party reach legitimately transits the public internet and is not the case this control flags.
+
+---
+
 ### CTL.APIGATEWAY.INTEGRATION.HTTP.PLAINTEXT.001
 
 **API Gateway Integration Forwards to HTTP Backend**
@@ -1234,6 +1339,21 @@ API Gateway REST API stages must have execution or access logging enabled to Clo
 
 ---
 
+### CTL.APIGATEWAY.METHOD.THROTTLE.MISSING.001
+
+**REST API Method Lacks Per-Method Throttle Override**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5, AC-7; iso_27001_2022: A.5.30, A.8.6, A.8.16; nist_800_53_r5: SC-5, AC-7; pci_dss_v4.0: 6.4.1, 8.3.4; soc2: A1.1, CC6.6;
+
+Sensitive REST API method (login, signup, password reset, payment, search, file upload) has no method-level throttle override. The method inherits the stage-level rate, which is typically tuned for normal-flow methods. Sensitive methods warrant tighter limits — login at 5 RPS rather than 1000 RPS drops credential-stuffing throughput by 200x without affecting legitimate users (who login once per session). Method-level overrides are the surgical layer; stage-level is the broad layer; usage plans are the per-consumer layer. All three combine to bound an attacker's effective throughput.
+
+**Remediation:** Add method-level throttle on sensitive methods via the stage methodSettings: aws apigateway update-stage with --patch-operations op=replace,path=/~1users~1login/POST/throttling/rateLimit, value=5. The path encoding uses ~1 for / in the method selector. Identify sensitive methods by reviewing the API's operation list — any operation that gates auth, mutates sensitive resources, or has a meaningful per-user upper bound on legitimate frequency is a candidate.
+
+---
+
 ### CTL.APIGATEWAY.MTLS.001
 
 **REST API Stages Must Use Client Certificates**
@@ -1306,6 +1426,21 @@ API Gateway has no custom domain associated and has not been deployed in the las
 API Gateway has an authorizer configured but no route or method references it. The authorizer exists in the API's configuration but is enforcing authentication on nothing. Three causes produce this state. First, an authorizer that was attached to routes earlier was detached during a configuration change — the routes are now unauthenticated and the authorizer is a vestigial artifact. Second, an authorizer was created during initial setup and the routes that were supposed to use it were never updated to reference it — the authorizer's existence masks the fact that nothing is authenticated. Third, the routes that referenced the authorizer were deleted but the authorizer wasn't cleaned up. The control is low severity — the authorizer's existence is not itself a vulnerability — but the orphan signal indicates one of the three causes above warrants investigation.
 
 **Remediation:** Determine which of the three causes applies. If routes were detached, re-attach the authorizer (or confirm the detachment was intentional and the routes are deliberately unauthenticated). If routes were never attached, attach the authorizer to the intended routes. If the authorizer is truly unused, delete it so the API's configuration accurately reflects what it enforces.
+
+---
+
+### CTL.APIGATEWAY.PAYLOAD.SIZE.UNLIMITED.001
+
+**API Gateway Method Has No Request Validator Body Size Constraint**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5, SI-10; iso_27001_2022: A.5.30, A.8.6, A.8.16; nist_800_53_r5: SC-5, SI-10; pci_dss_v4.0: 6.4.1, 6.4.2; soc2: A1.1, CC6.6;
+
+REST API method does not declare an explicit maximum body size constraint via the request validator and request model. API Gateway accepts request bodies up to the service maximum (10 MB for REST, 10 MB for HTTP). For most APIs the legitimate maximum is far smaller — kilobytes for typical JSON, hundreds of kilobytes for richly-attributed records. The 10 MB ceiling is a memory amplification vector: an attacker sends max-size bodies repeatedly to exhaust backend memory (Lambda allocation, container heap), drive up invocation cost, or trigger downstream timeouts. The fix is the request model declaring a maxLength / maxItems / maxBytes constraint matching the operation's legitimate maximum.
+
+**Remediation:** Define a request model with maxLength / maxItems constraints in the JSON Schema, attach the model to the method, and ensure a request validator is configured to enforce body validation. aws apigateway create-model followed by update-method to attach. For methods that legitimately accept large bodies (file upload, batch import), document the rationale in the triage override rather than removing the constraint.
 
 ---
 
@@ -1504,6 +1639,51 @@ API Gateway REST API stages should enable X-Ray active tracing for distributed r
 
 ---
 
+### CTL.APIGATEWAY.UNAUTH.THROTTLE.MISSING.001
+
+**Unauthenticated Routes Lack Per-Method Throttling**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5, AC-7; iso_27001_2022: A.5.30, A.8.6, A.8.16; nist_800_53_r5: SC-5, AC-7; pci_dss_v4.0: 6.4.1; soc2: A1.1, CC6.6;
+
+REST API has methods with NONE authorization (intentionally public — health check, signup, contact form) and no method- level throttle is configured for them. Authenticated routes benefit from per-API-key throttling via usage plans; unauthenticated routes do not — every request is anonymous, every request shares the stage-level limit. Public-facing unauthenticated routes are the highest-throughput attack surface on most APIs: bots, scrapers, abuse traffic, DDoS vectors. They warrant the tightest method-level throttle the use case tolerates, paired with WAF rate-based rules at the edge.
+
+**Remediation:** Add method-level throttle on every NONE-authorized method: aws apigateway update-stage with --patch-operations op=replace,path=/<method-selector>/throttling/rateLimit, value=<rps>. Pair with WAF rate-based rules to drop abusive sources at the edge before they reach API Gateway. For signup or other identity-creation routes, also consider CAPTCHA or proof-of-work to raise the abuse cost.
+
+---
+
+### CTL.APIGATEWAY.USAGEPLAN.QUOTA.MISSING.001
+
+**Usage Plan Has Rate Limit But No Daily/Monthly Quota**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5, SC-6; iso_27001_2022: A.5.30, A.8.6; nist_800_53_r5: SC-5, SC-6; pci_dss_v4.0: 6.4.1; soc2: A1.1, A1.2, CC6.6;
+
+REST API usage plan is configured with rate and burst limits but no quota (daily/weekly/monthly request count cap). Rate and burst constrain instantaneous traffic, not aggregate consumption. A consumer that stays under the rate limit but hammers the API steadily for 24 hours generates orders of magnitude more requests than the operator likely intended, driving Lambda invocation costs, downstream backend load, and database read/write spend. Quotas are the time-bounded consumption cap; rate is the instantaneous flow limit. APIs that handle business operations (signup, password reset, payment, search) should set quotas that match expected consumer behavior.
+
+**Remediation:** Set a quota on the usage plan that matches expected consumer aggregate behavior: aws apigateway update-usage-plan with --patch-operations op=add,path=/quota,value='{"limit":10000,"period":"DAY"}'. Periods are DAY, WEEK, MONTH. The number should reflect a consumer's expected upper bound plus operational headroom — bursting consumers can exceed in-period budget; the operator decides whether to refuse or to allow.
+
+---
+
+### CTL.APIGATEWAY.USAGEPLAN.RATE.EXCESSIVE.001
+
+**Usage Plan Rate Limit Far Exceeds Plausible Consumer Need**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5, SC-6, CM-2; iso_27001_2022: A.5.30, A.8.6; nist_800_53_r5: SC-5, SC-6, CM-2; pci_dss_v4.0: 6.4.1; soc2: A1.1, A1.2, CC6.6;
+
+REST API usage plan is configured with a rate limit greater than 10000 requests per second per consumer. That ceiling is the AWS account-level default; setting a usage plan rate at or above the account-level limit means the usage plan exerts no effective constraint — every consumer can burst to the account ceiling. Most APIs serve consumers that legitimately need 10s-100s of RPS, not 10000. The number is often left at the AWS console-form maximum during initial setup and never tuned downward; or copied from a high-traffic template without review.
+
+**Remediation:** Lower the per-consumer rate to the value the consumer actually needs: aws apigateway update-usage-plan with --patch-operations op=replace,path=/throttle/rateLimit, value=100. Pair with a burst limit roughly 2-3x the rate. Values appropriate for typical consumers are 10-100 RPS; high-traffic consumers may legitimately need 1000+ but that should be a deliberate decision, not a default.
+
+---
+
 ### CTL.APIGATEWAY.VALIDATION.001
 
 **API Gateway Must Have Request Validation Enabled**
@@ -1549,6 +1729,36 @@ REST API method has no request validator configured at the method level. Distinc
 
 ---
 
+### CTL.APIGATEWAY.VPCLINK.SG.BROAD.001
+
+**VPC Link Target NLB Security Group Allows Sources Beyond API Gateway**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, SC-7; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-3, SC-7; pci_dss_v4.0: 1.2, 1.3, 6.4.2; soc2: CC6.1, CC6.6;
+
+REST API VPC Link points at a Network Load Balancer whose security group allows inbound traffic from sources beyond the API Gateway service. Common shapes: SG opens the application port from 0.0.0.0/0, from broad VPC CIDRs, or from any SG in the account. The VPC Link is the API Gateway path to the backend; the NLB SG should restrict inbound to the API Gateway prefix list (com.amazonaws.<region>.apigateway-execute-api) so other sources can't reach the backend by addressing the NLB directly. With a broad SG, anything that can resolve the NLB hostname or IP reaches the backend without traversing API Gateway — bypassing authorizers, WAF, and every other API-Gateway-layer protection.
+
+**Remediation:** Tighten the NLB security group to allow inbound on the application port from only the AWS API Gateway prefix list: aws ec2 authorize-security-group-ingress with SourcePrefixListIds set to the com.amazonaws.<region>.apigateway-execute-api prefix list. Remove broader rules (0.0.0.0/0, broad CIDRs, unrelated SGs). For NLBs that legitimately serve traffic from sources beyond API Gateway (shared NLB used by other callers), document the additional sources explicitly and ensure each is justified.
+
+---
+
+### CTL.APIGATEWAY.VPCLINK.SINGLEAZ.001
+
+**VPC Link Target NLB Provisioned in a Single Availability Zone**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-2, CP-7, SC-7; iso_27001_2022: A.5.30, A.8.14, A.8.16; nist_800_53_r5: CP-2, CP-7, SC-7; pci_dss_v4.0: 1.2; soc2: A1.1, A1.2, CC6.6;
+
+REST API VPC Link points at a Network Load Balancer configured with subnets in a single availability zone. NLB cross-zone load balancing aside, the NLB itself only routes to targets in the AZs where the NLB has subnets — a single-AZ NLB has a single point of failure tied to the health of that AZ. AZ-failure events (rare but real) take the entire VPC Link integration offline. Multi-AZ NLB configuration with subnets in at least two AZs (ideally three) is the standard production posture for HA-relevant backends; the cost is minimal — a few subnets and the same NLB.
+
+**Remediation:** Add subnets in at least one additional availability zone to the NLB: aws elbv2 set-subnets --load-balancer-arn <nlb-arn> --subnets subnet-A subnet-B subnet-C. Provision backend targets in the additional AZs so the NLB has healthy targets to route to. Update the VPC Link configuration if it pins specific subnet IDs. For development or non-production VPC Links where AZ redundancy isn't required, document the rationale in the triage override.
+
+---
+
 ### CTL.APIGATEWAY.WAF.001
 
 **REST API Stages Must Have WAF ACL Attached**
@@ -1561,6 +1771,36 @@ REST API method has no request validator configured at the method level. Distinc
 API Gateway REST API stages must have an AWS WAF web ACL associated for application-layer filtering. Without WAF, APIs are exposed to injection attacks, parameter tampering, L7 floods, and bot abuse.
 
 **Remediation:** Associate a WAFv2 web ACL with the API stage.
+
+---
+
+### CTL.APIGATEWAY.WAF.BYPASS.CF.001
+
+**WAF Applied Only at CloudFront — Direct API Gateway Access Bypasses It**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3, SC-7, SI-4; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, SC-7, SI-4; pci_dss_v4.0: 1.2, 6.4.2; soc2: CC6.1, CC6.6, CC8.1;
+
+REST API stage is fronted by CloudFront with a WAF web ACL attached at the CloudFront layer, but no WAF web ACL is attached at the API Gateway stage layer. The API Gateway execute-api domain (and any custom domain pointed directly at API Gateway rather than at CloudFront) is reachable on the public internet — clients that resolve those endpoints bypass CloudFront entirely, never see the CloudFront-layer WAF, and reach API Gateway directly. Discovery is straight- forward: dig +short, search Censys for the AWS API Gateway certificate, follow CNAMEs through DNS history. The CloudFront-only WAF posture is the false-protection pattern in WAF deployments — appears to provide protection, bypassable at one DNS lookup remove.
+
+**Remediation:** Either disable the default execute-api endpoint and require all clients to traverse CloudFront (the CTL.APIGATEWAY.ENDPOINT.DEFAULT.001 control flags this case), or attach a WAF web ACL at the API Gateway stage level so direct access still flows through WAF: aws wafv2 associate-web-acl with --resource-arn pointing at the API Gateway stage. WAF rules can be attached at multiple layers; the same web ACL ARN can be associated with both CloudFront and API Gateway stages so the rule set stays consistent.
+
+---
+
+### CTL.APIGATEWAY.WAF.RATELIMIT.MISSING.001
+
+**API Gateway WAF Web ACL Has No Rate-Based Rule**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5, SC-7, SI-4; iso_27001_2022: A.5.30, A.8.6, A.8.16; nist_800_53_r5: SC-5, SC-7, SI-4; pci_dss_v4.0: 6.4.1, 6.4.2; soc2: A1.1, CC6.6, CC7.2;
+
+REST API stage is associated with a WAF web ACL, but the web ACL contains no rate-based rule. Rate-based rules drop abusive sources at the WAF layer before requests ever reach API Gateway — the lowest-cost, highest-leverage layer for application-DDoS mitigation. API Gateway's own throttling layer is per-stage / per-API-key; it can't drop traffic by IP. Without WAF rate rules the attack-volume traffic still reaches API Gateway, where it consumes the stage rate limit and crowds out legitimate users with 429 responses.
+
+**Remediation:** Add a rate-based rule to the WAF web ACL: aws wafv2 update-web-acl with a Rule of type RateBasedStatement, Limit (request count over 5-minute window), and Action BLOCK. A typical starting point is 2000 requests per IP per 5 minutes; tune downward for sensitive operations (login: 100, signup: 50). Combine with the count-only detect-mode rule first, observe baseline, then promote to block.
 
 ---
 

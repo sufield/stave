@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.VPCLINK.SG.BROAD.001
+name: VPC Link Target NLB Security Group Allows Sources Beyond API Gateway
+description: >
+  REST API VPC Link points at a Network Load Balancer whose
+  security group allows inbound traffic from sources beyond
+  the API Gateway service. Common shapes: SG opens the
+  application port from 0.0.0.0/0, from broad VPC CIDRs, or
+  from any SG in the account. The VPC Link is the API
+  Gateway path to the backend; the NLB SG should restrict
+  inbound to the API Gateway prefix list (com.amazonaws.<region>.apigateway-execute-api)
+  so other sources can't reach the backend by addressing the
+  NLB directly. With a broad SG, anything that can resolve
+  the NLB hostname or IP reaches the backend without
+  traversing API Gateway — bypassing authorizers, WAF, and
+  every other API-Gateway-layer protection.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, SC-7"
+  fedramp_moderate: "AC-3, SC-7"
+  pci_dss_v4.0: "1.2, 1.3, 6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    VPC Link target NLB security group allows sources beyond
+    the API Gateway service.
+  action: >
+    Tighten the NLB security group to allow inbound on the
+    application port from only the AWS API Gateway prefix
+    list: aws ec2 authorize-security-group-ingress with
+    SourcePrefixListIds set to the
+    com.amazonaws.<region>.apigateway-execute-api prefix list.
+    Remove broader rules (0.0.0.0/0, broad CIDRs, unrelated
+    SGs). For NLBs that legitimately serve traffic from
+    sources beyond API Gateway (shared NLB used by other
+    callers), document the additional sources explicitly and
+    ensure each is justified.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_vpc_link",
+        "vpc_link": {
+          "nlb_sg_restricted_to_apigateway": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_vpc_link
+    - field: properties.api.vpc_link.nlb_sg_restricted_to_apigateway
+      op: eq
+      value: false

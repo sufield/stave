@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.PAYLOAD.SIZE.UNLIMITED.001
+name: API Gateway Method Has No Request Validator Body Size Constraint
+description: >
+  REST API method does not declare an explicit maximum body
+  size constraint via the request validator and request model.
+  API Gateway accepts request bodies up to the service maximum
+  (10 MB for REST, 10 MB for HTTP). For most APIs the
+  legitimate maximum is far smaller — kilobytes for typical
+  JSON, hundreds of kilobytes for richly-attributed records.
+  The 10 MB ceiling is a memory amplification vector: an
+  attacker sends max-size bodies repeatedly to exhaust backend
+  memory (Lambda allocation, container heap), drive up
+  invocation cost, or trigger downstream timeouts. The fix is
+  the request model declaring a maxLength / maxItems / maxBytes
+  constraint matching the operation's legitimate maximum.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5, SI-10"
+  fedramp_moderate: "SC-5, SI-10"
+  pci_dss_v4.0: "6.4.1, 6.4.2"
+  soc2: "A1.1, CC6.6"
+  iso_27001_2022: "A.5.30, A.8.6, A.8.16"
+  ccm_v4: ["AIS-01", "IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Method accepts request bodies up to the API Gateway service
+    maximum; no operation-specific body size constraint.
+  action: >
+    Define a request model with maxLength / maxItems
+    constraints in the JSON Schema, attach the model to the
+    method, and ensure a request validator is configured to
+    enforce body validation. aws apigateway create-model
+    followed by update-method to attach. For methods that
+    legitimately accept large bodies (file upload, batch
+    import), document the rationale in the triage override
+    rather than removing the constraint.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_method",
+        "request": {
+          "body_size_constrained": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_method
+    - field: properties.api.request.body_size_constrained
+      op: eq
+      value: false

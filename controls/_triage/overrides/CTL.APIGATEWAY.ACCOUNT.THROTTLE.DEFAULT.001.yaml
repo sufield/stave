@@ -1,0 +1,22 @@
+control: CTL.APIGATEWAY.ACCOUNT.THROTTLE.DEFAULT.001
+defect: >
+  Account-level API Gateway throttle is at the AWS default
+  (10000 RPS / 5000 burst) with no operator-recorded review.
+infection: >
+  The account-level throttle is the ceiling against which every
+  stage and every usage plan competes. One stage's runaway
+  traffic — whether through misuse, attack, or bug — can
+  absorb the entire account's API Gateway capacity, denying
+  service to every other API in the account. The default
+  10000 RPS isn't inherently wrong; it's the absence of
+  operator review that matters. Accounts hosting only a few
+  low-traffic APIs should be far below the default; accounts
+  hosting high-traffic production workloads may legitimately
+  request quota increases from AWS but should record the
+  rationale (account tag, SSM parameter, infrastructure-as-code
+  comment). Reviewing the account-level throttle is a once-
+  per-portfolio operational decision, not a per-API decision.
+failure: >
+  Cross-API blast radius. One runaway stage can absorb the
+  account's entire throttle budget, denying service to every
+  other API hosted in the same account.

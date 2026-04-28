@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.DOMAIN.CERT.NOTACM.001
+name: API Gateway Custom Domain Certificate Imported Manually Instead of ACM-Issued
+description: >
+  Custom domain certificate is imported into ACM rather than
+  issued by ACM. Imported certificates are valid TLS
+  certificates and ACM holds them, but ACM cannot auto-renew
+  them — the operator must request a new certificate from
+  the issuing CA, import the renewed cert, and re-associate
+  with the custom domain before the existing cert expires.
+  ACM-issued certificates renew automatically (provided DNS
+  validation records remain valid) and the operator is
+  notified before expiry. Manually-imported certs are a
+  recurring operational burden; the manual step is precisely
+  where renewals get missed.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12, SC-17, CM-2"
+  fedramp_moderate: "SC-12, SC-17"
+  pci_dss_v4.0: "4.2"
+  soc2: "CC6.7, CC8.1"
+  iso_27001_2022: "A.5.16, A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Custom domain certificate is imported, not ACM-issued —
+    no auto-renewal, manual renewal cycle.
+  action: >
+    Migrate to an ACM-issued certificate when feasible: aws
+    acm request-certificate with the same SAN list, complete
+    DNS validation, then update the custom domain to use the
+    new ACM-issued ARN. ACM-issued certificates handle
+    renewal silently. Migration is a one-time effort that
+    eliminates the recurring manual renewal step. For cases
+    where imported certs are required (third-party CA
+    requirements, EV certificates, internal CA chains),
+    document the rationale and implement an external monitor
+    that alerts well before expiry.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_custom_domain",
+        "cert": {
+          "issued_by_acm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_custom_domain
+    - field: properties.api.cert.issued_by_acm
+      op: eq
+      value: false

@@ -1,0 +1,23 @@
+control: CTL.APIGATEWAY.WAF.RATELIMIT.MISSING.001
+defect: >
+  REST API stage is associated with a WAF web ACL, but the
+  web ACL contains no rate-based rule.
+infection: >
+  Rate-based WAF rules drop abusive sources at the WAF layer
+  before requests ever reach API Gateway — the lowest-cost,
+  highest-leverage layer for application-DDoS mitigation. API
+  Gateway's own throttling layer is per-stage / per-API-key;
+  it can't drop traffic by IP. Without WAF rate rules the
+  attack-volume traffic still reaches API Gateway, where it
+  consumes the stage rate limit and crowds out legitimate
+  users with 429 responses. The defense topology is:
+  WAF rate rules at the edge (drop volume attacks per IP),
+  API Gateway throttling per stage / per usage plan (cap
+  each consumer's traffic), per-method overrides on
+  sensitive routes (cap individual operations). Rate-based
+  WAF rules are the first layer; without them, every other
+  layer absorbs traffic that should never have arrived.
+failure: >
+  Application DDoS reaches API Gateway. WAF is associated but
+  doesn't drop volume attacks; API Gateway's per-stage throttle
+  becomes the front line and runs out first.

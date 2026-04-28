@@ -1,0 +1,22 @@
+control: CTL.APIGATEWAY.EDGE.NOCLOUDFRONT.001
+defect: >
+  REST API uses EDGE endpoint type without an operator-managed
+  CloudFront distribution in front.
+infection: >
+  EDGE endpoint type uses a CloudFront distribution that AWS
+  manages on the customer's behalf — it provides geographic
+  edge termination but is not customer-configurable. The
+  operator cannot attach a WAF web ACL, configure custom error
+  pages, apply geo-restriction, configure signed URLs, or
+  enable Origin Shield. For most production APIs the
+  recommended posture is REGIONAL endpoint type fronted by a
+  customer-managed CloudFront distribution that exposes the
+  full configuration surface. EDGE without a customer
+  CloudFront in front trades configuration capability for
+  one-time-setup convenience; for low-traffic APIs that
+  legitimately don't need any CloudFront-managed surfaces,
+  EDGE is fine — but the choice should be deliberate.
+failure: >
+  Edge protections unavailable. WAF can't attach, custom
+  responses can't customize, geo-restriction can't apply —
+  the API serves everywhere with no edge-layer hardening.

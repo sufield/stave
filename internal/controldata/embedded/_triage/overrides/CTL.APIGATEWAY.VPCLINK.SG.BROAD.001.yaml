@@ -1,0 +1,24 @@
+control: CTL.APIGATEWAY.VPCLINK.SG.BROAD.001
+defect: >
+  VPC Link target NLB security group allows inbound traffic
+  from sources beyond the API Gateway service.
+infection: >
+  The VPC Link is the API Gateway path to the backend. NLB
+  security groups should restrict inbound on the application
+  port to only the AWS API Gateway prefix list
+  (com.amazonaws.<region>.apigateway-execute-api), so other
+  sources can't reach the backend by addressing the NLB
+  directly. Common broad-shape failures: SG opens the
+  application port from 0.0.0.0/0, from broad VPC CIDRs, or
+  from any SG in the account. With a broad SG, anything that
+  can resolve the NLB hostname or IP reaches the backend
+  without traversing API Gateway — bypassing authorizers,
+  WAF, request validation, throttling, and every other API-
+  Gateway-layer protection. Tightening to the apigateway
+  prefix list is a one-line change; for NLBs that
+  legitimately serve other callers, the additional sources
+  should be enumerated and justified.
+failure: >
+  API Gateway protections bypassable. Backend reachable
+  directly from broader sources than API Gateway; auth, WAF,
+  validation, and throttling all skipped.

@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.EDGE.NOCLOUDFRONT.001
+name: REST API With EDGE Endpoint Type Lacks CloudFront Origin Configuration
+description: >
+  REST API is configured with EDGE endpoint type but is not
+  fronted by an operator-managed CloudFront distribution.
+  EDGE endpoint type uses a CloudFront distribution that AWS
+  manages on the customer's behalf — it provides geographic
+  edge termination but is not customer-configurable for WAF,
+  custom error pages, geo-restriction, signed URLs, or origin
+  shield. Most production APIs warrant a customer-managed
+  CloudFront in front of REGIONAL endpoints rather than the
+  EDGE convenience type, because customer-managed CloudFront
+  exposes the full configuration surface. EDGE without a
+  customer CloudFront in front loses the ability to apply
+  WAF, custom origin headers, and per-PoP routing decisions.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7, CM-2"
+  fedramp_moderate: "SC-7, CM-2"
+  pci_dss_v4.0: "1.2, 6.4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EDGE endpoint type without operator-managed CloudFront —
+    no WAF integration point, no custom origin headers, no
+    geo-restriction.
+  action: >
+    Switch to REGIONAL endpoint type and front the API with
+    a customer-managed CloudFront distribution: aws apigateway
+    update-rest-api with --patch-operations
+    op=replace,path=/endpointConfiguration/types,value=REGIONAL,
+    then create a CloudFront distribution with the API
+    Gateway domain as origin and configure WAF, custom error
+    responses, and any other CloudFront-managed surfaces.
+    EDGE endpoint type is appropriate for low-traffic APIs
+    that legitimately don't need any of the customer-
+    CloudFront features, but those should be the exception.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_rest_api",
+        "endpoint": {
+          "type": "EDGE",
+          "fronted_by_customer_cloudfront": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_rest_api
+    - field: properties.api.endpoint.type
+      op: eq
+      value: EDGE
+    - field: properties.api.endpoint.fronted_by_customer_cloudfront
+      op: eq
+      value: false

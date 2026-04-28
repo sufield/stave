@@ -1,0 +1,26 @@
+control: CTL.APIGATEWAY.WAF.BYPASS.CF.001
+defect: >
+  WAF web ACL is attached only at CloudFront, not at the API
+  Gateway stage. Direct execute-api access bypasses the WAF.
+infection: >
+  When CloudFront fronts an API Gateway REST API and the WAF
+  is attached at the CloudFront layer, every request through
+  CloudFront is filtered by WAF. But the API Gateway
+  execute-api domain (and any custom domain pointed directly
+  at API Gateway rather than at CloudFront) is reachable on
+  the public internet. Clients that resolve those endpoints
+  bypass CloudFront entirely, never see the CloudFront-layer
+  WAF, and reach API Gateway directly. Discovery of the
+  bypass path is straightforward: dig the API custom domain,
+  search Censys for the AWS API Gateway certificate, follow
+  CNAME history. The CloudFront-only WAF posture is the
+  false-protection pattern in WAF deployments — it appears
+  to provide protection but is bypassable at one DNS lookup
+  remove. The fix is either to disable the default execute-
+  api endpoint and force all traffic through CloudFront, or
+  to attach the same WAF web ACL at the API Gateway stage so
+  direct access still flows through the rules.
+failure: >
+  Bypassable WAF. Attackers who address API Gateway directly
+  reach the backend with no WAF filtering — the perimeter is
+  cosmetic.

@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.ACCOUNT.THROTTLE.DEFAULT.001
+name: API Gateway Account-Level Throttle At AWS Default Without Operator Review
+description: >
+  Account-level API Gateway throttle is at the AWS default
+  (10000 RPS, 5000 burst) and no operator-recorded review
+  exists in the account's configuration history. The account-
+  level throttle is the ceiling against which every stage and
+  every usage plan competes — one runaway stage can absorb the
+  entire account's capacity, denying service to every other
+  API in the account. The default value isn't inherently
+  wrong; it's the absence of operator review that matters.
+  Accounts hosting only a few low-traffic APIs should be far
+  below 10000; accounts hosting high-traffic production
+  workloads may legitimately request quota increases from AWS
+  and should record the rationale.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "SC-5, CM-2"
+  fedramp_moderate: "SC-5, CM-2"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "A1.1, CC6.6, CC8.1"
+  iso_27001_2022: "A.5.30, A.8.6"
+  ccm_v4: ["AIS-01"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Account-level throttle has not been reviewed against the
+    account's actual API portfolio.
+  action: >
+    Either record an operator review confirming the default is
+    appropriate (annotate via account tags or an SSM parameter
+    documenting the review date and reviewer), or adjust the
+    account-level throttle to match the portfolio. aws
+    apigateway update-account with --patch-operations
+    op=replace,path=/throttleSettings/rateLimit,value=<rps>.
+    For accounts hosting public APIs, lower bounds force per-
+    stage throttling decisions to be deliberate; for backend-
+    integration accounts, much lower limits often suit the
+    actual traffic profile.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_account",
+        "account": {
+          "throttle_reviewed": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_account
+    - field: properties.api.account.throttle_reviewed
+      op: eq
+      value: false

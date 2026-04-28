@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.INTEGRATION.HTTP.BACKEND.PUBLIC.001
+name: HTTP Integration Backend Is Public Internet URL Instead of Private Endpoint
+description: >
+  REST API method has an HTTP_PROXY or HTTP integration whose
+  backend URL resolves to a public internet endpoint rather
+  than a private resource (VPC endpoint, private DNS,
+  internal IP). API Gateway routes traffic over the public
+  internet to reach the backend — adding a public-internet
+  hop between API Gateway (an AWS service in the same
+  region, often the same account as the backend) and the
+  backend itself. That hop is unnecessary egress, increases
+  attack surface (the backend has a public listener that
+  must accept traffic from arbitrary AWS API Gateway IP
+  ranges), and removes the private-network blast-radius
+  containment that VPC isolation provides.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7, AC-4"
+  fedramp_moderate: "SC-7, AC-4"
+  pci_dss_v4.0: "1.2, 1.3, 4.2"
+  soc2: "CC6.1, CC6.6"
+  iso_27001_2022: "A.5.10, A.8.16"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    HTTP integration backend is a public URL; traffic egresses
+    public internet instead of staying private.
+  action: >
+    Replace the public URL with a VPC Link integration to a
+    private NLB or with a private DNS name resolved within the
+    VPC: aws apigateway update-integration with
+    --patch-operations
+    op=replace,path=/connectionType,value=VPC_LINK and the
+    appropriate connectionId. For backends that are inherently
+    third-party (an external SaaS API), document the rationale
+    in the triage override — third-party reach legitimately
+    transits the public internet and is not the case this
+    control flags.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_integration",
+        "integration": {
+          "type": "HTTP_PROXY",
+          "backend_is_private": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_integration
+    - field: properties.api.integration.type
+      op: in
+      value: ["HTTP", "HTTP_PROXY"]
+    - field: properties.api.integration.backend_is_private
+      op: eq
+      value: false

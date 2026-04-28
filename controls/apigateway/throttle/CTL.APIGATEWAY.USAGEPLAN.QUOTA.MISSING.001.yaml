@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.USAGEPLAN.QUOTA.MISSING.001
+name: Usage Plan Has Rate Limit But No Daily/Monthly Quota
+description: >
+  REST API usage plan is configured with rate and burst limits
+  but no quota (daily/weekly/monthly request count cap). Rate
+  and burst constrain instantaneous traffic, not aggregate
+  consumption. A consumer that stays under the rate limit but
+  hammers the API steadily for 24 hours generates orders of
+  magnitude more requests than the operator likely intended,
+  driving Lambda invocation costs, downstream backend load, and
+  database read/write spend. Quotas are the time-bounded
+  consumption cap; rate is the instantaneous flow limit. APIs
+  that handle business operations (signup, password reset,
+  payment, search) should set quotas that match expected
+  consumer behavior.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5, SC-6"
+  fedramp_moderate: "SC-5, SC-6"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "A1.1, A1.2, CC6.6"
+  iso_27001_2022: "A.5.30, A.8.6"
+  ccm_v4: ["AIS-01", "BCR-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Usage plan defines rate/burst but no quota; aggregate
+    consumption is unbounded.
+  action: >
+    Set a quota on the usage plan that matches expected consumer
+    aggregate behavior: aws apigateway update-usage-plan with
+    --patch-operations
+    op=add,path=/quota,value='{"limit":10000,"period":"DAY"}'.
+    Periods are DAY, WEEK, MONTH. The number should reflect a
+    consumer's expected upper bound plus operational headroom —
+    bursting consumers can exceed in-period budget; the
+    operator decides whether to refuse or to allow.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_usage_plan",
+        "usage_plan": {
+          "has_quota": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_usage_plan
+    - field: properties.api.usage_plan.has_quota
+      op: eq
+      value: false

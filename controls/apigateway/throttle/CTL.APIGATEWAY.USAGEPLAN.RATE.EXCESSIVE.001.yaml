@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.USAGEPLAN.RATE.EXCESSIVE.001
+name: Usage Plan Rate Limit Far Exceeds Plausible Consumer Need
+description: >
+  REST API usage plan is configured with a rate limit greater
+  than 10000 requests per second per consumer. That ceiling
+  is the AWS account-level default; setting a usage plan rate
+  at or above the account-level limit means the usage plan
+  exerts no effective constraint — every consumer can burst to
+  the account ceiling. Most APIs serve consumers that
+  legitimately need 10s-100s of RPS, not 10000. The number is
+  often left at the AWS console-form maximum during initial
+  setup and never tuned downward; or copied from a high-traffic
+  template without review.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5, SC-6, CM-2"
+  fedramp_moderate: "SC-5, SC-6, CM-2"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "A1.1, A1.2, CC6.6"
+  iso_27001_2022: "A.5.30, A.8.6"
+  ccm_v4: ["AIS-01"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Usage plan rate is set high enough to be effectively
+    unbounded against the account-level ceiling.
+  action: >
+    Lower the per-consumer rate to the value the consumer
+    actually needs: aws apigateway update-usage-plan with
+    --patch-operations op=replace,path=/throttle/rateLimit,
+    value=100. Pair with a burst limit roughly 2-3x the rate.
+    Values appropriate for typical consumers are 10-100 RPS;
+    high-traffic consumers may legitimately need 1000+ but
+    that should be a deliberate decision, not a default.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_usage_plan",
+        "usage_plan": {
+          "rate_limit_rps": 100
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_usage_plan
+    - field: properties.api.usage_plan.rate_limit_rps
+      op: gt
+      value: 10000

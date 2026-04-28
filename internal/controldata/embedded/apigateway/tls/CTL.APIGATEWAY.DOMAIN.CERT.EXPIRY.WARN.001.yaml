@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.DOMAIN.CERT.EXPIRY.WARN.001
+name: API Gateway Custom Domain Certificate Expires Within 30 Days
+description: >
+  Custom domain certificate is approaching expiry. ACM-issued
+  certificates auto-renew when they're attached to a
+  supported AWS service and DNS validation records remain
+  valid; imported certificates do not — the operator is
+  responsible for re-importing before expiry. The 30-day
+  window catches both auto-renewal failures (DNS records
+  changed, validation broke) and imported-cert renewal
+  oversights. Expired certificates produce hard TLS failures
+  the moment the expiration timestamp passes — clients see
+  certificate-not-valid errors, every API call fails, and
+  the operator finds out from customer reports.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8, SC-12, SC-17"
+  fedramp_moderate: "SC-8, SC-12, SC-17"
+  pci_dss_v4.0: "4.2"
+  soc2: "CC6.1, CC6.7, CC8.1"
+  iso_27001_2022: "A.5.16, A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Custom domain certificate expires within 30 days.
+  action: >
+    For ACM-managed certificates, verify auto-renewal is
+    healthy: aws acm describe-certificate to inspect
+    RenewalSummary; failed renewal usually indicates a DNS
+    validation record was deleted. For imported certificates,
+    request and import a renewal: aws acm import-certificate
+    with --certificate, --private-key, --certificate-chain,
+    and the existing certificate ARN to replace in place.
+    Verify the new ARN is associated with the custom domain
+    after import.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_custom_domain",
+        "cert": {
+          "days_until_expiry": 90
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_custom_domain
+    - field: properties.api.cert.days_until_expiry
+      op: lt
+      value: 30

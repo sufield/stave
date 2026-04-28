@@ -1,0 +1,26 @@
+control: CTL.APIGATEWAY.INTEGRATION.HTTP.BACKEND.PUBLIC.001
+defect: >
+  HTTP integration backend is a public internet URL rather
+  than a private endpoint (VPC Link, private DNS, internal IP).
+infection: >
+  API Gateway is an AWS service running in the same region as
+  the customer's account. When the integration target is
+  inside the same VPC or private network, traffic should stay
+  on the private network — VPC Link to a private NLB, private
+  DNS resolved within the VPC. When the integration target is
+  a public URL, API Gateway's outbound traffic egresses
+  through AWS's public internet boundary and reaches the
+  backend over the public internet. The hop is unnecessary
+  egress (AWS-internal traffic now traverses public networks),
+  forces the backend to expose a public listener (broader
+  attack surface than a VPC-internal listener), and removes
+  the private-network blast-radius containment that VPC
+  isolation provides. Cases that legitimately need public
+  egress — third-party SaaS APIs, external partner services
+  — should document the rationale and accept the public-
+  internet hop deliberately.
+failure: >
+  Unnecessary public egress and broader backend exposure.
+  Backend listener is public, traffic transits public
+  internet, the boundary that VPC was supposed to provide
+  is gone.

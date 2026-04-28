@@ -1,0 +1,22 @@
+control: CTL.APIGATEWAY.UNAUTH.THROTTLE.MISSING.001
+defect: >
+  Unauthenticated REST API method has no method-level throttle;
+  relies on stage-level throttle alone.
+infection: >
+  Authenticated routes benefit from per-API-key throttling via
+  usage plans — the throttle layer can identify the consumer
+  and apply per-consumer limits. Unauthenticated routes do not:
+  every request is anonymous, every request shares the stage-
+  level pool. Public-facing unauthenticated routes (signup,
+  health check, contact form, login, search) are typically the
+  highest-throughput attack surface on most APIs. Bots,
+  scrapers, abuse traffic, and DDoS vectors all target these
+  first because they can without proving identity. The
+  method-level throttle is the first surgical layer; WAF
+  rate-based rules at the edge are the second. Both are
+  needed for unauthenticated-route hardening.
+failure: >
+  Anonymous abuse surface unbounded at the method layer.
+  Unauthenticated methods can absorb the full stage rate,
+  with no per-route throttle to limit how much one method's
+  abuse displaces traffic to others.

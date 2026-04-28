@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.WAF.RATELIMIT.MISSING.001
+name: API Gateway WAF Web ACL Has No Rate-Based Rule
+description: >
+  REST API stage is associated with a WAF web ACL, but the web
+  ACL contains no rate-based rule. Rate-based rules drop
+  abusive sources at the WAF layer before requests ever reach
+  API Gateway — the lowest-cost, highest-leverage layer for
+  application-DDoS mitigation. API Gateway's own throttling
+  layer is per-stage / per-API-key; it can't drop traffic by
+  IP. Without WAF rate rules the attack-volume traffic still
+  reaches API Gateway, where it consumes the stage rate limit
+  and crowds out legitimate users with 429 responses.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5, SC-7, SI-4"
+  fedramp_moderate: "SC-5, SC-7, SI-4"
+  pci_dss_v4.0: "6.4.1, 6.4.2"
+  soc2: "A1.1, CC6.6, CC7.2"
+  iso_27001_2022: "A.5.30, A.8.6, A.8.16"
+  ccm_v4: ["AIS-01", "IVS-09", "TVM-04"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    WAF is associated but has no rate-based rule; abusive
+    sources can saturate API Gateway's per-stage rate limit
+    before WAF intervenes.
+  action: >
+    Add a rate-based rule to the WAF web ACL: aws wafv2
+    update-web-acl with a Rule of type RateBasedStatement,
+    Limit (request count over 5-minute window), and Action
+    BLOCK. A typical starting point is 2000 requests per IP
+    per 5 minutes; tune downward for sensitive operations
+    (login: 100, signup: 50). Combine with the count-only
+    detect-mode rule first, observe baseline, then promote to
+    block.
+  example: |
+    {
+      "api": {
+        "kind": "apigateway_stage",
+        "waf": {
+          "associated": true,
+          "has_rate_based_rule": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: apigateway_stage
+    - field: properties.api.waf.associated
+      op: eq
+      value: true
+    - field: properties.api.waf.has_rate_based_rule
+      op: eq
+      value: false

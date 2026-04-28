@@ -1,0 +1,25 @@
+control: CTL.APIGATEWAY.DOMAIN.CERT.NOTACM.001
+defect: >
+  Custom domain certificate is imported into ACM rather than
+  issued by ACM.
+infection: >
+  Imported certificates are valid TLS certificates — ACM holds
+  them, presents them, the TLS handshake works the same — but
+  ACM cannot auto-renew imported certs. The operator must
+  request a new certificate from the issuing CA, complete
+  whatever validation the CA requires, import the renewed
+  cert, and re-associate it with the custom domain before the
+  existing cert expires. Renewal is recurring operational
+  burden, and the manual step is precisely where renewals
+  get missed. ACM-issued certificates renew automatically
+  when DNS validation records remain valid and the cert is
+  attached to a supported AWS service. The migration from
+  imported to ACM-issued is a one-time effort that
+  eliminates the recurring manual step. Cases where imported
+  certs are required (third-party CA contracts, EV certs,
+  internal CA chains) should document the rationale and add
+  external monitoring against expiry.
+failure: >
+  Recurring renewal exposure. Auto-renewal isn't available;
+  every renewal cycle is a manual step where missing the
+  window causes an outage.
