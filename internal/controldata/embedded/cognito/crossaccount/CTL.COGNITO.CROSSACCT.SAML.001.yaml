@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CROSSACCT.SAML.001
+name: Cognito SAML Provider Federates with Untrusted Organization
+description: >
+  Cognito SAML identity provider's metadata
+  references an IdP at an organization
+  outside the user pool owner's trust scope.
+  Federated users from the untrusted org
+  authenticate into the application as if
+  they were trusted users.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6, IA-8"
+  pci_dss_v4.0: "7.2, 8.3"
+  fedramp_moderate: "AC-3, IA-8"
+  iso_27001_2022: "A.5.16, A.5.18"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: data
+    scope: cross_account
+    multiplier: 3.5
+remediation:
+  description: >
+    SAML provider points at an untrusted
+    organization's IdP.
+  action: >
+    Verify the IdP organization is on the
+    approved-partner list before federation
+    can proceed. If it isn't, remove the
+    SAML provider configuration. If it
+    should be, document the federation
+    relationship in a vendor-management
+    record so future audits don't re-flag.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "saml_idp_organization": "trusted-partner.com",
+          "saml_idp_trusted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.saml_idp_trusted
+      op: eq
+      value: false
+defect: >
+  Cognito SAML provider points at an
+  untrusted organization.
+infection: >
+  SAML federation extends authentication
+  trust outside the immediate AWS account.
+  Users from the federated IdP authenticate
+  successfully and operate as authenticated
+  Cognito users. If the IdP organization
+  isn't on the trusted list — a partner
+  whose contract ended, a sandbox tenant
+  someone forgot to disable, or an outright
+  malicious IdP added by a compromised
+  admin — those external users get
+  legitimate-looking access. The control
+  flags providers that don't match the
+  approved-organization list maintained by
+  vendor management or the security team.
+failure: >
+  Untrusted organization can authenticate
+  users into the application.
+tests:
+  - name: untrusted SAML org fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            saml_idp_organization: "unknown-vendor.com"
+            saml_idp_trusted: false
+  - name: trusted SAML org passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            saml_idp_organization: "trusted-partner.com"
+            saml_idp_trusted: true

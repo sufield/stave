@@ -1,0 +1,25 @@
+control: CTL.COGNITO.COMPLIANCE.LOGRETENTION.001
+defect: >
+  Cognito authentication log retention is
+  shorter than the compliance horizon.
+infection: >
+  Authentication events — successful logins,
+  failed attempts, MFA challenges, token
+  issuance — are core audit-trail content.
+  Compliance frameworks (SOC 2, HIPAA, PCI-
+  DSS) all specify minimum retention windows
+  for security audit logs. When the
+  CloudWatch log group receiving Cognito
+  events expires data before that window
+  closes, the audit trail has gaps the
+  framework treats as unacceptable. The
+  problem typically arises from default
+  CloudWatch log-group settings (Cognito
+  doesn't auto-set retention) or from cost-
+  driven retention reductions made without
+  considering Cognito-specific compliance
+  requirements.
+failure: >
+  Audit-trail expiry before compliance window.
+  Authentication events evicted before the
+  framework permits.

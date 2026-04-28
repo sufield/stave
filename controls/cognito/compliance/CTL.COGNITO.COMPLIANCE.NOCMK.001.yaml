@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.COMPLIANCE.NOCMK.001
+name: Cognito User Pool Not Encrypted with Customer-Managed KMS Key
+description: >
+  Cognito user pool processing PII does not
+  use a customer-managed KMS key for
+  encryption. Default AWS-managed encryption
+  protects data at rest but the customer has
+  no key-policy control, no audit visibility
+  into decryption, and no revocation path.
+domain: governance
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  fedramp_moderate: "SC-12, SC-13, SC-28"
+  hipaa: "164.312(a)(2)(iv), 164.312(e)(2)(ii)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    User pool not encrypted with CMK.
+  action: >
+    Configure custom_email_sender or KMS-
+    encrypted attributes on the user pool
+    using a customer-managed KMS key. For
+    pools subject to compliance requirements
+    (HIPAA, PCI-DSS, FedRAMP), CMK
+    encryption is typically a baseline
+    requirement; default AWS-managed
+    encryption may not satisfy auditors.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "uses_cmk_encryption": true,
+          "kms_key_arn": "arn:aws:kms:us-east-1:111122223333:key/abc"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.uses_cmk_encryption
+      op: eq
+      value: false
+defect: >
+  Cognito user pool does not use a customer-
+  managed KMS key.
+infection: >
+  AWS-managed encryption keeps user-pool
+  data encrypted at rest, but the keys live
+  in AWS-controlled accounts. The customer
+  has no key policy to scope decryption, no
+  CloudTrail visibility into decryption
+  operations, and no way to revoke access
+  by deleting or disabling the key. For
+  user pools storing PII (email, phone,
+  custom attributes), regulated workloads
+  (HIPAA-PHI, PCI-CHD), or any
+  organizational compliance baseline that
+  mandates customer key control, this is a
+  baseline gap. Configuring a CMK gives the
+  operator the controls auditors expect.
+failure: >
+  No customer-controlled encryption. Default
+  AWS-managed keys lack policy, audit, and
+  revocation capabilities.
+tests:
+  - name: pool without CMK fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            uses_cmk_encryption: false
+  - name: pool with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            uses_cmk_encryption: true
+            kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/abc"

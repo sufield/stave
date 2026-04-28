@@ -1,0 +1,25 @@
+control: CTL.COGNITO.TOKEN.REFRESHNOROT.001
+defect: >
+  Cognito app client doesn't rotate refresh
+  tokens.
+infection: >
+  Without refresh-token rotation, the same
+  refresh token is reused across every token
+  exchange. A stolen refresh token grants
+  access until natural expiry — for a 30-day
+  refresh validity, that's a 30-day window
+  on a single theft. With rotation, each
+  exchange invalidates the old token and
+  issues a new one. The legitimate client
+  refreshes constantly (every access-token
+  expiry); the next legitimate refresh
+  invalidates the stolen token. The attacker
+  has a window measured in minutes rather
+  than days. Rotation is paired with token
+  revocation — together they bound the
+  exposure of any single stolen token to a
+  short interval.
+failure: >
+  Stolen refresh tokens stay valid. No
+  rotation means a single theft yields a
+  long-term session.

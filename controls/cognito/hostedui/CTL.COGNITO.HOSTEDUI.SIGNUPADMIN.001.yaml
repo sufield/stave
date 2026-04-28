@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.HOSTEDUI.SIGNUPADMIN.001
+name: Cognito Hosted UI Allows Sign-Up When Pool Is Admin-Managed
+description: >
+  Cognito user pool hosted UI is configured
+  to allow self-sign-up but the pool's
+  AdminCreateUserConfig has
+  AllowAdminCreateUserOnly=true. The hosted
+  UI shows a sign-up button that, when
+  clicked, contradicts the pool's intent —
+  inconsistent UX and surface mismatch.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-2, IA-2"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "AC-2, IA-2"
+  iso_27001_2022: "A.5.16, A.5.18"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Hosted UI offers sign-up for an admin-only
+    pool. UX contradicts intent.
+  action: >
+    Disable hosted-UI sign-up so the
+    presentation layer matches the pool's
+    intent: aws cognito-idp
+    update-user-pool-client with
+    --explicit-auth-flows excluding
+    self-sign-up. Alternatively, flip
+    AllowAdminCreateUserOnly to false if
+    self-sign-up is actually intended.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "allow_admin_create_only": true,
+          "hosted_ui_allows_signup": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.allow_admin_create_only
+      op: eq
+      value: true
+    - field: properties.identity.cognito.hosted_ui_allows_signup
+      op: eq
+      value: true
+defect: >
+  Hosted UI advertises sign-up while pool is
+  admin-only.
+infection: >
+  Users see a 'Sign up' link on the hosted
+  UI. They click it, fill out the form, and
+  submit. The pool rejects the request
+  because AllowAdminCreateUserOnly=true.
+  The user gets a generic error, doesn't
+  know what went wrong, and loses trust in
+  the application. The fix isn't on the
+  user's side — the contradiction is in
+  the configuration. From a security
+  perspective, this is also a hint that the
+  team's intent doesn't match the
+  implementation; either the policy is
+  weaker than they think (sign-up actually
+  works) or stronger (admin-only is enforced).
+failure: >
+  Inconsistent enrollment surface. Users see
+  sign-up but submissions fail; configuration
+  intent unclear.
+tests:
+  - name: contradicting hosted UI fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            allow_admin_create_only: true
+            hosted_ui_allows_signup: true
+  - name: consistent hosted UI passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            allow_admin_create_only: true
+            hosted_ui_allows_signup: false

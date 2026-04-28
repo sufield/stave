@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CROSSACCT.LAMBDA.001
+name: Cognito Lambda Trigger Lives in Different Account
+description: >
+  Cognito user pool's Lambda trigger ARN
+  points at a function in a different AWS
+  account from the user pool. Cross-account
+  Lambda invocation crosses a trust boundary
+  on every authentication event; the foreign
+  account becomes a soft dependency for
+  pool authentication.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, CM-3"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-4"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+  blast_radius:
+    type: data
+    scope: cross_account
+    multiplier: 2.5
+remediation:
+  description: >
+    Trigger Lambda is in another account.
+    Pool authentication depends on a foreign
+    account.
+  action: >
+    Move the trigger Lambda into the user
+    pool's account, or document the cross-
+    account dependency with explicit trust
+    review. If cross-account is intentional
+    (centralized authentication logic shared
+    across multiple pools), require the
+    foreign-account Lambda's resource policy
+    to scope cognito-idp invocation to the
+    expected pool ARNs.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "trigger_lambda_account": "111122223333",
+          "user_pool_account": "111122223333",
+          "trigger_lambda_cross_account": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.trigger_lambda_cross_account
+      op: eq
+      value: true
+defect: >
+  Cognito Lambda trigger is in a different
+  AWS account from the user pool.
+infection: >
+  Cross-account Lambda triggers cross a
+  trust boundary on every signup, every
+  login, every token issuance. Two
+  consequences. First, the foreign account's
+  availability becomes the pool's
+  availability — if the other account
+  experiences IAM issues, network problems,
+  or cost-throttling, Cognito triggers fail
+  and authentication breaks. Second, the
+  trigger Lambda's authority grows — its
+  execution role is in the foreign account
+  but it operates on the user pool's
+  authentication flows. Compromise of the
+  foreign account compromises the pool.
+  Same-account triggers keep the trust
+  boundary tight.
+failure: >
+  Cross-account dependency on auth path. Pool
+  authentication depends on a Lambda in
+  another account.
+tests:
+  - name: cross-account trigger fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            trigger_lambda_account: "444455556666"
+            user_pool_account: "111122223333"
+            trigger_lambda_cross_account: true
+  - name: same-account trigger passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            trigger_lambda_account: "111122223333"
+            user_pool_account: "111122223333"
+            trigger_lambda_cross_account: false

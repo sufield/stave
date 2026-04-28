@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.COMPLIANCE.LOGRETENTION.001
+name: Cognito Authentication Logs Retained Below Compliance Window
+description: >
+  CloudWatch log group receiving Cognito
+  authentication event logs has retention set
+  shorter than the applicable compliance
+  framework requires (typically 1 year for
+  SOC 2, 6 years for HIPAA, 1 year for
+  PCI-DSS). Authentication audit trail
+  expires before the compliance window
+  closes.
+domain: governance
+severity: medium
+compliance:
+  cis_aws_v3.0: "3.4"
+  soc2: "CC7.1, A1.2"
+  nist_800_53_r5: "AU-9, AU-11"
+  pci_dss_v4.0: "10.5.1, 10.7"
+  fedramp_moderate: "AU-9, AU-11"
+  hipaa: "164.312(b), 164.316(b)(2)(i)"
+  iso_27001_2022: "A.5.16, A.8.10"
+  ccm_v4: ["LOG-12"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Authentication log retention shorter than
+    compliance horizon.
+  action: >
+    Set retention on Cognito-associated log
+    groups to meet the applicable framework's
+    minimum: aws logs put-retention-policy
+    --log-group-name <name>
+    --retention-in-days 365 (SOC 2 / PCI-DSS),
+    2190 (HIPAA), or higher per organizational
+    policy. The catalog already has
+    log-group retention controls
+    (CW-2 LOGGROUP.RETENTION.SHORT) — this
+    control adds Cognito-specific framing
+    when those log groups carry auth events.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "auth_log_retention_days": 365,
+          "auth_log_retention_compliant": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.auth_log_retention_compliant
+      op: eq
+      value: false
+defect: >
+  Cognito authentication log retention is
+  shorter than the compliance horizon.
+infection: >
+  Authentication events — successful logins,
+  failed attempts, MFA challenges, token
+  issuance — are core audit-trail content.
+  Compliance frameworks (SOC 2, HIPAA, PCI-
+  DSS) all specify minimum retention windows
+  for security audit logs. When the
+  CloudWatch log group receiving Cognito
+  events expires data before that window
+  closes, the audit trail has gaps the
+  framework treats as unacceptable. The
+  problem typically arises from default
+  CloudWatch log-group settings (Cognito
+  doesn't auto-set retention) or from cost-
+  driven retention reductions made without
+  considering Cognito-specific compliance
+  requirements.
+failure: >
+  Audit-trail expiry before compliance window.
+  Authentication events evicted before the
+  framework permits.
+tests:
+  - name: short retention fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            auth_log_retention_days: 30
+            auth_log_retention_compliant: false
+  - name: compliant retention passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            auth_log_retention_days: 365
+            auth_log_retention_compliant: true

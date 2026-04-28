@@ -1,0 +1,23 @@
+control: CTL.COGNITO.COMPLIANCE.NOCMK.001
+defect: >
+  Cognito user pool does not use a customer-
+  managed KMS key.
+infection: >
+  AWS-managed encryption keeps user-pool
+  data encrypted at rest, but the keys live
+  in AWS-controlled accounts. The customer
+  has no key policy to scope decryption, no
+  CloudTrail visibility into decryption
+  operations, and no way to revoke access
+  by deleting or disabling the key. For
+  user pools storing PII (email, phone,
+  custom attributes), regulated workloads
+  (HIPAA-PHI, PCI-CHD), or any
+  organizational compliance baseline that
+  mandates customer key control, this is a
+  baseline gap. Configuring a CMK gives the
+  operator the controls auditors expect.
+failure: >
+  No customer-controlled encryption. Default
+  AWS-managed keys lack policy, audit, and
+  revocation capabilities.

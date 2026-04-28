@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.COMPLIANCE.NOTAG.001
+name: Cognito Resources Missing Required Compliance Tags
+description: >
+  Cognito user pool, identity pool, or app
+  client lacks tags identifying its
+  compliance scope (data classification,
+  business unit, owner, environment).
+  Without tags, audit scope can't be
+  derived, cost allocation can't be
+  attributed, and policy automation can't
+  target the resource.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-8, SA-22"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Cognito resource lacks required tags.
+  action: >
+    Tag the resource with the organization's
+    standard tag set: Environment
+    (production/staging/dev), DataClass (PII,
+    PHI, confidential), Owner (team email or
+    ID), CostCenter, and any compliance-
+    specific tags (SOC2, HIPAA, PCI). Apply
+    via aws cognito-idp tag-resource. Pair
+    with an SCP that denies
+    cognito-idp:CreateUserPool without the
+    required tag set so future creations
+    enforce the standard.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "tags_complete": true,
+          "missing_tags": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.tags_complete
+      op: eq
+      value: false
+defect: >
+  Cognito resource lacks required compliance
+  tags.
+infection: >
+  Tags are how organizations attribute
+  ownership, classify data sensitivity, and
+  scope automation. Without tags on Cognito
+  resources, every other governance process
+  (cost allocation, audit scope derivation,
+  automation targeting) becomes manual or
+  impossible. The compliance impact is
+  indirect — tags don't change behavior —
+  but the operational cost is direct: every
+  audit becomes a one-off identification
+  exercise instead of a query against a
+  tagged inventory.
+failure: >
+  Untagged Cognito resources. Audit scope
+  and ownership not attributable from
+  resource metadata.
+tests:
+  - name: missing tags fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            tags_complete: false
+            missing_tags: ["Environment", "Owner", "DataClass"]
+  - name: complete tags pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            tags_complete: true
+            missing_tags: []

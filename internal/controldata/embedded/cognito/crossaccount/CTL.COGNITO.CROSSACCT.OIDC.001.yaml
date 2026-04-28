@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CROSSACCT.OIDC.001
+name: Cognito OIDC Provider Issuer Hosted in External AWS Account
+description: >
+  Cognito OIDC identity provider's issuer URL
+  resolves to infrastructure in a different
+  AWS account. The federation depends on a
+  foreign account's OIDC service; an
+  attacker who compromises that account can
+  issue tokens that exchange for legitimate
+  access to the user pool's application.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, IA-8"
+  pci_dss_v4.0: "7.2, 8.3"
+  fedramp_moderate: "AC-3, AC-4, IA-8"
+  iso_27001_2022: "A.5.16, A.5.18"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: data
+    scope: cross_account
+    multiplier: 3.5
+remediation:
+  description: >
+    OIDC issuer is in another AWS account.
+    Federation trust spans accounts.
+  action: >
+    If the cross-account OIDC dependency is
+    intentional (e.g., centralized identity
+    provider in a dedicated account), document
+    the relationship and ensure the foreign
+    account's OIDC service has equivalent
+    security controls. If unintentional,
+    remove the provider and configure
+    federation against an internally-owned
+    OIDC service.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "oidc_issuer_account": "111122223333",
+          "user_pool_account": "111122223333",
+          "oidc_issuer_cross_account": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.oidc_issuer_cross_account
+      op: eq
+      value: true
+defect: >
+  Cognito OIDC issuer is hosted in a different
+  AWS account.
+infection: >
+  Cross-account OIDC federation extends the
+  authentication trust boundary across AWS
+  accounts. Compromise of the issuer account
+  yields the ability to issue tokens that
+  authenticate into the user pool's
+  application. The control flags the cross-
+  account dependency for review; it doesn't
+  preclude the configuration but requires
+  the operator to confirm the trust shape
+  is intentional. Same pattern as SAML
+  federation with an untrusted org —
+  federation is a deliberate architectural
+  decision, not an ambient default.
+failure: >
+  Cross-account federation trust. Foreign
+  account's OIDC service authoritative for
+  authentication into this pool's
+  application.
+tests:
+  - name: cross-account OIDC fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            oidc_issuer_account: "444455556666"
+            user_pool_account: "111122223333"
+            oidc_issuer_cross_account: true
+  - name: same-account OIDC passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            oidc_issuer_account: "111122223333"
+            user_pool_account: "111122223333"
+            oidc_issuer_cross_account: false

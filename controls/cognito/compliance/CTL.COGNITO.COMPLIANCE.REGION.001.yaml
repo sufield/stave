@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.COMPLIANCE.REGION.001
+name: Cognito User Pool in Non-Compliant Region
+description: >
+  Cognito user pool deployed in an AWS
+  region that's not on the organization's
+  approved-region list. For data-residency-
+  regulated workloads (GDPR for EU users,
+  HIPAA for US-only PHI), pools in
+  off-policy regions are immediate
+  compliance violations.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-3, AC-4, SA-22"
+  pci_dss_v4.0: "12.10"
+  fedramp_moderate: "AC-3, AC-4"
+  hipaa: "164.310(d)(2)(i)"
+  iso_27001_2022: "A.5.16, A.8.10"
+  ccm_v4: ["DSP-04", "DSP-13"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    User pool in a region outside the
+    approved list.
+  action: >
+    Migrate the user pool to an approved
+    region (Cognito does not support cross-
+    region replication; migration requires
+    user re-registration or a custom
+    migration trigger). Add an SCP that
+    denies cognito-idp:CreateUserPool in
+    non-approved regions to prevent future
+    occurrences.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "region": "us-east-1",
+          "in_approved_region": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.in_approved_region
+      op: eq
+      value: false
+defect: >
+  Cognito user pool is in a non-compliant
+  region.
+infection: >
+  Data residency rules constrain where
+  identity data can live. EU GDPR users
+  expect their personal data inside the
+  EU; HIPAA workloads expect PHI in
+  US-only regions; some industry-specific
+  rules constrain to even narrower
+  geographies. Cognito stores user
+  attributes (email, phone, custom claims)
+  in the pool's region. A pool in
+  ap-south-1 storing EU users' data is an
+  immediate GDPR violation regardless of
+  any other configuration. The control
+  fires when the region isn't in the
+  organization's approved-region list,
+  surfacing the violation at audit time
+  rather than during a regulatory
+  investigation.
+failure: >
+  Data residency violation. User data
+  stored in a region the organization's
+  policy doesn't approve.
+tests:
+  - name: non-approved region fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:ap-south-1:111122223333:userpool/ap-south-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            region: "ap-south-1"
+            in_approved_region: false
+  - name: approved region passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            region: "us-east-1"
+            in_approved_region: true

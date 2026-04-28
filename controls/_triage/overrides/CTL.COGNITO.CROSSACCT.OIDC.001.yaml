@@ -1,0 +1,23 @@
+control: CTL.COGNITO.CROSSACCT.OIDC.001
+defect: >
+  Cognito OIDC issuer is hosted in a different
+  AWS account.
+infection: >
+  Cross-account OIDC federation extends the
+  authentication trust boundary across AWS
+  accounts. Compromise of the issuer account
+  yields the ability to issue tokens that
+  authenticate into the user pool's
+  application. The control flags the cross-
+  account dependency for review; it doesn't
+  preclude the configuration but requires
+  the operator to confirm the trust shape
+  is intentional. Same pattern as SAML
+  federation with an untrusted org —
+  federation is a deliberate architectural
+  decision, not an ambient default.
+failure: >
+  Cross-account federation trust. Foreign
+  account's OIDC service authoritative for
+  authentication into this pool's
+  application.

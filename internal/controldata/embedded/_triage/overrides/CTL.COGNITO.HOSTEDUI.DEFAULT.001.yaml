@@ -1,0 +1,24 @@
+control: CTL.COGNITO.HOSTEDUI.DEFAULT.001
+defect: >
+  Cognito user pool hosted UI uses the default
+  amazoncognito.com domain.
+infection: >
+  Users typing their credentials into
+  https://abc-pool.auth.us-east-1.amazoncognito.com
+  see an unfamiliar URL during login. The
+  default domain works correctly but breaks
+  the trust signal — users learn that login
+  happens at amazoncognito.com, which makes
+  phishing attacks easier (an attacker
+  registers a similar-looking URL). Custom
+  domains keep the brand consistent
+  (auth.example.com), reinforce trust, and
+  reduce phishing surface area. The
+  remediation also enables custom branding
+  and email senders that cohere with the
+  application identity.
+failure: >
+  Brand-mismatched login URL. Users see
+  amazoncognito.com instead of the
+  application's domain; phishing surface
+  widens.

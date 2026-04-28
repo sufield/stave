@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.TOKEN.REFRESHNOROT.001
+name: Cognito App Client Does Not Rotate Refresh Tokens
+description: >
+  Cognito app client does not rotate refresh
+  tokens on use. The same refresh token works
+  for the entire validity window (potentially
+  30+ days), making token theft a long-term
+  compromise rather than a short-term one.
+  Refresh-token rotation invalidates each
+  token after exchange and issues a fresh one.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-5"
+  pci_dss_v4.0: "8.6"
+  fedramp_moderate: "IA-5"
+  iso_27001_2022: "A.5.17, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Refresh tokens don't rotate. A stolen
+    refresh token works until natural expiry.
+  action: >
+    Enable refresh-token rotation on the app
+    client: aws cognito-idp
+    update-user-pool-client with
+    --enable-token-revocation true and the
+    appropriate refresh token rotation
+    setting. After enable, every refresh
+    exchange invalidates the old token and
+    issues a new one — a stolen token works
+    only until the legitimate user next
+    refreshes.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "refresh_token_rotation_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.refresh_token_rotation_enabled
+      op: eq
+      value: false
+defect: >
+  Cognito app client doesn't rotate refresh
+  tokens.
+infection: >
+  Without refresh-token rotation, the same
+  refresh token is reused across every token
+  exchange. A stolen refresh token grants
+  access until natural expiry — for a 30-day
+  refresh validity, that's a 30-day window
+  on a single theft. With rotation, each
+  exchange invalidates the old token and
+  issues a new one. The legitimate client
+  refreshes constantly (every access-token
+  expiry); the next legitimate refresh
+  invalidates the stolen token. The attacker
+  has a window measured in minutes rather
+  than days. Rotation is paired with token
+  revocation — together they bound the
+  exposure of any single stolen token to a
+  short interval.
+failure: >
+  Stolen refresh tokens stay valid. No
+  rotation means a single theft yields a
+  long-term session.
+tests:
+  - name: rotation disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            refresh_token_rotation_enabled: false
+  - name: rotation enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/client/abc"
+      asset_type: aws_cognito_user_pool_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            refresh_token_rotation_enabled: true

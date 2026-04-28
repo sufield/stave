@@ -1,0 +1,22 @@
+control: CTL.COGNITO.CROSSACCT.SAML.001
+defect: >
+  Cognito SAML provider points at an
+  untrusted organization.
+infection: >
+  SAML federation extends authentication
+  trust outside the immediate AWS account.
+  Users from the federated IdP authenticate
+  successfully and operate as authenticated
+  Cognito users. If the IdP organization
+  isn't on the trusted list — a partner
+  whose contract ended, a sandbox tenant
+  someone forgot to disable, or an outright
+  malicious IdP added by a compromised
+  admin — those external users get
+  legitimate-looking access. The control
+  flags providers that don't match the
+  approved-organization list maintained by
+  vendor management or the security team.
+failure: >
+  Untrusted organization can authenticate
+  users into the application.

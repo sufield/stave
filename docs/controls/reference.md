@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2006
-**Pack hash:** `eed2b1b113c33c020f83d2a9eba2c7c63deba065f7cda036ba50cf265c8507c7`
+**Total controls:** 2019
+**Pack hash:** `a971895c120bb232deda5328ba209a3c3a6ec6ae4e55bf4b89a8676b13918285`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 231 |
-| high | 892 |
+| high | 896 |
 | info | 16 |
-| low | 136 |
-| medium | 731 |
+| low | 138 |
+| medium | 738 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,10 +24,10 @@
 | cryptography | 3 |
 | detection | 96 |
 | encryption | 92 |
-| exposure | 1052 |
-| governance | 264 |
+| exposure | 1053 |
+| governance | 272 |
 | hygiene | 16 |
-| identity | 354 |
+| identity | 358 |
 | network | 28 |
 | resilience | 18 |
 | secrets | 4 |
@@ -7875,6 +7875,66 @@ Cognito app client has a callback URL containing a wildcard (*) or other broad p
 
 ---
 
+### CTL.COGNITO.COMPLIANCE.LOGRETENTION.001
+
+**Cognito Authentication Logs Retained Below Compliance Window**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.4; fedramp_moderate: AU-9, AU-11; hipaa: 164.312(b), 164.316(b)(2)(i); iso_27001_2022: A.5.16, A.8.10; nist_800_53_r5: AU-9, AU-11; pci_dss_v4.0: 10.5.1, 10.7; soc2: CC7.1, A1.2;
+
+CloudWatch log group receiving Cognito authentication event logs has retention set shorter than the applicable compliance framework requires (typically 1 year for SOC 2, 6 years for HIPAA, 1 year for PCI-DSS). Authentication audit trail expires before the compliance window closes.
+
+**Remediation:** Set retention on Cognito-associated log groups to meet the applicable framework's minimum: aws logs put-retention-policy --log-group-name <name> --retention-in-days 365 (SOC 2 / PCI-DSS), 2190 (HIPAA), or higher per organizational policy. The catalog already has log-group retention controls (CW-2 LOGGROUP.RETENTION.SHORT) — this control adds Cognito-specific framing when those log groups carry auth events.
+
+---
+
+### CTL.COGNITO.COMPLIANCE.NOCMK.001
+
+**Cognito User Pool Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-12, SC-13, SC-28; hipaa: 164.312(a)(2)(iv), 164.312(e)(2)(ii); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+Cognito user pool processing PII does not use a customer-managed KMS key for encryption. Default AWS-managed encryption protects data at rest but the customer has no key-policy control, no audit visibility into decryption, and no revocation path.
+
+**Remediation:** Configure custom_email_sender or KMS- encrypted attributes on the user pool using a customer-managed KMS key. For pools subject to compliance requirements (HIPAA, PCI-DSS, FedRAMP), CMK encryption is typically a baseline requirement; default AWS-managed encryption may not satisfy auditors.
+
+---
+
+### CTL.COGNITO.COMPLIANCE.NOTAG.001
+
+**Cognito Resources Missing Required Compliance Tags**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-8, SA-22; soc2: CC8.1;
+
+Cognito user pool, identity pool, or app client lacks tags identifying its compliance scope (data classification, business unit, owner, environment). Without tags, audit scope can't be derived, cost allocation can't be attributed, and policy automation can't target the resource.
+
+**Remediation:** Tag the resource with the organization's standard tag set: Environment (production/staging/dev), DataClass (PII, PHI, confidential), Owner (team email or ID), CostCenter, and any compliance- specific tags (SOC2, HIPAA, PCI). Apply via aws cognito-idp tag-resource. Pair with an SCP that denies cognito-idp:CreateUserPool without the required tag set so future creations enforce the standard.
+
+---
+
+### CTL.COGNITO.COMPLIANCE.REGION.001
+
+**Cognito User Pool in Non-Compliant Region**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3, AC-4; hipaa: 164.310(d)(2)(i); iso_27001_2022: A.5.16, A.8.10; nist_800_53_r5: AC-3, AC-4, SA-22; pci_dss_v4.0: 12.10; soc2: CC6.1, CC8.1;
+
+Cognito user pool deployed in an AWS region that's not on the organization's approved-region list. For data-residency- regulated workloads (GDPR for EU users, HIPAA for US-only PHI), pools in off-policy regions are immediate compliance violations.
+
+**Remediation:** Migrate the user pool to an approved region (Cognito does not support cross- region replication; migration requires user re-registration or a custom migration trigger). Add an SCP that denies cognito-idp:CreateUserPool in non-approved regions to prevent future occurrences.
+
+---
+
 ### CTL.COGNITO.COMPROMISED.CREDS.001
 
 **Cognito Must Block Sign-In with Compromised Credentials**
@@ -7887,6 +7947,51 @@ Cognito app client has a callback URL containing a wildcard (*) or other broad p
 Cognito user pools with advanced security must block sign-in attempts using credentials detected in known breaches. Requires advanced security ENFORCED mode with compromised-credentials policy set to BLOCK on sign-in events.
 
 **Remediation:** Enable advanced security in ENFORCED mode and set the compromised-credentials policy to BLOCK for sign-in events.
+
+---
+
+### CTL.COGNITO.CROSSACCT.LAMBDA.001
+
+**Cognito Lambda Trigger Lives in Different Account**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3, AC-4; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-3, AC-4, CM-3; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.6;
+
+Cognito user pool's Lambda trigger ARN points at a function in a different AWS account from the user pool. Cross-account Lambda invocation crosses a trust boundary on every authentication event; the foreign account becomes a soft dependency for pool authentication.
+
+**Remediation:** Move the trigger Lambda into the user pool's account, or document the cross- account dependency with explicit trust review. If cross-account is intentional (centralized authentication logic shared across multiple pools), require the foreign-account Lambda's resource policy to scope cognito-idp invocation to the expected pool ARNs.
+
+---
+
+### CTL.COGNITO.CROSSACCT.OIDC.001
+
+**Cognito OIDC Provider Issuer Hosted in External AWS Account**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3, AC-4, IA-8; iso_27001_2022: A.5.16, A.5.18; nist_800_53_r5: AC-3, AC-4, IA-8; pci_dss_v4.0: 7.2, 8.3; soc2: CC6.1, CC6.6;
+
+Cognito OIDC identity provider's issuer URL resolves to infrastructure in a different AWS account. The federation depends on a foreign account's OIDC service; an attacker who compromises that account can issue tokens that exchange for legitimate access to the user pool's application.
+
+**Remediation:** If the cross-account OIDC dependency is intentional (e.g., centralized identity provider in a dedicated account), document the relationship and ensure the foreign account's OIDC service has equivalent security controls. If unintentional, remove the provider and configure federation against an internally-owned OIDC service.
+
+---
+
+### CTL.COGNITO.CROSSACCT.SAML.001
+
+**Cognito SAML Provider Federates with Untrusted Organization**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3, IA-8; iso_27001_2022: A.5.16, A.5.18; nist_800_53_r5: AC-3, AC-6, IA-8; pci_dss_v4.0: 7.2, 8.3; soc2: CC6.1, CC6.6;
+
+Cognito SAML identity provider's metadata references an IdP at an organization outside the user pool owner's trust scope. Federated users from the untrusted org authenticate into the application as if they were trusted users.
+
+**Remediation:** Verify the IdP organization is on the approved-partner list before federation can proceed. If it isn't, remove the SAML provider configuration. If it should be, document the federation relationship in a vendor-management record so future audits don't re-flag.
 
 ---
 
@@ -8157,6 +8262,51 @@ Cognito user-migration Lambda has been deleted while the pool still uses migrati
 Cognito verify-auth-challenge-response Lambda has been deleted. Even when define-auth and create-auth produce a challenge, the response cannot be validated — users complete the challenge correctly but their answer is never confirmed.
 
 **Remediation:** Redeploy the verify-auth-challenge-response Lambda. Verify after deployment by running a complete custom-auth flow end-to-end in a sandbox.
+
+---
+
+### CTL.COGNITO.HOSTEDUI.CORS.001
+
+**Cognito OAuth Endpoints Allow Wildcard CORS Origin**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, SC-7; iso_27001_2022: A.5.16, A.8.20; nist_800_53_r5: IA-2, SC-7, SC-8; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+
+Cognito's OAuth endpoints (or a CDN layer in front of them) allow CORS from any origin. Tokens and authorization codes flowing through these endpoints become cross-origin readable, expanding the surface for XSS-driven token exfiltration.
+
+**Remediation:** Restrict CORS to the application's explicit origins. If a CDN sits in front of Cognito, set CORS in the CDN configuration to the application domain list. Cognito itself doesn't expose arbitrary CORS configuration on its endpoints, so the misconfiguration is typically in customer-managed infrastructure (CloudFront, custom Lambda@Edge).
+
+---
+
+### CTL.COGNITO.HOSTEDUI.DEFAULT.001
+
+**Cognito Hosted UI Uses Default Cognito Domain**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, AC-22; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito user pool hosted UI is reachable only through the default *.amazoncognito.com domain — no custom domain configured. Users see AWS infrastructure URLs during login; brand-mismatched URLs invite phishing confusion and damage trust signals.
+
+**Remediation:** Register a custom domain on the user pool: aws cognito-idp create-user-pool-domain --domain auth.example.com --custom-domain-config CertificateArn=... Update application redirect URLs to use the custom domain. The default Cognito domain remains as a backup and continues to work.
+
+---
+
+### CTL.COGNITO.HOSTEDUI.SIGNUPADMIN.001
+
+**Cognito Hosted UI Allows Sign-Up When Pool Is Admin-Managed**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-2, IA-2; iso_27001_2022: A.5.16, A.5.18; nist_800_53_r5: AC-2, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+Cognito user pool hosted UI is configured to allow self-sign-up but the pool's AdminCreateUserConfig has AllowAdminCreateUserOnly=true. The hosted UI shows a sign-up button that, when clicked, contradicts the pool's intent — inconsistent UX and surface mismatch.
+
+**Remediation:** Disable hosted-UI sign-up so the presentation layer matches the pool's intent: aws cognito-idp update-user-pool-client with --explicit-auth-flows excluding self-sign-up. Alternatively, flip AllowAdminCreateUserOnly to false if self-sign-up is actually intended.
 
 ---
 
@@ -8639,6 +8789,36 @@ Cognito user pool enforces MFA but the account-recovery configuration permits re
 
 ---
 
+### CTL.COGNITO.RESOURCESRV.BROADSCOPE.001
+
+**Cognito Resource Server Has Single Broad Scope**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3, AC-6; iso_27001_2022: A.5.15, A.8.5; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+Cognito resource server defines a single scope that covers all operations on the protected API. There's no granularity — any token with the scope can perform any operation. The OAuth surface exists but doesn't differentiate read from write, admin from user, or anything else.
+
+**Remediation:** Split the single scope into operation- aligned scopes (read, write, admin) or domain-aligned scopes (orders.read, orders.write, customers.read, etc.). Update app clients to grant only the scopes the user populations need. The application then checks token scopes per-operation; users with the read scope cannot perform write operations even if their tokens validate.
+
+---
+
+### CTL.COGNITO.RESOURCESRV.NONE.001
+
+**Cognito User Pool Has OAuth Flows Without Resource Servers**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3, AC-6; iso_27001_2022: A.5.15, A.8.5; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+
+Cognito user pool has app clients using OAuth flows (code, implicit) but no resource servers defined. The pool can only issue tokens with the standard scopes (openid, email, profile, aws.cognito.signin.user.admin) — there is no way to express fine-grained authorization for the application's protected resources.
+
+**Remediation:** Define resource servers matching the application's API surfaces, with scopes matching the API operations: aws cognito-idp create-resource-server --identifier https://api.example.com --scopes ScopeName=read,ScopeDescription=... Update app clients to include the new scopes in allowed_o_auth_scopes. The application can then check token scopes to authorize specific operations rather than relying on group membership alone.
+
+---
+
 ### CTL.COGNITO.SAML.ATTRMAP.001
 
 **Cognito SAML Attribute Mapping Missing Required Attributes**
@@ -8801,6 +8981,21 @@ Cognito social identity provider (Google, Facebook, Apple, Amazon, etc.) is conf
 Cognito user pool temporary password validity must not exceed 7 days. Long-lived temporary passwords increase the window for credential interception or misuse.
 
 **Remediation:** Set TemporaryPasswordValidityDays to 7 or less.
+
+---
+
+### CTL.COGNITO.TOKEN.REFRESHNOROT.001
+
+**Cognito App Client Does Not Rotate Refresh Tokens**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-5; iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-5; pci_dss_v4.0: 8.6; soc2: CC6.1;
+
+Cognito app client does not rotate refresh tokens on use. The same refresh token works for the entire validity window (potentially 30+ days), making token theft a long-term compromise rather than a short-term one. Refresh-token rotation invalidates each token after exchange and issues a fresh one.
+
+**Remediation:** Enable refresh-token rotation on the app client: aws cognito-idp update-user-pool-client with --enable-token-revocation true and the appropriate refresh token rotation setting. After enable, every refresh exchange invalidates the old token and issues a new one — a stolen token works only until the legitimate user next refreshes.
 
 ---
 

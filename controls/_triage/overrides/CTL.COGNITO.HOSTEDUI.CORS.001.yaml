@@ -1,0 +1,25 @@
+control: CTL.COGNITO.HOSTEDUI.CORS.001
+defect: >
+  Cognito OAuth endpoints permit wildcard
+  CORS origins.
+infection: >
+  Wildcard CORS on OAuth endpoints means any
+  origin can issue cross-origin requests
+  carrying credentials. For Cognito's token
+  endpoint, this expands the XSS-driven
+  exfiltration surface significantly — an
+  XSS in any web property the user visits
+  can issue requests to the Cognito token
+  endpoint with the user's existing session,
+  and read the response. Restricting CORS
+  to the application's explicit origin list
+  closes this path. Cognito's default
+  endpoints have controlled CORS; the
+  misconfiguration usually appears in a
+  CloudFront layer in front of a custom
+  domain.
+failure: >
+  XSS-driven token theft via cross-origin
+  reads. Any origin can call OAuth endpoints
+  with the user's credentials and read the
+  response.

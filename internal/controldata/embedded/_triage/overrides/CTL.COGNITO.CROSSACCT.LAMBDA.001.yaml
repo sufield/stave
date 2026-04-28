@@ -1,0 +1,25 @@
+control: CTL.COGNITO.CROSSACCT.LAMBDA.001
+defect: >
+  Cognito Lambda trigger is in a different
+  AWS account from the user pool.
+infection: >
+  Cross-account Lambda triggers cross a
+  trust boundary on every signup, every
+  login, every token issuance. Two
+  consequences. First, the foreign account's
+  availability becomes the pool's
+  availability — if the other account
+  experiences IAM issues, network problems,
+  or cost-throttling, Cognito triggers fail
+  and authentication breaks. Second, the
+  trigger Lambda's authority grows — its
+  execution role is in the foreign account
+  but it operates on the user pool's
+  authentication flows. Compromise of the
+  foreign account compromises the pool.
+  Same-account triggers keep the trust
+  boundary tight.
+failure: >
+  Cross-account dependency on auth path. Pool
+  authentication depends on a Lambda in
+  another account.

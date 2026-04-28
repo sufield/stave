@@ -1,0 +1,28 @@
+control: CTL.COGNITO.RESOURCESRV.NONE.001
+defect: >
+  Cognito user pool uses OAuth flows but
+  has no resource servers.
+infection: >
+  Resource servers are how Cognito expresses
+  custom OAuth scopes. Without them, the
+  pool issues tokens with only the standard
+  scopes, and applications must derive
+  authorization from group membership or
+  custom claims rather than the OAuth-
+  native scope mechanism. Two consequences
+  follow. First, the application implements
+  authorization in code rather than at the
+  authorization server — easier to bypass
+  and harder to audit. Second, integrations
+  with third-party API gateways or service
+  meshes that expect scope-based
+  authorization can't function correctly.
+  Defining resource servers gives the pool
+  the proper OAuth surface and lets
+  authorization decisions happen at token-
+  validation time.
+failure: >
+  No fine-grained authorization surface.
+  OAuth flows issue only standard scopes;
+  application authorization is necessarily
+  ad-hoc.

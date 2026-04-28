@@ -1,0 +1,26 @@
+control: CTL.COGNITO.COMPLIANCE.REGION.001
+defect: >
+  Cognito user pool is in a non-compliant
+  region.
+infection: >
+  Data residency rules constrain where
+  identity data can live. EU GDPR users
+  expect their personal data inside the
+  EU; HIPAA workloads expect PHI in
+  US-only regions; some industry-specific
+  rules constrain to even narrower
+  geographies. Cognito stores user
+  attributes (email, phone, custom claims)
+  in the pool's region. A pool in
+  ap-south-1 storing EU users' data is an
+  immediate GDPR violation regardless of
+  any other configuration. The control
+  fires when the region isn't in the
+  organization's approved-region list,
+  surfacing the violation at audit time
+  rather than during a regulatory
+  investigation.
+failure: >
+  Data residency violation. User data
+  stored in a region the organization's
+  policy doesn't approve.

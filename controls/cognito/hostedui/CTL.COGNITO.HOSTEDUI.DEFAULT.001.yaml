@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.HOSTEDUI.DEFAULT.001
+name: Cognito Hosted UI Uses Default Cognito Domain
+description: >
+  Cognito user pool hosted UI is reachable
+  only through the default *.amazoncognito.com
+  domain — no custom domain configured. Users
+  see AWS infrastructure URLs during login;
+  brand-mismatched URLs invite phishing
+  confusion and damage trust signals.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "IA-2, AC-22"
+  pci_dss_v4.0: "8.3"
+  fedramp_moderate: "IA-2"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Hosted UI uses default amazoncognito.com
+    domain.
+  action: >
+    Register a custom domain on the user pool:
+    aws cognito-idp create-user-pool-domain
+    --domain auth.example.com
+    --custom-domain-config CertificateArn=...
+    Update application redirect URLs to use
+    the custom domain. The default Cognito
+    domain remains as a backup and continues
+    to work.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "uses_default_domain": false,
+          "custom_domain": "auth.example.com"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.uses_default_domain
+      op: eq
+      value: true
+defect: >
+  Cognito user pool hosted UI uses the default
+  amazoncognito.com domain.
+infection: >
+  Users typing their credentials into
+  https://abc-pool.auth.us-east-1.amazoncognito.com
+  see an unfamiliar URL during login. The
+  default domain works correctly but breaks
+  the trust signal — users learn that login
+  happens at amazoncognito.com, which makes
+  phishing attacks easier (an attacker
+  registers a similar-looking URL). Custom
+  domains keep the brand consistent
+  (auth.example.com), reinforce trust, and
+  reduce phishing surface area. The
+  remediation also enables custom branding
+  and email senders that cohere with the
+  application identity.
+failure: >
+  Brand-mismatched login URL. Users see
+  amazoncognito.com instead of the
+  application's domain; phishing surface
+  widens.
+tests:
+  - name: default domain fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            uses_default_domain: true
+            custom_domain: ""
+  - name: custom domain passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            uses_default_domain: false
+            custom_domain: "auth.example.com"

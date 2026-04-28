@@ -1,0 +1,23 @@
+control: CTL.COGNITO.RESOURCESRV.BROADSCOPE.001
+defect: >
+  Cognito resource server has a single scope
+  covering all operations.
+infection: >
+  Coarse-grained scopes collapse the OAuth
+  authorization model. With a single scope
+  for the whole API, every token holder can
+  perform every API operation; the OAuth
+  surface is technically present but
+  functionally absent. The same pattern as
+  IAM policies with iam:* — the granularity
+  exists but isn't used. Splitting into
+  read/write/admin scopes lets the
+  application distinguish user populations
+  at the token level. The cost is upfront
+  scope design; the benefit is durable
+  authorization that doesn't require
+  application code to enforce.
+failure: >
+  Single coarse scope. No way to differentiate
+  operations at the token level; OAuth
+  authorization is symbolic.

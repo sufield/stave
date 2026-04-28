@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.RESOURCESRV.BROADSCOPE.001
+name: Cognito Resource Server Has Single Broad Scope
+description: >
+  Cognito resource server defines a single
+  scope that covers all operations on the
+  protected API. There's no granularity —
+  any token with the scope can perform any
+  operation. The OAuth surface exists but
+  doesn't differentiate read from write,
+  admin from user, or anything else.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Resource server has a single coarse scope.
+    No fine-grained authorization possible.
+  action: >
+    Split the single scope into operation-
+    aligned scopes (read, write, admin) or
+    domain-aligned scopes (orders.read,
+    orders.write, customers.read, etc.).
+    Update app clients to grant only the
+    scopes the user populations need. The
+    application then checks token scopes
+    per-operation; users with the read
+    scope cannot perform write operations
+    even if their tokens validate.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_resource_server",
+        "cognito": {
+          "resource_server_scope_count": 4,
+          "resource_server_broad_scope": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_resource_server
+    - field: properties.identity.cognito.resource_server_broad_scope
+      op: eq
+      value: true
+defect: >
+  Cognito resource server has a single scope
+  covering all operations.
+infection: >
+  Coarse-grained scopes collapse the OAuth
+  authorization model. With a single scope
+  for the whole API, every token holder can
+  perform every API operation; the OAuth
+  surface is technically present but
+  functionally absent. The same pattern as
+  IAM policies with iam:* — the granularity
+  exists but isn't used. Splitting into
+  read/write/admin scopes lets the
+  application distinguish user populations
+  at the token level. The cost is upfront
+  scope design; the benefit is durable
+  authorization that doesn't require
+  application code to enforce.
+failure: >
+  Single coarse scope. No way to differentiate
+  operations at the token level; OAuth
+  authorization is symbolic.
+tests:
+  - name: single broad scope fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/resource-server/api"
+      asset_type: aws_cognito_resource_server
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_resource_server
+          cognito:
+            resource_server_scope_count: 1
+            resource_server_broad_scope: true
+  - name: multiple scopes pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc/resource-server/api"
+      asset_type: aws_cognito_resource_server
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_resource_server
+          cognito:
+            resource_server_scope_count: 5
+            resource_server_broad_scope: false

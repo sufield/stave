@@ -1,0 +1,125 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.RESOURCESRV.NONE.001
+name: Cognito User Pool Has OAuth Flows Without Resource Servers
+description: >
+  Cognito user pool has app clients using
+  OAuth flows (code, implicit) but no
+  resource servers defined. The pool can
+  only issue tokens with the standard
+  scopes (openid, email, profile,
+  aws.cognito.signin.user.admin) — there is
+  no way to express fine-grained
+  authorization for the application's
+  protected resources.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.1, 7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    No resource servers means no fine-grained
+    OAuth scopes.
+  action: >
+    Define resource servers matching the
+    application's API surfaces, with scopes
+    matching the API operations: aws
+    cognito-idp create-resource-server
+    --identifier https://api.example.com
+    --scopes ScopeName=read,ScopeDescription=...
+    Update app clients to include the new
+    scopes in allowed_o_auth_scopes. The
+    application can then check token scopes
+    to authorize specific operations rather
+    than relying on group membership alone.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "cognito": {
+          "uses_oauth_flows": true,
+          "resource_server_count": 1,
+          "has_resource_servers": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.cognito.uses_oauth_flows
+      op: eq
+      value: true
+    - field: properties.identity.cognito.has_resource_servers
+      op: eq
+      value: false
+defect: >
+  Cognito user pool uses OAuth flows but
+  has no resource servers.
+infection: >
+  Resource servers are how Cognito expresses
+  custom OAuth scopes. Without them, the
+  pool issues tokens with only the standard
+  scopes, and applications must derive
+  authorization from group membership or
+  custom claims rather than the OAuth-
+  native scope mechanism. Two consequences
+  follow. First, the application implements
+  authorization in code rather than at the
+  authorization server — easier to bypass
+  and harder to audit. Second, integrations
+  with third-party API gateways or service
+  meshes that expect scope-based
+  authorization can't function correctly.
+  Defining resource servers gives the pool
+  the proper OAuth surface and lets
+  authorization decisions happen at token-
+  validation time.
+failure: >
+  No fine-grained authorization surface.
+  OAuth flows issue only standard scopes;
+  application authorization is necessarily
+  ad-hoc.
+tests:
+  - name: OAuth without resource servers fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            uses_oauth_flows: true
+            resource_server_count: 0
+            has_resource_servers: false
+  - name: OAuth with resource servers passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          cognito:
+            uses_oauth_flows: true
+            resource_server_count: 2
+            has_resource_servers: true

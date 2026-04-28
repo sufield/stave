@@ -1,0 +1,21 @@
+control: CTL.COGNITO.COMPLIANCE.NOTAG.001
+defect: >
+  Cognito resource lacks required compliance
+  tags.
+infection: >
+  Tags are how organizations attribute
+  ownership, classify data sensitivity, and
+  scope automation. Without tags on Cognito
+  resources, every other governance process
+  (cost allocation, audit scope derivation,
+  automation targeting) becomes manual or
+  impossible. The compliance impact is
+  indirect — tags don't change behavior —
+  but the operational cost is direct: every
+  audit becomes a one-off identification
+  exercise instead of a query against a
+  tagged inventory.
+failure: >
+  Untagged Cognito resources. Audit scope
+  and ownership not attributable from
+  resource metadata.

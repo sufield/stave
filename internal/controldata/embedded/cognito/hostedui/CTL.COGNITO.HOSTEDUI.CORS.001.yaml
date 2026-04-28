@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.HOSTEDUI.CORS.001
+name: Cognito OAuth Endpoints Allow Wildcard CORS Origin
+description: >
+  Cognito's OAuth endpoints (or a CDN layer
+  in front of them) allow CORS from any
+  origin. Tokens and authorization codes
+  flowing through these endpoints become
+  cross-origin readable, expanding the surface
+  for XSS-driven token exfiltration.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "IA-2, SC-7, SC-8"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "IA-2, SC-7"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    OAuth endpoints reachable via wildcard
+    CORS. Token theft surface widens.
+  action: >
+    Restrict CORS to the application's
+    explicit origins. If a CDN sits in front
+    of Cognito, set CORS in the CDN
+    configuration to the application domain
+    list. Cognito itself doesn't expose
+    arbitrary CORS configuration on its
+    endpoints, so the misconfiguration is
+    typically in customer-managed
+    infrastructure (CloudFront, custom
+    Lambda@Edge).
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "oauth_cors_allowed_origins": ["https://app.example.com"],
+          "oauth_cors_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.oauth_cors_wildcard
+      op: eq
+      value: true
+defect: >
+  Cognito OAuth endpoints permit wildcard
+  CORS origins.
+infection: >
+  Wildcard CORS on OAuth endpoints means any
+  origin can issue cross-origin requests
+  carrying credentials. For Cognito's token
+  endpoint, this expands the XSS-driven
+  exfiltration surface significantly — an
+  XSS in any web property the user visits
+  can issue requests to the Cognito token
+  endpoint with the user's existing session,
+  and read the response. Restricting CORS
+  to the application's explicit origin list
+  closes this path. Cognito's default
+  endpoints have controlled CORS; the
+  misconfiguration usually appears in a
+  CloudFront layer in front of a custom
+  domain.
+failure: >
+  XSS-driven token theft via cross-origin
+  reads. Any origin can call OAuth endpoints
+  with the user's credentials and read the
+  response.
+tests:
+  - name: wildcard CORS fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            oauth_cors_allowed_origins: ["*"]
+            oauth_cors_wildcard: true
+  - name: explicit origins pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_abc"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            oauth_cors_allowed_origins: ["https://app.example.com"]
+            oauth_cors_wildcard: false
