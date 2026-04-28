@@ -1,0 +1,20 @@
+control: CTL.CLOUDTRAIL.S3.SOURCEARN.001
+defect: >
+  CloudTrail trail S3 bucket allows CloudTrail PutObject
+  without aws:SourceArn condition.
+infection: >
+  The bucket policy grants s3:PutObject to the
+  cloudtrail.amazonaws.com service principal — allowing
+  CloudTrail to write log files. Without aws:SourceArn
+  condition: any trail in any AWS account can write to
+  this bucket. An attacker creates their own trail in
+  their own account, points it at this bucket, and
+  generates API calls. The attacker's log entries appear
+  alongside legitimate entries — fake events mixed with
+  real events. An investigator reading the logs sees
+  events that never happened in the organization's
+  accounts. SourceArn restricts PutObject to specific
+  trail ARN(s) — only the organization's trails can write.
+failure: >
+  Log injection possible. Any CloudTrail trail in any
+  account can write entries to the audit log bucket.

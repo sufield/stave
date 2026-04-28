@@ -1,0 +1,22 @@
+id: cloudtrail_log_tamperable
+description: >
+  No Object Lock plus either no MFA Delete or no Deny for
+  DeleteObject. Log files have no WORM protection AND
+  either no MFA requirement for deletion or no policy-
+  level deletion block. Three independent log-protection
+  layers stack here — Object Lock (WORM), MFA Delete
+  (MFA factor), and bucket-policy Deny (policy block);
+  losing two of three means the audit log can be deleted
+  or modified by a single compromised IAM principal.
+  Threshold of 2 fires when any two of the three
+  protections are absent.
+controls:
+  - CTL.CLOUDTRAIL.S3.OBJECTLOCK.001
+  - CTL.CLOUDTRAIL.S3.MFADELETE.001
+  - CTL.CLOUDTRAIL.S3.NODELETE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

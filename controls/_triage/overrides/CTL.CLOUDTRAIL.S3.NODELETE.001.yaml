@@ -1,0 +1,22 @@
+control: CTL.CLOUDTRAIL.S3.NODELETE.001
+defect: >
+  CloudTrail trail S3 bucket policy lacks a Deny for
+  s3:DeleteObject.
+infection: >
+  S3 bucket policy Deny statements override all IAM Allow
+  statements — a Deny in the bucket policy blocks the
+  action even if the principal's IAM policy grants it.
+  Without a Deny for DeleteObject: any principal with
+  s3:DeleteObject in their IAM policy can delete log files
+  from the trail bucket. With a Deny: no principal (except
+  those explicitly excluded via a condition) can delete
+  log files — regardless of their IAM permissions. The
+  Deny should cover s3:DeleteObject (individual log file
+  deletion), s3:DeleteObjectVersion (versioned object
+  deletion), s3:PutBucketPolicy (modifying the bucket
+  policy to remove the Deny), and s3:DeleteBucketPolicy
+  (removing the bucket policy entirely).
+failure: >
+  Audit log unprotected from deletion. No bucket policy
+  Deny prevents log file deletion — IAM permissions alone
+  determine access.

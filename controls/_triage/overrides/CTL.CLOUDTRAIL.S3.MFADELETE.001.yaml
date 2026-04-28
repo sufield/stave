@@ -1,0 +1,20 @@
+control: CTL.CLOUDTRAIL.S3.MFADELETE.001
+defect: >
+  CloudTrail trail S3 bucket has versioning enabled but MFA
+  Delete is not.
+infection: >
+  Without MFA Delete, deleting log files requires only
+  s3:DeleteObject permission — no additional authentication.
+  An attacker with IAM credentials that include S3 delete
+  access can: list log files in the trail bucket
+  (s3:ListBucket), identify log files covering the time
+  window of their attack, and delete those files
+  (s3:DeleteObject). Without MFA Delete, no MFA challenge
+  interrupts this process. With MFA Delete enabled,
+  permanent deletion of versioned objects requires the root
+  account's MFA token — the attacker needs both IAM
+  credentials AND physical access to the root MFA device.
+failure: >
+  Audit log deletion without MFA. Log files can be
+  permanently deleted with IAM credentials alone — no
+  second factor required.

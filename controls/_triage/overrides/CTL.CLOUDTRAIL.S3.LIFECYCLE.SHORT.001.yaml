@@ -1,0 +1,24 @@
+control: CTL.CLOUDTRAIL.S3.LIFECYCLE.SHORT.001
+defect: >
+  CloudTrail trail S3 lifecycle expires log files before
+  the applicable compliance retention period.
+infection: >
+  Compliance frameworks require audit logs to be
+  retrievable for incident investigation, regulator
+  audits, and forensic reconstruction. HIPAA requires 6
+  years; PCI-DSS, SOC2, and most internal policies
+  require 1 year minimum. When the lifecycle policy
+  expires log files at, say, 90 days but compliance
+  requires 365, evidence covering days 91-365 is
+  permanently destroyed. An incident discovered in month
+  9 has 6 months of logs missing. An audit covering the
+  full year fails because months 1-9 have been deleted.
+  The lifecycle policy is the operational expression of
+  retention intent — when it doesn't match compliance
+  requirements, the misalignment is silent until an
+  audit or incident exposes it.
+failure: >
+  Audit evidence destroyed early. Log files expire before
+  the compliance retention window closes; investigations
+  and audits cannot reconstruct events from the deleted
+  period.

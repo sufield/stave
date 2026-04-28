@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.S3.LIFECYCLE.001
+name: CloudTrail Trail S3 Bucket Has No Lifecycle Policy
+description: >
+  CloudTrail trail S3 bucket has no S3 lifecycle policy.
+  Log files accumulate indefinitely with no transition to
+  cheaper storage and no expiration. This is a cost and
+  governance issue (logs grow unbounded) rather than a
+  security issue, but unbounded retention often hides
+  compliance gaps elsewhere — when nobody manages
+  retention, nobody verifies it meets requirements.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.1, A1.2"
+  nist_800_53_r5: "AU-11, CM-2"
+  pci_dss_v4.0: "10.7"
+  fedramp_moderate: "AU-11"
+  iso_27001_2022: "A.5.16, A.8.10"
+  ccm_v4: ["LOG-12", "BCR-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Trail S3 bucket has no lifecycle policy. Log files grow
+    unbounded.
+  action: >
+    Add an S3 lifecycle policy to the trail bucket. A
+    typical configuration: transition to STANDARD_IA after
+    30 days (cheaper storage for less-frequently-accessed
+    older logs), GLACIER after 90 days, expire after the
+    compliance retention period (1 year for SOC2 / PCI-DSS,
+    6 years for HIPAA). Apply the policy to the AWSLogs/
+    prefix specifically so non-log objects in the bucket
+    aren't affected. Pair with
+    CTL.CLOUDTRAIL.S3.LIFECYCLE.SHORT.001 — this control
+    catches the absence; the SHORT control catches an
+    expiration shorter than compliance requires.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "s3_has_lifecycle": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.s3_has_lifecycle
+      op: eq
+      value: false
+defect: >
+  CloudTrail trail S3 bucket has no lifecycle policy.
+infection: >
+  S3 lifecycle policies transition objects between storage
+  classes (STANDARD → STANDARD_IA → GLACIER) and expire
+  them after a defined period. CloudTrail logs grow
+  several GB per month for an active account; without a
+  lifecycle policy the bucket size grows indefinitely.
+  Operationally: storage costs accumulate, retention is
+  ungoverned (logs persist until someone manually
+  deletes), and there's no signal in the bucket
+  configuration that the team has thought about
+  retention. Compliance frameworks usually specify
+  minimum retention; some specify maximum. A configured
+  lifecycle policy is the place that signal lives.
+failure: >
+  Unmanaged retention. Trail logs accumulate without
+  storage-class transition or expiration; cost grows
+  unbounded and retention is undocumented.
+tests:
+  - name: trail bucket without lifecycle fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_bucket_name: "org-cloudtrail-logs"
+            s3_has_lifecycle: false
+  - name: trail bucket with lifecycle passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_bucket_name: "org-cloudtrail-logs"
+            s3_has_lifecycle: true
+            s3_lifecycle_rules:
+              - transition_days: 30
+                storage_class: "STANDARD_IA"
+              - transition_days: 90
+                storage_class: "GLACIER"
+              - expiration_days: 2190

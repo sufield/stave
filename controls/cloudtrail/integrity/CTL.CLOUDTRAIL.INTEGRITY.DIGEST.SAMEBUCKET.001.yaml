@@ -1,0 +1,139 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.INTEGRITY.DIGEST.SAMEBUCKET.001
+name: CloudTrail Log File Digest Files Stored in Same Bucket as Logs
+description: >
+  CloudTrail log file validation digest files are stored
+  in the same S3 bucket as the log files. Log file
+  validation works by writing per-hour digest files
+  containing hashes of the log files; integrity is
+  verified by comparing log-file hashes to the digest
+  hashes. If both live in the same bucket, an attacker
+  who compromises the bucket can modify the log files,
+  recompute the hashes, and update the digest files —
+  integrity verification still passes on tampered data.
+  Separate buckets with independent access controls
+  raise the bar to compromising both. Fires only when
+  log file validation is enabled (otherwise there are
+  no digests to protect).
+domain: governance
+severity: medium
+compliance:
+  cis_aws_v3.0: "3.2"
+  soc2: "CC7.1"
+  nist_800_53_r5: "AU-9, SI-7"
+  pci_dss_v4.0: "10.5"
+  fedramp_moderate: "AU-9"
+  hipaa: "164.312(c)(1)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Trail's digest files share the bucket with the log
+    files. Integrity verification can be defeated by a
+    single bucket compromise.
+  action: >
+    Move the digest output to a dedicated bucket with
+    stricter access controls. The trail config exposes a
+    separate digest-bucket setting; once moved, restrict
+    write access on the digest bucket to the CloudTrail
+    service principal only and apply the same hardening
+    pattern as the log bucket (Object Lock, MFA Delete,
+    bucket-policy Deny). Verify integrity end-to-end
+    after the move with `aws cloudtrail
+    validate-logs --trail-arn <arn>`.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "log_validation_enabled": true,
+          "log_bucket": "org-cloudtrail-logs",
+          "digest_bucket": "org-cloudtrail-digests",
+          "digest_same_bucket": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.log_validation_enabled
+      op: eq
+      value: true
+    - field: properties.audit.cloudtrail.digest_same_bucket
+      op: eq
+      value: true
+defect: >
+  CloudTrail log file digest files are stored in the same
+  S3 bucket as the log files.
+infection: >
+  Log file validation works by creating digest files that
+  contain hashes of the log files. To verify integrity,
+  you compare the log file hash to the hash in the
+  digest. If both the log files and digest files are in
+  the same bucket, an attacker who compromises the bucket
+  can: modify the log file (alter events), recompute the
+  hash, and update the digest file — the integrity
+  verification passes on tampered data. Separate buckets
+  with independent access controls mean the attacker must
+  compromise BOTH buckets to defeat integrity
+  verification. The digest bucket should have stricter
+  access (fewer principals with write access) than the
+  log bucket.
+failure: >
+  Log integrity verification defeatable. An attacker who
+  accesses the log bucket can modify both logs and
+  digests; integrity check still passes on tampered data.
+tests:
+  - name: validation enabled with shared bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            log_validation_enabled: true
+            log_bucket: "org-cloudtrail-logs"
+            digest_bucket: "org-cloudtrail-logs"
+            digest_same_bucket: true
+  - name: validation enabled with separate buckets passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            log_validation_enabled: true
+            log_bucket: "org-cloudtrail-logs"
+            digest_bucket: "org-cloudtrail-digests"
+            digest_same_bucket: false
+  - name: validation disabled does not fire (no digests to protect)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/legacy-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            log_validation_enabled: false
+            digest_same_bucket: true

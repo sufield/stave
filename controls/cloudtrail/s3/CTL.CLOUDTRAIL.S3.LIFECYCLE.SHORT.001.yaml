@@ -1,0 +1,137 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.S3.LIFECYCLE.SHORT.001
+name: CloudTrail Trail S3 Lifecycle Deletes Logs Before Compliance Requirement
+description: >
+  CloudTrail trail S3 bucket lifecycle policy deletes log
+  files before the applicable compliance retention period.
+  Common requirements: HIPAA 6 years (2190 days), PCI-DSS
+  1 year (365 days), SOC2 1 year (365 days), internal
+  policies 1-3 years. If the lifecycle expires objects at
+  90 days but compliance requires 365, evidence is
+  destroyed before the audit window closes. Compliance-
+  profile control: fires only when compliance tags or a
+  compliance profile are active AND the lifecycle is
+  shorter than required.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.1, 3.4"
+  soc2: "CC7.1, A1.2"
+  nist_800_53_r5: "AU-9, AU-11"
+  pci_dss_v4.0: "10.5.1, 10.7"
+  fedramp_moderate: "AU-11"
+  hipaa: "164.312(b), 164.316(b)(2)(i)"
+  iso_27001_2022: "A.5.16, A.8.10"
+  ccm_v4: ["LOG-12"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Trail S3 lifecycle expires log files before the
+    compliance retention requirement. Audit evidence is
+    destroyed too early.
+  action: >
+    Update the lifecycle policy's expiration to meet or
+    exceed the required_retention_days. Verify both
+    storage-class transitions (legal — older logs to
+    Glacier) and the final expiration. For workloads
+    spanning multiple compliance regimes, set expiration
+    to the longest required period (HIPAA's 2190 days
+    overrides PCI-DSS's 365). Add a compliance tag
+    (compliance: hipaa / pci-dss / soc2) on the bucket
+    that the observation pipeline reads to populate
+    required_retention_days for this control.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "s3_lifecycle_expiration_days": 2190,
+          "s3_lifecycle_too_short": false,
+          "required_retention_days": 2190,
+          "compliance_tags": ["hipaa"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.s3_lifecycle_too_short
+      op: eq
+      value: true
+defect: >
+  CloudTrail trail S3 lifecycle expires log files before
+  the applicable compliance retention period.
+infection: >
+  Compliance frameworks require audit logs to be
+  retrievable for incident investigation, regulator
+  audits, and forensic reconstruction. HIPAA requires 6
+  years; PCI-DSS, SOC2, and most internal policies
+  require 1 year minimum. When the lifecycle policy
+  expires log files at, say, 90 days but compliance
+  requires 365, evidence covering days 91-365 is
+  permanently destroyed. An incident discovered in month
+  9 has 6 months of logs missing. An audit covering the
+  full year fails because months 1-9 have been deleted.
+  The lifecycle policy is the operational expression of
+  retention intent — when it doesn't match compliance
+  requirements, the misalignment is silent until an
+  audit or incident exposes it.
+failure: >
+  Audit evidence destroyed early. Log files expire before
+  the compliance retention window closes; investigations
+  and audits cannot reconstruct events from the deleted
+  period.
+tests:
+  - name: 90-day expiration with 365-day requirement fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/pci-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_lifecycle_expiration_days: 90
+            s3_lifecycle_too_short: true
+            required_retention_days: 365
+            compliance_tags: ["pci-dss"]
+  - name: 2190-day expiration with HIPAA requirement passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/hipaa-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_lifecycle_expiration_days: 2190
+            s3_lifecycle_too_short: false
+            required_retention_days: 2190
+            compliance_tags: ["hipaa"]
+  - name: no compliance tags does not fire (compliance-profile only)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/dev-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_lifecycle_expiration_days: 90
+            s3_lifecycle_too_short: false
+            compliance_tags: []

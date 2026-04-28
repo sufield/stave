@@ -1,0 +1,125 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.CWLOGS.ENCRYPT.001
+name: CloudTrail CloudWatch Logs Group Not Encrypted with CMK
+description: >
+  CloudTrail's CloudWatch Logs log group is not encrypted
+  with a customer-managed KMS key. CloudWatch Logs
+  encrypts log data at rest by default with an
+  AWS-managed key, but without a CMK there's no key
+  policy control, no usage audit trail, and no
+  revocation capability. The audit log data in CW Logs —
+  containing every API call — is encrypted with a key the
+  organization doesn't control.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.7, CC7.1"
+  nist_800_53_r5: "AU-9, SC-12, SC-28"
+  pci_dss_v4.0: "3.4.1, 10.5"
+  fedramp_moderate: "SC-28"
+  hipaa: "164.312(a)(2)(iv)"
+  iso_27001_2022: "A.8.24, A.8.15"
+  ccm_v4: ["CEK-03", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    CloudTrail's CW Logs group lacks customer-managed key
+    encryption. Decryption authority sits with AWS, not the
+    account.
+  action: >
+    Associate a customer-managed KMS key with the log
+    group: aws logs associate-kms-key --log-group-name
+    <log-group> --kms-key-id <cmk-arn>. Update the KMS
+    key policy to grant logs.amazonaws.com permission to
+    use the key for the log group's region. After the
+    association, new log events are encrypted with the
+    CMK; existing events remain encrypted with the
+    previous key (re-encryption is not automatic).
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "cw_logs_group_name": "/aws/cloudtrail/org",
+          "cw_logs_encrypted_cmk": true,
+          "cw_logs_kms_key": "arn:aws:kms:us-east-1:111122223333:key/abc-123"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.cw_logs_delivery_configured
+      op: eq
+      value: true
+    - field: properties.audit.cloudtrail.cw_logs_encrypted_cmk
+      op: eq
+      value: false
+defect: >
+  CloudTrail CloudWatch Logs group is not encrypted with a
+  customer-managed KMS key.
+infection: >
+  CloudWatch Logs encrypts log data at rest by default
+  using an AWS-managed key. The encryption is real but
+  the controls around it are limited: the AWS-managed
+  key has no policy the account can edit, no audit trail
+  for usage, and no revocation. With a CMK the account
+  controls who can decrypt: revocable via key policy,
+  auditable via CloudTrail data events on the key, and
+  scopeable via key grants. For an audit log destination
+  — which contains every API call across every service
+  — the difference matters: an attacker who exfiltrates
+  log files needs decryption authority, and CMK puts
+  that authority in the account's hands.
+failure: >
+  Audit log decryption authority sits outside the
+  account. Without a CMK there is no key-policy
+  revocation, no usage audit trail, and no scope control.
+tests:
+  - name: CW Logs group without CMK fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            cw_logs_delivery_configured: true
+            cw_logs_group_name: "/aws/cloudtrail/org"
+            cw_logs_encrypted_cmk: false
+  - name: CW Logs group with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            cw_logs_delivery_configured: true
+            cw_logs_group_name: "/aws/cloudtrail/org"
+            cw_logs_encrypted_cmk: true
+            cw_logs_kms_key: "arn:aws:kms:us-east-1:111122223333:key/abc-123"
+  - name: trail without CW Logs delivery does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/s3-only-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            cw_logs_delivery_configured: false
+            cw_logs_encrypted_cmk: false

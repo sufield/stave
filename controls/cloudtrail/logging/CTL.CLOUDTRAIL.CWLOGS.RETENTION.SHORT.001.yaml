@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.CWLOGS.RETENTION.SHORT.001
+name: CloudTrail CloudWatch Logs Retention Too Short for Compliance
+description: >
+  CloudTrail's CloudWatch Logs log group has a retention
+  period shorter than the applicable compliance
+  requirement. The existing CTL.CLOUDTRAIL.RETENTION.001
+  checks whether a retention policy exists; this control
+  checks whether the configured PERIOD meets compliance
+  requirements. A 30-day retention satisfies "retention
+  exists" but fails "retention meets HIPAA's 6-year
+  minimum." Compliance-profile control: fires when the
+  log group has retention set AND the configured days are
+  shorter than required_retention_days.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.4"
+  soc2: "CC7.1, A1.2"
+  nist_800_53_r5: "AU-9, AU-11"
+  pci_dss_v4.0: "10.5.1, 10.7"
+  fedramp_moderate: "AU-11"
+  hipaa: "164.312(b), 164.316(b)(2)(i)"
+  iso_27001_2022: "A.5.16, A.8.10"
+  ccm_v4: ["LOG-12"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    CloudTrail CW Logs retention is shorter than the
+    compliance requirement. Real-time-detection log data
+    expires before the audit window closes.
+  action: >
+    Update the log group's retention to meet or exceed
+    required_retention_days:
+    aws logs put-retention-policy --log-group-name <name>
+    --retention-in-days <days>. Allowed retention values
+    in CW Logs are discrete (1, 3, 5, 7, 14, 30, 60, 90,
+    120, 150, 180, 365, 400, 545, 731, 1827, 3653) — pick
+    the smallest value that meets compliance, or a
+    longer one if multiple regimes apply (HIPAA's 2190
+    rounds up to 3653 in CW Logs allowed values).
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "cw_logs_retention_days": 365,
+          "cw_logs_retention_compliant": true,
+          "required_retention_days": 365
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.cw_logs_delivery_configured
+      op: eq
+      value: true
+    - field: properties.audit.cloudtrail.cw_logs_retention_compliant
+      op: eq
+      value: false
+defect: >
+  CloudTrail CloudWatch Logs retention is shorter than the
+  applicable compliance retention requirement.
+infection: >
+  CloudWatch Logs retention is the period before log
+  events are automatically deleted from the log group.
+  CTL.CLOUDTRAIL.RETENTION.001 catches the absence of
+  any retention setting. This control catches a
+  retention setting that's shorter than required: 30 days
+  configured, 365 required. Real-time alarms running
+  against the log group continue to work — they only
+  need recent events. But forensic queries (a CloudWatch
+  Logs Insights search across the past year) only see
+  the retention window. An incident discovered in month
+  9 with 30-day retention has 8 months of CW Logs gone.
+  S3 logs may still exist (different retention surface)
+  but real-time querying capability is lost.
+failure: >
+  Real-time log retention insufficient for compliance.
+  CW Logs query horizon is shorter than the audit
+  evidence window.
+tests:
+  - name: 30-day retention with 365-day requirement fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/pci-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            cw_logs_delivery_configured: true
+            cw_logs_retention_days: 30
+            cw_logs_retention_compliant: false
+            required_retention_days: 365
+  - name: 365-day retention with PCI requirement passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/pci-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            cw_logs_delivery_configured: true
+            cw_logs_retention_days: 365
+            cw_logs_retention_compliant: true
+            required_retention_days: 365
+  - name: trail without CW Logs delivery does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/s3-only-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            cw_logs_delivery_configured: false
+            cw_logs_retention_compliant: false

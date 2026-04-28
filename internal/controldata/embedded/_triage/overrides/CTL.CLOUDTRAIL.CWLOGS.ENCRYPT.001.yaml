@@ -1,0 +1,21 @@
+control: CTL.CLOUDTRAIL.CWLOGS.ENCRYPT.001
+defect: >
+  CloudTrail CloudWatch Logs group is not encrypted with a
+  customer-managed KMS key.
+infection: >
+  CloudWatch Logs encrypts log data at rest by default
+  using an AWS-managed key. The encryption is real but
+  the controls around it are limited: the AWS-managed
+  key has no policy the account can edit, no audit trail
+  for usage, and no revocation. With a CMK the account
+  controls who can decrypt: revocable via key policy,
+  auditable via CloudTrail data events on the key, and
+  scopeable via key grants. For an audit log destination
+  — which contains every API call across every service
+  — the difference matters: an attacker who exfiltrates
+  log files needs decryption authority, and CMK puts
+  that authority in the account's hands.
+failure: >
+  Audit log decryption authority sits outside the
+  account. Without a CMK there is no key-policy
+  revocation, no usage audit trail, and no scope control.

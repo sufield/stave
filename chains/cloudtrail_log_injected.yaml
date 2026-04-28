@@ -1,0 +1,20 @@
+id: cloudtrail_log_injected
+description: >
+  No SourceArn validation AND digest files share the log
+  bucket. Any CloudTrail trail in any AWS account can
+  write entries to the log bucket AND an attacker who
+  accesses the bucket can modify both logs and digests
+  (recomputing hashes so integrity verification still
+  passes). The audit trail can be both injected (fake
+  entries from foreign trails) and tampered (modified
+  entries with regenerated digests). Threshold of 2
+  fires when both surfaces are open simultaneously.
+controls:
+  - CTL.CLOUDTRAIL.S3.SOURCEARN.001
+  - CTL.CLOUDTRAIL.INTEGRITY.DIGEST.SAMEBUCKET.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

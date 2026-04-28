@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 1800
-**Pack hash:** `367f7a6aa9d51027209fb0f063f04af107edc0ca5822d8f3d421b29282fc548c`
+**Total controls:** 1808
+**Pack hash:** `40a7e8872adc8d088cecdc0c506ac990ed0029ae3393bf4e234429999ff281fd`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 199 |
-| high | 796 |
+| high | 800 |
 | info | 16 |
 | low | 123 |
-| medium | 666 |
+| medium | 670 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,8 +24,8 @@
 | cryptography | 3 |
 | detection | 90 |
 | encryption | 92 |
-| exposure | 969 |
-| governance | 195 |
+| exposure | 971 |
+| governance | 201 |
 | hygiene | 16 |
 | identity | 333 |
 | network | 28 |
@@ -5686,6 +5686,36 @@ CloudTrail trails must be configured to deliver events to a CloudWatch Logs log 
 
 ---
 
+### CTL.CLOUDTRAIL.CWLOGS.ENCRYPT.001
+
+**CloudTrail CloudWatch Logs Group Not Encrypted with CMK**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.8.24, A.8.15; nist_800_53_r5: AU-9, SC-12, SC-28; pci_dss_v4.0: 3.4.1, 10.5; soc2: CC6.7, CC7.1;
+
+CloudTrail's CloudWatch Logs log group is not encrypted with a customer-managed KMS key. CloudWatch Logs encrypts log data at rest by default with an AWS-managed key, but without a CMK there's no key policy control, no usage audit trail, and no revocation capability. The audit log data in CW Logs — containing every API call — is encrypted with a key the organization doesn't control.
+
+**Remediation:** Associate a customer-managed KMS key with the log group: aws logs associate-kms-key --log-group-name <log-group> --kms-key-id <cmk-arn>. Update the KMS key policy to grant logs.amazonaws.com permission to use the key for the log group's region. After the association, new log events are encrypted with the CMK; existing events remain encrypted with the previous key (re-encryption is not automatic).
+
+---
+
+### CTL.CLOUDTRAIL.CWLOGS.RETENTION.SHORT.001
+
+**CloudTrail CloudWatch Logs Retention Too Short for Compliance**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.4; fedramp_moderate: AU-11; hipaa: 164.312(b), 164.316(b)(2)(i); iso_27001_2022: A.5.16, A.8.10; nist_800_53_r5: AU-9, AU-11; pci_dss_v4.0: 10.5.1, 10.7; soc2: CC7.1, A1.2;
+
+CloudTrail's CloudWatch Logs log group has a retention period shorter than the applicable compliance requirement. The existing CTL.CLOUDTRAIL.RETENTION.001 checks whether a retention policy exists; this control checks whether the configured PERIOD meets compliance requirements. A 30-day retention satisfies "retention exists" but fails "retention meets HIPAA's 6-year minimum." Compliance-profile control: fires when the log group has retention set AND the configured days are shorter than required_retention_days.
+
+**Remediation:** Update the log group's retention to meet or exceed required_retention_days: aws logs put-retention-policy --log-group-name <name> --retention-in-days <days>. Allowed retention values in CW Logs are discrete (1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653) — pick the smallest value that meets compliance, or a longer one if multiple regimes apply (HIPAA's 2190 rounds up to 3653 in CW Logs allowed values).
+
+---
+
 ### CTL.CLOUDTRAIL.DATA.DYNAMODB.001
 
 **CloudTrail Must Log DynamoDB Data Events**
@@ -5900,6 +5930,21 @@ CloudTrail Insights must be enabled to detect anomalous API activity patterns �
 
 ---
 
+### CTL.CLOUDTRAIL.INTEGRITY.DIGEST.SAMEBUCKET.001
+
+**CloudTrail Log File Digest Files Stored in Same Bucket as Logs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.2; fedramp_moderate: AU-9; hipaa: 164.312(c)(1); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-9, SI-7; pci_dss_v4.0: 10.5; soc2: CC7.1;
+
+CloudTrail log file validation digest files are stored in the same S3 bucket as the log files. Log file validation works by writing per-hour digest files containing hashes of the log files; integrity is verified by comparing log-file hashes to the digest hashes. If both live in the same bucket, an attacker who compromises the bucket can modify the log files, recompute the hashes, and update the digest files — integrity verification still passes on tampered data. Separate buckets with independent access controls raise the bar to compromising both. Fires only when log file validation is enabled (otherwise there are no digests to protect).
+
+**Remediation:** Move the digest output to a dedicated bucket with stricter access controls. The trail config exposes a separate digest-bucket setting; once moved, restrict write access on the digest bucket to the CloudTrail service principal only and apply the same hardening pattern as the log bucket (Object Lock, MFA Delete, bucket-policy Deny). Verify integrity end-to-end after the move with `aws cloudtrail validate-logs --trail-arn <arn>`.
+
+---
+
 ### CTL.CLOUDTRAIL.LOG.VALIDATION.001
 
 **CloudTrail Log File Validation Must Be Enabled**
@@ -5990,6 +6035,66 @@ CloudTrail trail must deliver logs to an S3 bucket or CloudWatch Logs group with
 
 ---
 
+### CTL.CLOUDTRAIL.S3.LIFECYCLE.001
+
+**CloudTrail Trail S3 Bucket Has No Lifecycle Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-11; iso_27001_2022: A.5.16, A.8.10; nist_800_53_r5: AU-11, CM-2; pci_dss_v4.0: 10.7; soc2: CC7.1, A1.2;
+
+CloudTrail trail S3 bucket has no S3 lifecycle policy. Log files accumulate indefinitely with no transition to cheaper storage and no expiration. This is a cost and governance issue (logs grow unbounded) rather than a security issue, but unbounded retention often hides compliance gaps elsewhere — when nobody manages retention, nobody verifies it meets requirements.
+
+**Remediation:** Add an S3 lifecycle policy to the trail bucket. A typical configuration: transition to STANDARD_IA after 30 days (cheaper storage for less-frequently-accessed older logs), GLACIER after 90 days, expire after the compliance retention period (1 year for SOC2 / PCI-DSS, 6 years for HIPAA). Apply the policy to the AWSLogs/ prefix specifically so non-log objects in the bucket aren't affected. Pair with CTL.CLOUDTRAIL.S3.LIFECYCLE.SHORT.001 — this control catches the absence; the SHORT control catches an expiration shorter than compliance requires.
+
+---
+
+### CTL.CLOUDTRAIL.S3.LIFECYCLE.SHORT.001
+
+**CloudTrail Trail S3 Lifecycle Deletes Logs Before Compliance Requirement**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.1, 3.4; fedramp_moderate: AU-11; hipaa: 164.312(b), 164.316(b)(2)(i); iso_27001_2022: A.5.16, A.8.10; nist_800_53_r5: AU-9, AU-11; pci_dss_v4.0: 10.5.1, 10.7; soc2: CC7.1, A1.2;
+
+CloudTrail trail S3 bucket lifecycle policy deletes log files before the applicable compliance retention period. Common requirements: HIPAA 6 years (2190 days), PCI-DSS 1 year (365 days), SOC2 1 year (365 days), internal policies 1-3 years. If the lifecycle expires objects at 90 days but compliance requires 365, evidence is destroyed before the audit window closes. Compliance- profile control: fires only when compliance tags or a compliance profile are active AND the lifecycle is shorter than required.
+
+**Remediation:** Update the lifecycle policy's expiration to meet or exceed the required_retention_days. Verify both storage-class transitions (legal — older logs to Glacier) and the final expiration. For workloads spanning multiple compliance regimes, set expiration to the longest required period (HIPAA's 2190 days overrides PCI-DSS's 365). Add a compliance tag (compliance: hipaa / pci-dss / soc2) on the bucket that the observation pipeline reads to populate required_retention_days for this control.
+
+---
+
+### CTL.CLOUDTRAIL.S3.MFADELETE.001
+
+**CloudTrail Trail S3 Bucket Does Not Have MFA Delete Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: AU-9; hipaa: 164.312(c)(1), 164.312(d); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-9, AU-11, IA-2; pci_dss_v4.0: 10.5, 10.7; soc2: CC6.1, CC7.1;
+
+CloudTrail trail S3 bucket has versioning enabled but MFA Delete is not. Without MFA Delete, log files can be permanently deleted with IAM credentials alone — no MFA challenge. MFA Delete requires the root account's MFA device to confirm permanent object deletions, raising the bar for an attacker from "compromise an IAM principal with s3:DeleteObject" to "compromise IAM credentials AND physical access to the root MFA device." Fires only when versioning is enabled (MFA Delete only applies to versioned buckets); CTL.S3.VERSIONING.001 catches the underlying versioning gap.
+
+**Remediation:** Enable MFA Delete on the trail bucket (root account required, console flow rather than CLI for the first-time setup): aws s3api put-bucket-versioning --bucket <trail-bucket> --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa "<root-mfa-serial> <code>". Document the root MFA process in runbooks — operationally complex but the strongest single control against audit-log destruction. Pair with Object Lock (CTL.CLOUDTRAIL.S3.OBJECTLOCK.001) and a bucket-policy Deny (CTL.CLOUDTRAIL.S3.NODELETE.001) for layered protection.
+
+---
+
+### CTL.CLOUDTRAIL.S3.NODELETE.001
+
+**CloudTrail Trail S3 Bucket Policy Does Not Deny DeleteObject**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.5; fedramp_moderate: AU-9; hipaa: 164.312(c)(1); iso_27001_2022: A.5.15, A.8.15; nist_800_53_r5: AC-3, AU-9, AU-11; pci_dss_v4.0: 10.5, 10.7; soc2: CC6.1, CC7.1;
+
+CloudTrail trail S3 bucket policy does not include a Deny statement for s3:DeleteObject (and ideally s3:DeleteObjectVersion, s3:PutBucketPolicy, s3:DeleteBucketPolicy). S3 bucket policy Deny overrides IAM Allow, blocking deletion regardless of the principal's IAM permissions. Without an explicit Deny, any principal with sufficient IAM permissions can delete log files. Three independent log-protection mechanisms layer here: Object Lock (WORM), MFA Delete (MFA factor), and bucket-policy Deny (policy block). This control covers the policy-block layer.
+
+**Remediation:** Add a Deny statement to the bucket policy covering s3:DeleteObject, s3:DeleteObjectVersion, s3:PutBucketPolicy, and s3:DeleteBucketPolicy. Scope the Deny with NotPrincipal to allow a small break-glass role (e.g., the audit administrator) so log-retention enforcement remains operable. Bucket-policy Deny overrides IAM Allow — even an admin role with s3:DeleteObject in IAM is blocked from deleting if the bucket policy denies them.
+
+---
+
 ### CTL.CLOUDTRAIL.S3.OBJECTLOCK.001
 
 **CloudTrail Trail S3 Bucket Does Not Have Object Lock Enabled**
@@ -6002,6 +6107,23 @@ CloudTrail trail must deliver logs to an S3 bucket or CloudWatch Logs group with
 CloudTrail trail S3 bucket does not have S3 Object Lock enabled. Without Object Lock, log files can be deleted or overwritten after delivery. An attacker who gains access to the trail S3 bucket can erase specific log files (removing evidence) or overwrite log files with modified versions (altering the audit record). Object Lock in Compliance mode provides WORM (Write Once Read Many) protection — log files cannot be deleted or overwritten for the retention period, even by the root account.
 
 **Remediation:** Recreate the audit bucket with Object Lock enabled (S3 requires Object Lock to be set at bucket creation time) and migrate log files to it; update the trail's S3BucketName. Configure a default Object Lock retention rule in Compliance mode for the audit horizon (e.g., 365 days for typical compliance, 7 years for highly regulated workloads). Compliance mode is preferred over Governance — Governance allows privileged users to override the lock.
+
+---
+
+### CTL.CLOUDTRAIL.S3.SOURCEARN.001
+
+**CloudTrail Trail S3 Bucket Policy Does Not Validate SourceArn**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.15; nist_800_53_r5: AC-3, AU-9, AU-10; pci_dss_v4.0: 10.5, 7.1; soc2: CC6.1, CC6.6, CC7.1;
+
+CloudTrail trail S3 bucket policy allows s3:PutObject from the cloudtrail.amazonaws.com service principal without restricting aws:SourceArn to the specific trail(s) that should deliver to this bucket. Without SourceArn validation, any CloudTrail trail in any AWS account can write to this bucket — including an attacker's trail writing fake log entries.
+
+**Remediation:** Update the bucket policy's CloudTrail PutObject statement to require aws:SourceArn matching the organization's trail ARN(s). For an org trail use the multi-region trail ARN; for member-account trails list each. The condition shape: "Condition":{"StringEquals":{"aws:SourceArn":[
+  "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"]}}.
+Verify by attempting to write from a test trail in a different account — the write must fail with AccessDenied citing the SourceArn condition.
 
 ---
 

@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.S3.NODELETE.001
+name: CloudTrail Trail S3 Bucket Policy Does Not Deny DeleteObject
+description: >
+  CloudTrail trail S3 bucket policy does not include a Deny
+  statement for s3:DeleteObject (and ideally
+  s3:DeleteObjectVersion, s3:PutBucketPolicy,
+  s3:DeleteBucketPolicy). S3 bucket policy Deny overrides
+  IAM Allow, blocking deletion regardless of the
+  principal's IAM permissions. Without an explicit Deny,
+  any principal with sufficient IAM permissions can delete
+  log files. Three independent log-protection mechanisms
+  layer here: Object Lock (WORM), MFA Delete (MFA factor),
+  and bucket-policy Deny (policy block). This control
+  covers the policy-block layer.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC6.1, CC7.1"
+  nist_800_53_r5: "AC-3, AU-9, AU-11"
+  pci_dss_v4.0: "10.5, 10.7"
+  fedramp_moderate: "AU-9"
+  hipaa: "164.312(c)(1)"
+  iso_27001_2022: "A.5.15, A.8.15"
+  ccm_v4: ["IAM-04", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Trail S3 bucket policy lacks an explicit Deny for log-
+    file deletion and policy modification.
+  action: >
+    Add a Deny statement to the bucket policy covering
+    s3:DeleteObject, s3:DeleteObjectVersion,
+    s3:PutBucketPolicy, and s3:DeleteBucketPolicy. Scope the
+    Deny with NotPrincipal to allow a small break-glass
+    role (e.g., the audit administrator) so log-retention
+    enforcement remains operable. Bucket-policy Deny
+    overrides IAM Allow — even an admin role with
+    s3:DeleteObject in IAM is blocked from deleting if the
+    bucket policy denies them.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "s3_policy_denies_delete": true,
+          "s3_policy_denies_policy_change": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.s3_policy_denies_delete
+      op: eq
+      value: false
+defect: >
+  CloudTrail trail S3 bucket policy lacks a Deny for
+  s3:DeleteObject.
+infection: >
+  S3 bucket policy Deny statements override all IAM Allow
+  statements — a Deny in the bucket policy blocks the
+  action even if the principal's IAM policy grants it.
+  Without a Deny for DeleteObject: any principal with
+  s3:DeleteObject in their IAM policy can delete log files
+  from the trail bucket. With a Deny: no principal (except
+  those explicitly excluded via a condition) can delete
+  log files — regardless of their IAM permissions. The
+  Deny should cover s3:DeleteObject (individual log file
+  deletion), s3:DeleteObjectVersion (versioned object
+  deletion), s3:PutBucketPolicy (modifying the bucket
+  policy to remove the Deny), and s3:DeleteBucketPolicy
+  (removing the bucket policy entirely).
+failure: >
+  Audit log unprotected from deletion. No bucket policy
+  Deny prevents log file deletion — IAM permissions alone
+  determine access.
+tests:
+  - name: trail bucket without Deny statement fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_bucket_name: "org-cloudtrail-logs"
+            s3_policy_denies_delete: false
+  - name: trail bucket with comprehensive Deny passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_bucket_name: "org-cloudtrail-logs"
+            s3_policy_denies_delete: true
+            s3_policy_denies_policy_change: true

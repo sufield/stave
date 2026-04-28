@@ -1,0 +1,134 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.S3.MFADELETE.001
+name: CloudTrail Trail S3 Bucket Does Not Have MFA Delete Enabled
+description: >
+  CloudTrail trail S3 bucket has versioning enabled but
+  MFA Delete is not. Without MFA Delete, log files can be
+  permanently deleted with IAM credentials alone — no MFA
+  challenge. MFA Delete requires the root account's MFA
+  device to confirm permanent object deletions, raising the
+  bar for an attacker from "compromise an IAM principal
+  with s3:DeleteObject" to "compromise IAM credentials AND
+  physical access to the root MFA device." Fires only when
+  versioning is enabled (MFA Delete only applies to
+  versioned buckets); CTL.S3.VERSIONING.001 catches the
+  underlying versioning gap.
+domain: governance
+severity: high
+compliance:
+  cis_aws_v3.0: "3.5"
+  soc2: "CC6.1, CC7.1"
+  nist_800_53_r5: "AU-9, AU-11, IA-2"
+  pci_dss_v4.0: "10.5, 10.7"
+  fedramp_moderate: "AU-9"
+  hipaa: "164.312(c)(1), 164.312(d)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["IAM-04", "LOG-08"]
+scope_tags:
+  - aws
+  - cloudtrail
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Trail S3 bucket lacks MFA Delete. Permanent deletion of
+    log files requires only IAM permissions, no MFA factor.
+  action: >
+    Enable MFA Delete on the trail bucket (root account
+    required, console flow rather than CLI for the
+    first-time setup):
+    aws s3api put-bucket-versioning --bucket <trail-bucket>
+    --versioning-configuration Status=Enabled,MFADelete=Enabled
+    --mfa "<root-mfa-serial> <code>". Document the root MFA
+    process in runbooks — operationally complex but the
+    strongest single control against audit-log destruction.
+    Pair with Object Lock (CTL.CLOUDTRAIL.S3.OBJECTLOCK.001)
+    and a bucket-policy Deny (CTL.CLOUDTRAIL.S3.NODELETE.001)
+    for layered protection.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "s3_bucket_name": "org-cloudtrail-logs",
+          "s3_versioning_enabled": true,
+          "s3_mfa_delete_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.s3_versioning_enabled
+      op: eq
+      value: true
+    - field: properties.audit.cloudtrail.s3_mfa_delete_enabled
+      op: eq
+      value: false
+defect: >
+  CloudTrail trail S3 bucket has versioning enabled but MFA
+  Delete is not.
+infection: >
+  Without MFA Delete, deleting log files requires only
+  s3:DeleteObject permission — no additional authentication.
+  An attacker with IAM credentials that include S3 delete
+  access can: list log files in the trail bucket
+  (s3:ListBucket), identify log files covering the time
+  window of their attack, and delete those files
+  (s3:DeleteObject). Without MFA Delete, no MFA challenge
+  interrupts this process. With MFA Delete enabled,
+  permanent deletion of versioned objects requires the root
+  account's MFA token — the attacker needs both IAM
+  credentials AND physical access to the root MFA device.
+failure: >
+  Audit log deletion without MFA. Log files can be
+  permanently deleted with IAM credentials alone — no
+  second factor required.
+tests:
+  - name: trail bucket versioned without MFA Delete fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_bucket_name: "org-cloudtrail-logs"
+            s3_versioning_enabled: true
+            s3_mfa_delete_enabled: false
+  - name: trail bucket with MFA Delete passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_bucket_name: "org-cloudtrail-logs"
+            s3_versioning_enabled: true
+            s3_mfa_delete_enabled: true
+  - name: trail bucket without versioning does not fire (versioning gap covered elsewhere)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/legacy-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            s3_bucket_name: "legacy-trail-logs"
+            s3_versioning_enabled: false
+            s3_mfa_delete_enabled: false

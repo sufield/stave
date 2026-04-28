@@ -1,0 +1,22 @@
+control: CTL.CLOUDTRAIL.INTEGRITY.DIGEST.SAMEBUCKET.001
+defect: >
+  CloudTrail log file digest files are stored in the same
+  S3 bucket as the log files.
+infection: >
+  Log file validation works by creating digest files that
+  contain hashes of the log files. To verify integrity,
+  you compare the log file hash to the hash in the
+  digest. If both the log files and digest files are in
+  the same bucket, an attacker who compromises the bucket
+  can: modify the log file (alter events), recompute the
+  hash, and update the digest file — the integrity
+  verification passes on tampered data. Separate buckets
+  with independent access controls mean the attacker must
+  compromise BOTH buckets to defeat integrity
+  verification. The digest bucket should have stricter
+  access (fewer principals with write access) than the
+  log bucket.
+failure: >
+  Log integrity verification defeatable. An attacker who
+  accesses the log bucket can modify both logs and
+  digests; integrity check still passes on tampered data.

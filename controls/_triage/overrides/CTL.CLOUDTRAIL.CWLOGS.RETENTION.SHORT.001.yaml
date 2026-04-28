@@ -1,0 +1,22 @@
+control: CTL.CLOUDTRAIL.CWLOGS.RETENTION.SHORT.001
+defect: >
+  CloudTrail CloudWatch Logs retention is shorter than the
+  applicable compliance retention requirement.
+infection: >
+  CloudWatch Logs retention is the period before log
+  events are automatically deleted from the log group.
+  CTL.CLOUDTRAIL.RETENTION.001 catches the absence of
+  any retention setting. This control catches a
+  retention setting that's shorter than required: 30 days
+  configured, 365 required. Real-time alarms running
+  against the log group continue to work — they only
+  need recent events. But forensic queries (a CloudWatch
+  Logs Insights search across the past year) only see
+  the retention window. An incident discovered in month
+  9 with 30-day retention has 8 months of CW Logs gone.
+  S3 logs may still exist (different retention surface)
+  but real-time querying capability is lost.
+failure: >
+  Real-time log retention insufficient for compliance.
+  CW Logs query horizon is shorter than the audit
+  evidence window.

@@ -1,0 +1,20 @@
+control: CTL.CLOUDTRAIL.S3.LIFECYCLE.001
+defect: >
+  CloudTrail trail S3 bucket has no lifecycle policy.
+infection: >
+  S3 lifecycle policies transition objects between storage
+  classes (STANDARD → STANDARD_IA → GLACIER) and expire
+  them after a defined period. CloudTrail logs grow
+  several GB per month for an active account; without a
+  lifecycle policy the bucket size grows indefinitely.
+  Operationally: storage costs accumulate, retention is
+  ungoverned (logs persist until someone manually
+  deletes), and there's no signal in the bucket
+  configuration that the team has thought about
+  retention. Compliance frameworks usually specify
+  minimum retention; some specify maximum. A configured
+  lifecycle policy is the place that signal lives.
+failure: >
+  Unmanaged retention. Trail logs accumulate without
+  storage-class transition or expiration; cost grows
+  unbounded and retention is undocumented.
