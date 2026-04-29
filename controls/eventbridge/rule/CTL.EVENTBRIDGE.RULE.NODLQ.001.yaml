@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.NODLQ.001
+name: EventBridge Rule Has No Dead-Letter Queue Configured
+description: >
+  EventBridge rule has no DeadLetterConfig at all — failed target
+  invocations have no preservation surface. After the rule's retry
+  budget exhausts, the event is discarded. Failed events are gone
+  with no record of payload, target, or invocation history. Same
+  failure-handling defect as the SQS NODLQ control but at the EB
+  rule layer; distinct from CTL.EVENTBRIDGE.GHOST.RULE.DLQ.001
+  (which detects a configured-but-deleted DLQ — this control
+  detects "never configured"). Critical rules — security
+  automation, audit pipelines, billing events — should always have
+  a DLQ.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.2, CC7.2"
+  nist_800_53_r5: "SI-11, CP-10"
+  fedramp_moderate: "SI-11, CP-10"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    EventBridge rule has no DLQ configured. Failed invocations are
+    discarded with no preservation.
+  action: >
+    Configure a DeadLetterConfig pointing at an SQS queue. Set the
+    queue's retention to at least 14 days (max) to maximize
+    investigation window. Pair with a CloudWatch alarm on the
+    DLQ's ApproximateNumberOfMessagesVisible so failures surface
+    immediately.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "has_dlq": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.has_dlq
+      op: eq
+      value: false
+defect: >
+  EventBridge rule has no DeadLetterConfig at all.
+infection: >
+  When a target invocation fails — Lambda throttle, SQS visibility
+  collision, target ResourceNotFoundException — EventBridge
+  retries per the rule's retry policy. After retries exhaust, the
+  event is discarded. There's no record of the event payload,
+  the target it was meant for, or the failure reason at the rule
+  layer. Operators have no way to replay failed events,
+  reconstruct what was lost, or identify systematic failure
+  patterns. Failed events become the silent gap in the bus's
+  audit trail.
+failure: >
+  Silent event loss on failure. Failed invocations are discarded
+  with no preservation surface. The rule fired; the target
+  failed; the event is gone.
+tests:
+  - name: rule with no DLQ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            has_dlq: false
+  - name: rule with DLQ configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            has_dlq: true

@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.PIPE.ENRICHMENT.IAM.WILDCARD.001
+name: EventBridge Pipe Enrichment Lambda Role Has Wildcard Permissions
+description: >
+  EventBridge Pipe enrichment Lambda function execution role grants
+  wildcard actions (iam:*, s3:*, dynamodb:*) instead of the
+  minimum required to enrich each record. Pipe enrichment runs in
+  the data path between source and target — every record flows
+  through it. A wildcard role on the enrichment makes every pipe
+  invocation a potential pivot point: if the enrichment Lambda is
+  ever exploited (deserialization bug, dependency vuln, supply-chain
+  compromise), the wildcard role brings the full scope with it.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_pipe
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EventBridge Pipe enrichment Lambda role grants wildcard
+    actions.
+  action: >
+    Replace the wildcard with the specific actions the
+    enrichment needs. Most enrichment Lambdas only need to read
+    a lookup table or call a downstream API for context — list
+    those exact actions and resources. Avoid managed policies
+    like AdministratorAccess on enrichment roles.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_pipe",
+        "events": {
+          "enrichment_role_has_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_pipe
+    - field: properties.governance.events.enrichment_type
+      op: eq
+      value: lambda
+    - field: properties.governance.events.enrichment_role_has_wildcard
+      op: eq
+      value: true
+defect: >
+  EventBridge Pipe enrichment Lambda role grants wildcard
+  actions instead of the minimum required to enrich each
+  record.
+infection: >
+  Enrichment runs in the data path. An attacker exploiting the
+  enrichment Lambda — through a deserialization bug, a
+  vulnerable dependency, or a supply-chain compromise of the
+  function code — gets the role's full wildcard permission set.
+  The blast radius isn't bounded by what the enrichment
+  legitimately needs; it's bounded by what the role is
+  permitted to do. For wildcard scopes that's typically the
+  entire service — every IAM API, every S3 bucket, every
+  DynamoDB table.
+failure: >
+  Latent privilege escalation surface. Compromise of the
+  enrichment Lambda yields full wildcard scope on the source/
+  service the role names.
+tests:
+  - name: enrichment with wildcard role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-enrich"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            enrichment_type: "lambda"
+            enrichment_role_has_wildcard: true
+  - name: enrichment with scoped role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-enrich"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            enrichment_type: "lambda"
+            enrichment_role_has_wildcard: false

@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.SCHEDULE.SYNTAX.001
+name: EventBridge Schedule Expression Has Invalid Syntax
+description: >
+  EventBridge rule has a ScheduleExpression that is syntactically
+  invalid (cron typo, rate-expression unit error, or unsupported
+  format). The rule is created — EventBridge accepts the expression
+  at PutRule time only with limited validation — but it never
+  fires. The rule appears active in the console; CloudWatch shows
+  zero invocations; the work the schedule was supposed to drive
+  silently doesn't happen.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, A1.2"
+  nist_800_53_r5: "CM-2, CM-3, CP-10"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EventBridge schedule expression is invalid; the rule never
+    fires.
+  action: >
+    Validate the expression syntax. cron expressions in
+    EventBridge use 6 fields (minute, hour, day-of-month, month,
+    day-of-week, year) — different from standard 5-field cron.
+    rate expressions must use minute/minutes/hour/hours/day/days
+    units. Test the expression by enabling the rule briefly and
+    confirming the next-invocation time, or use the AWS console's
+    schedule preview.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "schedule_expression": "cron(0 9 * * ? *)",
+          "schedule_expression_valid": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.schedule_expression_valid
+      op: eq
+      value: false
+defect: >
+  EventBridge rule's ScheduleExpression cannot be parsed as a
+  valid cron or rate expression.
+infection: >
+  EventBridge accepts the malformed expression at PutRule time
+  with limited validation, but the scheduler can't compute a
+  fire time from it. The rule advertises a schedule; CloudWatch
+  records zero MatchedEvents and zero Invocations. Operators
+  monitoring rule activity by enabled-state alone don't see the
+  failure. Scheduled batch jobs, recurring data-pipeline triggers,
+  and cron-driven maintenance simply don't run.
+failure: >
+  Silent schedule failure. The rule never fires; the work the
+  schedule was supposed to do silently doesn't happen.
+tests:
+  - name: invalid cron expression fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/nightly"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            schedule_expression: "cron(0 9 * * *)"
+            schedule_expression_valid: false
+  - name: valid 6-field cron passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/nightly"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            schedule_expression: "cron(0 9 * * ? *)"
+            schedule_expression_valid: true

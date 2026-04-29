@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.PIPE.SOURCE.NOFILTER.001
+name: EventBridge Pipe Has No Source Filter Pattern
+description: >
+  EventBridge Pipe has no SourceParameters.FilterCriteria
+  configured. Every record from the source flows through
+  enrichment (if configured) and into the target. Without a
+  filter, the pipe's enrichment Lambda processes every record
+  regardless of relevance, and the target receives the full
+  source firehose. Cost, latency, and downstream load all scale
+  with source volume rather than with the actually-relevant
+  subset. AWS pipes support source-side filtering precisely so
+  the pipe can drop unwanted records before incurring enrichment
+  or target invocation cost.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, SC-5"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_pipe
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge Pipe has no source filter. Every record reaches
+    enrichment and target.
+  action: >
+    Configure SourceParameters.FilterCriteria with a JSON-event
+    pattern matching only the records the pipe should process.
+    Filter early to reduce enrichment Lambda invocations and
+    target load. If a true catch-all is needed (an analytics
+    archive sink), document the rationale in the pipe's tags
+    (Purpose=archive-all) and pair with throughput monitoring.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_pipe",
+        "events": {
+          "has_source_filter": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_pipe
+    - field: properties.governance.events.has_source_filter
+      op: eq
+      value: false
+defect: >
+  EventBridge Pipe has no source FilterCriteria.
+infection: >
+  Every record from the source flows through the pipe's full
+  pipeline. Enrichment Lambda runs on every record, including
+  records the consumer doesn't need. Target receives the full
+  source volume. Cost and latency scale with the source's
+  throughput rather than with the relevant subset. The pipe's
+  metrics conflate "active workload" with "noise the pipe is
+  paying to process and discard downstream".
+failure: >
+  Unbounded fan-through. The pipe pays enrichment and target
+  cost for every source record, including records the target
+  drops. Cost and downstream pressure grow with source volume.
+tests:
+  - name: pipe without source filter fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            has_source_filter: false
+  - name: pipe with source filter passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            has_source_filter: true

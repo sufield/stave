@@ -1,0 +1,23 @@
+id: eventbridge_policy_ungoverned
+description: >
+  Two or more EventBridge bus-policy actions are granted broadly:
+  PutRule, PutTargets, RemoveTargets, DeleteEventBus/DeleteRule,
+  or partner-source registration. Each broad-action grant is a
+  separate path to automation hijack, silent disablement, or
+  destructive impact; co-occurrence indicates the bus's
+  administrative perimeter is not enforced. Threshold of 2 fires
+  when at least two action-scope defects coexist on the same bus.
+  Same governance-collapse pattern as sns_policy_ungoverned and
+  sqs_policy_ungoverned.
+controls:
+  - CTL.EVENTBRIDGE.POLICY.PUTRULE.BROAD.001
+  - CTL.EVENTBRIDGE.POLICY.PUTTARGETS.BROAD.001
+  - CTL.EVENTBRIDGE.POLICY.REMOVETARGETS.BROAD.001
+  - CTL.EVENTBRIDGE.POLICY.DELETEEVENTBUS.BROAD.001
+  - CTL.EVENTBRIDGE.POLICY.PARTNER.BROAD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - automation_hijack

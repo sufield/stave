@@ -1,0 +1,24 @@
+id: eventbridge_injection_surface
+description: >
+  An EventBridge bus combines public access (Principal: *) or broad
+  cross-account access with a service-source confused deputy
+  opening or a broad PutTargets grant. Both ingress (events arrive
+  from anywhere) and downstream wiring (which targets receive them)
+  can be steered by an external party. Threshold of 2 fires when
+  the public-access defect coexists with at least one of the
+  service-source / action-scope defects on the same bus.
+controls:
+  - CTL.EVENTBRIDGE.BUS.PUBLIC.001
+  - CTL.EVENTBRIDGE.BUS.CROSSACCOUNT.001
+  - CTL.EVENTBRIDGE.POLICY.S3.NOSOURCE.001
+  - CTL.EVENTBRIDGE.POLICY.CLOUDWATCH.NOSOURCE.001
+  - CTL.EVENTBRIDGE.POLICY.SES.NOSOURCE.001
+  - CTL.EVENTBRIDGE.POLICY.SSM.NOSOURCE.001
+  - CTL.EVENTBRIDGE.POLICY.PUTTARGETS.BROAD.001
+  - CTL.EVENTBRIDGE.POLICY.PARTNER.BROAD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - cross_account_injection

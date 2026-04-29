@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.FANOUT.WIDE.001
+name: EventBridge Rule Has Excessive Target Count
+description: >
+  EventBridge rule has more than 5 targets configured (AWS soft
+  limit). Each event matching the rule is delivered independently
+  to each target; one target's throttle, failure, or rate-limit
+  doesn't isolate from the others, but operationally a wide fan-out
+  often signals that the rule has accumulated targets over time —
+  a new consumer was added without auditing what's already there.
+  The mix of targets often spans criticality classes (security
+  automation alongside analytics, alongside dev observability),
+  and a noisy target throttling the rule's invocation budget
+  starves the critical paths.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, SC-5"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge rule fans out to more than 5 targets. Audit
+    target list for accumulated consumers.
+  action: >
+    Review the target list via DescribeRule + ListTargetsByRule.
+    For each target, confirm the consumer is still active and
+    that the rule's pattern is the right subscription point —
+    not a more-narrow downstream rule. Consider splitting the
+    rule into per-criticality rules (security, analytics, dev)
+    so target-level throttling on one tier doesn't starve the
+    others. AWS hard limit is 5 targets per rule; values >5
+    indicate a config validation gap or use of newer features
+    that allow more.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "target_count": 3
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.target_count
+      op: gt
+      value: 5
+defect: >
+  EventBridge rule has more than 5 targets configured.
+infection: >
+  Each event matching the rule fans out to every target. Targets
+  span criticality classes and consumption patterns —
+  high-volume analytics next to low-volume security automation.
+  When one target throttles (Lambda concurrency, SQS visibility,
+  network slowdown), the rule's per-target retry budgets compete
+  for the same per-rule invocation pool. Critical-path targets
+  see latency or skipped invocations because a noisy neighbor is
+  consuming the budget. Operationally, the wide target list is
+  also harder to audit — adding one more consumer rarely prompts
+  re-evaluating whether the original consumers are still needed.
+failure: >
+  Target-list sprawl. Critical-path targets share invocation
+  budget with analytics/observability; operational visibility
+  into who-consumes-what degrades.
+tests:
+  - name: rule with 7 targets fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            target_count: 7
+  - name: rule with 3 targets passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            target_count: 3

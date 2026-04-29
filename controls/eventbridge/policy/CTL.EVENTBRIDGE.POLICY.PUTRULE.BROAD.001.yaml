@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.POLICY.PUTRULE.BROAD.001
+name: EventBridge Bus Policy Allows PutRule To Non-Admin Principals
+description: >
+  EventBridge bus resource policy grants events:PutRule to
+  principals beyond a tightly-scoped administrative role. PutRule
+  creates or modifies rules on the bus — it controls which patterns
+  fire, which downstream automation runs, and on which event
+  shapes. A PutRule grant on a bus is equivalent to control over the
+  account's automation surface. Most production bus policies should
+  reserve PutRule to a dedicated platform role; broad grants
+  (Principal: *, broad role wildcards, cross-account principals
+  without scope) are an automation-takeover surface.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6, CM-3"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EventBridge bus policy grants events:PutRule beyond an
+    administrative role. The grantee can create or modify rules on
+    the bus, hijacking automation.
+  action: >
+    Restrict events:PutRule to a dedicated platform-admin role.
+    Remove Principal: * statements; replace cross-account principal
+    wildcards with specific role ARNs scoped by aws:PrincipalOrgID.
+    Audit every existing rule for unexpected creators via
+    CloudTrail PutRule events.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "policy_putrule_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.policy_putrule_broad
+      op: eq
+      value: true
+defect: >
+  EventBridge bus policy grants events:PutRule to a broad set of
+  principals (Principal: *, role wildcards, or unrestricted
+  cross-account access).
+infection: >
+  Any principal granted PutRule on the bus can create new rules,
+  modify existing rule patterns, and add new targets. Creating a
+  rule with a permissive pattern and an attacker-controlled target
+  redirects every matching event into the attacker's control. The
+  bus advertises one set of automation behaviors; the actual
+  routing is whatever the most-recent PutRule says it is.
+failure: >
+  Automation hijack. Attacker-created rules redirect events to
+  attacker-controlled targets, with the bus's full event stream as
+  input.
+tests:
+  - name: bus policy with broad PutRule fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/app"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_putrule_broad: true
+  - name: bus policy with scoped PutRule passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/app"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_putrule_broad: false

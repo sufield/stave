@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.PIPE.SOURCE.NODLQ.001
+name: EventBridge Pipe Source Has No Dead-Letter Queue
+description: >
+  EventBridge Pipe has no DeadLetterConfig on its source.
+  Poison-pill records — malformed payloads, items that crash
+  enrichment, items the target rejects after retry exhaustion —
+  block the pipe's source consumer indefinitely or are silently
+  discarded depending on source semantics. Without a DLQ there's
+  no preservation surface for failed records and no mechanism for
+  the pipe to make forward progress past a bad item. Pipes with
+  Kinesis / DynamoDB-Streams sources are particularly affected:
+  the source iterator stalls on the bad shard until intervention.
+domain: governance
+severity: high
+compliance:
+  soc2: "A1.2, CC7.2"
+  nist_800_53_r5: "SI-11, CP-10"
+  fedramp_moderate: "SI-11, CP-10"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_pipe
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    EventBridge Pipe has no DLQ on its source. Failed records
+    block the pipe or are discarded.
+  action: >
+    Configure a DeadLetterConfig pointing at an SQS queue, with
+    queue retention of at least 14 days for investigation
+    headroom. Pair with a CloudWatch alarm on the DLQ depth so
+    the pipe's failure rate surfaces fast. For Kinesis /
+    DynamoDB-Streams sources, also configure
+    OnPartialBatchItemFailure to handle per-record failures
+    without stalling the shard.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_pipe",
+        "events": {
+          "source_has_dlq": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_pipe
+    - field: properties.governance.events.source_has_dlq
+      op: eq
+      value: false
+defect: >
+  EventBridge Pipe source has no DeadLetterConfig.
+infection: >
+  The pipe pulls records from its source. A poison record —
+  malformed JSON, item crashing enrichment, oversized payload,
+  schema mismatch — fails processing. With a DLQ, the failed
+  record is preserved and the pipe makes progress past it. With
+  no DLQ, behavior depends on source: Kinesis / DynamoDB-Streams
+  stall the iterator until the bad record ages out (24h–7d
+  retention); SQS sources retry until visibility timeout
+  exhausts and discard. In both cases the pipe's throughput
+  collapses or the failed record is silently lost; investigation
+  has no preserved evidence to work with.
+failure: >
+  Pipe stall or silent record loss. Without DLQ, poison records
+  either block source progress or vanish; the pipe's reliability
+  posture is below AWS defaults for no documented reason.
+tests:
+  - name: pipe without source DLQ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            source_has_dlq: false
+  - name: pipe with source DLQ passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            source_has_dlq: true

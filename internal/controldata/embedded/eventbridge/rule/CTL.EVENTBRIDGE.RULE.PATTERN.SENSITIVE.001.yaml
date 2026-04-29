@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.PATTERN.SENSITIVE.001
+name: EventBridge Rule Subscribes To Sensitive Source Without Filter Narrowing
+description: >
+  EventBridge rule subscribes to a high-sensitivity event source
+  (aws.health, aws.config, aws.guardduty, aws.securityhub,
+  aws.cloudtrail, aws.iam) without narrowing the pattern beyond
+  the source key. The rule receives every event from the sensitive
+  source and forwards it to every target. Health, Config, and
+  GuardDuty events contain finding details, account IDs,
+  resource identifiers, and remediation hints — broad fan-out
+  exposes that material to every target including those that
+  don't need it.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6, CC7.2"
+  nist_800_53_r5: "AC-3, AC-21, SI-4"
+  fedramp_moderate: "AC-3, SI-4"
+  iso_27001_2022: "A.5.15, A.8.16, A.8.24"
+  ccm_v4: ["DSP-17", "LOG-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: collection
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge rule consumes sensitive source events with no
+    filter narrowing. Every sensitive event reaches every target.
+  action: >
+    Add at least one narrowing key to the pattern: detail-type
+    (specific event class), detail.severity (e.g., HIGH /
+    CRITICAL only for GuardDuty findings), detail.eventName
+    (specific CloudTrail API), or resource ARN prefix. Targets
+    that don't need the full firehose should subscribe to a
+    narrowed downstream rule, not the sensitive-source root rule.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "subscribes_sensitive_source": true,
+          "has_narrowing_filter": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.subscribes_sensitive_source
+      op: eq
+      value: true
+    - field: properties.governance.events.has_narrowing_filter
+      op: eq
+      value: false
+defect: >
+  EventBridge rule consumes a sensitive event source with no
+  narrowing filter beyond the source key.
+infection: >
+  The rule pattern lists only `source` keys for sensitive
+  services. Every event those services emit — every Health
+  notification, every Config rule evaluation, every GuardDuty
+  finding, every IAM API call — fans out to every target. Targets
+  that should only see HIGH-severity findings see all severities;
+  targets meant to handle account-level events see resource-level
+  events. Sensitive metadata (account IDs, finding details,
+  remediation hints) reaches consumers that have no business
+  with it. Downstream logging surfaces multiply the data
+  retention exposure.
+failure: >
+  Over-distribution of sensitive event metadata. Targets receive
+  the full sensitive-source firehose; downstream logs and storage
+  retain finding/audit data beyond the actually-needed scope.
+tests:
+  - name: GuardDuty source without filter narrowing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/gd-all"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            subscribes_sensitive_source: true
+            sensitive_source: "aws.guardduty"
+            has_narrowing_filter: false
+  - name: GuardDuty source with severity filter passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/gd-high"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            subscribes_sensitive_source: true
+            sensitive_source: "aws.guardduty"
+            has_narrowing_filter: true

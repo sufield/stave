@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.PIPE.ENRICHMENT.NOTIMEOUT.001
+name: EventBridge Pipe Enrichment Has No Timeout Or An Excessive One
+description: >
+  EventBridge Pipe enrichment Lambda's timeout is at the AWS
+  maximum (15 minutes) or unset (defaults to 3 seconds, but ≥30s
+  is the issue). A long enrichment timeout stalls the pipe's
+  source consumer — Kinesis / DynamoDB-Streams shards block on
+  the in-flight record, source backlog grows, downstream targets
+  starve. A 15-minute enrichment isn't enrichment, it's a
+  long-running workflow that should be a Step Functions target
+  instead.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.1, CC8.1"
+  nist_800_53_r5: "SC-5, SI-11"
+  fedramp_moderate: "SC-5"
+  iso_27001_2022: "A.8.6, A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_pipe
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    EventBridge Pipe enrichment Lambda has timeout above 30s.
+    Long enrichments stall the source.
+  action: >
+    Set the enrichment Lambda timeout to <=30 seconds. If the
+    enrichment legitimately needs longer (calling a third-party
+    API with multi-second latency, performing aggregation across
+    a long window), restructure the pipe: use a fast enrichment
+    that emits events to a Step Functions state machine target,
+    let the long work happen out-of-band, and write the result
+    back via a separate path.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_pipe",
+        "events": {
+          "enrichment_timeout_seconds": 5
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_pipe
+    - field: properties.governance.events.enrichment_type
+      op: eq
+      value: lambda
+    - field: properties.governance.events.enrichment_timeout_seconds
+      op: gt
+      value: 30
+defect: >
+  EventBridge Pipe enrichment Lambda has timeout greater than
+  30 seconds.
+infection: >
+  Enrichment runs synchronously between source and target. While
+  a record is being enriched, the source consumer blocks on
+  that record (per-shard for Kinesis / DDB-Streams; per-message
+  for SQS). With long timeouts, one slow record holds the shard
+  for minutes, source backlog grows, and target throughput
+  collapses. Multiple slow records in flight compound the
+  effect — the pipe's effective throughput drops to 1/timeout
+  per shard. AWS imposes a 15-minute hard limit but most
+  enrichments should finish in single-digit seconds.
+failure: >
+  Pipe throughput collapse. Long-running enrichment stalls the
+  source consumer; source backlog and target latency grow.
+tests:
+  - name: enrichment timeout 300s fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-enrich"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            enrichment_type: "lambda"
+            enrichment_timeout_seconds: 300
+  - name: enrichment timeout 5s passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-enrich"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            enrichment_type: "lambda"
+            enrichment_timeout_seconds: 5

@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.PIPE.SOURCE.IAM.WILDCARD.001
+name: EventBridge Pipe Source Role Has Wildcard Permissions
+description: >
+  EventBridge Pipe source IAM role grants wildcard actions on the
+  source service (kinesis:*, dynamodb:*, sqs:*, kafka:*) instead of
+  the minimum required for pipe consumption (typically GetRecords /
+  GetShardIterator / DescribeStream-style read-only actions). A
+  wildcard role lets the pipe — or anyone able to assume it — do
+  far more than poll the source: write back, modify the stream's
+  consumer registration, delete records, or reshape the resource.
+  Same overprivilege pattern as Lambda execution roles, scoped to
+  the pipe-source surface.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_pipe
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge Pipe source IAM role grants wildcard actions on the
+    source service.
+  action: >
+    Replace the wildcard action with the specific read-only
+    actions the pipe needs. For Kinesis: GetRecords,
+    GetShardIterator, DescribeStream, ListShards. For DynamoDB
+    Streams: DescribeStream, GetRecords, GetShardIterator,
+    ListStreams. For SQS: ReceiveMessage, DeleteMessage,
+    GetQueueAttributes. For self-managed Kafka / MSK: the IAM
+    actions documented for the chosen auth mechanism. AWS
+    publishes least-privilege role examples per source type;
+    those are the right starting point.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_pipe",
+        "events": {
+          "source_role_has_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_pipe
+    - field: properties.governance.events.source_role_has_wildcard
+      op: eq
+      value: true
+defect: >
+  EventBridge Pipe source IAM role grants wildcard actions
+  (kinesis:*, dynamodb:*, sqs:*, kafka:*) instead of the
+  minimum required for pipe consumption.
+infection: >
+  The pipe source role is broader than pipe consumption requires.
+  An attacker with access to the role — via instance metadata
+  exfiltration, role-chain abuse, or compromise of the pipe
+  control plane — can perform actions far beyond reading the
+  source: write to the source stream, modify the stream's
+  configuration, or pivot to other resources within the
+  service's wildcard scope. The pipe runs normally either way;
+  the excess privilege is dormant attack surface.
+failure: >
+  Latent privilege escalation surface. The pipe role grants
+  more than the pipe needs; any compromise of the role brings
+  the full wildcard scope with it.
+tests:
+  - name: pipe with wildcard source role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            source_type: "kinesis_stream"
+            source_role_has_wildcard: true
+  - name: pipe with scoped source role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            source_type: "kinesis_stream"
+            source_role_has_wildcard: false

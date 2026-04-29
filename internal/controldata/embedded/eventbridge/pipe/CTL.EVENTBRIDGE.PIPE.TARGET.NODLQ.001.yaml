@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.PIPE.TARGET.NODLQ.001
+name: EventBridge Pipe Target Failure Has No Dead-Letter Queue
+description: >
+  EventBridge Pipe has source DLQ configured (or not) but no
+  separate target-failure DLQ. When the target rejects a record
+  (after retries), the pipe routes the record to its source DLQ
+  if one exists, conflating source-side poison records with
+  target-side failures. Operators investigating "why are records
+  in the DLQ" can't distinguish between the source emitting
+  malformed records and the target's downstream service being
+  unhealthy. Pipes with mixed-failure-mode workloads benefit from
+  separate target DLQ to keep the failure modes distinguishable.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.2, CC7.2"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_pipe
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    EventBridge Pipe routes target failures to the source DLQ
+    or discards them.
+  action: >
+    Configure a separate TargetParameters.DeadLetterConfig
+    pointing at a distinct SQS queue. Tag the queue
+    (Source=eb-pipe-target-failures, PipeName=<name>) so
+    operators investigating failures can distinguish target-
+    side from source-side poison records. Pair with a
+    CloudWatch alarm on each DLQ so the failure mode is visible.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_pipe",
+        "events": {
+          "target_has_dlq": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_pipe
+    - field: properties.governance.events.target_has_dlq
+      op: eq
+      value: false
+defect: >
+  EventBridge Pipe has no separate DLQ for target-side
+  failures.
+infection: >
+  Records that fail target invocation (after retries exhaust)
+  either go to the shared source DLQ or are discarded. With a
+  shared DLQ, source-side poison records and target-side
+  delivery failures land in the same place — operators reading
+  the DLQ can't tell whether the upstream system is emitting
+  bad data or the downstream system is unhealthy. With no
+  target DLQ, failed records are silently lost: the pipe's
+  metrics show invocation attempts; downstream evidence shows
+  nothing arrived.
+failure: >
+  Mixed-failure-mode investigation gap or silent target-side
+  loss. Operators can't separate source poison from target
+  unhealth; some records are simply lost.
+tests:
+  - name: pipe without target DLQ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            target_has_dlq: false
+  - name: pipe with separate target DLQ passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            target_has_dlq: true

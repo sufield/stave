@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.NOTARGETS.001
+name: EventBridge Rule Has No Targets (Silent Dead Rule)
+description: >
+  EventBridge rule is enabled and matches events but has no targets
+  configured. Every matching event is silently dropped — the rule
+  fires, no downstream invocation occurs. This is the structural
+  outcome of RemoveTargets-without-DeleteRule (see
+  CTL.EVENTBRIDGE.POLICY.REMOVETARGETS.BROAD.001) but is also
+  reachable through normal ops drift: a target was removed during
+  decommissioning, the rule wasn't deleted, the pattern still
+  matches. Console shows a healthy rule; downstream consumers see
+  nothing.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC7.2, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, SI-4"
+  fedramp_moderate: "CM-2, SI-4"
+  iso_27001_2022: "A.5.16, A.8.16, A.8.32"
+  ccm_v4: ["BCR-08", "LOG-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge rule is enabled with a matching pattern but no
+    targets. Events match and are silently dropped.
+  action: >
+    Either attach the intended targets via PutTargets, disable the
+    rule (DisableRule) if it's expected to be inactive, or delete
+    the rule entirely (DeleteRule) if it was supposed to be
+    decommissioned. Pair with a CloudWatch alarm on
+    Invocations==0 for rules tagged as critical so future target
+    strips surface immediately.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "rule_enabled": true,
+          "target_count": 2
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.rule_enabled
+      op: eq
+      value: true
+    - field: properties.governance.events.target_count
+      op: eq
+      value: 0
+defect: >
+  EventBridge rule is enabled but has zero targets configured.
+infection: >
+  The rule matches events per its pattern but has no destinations.
+  Every match is silently dropped — no Lambda invocation, no SQS
+  message, no Step Functions execution. Console shows the rule
+  enabled and active. CloudWatch shows a non-zero MatchedEvents
+  count and a zero Invocations count. Operators monitoring rule
+  health by enabled-state alone don't see the failure. Downstream
+  consumers — security automation, data pipelines, audit
+  ingestors — silently stop receiving the events they expected.
+failure: >
+  Silent rule disablement. Events match the rule but no work
+  happens. Console reports the rule healthy; consumers report
+  nothing arriving.
+tests:
+  - name: enabled rule with zero targets fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders/process"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            rule_enabled: true
+            target_count: 0
+  - name: enabled rule with targets passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders/process"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            rule_enabled: true
+            target_count: 2
+  - name: disabled rule with zero targets passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders/legacy"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            rule_enabled: false
+            target_count: 0

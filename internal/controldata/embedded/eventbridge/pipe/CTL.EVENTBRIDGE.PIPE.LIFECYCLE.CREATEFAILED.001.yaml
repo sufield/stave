@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.PIPE.LIFECYCLE.CREATEFAILED.001
+name: EventBridge Pipe Stuck In CREATE_FAILED Or UPDATE_FAILED State
+description: >
+  EventBridge Pipe is in CREATE_FAILED or UPDATE_FAILED state and
+  has not been deleted or repaired. The pipe holds source
+  resources (consumer registrations, IAM bindings, secret
+  references) but isn't processing records. Source-side cost may
+  still accrue (Kinesis enhanced fan-out consumers continue to
+  bill, MSK IAM auth tokens are issued, secret access logs
+  populate). Operators looking at the resource list see "an
+  EventBridge Pipe exists for this stream"; the pipe is
+  effectively offline.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2, CM-8"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_pipe
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge Pipe is in CREATE_FAILED or UPDATE_FAILED
+    state.
+  action: >
+    Investigate the StateReason via DescribePipe. Common causes:
+    invalid IAM permissions, missing source resource, secret
+    decryption failure, target ARN not yet provisioned. Either
+    fix the underlying issue and call StartPipe, or delete the
+    pipe (DeletePipe) if the deployment is being abandoned.
+    Add a CloudWatch alarm on pipe state to surface future
+    failures fast.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_pipe",
+        "events": {
+          "state": "RUNNING"
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - all:
+        - field: properties.governance.kind
+          op: eq
+          value: eventbridge_pipe
+        - field: properties.governance.events.state
+          op: eq
+          value: CREATE_FAILED
+    - all:
+        - field: properties.governance.kind
+          op: eq
+          value: eventbridge_pipe
+        - field: properties.governance.events.state
+          op: eq
+          value: UPDATE_FAILED
+defect: >
+  EventBridge Pipe is in CREATE_FAILED or UPDATE_FAILED state.
+infection: >
+  The pipe is not processing records. Source resource bindings
+  may still hold (consumer registrations, IAM trust, secret
+  references) producing latent cost. The console shows the
+  pipe's existence; reviewers without operational context don't
+  see that the pipe is non-functional. Whatever workflow the
+  pipe was supposed to drive — data routing, enrichment-and-
+  forward, change-data-capture forwarding — silently doesn't
+  happen.
+failure: >
+  Silent pipe failure with residual cost. Source bindings
+  consume budget while the pipe processes nothing. Ops
+  inventory shows the pipe; consumers see no records.
+tests:
+  - name: pipe in CREATE_FAILED fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            state: "CREATE_FAILED"
+  - name: pipe in UPDATE_FAILED fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            state: "UPDATE_FAILED"
+  - name: pipe in RUNNING passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            state: "RUNNING"

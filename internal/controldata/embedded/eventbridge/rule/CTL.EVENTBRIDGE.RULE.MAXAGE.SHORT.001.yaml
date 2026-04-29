@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.MAXAGE.SHORT.001
+name: EventBridge Rule MaximumEventAge Is Shorter Than Recovery Window
+description: >
+  EventBridge rule has a MaximumEventAge value below 60 seconds.
+  AWS allows MaximumEventAge in the range 60-86400 seconds; setting
+  it to the 60-second floor means events expire from the retry
+  buffer in less than a minute. Any downstream incident lasting
+  longer than 60 seconds — Lambda cold-start storm, target service
+  5xx, network blip — exhausts the retention before recovery, and
+  events expire to the DLQ (if configured) or are dropped. The
+  default of 24h is appropriate for most rules; a deliberate
+  reduction is a brittle posture that should be explicit and
+  documented.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.2"
+  nist_800_53_r5: "SI-11, CP-10"
+  fedramp_moderate: "SI-11, CP-10"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    EventBridge rule has MaximumEventAge below 60 seconds. Events
+    expire from the retry buffer faster than typical downstream
+    recovery.
+  action: >
+    Increase MaximumEventAge to at least 300 seconds; AWS default
+    is 86400 (24h) and is appropriate for most rules. If a short
+    age is a deliberate latency-vs-durability trade, document the
+    rationale in the rule description and pair with a DLQ to
+    preserve expired events.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "maximum_event_age_seconds": 86400
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.maximum_event_age_seconds
+      op: lt
+      value: 60
+defect: >
+  EventBridge rule MaximumEventAge is below 60 seconds.
+infection: >
+  When a target invocation fails, EventBridge holds the event in
+  a retry buffer up to MaximumEventAge. With <60 seconds, any
+  recovery time longer than that — even a routine downstream
+  blip — sees events expire from the buffer mid-recovery. With
+  no DLQ they're discarded; with a DLQ they accumulate in the
+  failure path. The retry policy looks correct in the console;
+  the actual durability is significantly below AWS defaults
+  for no documented reason.
+failure: >
+  Brittle retention budget. Events expire from retry buffer
+  during ordinary downstream incidents that retries would
+  otherwise have absorbed.
+tests:
+  - name: MaximumEventAge below 60 seconds fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            maximum_event_age_seconds: 30
+  - name: AWS default 24h passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            maximum_event_age_seconds: 86400
+  - name: 5-minute floor passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders-fast"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            maximum_event_age_seconds: 300

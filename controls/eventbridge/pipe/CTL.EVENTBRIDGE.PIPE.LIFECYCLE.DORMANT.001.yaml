@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.PIPE.LIFECYCLE.DORMANT.001
+name: EventBridge Pipe Has Been STOPPED For Over 90 Days
+description: >
+  EventBridge Pipe is in STOPPED state and has been stopped for
+  more than 90 days. Long-stopped pipes are typically
+  forgotten experiments, decommissioning that never finished, or
+  stale staging-environment fixtures. They retain source
+  bindings, IAM trust policies, and secret references that
+  surface as inventory clutter and audit noise. Either delete
+  the pipe entirely or document the long-pause rationale via a
+  tag.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_pipe
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge Pipe has been STOPPED for over 90 days.
+  action: >
+    Decide whether the pipe is decommissioned (DeletePipe) or
+    paused for a documented reason (add a tag like
+    Lifecycle=Hibernating + DocumentedReason=<jira-ticket>).
+    Long-stopped pipes accumulate as inventory clutter and
+    extend the IAM-policy audit surface for no operational
+    benefit.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_pipe",
+        "events": {
+          "state": "STOPPED",
+          "stopped_days": 12
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_pipe
+    - field: properties.governance.events.state
+      op: eq
+      value: STOPPED
+    - field: properties.governance.events.stopped_days
+      op: gt
+      value: 90
+defect: >
+  EventBridge Pipe has been in STOPPED state for over 90 days.
+infection: >
+  The pipe holds source bindings (consumer registrations, IAM
+  trust, secret references) without processing records.
+  Inventory tooling reports the pipe as a live asset.
+  Compliance audits scan its IAM role even though it isn't
+  exercising any of the trust. Decisions about the source
+  resource (deprecation, encryption rotation, access changes)
+  treat the pipe as a live consumer when it isn't.
+failure: >
+  Inventory and audit clutter. Long-stopped pipes accumulate
+  IAM and secret bindings without operational purpose; the
+  audit surface grows without security value.
+tests:
+  - name: pipe stopped 120 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/legacy-test"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            state: "STOPPED"
+            stopped_days: 120
+  - name: pipe stopped 12 days passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            state: "STOPPED"
+            stopped_days: 12
+  - name: pipe in RUNNING passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            state: "RUNNING"
+            stopped_days: 0

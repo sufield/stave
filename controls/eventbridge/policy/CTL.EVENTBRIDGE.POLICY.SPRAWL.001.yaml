@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.POLICY.SPRAWL.001
+name: EventBridge Bus Policy Has Excessive Statement Count
+description: >
+  EventBridge bus resource policy contains an excessive number of
+  Allow statements (>= 10), accumulated over time as integrations
+  came and went. Each statement is an attack surface — service
+  principals, cross-account grants, and condition variants
+  multiply. Sprawl correlates strongly with stale grants for
+  decommissioned services, partner sources, and account-to-account
+  flows that no longer exist. Same governance pattern as
+  CTL.SNS.POLICY.SPRAWL.001 and CTL.SQS.POLICY.SPRAWL.001.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-3, CM-2"
+  fedramp_moderate: "AC-3, CM-2"
+  iso_27001_2022: "A.5.15, A.8.2, A.8.32"
+  ccm_v4: ["IAM-04", "BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge bus policy has accumulated many statements;
+    audit for stale grants.
+  action: >
+    Audit every Allow statement: identify the integration that
+    introduced it, confirm the integration still exists, and
+    remove statements for decommissioned services. After
+    consolidation the policy should typically have under 10
+    statements; more usually indicates layered grants that should
+    be merged with shared conditions.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "policy_statement_count": 6
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.policy_statement_count
+      op: gte
+      value: 10
+defect: >
+  EventBridge bus policy contains 10 or more Allow statements,
+  indicating accumulated grants without consolidation.
+infection: >
+  Each statement is a separate grant — service principal,
+  cross-account principal, or specific condition. As integrations
+  are added over time without removing old ones, the policy
+  accumulates statements that may no longer correspond to live
+  publishers. Stale statements continue to authorize publishers
+  that may have been compromised or repurposed; the operational
+  team typically can't identify which grants are still load-bearing
+  without a service-by-service audit. The risk of a stale grant
+  being exploited grows linearly with statement count.
+failure: >
+  Policy drift surface. Some allow statements no longer correspond
+  to active integrations and may authorize compromised or
+  repurposed source resources without surfacing.
+tests:
+  - name: policy with 12 statements fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/app"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_statement_count: 12
+  - name: policy with 6 statements passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/app"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_statement_count: 6

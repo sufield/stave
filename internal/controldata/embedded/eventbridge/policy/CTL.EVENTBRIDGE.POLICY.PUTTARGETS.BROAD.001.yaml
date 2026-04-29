@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.POLICY.PUTTARGETS.BROAD.001
+name: EventBridge Bus Policy Allows PutTargets To Non-Admin Principals
+description: >
+  EventBridge bus resource policy grants events:PutTargets to
+  principals beyond a tightly-scoped administrative role. PutTargets
+  attaches new targets to an existing rule — without changing the
+  pattern. The rule continues to advertise the same behavior to
+  reviewers; the actual delivery surface silently grows to include
+  the attacker's target. This is the most insidious EB privilege
+  because it leaves the rule itself unchanged. Existing pattern
+  audits don't catch it.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6, CM-3"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EventBridge bus policy grants events:PutTargets beyond an
+    administrative role. The grantee can attach new targets to
+    existing rules, silently exfiltrating events.
+  action: >
+    Restrict events:PutTargets to a dedicated platform-admin role.
+    Audit every existing rule's target list for unexpected ARNs
+    via DescribeRule + ListTargetsByRule. Add a CloudWatch alarm
+    on PutTargets API calls to surface future additions.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "policy_puttargets_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.policy_puttargets_broad
+      op: eq
+      value: true
+defect: >
+  EventBridge bus policy grants events:PutTargets to a broad set
+  of principals.
+infection: >
+  Any principal granted PutTargets on the bus can attach a new
+  target to any existing rule. The rule's pattern is unchanged;
+  the attacker simply adds their own Lambda, SQS queue, or
+  cross-account ARN to the target list. Every event the rule
+  matches now also arrives at the attacker. This is exfiltration
+  without any visible change to the rule's published behavior —
+  pattern audits don't catch it because the pattern was never
+  modified.
+failure: >
+  Silent event exfiltration. Events the rule was supposed to
+  deliver to legitimate targets are also delivered to attacker-
+  added targets; the rule appears unchanged.
+tests:
+  - name: bus policy with broad PutTargets fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/app"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_puttargets_broad: true
+  - name: bus policy with scoped PutTargets passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/app"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_puttargets_broad: false

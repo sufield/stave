@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.POLICY.DELETEEVENTBUS.BROAD.001
+name: EventBridge Bus Policy Allows DeleteEventBus Or DeleteRule To Non-Admin
+description: >
+  EventBridge bus resource policy grants events:DeleteEventBus or
+  events:DeleteRule to principals beyond a tightly-scoped
+  administrative role. Deleting the bus or its rules is the most
+  destructive EB operation: every downstream automation built on
+  the bus stops running, ghost references propagate to upstream
+  CloudWatch alarms, and recovery requires recreating both
+  resources and re-validating consumer integrations.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3, A1.2"
+  nist_800_53_r5: "AC-3, AC-6, SI-12"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: impact
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    EventBridge bus policy grants destructive operations
+    (DeleteEventBus / DeleteRule) beyond an administrative role.
+  action: >
+    Restrict events:DeleteEventBus and events:DeleteRule to a
+    dedicated platform-admin role with break-glass approval.
+    Add a CloudWatch alarm on DeleteEventBus / DeleteRule API
+    calls so destructive events trigger an immediate page.
+    Consider AWS SCPs to deny deletion org-wide except from a
+    designated admin account.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "policy_delete_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.policy_delete_broad
+      op: eq
+      value: true
+defect: >
+  EventBridge bus policy grants events:DeleteEventBus or
+  events:DeleteRule to a broad set of principals.
+infection: >
+  Any principal granted destructive EB operations can delete the
+  bus or specific rules at will. A single deletion cascades to
+  every downstream consumer that referenced the resource —
+  CloudWatch alarms targeting deleted rules, federated buses
+  expecting to receive replays, automation pipelines that depend
+  on rule-defined invocations. Recovery requires recreating both
+  the resource and validating that every downstream integration
+  still binds correctly.
+failure: >
+  Catastrophic automation loss. Deleting the bus or critical rules
+  silently disables every downstream consumer that depended on
+  them; recovery is operationally expensive.
+tests:
+  - name: bus policy with broad delete fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/app"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_delete_broad: true
+  - name: bus policy with scoped delete passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/app"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_delete_broad: false

@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.DEFAULTBUS.001
+name: EventBridge Rule On Default Bus Carries Application-Specific Pattern
+description: >
+  EventBridge rule lives on the account's default bus and carries
+  an application-specific pattern (custom source, custom
+  detail-type) rather than an AWS-service-event pattern. The
+  default bus is the catch-all for AWS service events; mixing
+  application events into it creates cross-tenant exposure in
+  multi-tenant accounts (every team's rules see every other
+  team's app events) and complicates per-application encryption,
+  archive retention, and isolation. Application events should live
+  on a dedicated custom bus.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, SC-7"
+  fedramp_moderate: "AC-3, SC-7"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IVS-09", "DSP-17"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: collection
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    EventBridge rule on default bus consumes application-custom
+    events instead of AWS service events.
+  action: >
+    Create a dedicated custom event bus for the application
+    (CreateEventBus). Move the rule to the new bus by deleting
+    and recreating it with EventBusName set. Update producers
+    (PutEvents callers) to publish to the custom bus. The
+    default bus should only carry AWS service events
+    (aws.<service> source) plus rules subscribing to those.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "is_default_bus": false,
+          "has_application_custom_pattern": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.is_default_bus
+      op: eq
+      value: true
+    - field: properties.governance.events.has_application_custom_pattern
+      op: eq
+      value: true
+defect: >
+  EventBridge rule on the default bus subscribes to an
+  application-custom event source/detail-type rather than an
+  AWS service event.
+infection: >
+  The default bus is shared across the entire account. Any rule
+  on the default bus sees every event the bus carries —
+  AWS service events plus any application events any team has
+  pushed to the default bus rather than to a dedicated bus.
+  Operators of application A can write rules that consume
+  application B's custom events; archives on the default bus
+  capture cross-application data; per-application CMK encryption
+  isn't possible because the default bus uses AWS-managed keys.
+  Migration to a dedicated bus is straightforward but rarely
+  prioritized once events are flowing.
+failure: >
+  Cross-tenant event mixing. Application events are visible to
+  rules belonging to other applications; per-application
+  isolation (encryption, archive, access policy) is not
+  achievable on the default bus.
+tests:
+  - name: app-custom rule on default bus fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/billing-event"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            event_bus_name: "default"
+            is_default_bus: true
+            has_application_custom_pattern: true
+  - name: app-custom rule on dedicated bus passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/billing-event"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            event_bus_name: "billing-app-bus"
+            is_default_bus: false
+            has_application_custom_pattern: true
+  - name: AWS-service rule on default bus passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/health-events"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            event_bus_name: "default"
+            is_default_bus: true
+            has_application_custom_pattern: false

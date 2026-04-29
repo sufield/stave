@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.PATTERN.WIDE.001
+name: EventBridge Rule Pattern Matches All Events
+description: >
+  EventBridge rule has an event pattern that matches every event on
+  the bus — either an empty pattern object, a pattern that
+  prefix-matches the empty string, or a logically equivalent
+  always-true expression. The rule fans out every event to every
+  configured target. This is rarely the intent; it's almost always
+  a debug stub left in production, a copy-paste from a "match all"
+  example, or a pattern whose narrowing keys were accidentally
+  removed. The cost is throughput, downstream invocation count, and
+  loss of the pattern's diagnostic value (no longer answers "which
+  events triggered this rule").
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-3, CM-2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge rule pattern matches every event on the bus.
+  action: >
+    Tighten the pattern with at least one narrowing key — source,
+    detail-type, or detail field equality. If a true catch-all is
+    required, document it with a tag (e.g., Purpose=catch-all-archive)
+    and pair it with a dedicated archive-only target so the
+    fan-out is bounded.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "pattern_matches_everything": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.pattern_matches_everything
+      op: eq
+      value: true
+defect: >
+  EventBridge rule's event pattern has no narrowing keys and matches
+  every event on the bus.
+infection: >
+  Every event on the bus matches the rule. Every target receives
+  every event. Downstream Lambda concurrency, SQS depth, and
+  Step Functions executions multiply by the bus's full event volume
+  rather than by the intended subset. Targets see event shapes the
+  consumer wasn't written to handle, often producing parser errors
+  or no-op invocations that look like activity. The rule's
+  diagnostic value is lost — operators can't distinguish "rule
+  fired because the relevant event happened" from "rule fired
+  because all events trigger it".
+failure: >
+  Unbounded fan-out. The rule's targets process the bus's full
+  event volume; cost and downstream invocation pressure scale
+  with bus throughput, not with the actually-relevant subset.
+tests:
+  - name: pattern matching everything fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders/catch"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            pattern_matches_everything: true
+  - name: narrow pattern passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders/created"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            pattern_matches_everything: false

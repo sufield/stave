@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.SELFLOOP.001
+name: EventBridge Rule Target Republishes To Same Bus With Matching Pattern
+description: >
+  EventBridge rule has a target that republishes events back to the
+  same bus, and the rule's pattern matches the republished event
+  shape. Each event match triggers a target invocation that
+  produces another matching event — the cycle multiplies until a
+  rate limit, account quota, or downstream failure breaks it.
+  Most commonly seen with rules whose target is a Lambda or Step
+  Functions workflow that PutEventses augmented copies back to the
+  bus for downstream consumers.
+domain: governance
+severity: high
+compliance:
+  soc2: "A1.1, A1.2"
+  nist_800_53_r5: "SC-5, SI-11"
+  fedramp_moderate: "SC-5, SI-11"
+  iso_27001_2022: "A.8.6, A.8.16"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EventBridge rule has a republish loop with itself. Matched
+    events trigger republished events that match again, multiplying
+    invocations.
+  action: >
+    Either narrow the rule pattern to exclude the target's
+    republished event shape (add a source/detail-type filter that
+    discriminates original from republished), or route the
+    target's republish to a different bus. As a defense-in-depth
+    floor, set a CloudWatch alarm on Invocations exceeding a
+    historical p99 baseline so a runaway loop surfaces fast.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "has_self_publishing_loop": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.has_self_publishing_loop
+      op: eq
+      value: true
+defect: >
+  EventBridge rule's target republishes events to the same bus
+  with a shape that matches the rule's own pattern.
+infection: >
+  When the rule fires, it invokes its target. The target — a
+  Lambda or Step Functions workflow that emits enriched events,
+  or another EventBridge rule federation — publishes a new event
+  to the same bus. The new event matches the same rule. The rule
+  fires again. The cycle compounds: each iteration produces N
+  events for N targets. Within minutes the bus's PutEvents quota,
+  Lambda concurrency, and downstream cost spike. Recovery requires
+  disabling the rule (which races against in-flight invocations)
+  or breaking the loop at the target.
+failure: >
+  Runaway invocation cascade. The rule and its target multiply
+  events until a rate limit breaks the loop — by which time
+  cost, downstream failure, and observable side effects have
+  compounded.
+tests:
+  - name: rule with self-publishing loop fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/order-enrich"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            has_self_publishing_loop: true
+  - name: rule without self-loop passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/order-enrich"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            has_self_publishing_loop: false

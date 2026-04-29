@@ -31,7 +31,7 @@ var _ ports.AlertSink = (*CEFFileSink)(nil)
 
 // NewCEFFileSink opens a CEF output file in append mode.
 func NewCEFFileSink(path string) (*CEFFileSink, error) {
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gosec // user-specified path
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600) //nolint:gosec // user-specified path
 	if err != nil {
 		return nil, fmt.Errorf("open CEF file %q: %w", path, err)
 	}

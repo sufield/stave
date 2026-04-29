@@ -1,0 +1,24 @@
+id: eventbridge_pattern_governance
+description: >
+  Two or more rule-pattern correctness defects co-occur on the
+  same bus: wide-pattern (matches everything), pattern-overlap
+  (duplicate invocations across rules), no-targets (silent dead
+  rule), self-loop (event amplification), or sensitive-source
+  unfiltered (over-distribution of finding/audit metadata).
+  Co-occurrence indicates the bus's pattern hygiene has eroded
+  beyond a single rogue rule — pattern review and target audit
+  are both needed. Threshold of 2 fires when at least two
+  pattern-correctness defects are present.
+controls:
+  - CTL.EVENTBRIDGE.RULE.PATTERN.WIDE.001
+  - CTL.EVENTBRIDGE.RULE.NOTARGETS.001
+  - CTL.EVENTBRIDGE.RULE.SELFLOOP.001
+  - CTL.EVENTBRIDGE.RULE.PATTERN.OVERLAP.001
+  - CTL.EVENTBRIDGE.RULE.PATTERN.SENSITIVE.001
+  - CTL.EVENTBRIDGE.RULE.DEFAULTBUS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.SCHEDULE.TIMEZONE.001
+name: EventBridge Schedule Expression Defaults To UTC When Local Intended
+description: >
+  EventBridge rule has a cron-format schedule expression that
+  references hour-of-day or day-of-week without explicit timezone
+  context. EventBridge interprets the expression in UTC. When the
+  schedule was intended for a local business timezone (e.g., "9 AM
+  every weekday in PST"), it fires at the wrong wall-clock time
+  — typically 8 hours off, drifting across DST boundaries. Pure
+  UTC schedules are fine; business-hour schedules require the
+  newer EventBridge Scheduler (with ScheduleExpressionTimezone)
+  or an explicit UTC-converted offset documented in the rule's
+  description.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.2"
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge cron schedule references hour-of-day without
+    explicit timezone; defaults to UTC and may fire at wrong
+    wall-clock time.
+  action: >
+    For business-hour-sensitive schedules, migrate to EventBridge
+    Scheduler which supports ScheduleExpressionTimezone. If
+    keeping the rule on EventBridge, document the UTC offset in
+    the rule description (e.g., "9 AM PST = 17:00 UTC standard /
+    16:00 UTC during DST") and add a tag indicating manual DST
+    rollover responsibility.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "uses_cron_schedule": true,
+          "timezone_documented": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.uses_cron_schedule
+      op: eq
+      value: true
+    - field: properties.governance.events.timezone_documented
+      op: eq
+      value: false
+defect: >
+  EventBridge cron schedule references hour-of-day or day-of-week
+  without explicit timezone documentation; UTC interpretation
+  may not match operator intent.
+infection: >
+  The cron expression specifies a fire time, e.g., "0 9 * * ? *".
+  EventBridge interprets all non-Scheduler cron expressions in UTC.
+  If the intent was 9 AM Eastern, the actual fire time is 4 AM
+  Eastern (during DST) or 5 AM Eastern (standard time) — outside
+  business hours, possibly waking on-call without cause or
+  triggering during a maintenance window. The drift is
+  twice-yearly (DST transitions) and consistent — a 1-hour shift
+  every March and November relative to local time.
+failure: >
+  Schedule fires at wrong wall-clock time. Off-hours runs,
+  missed business-hour windows, twice-yearly DST drift.
+tests:
+  - name: cron schedule without timezone documentation fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/morning-job"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            uses_cron_schedule: true
+            timezone_documented: false
+  - name: cron schedule with documented timezone passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/morning-job"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            uses_cron_schedule: true
+            timezone_documented: true
+  - name: rate-based schedule passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/poll-every-5"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            uses_cron_schedule: false
+            timezone_documented: false

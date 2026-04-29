@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.POLICY.REMOVETARGETS.BROAD.001
+name: EventBridge Bus Policy Allows RemoveTargets To Non-Admin Principals
+description: >
+  EventBridge bus resource policy grants events:RemoveTargets to
+  principals beyond a tightly-scoped administrative role.
+  RemoveTargets strips targets from a rule. The rule's pattern
+  stays — events still match — but they have no destination. The
+  rule becomes a silent dead rule. Security automation,
+  remediation pipelines, and audit ingestion that depended on the
+  rule are turned off without visible configuration change.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3, CC7.2"
+  nist_800_53_r5: "AC-3, AC-6, SI-4"
+  pci_dss_v4.0: "7.2, 10.2"
+  fedramp_moderate: "AC-3, AC-6, SI-4"
+  iso_27001_2022: "A.5.15, A.8.2, A.8.16"
+  ccm_v4: ["IAM-04", "LOG-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EventBridge bus policy grants events:RemoveTargets beyond an
+    administrative role. The grantee can silently disable rules
+    by stripping their targets.
+  action: >
+    Restrict events:RemoveTargets to a dedicated platform-admin
+    role. Add a CloudWatch alarm on RemoveTargets API calls so
+    future strips surface immediately. Pair with rule-target audit
+    via daily DescribeRule + ListTargetsByRule reconciliation.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "policy_removetargets_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.policy_removetargets_broad
+      op: eq
+      value: true
+defect: >
+  EventBridge bus policy grants events:RemoveTargets to a broad
+  set of principals.
+infection: >
+  Any principal granted RemoveTargets on the bus can strip targets
+  from any rule. Events still match the rule; the rule appears
+  active in the console; downstream automation simply doesn't run.
+  This is the EB-layer analog of disabling a CloudWatch alarm
+  silently. Security-response Lambdas, remediation rules, and
+  audit ingestors that rely on EB rules are all defeated by
+  RemoveTargets without any rule deletion.
+failure: >
+  Silent automation disablement. Rules continue to match upstream
+  events; no targets receive them. Console shows the rule active;
+  no downstream work happens.
+tests:
+  - name: bus policy with broad RemoveTargets fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/app"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_removetargets_broad: true
+  - name: bus policy with scoped RemoveTargets passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/app"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_removetargets_broad: false

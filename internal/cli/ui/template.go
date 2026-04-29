@@ -28,8 +28,12 @@ var allowedFunctions = map[string]struct{}{
 	// Custom functions
 	"json": {},
 	// Safe text/template builtins
-	"and":      {},
-	"call":     {}, // only calls FuncMap entries, which we control
+	"and": {},
+	// "call" is intentionally excluded. The text/template "call"
+	// builtin invokes any function value, including ones reached via
+	// dot-path on the data argument — not just FuncMap entries. With
+	// "call" excluded, a function-typed field added to a data struct
+	// in the future cannot be invoked through a user-supplied template.
 	"html":     {},
 	"index":    {},
 	"slice":    {},

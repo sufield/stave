@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.POLICY.SSM.NOSOURCE.001
+name: EventBridge Bus Policy Allows SSM Run Command Inbound Without SourceArn
+description: >
+  EventBridge bus resource policy grants events:PutEvents to the
+  Systems Manager service principal (ssm.amazonaws.com) without an
+  aws:SourceArn or aws:SourceAccount condition. SSM publishes
+  Run-Command, Maintenance-Window, and Automation events. Without
+  source restriction any SSM document execution in any account can
+  inject events targeting the bus — and downstream automation
+  rules built around SSM event types (e.g., remediation-on-document-
+  failure) execute on attacker-controlled triggers.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, SC-7, AT-3"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.9"
+  ccm_v4: ["IAM-16", "IVS-09"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge bus policy authorizes the SSM service principal
+    without a source restriction. Any SSM execution in any account
+    can publish events to the bus.
+  action: >
+    Add aws:SourceArn (the SSM document or association ARN) or
+    aws:SourceAccount (the SSM-owning account) to every statement
+    granting ssm.amazonaws.com PutEvents. SSM events are
+    operationally privileged — restrict tightly.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "policy_allows_ssm": true,
+          "policy_ssm_has_source": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.policy_allows_ssm
+      op: eq
+      value: true
+    - field: properties.governance.events.policy_ssm_has_source
+      op: eq
+      value: false
+defect: >
+  EventBridge bus policy authorizes SSM service principal
+  PutEvents without aws:SourceArn or aws:SourceAccount.
+infection: >
+  The bus policy grants PutEvents to ssm.amazonaws.com without
+  source restriction. Any SSM document run in any account can
+  fire a synthetic Run-Command-result or Automation-finished
+  event into the bus. Operations rules that auto-remediate on SSM
+  failures, escalate stuck Maintenance Windows, or route
+  Automation outputs to incident channels run on spoofed input.
+  Run Command remediation chained off these events is
+  operationally privileged — the attacker steers it.
+failure: >
+  Spoofed SSM event injection. Operations automation acts on
+  attacker-controlled SSM events; downstream Run Command
+  remediation can be steered to attacker-chosen targets.
+tests:
+  - name: SSM principal without source condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/ops"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_allows_ssm: true
+            policy_ssm_has_source: false
+  - name: SSM principal with sourceAccount passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/ops"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            policy_allows_ssm: true
+            policy_ssm_has_source: true

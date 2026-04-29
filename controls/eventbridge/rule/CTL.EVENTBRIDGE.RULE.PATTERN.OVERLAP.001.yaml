@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.PATTERN.OVERLAP.001
+name: EventBridge Rule Pattern Overlaps Another Rule On Same Bus
+description: >
+  EventBridge bus has multiple rules whose patterns overlap — at
+  least one event shape matches more than one rule. Overlapping
+  patterns produce duplicate target invocations: every event in the
+  overlap fires every overlapping rule, and each rule's targets
+  process the event independently. This is rarely intentional;
+  it's usually the result of a refactor that split one rule into
+  two without removing the original, or two teams writing rules
+  for the same event source without coordinating.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, SI-11"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge rule's pattern overlaps another rule's pattern on
+    the same bus, producing duplicate invocations.
+  action: >
+    Identify the overlapping rules via DescribeRule for each rule
+    on the bus. Choose one of: (a) consolidate into a single rule
+    with all needed targets, (b) narrow each rule's pattern with a
+    discriminating key (different detail-type / source / tag) so
+    the patterns are mutually exclusive, or (c) accept the overlap
+    explicitly and add a tag (Overlap=intentional) plus a
+    documentation note stating which rule is canonical.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "has_overlapping_pattern": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.has_overlapping_pattern
+      op: eq
+      value: true
+defect: >
+  EventBridge rule's pattern overlaps with at least one other
+  rule on the same bus.
+infection: >
+  When an event matching the overlap arrives, every overlapping
+  rule fires. Each rule's targets process the event independently
+  — the same Lambda invokes twice, the same SQS message arrives
+  twice, the same Step Functions execution starts twice with
+  identical input. Idempotent consumers absorb the duplication
+  (cost only); non-idempotent consumers double-write, double-
+  charge, or double-notify. The bus's metrics show inflated rule-
+  invocation counts that mask actual event volume.
+failure: >
+  Duplicate target invocations. Targets process the same event
+  multiple times; non-idempotent downstream effects compound.
+tests:
+  - name: rule with overlapping pattern fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders-v2"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            has_overlapping_pattern: true
+  - name: rule with unique pattern passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders-v2"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            has_overlapping_pattern: false

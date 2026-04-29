@@ -1,0 +1,18 @@
+id: eventbridge_schedule_misfire
+description: >
+  EventBridge scheduled rule has both an invalid expression
+  (cron syntax error or rate-unit error) and an undocumented
+  timezone reference. The schedule either doesn't fire at all
+  or fires at the wrong wall-clock time, with no operator
+  visibility into which mode it's in. Threshold of 2 fires when
+  both schedule-correctness defects are present on the same
+  rule.
+controls:
+  - CTL.EVENTBRIDGE.RULE.SCHEDULE.SYNTAX.001
+  - CTL.EVENTBRIDGE.RULE.SCHEDULE.TIMEZONE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
