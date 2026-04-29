@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.GHOST.RULE.DLQ.001
+name: EventBridge Rule Dead-Letter Queue Target Does Not Exist
+description: >
+  An EventBridge rule has a dead-letter queue configured but the
+  DLQ ARN names an SQS queue that has been deleted. Failed
+  invocations meant to be preserved in the DLQ for investigation
+  are silently lost. This is the rule-side analog of
+  CTL.SQS.GHOST.DLQ.001 (queue-side DLQ ghost) and the most
+  dangerous SQS-coupling failure for EventBridge: when the rule
+  target itself fails, the DLQ is the safety net; when the DLQ is
+  ghosted, the safety net is gone.
+domain: governance
+severity: critical
+compliance:
+  soc2: "CC6.1, CC8.1, A1.2"
+  nist_800_53_r5: "CM-2, CM-3, SI-11"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EventBridge rule's DLQ points to an SQS queue that has been
+    deleted. Failed invocations have no preservation surface.
+  action: >
+    Recreate the SQS DLQ at the original ARN, repoint the rule's
+    DLQ to a live queue
+    (aws events put-rule / put-targets with --dead-letter-config),
+    or remove the DLQ if the workload no longer needs it. Pair with
+    a CloudWatch alarm on DeadLetterInvocations so future deletions
+    surface immediately.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "has_dlq": true,
+          "dlq_arn": "arn:aws:sqs:us-east-1:111122223333:eb-failures",
+          "dlq_exists": true,
+          "has_ghost_dlq": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.has_ghost_dlq
+      op: eq
+      value: true
+defect: >
+  EventBridge rule's dead-letter-config references an SQS queue ARN
+  that has been deleted.
+infection: >
+  The rule has DLQ configuration — the console shows the DLQ ARN,
+  the DeadLetterConfig is present in the rule definition. When a
+  target invocation fails after the retry budget exhausts,
+  EventBridge attempts to deliver the failed event to the DLQ.
+  Because the DLQ no longer exists, the delivery to DLQ also fails.
+  The failed event is discarded. Failures that should have been
+  captured for triage and replay are gone. The rule appears to have
+  a failure-handling safety net; it doesn't.
+failure: >
+  Silent failure-path collapse. Events that fail target invocation
+  also fail DLQ delivery and are discarded. The rule looks
+  resilient; failed events are unrecoverable.
+tests:
+  - name: rule with ghost DLQ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            rule_arn: "arn:aws:events:us-east-1:111122223333:rule/orders"
+            has_dlq: true
+            dlq_arn: "arn:aws:sqs:us-east-1:111122223333:eb-failures-deleted"
+            dlq_exists: false
+            has_ghost_dlq: true
+  - name: rule with live DLQ passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            rule_arn: "arn:aws:events:us-east-1:111122223333:rule/orders"
+            has_dlq: true
+            dlq_arn: "arn:aws:sqs:us-east-1:111122223333:eb-failures"
+            dlq_exists: true
+            has_ghost_dlq: false
+  - name: rule without DLQ does not fire (different control)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/non-critical"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            rule_arn: "arn:aws:events:us-east-1:111122223333:rule/non-critical"
+            has_dlq: false
+            has_ghost_dlq: false

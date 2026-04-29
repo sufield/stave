@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.GHOST.TARGET.SAGEMAKER.001
+name: EventBridge Rule Targets Deleted SageMaker Pipeline
+description: >
+  An EventBridge rule's target is a SageMaker pipeline ARN that no
+  longer exists. SageMaker pipelines are typically triggered by data
+  arrival events (S3 ObjectCreated) or scheduled retraining; a ghost
+  SageMaker target means model retraining and ML inference pipelines
+  silently stop executing on schedule. Model freshness regresses
+  without anyone noticing until output drift becomes visible.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, SI-4"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule_target
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    EventBridge rule target references a SageMaker pipeline that has
+    been deleted. Scheduled retraining and inference pipelines fail.
+  action: >
+    Recreate the SageMaker pipeline at the original ARN, repoint the
+    target to a live pipeline, or remove the target. If the pipeline
+    was renamed/migrated, update the rule target ARN to match.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule_target",
+        "events": {
+          "target_type": "sagemaker_pipeline",
+          "target_arn": "arn:aws:sagemaker:us-east-1:111122223333:pipeline/retrain-prod",
+          "target_exists": true,
+          "has_ghost_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule_target
+    - field: properties.governance.events.target_type
+      op: eq
+      value: sagemaker_pipeline
+    - field: properties.governance.events.has_ghost_target
+      op: eq
+      value: true
+defect: >
+  EventBridge rule target ARN names a SageMaker pipeline that has
+  been deleted.
+infection: >
+  The trigger event continues to match. Each match attempts
+  StartPipelineExecution against a missing pipeline — the API
+  rejects. Events route to DLQ or discard. Scheduled model
+  retraining and inference orchestration triggered by upstream
+  events silently stop running. Models drift; predictions degrade.
+failure: >
+  Silent ML-pipeline failure. Models go stale because their
+  scheduled retraining trigger points at a deleted pipeline. Output
+  quality regresses gradually until a downstream consumer raises an
+  alarm — often weeks later.
+tests:
+  - name: rule target to deleted SageMaker pipeline fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/retrain-trigger/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-1"
+            target_type: "sagemaker_pipeline"
+            target_arn: "arn:aws:sagemaker:us-east-1:111122223333:pipeline/retrain-prod-deleted"
+            target_exists: false
+            has_ghost_target: true
+  - name: rule target to live SageMaker pipeline passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/retrain-trigger/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-1"
+            target_type: "sagemaker_pipeline"
+            target_arn: "arn:aws:sagemaker:us-east-1:111122223333:pipeline/retrain-prod"
+            target_exists: true
+            has_ghost_target: false

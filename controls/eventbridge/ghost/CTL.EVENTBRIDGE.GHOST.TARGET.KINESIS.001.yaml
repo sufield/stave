@@ -1,0 +1,121 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.GHOST.TARGET.KINESIS.001
+name: EventBridge Rule Targets Deleted Kinesis Stream
+description: >
+  An EventBridge rule's target is a Kinesis data stream ARN that no
+  longer exists. The rule continues to match events; every matching
+  event attempts to PutRecords into a stream that has been deleted.
+  The PutRecords call fails with ResourceNotFoundException; after the
+  rule's retry budget exhausts, the event is either redirected to the
+  rule's DLQ (if configured) or silently discarded. Same silent
+  failure pattern as CTL.EVENTBRIDGE.TARGET.GHOST.001 but specific to
+  Kinesis stream targets — important because Kinesis streams are
+  often the bridge between EB events and downstream analytics, and a
+  ghost stream silently breaks the analytics pipeline.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, SI-4"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule_target
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge rule target is a Kinesis stream that has been deleted.
+    Every matching event fails delivery silently.
+  action: >
+    Recreate the Kinesis stream at the original ARN, repoint the rule
+    target to a live stream
+    (aws events put-targets --rule <name> --targets ...), or remove
+    the target. If the stream was decommissioned intentionally, also
+    remove the EventBridge invocation role's
+    kinesis:PutRecord/PutRecords permission for the deleted ARN.
+    Configure a rule DLQ so future deletions surface as
+    DeadLetterInvocations metric spikes.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule_target",
+        "events": {
+          "target_type": "kinesis_stream",
+          "target_arn": "arn:aws:kinesis:us-east-1:111122223333:stream/analytics",
+          "target_exists": true,
+          "has_ghost_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule_target
+    - field: properties.governance.events.target_type
+      op: eq
+      value: kinesis_stream
+    - field: properties.governance.events.has_ghost_target
+      op: eq
+      value: true
+defect: >
+  EventBridge rule target ARN names a Kinesis data stream that has
+  been deleted.
+infection: >
+  The rule pattern continues to match events. Each match attempts
+  PutRecords against the named stream — the API returns
+  ResourceNotFoundException. EventBridge retries per the rule's
+  retry policy. After retries exhaust, the event is sent to the
+  rule's DLQ (if configured) or discarded. The rule appears active.
+  No error surfaces unless a FailedInvocations alarm or DLQ-depth
+  alarm is configured. Every event matching the rule is lost from
+  the analytics pipeline downstream of the deleted stream.
+failure: >
+  Silent analytics-pipeline failure. Events that should be ingested
+  into Kinesis for downstream consumers (Firehose, Analytics
+  applications, Lambda processors) are dropped. The rule's metrics
+  show successful invocation attempts; the data never arrives.
+tests:
+  - name: rule target to deleted Kinesis stream fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            rule_arn: "arn:aws:events:us-east-1:111122223333:rule/orders"
+            target_id: "target-1"
+            target_type: "kinesis_stream"
+            target_arn: "arn:aws:kinesis:us-east-1:111122223333:stream/analytics-deleted"
+            target_exists: false
+            has_ghost_target: true
+  - name: rule target to live Kinesis stream passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            rule_arn: "arn:aws:events:us-east-1:111122223333:rule/orders"
+            target_id: "target-1"
+            target_type: "kinesis_stream"
+            target_arn: "arn:aws:kinesis:us-east-1:111122223333:stream/analytics"
+            target_exists: true
+            has_ghost_target: false

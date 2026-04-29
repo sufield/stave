@@ -1,0 +1,30 @@
+id: eventbridge_ghost_cascade
+description: >
+  Two or more EventBridge ghost references co-locate on the same
+  rule infrastructure. Multiple downstream dependencies have been
+  deleted while the rule continues to match upstream events —
+  systematic decommissioning failure in the event-driven backbone.
+  Members span seven target service-types (Kinesis, Firehose, ECS,
+  Batch, CodePipeline, SageMaker, log-group), the invocation IAM
+  role, the rule's DLQ, and the legacy generic-target ghost
+  control. Any two ghosts coexisting on the same rule indicate
+  upstream cleanup landed on neighbours of the rule without landing
+  on the rule itself. Threshold of 2 fires when at least two ghost
+  references coexist.
+controls:
+  - CTL.EVENTBRIDGE.TARGET.GHOST.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.KINESIS.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.FIREHOSE.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.ECS.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.BATCH.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.CODEPIPELINE.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.SAGEMAKER.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.LOGGROUP.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.IAMROLE.001
+  - CTL.EVENTBRIDGE.GHOST.RULE.DLQ.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.RULE.RETRY.NONE.001
+name: EventBridge Rule Retry Policy Disabled
+description: >
+  An EventBridge rule has MaximumRetryAttempts set to 0, disabling
+  retries on target-invocation failure. Any transient downstream
+  failure (Lambda throttling, ECS RunTask capacity, SQS visibility
+  collision) results in immediate event loss. Combined with no DLQ
+  this is a complete failure-path collapse; even with a DLQ, this
+  trades retry headroom for tighter latency at the cost of
+  durability. Rules in the failure-handling path of upstream
+  services (security automation, audit pipelines) should not have
+  retries disabled.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.2"
+  nist_800_53_r5: "SI-11, CP-10"
+  fedramp_moderate: "CP-10"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    EventBridge rule has retries disabled (MaximumRetryAttempts=0).
+    Transient failures result in immediate event loss.
+  action: >
+    Set MaximumRetryAttempts to a non-zero value (AWS default is
+    185, range 0–185) via aws events put-targets with
+    --retry-policy. For high-throughput rules a lower bound around
+    5–25 is reasonable; for security/audit rules use the default.
+    Pair with a DLQ so events that exhaust retries are still
+    preserved.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "maximum_retry_attempts": 25,
+          "has_retries": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.has_retries
+      op: eq
+      value: false
+defect: >
+  EventBridge rule has MaximumRetryAttempts explicitly set to 0,
+  disabling all retries on target-invocation failure.
+infection: >
+  When a target invocation fails — Lambda throttle, target service
+  5xx, network blip, downstream timeout — EventBridge will not
+  retry. The event is sent to the DLQ if configured or discarded.
+  For rules in the security/audit critical path, a transient
+  throttle becomes a permanent loss. The rule appears to function
+  correctly during steady-state operation; the failure manifests
+  only under load or downstream outage when retry headroom is
+  exactly what was needed.
+failure: >
+  Brittle failure path. Transient downstream issues that retries
+  would have absorbed result in permanent event loss. The rule's
+  resilience profile is below AWS defaults for no documented
+  reason.
+tests:
+  - name: rule with MaximumRetryAttempts=0 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            rule_arn: "arn:aws:events:us-east-1:111122223333:rule/orders"
+            maximum_retry_attempts: 0
+            has_retries: false
+  - name: rule with default retries passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            rule_arn: "arn:aws:events:us-east-1:111122223333:rule/orders"
+            maximum_retry_attempts: 185
+            has_retries: true
+  - name: rule with bounded retries passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders-fast"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            rule_arn: "arn:aws:events:us-east-1:111122223333:rule/orders-fast"
+            maximum_retry_attempts: 5
+            has_retries: true

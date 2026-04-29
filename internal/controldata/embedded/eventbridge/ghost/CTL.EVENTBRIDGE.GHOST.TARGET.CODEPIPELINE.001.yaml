@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.GHOST.TARGET.CODEPIPELINE.001
+name: EventBridge Rule Targets Deleted CodePipeline Pipeline
+description: >
+  An EventBridge rule's target is a CodePipeline pipeline ARN that
+  no longer exists. The rule pattern often fires on commit-push or
+  upstream artifact-changed events; a ghost CodePipeline target
+  means CI/CD invocations from those events silently fail. Releases
+  and deployments triggered by upstream changes stop happening
+  without anyone noticing until a stakeholder checks for the missing
+  deploy.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, CM-5"
+  fedramp_moderate: "CM-2, CM-5"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "CCC-04"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule_target
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge rule target references a CodePipeline pipeline that
+    has been deleted. Triggered deploys silently fail.
+  action: >
+    Recreate the pipeline at the original ARN, repoint the rule
+    target to a live pipeline, or remove the target. If the pipeline
+    was renamed, update the rule target ARN to match the new name.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule_target",
+        "events": {
+          "target_type": "codepipeline",
+          "target_arn": "arn:aws:codepipeline:us-east-1:111122223333:prod-deploy",
+          "target_exists": true,
+          "has_ghost_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule_target
+    - field: properties.governance.events.target_type
+      op: eq
+      value: codepipeline
+    - field: properties.governance.events.has_ghost_target
+      op: eq
+      value: true
+defect: >
+  EventBridge rule target ARN names a CodePipeline pipeline that has
+  been deleted.
+infection: >
+  The rule pattern (often: CodeCommit push / S3 ObjectCreated /
+  ECR image-pushed) continues to match. Each match attempts
+  StartPipelineExecution — the API returns
+  PipelineNotFoundException. Events route to DLQ or are discarded.
+  CI/CD deploys triggered by upstream changes silently stop
+  executing. The release cadence appears to halt; the upstream
+  source events still fire.
+failure: >
+  Silent CI/CD failure. Code changes don't reach production because
+  the pipeline that was supposed to deploy them was deleted but the
+  trigger rule still points to it. Stakeholders see the upstream
+  change but no deploy.
+tests:
+  - name: rule target to deleted pipeline fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/source-changed/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-1"
+            target_type: "codepipeline"
+            target_arn: "arn:aws:codepipeline:us-east-1:111122223333:prod-deploy-deleted"
+            target_exists: false
+            has_ghost_target: true
+  - name: rule target to live pipeline passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/source-changed/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-1"
+            target_type: "codepipeline"
+            target_arn: "arn:aws:codepipeline:us-east-1:111122223333:prod-deploy"
+            target_exists: true
+            has_ghost_target: false

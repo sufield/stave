@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.GHOST.TARGET.ECS.001
+name: EventBridge Rule Targets Deleted ECS Cluster Or Task Definition
+description: >
+  An EventBridge rule's target is an ECS cluster ARN or task
+  definition revision that no longer exists. Each matching event
+  attempts to RunTask against a missing resource — the API returns
+  ClusterNotFoundException or InvalidParameterException. The event
+  is sent to DLQ if configured or discarded. ECS rule targets often
+  drive scheduled batch jobs, recurring data pipelines, and event-
+  driven processing — a ghost ECS target silently halts that work.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, SI-4"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule_target
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge rule target references an ECS cluster or task
+    definition revision that has been deleted. Events fail RunTask.
+  action: >
+    Recreate the cluster, repoint the target to a live cluster /
+    task-definition family, or remove the target. If a task
+    definition revision was deprecated, update the target to use the
+    new revision (or pin to the family rather than a specific
+    revision so future revisions are picked up automatically).
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule_target",
+        "events": {
+          "target_type": "ecs_task",
+          "target_arn": "arn:aws:ecs:us-east-1:111122223333:cluster/batch",
+          "task_definition_arn": "arn:aws:ecs:us-east-1:111122223333:task-definition/batch:7",
+          "target_exists": true,
+          "has_ghost_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule_target
+    - field: properties.governance.events.target_type
+      op: eq
+      value: ecs_task
+    - field: properties.governance.events.has_ghost_target
+      op: eq
+      value: true
+defect: >
+  EventBridge rule target references an ECS cluster ARN or task
+  definition revision that has been deleted.
+infection: >
+  The rule pattern continues to match. Each match attempts RunTask
+  against the missing cluster or task definition. RunTask returns
+  ClusterNotFoundException (cluster gone) or
+  InvalidParameterException (task definition gone). Events route to
+  DLQ if configured, otherwise discarded. Scheduled batch
+  processing, event-driven data pipelines, and periodic maintenance
+  jobs that the rule was supposed to trigger silently stop running.
+failure: >
+  Silent batch-job and event-driven pipeline failure. The work the
+  rule was scheduled to perform doesn't happen. Console shows the
+  rule firing successfully; downstream evidence (S3 outputs, DB
+  rows, log entries) shows no work was done.
+tests:
+  - name: rule target to deleted ECS cluster fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/nightly-batch/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-1"
+            target_type: "ecs_task"
+            target_arn: "arn:aws:ecs:us-east-1:111122223333:cluster/batch-deleted"
+            task_definition_arn: "arn:aws:ecs:us-east-1:111122223333:task-definition/batch:7"
+            target_exists: false
+            has_ghost_target: true
+  - name: rule target to live ECS cluster passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/nightly-batch/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-1"
+            target_type: "ecs_task"
+            target_arn: "arn:aws:ecs:us-east-1:111122223333:cluster/batch"
+            task_definition_arn: "arn:aws:ecs:us-east-1:111122223333:task-definition/batch:7"
+            target_exists: true
+            has_ghost_target: false

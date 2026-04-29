@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.GHOST.TARGET.FIREHOSE.001
+name: EventBridge Rule Targets Deleted Firehose Delivery Stream
+description: >
+  An EventBridge rule's target is a Kinesis Data Firehose delivery
+  stream ARN that no longer exists. Firehose targets are typically
+  on the path to durable storage (S3 archive, Redshift, OpenSearch),
+  so a ghost Firehose target means events that should have landed in
+  long-term storage are silently dropped. Same ghost-reference pattern
+  as the Kinesis stream variant, but the failure tail is more severe
+  because Firehose feeds compliance-grade archives.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, AU-9"
+  fedramp_moderate: "CM-2, AU-9"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "LOG-04"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule_target
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge rule target is a Firehose delivery stream that has
+    been deleted. Events meant for archival storage are dropped.
+  action: >
+    Recreate the Firehose at the original ARN, repoint the rule
+    target to a live delivery stream, or remove the target. If the
+    delivery stream was decommissioned, also delete any S3/Redshift
+    archive expectations downstream that depended on it.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule_target",
+        "events": {
+          "target_type": "firehose_stream",
+          "target_arn": "arn:aws:firehose:us-east-1:111122223333:deliverystream/audit-archive",
+          "target_exists": true,
+          "has_ghost_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule_target
+    - field: properties.governance.events.target_type
+      op: eq
+      value: firehose_stream
+    - field: properties.governance.events.has_ghost_target
+      op: eq
+      value: true
+defect: >
+  EventBridge rule target ARN names a Firehose delivery stream that
+  has been deleted.
+infection: >
+  The rule pattern continues to match events; each match attempts to
+  invoke the named Firehose. PutRecord returns
+  ResourceNotFoundException. After retries the event is sent to the
+  rule DLQ if configured or discarded. The archive pipeline appears
+  to be working from the producer side; no records arrive at the
+  archival destination (S3, Redshift, OpenSearch). Compliance audits
+  that rely on the archive contents will fail to find expected
+  records.
+failure: >
+  Silent archive-pipeline failure. Events that should be captured
+  for retention/compliance never reach the archive. The producer
+  metrics show events flowed; the archive shows empty.
+tests:
+  - name: rule target to deleted Firehose fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/audit/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-1"
+            target_type: "firehose_stream"
+            target_arn: "arn:aws:firehose:us-east-1:111122223333:deliverystream/audit-archive-deleted"
+            target_exists: false
+            has_ghost_target: true
+  - name: rule target to live Firehose passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/audit/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-1"
+            target_type: "firehose_stream"
+            target_arn: "arn:aws:firehose:us-east-1:111122223333:deliverystream/audit-archive"
+            target_exists: true
+            has_ghost_target: false

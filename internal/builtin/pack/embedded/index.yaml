@@ -102,3 +102,5 @@ packs:
     path: packs/cisco.yaml
   - id: efs
     path: packs/efs.yaml
+  - id: eventbridge
+    path: packs/eventbridge.yaml

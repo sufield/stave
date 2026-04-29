@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.GHOST.TARGET.LOGGROUP.001
+name: EventBridge Rule Targets Deleted CloudWatch Log Group
+description: >
+  An EventBridge rule's target is a CloudWatch Log Group ARN that no
+  longer exists. Log Group targets are typically used to capture
+  control-plane events (Config rule changes, CloudTrail events,
+  GuardDuty findings) into a forensic log stream; a ghost Log Group
+  target means those forensic records are dropped. The rule fires;
+  the audit trail is incomplete.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC7.2, CC7.4"
+  nist_800_53_r5: "AU-3, AU-9, CM-2"
+  fedramp_moderate: "AU-3, AU-9, CM-2"
+  iso_27001_2022: "A.5.16, A.8.15, A.8.32"
+  ccm_v4: ["LOG-04", "LOG-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule_target
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EventBridge rule target references a CloudWatch Log Group that
+    has been deleted. Forensic events are dropped silently.
+  action: >
+    Recreate the Log Group at the original ARN (preserve the name to
+    avoid breaking consumers), repoint the target to a live Log
+    Group, or remove the target. If the Log Group was decommissioned
+    intentionally, also delete subscription filters / metric filters
+    that depended on it.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule_target",
+        "events": {
+          "target_type": "cloudwatch_log_group",
+          "target_arn": "arn:aws:logs:us-east-1:111122223333:log-group:/aws/events/audit",
+          "target_exists": true,
+          "has_ghost_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule_target
+    - field: properties.governance.events.target_type
+      op: eq
+      value: cloudwatch_log_group
+    - field: properties.governance.events.has_ghost_target
+      op: eq
+      value: true
+defect: >
+  EventBridge rule target ARN names a CloudWatch Log Group that has
+  been deleted.
+infection: >
+  The rule pattern continues to match security/audit events. Each
+  match attempts to PutLogEvents into the named Log Group — the
+  API returns ResourceNotFoundException. Events route to DLQ or are
+  discarded. The forensic record the rule was supposed to capture
+  is silently absent. During incident investigation, gaps appear in
+  the audit timeline that aren't explained by retention policy or
+  access controls.
+failure: >
+  Silent forensic gap. Security events that should have been
+  captured for incident response and compliance audit are missing
+  from the Log Group. The rule appears active; the records aren't
+  there.
+tests:
+  - name: rule target to deleted log group fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/audit-events/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-1"
+            target_type: "cloudwatch_log_group"
+            target_arn: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/events/audit-deleted"
+            target_exists: false
+            has_ghost_target: true
+  - name: rule target to live log group passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/audit-events/target-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-1"
+            target_type: "cloudwatch_log_group"
+            target_arn: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/events/audit"
+            target_exists: true
+            has_ghost_target: false
