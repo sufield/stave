@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.IAM.NORESOURCETAG.001
+name: Step Functions IAM Policies Don't Use aws:ResourceTag For Scoping
+description: >
+  Step Functions IAM policies don't use
+  `aws:ResourceTag/*` conditions to scope by
+  team / environment / compliance class. Single
+  IAM role hits all state machines in the
+  account; per-team / per-env isolation
+  requires per-machine policy duplication.
+  ABAC is the AWS-recommended pattern for
+  scaling authorization.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    IAM policies not using ResourceTag scoping.
+  action: >
+    Add condition: aws:ResourceTag/team equals
+    aws:PrincipalTag/team. Tag state machines
+    with team / env. Audit Access Analyzer
+    findings for over-permissive grants.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "iam": {
+          "uses_resource_tag_scoping": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.iam.uses_resource_tag_scoping
+      op: eq
+      value: false
+defect: >
+  IAM policies don't use aws:ResourceTag
+  conditions.
+infection: >
+  Cross-team / cross-env isolation broken;
+  any role with states:* hits all machines.
+failure: >
+  Coarse authorization model.
+tests:
+  - name: no tag scoping fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            uses_resource_tag_scoping: false
+  - name: tag scoped passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            uses_resource_tag_scoping: true

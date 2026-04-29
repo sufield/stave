@@ -4,15 +4,24 @@
 //
 // Usage:
 //
-//	go run ./internal/tools/regengoldens               # regenerate all and report
-//	go run ./internal/tools/regengoldens -dry-run      # preview without writing
-//	go run ./internal/tools/regengoldens -filter s3    # regex filter on fixture name
+//	go run ./internal/tools/regengoldens                  # regenerate all and report
+//	go run ./internal/tools/regengoldens -dry-run         # preview without writing
+//	go run ./internal/tools/regengoldens -filter s3       # regex filter on fixture name
+//	go run ./internal/tools/regengoldens -since HEAD~1    # only fixtures affected by recent control/pack changes
 //
 // Fixtures are processed sequentially. A previous parallel implementation
 // (NumCPU goroutines feeding a worker pool) produced 0-byte fixture
 // outputs intermittently — likely fd-exhaustion or pipe-read truncation
 // under heavy concurrent fork/exec. Sequential is ~5–10 minutes for the
-// full 2525-fixture suite; for iterative work scope with -filter.
+// full 2525-fixture suite; for iterative work scope with -filter or
+// -since.
+//
+// The -since flag computes "affected domains" from `git diff --name-only
+// <ref>` and skips fixtures whose controls dir does not reference any
+// affected domain. Adding a single domain's controls (e.g. CTL.OPENSEARCH.*)
+// scopes regen to that domain's fixtures, cutting full-suite cost from
+// ~50 min to ~30 s. Non-pack changes (chains, schemas, code) fall back
+// to a full regen.
 //
 // Invoked from the `regenerate-goldens` Makefile target. The tool wraps
 // the existing `./stave apply` / `check` / `enforce` invocations — it
@@ -21,10 +30,12 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -60,6 +71,7 @@ func main() {
 	dryRun := flag.Bool("dry-run", false, "preview diffs without writing goldens")
 	filter := flag.String("filter", "", "regex filter on fixture directory name")
 	rootFlag := flag.String("root", "testdata/e2e", "fixture root directory")
+	since := flag.String("since", "", "regen only fixtures affected by control/pack changes vs this git ref (e.g. HEAD~1); empty = full regen")
 	flag.Parse()
 
 	var filterRE *regexp.Regexp
@@ -69,6 +81,25 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "invalid -filter regex: %v\n", err)
 			os.Exit(2)
+		}
+	}
+
+	// Compute affected domains from git diff. nil result → full regen
+	// (either flag unset, or non-pack changes detected).
+	var affected map[string]struct{}
+	if *since != "" {
+		var err error
+		affected, err = affectedDomains(*since)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "compute affected domains vs %s: %v\n", *since, err)
+			os.Exit(2)
+		}
+		if affected == nil {
+			fmt.Fprintf(os.Stderr, "non-pack changes detected vs %s; falling back to full regen\n", *since)
+		} else if len(affected) == 0 {
+			fmt.Fprintf(os.Stderr, "no control / pack changes vs %s; nothing to regenerate\n", *since)
+		} else {
+			fmt.Fprintf(os.Stderr, "affected domains vs %s: %s\n", *since, joinSorted(affected))
 		}
 	}
 
@@ -84,6 +115,7 @@ func main() {
 	}
 
 	var reports []fixtureReport
+	skipped := 0
 	for _, e := range entries {
 		if !e.IsDir() {
 			continue
@@ -93,11 +125,242 @@ func main() {
 			continue
 		}
 		fixDir := filepath.Join(*rootFlag, name)
+		// Affected-only short-circuit: if the fixture's controls dir
+		// references no affected domain, skip it. Fixtures with no
+		// scannable controls dir (command.txt or profile-mode) fall
+		// through to full evaluation conservatively.
+		if affected != nil && !fixtureIntersectsAffected(fixDir, affected) {
+			reports = append(reports, fixtureReport{Fixture: name, Category: catClean})
+			skipped++
+			continue
+		}
 		reports = append(reports, processFixture(name, fixDir, *dryRun))
 	}
 
 	sort.Slice(reports, func(i, j int) bool { return reports[i].Fixture < reports[j].Fixture })
+	if affected != nil && skipped > 0 {
+		fmt.Fprintf(os.Stderr, "skipped %d fixtures unaffected by changes vs %s\n", skipped, *since)
+	}
 	printReport(reports, *dryRun)
+}
+
+// affectedDomains returns the set of domain tokens (lowercase) whose
+// controls / chains / pack manifest changed since baseRef. Returns
+// (nil, nil) to signal "fall back to full regen": at least one changed
+// path lies inside the project subtree but outside the pack/control
+// surface this tool understands (schemas, code, scripts, etc.).
+//
+// Heuristic mapping (after stripping the cwd's repo-relative prefix):
+//   - controls/<domain>/...                              → affects domain
+//   - internal/controldata/embedded/<dom>/...            → affects domain (synced copies)
+//   - internal/builtin/pack/embedded/packs/<pack>.yaml   → affects pack
+//   - chains/<word>_*.yaml                               → affects word
+//
+// Generated artifacts derived from the embedded controls are ignored:
+//   - README.md, README.tmpl.md, docs/controls/reference.md
+//
+// Paths outside this tool's working subtree (i.e. that did NOT have the
+// expected git prefix) are silently ignored — they cannot affect this
+// project's goldens.
+//
+// Anything else inside the subtree triggers full-regen fallback. The
+// list of out-of-scope paths is logged so the operator can see why
+// scoping degraded.
+func affectedDomains(baseRef string) (map[string]struct{}, error) {
+	prefix, err := gitPrefix()
+	if err != nil {
+		return nil, err
+	}
+	diffOut, err := exec.Command("git", "diff", "--name-only", baseRef).Output()
+	if err != nil {
+		return nil, fmt.Errorf("git diff: %w", err)
+	}
+	// Include untracked-but-not-ignored files so newly authored controls
+	// (typical case during iteration) count as "changed since baseRef".
+	// `git ls-files --others` reports paths relative to cwd, while
+	// `git diff` reports paths relative to repo root — prefix the
+	// untracked entries so the prefix-strip logic below sees them
+	// consistently. Errors here are non-fatal.
+	untrackedOut, _ := exec.Command("git", "ls-files", "--others", "--exclude-standard").Output()
+	if prefix != "" && len(untrackedOut) > 0 {
+		var b strings.Builder
+		for line := range strings.SplitSeq(string(untrackedOut), "\n") {
+			if line == "" {
+				continue
+			}
+			b.WriteString(prefix)
+			b.WriteString(line)
+			b.WriteByte('\n')
+		}
+		untrackedOut = []byte(b.String())
+	}
+	out := append(append([]byte{}, diffOut...), untrackedOut...)
+	domains := map[string]struct{}{}
+	var outOfScope []string
+	for raw := range strings.SplitSeq(string(out), "\n") {
+		line := strings.TrimSpace(raw)
+		if line == "" {
+			continue
+		}
+		// Restrict to changes inside our subtree.
+		if prefix != "" {
+			rel, ok := strings.CutPrefix(line, prefix)
+			if !ok {
+				continue
+			}
+			line = rel
+		}
+		switch {
+		case strings.HasPrefix(line, "controls/"):
+			parts := strings.SplitN(line, "/", 3)
+			if len(parts) >= 2 {
+				domains[strings.ToLower(parts[1])] = struct{}{}
+			}
+		case strings.HasPrefix(line, "internal/controldata/embedded/"):
+			parts := strings.SplitN(line, "/", 5)
+			if len(parts) >= 4 {
+				domains[strings.ToLower(parts[3])] = struct{}{}
+			}
+		case strings.HasPrefix(line, "internal/builtin/pack/embedded/packs/"):
+			pack := strings.TrimSuffix(filepath.Base(line), ".yaml")
+			if pack != "" {
+				domains[strings.ToLower(pack)] = struct{}{}
+			}
+		case strings.HasPrefix(line, "chains/"):
+			// Chain filenames are <domain>_<rest>.yaml. Domain is the
+			// token before the first underscore.
+			base := strings.TrimSuffix(filepath.Base(line), ".yaml")
+			if dom, _, ok := strings.Cut(base, "_"); ok && dom != "" {
+				domains[strings.ToLower(dom)] = struct{}{}
+			} else {
+				outOfScope = append(outOfScope, line)
+			}
+		case isGoldenSafe(line):
+			// Generated artifact derived from the embedded controls;
+			// no observable effect on golden output.
+		default:
+			outOfScope = append(outOfScope, line)
+		}
+	}
+	if len(outOfScope) > 0 {
+		fmt.Fprintf(os.Stderr, "out-of-scope changes vs %s (forcing full regen):\n", baseRef)
+		for _, p := range outOfScope[:min(len(outOfScope), 5)] {
+			fmt.Fprintf(os.Stderr, "  %s\n", p)
+		}
+		if len(outOfScope) > 5 {
+			fmt.Fprintf(os.Stderr, "  … (+%d more)\n", len(outOfScope)-5)
+		}
+		return nil, nil
+	}
+	return domains, nil
+}
+
+// gitPrefix returns the cwd's path within the git repo (with trailing
+// slash, or empty string if cwd is the repo root). Used to strip from
+// `git diff` output so paths line up with our heuristic rules.
+func gitPrefix() (string, error) {
+	out, err := exec.Command("git", "rev-parse", "--show-prefix").Output()
+	if err != nil {
+		return "", fmt.Errorf("git rev-parse --show-prefix: %w", err)
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+// isGoldenSafe reports whether a changed path is a generated artifact
+// or development-only tool that cannot affect e2e goldens. The README
+// and control reference are produced from the embedded controls by
+// `make readme` / `make docs-controls`. Files under internal/tools/
+// are dev-time scripts; their build artifacts (this regen tool itself,
+// genreadme, gencontroldocs) are rebuilt by the Makefile target before
+// regen runs, so source-level edits don't change golden behavior.
+func isGoldenSafe(path string) bool {
+	switch path {
+	case "README.md", "README.tmpl.md", "docs/controls/reference.md":
+		return true
+	}
+	return strings.HasPrefix(path, "internal/tools/")
+}
+
+// fixtureIntersectsAffected reports whether the fixture references
+// any affected domain. Returns true conservatively when the fixture's
+// control set is not statically inspectable (command.txt-style or
+// profile-style fixtures) so those always re-evaluate.
+func fixtureIntersectsAffected(fixDir string, affected map[string]struct{}) bool {
+	loaded := fixtureDomains(fixDir)
+	if loaded == nil {
+		return true
+	}
+	for d := range loaded {
+		if _, ok := affected[d]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+// fixtureDomains returns the set of domain tokens loaded by the fixture's
+// controls dir, derived from the `id: CTL.<DOMAIN>.*` line in each YAML.
+// Returns nil to indicate the fixture has no inspectable controls dir
+// (caller should treat as "always affected").
+func fixtureDomains(fixDir string) map[string]struct{} {
+	dir := filepath.Join(fixDir, "controls")
+	st, err := os.Stat(dir)
+	if err != nil || !st.IsDir() {
+		return nil
+	}
+	out := map[string]struct{}{}
+	_ = filepath.WalkDir(dir, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil || d.IsDir() {
+			return nil
+		}
+		if !strings.HasSuffix(path, ".yaml") && !strings.HasSuffix(path, ".yml") {
+			return nil
+		}
+		if dom := domainFromControlYAML(path); dom != "" {
+			out[dom] = struct{}{}
+		}
+		return nil
+	})
+	return out
+}
+
+// domainFromControlYAML reads the first `id:` line and extracts the
+// domain token from a CTL.<DOMAIN>.* identifier. Returns "" if not
+// matched.
+func domainFromControlYAML(path string) string {
+	f, err := os.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	sc := bufio.NewScanner(f)
+	sc.Buffer(make([]byte, 0, 64*1024), 64*1024)
+	for sc.Scan() {
+		line := strings.TrimSpace(sc.Text())
+		if !strings.HasPrefix(line, "id:") {
+			continue
+		}
+		id := strings.TrimSpace(strings.TrimPrefix(line, "id:"))
+		// Strip optional quotes.
+		id = strings.Trim(id, `"'`)
+		parts := strings.Split(id, ".")
+		if len(parts) >= 2 && strings.EqualFold(parts[0], "CTL") {
+			return strings.ToLower(parts[1])
+		}
+		return ""
+	}
+	return ""
+}
+
+// joinSorted formats a domain set as a sorted comma-separated list for
+// log output.
+func joinSorted(set map[string]struct{}) string {
+	names := make([]string, 0, len(set))
+	for n := range set {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	return strings.Join(names, ", ")
 }
 
 // processFixture runs the correct stave invocation for the fixture, diffs

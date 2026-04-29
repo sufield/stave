@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.NOSRC.001
+name: Step Functions Cross-Account Grant Without aws:SourceAccount Condition
+description: >
+  Step Functions IAM resource-based or identity-
+  based policy grants states:* actions to a
+  principal in a different AWS account but lacks
+  an `aws:SourceAccount` (or equivalent
+  `aws:SourceArn`) condition. The grant is open
+  to any caller from the foreign account
+  regardless of which workflow / role is
+  intended.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  pci_dss_v4.0: "7.2.4"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: cross_account
+    scope: cross_account
+    multiplier: 3.0
+remediation:
+  description: >
+    Cross-account grant lacks SourceAccount
+    constraint.
+  action: >
+    Add condition: aws:SourceAccount equals the
+    expected account, or aws:SourceArn pinned
+    to the specific calling resource.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "iam": {
+          "crossaccount_no_source_account": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.iam.crossaccount_no_source_account
+      op: eq
+      value: true
+defect: >
+  Cross-account grant without SourceAccount /
+  SourceArn condition.
+infection: >
+  Any caller in the foreign account can invoke
+  the policy path; confused-deputy attack
+  surface.
+failure: >
+  Cross-account boundary unscoped.
+tests:
+  - name: missing source-account fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            crossaccount_no_source_account: true
+  - name: scoped passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            crossaccount_no_source_account: false

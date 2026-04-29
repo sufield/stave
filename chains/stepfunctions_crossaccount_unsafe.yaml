@@ -1,0 +1,23 @@
+id: stepfunctions_crossaccount_unsafe
+description: >
+  Step Functions state machine has multiple
+  cross-account boundary defects: cross-account
+  grant without aws:SourceAccount condition,
+  cross-account StartExecution without
+  sts:ExternalId, or cross-account principal
+  granted action wildcard. Each defect alone
+  expands the cross-account confused-deputy
+  surface; co-occurrence means any identity in
+  the foreign account becomes equivalent to a
+  workflow owner. Threshold of 2 fires when at
+  least two cross-account defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.NOSRC.001
+  - CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.NOEXTERNAL.001
+  - CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.WILDCARD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - cross_account_injection
+postconditions:
+  - shadow_admin_access

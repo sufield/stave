@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.WILDCARD.001
+name: Step Functions Cross-Account Principal Granted Action Wildcard
+description: >
+  Step Functions resource-based policy grants
+  `states:*` (or another action wildcard) to a
+  principal in a different AWS account. Cross-
+  account + action wildcard = compromise of any
+  identity in the foreign account yields full
+  Step Functions control over the granted state
+  machine.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC6.1, CC6.3"
+  pci_dss_v4.0: "7.2.1, 7.2.4"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: cross_account
+    scope: cross_account
+    multiplier: 3.5
+remediation:
+  description: >
+    Cross-account principal granted action
+    wildcard.
+  action: >
+    Narrow grant to specific actions
+    (StartExecution, DescribeExecution).
+    Combine with sts:ExternalId for
+    confused-deputy protection.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "iam": {
+          "crossaccount_action_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.iam.crossaccount_action_wildcard
+      op: eq
+      value: true
+defect: >
+  Cross-account grant with action wildcard.
+infection: >
+  Foreign-account compromise yields full
+  Step Functions control on the machine.
+failure: >
+  Cross-account control-plane takeover path.
+tests:
+  - name: wildcard fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            crossaccount_action_wildcard: true
+  - name: scoped passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            crossaccount_action_wildcard: false

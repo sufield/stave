@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.IAM.STARTEXEC.ALLMACHINE.001
+name: Step Functions StartExecution On All-Machine Resource Pattern
+description: >
+  IAM policy grants `states:StartExecution` on
+  `Resource: "arn:aws:states:*:*:stateMachine/*"`
+  (or the per-region equivalent). Role can start
+  any state machine in any region, not just the
+  intended one. Most workloads need StartExecution
+  on a single ARN.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  pci_dss_v4.0: "7.2.1, 7.2.2"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    StartExecution on all-machine resource
+    pattern.
+  action: >
+    Pin Resource to specific state-machine ARN.
+    Use ABAC (aws:ResourceTag) for multi-machine
+    grants where appropriate.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "iam": {
+          "startexec_resource_allmachines": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.iam.startexec_resource_allmachines
+      op: eq
+      value: true
+defect: >
+  StartExecution Resource pattern matches all
+  state machines.
+infection: >
+  Role can invoke any state machine; cross-
+  workflow lateral movement.
+failure: >
+  Workflow-isolation boundary collapsed.
+tests:
+  - name: allmachine fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            startexec_resource_allmachines: true
+  - name: pinned passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            startexec_resource_allmachines: false

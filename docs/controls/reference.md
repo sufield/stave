@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2464
-**Pack hash:** `1700ef04fa4eec3a4632d190ad31309e3eaf358a2b24db3c761c0bc67a80e744`
+**Total controls:** 2474
+**Pack hash:** `34196d9ea95c31f4a5b9d80831e54178dca4603e40ee07f290d237d16201abec`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 254 |
-| high | 1075 |
+| critical | 258 |
+| high | 1078 |
 | info | 16 |
 | low | 181 |
-| medium | 938 |
+| medium | 941 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,8 +27,8 @@
 | detection | 98 |
 | encrypt | 10 |
 | encryption | 92 |
-| exposure | 1153 |
-| governance | 513 |
+| exposure | 1160 |
+| governance | 516 |
 | hygiene | 16 |
 | identity | 393 |
 | network | 28 |
@@ -35400,6 +35400,156 @@ SSM Run Command allows executing arbitrary commands on managed EC2 instances. Wi
 AWS Systems Manager Parameter Store parameters that store values in String or StringList type when their path indicates sensitive content are readable by any IAM principal with ssm:GetParameter. SecureString parameters are KMS-encrypted at rest and require kms:Decrypt to read. This control checks the parameter type field — not the parameter value.
 
 **Remediation:** Create a new SecureString parameter with the same value and update all references. SSM does not support changing parameter type in place — you must create a new parameter. Use aws ssm put-parameter --name <path> --type SecureString --value <value> --overwrite.
+
+---
+
+### CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.NOEXTERNAL.001
+
+**Step Functions Cross-Account StartExecution Without ExternalId**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.16, A.8.20; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.2.4; soc2: CC6.1, CC6.6;
+
+Step Functions cross-account `states:StartExecution` grant lacks an `sts:ExternalId` condition. Any role in the foreign account can assume into the trusted role and start executions — classic confused-deputy. ExternalId binds the trust to a specific tenant / integration.
+
+**Remediation:** Add sts:ExternalId condition matching the integration's known external ID. Distribute the ExternalId out-of-band.
+
+---
+
+### CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.NOSRC.001
+
+**Step Functions Cross-Account Grant Without aws:SourceAccount Condition**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.16, A.8.20; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.2.4; soc2: CC6.1, CC6.6;
+
+Step Functions IAM resource-based or identity- based policy grants states:* actions to a principal in a different AWS account but lacks an `aws:SourceAccount` (or equivalent `aws:SourceArn`) condition. The grant is open to any caller from the foreign account regardless of which workflow / role is intended.
+
+**Remediation:** Add condition: aws:SourceAccount equals the expected account, or aws:SourceArn pinned to the specific calling resource.
+
+---
+
+### CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.WILDCARD.001
+
+**Step Functions Cross-Account Principal Granted Action Wildcard**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.2.1, 7.2.4; soc2: CC6.1, CC6.3;
+
+Step Functions resource-based policy grants `states:*` (or another action wildcard) to a principal in a different AWS account. Cross- account + action wildcard = compromise of any identity in the foreign account yields full Step Functions control over the granted state machine.
+
+**Remediation:** Narrow grant to specific actions (StartExecution, DescribeExecution). Combine with sts:ExternalId for confused-deputy protection.
+
+---
+
+### CTL.STEPFUNCTIONS.IAM.NORESOURCETAG.001
+
+**Step Functions IAM Policies Don't Use aws:ResourceTag For Scoping**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-3, AC-6; soc2: CC6.1, CC6.3;
+
+Step Functions IAM policies don't use `aws:ResourceTag/*` conditions to scope by team / environment / compliance class. Single IAM role hits all state machines in the account; per-team / per-env isolation requires per-machine policy duplication. ABAC is the AWS-recommended pattern for scaling authorization.
+
+**Remediation:** Add condition: aws:ResourceTag/team equals aws:PrincipalTag/team. Tag state machines with team / env. Audit Access Analyzer findings for over-permissive grants.
+
+---
+
+### CTL.STEPFUNCTIONS.IAM.OPS.BROAD.001
+
+**Step Functions Disruption / Tag Permissions Granted Broadly**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; soc2: CC6.1, CC8.1;
+
+IAM policy grants `states:StopExecution` and / or `states:TagResource` / `states:UntagResource` broadly (e.g., on Resource:* or to a non-operations role). StopExecution is a denial-of-service surface (any caller can interrupt running workflows). TagResource manipulation breaks cost allocation, ABAC scoping, and compliance reporting.
+
+**Remediation:** Restrict StopExecution to operator roles. Restrict TagResource / UntagResource to deployment / governance roles. Both should target specific machine ARNs not Resource:*.
+
+---
+
+### CTL.STEPFUNCTIONS.IAM.STALE.RULE.001
+
+**Step Functions IAM Policy Has Stale Temporary Allow Rule**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.27; nist_800_53_r5: AC-6, CA-7; soc2: CC6.1, CC8.1;
+
+Step Functions IAM policy contains a statement marked or commented as temporary (operator's IP, contractor's vendor CIDR, debugging exception) older than 90 days. Temporary rules accumulate as nobody owns removal; each is an unreviewed allow path on the workflow.
+
+**Remediation:** Quarterly access-review: identify temporary statements (Sids tagged temp- / commented), promote to permanent or remove. Encode expiry date in Sid for mechanical review.
+
+---
+
+### CTL.STEPFUNCTIONS.IAM.STARTEXEC.ALLMACHINE.001
+
+**Step Functions StartExecution On All-Machine Resource Pattern**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1, 7.2.2; soc2: CC6.1, CC6.3;
+
+IAM policy grants `states:StartExecution` on `Resource: "arn:aws:states:*:*:stateMachine/*"` (or the per-region equivalent). Role can start any state machine in any region, not just the intended one. Most workloads need StartExecution on a single ARN.
+
+**Remediation:** Pin Resource to specific state-machine ARN. Use ABAC (aws:ResourceTag) for multi-machine grants where appropriate.
+
+---
+
+### CTL.STEPFUNCTIONS.IAM.STARTEXEC.WILDCARD.001
+
+**Step Functions StartExecution Granted To Wildcard Principal**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Step Functions state machine has an IAM policy granting `states:StartExecution` to `Principal: "*"` without conditions. Any AWS identity (or anonymous, depending on path) can start executions of this state machine, consuming downstream Lambda / DDB / SNS resources at the workflow's full IAM authority.
+
+**Remediation:** Replace Principal: "*" with specific role ARNs that need to start executions. Add `aws:SourceAccount` / `aws:SourceArn` conditions for cross-account integrations.
+
+---
+
+### CTL.STEPFUNCTIONS.IAM.STATES.WILDCARD.001
+
+**Step Functions IAM Policy Grants states:* On Resource:***
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1, 7.2.2; soc2: CC6.1, CC6.3;
+
+IAM policy grants `states:*` on `Resource: "*"` without scoping by tag, account, or specific state machine ARN. Roles holding this policy can create, update, delete, start, and stop every state machine in the account. Most workloads need just StartExecution / Describe on a single ARN.
+
+**Remediation:** Narrow to the specific actions the role needs (StartExecution, DescribeExecution) on the specific state machine ARN. Reserve states:* for admin / break-glass with sign-off.
+
+---
+
+### CTL.STEPFUNCTIONS.IAM.UPDATE.NONADMIN.001
+
+**Step Functions Control-Plane Actions Granted To Non-Admin Roles**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6, CM-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC6.3, CC8.1;
+
+Non-admin role granted Step Functions control- plane actions: `states:CreateStateMachine`, `states:UpdateStateMachine`, or `states:DeleteStateMachine`. Compromise of the role enables attacker to define new workflows, rewrite existing definitions (including pivoting to an attacker-controlled execution role), or destroy production workflows.
+
+**Remediation:** Restrict CreateStateMachine / UpdateStateMachine / DeleteStateMachine to a documented admin role with break-glass sign-off. Remove from automation / deployment roles unless they have explicit workflow-management mandate.
 
 ---
 

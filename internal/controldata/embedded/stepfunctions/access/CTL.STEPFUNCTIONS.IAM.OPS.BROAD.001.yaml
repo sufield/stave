@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.IAM.OPS.BROAD.001
+name: Step Functions Disruption / Tag Permissions Granted Broadly
+description: >
+  IAM policy grants `states:StopExecution` and /
+  or `states:TagResource` /
+  `states:UntagResource` broadly (e.g., on
+  Resource:* or to a non-operations role).
+  StopExecution is a denial-of-service surface
+  (any caller can interrupt running workflows).
+  TagResource manipulation breaks cost
+  allocation, ABAC scoping, and compliance
+  reporting.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Stop / Tag actions granted broadly.
+  action: >
+    Restrict StopExecution to operator roles.
+    Restrict TagResource / UntagResource to
+    deployment / governance roles. Both should
+    target specific machine ARNs not Resource:*.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "iam": {
+          "ops_actions_broadly_granted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.iam.ops_actions_broadly_granted
+      op: eq
+      value: true
+defect: >
+  Stop / Tag actions granted broadly.
+infection: >
+  Any caller with the role can disrupt running
+  executions or manipulate cost / governance
+  tags.
+failure: >
+  Operational tampering surface open.
+tests:
+  - name: broad ops fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            ops_actions_broadly_granted: true
+  - name: scoped passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            ops_actions_broadly_granted: false

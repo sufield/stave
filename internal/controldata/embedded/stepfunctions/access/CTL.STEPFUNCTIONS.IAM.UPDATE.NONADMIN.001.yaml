@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.IAM.UPDATE.NONADMIN.001
+name: Step Functions Control-Plane Actions Granted To Non-Admin Roles
+description: >
+  Non-admin role granted Step Functions control-
+  plane actions: `states:CreateStateMachine`,
+  `states:UpdateStateMachine`, or
+  `states:DeleteStateMachine`. Compromise of the
+  role enables attacker to define new workflows,
+  rewrite existing definitions (including
+  pivoting to an attacker-controlled execution
+  role), or destroy production workflows.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC6.1, CC6.3, CC8.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6, CM-3"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control_plane
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Control-plane actions on non-admin role.
+  action: >
+    Restrict CreateStateMachine /
+    UpdateStateMachine / DeleteStateMachine to
+    a documented admin role with break-glass
+    sign-off. Remove from automation /
+    deployment roles unless they have explicit
+    workflow-management mandate.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "iam": {
+          "controlplane_to_nonadmin": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.iam.controlplane_to_nonadmin
+      op: eq
+      value: true
+defect: >
+  Create / Update / Delete StateMachine on
+  non-admin role.
+infection: >
+  Compromise of role enables workflow
+  redefinition (pivot to attacker execution
+  role), creation of new workflows, or
+  destruction of production.
+failure: >
+  Control-plane takeover via single role
+  compromise.
+tests:
+  - name: control-plane fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            controlplane_to_nonadmin: true
+  - name: admin-only passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          iam:
+            controlplane_to_nonadmin: false

@@ -1,0 +1,21 @@
+id: stepfunctions_governance_decay
+description: >
+  Step Functions state machine has multiple IAM
+  governance defects: stale temporary allow rule
+  > 90 days, IAM policies don't use
+  aws:ResourceTag scoping, or broad Stop / Tag
+  actions. Each defect alone makes per-machine
+  authorization less reviewable; co-occurrence
+  indicates governance is unmaintained.
+  Threshold of 2 fires when at least two
+  governance defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.IAM.STALE.RULE.001
+  - CTL.STEPFUNCTIONS.IAM.NORESOURCETAG.001
+  - CTL.STEPFUNCTIONS.IAM.OPS.BROAD.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
