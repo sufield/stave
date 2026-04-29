@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ROLE.STALE.PERMS.001
+name: Step Functions Execution Role Has Stale Permissions For Unused Services
+description: >
+  Execution role grants permissions for AWS
+  services the workflow no longer uses (e.g.,
+  policy includes `lambda:InvokeFunction` after
+  the workflow migrated to `arn:aws:states:::aws-sdk:`
+  direct integrations and removed the Lambda
+  task). Stale permissions drift in only one
+  direction (additive); each is reviewable but
+  rarely reviewed.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-6, CA-7"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Role has stale permissions.
+  action: >
+    Run IAM Access Analyzer's unused-access
+    findings; remove permissions whose
+    last-used timestamp is older than the
+    workflow's last definition change. Review
+    quarterly.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "role": {
+          "has_stale_permissions": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.role.has_stale_permissions
+      op: eq
+      value: true
+defect: >
+  Role grants permissions for services the
+  workflow no longer uses.
+infection: >
+  Latent privilege; available to attacker if
+  workflow is repurposed.
+failure: >
+  Permission drift.
+tests:
+  - name: stale perms fire
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            has_stale_permissions: true
+  - name: lean role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            has_stale_permissions: false

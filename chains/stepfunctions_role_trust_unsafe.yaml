@@ -1,0 +1,20 @@
+id: stepfunctions_role_trust_unsafe
+description: >
+  Step Functions execution role has multiple
+  trust-policy defects: missing aws:SourceAccount
+  / aws:SourceArn condition (confused-deputy
+  surface) or trusts multiple AWS service
+  principals (cross-service blast radius). Each
+  defect alone weakens the trust boundary;
+  co-occurrence indicates the trust policy was
+  authored without scoping discipline.
+  Threshold of 2 fires when both defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.ROLE.TRUST.NOSRCACCT.001
+  - CTL.STEPFUNCTIONS.ROLE.TRUST.MULTIPLE.SERVICES.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - cross_account_injection
+postconditions:
+  - shadow_admin_access

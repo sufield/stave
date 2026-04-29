@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ROLE.PERM.STS.WILDCARD.001
+name: Step Functions Execution Role Grants sts:AssumeRole On Wildcard Resource
+description: >
+  Execution role grants `sts:AssumeRole` on
+  `Resource: "*"`. Workflow can assume any
+  role in the account that trusts Step Functions
+  (or, transitively, any role this role can
+  reach). Combined with `iam:PassRole`-style
+  abuse, this is a privilege-escalation
+  primitive: workflow assumes admin role,
+  performs admin actions, returns. Audit only
+  shows the workflow's role, not the assumed
+  one — escalation is also detection-evasive.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC6.1, CC6.3"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control_plane
+    scope: account
+    multiplier: 3.5
+remediation:
+  description: >
+    sts:AssumeRole granted on Resource:*.
+  action: >
+    Pin Resource to specific role ARNs the
+    workflow actually needs to assume. Audit
+    every assume target's trust policy for
+    confused-deputy protection.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "role": {
+          "sts_assume_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.role.sts_assume_wildcard
+      op: eq
+      value: true
+defect: >
+  sts:AssumeRole on Resource:*.
+infection: >
+  Workflow can assume any role accessible from
+  Step Functions — privilege-escalation pivot.
+failure: >
+  Escalation primitive present on workflow role.
+tests:
+  - name: wildcard fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            sts_assume_wildcard: true
+  - name: scoped passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            sts_assume_wildcard: false

@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ROLE.IDLE.MACHINE.001
+name: Step Functions Execution Role Attached To Idle State Machine
+description: >
+  Execution role attached to a state machine
+  that has had no executions in 90+ days. The
+  state machine is dead inventory; its role
+  remains assumable and contributes to the
+  account's effective permission surface for
+  no operational benefit. Often accompanied by
+  the role's permissions still pointing at
+  decommissioned downstream resources.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "AC-2, CM-8"
+  fedramp_moderate: "AC-2"
+  iso_27001_2022: "A.5.16, A.8.10"
+  ccm_v4: ["IAM-09", "GRC-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Role attached to idle state machine.
+  action: >
+    Decide: decommission the state machine and
+    delete its role, or document active intent.
+    If the machine is dormant by design (DR /
+    seasonal), tag accordingly so periodic
+    review skips it.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "role": {
+          "machine_idle_days": 30
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.role.machine_idle_days
+      op: gt
+      value: 90
+defect: >
+  Role attached to state machine idle > 90 days.
+infection: >
+  Dead inventory; latent permission surface.
+failure: >
+  Cleanup gap.
+tests:
+  - name: 180d idle fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:old"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            machine_idle_days: 180
+  - name: active passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            machine_idle_days: 30

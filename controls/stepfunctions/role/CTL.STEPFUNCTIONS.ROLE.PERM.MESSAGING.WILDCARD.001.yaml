@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ROLE.PERM.MESSAGING.WILDCARD.001
+name: Step Functions Execution Role Grants Messaging Actions On Wildcard Resources
+description: >
+  Execution role grants `sns:Publish`,
+  `sqs:SendMessage`, or `events:PutEvents` on
+  `Resource: "*"`. Workflow can publish to any
+  topic, send to any queue, or inject events
+  on any bus in the account — exfiltration
+  channels (SNS to email/SMS/HTTPS endpoints)
+  and event-bus injection (triggering arbitrary
+  EventBridge rules) are open.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data_exposure
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    sns:Publish / sqs:SendMessage /
+    events:PutEvents on Resource:*.
+  action: >
+    Pin to specific topic / queue / event-bus
+    ARNs the workflow actually uses.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "role": {
+          "messaging_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.role.messaging_wildcard
+      op: eq
+      value: true
+defect: >
+  Messaging-action wildcard on Resource:*.
+infection: >
+  Exfil / event-injection paths open across
+  the account.
+failure: >
+  Outbound-channel authority unscoped.
+tests:
+  - name: wildcard fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            messaging_wildcard: true
+  - name: scoped passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            messaging_wildcard: false

@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2474
-**Pack hash:** `34196d9ea95c31f4a5b9d80831e54178dca4603e40ee07f290d237d16201abec`
+**Total controls:** 2485
+**Pack hash:** `a3a778b26bdaed188c0d01fc31a90717b05885f9ab83e71efe9514d1f6f5f3ae`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 258 |
-| high | 1078 |
+| critical | 260 |
+| high | 1082 |
 | info | 16 |
-| low | 181 |
-| medium | 941 |
+| low | 184 |
+| medium | 943 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,8 +27,8 @@
 | detection | 98 |
 | encrypt | 10 |
 | encryption | 92 |
-| exposure | 1160 |
-| governance | 516 |
+| exposure | 1167 |
+| governance | 520 |
 | hygiene | 16 |
 | identity | 393 |
 | network | 28 |
@@ -35565,6 +35565,175 @@ Non-admin role granted Step Functions control- plane actions: `states:CreateStat
 Step Functions state machines must emit execution logs to CloudWatch Logs. Without logging, workflow execution details and errors are invisible.
 
 **Remediation:** Enable execution logging to CloudWatch Logs.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.IDLE.MACHINE.001
+
+**Step Functions Execution Role Attached To Idle State Machine**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-2; iso_27001_2022: A.5.16, A.8.10; nist_800_53_r5: AC-2, CM-8; soc2: CC8.1;
+
+Execution role attached to a state machine that has had no executions in 90+ days. The state machine is dead inventory; its role remains assumable and contributes to the account's effective permission surface for no operational benefit. Often accompanied by the role's permissions still pointing at decommissioned downstream resources.
+
+**Remediation:** Decide: decommission the state machine and delete its role, or document active intent. If the machine is dormant by design (DR / seasonal), tag accordingly so periodic review skips it.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.NOCONDITIONS.001
+
+**Step Functions Execution Role Lacks Defense-In-Depth Condition Keys**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-3, AC-6; soc2: CC6.1;
+
+Execution role's identity-based policies have no defense-in-depth condition keys — `aws:RequestedRegion`, `aws:CalledVia`, `aws:SourceVpc`, `aws:VpcSourceIp`. Granted actions execute regardless of where the call comes from. Conditions reduce blast radius during a credential-leak incident: stolen credentials are useless from outside the expected region or service path.
+
+**Remediation:** Add condition: aws:RequestedRegion equals the workflow's region. For VPC-bound workflows, add aws:SourceVpc / aws:SourceVpce. For CalledVia: states. amazonaws.com to ensure the role is only callable via Step Functions.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.PERM.DYNAMODB.WILDCARD.001
+
+**Step Functions Execution Role Grants dynamodb:* On Wildcard Resource**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC6.3;
+
+Execution role grants `dynamodb:*` on `Resource: "*"`. State machine can read, write, or delete every DynamoDB table in the account. Workflow input or definition compromise becomes total DynamoDB authority for the workflow's region.
+
+**Remediation:** Restrict to specific table ARNs and the minimum action set (PutItem / GetItem / Query / UpdateItem). Reserve DeleteTable / DeleteItem for explicit workflow steps that need them.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.PERM.LAMBDA.WILDCARD.001
+
+**Step Functions Execution Role Grants lambda:InvokeFunction On Wildcard Resource**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC6.3;
+
+Execution role grants `lambda:InvokeFunction` on `Resource: "*"` instead of specific function ARNs. State machine can invoke any Lambda in the account, not just its own task functions. Compromise of the workflow input or definition becomes a path to invoke arbitrary Lambdas.
+
+**Remediation:** Pin Resource to specific function ARNs (or aliases / versions) referenced by the state machine. Use ABAC for many-function cases.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.PERM.MESSAGING.WILDCARD.001
+
+**Step Functions Execution Role Grants Messaging Actions On Wildcard Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Execution role grants `sns:Publish`, `sqs:SendMessage`, or `events:PutEvents` on `Resource: "*"`. Workflow can publish to any topic, send to any queue, or inject events on any bus in the account — exfiltration channels (SNS to email/SMS/HTTPS endpoints) and event-bus injection (triggering arbitrary EventBridge rules) are open.
+
+**Remediation:** Pin to specific topic / queue / event-bus ARNs the workflow actually uses.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.PERM.S3.WILDCARD.001
+
+**Step Functions Execution Role Grants s3:* On Wildcard Resource**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC6.3;
+
+Execution role grants `s3:*` on `Resource: "*"`. Includes object reads, writes, deletes, bucket-policy modifications, and replication-config changes. Distributed Map state and direct S3 SDK integrations inherit this scope; one workflow becomes a total-S3 pivot.
+
+**Remediation:** Restrict to specific bucket / object ARNs. Split read vs write actions where possible. Reserve s3:DeleteObject / s3:PutBucketPolicy for explicit workflow steps.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.PERM.STS.WILDCARD.001
+
+**Step Functions Execution Role Grants sts:AssumeRole On Wildcard Resource**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC6.3;
+
+Execution role grants `sts:AssumeRole` on `Resource: "*"`. Workflow can assume any role in the account that trusts Step Functions (or, transitively, any role this role can reach). Combined with `iam:PassRole`-style abuse, this is a privilege-escalation primitive: workflow assumes admin role, performs admin actions, returns. Audit only shows the workflow's role, not the assumed one — escalation is also detection-evasive.
+
+**Remediation:** Pin Resource to specific role ARNs the workflow actually needs to assume. Audit every assume target's trust policy for confused-deputy protection.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.SHARED.001
+
+**Step Functions Execution Role Shared Across Multiple State Machines**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; soc2: CC6.1, CC6.3;
+
+A single execution role is referenced by more than one state machine. Compromise of any workflow's input / definition gives the attacker the role's full permission set, which now spans all sharing workflows. Each state machine should have its own role scoped to that workflow's specific downstream resources.
+
+**Remediation:** Create per-machine roles. Use IaC modules to keep the boilerplate manageable.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.STALE.PERMS.001
+
+**Step Functions Execution Role Has Stale Permissions For Unused Services**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-6, CA-7; soc2: CC6.1, CC8.1;
+
+Execution role grants permissions for AWS services the workflow no longer uses (e.g., policy includes `lambda:InvokeFunction` after the workflow migrated to `arn:aws:states:::aws-sdk:` direct integrations and removed the Lambda task). Stale permissions drift in only one direction (additive); each is reviewable but rarely reviewed.
+
+**Remediation:** Run IAM Access Analyzer's unused-access findings; remove permissions whose last-used timestamp is older than the workflow's last definition change. Review quarterly.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.TRUST.MULTIPLE.SERVICES.001
+
+**Step Functions Execution Role Trust Includes Unrelated AWS Services**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC6.3;
+
+Step Functions execution role's trust policy permits both `states.amazonaws.com` and other AWS service principals (e.g., `lambda.amazonaws.com`, `events.amazonaws.com`). Sharing an execution role across services amplifies blast radius — compromise of any of the trusted services' invocation paths reaches this role's permissions. Each service should have its own scoped role.
+
+**Remediation:** Split into per-service roles. Each role's trust policy should reference a single AWS service principal.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.TRUST.NOSRCACCT.001
+
+**Step Functions Execution Role Trust Policy Lacks SourceAccount/SourceArn**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.16, A.8.20; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.2.4; soc2: CC6.1, CC6.6;
+
+Step Functions execution role's trust policy trusts `states.amazonaws.com` but lacks `aws:SourceAccount` and `aws:SourceArn` conditions. Without them, Step Functions in any account can be tricked into assuming this role via a confused-deputy chain (e.g. a Step Functions service in account B calling StartExecution on a state machine pointing at this role's ARN). The two conditions bind the trust to a specific calling account / state machine.
+
+**Remediation:** Add condition keys to the trust policy:
+  "Condition": {
+    "StringEquals": {"aws:SourceAccount": "111122223333"},
+    "ArnLike": {"aws:SourceArn": "arn:aws:states:us-east-1:111122223333:stateMachine:*"}
+  }
 
 ---
 

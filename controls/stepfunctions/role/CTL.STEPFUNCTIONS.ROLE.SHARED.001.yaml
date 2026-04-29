@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ROLE.SHARED.001
+name: Step Functions Execution Role Shared Across Multiple State Machines
+description: >
+  A single execution role is referenced by more
+  than one state machine. Compromise of any
+  workflow's input / definition gives the
+  attacker the role's full permission set,
+  which now spans all sharing workflows. Each
+  state machine should have its own role
+  scoped to that workflow's specific
+  downstream resources.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-09"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Execution role shared across machines.
+  action: >
+    Create per-machine roles. Use IaC modules
+    to keep the boilerplate manageable.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "role": {
+          "shared_across_machines": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.role.shared_across_machines
+      op: eq
+      value: true
+defect: >
+  One role used by multiple state machines.
+infection: >
+  Compromise of any consumer affects all.
+failure: >
+  Cross-workflow blast radius.
+tests:
+  - name: shared fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            shared_across_machines: true
+  - name: dedicated passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            shared_across_machines: false

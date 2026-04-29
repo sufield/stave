@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ROLE.TRUST.MULTIPLE.SERVICES.001
+name: Step Functions Execution Role Trust Includes Unrelated AWS Services
+description: >
+  Step Functions execution role's trust policy
+  permits both `states.amazonaws.com` and other
+  AWS service principals (e.g.,
+  `lambda.amazonaws.com`, `events.amazonaws.com`).
+  Sharing an execution role across services
+  amplifies blast radius — compromise of any of
+  the trusted services' invocation paths reaches
+  this role's permissions. Each service should
+  have its own scoped role.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-09"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Execution role trust permits multiple
+    services.
+  action: >
+    Split into per-service roles. Each role's
+    trust policy should reference a single
+    AWS service principal.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "role": {
+          "trust_multiple_services": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.role.trust_multiple_services
+      op: eq
+      value: true
+defect: >
+  Execution role trust permits multiple AWS
+  service principals.
+infection: >
+  Compromise of any trusted service's invocation
+  path can pivot through this role.
+failure: >
+  Multi-service blast radius on one role.
+tests:
+  - name: multiple services fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            trust_multiple_services: true
+  - name: single service passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          role:
+            trust_multiple_services: false
