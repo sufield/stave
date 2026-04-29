@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.REPLAY.SESSION.STALE.001
+name: EventBridge Replay Session Has Been Running Longer Than Expected
+description: >
+  EventBridge replay session has been in RUNNING state for more
+  than 24 hours. Replays typically complete in minutes to hours
+  depending on the archive window and downstream throughput;
+  a replay that's been running for over a day is either
+  re-injecting an unexpectedly large window, blocked on
+  downstream backpressure, or was simply forgotten. Long-running
+  replays continue to invoke downstream targets — every hour
+  of run time is more downstream load.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_replay
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge replay has been RUNNING for over 24 hours.
+  action: >
+    Check replay status (DescribeReplay): EventLastReplayedTime
+    indicates progress, EventEndTime indicates target completion.
+    If the replay has stalled or is invoking targets unexpectedly,
+    cancel it (CancelReplay). For long-running replays that are
+    legitimately processing a large archive window, document the
+    expected duration in the replay's description so future
+    operators don't mistake it for a stalled session.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_replay",
+        "events": {
+          "state": "COMPLETED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_replay
+    - field: properties.governance.events.state
+      op: eq
+      value: RUNNING
+    - field: properties.governance.events.running_hours
+      op: gt
+      value: 24
+defect: >
+  EventBridge replay session is in RUNNING state and has been
+  running for more than 24 hours.
+infection: >
+  Replay re-injects archived events into the bus over its
+  duration. Each invocation triggers the matching rules and
+  their targets — Lambda functions, Step Functions, SQS
+  queues — incurring per-invocation cost and downstream
+  load. A replay running >24 hours is either processing a
+  large window (operationally expected, but should be
+  documented), stalled on downstream backpressure (operational
+  problem requiring intervention), or was forgotten after
+  initial start (replay continues invoking long after the
+  operator's attention moved on).
+failure: >
+  Long-running replay continues invoking downstream targets
+  past the operator's attention window. Cost and downstream
+  load accumulate unchecked.
+tests:
+  - name: replay running 48 hours fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:replay/audit-replay"
+      asset_type: aws_eventbridge_replay
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_replay
+          events:
+            state: "RUNNING"
+            running_hours: 48
+  - name: replay completed passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:replay/audit-replay"
+      asset_type: aws_eventbridge_replay
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_replay
+          events:
+            state: "COMPLETED"
+            running_hours: 0
+  - name: replay running 6 hours passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:replay/audit-replay"
+      asset_type: aws_eventbridge_replay
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_replay
+          events:
+            state: "RUNNING"
+            running_hours: 6

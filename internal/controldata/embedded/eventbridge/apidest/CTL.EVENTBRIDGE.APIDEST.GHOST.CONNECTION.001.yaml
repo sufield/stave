@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.APIDEST.GHOST.CONNECTION.001
+name: EventBridge API Destination References Deleted Connection
+description: >
+  EventBridge API destination's ConnectionArn points to a
+  Connection that has been deleted. Every invocation through
+  the destination fails because the connection — and therefore
+  the auth credentials — no longer resolves. Same ghost-
+  reference pattern as other EB ghost-target controls; specific
+  to the API-destination → connection link.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, SI-4"
+  fedramp_moderate: "CM-2, SI-4"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_apidestination
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge API destination references a Connection that
+    has been deleted.
+  action: >
+    Recreate the Connection at the original ARN, repoint the
+    destination to a live Connection (UpdateApiDestination),
+    or delete the destination if the partner integration is
+    decommissioned.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_apidestination",
+        "events": {
+          "connection_arn": "arn:aws:events:us-east-1:111122223333:connection/partner",
+          "connection_exists": true,
+          "has_ghost_connection": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_apidestination
+    - field: properties.governance.events.has_ghost_connection
+      op: eq
+      value: true
+defect: >
+  EventBridge API destination references a Connection ARN that
+  has been deleted.
+infection: >
+  The destination references a connection by ARN. When a rule
+  invokes the destination, the data plane resolves the
+  connection to fetch auth credentials — the connection no
+  longer exists, the resolution fails, the invocation fails.
+  Console shows the destination configured; events targeting
+  it never reach the partner. Operators investigating "why
+  isn't partner X getting events" find a destination that
+  appears healthy and a missing connection upstream of it.
+failure: >
+  Silent destination failure. Events targeting the destination
+  fail authentication; partner never receives them.
+tests:
+  - name: destination with ghost connection fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:api-destination/partner"
+      asset_type: aws_eventbridge_apidestination
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_apidestination
+          events:
+            connection_arn: "arn:aws:events:us-east-1:111122223333:connection/partner-deleted"
+            connection_exists: false
+            has_ghost_connection: true
+  - name: destination with live connection passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:api-destination/partner"
+      asset_type: aws_eventbridge_apidestination
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_apidestination
+          events:
+            connection_arn: "arn:aws:events:us-east-1:111122223333:connection/partner"
+            connection_exists: true
+            has_ghost_connection: false

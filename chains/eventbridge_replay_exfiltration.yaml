@@ -1,0 +1,19 @@
+id: eventbridge_replay_exfiltration
+description: >
+  EventBridge replay routes events from a sensitive source bus
+  to a different destination bus AND/OR uses a replay filter
+  broader than the archive's filter. The combination is the
+  documented exfiltration path: sensitive archived events
+  re-injected into a less-controlled bus, with replay scope
+  broader than intended. Threshold of 2 fires when both the
+  cross-bus targeting AND filter-drift defects co-occur on
+  the same replay session.
+controls:
+  - CTL.EVENTBRIDGE.REPLAY.CROSSBUS.001
+  - CTL.EVENTBRIDGE.REPLAY.FILTER.WIDE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - cross_account_injection

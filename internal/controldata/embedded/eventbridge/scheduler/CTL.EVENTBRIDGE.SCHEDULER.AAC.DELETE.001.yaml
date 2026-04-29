@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.SCHEDULER.AAC.DELETE.001
+name: EventBridge Scheduler ActionAfterCompletion=DELETE On A Recurring Schedule
+description: >
+  EventBridge Scheduler schedule has ActionAfterCompletion set to
+  DELETE while the schedule is recurring (cron or rate
+  expression). DELETE is intended for one-time `at()` schedules
+  to auto-clean themselves after firing; on a recurring schedule
+  it has no defined effect on a per-fire basis but is a strong
+  smell of misconfiguration — the operator either intended a
+  one-time schedule (and should switch the expression) or
+  intended NONE (and should switch the action). Either way the
+  current state diverges from the intent.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_schedule
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge Scheduler schedule has ActionAfterCompletion=DELETE
+    on a recurring expression.
+  action: >
+    Decide which intent applies: (a) the schedule should fire
+    once and clean up — change the expression to `at(...)`;
+    (b) the schedule should recur — change ActionAfterCompletion
+    to NONE. The current cron+DELETE / rate+DELETE combination
+    suggests one of the two settings was edited without the
+    other being updated.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_schedule",
+        "events": {
+          "is_recurring": true,
+          "action_after_completion": "NONE"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_schedule
+    - field: properties.governance.events.is_recurring
+      op: eq
+      value: true
+    - field: properties.governance.events.action_after_completion
+      op: eq
+      value: DELETE
+defect: >
+  EventBridge Scheduler schedule has ActionAfterCompletion=DELETE
+  on a recurring (cron / rate) expression.
+infection: >
+  ActionAfterCompletion=DELETE was designed to auto-clean
+  one-time `at()` schedules after they fire. On a recurring
+  schedule the setting is incongruous — the schedule's lifecycle
+  semantics (fire repeatedly until disabled or deleted) and the
+  action (delete after completion) are mismatched. Either the
+  expression was originally `at()` and changed to `cron()`/`rate()`
+  without updating ActionAfterCompletion, or the action was
+  copy-pasted from a template without checking the expression
+  type. The ambiguity creates an unreliable mental model: future
+  operators cannot predict whether the schedule will be deleted
+  on next fire.
+failure: >
+  Mismatched lifecycle intent. Configuration suggests the
+  schedule's expected behavior is uncertain to operators
+  reviewing it.
+tests:
+  - name: recurring schedule with AAC=DELETE fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/nightly"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            is_recurring: true
+            action_after_completion: "DELETE"
+  - name: recurring schedule with AAC=NONE passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/nightly"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            is_recurring: true
+            action_after_completion: "NONE"
+  - name: one-time schedule with AAC=DELETE passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/migrate-once"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            is_recurring: false
+            action_after_completion: "DELETE"

@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.REPLAY.FILTER.WIDE.001
+name: EventBridge Replay Filter Pattern Broader Than Archive Filter
+description: >
+  EventBridge replay's event-pattern filter is broader than (or
+  absent compared to) the archive's filter. Effective replay
+  scope is "events matching archive filter AND replay filter",
+  but if the operator intended replay to be a strict subset of
+  the archive — replaying only HIGH-severity findings rather
+  than all GuardDuty events, for example — a missing or
+  broader replay filter re-injects more than intended.
+  Downstream subscribers see events the operator didn't mean
+  to replay.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, AC-3"
+  fedramp_moderate: "CM-2, AC-3"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_replay
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    EventBridge replay filter is broader than the archive filter,
+    re-injecting more events than intended.
+  action: >
+    Cancel the replay (CancelReplay). Restart with a replay
+    filter that's a strict subset of the archive filter —
+    typically a more-specific detail-type or a severity
+    threshold. If the goal is to replay everything in the
+    archive, set the replay filter equal to the archive filter
+    explicitly so future operators reading the replay know it
+    was deliberate.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_replay",
+        "events": {
+          "replay_filter_subset_of_archive": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_replay
+    - field: properties.governance.events.replay_filter_subset_of_archive
+      op: eq
+      value: false
+defect: >
+  EventBridge replay filter pattern is broader than the
+  archive's filter pattern.
+infection: >
+  The archive scoped to a specific event subset; the replay
+  filter is broader (or absent). Effective replayed events =
+  archive ∩ replay filter, which equals archive when replay
+  filter is wider than archive's. Operators initiating a
+  targeted replay (e.g., "only re-process the failed
+  HIGH-severity findings from yesterday") get the entire
+  archive's matching subset because the replay filter
+  doesn't narrow further. Downstream consumers see events
+  outside the operator's intended scope.
+failure: >
+  Replay scope drift. The replay re-injects more events than
+  the operator intended; downstream effects extend past the
+  operator's mental model.
+tests:
+  - name: replay filter broader than archive fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:replay/audit-replay"
+      asset_type: aws_eventbridge_replay
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_replay
+          events:
+            replay_filter_subset_of_archive: false
+  - name: replay filter scoped narrower passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:replay/audit-replay"
+      asset_type: aws_eventbridge_replay
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_replay
+          events:
+            replay_filter_subset_of_archive: true

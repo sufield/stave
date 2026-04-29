@@ -19,12 +19,14 @@ import (
 // stability; the order has no runtime meaning.
 var builtinNames = []string{
 	"audit_trail_destroyed",
+	"automation_hijack",
 	"aws_root_access",
 	"cdn_bypass_data_access",
 	"cloudfront_origin_configured",
 	"cloudtrail_data_access",
 	"container_code_execution",
 	"control_plane_code_execution",
+	"cross_account_injection",
 	"data_access",
 	"data_destruction",
 	"data_in_transit_exposure",

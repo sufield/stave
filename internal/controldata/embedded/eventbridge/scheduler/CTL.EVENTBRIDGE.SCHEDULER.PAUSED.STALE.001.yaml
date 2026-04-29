@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.SCHEDULER.PAUSED.STALE.001
+name: EventBridge Scheduler Schedule Has Been DISABLED For Over 90 Days
+description: >
+  EventBridge Scheduler schedule is in DISABLED state and has been
+  paused for more than 90 days. Long-paused schedules are typically
+  forgotten experiments, decommissioning that never finished, or
+  stale temporary disables that nobody remembered to revisit. They
+  retain IAM trust, role bindings, and schedule-group membership
+  that surface as inventory clutter. Either delete or document
+  the long-pause rationale.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_schedule
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge Scheduler schedule has been DISABLED for over
+    90 days.
+  action: >
+    Decide whether the schedule is decommissioned (DeleteSchedule)
+    or paused for a documented reason (add a tag like
+    Lifecycle=Hibernating + DocumentedReason=<jira-ticket>).
+    Long-disabled schedules accumulate IAM trust and role
+    binding audit surface for no operational benefit.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_schedule",
+        "events": {
+          "state": "DISABLED",
+          "disabled_days": 12
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_schedule
+    - field: properties.governance.events.state
+      op: eq
+      value: DISABLED
+    - field: properties.governance.events.disabled_days
+      op: gt
+      value: 90
+defect: >
+  EventBridge Scheduler schedule has been in DISABLED state for
+  over 90 days.
+infection: >
+  The schedule is paused, holding IAM trust, role bindings, and
+  schedule-group membership without firing. ListSchedules counts
+  it; per-account quota counts it; IAM policy audits include
+  its trust relationship. Decisions about the target resource
+  (deprecation, scope change) treat the schedule as a live
+  consumer when it isn't.
+failure: >
+  Inventory and audit clutter. Long-disabled schedules
+  accumulate IAM bindings without operational purpose.
+tests:
+  - name: schedule disabled 120 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/legacy"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            state: "DISABLED"
+            disabled_days: 120
+  - name: schedule disabled 12 days passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/maint-pause"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            state: "DISABLED"
+            disabled_days: 12
+  - name: schedule ENABLED passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/nightly"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            state: "ENABLED"
+            disabled_days: 0

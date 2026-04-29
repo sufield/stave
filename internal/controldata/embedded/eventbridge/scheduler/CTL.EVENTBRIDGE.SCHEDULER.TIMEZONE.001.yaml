@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.SCHEDULER.TIMEZONE.001
+name: EventBridge Scheduler Cron Schedule Has No ScheduleExpressionTimezone
+description: >
+  EventBridge Scheduler cron schedule has no ScheduleExpressionTimezone
+  set. Without an explicit timezone the cron expression is
+  interpreted in UTC. Scheduler is the AWS surface specifically
+  designed to support timezone-aware schedules (unlike legacy
+  EventBridge rule schedules which are UTC-only); leaving the
+  field unset wastes that capability and creates twice-yearly DST
+  drift if the schedule was intended for a local-business
+  cadence.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.2"
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_schedule
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge Scheduler cron schedule has no
+    ScheduleExpressionTimezone set; UTC interpretation may not
+    match operator intent.
+  action: >
+    Set ScheduleExpressionTimezone to the IANA timezone name
+    (e.g., "America/New_York", "Europe/London", "Asia/Singapore")
+    matching the schedule's intended local-business cadence.
+    Scheduler handles DST transitions automatically when timezone
+    is set. If the schedule is genuinely UTC-driven (data-pipeline
+    coordinator, cross-region reconciliation), set the field to
+    "UTC" explicitly so the choice is documented rather than
+    defaulted.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_schedule",
+        "events": {
+          "uses_cron_expression": true,
+          "schedule_expression_timezone": "America/New_York"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_schedule
+    - field: properties.governance.events.uses_cron_expression
+      op: eq
+      value: true
+    - field: properties.governance.events.schedule_expression_timezone
+      op: eq
+      value: ""
+defect: >
+  EventBridge Scheduler cron schedule has empty
+  ScheduleExpressionTimezone, defaulting to UTC.
+infection: >
+  Scheduler interprets the cron expression in UTC by default. If
+  the schedule was intended for local-business hours, the actual
+  fire time is offset by the local-vs-UTC delta. The drift is
+  also DST-sensitive: a schedule that fires at the right
+  wall-clock time in one half of the year fires an hour off in
+  the other. Unlike legacy EventBridge rule schedules where this
+  was unavoidable, Scheduler's
+  ScheduleExpressionTimezone is the supported solution; leaving
+  it empty wastes the capability.
+failure: >
+  Schedule fires at wrong wall-clock time, twice-yearly DST
+  drift. Off-hours runs, missed business-hour windows.
+tests:
+  - name: cron schedule with empty timezone fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/morning"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            uses_cron_expression: true
+            schedule_expression_timezone: ""
+  - name: cron schedule with timezone passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/morning"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            uses_cron_expression: true
+            schedule_expression_timezone: "America/New_York"
+  - name: rate schedule passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/poll-5"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            uses_cron_expression: false
+            schedule_expression_timezone: ""

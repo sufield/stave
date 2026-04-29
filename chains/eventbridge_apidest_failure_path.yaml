@@ -1,0 +1,21 @@
+id: eventbridge_apidest_failure_path
+description: >
+  EventBridge API destination has multiple operational defects:
+  HTTP endpoint (not HTTPS), ghost connection (deleted), or no
+  rate limit. HTTP + ghost-connection means every event leaks
+  partial request metadata to a destination that can't actually
+  authenticate; HTTP + no-rate-limit means a fan-out spike
+  blasts the partner over plaintext; ghost-connection +
+  no-rate-limit means failed retries against a missing
+  authentication path compound. Threshold of 2 fires when at
+  least two destination defects coexist.
+controls:
+  - CTL.EVENTBRIDGE.APIDEST.HTTP.001
+  - CTL.EVENTBRIDGE.APIDEST.GHOST.CONNECTION.001
+  - CTL.EVENTBRIDGE.APIDEST.RATELIMIT.UNSET.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_in_transit_exposure

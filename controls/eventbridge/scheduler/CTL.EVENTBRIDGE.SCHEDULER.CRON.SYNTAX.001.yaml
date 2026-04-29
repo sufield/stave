@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.SCHEDULER.CRON.SYNTAX.001
+name: EventBridge Scheduler Schedule Expression Has Invalid Syntax
+description: >
+  EventBridge Scheduler schedule has a malformed ScheduleExpression
+  (cron typo, rate-unit error, or unsupported `at()` form). The
+  schedule is created — Scheduler accepts the expression at
+  CreateSchedule time with limited validation — but never fires.
+  The schedule appears healthy in the console; CloudWatch shows
+  zero invocations; the work the schedule was supposed to drive
+  silently doesn't happen. Same silent-failure pattern as
+  CTL.EVENTBRIDGE.RULE.SCHEDULE.SYNTAX.001 but on the Scheduler
+  sub-product.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, A1.2"
+  nist_800_53_r5: "CM-2, CM-3, CP-10"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_schedule
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EventBridge Scheduler schedule expression cannot be parsed.
+  action: >
+    Validate the expression. EventBridge Scheduler supports
+    `cron(...)` (6-field cron with year), `rate(...)` (numeric +
+    minutes/hours/days), and `at(YYYY-MM-DDThh:mm:ss)` for
+    one-time. Test by calling GetSchedule and checking
+    ScheduleState — non-running schedules with NextInvocationTime
+    absent are typically the malformed ones.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_schedule",
+        "events": {
+          "schedule_expression_valid": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_schedule
+    - field: properties.governance.events.schedule_expression_valid
+      op: eq
+      value: false
+defect: >
+  EventBridge Scheduler schedule has an invalid ScheduleExpression
+  that cannot be parsed.
+infection: >
+  CreateSchedule accepted the expression; the scheduler service
+  cannot compute a fire time. The schedule is listed; ListSchedules
+  shows it; CloudWatch invocation metrics show zero. Operators
+  monitoring schedule health by enabled-count alone don't see the
+  failure. Any work the schedule was supposed to drive — recurring
+  reconciliation jobs, retention-cleanup invocations, scheduled
+  exports — silently doesn't happen.
+failure: >
+  Silent schedule failure. The schedule never fires; downstream
+  work doesn't run; metrics don't surface the misconfiguration.
+tests:
+  - name: invalid expression fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/nightly"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            schedule_expression_valid: false
+  - name: valid expression passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/nightly"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            schedule_expression_valid: true

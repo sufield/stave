@@ -1,6 +1,7 @@
 package graph_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"os/exec"
@@ -35,12 +36,17 @@ func TestGraphExportE2E(t *testing.T) {
 		t.Skipf("fixture not found: %s", assessment)
 	}
 
-	// Run graph export.
+	// Run graph export. Capture stderr separately so stdout stays
+	// pure JSON for json.Unmarshal while diagnostic output remains
+	// available when the binary exits non-zero (e.g., chain
+	// validation failure during global init).
 	cmd := exec.Command(bin, "graph", "export", "--output", assessment)
 	cmd.Dir = repoRoot
+	var stderrBuf bytes.Buffer
+	cmd.Stderr = &stderrBuf
 	stdout, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("graph export failed: %v", err)
+		t.Fatalf("graph export failed: %v\nstderr:\n%s", err, stderrBuf.String())
 	}
 
 	// Parse output.

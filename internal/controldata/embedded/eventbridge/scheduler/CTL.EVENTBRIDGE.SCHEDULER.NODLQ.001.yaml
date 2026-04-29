@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.SCHEDULER.NODLQ.001
+name: EventBridge Scheduler Schedule Has No Dead-Letter Queue
+description: >
+  EventBridge Scheduler schedule has no DeadLetterConfig.
+  Failed invocations after retry exhaustion are dropped: the
+  schedule fired, the target invocation failed, and there's no
+  preservation surface. The Scheduler InvocationDroppedCount
+  CloudWatch metric increments — but without a DLQ there's no
+  way to recover the failed invocation's payload, target, or
+  failure reason for replay. Critical scheduled work
+  (security-automation triggers, audit-log rotation, retention
+  enforcement) should always have a DLQ.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.2, CC7.2"
+  nist_800_53_r5: "SI-11, CP-10"
+  fedramp_moderate: "SI-11, CP-10"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_schedule
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    EventBridge Scheduler schedule has no DLQ. Failed invocations
+    are silently dropped.
+  action: >
+    Configure Target.DeadLetterConfig with an SQS queue ARN.
+    Set the queue's retention to at least 14 days (max).
+    Pair with a CloudWatch alarm on the DLQ depth and on the
+    Scheduler InvocationDroppedCount metric so failures
+    surface fast.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_schedule",
+        "events": {
+          "has_dlq": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_schedule
+    - field: properties.governance.events.has_dlq
+      op: eq
+      value: false
+defect: >
+  EventBridge Scheduler schedule has no DeadLetterConfig.
+infection: >
+  When a target invocation fails — Lambda throttle, target
+  service 5xx, target ResourceNotFoundException — Scheduler
+  retries per the schedule's retry policy. After retries
+  exhaust, the invocation is dropped: InvocationDroppedCount
+  increments, no record of the invocation is preserved, no
+  replay is possible. Operators noticing the dropped count
+  cannot diagnose which invocation failed or recover the
+  intended work.
+failure: >
+  Silent invocation loss. Failed scheduled invocations are
+  discarded with no preservation; the schedule's audit trail
+  has gaps.
+tests:
+  - name: schedule with no DLQ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/nightly"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            has_dlq: false
+  - name: schedule with DLQ passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/nightly"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            has_dlq: true

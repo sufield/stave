@@ -1,0 +1,23 @@
+id: eventbridge_archive_lifecycle_decay
+description: >
+  EventBridge archive / replay ecosystem has multiple lifecycle
+  hygiene defects: archive on default bus (cross-tenant data),
+  archive without filter (broad capture), short retention
+  (insufficient for incident investigation), unthrottled replay
+  (long window without pacing), or stale running replay session.
+  Co-occurrence indicates the archive surface is under-curated
+  — provisioned and forgotten rather than actively managed.
+  Threshold of 2 fires when at least two governance/lifecycle
+  defects coexist within the archive scope.
+controls:
+  - CTL.EVENTBRIDGE.ARCHIVE.DEFAULTBUS.001
+  - CTL.EVENTBRIDGE.ARCHIVE.NOFILTER.001
+  - CTL.EVENTBRIDGE.ARCHIVE.RETENTION.SHORT.001
+  - CTL.EVENTBRIDGE.REPLAY.UNTHROTTLED.001
+  - CTL.EVENTBRIDGE.REPLAY.SESSION.STALE.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

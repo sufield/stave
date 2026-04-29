@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ARCHIVE.RETENTION.LONG.001
+name: EventBridge Archive Retention Exceeds Documented Compliance Window
+description: >
+  EventBridge archive retention is set to indefinite (RetentionDays
+  unset / 0) or to a value greater than 730 days (2 years) without
+  documented compliance rationale. Long-retained archives accumulate
+  PII, audit-grade event detail, and stale operational metadata.
+  GDPR Article 5(1)(e) and HIPAA's minimum-necessary standard both
+  push toward "no longer than necessary" retention; long defaults
+  without explicit rationale create regulatory exposure with no
+  operational benefit.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.5, P4.0"
+  nist_800_53_r5: "AU-11, SI-12"
+  hipaa: "164.530(j)"
+  gdpr: "Art-5(1)(e)"
+  fedramp_moderate: "AU-11, SI-12"
+  iso_27001_2022: "A.5.33, A.8.10"
+  ccm_v4: ["DSP-16", "LOG-04"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_archive
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    EventBridge archive retention exceeds 2 years without
+    documented compliance rationale.
+  action: >
+    Decide the archive's intended use. For incident-investigation
+    archives, 90-180 days is typical. For compliance-required
+    retention (HIPAA 6yr, PCI 1yr, SOX 7yr), tag the archive with
+    the framework + retention rationale (Compliance=HIPAA,
+    RetentionRationale=164.530(j)). Then set RetentionDays
+    explicitly to match — not "indefinite as a default".
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_archive",
+        "events": {
+          "retention_days": 90
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - all:
+        - field: properties.governance.kind
+          op: eq
+          value: eventbridge_archive
+        - field: properties.governance.events.retention_days
+          op: eq
+          value: 0
+    - all:
+        - field: properties.governance.kind
+          op: eq
+          value: eventbridge_archive
+        - field: properties.governance.events.retention_days
+          op: gt
+          value: 730
+defect: >
+  EventBridge archive retention is unset (indefinite) or exceeds
+  730 days without documented rationale.
+infection: >
+  Archive payloads accumulate over the retention window. Every
+  event matched by the archive's filter is preserved with full
+  detail — sometimes including PII, financial signals, or
+  audit-grade actor information. With indefinite retention or
+  retention beyond 2 years, the archive grows into a long-tail
+  data surface that compounds privacy regulation exposure
+  without adding investigative value (most incident
+  investigations don't need 2+ years of hot archive).
+failure: >
+  Regulatory / audit exposure. Long-retained archives carry
+  PII / sensitive event detail beyond what compliance frameworks
+  permit by default; long retention without rationale is a
+  recurring audit finding.
+tests:
+  - name: archive with indefinite retention fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:archive/audit"
+      asset_type: aws_eventbridge_archive
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_archive
+          events:
+            retention_days: 0
+  - name: archive with 1095-day retention fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:archive/audit"
+      asset_type: aws_eventbridge_archive
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_archive
+          events:
+            retention_days: 1095
+  - name: archive with 90-day retention passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:archive/audit"
+      asset_type: aws_eventbridge_archive
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_archive
+          events:
+            retention_days: 90

@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.SCHEDULER.GHOST.DLQ.001
+name: EventBridge Scheduler DLQ Target Does Not Exist
+description: >
+  EventBridge Scheduler schedule has DeadLetterConfig configured
+  but the DLQ ARN names an SQS queue that has been deleted.
+  Failed invocations meant to be preserved in the DLQ for
+  investigation are silently lost — the safety net advertised in
+  the schedule's configuration doesn't exist. Same ghost-reference
+  pattern as CTL.EVENTBRIDGE.GHOST.RULE.DLQ.001 but on the
+  Scheduler sub-product.
+domain: governance
+severity: critical
+compliance:
+  soc2: "CC6.1, CC8.1, A1.2"
+  nist_800_53_r5: "CM-2, CM-3, SI-11"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_schedule
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EventBridge Scheduler schedule's DLQ points to an SQS queue
+    that has been deleted.
+  action: >
+    Recreate the SQS queue at the original ARN, repoint the
+    schedule's DeadLetterConfig to a live queue
+    (UpdateSchedule with new Target.DeadLetterConfig.Arn), or
+    remove the DLQ if no longer needed. Pair with a CloudWatch
+    alarm on InvocationDroppedCount so future deletions surface.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_schedule",
+        "events": {
+          "has_dlq": true,
+          "dlq_exists": true,
+          "has_ghost_dlq": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_schedule
+    - field: properties.governance.events.has_ghost_dlq
+      op: eq
+      value: true
+defect: >
+  EventBridge Scheduler schedule's DeadLetterConfig references
+  an SQS queue that has been deleted.
+infection: >
+  The schedule has DLQ configuration: the console shows the
+  DLQ ARN, the DeadLetterConfig is present in GetSchedule.
+  When a target invocation fails after retries exhaust,
+  Scheduler attempts to deliver the failed invocation to the
+  DLQ. Because the DLQ no longer exists, the delivery to DLQ
+  also fails. The invocation is dropped — InvocationDroppedCount
+  increments. Failures that should have been preserved for
+  triage are gone. The schedule appears resilient; failures are
+  unrecoverable.
+failure: >
+  Silent failure-path collapse. Schedule appears to have a
+  preservation safety net; failed invocations are unrecoverable.
+tests:
+  - name: schedule with ghost DLQ fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/nightly"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            has_dlq: true
+            dlq_arn: "arn:aws:sqs:us-east-1:111122223333:scheduler-failures-deleted"
+            dlq_exists: false
+            has_ghost_dlq: true
+  - name: schedule with live DLQ passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/nightly"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            has_dlq: true
+            dlq_arn: "arn:aws:sqs:us-east-1:111122223333:scheduler-failures"
+            dlq_exists: true
+            has_ghost_dlq: false

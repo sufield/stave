@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.REPLAY.UNTHROTTLED.001
+name: EventBridge Replay Has No Rate Throttle Configured
+description: >
+  EventBridge replay was initiated without rate limiting and
+  re-injects events at the bus's maximum ingestion rate. For
+  archives capturing high-volume events over weeks or months,
+  unthrottled replay overwhelms downstream targets — Lambda
+  concurrency limits hit, SQS backpressure builds, target
+  service 5xx rates spike. Replay should be paced to stay
+  within the downstream's normal operating envelope.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.1, A1.2"
+  nist_800_53_r5: "SC-5, SI-11"
+  fedramp_moderate: "SC-5"
+  iso_27001_2022: "A.8.6, A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_replay
+params:
+  attack_stage: impact
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    EventBridge replay is running without rate throttling.
+  action: >
+    Cancel the in-flight replay (CancelReplay), then re-initiate
+    with a narrower time window (replay smaller archive
+    segments) or with downstream pre-warming (Lambda reserved
+    concurrency adjusted, SQS visibility-timeout + worker
+    capacity scaled up). EventBridge does not currently expose
+    a rate-throttle parameter on StartReplay; pacing is
+    achieved by replaying narrow time windows in sequence
+    rather than the full archive at once.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_replay",
+        "events": {
+          "replay_window_hours": 24
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_replay
+    - field: properties.governance.events.replay_window_hours
+      op: gt
+      value: 168
+defect: >
+  EventBridge replay covers a window greater than 168 hours
+  (1 week) without explicit pacing.
+infection: >
+  Replay re-injects events into the bus at the bus's ingestion
+  rate. For an archive with weeks of accumulated events, the
+  bus suddenly serves the integrated event volume of the
+  replay window in real-time. Lambda targets hit concurrency
+  limits and start throttling; SQS queues build depth and
+  consumers fall behind; downstream services targeted by the
+  replay see traffic patterns that don't match their normal
+  operating envelope. Replay completes (eventually), but
+  during the run downstream incidents occur that would not
+  have happened if the replay were paced.
+failure: >
+  Replay-induced downstream overload. Targets see traffic
+  spikes during replay; Lambda throttle, SQS backpressure,
+  target 5xx incidents result.
+tests:
+  - name: replay over 1 week window fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:replay/audit-replay"
+      asset_type: aws_eventbridge_replay
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_replay
+          events:
+            replay_window_hours: 720
+  - name: replay 24-hour window passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:replay/incident-replay"
+      asset_type: aws_eventbridge_replay
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_replay
+          events:
+            replay_window_hours: 24

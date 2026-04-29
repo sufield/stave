@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.APIDEST.RATELIMIT.UNSET.001
+name: EventBridge API Destination Has No Invocation Rate Limit
+description: >
+  EventBridge API destination has InvocationRateLimitPerSecond
+  unset (no upper bound on requests per second to the partner
+  endpoint). Rule fan-out can DDoS the partner if a bus event
+  triggers a rule with many records or a high-volume source.
+  Rate-limiting at the destination level — independent of the
+  partner's own throttling — is AWS's documented protection
+  against this case.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.1"
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  iso_27001_2022: "A.8.6"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_apidestination
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    EventBridge API destination has no rate limit; rule
+    fan-out can overwhelm the partner.
+  action: >
+    Set InvocationRateLimitPerSecond to a value matching the
+    partner's documented rate limit, with safety margin
+    (typically 50-80% of the partner's published limit).
+    EventBridge buffers excess events at the bus and respects
+    the configured rate; without the cap, every event flows
+    immediately to the partner.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_apidestination",
+        "events": {
+          "rate_limit_set": true,
+          "invocation_rate_limit_per_second": 100
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_apidestination
+    - field: properties.governance.events.rate_limit_set
+      op: eq
+      value: false
+defect: >
+  EventBridge API destination has no
+  InvocationRateLimitPerSecond configured.
+infection: >
+  Every event reaching the destination invokes the partner
+  endpoint immediately. For low-volume destinations this is
+  fine; for destinations targeted by rules that match
+  high-volume sources (S3 ObjectCreated, EC2 state changes,
+  CloudTrail), a traffic spike at the source produces a
+  proportional spike at the partner. The partner's rate limit
+  applies — typically with 429 responses — but EventBridge
+  doesn't slow down on its side, so retries compound the
+  pressure on the partner.
+failure: >
+  Partner-side rate-limit collisions. High-volume rule fan-out
+  triggers 429s at the partner; the destination retries
+  compound the load; the partner integration degrades or
+  rate-limits the entire AWS-account-shared client.
+tests:
+  - name: destination without rate limit fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:api-destination/partner"
+      asset_type: aws_eventbridge_apidestination
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_apidestination
+          events:
+            rate_limit_set: false
+  - name: destination with rate limit passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:api-destination/partner"
+      asset_type: aws_eventbridge_apidestination
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_apidestination
+          events:
+            rate_limit_set: true
+            invocation_rate_limit_per_second: 100

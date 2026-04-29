@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.REPLAY.CROSSBUS.001
+name: EventBridge Replay Targets A Different Bus Than The Source
+description: >
+  EventBridge replay's destination is a different event bus than
+  the bus the archive captured. This is the documented exfiltration
+  vector for archive abuse: an archive on a sensitive bus
+  (security-events, audit) is replayed into a less-controlled
+  bus (analytics, dev) where downstream subscribers — including
+  potentially attacker-controlled ones — receive every replayed
+  event. Replay between buses should require an explicit
+  business justification and an audit log, not be a default
+  capability.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC6.1, CC6.6, CC6.7"
+  nist_800_53_r5: "AC-3, AC-4, AC-21, SC-7"
+  pci_dss_v4.0: "1.2, 7.1"
+  fedramp_moderate: "AC-3, AC-4, SC-7"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["DSP-17", "IVS-09"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_replay
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    EventBridge replay routes events to a different bus than
+    the source archive — exfiltration vector.
+  action: >
+    Cancel the replay (CancelReplay) if it's still active.
+    Audit who started the replay (CloudTrail StartReplay event)
+    and whether the destination bus has subscribers that
+    shouldn't have access to the source's events. For
+    legitimate cross-bus replays (e.g., replaying to a
+    dedicated incident-replay bus), document the business case
+    in tags and restrict events:StartReplay via the source
+    archive bus's policy to specific principals + specific
+    destination bus ARNs (aws:RequestedRegion +
+    aws:ResourceTag conditions).
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_replay",
+        "events": {
+          "replay_to_different_bus": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_replay
+    - field: properties.governance.events.replay_to_different_bus
+      op: eq
+      value: true
+defect: >
+  EventBridge replay's destination bus differs from the archive's
+  source bus.
+infection: >
+  An archive captured events on bus A (typically the
+  audit/security-events bus, with carefully-curated subscribers).
+  A replay was initiated targeting bus B — a different,
+  potentially less-controlled bus. Every event in the replay
+  window now arrives at every rule subscribed to bus B,
+  including rules that were never authorized to consume the
+  source bus's traffic. Sensitive event detail (account IDs,
+  finding payloads, audit metadata) reaches consumers that
+  weren't part of the original event-routing design. Once
+  replayed, the data has spread; revocation requires per-
+  subscriber cleanup.
+failure: >
+  Cross-tenant event leakage. Archived events from a
+  controlled bus are re-injected into a different bus's
+  subscriber set; the source's access policy no longer
+  governs the replay's reach.
+tests:
+  - name: replay to different bus fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:replay/audit-replay"
+      asset_type: aws_eventbridge_replay
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_replay
+          events:
+            source_bus_arn: "arn:aws:events:us-east-1:111122223333:event-bus/audit"
+            destination_bus_arn: "arn:aws:events:us-east-1:111122223333:event-bus/analytics"
+            replay_to_different_bus: true
+  - name: replay to same bus passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:replay/audit-replay"
+      asset_type: aws_eventbridge_replay
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_replay
+          events:
+            source_bus_arn: "arn:aws:events:us-east-1:111122223333:event-bus/audit"
+            destination_bus_arn: "arn:aws:events:us-east-1:111122223333:event-bus/audit"
+            replay_to_different_bus: false

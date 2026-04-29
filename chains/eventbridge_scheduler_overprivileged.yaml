@@ -1,0 +1,18 @@
+id: eventbridge_scheduler_overprivileged
+description: >
+  EventBridge Scheduler schedule's invocation role has wildcard
+  target actions AND a trust policy that doesn't restrict to
+  scheduler.amazonaws.com. Either defect alone is real; the
+  combination means a privileged role with broad target scope
+  can be assumed from outside Scheduler — the worst-case
+  identity-boundary expansion. Threshold of 2 fires when both
+  role defects co-occur.
+controls:
+  - CTL.EVENTBRIDGE.SCHEDULER.ROLE.WILDCARD.001
+  - CTL.EVENTBRIDGE.SCHEDULER.ROLE.TRUST.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - automation_hijack

@@ -1,0 +1,20 @@
+id: eventbridge_scheduler_silent_loss
+description: >
+  EventBridge Scheduler schedule has multiple failure-path defects:
+  no DLQ AND/OR DLQ ghost-reference AND/OR ActionAfterCompletion
+  DELETE on a recurring schedule. With these combined, failed
+  invocations have no preservation surface; depending on the
+  AAC=DELETE state, the schedule may also be self-destructing
+  unexpectedly. Threshold of 2 fires when at least two
+  failure-path / lifecycle-mismatch defects coexist on the same
+  schedule.
+controls:
+  - CTL.EVENTBRIDGE.SCHEDULER.NODLQ.001
+  - CTL.EVENTBRIDGE.SCHEDULER.GHOST.DLQ.001
+  - CTL.EVENTBRIDGE.SCHEDULER.AAC.DELETE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

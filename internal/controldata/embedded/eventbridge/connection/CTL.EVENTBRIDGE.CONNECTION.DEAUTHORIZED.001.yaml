@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.CONNECTION.DEAUTHORIZED.001
+name: EventBridge Connection In DEAUTHORIZED State With Active Destinations
+description: >
+  EventBridge Connection is in DEAUTHORIZED state but API
+  destinations referencing it are still configured to receive
+  events. DEAUTHORIZED indicates the connection's credentials
+  have been invalidated (often after a partner-side credential
+  rotation that wasn't reflected in Secrets Manager); every
+  destination invocation through the connection fails
+  authentication. The destinations look configured;
+  invocations silently fail.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, A1.2"
+  nist_800_53_r5: "CM-2, CM-3, SI-4"
+  fedramp_moderate: "CM-2, SI-4"
+  iso_27001_2022: "A.5.16, A.8.16, A.8.32"
+  ccm_v4: ["BCR-08", "IAM-02"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_connection
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EventBridge Connection is DEAUTHORIZED but destinations
+    still attempt invocations.
+  action: >
+    Identify the cause via DescribeConnection's StateReason.
+    Common causes: secret rotation that broke the partner-side
+    credential, OAuth refresh-token expiry, partner API
+    revoked the credential. Either re-authorize via
+    UpdateConnection with current credentials, delete the
+    connection plus dependent destinations, or pause the
+    rules invoking the destinations until the connection is
+    restored.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_connection",
+        "events": {
+          "state": "AUTHORIZED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_connection
+    - field: properties.governance.events.state
+      op: eq
+      value: DEAUTHORIZED
+defect: >
+  EventBridge Connection is in DEAUTHORIZED state.
+infection: >
+  The connection's last authorization attempt failed (typically
+  because the partner-side credentials were rotated, the OAuth
+  refresh token expired, or the partner revoked the
+  credential). API destinations referencing the connection
+  still appear in inventory; rules targeting them still fire;
+  every invocation fails authentication at the partner. The
+  destination's metrics show invocation attempts and zero
+  successful deliveries. The work the destinations were
+  configured to perform (forwarding events to monitoring
+  partners, triggering external workflows) silently doesn't
+  happen.
+failure: >
+  Silent destination failure. Rules invoke API destinations;
+  authentication fails at the partner; events never arrive.
+  Investigation surfaces a connection in DEAUTHORIZED state.
+tests:
+  - name: connection in DEAUTHORIZED fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:connection/partner"
+      asset_type: aws_eventbridge_connection
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_connection
+          events:
+            state: "DEAUTHORIZED"
+  - name: AUTHORIZED connection passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:connection/partner"
+      asset_type: aws_eventbridge_connection
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_connection
+          events:
+            state: "AUTHORIZED"

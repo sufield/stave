@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.SCHEDULER.AT.STALE.001
+name: EventBridge Scheduler One-Time Schedule Has Already Fired Or Expired
+description: >
+  EventBridge Scheduler one-time schedule (using `at()` expression)
+  has a target time in the past and is still in the schedule list.
+  The schedule has either fired and the post-completion action
+  didn't delete it, or it expired without firing. Either way the
+  schedule is dead weight in the schedule group's inventory — it
+  will not fire again, but it accumulates IAM-audit surface and
+  obscures which schedules are actually live.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2, CM-8"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_schedule
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge Scheduler one-time schedule has a past fire time
+    but is still in the inventory.
+  action: >
+    Delete the schedule (DeleteSchedule). For one-time schedules
+    going forward, set ActionAfterCompletion=DELETE so post-fire
+    cleanup is automatic. Audit the schedule group for other
+    stale `at()` schedules.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_schedule",
+        "events": {
+          "uses_at_expression": true,
+          "at_time_in_past": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_schedule
+    - field: properties.governance.events.uses_at_expression
+      op: eq
+      value: true
+    - field: properties.governance.events.at_time_in_past
+      op: eq
+      value: true
+defect: >
+  EventBridge Scheduler one-time `at()` schedule has a target
+  time in the past and was not auto-deleted after firing.
+infection: >
+  The one-time schedule has a fire time that's already passed.
+  Either it fired and the post-completion action did not delete
+  it, or it expired without firing because the schedule was
+  paused or invalid at the target time. The schedule remains in
+  the schedule group's inventory: ListSchedules shows it,
+  scheduler resource quota counts it, IAM audits include its
+  trust relationship. It cannot fire again — `at()` is one-time
+  by definition — so the inventory entry is dead weight.
+failure: >
+  Inventory clutter. Stale one-time schedules accumulate in the
+  schedule group, obscuring which schedules are actually live.
+tests:
+  - name: at() schedule with past time fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/migrate-once"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            uses_at_expression: true
+            at_time_in_past: true
+  - name: at() schedule with future time passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/migrate-once"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            uses_at_expression: true
+            at_time_in_past: false
+  - name: rate schedule passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/poll-5"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            uses_at_expression: false
+            at_time_in_past: false

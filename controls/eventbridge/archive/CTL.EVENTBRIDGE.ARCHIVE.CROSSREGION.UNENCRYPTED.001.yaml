@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ARCHIVE.CROSSREGION.UNENCRYPTED.001
+name: EventBridge Archive Cross-Region Copy Lacks Encryption
+description: >
+  EventBridge archive replicates to a second region (cross-
+  region archive copy) without encryption configured on the
+  destination. Cross-region archive copies are operationally
+  useful for DR and compliance retention in geographically
+  separated regions, but without explicit destination
+  encryption the archive's encryption posture degrades on the
+  copy: even if the source archive uses CMK, the copy may fall
+  back to AWS-managed keys in the destination region. The
+  audit boundary the source archive established is broken at
+  the region boundary.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "SC-12, SC-28"
+  pci_dss_v4.0: "3.5"
+  fedramp_moderate: "SC-12, SC-28"
+  iso_27001_2022: "A.5.17, A.8.20, A.8.24"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_archive
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    EventBridge archive's cross-region copy lacks explicit
+    encryption configuration.
+  action: >
+    Configure the destination region's archive copy with a CMK
+    in that region. Cross-region KMS access requires either
+    multi-region keys (recommended) or per-region CMKs with
+    aligned key policies. Update the cross-region replication
+    target accordingly.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_archive",
+        "events": {
+          "cross_region_replicated": true,
+          "cross_region_uses_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_archive
+    - field: properties.governance.events.cross_region_replicated
+      op: eq
+      value: true
+    - field: properties.governance.events.cross_region_uses_cmk
+      op: eq
+      value: false
+defect: >
+  EventBridge archive replicates cross-region without an
+  explicit CMK on the destination copy.
+infection: >
+  The source archive may use CMK for encryption at rest. When
+  the archive replicates to a second region, the copy's
+  encryption posture is independent — without explicit
+  configuration it may fall back to AWS-managed keys in the
+  destination region. The audit boundary the source archive
+  established is broken at the region boundary; key rotation,
+  access policy, and revocation no longer apply uniformly.
+  Cross-region investigators reading the destination copy may
+  find their key access doesn't match the source's policy.
+failure: >
+  Cross-region encryption inconsistency. Archive copy in the
+  destination region is not under the org's CMK; key-policy
+  audit no longer applies uniformly across the archive's
+  full geographic footprint.
+tests:
+  - name: cross-region archive without destination CMK fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:archive/audit"
+      asset_type: aws_eventbridge_archive
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_archive
+          events:
+            cross_region_replicated: true
+            cross_region_uses_cmk: false
+  - name: cross-region archive with destination CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:archive/audit"
+      asset_type: aws_eventbridge_archive
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_archive
+          events:
+            cross_region_replicated: true
+            cross_region_uses_cmk: true
+  - name: single-region archive does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:archive/audit"
+      asset_type: aws_eventbridge_archive
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_archive
+          events:
+            cross_region_replicated: false
+            cross_region_uses_cmk: false

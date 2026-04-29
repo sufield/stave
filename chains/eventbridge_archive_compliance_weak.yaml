@@ -1,0 +1,22 @@
+id: eventbridge_archive_compliance_weak
+description: >
+  EventBridge archive has multiple compliance / regulatory
+  exposure defects: AWS-managed-key encryption, retention beyond
+  documented compliance window, no event-pattern filter (broad
+  capture), or cross-region copy without destination CMK.
+  Co-occurrence indicates the archive was provisioned without
+  reviewing the compliance posture for the data it captures —
+  storage cost compounds privacy exposure compounds audit risk.
+  Threshold of 2 fires when at least two compliance/encryption
+  defects coexist on the same archive.
+controls:
+  - CTL.EVENTBRIDGE.ARCHIVE.NOCMK.001
+  - CTL.EVENTBRIDGE.ARCHIVE.RETENTION.LONG.001
+  - CTL.EVENTBRIDGE.ARCHIVE.NOFILTER.001
+  - CTL.EVENTBRIDGE.ARCHIVE.CROSSREGION.UNENCRYPTED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

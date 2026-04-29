@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ARCHIVE.NOFILTER.001
+name: EventBridge Archive Has No Event-Pattern Filter
+description: >
+  EventBridge archive has no EventPattern set — the archive
+  captures every event the bus delivers. For high-throughput
+  buses, the archive accumulates orders of magnitude more data
+  than it needs to. Storage cost compounds, retention-window
+  privacy exposure compounds, and replay (when used) re-injects
+  noise alongside the events the operator actually wanted to
+  replay. AWS designed archive filtering specifically so the
+  archive can be scoped to the audit-relevant subset.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, SC-5"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-16"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_archive
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    EventBridge archive has no event-pattern filter; archives
+    every event on the bus.
+  action: >
+    Set EventPattern to scope the archive to the audit-relevant
+    event subset. For audit archives, typically filter by
+    detail-type / source matching the operational events worth
+    preserving. For incident-investigation archives, scope to
+    the security-relevant sources (aws.guardduty, aws.health,
+    aws.config). A catch-all archive only makes sense if the
+    bus itself is single-purpose; on a shared bus, filter
+    explicitly.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_archive",
+        "events": {
+          "has_event_pattern": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_archive
+    - field: properties.governance.events.has_event_pattern
+      op: eq
+      value: false
+defect: >
+  EventBridge archive has no EventPattern; archives every
+  event on the bus.
+infection: >
+  Every event on the bus is captured in the archive. High-
+  volume sources (S3 ObjectCreated, EC2 state changes,
+  CloudTrail data events) inflate the archive size by orders
+  of magnitude relative to the audit-relevant subset. Storage
+  cost grows linearly with bus throughput; retention-window
+  privacy exposure grows in proportion. Replay re-injects the
+  full firehose unless the replay-side filter narrows it,
+  which is operator-error-prone.
+failure: >
+  Storage and privacy bloat. Archive captures the full bus
+  throughput rather than the audit-relevant subset; cost and
+  privacy exposure scale with bus volume.
+tests:
+  - name: archive without event pattern fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:archive/audit"
+      asset_type: aws_eventbridge_archive
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_archive
+          events:
+            has_event_pattern: false
+  - name: archive with event pattern passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:archive/audit"
+      asset_type: aws_eventbridge_archive
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_archive
+          events:
+            has_event_pattern: true

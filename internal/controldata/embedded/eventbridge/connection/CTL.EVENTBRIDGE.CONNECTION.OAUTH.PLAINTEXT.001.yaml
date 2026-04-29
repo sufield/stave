@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.CONNECTION.OAUTH.PLAINTEXT.001
+name: EventBridge Connection OAuth Client Secret Embedded In Definition
+description: >
+  EventBridge Connection uses OAUTH_CLIENT_CREDENTIALS
+  authentication with the ClientSecret embedded directly in the
+  connection definition rather than referenced from Secrets
+  Manager. The secret is visible to any principal with
+  events:DescribeConnection. OAuth client secrets typically
+  authorize the application's full API scope at the partner;
+  exposure compromises every principal that obtains tokens
+  through this client.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, IA-5, SC-28"
+  pci_dss_v4.0: "3.5, 8.3"
+  fedramp_moderate: "AC-3, IA-5"
+  iso_27001_2022: "A.5.17, A.8.5, A.8.24"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_connection
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EventBridge Connection OAuth ClientSecret is stored in the
+    connection definition.
+  action: >
+    Move the ClientSecret to AWS Secrets Manager. Update the
+    connection's OAuthParameters.ClientParameters to use a
+    SECRETS_MANAGER reference. The OAuth refresh-token rotation
+    cadence is governed by the partner's authorization server;
+    document the rotation expectations in the connection's
+    description so future operators understand the rotation
+    contract.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_connection",
+        "events": {
+          "auth_type": "OAUTH_CLIENT_CREDENTIALS",
+          "credentials_via_secret": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_connection
+    - field: properties.governance.events.auth_type
+      op: eq
+      value: OAUTH_CLIENT_CREDENTIALS
+    - field: properties.governance.events.credentials_via_secret
+      op: eq
+      value: false
+defect: >
+  EventBridge Connection OAuth ClientSecret is stored in the
+  connection definition rather than referenced from Secrets
+  Manager.
+infection: >
+  The connection's OAuthParameters carry the ClientSecret in
+  plain text. Every principal with events:DescribeConnection
+  sees it. The OAuth client credential authorizes the full
+  application scope at the partner — every API the partner
+  exposes to applications using this client. Compromise of the
+  ClientSecret enables an attacker to mint OAuth tokens for any
+  user the application can act on behalf of, depending on the
+  partner's authorization grants.
+failure: >
+  OAuth client compromise surface. ClientSecret exposed in
+  connection definitions extends to every API call the
+  application authorizes via this OAuth client.
+tests:
+  - name: OAuth connection with plaintext ClientSecret fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:connection/oauth-app"
+      asset_type: aws_eventbridge_connection
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_connection
+          events:
+            auth_type: "OAUTH_CLIENT_CREDENTIALS"
+            credentials_via_secret: false
+  - name: OAuth connection with secret reference passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:connection/oauth-app"
+      asset_type: aws_eventbridge_connection
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_connection
+          events:
+            auth_type: "OAUTH_CLIENT_CREDENTIALS"
+            credentials_via_secret: true

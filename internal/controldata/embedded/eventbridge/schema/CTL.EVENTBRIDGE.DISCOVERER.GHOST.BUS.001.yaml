@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.DISCOVERER.GHOST.BUS.001
+name: EventBridge Schema Discoverer References Deleted Bus
+description: >
+  EventBridge schema discoverer's SourceArn points to an event
+  bus that has been deleted. The discoverer is in STARTED state
+  but observes nothing — every API call against it succeeds
+  but discovers no new schemas. Same ghost-reference pattern as
+  the rule-target ghosts, on the schema-discoverer surface.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_discoverer
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge schema discoverer references a bus that has
+    been deleted.
+  action: >
+    Either delete the discoverer (DeleteDiscoverer) or update
+    its SourceArn to point at a live bus. Discoverers cost
+    per-event-observed; a discoverer pointed at a deleted bus
+    accumulates IAM-audit surface without producing schemas.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_discoverer",
+        "events": {
+          "source_bus_arn": "arn:aws:events:us-east-1:111122223333:event-bus/orders",
+          "source_bus_exists": true,
+          "has_ghost_source_bus": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_discoverer
+    - field: properties.governance.events.has_ghost_source_bus
+      op: eq
+      value: true
+defect: >
+  EventBridge schema discoverer's SourceArn references an
+  event bus that has been deleted.
+infection: >
+  The discoverer's SourceArn points at a bus that no longer
+  exists. ListDiscoverers returns it; DescribeDiscoverer shows
+  state STARTED. The data plane has nothing to observe — the
+  bus is gone — so no new schemas are produced. Operators
+  reviewing the schema registry expecting to find current
+  event shapes find only schemas frozen at the time the bus
+  was deleted. The discoverer continues to count against
+  account quotas and shows up in IAM audits.
+failure: >
+  Schema registry staleness. Schemas don't reflect current
+  event shapes; the discoverer accumulates audit surface
+  without delivering value.
+tests:
+  - name: discoverer with ghost source bus fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:schemas:us-east-1:111122223333:discoverer/d-abc"
+      asset_type: aws_eventbridge_discoverer
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_discoverer
+          events:
+            source_bus_arn: "arn:aws:events:us-east-1:111122223333:event-bus/orders-deleted"
+            source_bus_exists: false
+            has_ghost_source_bus: true
+  - name: discoverer with live source bus passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:schemas:us-east-1:111122223333:discoverer/d-abc"
+      asset_type: aws_eventbridge_discoverer
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_discoverer
+          events:
+            source_bus_arn: "arn:aws:events:us-east-1:111122223333:event-bus/orders"
+            source_bus_exists: true
+            has_ghost_source_bus: false

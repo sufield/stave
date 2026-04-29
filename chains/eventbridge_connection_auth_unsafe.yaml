@@ -1,0 +1,22 @@
+id: eventbridge_connection_auth_unsafe
+description: >
+  EventBridge has multiple connections with credentials stored
+  in plaintext in connection definitions rather than via Secrets
+  Manager references. BASIC, API_KEY, and OAUTH all support
+  Secrets Manager integration; co-occurrence of plaintext
+  credentials across at least two of the three auth types
+  indicates the operator hasn't adopted the Secrets Manager
+  integration pattern at all — every reader of connection
+  definitions sees every credential. Threshold of 2 fires when
+  at least two plaintext-credential controls fire on the same
+  account / connection inventory.
+controls:
+  - CTL.EVENTBRIDGE.CONNECTION.BASIC.PLAINTEXT.001
+  - CTL.EVENTBRIDGE.CONNECTION.APIKEY.PLAINTEXT.001
+  - CTL.EVENTBRIDGE.CONNECTION.OAUTH.PLAINTEXT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - secret_store_access

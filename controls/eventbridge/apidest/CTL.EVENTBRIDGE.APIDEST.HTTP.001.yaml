@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.APIDEST.HTTP.001
+name: EventBridge API Destination Targets HTTP Endpoint
+description: >
+  EventBridge API destination has an InvocationEndpoint that
+  uses the http:// scheme rather than https://. Events delivered
+  to the destination — which often carry account-scoped IDs,
+  payload templates with detail fields, and partner-API request
+  bodies — leave AWS in plaintext. The destination's auth
+  credentials, even when stored in Secrets Manager, are also
+  transmitted on the wire to authenticate the request.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-8, SC-13"
+  pci_dss_v4.0: "4.2"
+  fedramp_moderate: "SC-8, SC-13"
+  iso_27001_2022: "A.8.20, A.8.24"
+  ccm_v4: ["DSP-09", "DSP-17"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_apidestination
+params:
+  attack_stage: collection
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge API destination uses http:// not https://.
+  action: >
+    Update the InvocationEndpoint to use https://. If the
+    partner endpoint genuinely doesn't support TLS, escalate to
+    the partner — there's no acceptable production posture for
+    HTTP-only event delivery.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_apidestination",
+        "events": {
+          "endpoint_uses_https": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_apidestination
+    - field: properties.governance.events.endpoint_uses_https
+      op: eq
+      value: false
+defect: >
+  EventBridge API destination InvocationEndpoint uses the
+  http:// scheme.
+infection: >
+  Every destination invocation sends events plus auth headers
+  to the partner over plaintext HTTP. Network observers between
+  AWS and the partner — public internet, customer
+  intermediaries, shared VPC peering paths — see the event
+  payload and the auth credential exchange. Even where Secrets
+  Manager holds the connection's credentials, the credential
+  is transmitted as a request header on each invocation.
+failure: >
+  Plaintext event delivery and credential exposure on the
+  wire. Event payloads and auth credentials transit the public
+  internet unencrypted.
+tests:
+  - name: HTTP endpoint fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:api-destination/partner"
+      asset_type: aws_eventbridge_apidestination
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_apidestination
+          events:
+            invocation_endpoint: "http://partner.example.com/webhook"
+            endpoint_uses_https: false
+  - name: HTTPS endpoint passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:api-destination/partner"
+      asset_type: aws_eventbridge_apidestination
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_apidestination
+          events:
+            invocation_endpoint: "https://partner.example.com/webhook"
+            endpoint_uses_https: true

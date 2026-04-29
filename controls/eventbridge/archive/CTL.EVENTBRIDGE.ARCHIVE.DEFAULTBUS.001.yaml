@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ARCHIVE.DEFAULTBUS.001
+name: EventBridge Archive Targets The Default Bus
+description: >
+  EventBridge archive is attached to the account's default bus.
+  The default bus carries every AWS service event in the account
+  plus any application events any team has pushed to the default
+  bus rather than to a dedicated bus. An archive on the default
+  bus captures all of it — cross-tenant data mixing, sensitive
+  service events (Health, GuardDuty, Config), and any
+  application data flowing through the default bus all land in
+  one archive. Replay then re-injects all of that, creating a
+  cross-tenant exfiltration vector.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6, P4.0"
+  nist_800_53_r5: "AC-3, AC-4, AC-21, SC-7"
+  fedramp_moderate: "AC-3, SC-7"
+  iso_27001_2022: "A.5.15, A.8.20, A.8.24"
+  ccm_v4: ["DSP-17", "IVS-09"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_archive
+params:
+  attack_stage: collection
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge archive is attached to the default bus, mixing
+    cross-tenant data into a single archive.
+  action: >
+    Create a dedicated custom bus for the application that needs
+    archiving (CreateEventBus). Move producers and rules onto
+    the custom bus. Delete the default-bus archive and create a
+    new archive on the custom bus with a narrower filter
+    pattern. The default bus should not be archived at all in
+    multi-tenant accounts; AWS service events captured for
+    audit purposes belong in a dedicated audit bus or in
+    CloudTrail.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_archive",
+        "events": {
+          "bus_is_default": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_archive
+    - field: properties.governance.events.bus_is_default
+      op: eq
+      value: true
+defect: >
+  EventBridge archive is attached to the default bus.
+infection: >
+  The archive captures every event flowing through the default
+  bus — AWS service events plus any application events
+  improperly publishing to the default bus rather than a
+  dedicated bus. Cross-tenant data accumulates in the archive.
+  Replay from the archive re-injects the entire mixed event
+  stream; if replay destination is configured to a different
+  bus (see ARCHIVE.REPLAY.CROSSBUS) the cross-tenant data
+  flows where it shouldn't go.
+failure: >
+  Cross-tenant data accumulation in archive. Multi-application
+  default-bus traffic is captured in a single archive;
+  per-application isolation is impossible after the fact.
+tests:
+  - name: archive on default bus fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:archive/all-events"
+      asset_type: aws_eventbridge_archive
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_archive
+          events:
+            event_bus_name: "default"
+            bus_is_default: true
+  - name: archive on dedicated bus passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:archive/orders"
+      asset_type: aws_eventbridge_archive
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_archive
+          events:
+            event_bus_name: "orders-bus"
+            bus_is_default: false
