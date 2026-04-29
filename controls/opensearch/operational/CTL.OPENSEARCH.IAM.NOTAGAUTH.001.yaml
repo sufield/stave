@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.IAM.NOTAGAUTH.001
+name: OpenSearch IAM Permissions Not Scoped By Resource Tag
+description: >
+  Organization's IAM policies for OpenSearch
+  (`es:*` actions) are not scoped using
+  `aws:ResourceTag/<key>` conditions. Single
+  IAM role grants apply to every OpenSearch
+  domain in the account; per-team / per-env
+  isolation impossible without per-domain
+  policy proliferation. Tag-based access
+  control is the AWS-recommended pattern.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    IAM not using tag-based access control on
+    OpenSearch.
+  action: >
+    Add aws:ResourceTag conditions to
+    IAM policies:
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/team": "${aws:PrincipalTag/team}"
+        }
+      }
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "governance": {
+          "iam_tag_based_access": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.governance.iam_tag_based_access
+      op: eq
+      value: false
+defect: >
+  IAM policies don't use tag-based scoping.
+infection: >
+  Cross-team / cross-env isolation broken;
+  any role with es:* hits all domains.
+failure: >
+  Coarse authorization model.
+tests:
+  - name: no tag auth fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          governance:
+            iam_tag_based_access: false
+  - name: tag auth passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          governance:
+            iam_tag_based_access: true

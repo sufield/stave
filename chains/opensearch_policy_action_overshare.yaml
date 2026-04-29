@@ -1,0 +1,23 @@
+id: opensearch_policy_action_overshare
+description: >
+  OpenSearch domain access policy has multiple
+  action-overshare defects: action wildcard (es:*)
+  to non-admin role, ESHttp* wildcard to read-only
+  role, ESHttpDelete on read-only role, or
+  UpdateDomainConfig on non-admin role. Each defect
+  alone amplifies the blast radius of a single
+  compromised role; co-occurrence indicates
+  least-privilege discipline broke down across the
+  policy. Threshold of 2 fires when at least two
+  action-overshare defects coexist.
+controls:
+  - CTL.OPENSEARCH.POLICY.ACTION.WILDCARD.001
+  - CTL.OPENSEARCH.POLICY.ESHTTP.WILDCARD.001
+  - CTL.OPENSEARCH.POLICY.DELETE.READONLY.001
+  - CTL.OPENSEARCH.POLICY.UPDATECONFIG.NONADMIN.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access

@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AOSS.NETPOLICY.PUBLIC.001
+name: OpenSearch Serverless Collection Network Policy Permits Public Access
+description: >
+  OpenSearch Serverless collection's network
+  policy permits `Public` access type, or has no
+  network policy attached (default-public), or
+  permits `Public` and `VPC` simultaneously
+  (VPC pretense). Collection is reachable from
+  the internet despite "VPC-only" appearance in
+  the inventory. AOSS network policies are the
+  only network-level filter on collections.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "1.3.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.8.20"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - opensearch
+  - aoss
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_aoss_collection
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: data_exposure
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    AOSS collection network policy permits
+    public access.
+  action: >
+    Update network policy to specify VPC-only
+    via aoss:CreateSecurityPolicy with
+    AccessType=VPC and explicit VPCe ID list.
+    Verify with GetSecurityPolicy.
+  example: |
+    {
+      "search_service": {
+        "kind": "collection",
+        "access": {
+          "network_policy_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: collection
+    - field: properties.search_service.access.network_policy_public
+      op: eq
+      value: true
+defect: >
+  AOSS network policy permits public access.
+infection: >
+  Collection reachable from internet; auth
+  becomes the only barrier.
+failure: >
+  Network boundary absent on collection.
+tests:
+  - name: public netpolicy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          access:
+            network_policy_public: true
+  - name: vpc-only passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          access:
+            network_policy_public: false

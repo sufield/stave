@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.CUSTOM.ENDPOINT.PUBLIC.001
+name: OpenSearch Custom Endpoint Targets Public Domain When VPC Available
+description: >
+  OpenSearch domain has a custom endpoint (CNAME) that
+  resolves to the public domain endpoint while a VPC
+  endpoint is also available. The custom endpoint is
+  the one published to clients; using the public
+  endpoint behind it bypasses the VPC isolation that
+  the VPC endpoint was provisioned to provide.
+  Operators commonly add a custom endpoint for
+  branding without realizing it pins traffic to the
+  public path.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "1.3.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.8.20"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: data_exposure
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    OpenSearch custom endpoint resolves to the public
+    domain endpoint despite a VPC endpoint being
+    available.
+  action: >
+    Repoint the custom endpoint CNAME to the VPC
+    endpoint. Disable the public endpoint via
+    UpdateDomainConfig, or update the access policy
+    to deny non-VPC source IPs. Verify with:
+      dig +short <custom-endpoint>
+    The result should resolve to the VPC-internal
+    address, not the public one.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "custom_endpoint_enabled": true,
+          "custom_endpoint_targets_public": false,
+          "vpc_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.custom_endpoint_enabled
+      op: eq
+      value: true
+    - field: properties.search_service.access.vpc_enabled
+      op: eq
+      value: true
+    - field: properties.search_service.access.custom_endpoint_targets_public
+      op: eq
+      value: true
+defect: >
+  Custom endpoint is configured to resolve to the
+  public domain endpoint while a VPC endpoint exists.
+infection: >
+  Clients that use the custom endpoint hit the public
+  endpoint. The VPC isolation that the VPC endpoint
+  was supposed to enforce is bypassed for these
+  clients. Network policy (security groups, NACLs)
+  on the VPC endpoint does not apply.
+failure: >
+  Public exposure with VPC pretense. The domain looks
+  VPC-isolated in inventory but accepts public
+  traffic via the custom endpoint.
+tests:
+  - name: custom endpoint public over vpc fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            custom_endpoint_enabled: true
+            vpc_enabled: true
+            custom_endpoint_targets_public: true
+  - name: custom endpoint targets vpc passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            custom_endpoint_enabled: true
+            vpc_enabled: true
+            custom_endpoint_targets_public: false
+  - name: no custom endpoint passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            custom_endpoint_enabled: false
+            vpc_enabled: true
+            custom_endpoint_targets_public: false

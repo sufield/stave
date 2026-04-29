@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.EBS.GP2.IO.HEAVY.001
+name: OpenSearch Domain Uses gp2 EBS For IO-Heavy Workload
+description: >
+  OpenSearch domain with index-heavy / search-
+  heavy workload uses `gp2` EBS volume type.
+  gp2 IOPS scale with volume size (3 IOPS/GB);
+  IO-heavy workloads exhaust burst credits and
+  fall back to baseline IOPS, causing latency.
+  gp3 (provisioned IOPS independent of size) or
+  io2 (high-perf) are appropriate.
+domain: capacity
+severity: medium
+compliance:
+  soc2: "A1.1"
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  iso_27001_2022: "A.8.14"
+  ccm_v4: ["BCR-04"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    gp2 used for IO-heavy workload.
+  action: >
+    Migrate to gp3 (matches gp2 cost,
+    independent IOPS). For very heavy: io2.
+    Update via UpdateDomainConfig --ebs-options.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "capacity": {
+          "ebs_appropriate_for_workload": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.capacity.ebs_appropriate_for_workload
+      op: eq
+      value: false
+defect: >
+  EBS volume type unsuitable for workload.
+infection: >
+  IO burst credits exhausted; baseline IOPS
+  insufficient; latency degrades.
+failure: >
+  Storage layer bottleneck.
+tests:
+  - name: gp2 io heavy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          capacity:
+            ebs_appropriate_for_workload: false
+  - name: gp3 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          capacity:
+            ebs_appropriate_for_workload: true

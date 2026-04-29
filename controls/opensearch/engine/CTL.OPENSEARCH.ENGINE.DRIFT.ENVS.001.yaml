@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ENGINE.DRIFT.ENVS.001
+name: OpenSearch Engine Version Drifts Across Environment Tiers
+description: >
+  OpenSearch domain in production runs an engine
+  version older than the same workload's non-
+  production / staging domain. Operators tested
+  in dev, validated in staging on a newer
+  version, then never upgraded production.
+  Production now lacks fixes that have been
+  rolled out to lower environments.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-3, SI-2"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.8.32, A.8.8"
+  ccm_v4: ["TVM-04", "GRC-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Production engine older than non-prod.
+  action: >
+    Upgrade production to match non-prod.
+    Future: enforce version-pinning across
+    environments via IaC / pipeline policy.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "engine": {
+          "drifts_from_nonprod": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.engine.drifts_from_nonprod
+      op: eq
+      value: true
+defect: >
+  Production engine behind non-prod.
+infection: >
+  Untested / unpatched production state vs
+  validated lower environments.
+failure: >
+  Validated upgrade not promoted.
+tests:
+  - name: drift fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          engine:
+            drifts_from_nonprod: true
+  - name: in sync passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          engine:
+            drifts_from_nonprod: false

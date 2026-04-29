@@ -1,0 +1,28 @@
+id: opensearch_engine_decay
+description: >
+  OpenSearch domain has multiple engine /
+  patching defects: end-of-life engine, version
+  behind latest patch, software update pending
+  > 30 days, Auto-Tune disabled, ES 7.x not
+  migrated, blue-green deployment failed > 24h,
+  plugin / custom-package incompatibility, or
+  engine version drift across environments.
+  Each defect alone represents patch debt;
+  co-occurrence indicates engine maintenance is
+  unowned. Threshold of 2 fires when at least
+  two engine defects coexist.
+controls:
+  - CTL.OPENSEARCH.ENGINE.EOL.001
+  - CTL.OPENSEARCH.ENGINE.OUTDATED.001
+  - CTL.OPENSEARCH.SOFTWARE.UPDATE.STALE.001
+  - CTL.OPENSEARCH.AUTOTUNE.OFF.001
+  - CTL.OPENSEARCH.ES7.NOT.MIGRATED.001
+  - CTL.OPENSEARCH.BLUEGREEN.STUCK.001
+  - CTL.OPENSEARCH.PLUGIN.UNSUPPORTED.001
+  - CTL.OPENSEARCH.ENGINE.DRIFT.ENVS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

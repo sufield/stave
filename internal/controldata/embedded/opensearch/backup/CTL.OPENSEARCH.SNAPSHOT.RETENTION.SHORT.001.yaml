@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.SNAPSHOT.RETENTION.SHORT.001
+name: OpenSearch Automated Snapshot Retention Below Compliance Window
+description: >
+  OpenSearch automated snapshot retention is at
+  the AWS default (14 days) on a domain scoped
+  for HIPAA, PCI, or SOX compliance. Compliance
+  frameworks specify backup retention windows
+  much longer than 14 days. Recovery from a
+  ransomware / corruption event 30+ days back
+  fails at the snapshot layer.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.4, A1.2"
+  pci_dss_v4.0: "12.10.5"
+  hipaa: "164.308(a)(7)"
+  nist_800_53_r5: "CP-9, AU-11"
+  fedramp_moderate: "CP-9"
+  iso_27001_2022: "A.8.13"
+  ccm_v4: ["BCR-08", "BCR-11"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Auto-snapshot retention below compliance
+    window.
+  action: >
+    Configure manual snapshots to S3 with
+    bucket-level retention matching compliance
+    requirement. Automated snapshots cap at 14d;
+    augment with scheduled manual to long-
+    retention bucket.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "backup": {
+          "snapshot_retention_days": 365
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.backup.snapshot_retention_days
+      op: lt
+      value: 30
+defect: >
+  Snapshot retention < 30 days on
+  compliance-scoped domain.
+infection: >
+  Recovery for events older than retention is
+  impossible. Compliance audit cites the gap.
+failure: >
+  Backup retention shortfall.
+tests:
+  - name: 14-day retention fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          backup:
+            snapshot_retention_days: 14
+  - name: 365d retention passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          backup:
+            snapshot_retention_days: 365

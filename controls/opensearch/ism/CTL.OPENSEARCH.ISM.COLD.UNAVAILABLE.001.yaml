@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ISM.COLD.UNAVAILABLE.001
+name: OpenSearch ISM Policy Transitions To Cold With Cold Storage Disabled
+description: >
+  OpenSearch ISM policy declares a transition to
+  cold storage but the domain has cold storage
+  disabled. Same failure mode as warm-without-
+  ultrawarm; policy steps stuck or fail.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.30"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ISM uses cold transition without cold storage
+    enabled.
+  action: >
+    Enable cold storage tier on domain (engine
+    1.3+) or revise ISM policy to skip cold
+    transition.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "ism": {
+          "cold_transition_consistent": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.ism.uses_cold_transition
+      op: eq
+      value: true
+    - field: properties.search_service.ism.cold_storage_enabled
+      op: eq
+      value: false
+defect: >
+  ISM uses cold transition but cold disabled.
+infection: >
+  Policy step fails; indices stuck.
+failure: >
+  Lifecycle policy / domain config inconsistency.
+tests:
+  - name: cold without cold storage fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          ism:
+            uses_cold_transition: true
+            cold_storage_enabled: false
+  - name: cold storage enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          ism:
+            uses_cold_transition: true
+            cold_storage_enabled: true

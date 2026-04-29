@@ -1,0 +1,22 @@
+id: opensearch_tls_decay
+description: >
+  OpenSearch domain has multiple TLS hygiene
+  defects: TLS security policy below the modern
+  floor (Policy-Min-TLS-1.2-PFS-2023-10), custom
+  endpoint certificate from an untrusted CA, or
+  custom endpoint certificate near expiry without
+  auto-renewal. Each defect alone weakens TLS
+  authentication / confidentiality; co-occurrence
+  indicates TLS hygiene is unmaintained.
+  Threshold of 2 fires when at least two TLS
+  defects coexist on the same domain.
+controls:
+  - CTL.OPENSEARCH.TLS.POLICY.WEAK.001
+  - CTL.OPENSEARCH.CUSTOM.CERT.UNTRUSTED.001
+  - CTL.OPENSEARCH.CUSTOM.CERT.EXPIRY.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - data_in_transit_exposure
+postconditions:
+  - encryption_bypass

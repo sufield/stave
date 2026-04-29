@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.MAINTENANCE.WINDOW.UNSET.001
+name: OpenSearch Domain Maintenance Window Not Set Or In Business Hours
+description: >
+  OpenSearch domain has no auto-tune / software-
+  update maintenance window configured, or the
+  configured window falls in business hours.
+  Without a deliberate window, AWS picks a
+  default that may overlap peak traffic; updates
+  cause user-visible degradation. Operators rely
+  on "we'll see when it happens" — guaranteed
+  surprise.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.2"
+  nist_800_53_r5: "CM-3, MA-2"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["GRC-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Maintenance window unset or in business
+    hours.
+  action: >
+    Configure off-peak maintenance window via
+    UpdateDomainConfig --auto-tune-options
+    desired-state ENABLED + maintenance-schedule
+    in low-traffic hours (per your timezone).
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "alarms": {
+          "maintenance_window_set_offpeak": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.alarms.maintenance_window_set_offpeak
+      op: eq
+      value: false
+defect: >
+  Maintenance window unset or in business
+  hours.
+infection: >
+  Updates land at unpredictable / business-hour
+  times; user impact unpredictable.
+failure: >
+  Operational predictability gap.
+tests:
+  - name: window unset fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            maintenance_window_set_offpeak: false
+  - name: window offpeak passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            maintenance_window_set_offpeak: true

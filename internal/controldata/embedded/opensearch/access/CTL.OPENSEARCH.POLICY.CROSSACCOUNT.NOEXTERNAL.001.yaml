@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.POLICY.CROSSACCOUNT.NOEXTERNAL.001
+name: OpenSearch Cross-Account Principal Without ExternalId Condition
+description: >
+  OpenSearch domain access policy permits a principal
+  in another AWS account without an `sts:ExternalId`
+  condition or equivalent confused-deputy guard. The
+  classic confused-deputy attack: a third party with
+  any role in the foreign account can assume that
+  role and reach the domain. ExternalId binds the
+  trust to a specific tenant/integration.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  pci_dss_v4.0: "7.2.4"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: cross_account
+    scope: cross_account
+    multiplier: 3.0
+remediation:
+  description: >
+    Access policy grants cross-account principal
+    without ExternalId condition.
+  action: >
+    Add an sts:ExternalId condition matching the
+    integration's known external ID:
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "tenant-abc-9f2c"
+        }
+      }
+    Distribute the ExternalId out-of-band to the
+    integrating party.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "policy_crossaccount_principal": true,
+          "policy_crossaccount_externalid_present": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.policy_crossaccount_principal
+      op: eq
+      value: true
+    - field: properties.search_service.access.policy_crossaccount_externalid_present
+      op: eq
+      value: false
+defect: >
+  Cross-account principal granted without
+  ExternalId guard.
+infection: >
+  Any role in the foreign account, not just the
+  intended integration, can assume into the trusted
+  role and reach the domain. Confused-deputy attack
+  surface is the entire foreign account.
+failure: >
+  Cross-account trust is unscoped. Domain accessible
+  from any identity in the foreign account.
+tests:
+  - name: crossaccount no externalid fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            policy_crossaccount_principal: true
+            policy_crossaccount_externalid_present: false
+  - name: crossaccount with externalid passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            policy_crossaccount_principal: true
+            policy_crossaccount_externalid_present: true

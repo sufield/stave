@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.IAC.DRIFT.001
+name: OpenSearch Domain Configuration Modified Outside IaC
+description: >
+  OpenSearch domain's most recent configuration
+  change came from a principal that is not the
+  IaC automation role (Terraform / CloudFormation
+  service role). Direct console / CLI changes
+  bypass IaC review and create state divergence
+  that the next IaC apply will overwrite — or
+  worse, that operators will paper over by
+  hand-modifying the IaC source to match.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, CC7.1"
+  nist_800_53_r5: "CM-2, CM-3, CM-8"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["GRC-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Domain config last modified by a non-IaC
+    principal.
+  action: >
+    Identify the change via CloudTrail (filter
+    eventName=UpdateDomainConfig). Reproduce in
+    IaC; revert if unauthorized. Add a CloudWatch
+    alarm: UpdateDomainConfig events from
+    non-IaC principals.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "config": {
+          "last_modified_by_iac": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.config.last_modified_by_iac
+      op: eq
+      value: false
+defect: >
+  Domain config last modified by non-IaC
+  principal.
+infection: >
+  IaC source of truth diverges from deployed
+  state. Next `terraform apply` either reverts
+  the change (unexpected outage) or operators
+  back-port the change to IaC without review.
+  Either way, change-management discipline
+  broke.
+failure: >
+  Configuration drift. State and IaC source
+  disagree.
+tests:
+  - name: console-side change fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          config:
+            last_modified_by_iac: false
+  - name: iac-driven change passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          config:
+            last_modified_by_iac: true

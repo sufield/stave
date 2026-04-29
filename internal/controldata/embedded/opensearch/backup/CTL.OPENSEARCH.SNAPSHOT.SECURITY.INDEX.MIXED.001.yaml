@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.SNAPSHOT.SECURITY.INDEX.MIXED.001
+name: OpenSearch All-Indices Snapshot Includes Security Index Without Separation
+description: >
+  OpenSearch snapshot policy uses an
+  "all indices" pattern that includes
+  `.opendistro_security` (or
+  `.opendistro_security_*`) without separating
+  it into its own snapshot stream. Security
+  index contains FGAC users / role mappings;
+  restoring to a different cluster brings
+  source-cluster identities, which may not
+  exist on the target cluster, leading to
+  authorization failures. Plus the index can
+  contain hashed credentials that should
+  not co-mingle with workload-data backups.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CP-9, IA-5"
+  fedramp_moderate: "CP-9"
+  iso_27001_2022: "A.8.13, A.5.16"
+  ccm_v4: ["BCR-08", "IAM-09"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Snapshot bundles security index with workload
+    data.
+  action: >
+    Split snapshot policies: workload-data
+    snapshots use `*,-.opendistro_security*`
+    pattern; security-state snapshots run
+    separately to a dedicated, more
+    restricted bucket.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "backup": {
+          "snapshot_excludes_security_index": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.backup.snapshot_excludes_security_index
+      op: eq
+      value: false
+defect: >
+  Snapshot policy bundles security index with
+  workload data.
+infection: >
+  Restore to alternate cluster brings stale
+  identities. Security-related backup retention
+  / encryption rules can't be applied
+  independently.
+failure: >
+  Mixed-concern backup. Security state and
+  workload data collapsed into one stream.
+tests:
+  - name: bundled security index fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          backup:
+            snapshot_excludes_security_index: false
+  - name: security excluded passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          backup:
+            snapshot_excludes_security_index: true

@@ -1,0 +1,20 @@
+id: opensearch_saml_unhealthy
+description: >
+  OpenSearch domain SAML integration has multiple
+  health defects: SAML configured but no role
+  mappings reference SAML attributes (authorization
+  layer effectively absent), or SAML IdP metadata
+  signing certificate near expiry / expired
+  (imminent authentication outage). Co-occurrence
+  indicates SAML setup was never fully wired and
+  is now decaying. Threshold of 2 fires when both
+  defects coexist on the SAML-enabled domain.
+controls:
+  - CTL.OPENSEARCH.SAML.NOMAPPING.001
+  - CTL.OPENSEARCH.SAML.METADATA.EXPIRED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access

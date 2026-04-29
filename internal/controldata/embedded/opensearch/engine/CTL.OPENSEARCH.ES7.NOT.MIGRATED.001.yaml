@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ES7.NOT.MIGRATED.001
+name: OpenSearch Domain Still Running Elasticsearch 7.x Engine
+description: >
+  Domain is still running an Elasticsearch 7.x
+  engine and has not migrated to OpenSearch
+  1.x / 2.x. AWS no longer ships new features
+  for ES 7.x; future security updates may also
+  taper off. Migration to OpenSearch is a
+  one-time activity that requires planning;
+  delay compounds.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.1, CC8.1"
+  pci_dss_v4.0: "6.2"
+  nist_800_53_r5: "SI-2, CM-3"
+  fedramp_moderate: "SI-2"
+  iso_27001_2022: "A.8.8"
+  ccm_v4: ["TVM-04"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Domain on Elasticsearch 7.x.
+  action: >
+    Plan blue-green to OpenSearch 2.x. Test
+    in non-prod; verify plugin / client
+    compatibility; allow weeks for migration.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "engine": {
+          "is_legacy_es7": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.engine.is_legacy_es7
+      op: eq
+      value: true
+defect: >
+  Domain on Elasticsearch 7.x.
+infection: >
+  Feature lag; eventual support cliff.
+failure: >
+  Migration debt.
+tests:
+  - name: es7 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          engine:
+            is_legacy_es7: true
+  - name: opensearch passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          engine:
+            is_legacy_es7: false

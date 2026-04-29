@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AOSS.ENCRYPT.AWS.OWNED.001
+name: OpenSearch Serverless Collection Uses AWS-Owned Encryption Key
+description: >
+  OpenSearch Serverless collection's encryption
+  policy uses an AWS-owned key (default) rather
+  than a customer-managed KMS key. AWS-owned
+  keys are not auditable, can't be selectively
+  revoked, and can't be rotated under customer
+  schedule. For regulated workloads (HIPAA, PCI,
+  SOC2), customer-managed keys are required.
+domain: encrypt
+severity: high
+compliance:
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.5.1"
+  hipaa: "164.312(a)(2)(iv)"
+  nist_800_53_r5: "SC-12, SC-28"
+  fedramp_moderate: "SC-28"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-04", "CEK-09"]
+scope_tags:
+  - aws
+  - opensearch
+  - aoss
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_aoss_collection
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    AOSS collection uses AWS-owned key.
+  action: >
+    Create encryption policy with
+    KmsARN pointing to a customer-managed key.
+    Apply at collection creation; cannot be
+    changed in-place.
+  example: |
+    {
+      "search_service": {
+        "kind": "collection",
+        "encrypt": {
+          "uses_customer_key": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: collection
+    - field: properties.search_service.encrypt.uses_customer_key
+      op: eq
+      value: false
+defect: >
+  AOSS collection uses AWS-owned key.
+infection: >
+  Key custody is opaque; selective revoke or
+  rotation impossible.
+failure: >
+  Customer key control absent.
+tests:
+  - name: aws-owned fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          encrypt:
+            uses_customer_key: false
+  - name: customer key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          encrypt:
+            uses_customer_key: true

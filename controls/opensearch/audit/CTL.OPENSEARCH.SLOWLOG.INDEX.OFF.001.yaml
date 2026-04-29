@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.SLOWLOG.INDEX.OFF.001
+name: OpenSearch Index Slow Log Disabled
+description: >
+  OpenSearch domain has index slow-log delivery
+  to CloudWatch disabled. Index slow-log is the
+  primary signal for ingest regressions (write
+  saturation, mapping explosion, expensive
+  bulk operations). Without it, ingest slowdowns
+  become visible only through ThreadpoolWriteRejected
+  metrics or downstream pipeline backups.
+domain: detect
+severity: low
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "AU-2, AU-12"
+  fedramp_moderate: "AU-2"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Index slow log delivery off.
+  action: >
+    Enable via UpdateDomainConfig --log-publishing-
+    options INDEX_SLOW_LOGS. Set thresholds
+    appropriate to the bulk size (e.g., 5s warn,
+    15s info).
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "audit": {
+          "index_slowlog_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.audit.index_slowlog_enabled
+      op: eq
+      value: false
+defect: >
+  Index slow log delivery off.
+infection: >
+  Slow indexes accumulate without observability;
+  capacity-shape regressions invisible until
+  downstream queue backup.
+failure: >
+  Ingest signal absent. Write-path performance
+  decisions blind.
+tests:
+  - name: index slowlog off fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          audit:
+            index_slowlog_enabled: false
+  - name: index slowlog on passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          audit:
+            index_slowlog_enabled: true

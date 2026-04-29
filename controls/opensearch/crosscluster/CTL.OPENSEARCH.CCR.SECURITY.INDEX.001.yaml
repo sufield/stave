@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.CCR.SECURITY.INDEX.001
+name: OpenSearch CCR Replicates Security Plugin Index Across Clusters
+description: >
+  OpenSearch CCR auto-follow pattern matches the
+  `.opendistro_security` security index,
+  replicating FGAC users / role mappings from
+  the leader cluster to the follower. Different
+  clusters need different identity state;
+  cross-replicating it imports stale identities,
+  breaks per-cluster role mappings, and can
+  expose hashed credentials cross-domain.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  pci_dss_v4.0: "8.3.1"
+  nist_800_53_r5: "AC-3, IA-5"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    CCR replicates security index.
+  action: >
+    Update CCR auto-follow pattern to exclude
+    `.opendistro_security*`. Each cluster
+    manages its own identity state.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "crosscluster": {
+          "ccr_replicates_security_index": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.crosscluster.ccr_replicates_security_index
+      op: eq
+      value: true
+defect: >
+  CCR replicates security plugin index.
+infection: >
+  Identity state cross-pollinates between
+  clusters; per-cluster security boundary
+  collapses.
+failure: >
+  Identity-state leak between clusters.
+tests:
+  - name: security index replication fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          crosscluster:
+            ccr_replicates_security_index: true
+  - name: security index excluded passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          crosscluster:
+            ccr_replicates_security_index: false

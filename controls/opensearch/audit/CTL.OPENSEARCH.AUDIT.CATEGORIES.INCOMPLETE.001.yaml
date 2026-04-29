@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AUDIT.CATEGORIES.INCOMPLETE.001
+name: OpenSearch Audit Log Categories Missing FAILED_LOGIN Or AUTHENTICATED
+description: >
+  OpenSearch FGAC audit log is enabled but the
+  enabled categories do not include `FAILED_LOGIN`
+  and `AUTHENTICATED`. Without FAILED_LOGIN,
+  password-spraying / credential-stuffing
+  campaigns generate no signal in audit.
+  AUTHENTICATED bounds the timeline of who logged
+  in. Both are required for any meaningful
+  intrusion-detection workflow on the cluster.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2, CC7.3"
+  pci_dss_v4.0: "10.2.1, 10.2.2"
+  nist_800_53_r5: "AU-2, AU-3"
+  fedramp_moderate: "AU-2"
+  iso_27001_2022: "A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Audit log categories incomplete.
+  action: >
+    Update audit_log_categories to include at
+    minimum: FAILED_LOGIN, AUTHENTICATED,
+    GRANTED_PRIVILEGES, MISSING_PRIVILEGES,
+    INDEX_EVENT.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "audit": {
+          "categories_complete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.audit.enabled
+      op: eq
+      value: true
+    - field: properties.search_service.audit.categories_complete
+      op: eq
+      value: false
+defect: >
+  Audit log enabled but categories incomplete.
+infection: >
+  Failed-login storms generate no audit signal;
+  brute-force / spraying attacks invisible.
+  Authentication timeline incomplete during
+  incident response.
+failure: >
+  Detection coverage gap. Common attack
+  patterns absent from audit trail.
+tests:
+  - name: incomplete categories fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          audit:
+            enabled: true
+            categories_complete: false
+  - name: complete categories passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          audit:
+            enabled: true
+            categories_complete: true

@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ALARM.CLUSTER.YELLOW.001
+name: OpenSearch Cluster Yellow Status Has No CloudWatch Alarm
+description: >
+  OpenSearch domain has no CloudWatch alarm on the
+  `ClusterStatus.yellow` metric. Yellow means
+  replicas unassigned (data still queryable from
+  primaries, but resilience reduced). A persistent
+  yellow state usually precedes red by hours; an
+  alarm gives operators time to react before
+  data unavailability.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "AU-12, SI-4"
+  fedramp_moderate: "AU-12"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No alarm on ClusterStatus.yellow.
+  action: >
+    Create CloudWatch alarm: ClusterStatus.yellow
+    >= 1 sustained for 15 minutes, route to
+    operations channel.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "alarms": {
+          "cluster_yellow_alarm_present": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.alarms.cluster_yellow_alarm_present
+      op: eq
+      value: false
+defect: >
+  No alarm on ClusterStatus.yellow.
+infection: >
+  Persistent yellow state goes unnoticed;
+  cluster slides to red without warning.
+failure: >
+  Pre-failure signal absent.
+tests:
+  - name: missing alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            cluster_yellow_alarm_present: false
+  - name: alarm present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            cluster_yellow_alarm_present: true

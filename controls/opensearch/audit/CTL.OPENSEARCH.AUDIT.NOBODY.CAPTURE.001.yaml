@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AUDIT.NOBODY.CAPTURE.001
+name: OpenSearch Audit Log Body Capture Disabled For Search Events
+description: >
+  OpenSearch audit log body capture is disabled.
+  REQUEST events show that a search ran, but the
+  query body — `_source` filters, aggregations,
+  or DSL clauses — is not in the audit record.
+  Without the body, "did the attacker exfiltrate
+  PII?" is unanswerable from audit alone.
+  Trade-off: body-capture increases audit log
+  volume / cost, but is required for any
+  meaningful exfil-grade investigation.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2.5"
+  nist_800_53_r5: "AU-3, AU-12"
+  fedramp_moderate: "AU-3"
+  iso_27001_2022: "A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Audit log body capture disabled.
+  action: >
+    Enable audit_log_request_body for HTTP REST
+    requests. Decide whether to apply
+    cluster-wide or per-index (FGAC supports
+    per-role body capture). Increase log group
+    retention budget; bodies are larger than
+    headers.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "audit": {
+          "body_capture_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.audit.enabled
+      op: eq
+      value: true
+    - field: properties.search_service.audit.body_capture_enabled
+      op: eq
+      value: false
+defect: >
+  Audit log body capture disabled.
+infection: >
+  Audit shows query happened, not what query
+  asked for. "Did the attacker exfil specific
+  records" cannot be answered from audit.
+failure: >
+  Exfil-investigation gap. Audit covers
+  metadata but not content.
+tests:
+  - name: body capture off fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          audit:
+            enabled: true
+            body_capture_enabled: false
+  - name: body capture on passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          audit:
+            enabled: true
+            body_capture_enabled: true

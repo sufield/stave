@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.TLS.POLICY.WEAK.001
+name: OpenSearch Domain TLS Policy Below Modern Floor
+description: >
+  OpenSearch domain's `tls_security_policy` is below
+  `Policy-Min-TLS-1.2-PFS-2023-10`. Older policies
+  (`Policy-Min-TLS-1.0-2019-07`,
+  `Policy-Min-TLS-1.2-2019-07`) permit TLS 1.0 / 1.1
+  negotiation and / or non-PFS cipher suites. PCI-DSS
+  v4.0 requires TLS 1.2+, NIST guidance deprecates
+  TLS 1.0/1.1 entirely, and modern browsers /
+  clients have already removed support. Domains
+  created before late 2023 commonly carry the older
+  default and are never updated.
+domain: encrypt
+severity: high
+compliance:
+  soc2: "CC6.7"
+  pci_dss_v4.0: "4.2.1, A2.1"
+  nist_800_53_r5: "SC-8, SC-13"
+  fedramp_moderate: "SC-8, SC-13"
+  iso_27001_2022: "A.8.20, A.8.24"
+  ccm_v4: ["CEK-04"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data_exposure
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    OpenSearch domain TLS security policy is below
+    Policy-Min-TLS-1.2-PFS-2023-10.
+  action: >
+    Update the domain to the modern policy:
+      aws es update-domain-config
+        --domain-name <name>
+        --domain-endpoint-options '{
+          "TLSSecurityPolicy":
+            "Policy-Min-TLS-1.2-PFS-2023-10"
+        }'
+    Verify with describe-domain-config; the change is
+    blue-green and may take ~30 min on large
+    domains.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "encrypt": {
+          "tls_policy": "Policy-Min-TLS-1.2-PFS-2023-10",
+          "tls_policy_below_modern_floor": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.encrypt.tls_policy_below_modern_floor
+      op: eq
+      value: true
+defect: >
+  Domain's TLS security policy is below
+  Policy-Min-TLS-1.2-PFS-2023-10.
+infection: >
+  Domain endpoint negotiates TLS 1.0 / 1.1 or non-PFS
+  cipher suites with clients that request them.
+  Compliance review (PCI-DSS, NIST) cites the
+  domain as non-conformant. Active attackers can
+  downgrade the negotiation to weaker primitives
+  during a MITM if any path is on a hostile network.
+failure: >
+  Cryptographic floor below regulatory minimum.
+  Domain accepts deprecated TLS versions /
+  cipher suites.
+tests:
+  - name: TLS 1.0 policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          encrypt:
+            tls_policy: "Policy-Min-TLS-1.0-2019-07"
+            tls_policy_below_modern_floor: true
+  - name: modern PFS policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          encrypt:
+            tls_policy: "Policy-Min-TLS-1.2-PFS-2023-10"
+            tls_policy_below_modern_floor: false

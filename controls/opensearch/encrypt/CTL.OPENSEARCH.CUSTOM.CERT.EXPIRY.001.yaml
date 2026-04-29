@@ -1,0 +1,129 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.CUSTOM.CERT.EXPIRY.001
+name: OpenSearch Custom Endpoint Certificate Near Expiry
+description: >
+  OpenSearch domain custom endpoint TLS certificate
+  expires within 30 days and no automated rotation
+  is configured. ACM-issued certs auto-renew if the
+  CNAME validation record is in place; certs
+  imported from external sources do not. Once a
+  cert expires, every TLS handshake fails: the
+  domain is reachable but unusable for any
+  TLS-verifying client. Outage scope is every
+  client that talks to the custom endpoint.
+domain: encrypt
+severity: high
+compliance:
+  soc2: "CC7.4, A1.2"
+  nist_800_53_r5: "SC-12, SC-17"
+  fedramp_moderate: "SC-12, SC-17"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: availability
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Custom endpoint cert expires within 30 days
+    without automated rotation.
+  action: >
+    Migrate to ACM-managed cert with DNS validation
+    so AWS auto-renews. For imported certs, set up
+    a CloudWatch / EventBridge alert on
+    AcmCertificateExpiration metric and rotate
+    before expiry. Verify the domain config picks
+    up the new cert via UpdateDomainConfig
+    --domain-endpoint-options.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "encrypt": {
+          "custom_endpoint_cert_days_until_expiry": 90,
+          "custom_endpoint_cert_auto_renews": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.custom_endpoint_enabled
+      op: eq
+      value: true
+    - field: properties.search_service.encrypt.custom_endpoint_cert_days_until_expiry
+      op: lt
+      value: 30
+    - field: properties.search_service.encrypt.custom_endpoint_cert_auto_renews
+      op: eq
+      value: false
+defect: >
+  Custom endpoint cert expires within 30 days and
+  is not configured for auto-renewal.
+infection: >
+  Cert expires; every TLS handshake fails with
+  certificate-expired error. Domain is unreachable
+  for verifying clients; non-verifying clients
+  proceed but lose TLS authentication. On-call
+  pages because dashboards / pipelines stop. The
+  fix requires cert reissue + UpdateDomainConfig
+  cycle which can take 30+ minutes during the
+  outage.
+failure: >
+  Imminent TLS outage. Certificate expiry is a
+  hard deadline; once past, the domain is
+  effectively offline for TLS-verifying clients.
+tests:
+  - name: cert expires in 7 days no renewal fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            custom_endpoint_enabled: true
+          encrypt:
+            custom_endpoint_cert_days_until_expiry: 7
+            custom_endpoint_cert_auto_renews: false
+  - name: cert auto-renews passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            custom_endpoint_enabled: true
+          encrypt:
+            custom_endpoint_cert_days_until_expiry: 7
+            custom_endpoint_cert_auto_renews: true
+  - name: cert with long lifetime passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            custom_endpoint_enabled: true
+          encrypt:
+            custom_endpoint_cert_days_until_expiry: 90
+            custom_endpoint_cert_auto_renews: false

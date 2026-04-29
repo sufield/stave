@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.OSIS.NOVPC.001
+name: OpenSearch Ingestion Pipeline Has No VPC Configuration
+description: >
+  OpenSearch Ingestion (OSIS) pipeline has no
+  VPC config; ingest data path traverses the
+  public network. Source and sink both visible
+  to AWS-side observability, but the bytes
+  themselves transit a path operators don't
+  control.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.7"
+  pci_dss_v4.0: "1.3.1, 4.2.1"
+  nist_800_53_r5: "SC-7, SC-8"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.8.20"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - opensearch
+  - osis
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_osis_pipeline
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    OSIS pipeline runs without VPC config.
+  action: >
+    Re-create pipeline with vpc_options
+    pointing at private subnets and a security
+    group that scopes ingress.
+  example: |
+    {
+      "search_service": {
+        "kind": "pipeline",
+        "access": {
+          "vpc_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: pipeline
+    - field: properties.search_service.access.vpc_configured
+      op: eq
+      value: false
+defect: >
+  OSIS pipeline without VPC config.
+infection: >
+  Data path traverses public network.
+failure: >
+  Network boundary absent on ingestion.
+tests:
+  - name: no vpc fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:osis:us-east-1:111122223333:pipeline/prod"
+      asset_type: aws_osis_pipeline
+      vendor: aws
+      properties:
+        search_service:
+          kind: pipeline
+          access:
+            vpc_configured: false
+  - name: vpc configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:osis:us-east-1:111122223333:pipeline/prod"
+      asset_type: aws_osis_pipeline
+      vendor: aws
+      properties:
+        search_service:
+          kind: pipeline
+          access:
+            vpc_configured: true

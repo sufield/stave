@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.SAML.METADATA.EXPIRED.001
+name: OpenSearch SAML IdP Metadata Expired Or Near Expiry
+description: >
+  OpenSearch domain SAML configuration's IdP
+  metadata signing certificate is expired or
+  expires within 30 days. SAML responses signed
+  by the IdP fail validation; users cannot log
+  in. SAML metadata must be re-imported when
+  the IdP rotates its signing cert. Operators
+  rarely automate this; when the cert expires,
+  it's a hard outage with login failures across
+  the org.
+domain: encrypt
+severity: high
+compliance:
+  soc2: "CC7.4, A1.2"
+  nist_800_53_r5: "SC-12, SC-17"
+  fedramp_moderate: "SC-12"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: availability
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    SAML metadata cert expires within 30 days or
+    already expired.
+  action: >
+    Re-import the IdP's current SAML metadata XML
+    via UpdateDomainConfig --advanced-security-
+    options. Set up an EventBridge / EWS reminder
+    30 days before each expiry; some IdPs (Okta,
+    Azure AD) offer auto-rotation feeds the
+    domain can subscribe to.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "saml_enabled": true,
+          "saml_metadata_days_until_expiry": 90
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.saml_enabled
+      op: eq
+      value: true
+    - field: properties.search_service.access.saml_metadata_days_until_expiry
+      op: lt
+      value: 30
+defect: >
+  SAML IdP metadata cert expires within 30 days.
+infection: >
+  At expiry, all SAML logins fail. Users with
+  active sessions continue working until session
+  expiry; new logins blocked. On-call paged
+  during the outage; emergency re-import
+  requires IdP-side coordination.
+failure: >
+  Imminent authentication outage. Hard deadline.
+tests:
+  - name: SAML metadata 7 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            saml_enabled: true
+            saml_metadata_days_until_expiry: 7
+  - name: SAML metadata 90 days passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            saml_enabled: true
+            saml_metadata_days_until_expiry: 90

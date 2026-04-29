@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.CCS.NOTLSVERIFY.001
+name: OpenSearch Cross-Cluster Connection Skips TLS Verification
+description: >
+  OpenSearch cross-cluster connection between two
+  domains is configured to skip TLS certificate
+  verification, or runs unencrypted. Either
+  permits MITM on the cross-cluster path; the
+  remote cluster's identity is not authenticated.
+  Common during initial setup with self-signed
+  certs that operators "temporarily" disable
+  verification for and never re-enable.
+domain: encrypt
+severity: high
+compliance:
+  soc2: "CC6.7"
+  pci_dss_v4.0: "4.2.1"
+  nist_800_53_r5: "SC-8, SC-12"
+  fedramp_moderate: "SC-8"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-04"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: data_exposure
+    scope: cross_account
+    multiplier: 2.0
+remediation:
+  description: >
+    Cross-cluster connection skips TLS
+    verification or runs unencrypted.
+  action: >
+    Re-enable TLS verification; use ACM-issued
+    certs on both sides; encrypt CCR/CCS
+    in-transit.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "crosscluster": {
+          "tls_verified": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.crosscluster.has_connections
+      op: eq
+      value: true
+    - field: properties.search_service.crosscluster.tls_verified
+      op: eq
+      value: false
+defect: >
+  Cross-cluster TLS verification disabled or
+  unencrypted.
+infection: >
+  MITM on cross-cluster path possible; remote
+  cluster identity unauthenticated.
+failure: >
+  Trust boundary unsigned.
+tests:
+  - name: tls skipped fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          crosscluster:
+            has_connections: true
+            tls_verified: false
+  - name: tls verified passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          crosscluster:
+            has_connections: true
+            tls_verified: true

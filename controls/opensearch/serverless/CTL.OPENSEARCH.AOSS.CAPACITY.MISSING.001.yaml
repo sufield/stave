@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AOSS.CAPACITY.MISSING.001
+name: OpenSearch Serverless Capacity Or Lifecycle Policy Missing
+description: >
+  OpenSearch Serverless collection has no
+  capacity policy (max_indexing / max_search
+  capacity uncapped) or no lifecycle policy
+  (collection grows unboundedly). AOSS bills by
+  consumed OCU (OpenSearch Compute Units);
+  uncapped capacity = uncapped bill. Lifecycle
+  policies trim old data; without one, all data
+  ages forever.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CP-2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.30"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - opensearch
+  - aoss
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_aoss_collection
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    AOSS capacity / lifecycle policy missing.
+  action: >
+    Create capacity policy via aoss:
+    UpdateAccountSettings with maxIndexingCapacity
+    and maxSearchCapacity. Create lifecycle
+    policy via aoss:CreateLifecyclePolicy.
+  example: |
+    {
+      "search_service": {
+        "kind": "collection",
+        "lifecycle": {
+          "capacity_policy_attached": true,
+          "lifecycle_policy_attached": true
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - all:
+        - field: properties.search_service.kind
+          op: eq
+          value: collection
+        - field: properties.search_service.lifecycle.capacity_policy_attached
+          op: eq
+          value: false
+    - all:
+        - field: properties.search_service.kind
+          op: eq
+          value: collection
+        - field: properties.search_service.lifecycle.lifecycle_policy_attached
+          op: eq
+          value: false
+defect: >
+  Capacity or lifecycle policy missing.
+infection: >
+  Cost runaway, indefinite data growth.
+failure: >
+  Cost / lifecycle uncapped.
+tests:
+  - name: capacity missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          lifecycle:
+            capacity_policy_attached: false
+            lifecycle_policy_attached: true
+  - name: both attached passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          lifecycle:
+            capacity_policy_attached: true
+            lifecycle_policy_attached: true

@@ -1,0 +1,24 @@
+id: opensearch_operational_blind
+description: >
+  OpenSearch domain has multiple operational
+  observability defects: missing alarms on
+  AutomatedSnapshotFailure, KMS key access, 5xx
+  errors; or no subscription to software-update
+  events; or unset / business-hour maintenance
+  window. Each defect alone leaves an operational
+  failure mode unmonitored; co-occurrence means
+  operational hygiene is unmaintained. Threshold
+  of 2 fires when at least two operational
+  defects coexist.
+controls:
+  - CTL.OPENSEARCH.ALARM.AUTOSNAPSHOT.FAILURE.001
+  - CTL.OPENSEARCH.ALARM.KMS.INACCESSIBLE.001
+  - CTL.OPENSEARCH.ALARM.5XX.001
+  - CTL.OPENSEARCH.SOFTWARE.UPDATE.NOTIFY.001
+  - CTL.OPENSEARCH.MAINTENANCE.WINDOW.UNSET.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

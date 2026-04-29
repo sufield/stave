@@ -1,0 +1,23 @@
+id: opensearch_backup_hygiene_decay
+description: >
+  OpenSearch domain has multiple backup hygiene
+  defects: snapshot window in production peak,
+  multiple repos at same S3 path (write race),
+  security index bundled with workload data, or
+  snapshot retention misaligned with ISM
+  lifecycle. Each defect alone introduces a
+  quiet form of backup degradation;
+  co-occurrence indicates backup operations are
+  not well-managed. Threshold of 2 fires when
+  at least two hygiene defects coexist.
+controls:
+  - CTL.OPENSEARCH.SNAPSHOT.WINDOW.PEAK.001
+  - CTL.OPENSEARCH.SNAPSHOT.REPO.PATH.COLLISION.001
+  - CTL.OPENSEARCH.SNAPSHOT.SECURITY.INDEX.MIXED.001
+  - CTL.OPENSEARCH.SNAPSHOT.ISM.UNALIGNED.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

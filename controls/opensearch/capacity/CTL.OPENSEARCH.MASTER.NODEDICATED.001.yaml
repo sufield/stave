@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.MASTER.NODEDICATED.001
+name: OpenSearch Production Domain Has No Dedicated Master Nodes
+description: >
+  OpenSearch production-tier domain has no
+  dedicated master nodes. Without dedicated
+  masters, cluster-state operations (shard
+  reallocation, mapping update, ISM transitions)
+  contend with user query load on the same
+  nodes. Heavy workload episodes drag the master
+  process and can cause split-brain or stalled
+  state propagation.
+domain: resilience
+severity: high
+compliance:
+  soc2: "A1.1, A1.2"
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  iso_27001_2022: "A.8.14"
+  ccm_v4: ["BCR-04"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Production domain lacks dedicated master
+    nodes.
+  action: >
+    Configure 3 dedicated masters (m6g.large or
+    larger depending on cluster size). Update
+    via UpdateDomainConfig --cluster-config
+    dedicated-master-enabled.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "capacity": {
+          "dedicated_master_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.capacity.is_production
+      op: eq
+      value: true
+    - field: properties.search_service.capacity.dedicated_master_enabled
+      op: eq
+      value: false
+defect: >
+  Production domain without dedicated masters.
+infection: >
+  Master operations contend with user load;
+  heavy episodes risk split-brain.
+failure: >
+  Cluster stability dependent on workload
+  patterns.
+tests:
+  - name: no dedicated master fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          capacity:
+            is_production: true
+            dedicated_master_enabled: false
+  - name: dedicated masters passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          capacity:
+            is_production: true
+            dedicated_master_enabled: true

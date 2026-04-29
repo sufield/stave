@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AOSS.ENCRYPT.POLICY.MISSING.001
+name: OpenSearch Serverless Encryption Policy Not Attached At Collection Create
+description: >
+  OpenSearch Serverless collection was created
+  without an explicit encryption policy attached
+  before creation. AOSS applies a default
+  AWS-owned encryption silently; the collection
+  inventory lists encryption as enabled but key
+  custody is AWS-owned. Encryption policy must
+  be created before the collection.
+domain: encrypt
+severity: medium
+compliance:
+  soc2: "CC6.7, CC8.1"
+  nist_800_53_r5: "SC-12, CM-3"
+  fedramp_moderate: "SC-12"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-04"]
+scope_tags:
+  - aws
+  - opensearch
+  - aoss
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_aoss_collection
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Encryption policy applied as default silent
+    fallback.
+  action: >
+    Recreate the collection with explicit
+    encryption policy. If the collection holds
+    data, snapshot first; create new collection
+    with proper encryption; restore.
+  example: |
+    {
+      "search_service": {
+        "kind": "collection",
+        "encrypt": {
+          "explicit_policy_attached": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: collection
+    - field: properties.search_service.encrypt.explicit_policy_attached
+      op: eq
+      value: false
+defect: >
+  Collection created without explicit
+  encryption policy.
+infection: >
+  Default AWS-owned key applied silently;
+  custody opaque to operators.
+failure: >
+  Encryption policy ambiguity.
+tests:
+  - name: missing policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          encrypt:
+            explicit_policy_attached: false
+  - name: explicit policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          encrypt:
+            explicit_policy_attached: true

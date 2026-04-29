@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.OSIS.BUFFER.UNSAFE.001
+name: OpenSearch Ingestion Pipeline Lacks Persistent Buffer Or DLQ
+description: >
+  OpenSearch Ingestion pipeline has persistent
+  buffer disabled (data loss on restart) or
+  Dead-Letter Queue disabled (poison-pill data
+  silently dropped). Either makes the pipeline
+  silently lossy under non-happy-path
+  conditions; ingest counts diverge from upstream
+  produce counts without alarm.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.2, A1.2"
+  nist_800_53_r5: "AU-12, CP-9"
+  fedramp_moderate: "AU-12"
+  iso_27001_2022: "A.8.13, A.8.16"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - opensearch
+  - osis
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_osis_pipeline
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Persistent buffer or DLQ disabled.
+  action: >
+    Enable both via UpdatePipeline
+    --buffer-options EnablePersistentBuffer=true
+    and configure DLQ S3 bucket. Set up alarm
+    on DLQ object count.
+  example: |
+    {
+      "search_service": {
+        "kind": "pipeline",
+        "config": {
+          "persistent_buffer": true,
+          "dlq_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - all:
+        - field: properties.search_service.kind
+          op: eq
+          value: pipeline
+        - field: properties.search_service.config.persistent_buffer
+          op: eq
+          value: false
+    - all:
+        - field: properties.search_service.kind
+          op: eq
+          value: pipeline
+        - field: properties.search_service.config.dlq_enabled
+          op: eq
+          value: false
+defect: >
+  Persistent buffer or DLQ disabled.
+infection: >
+  Pipeline lossy on restart or poison data.
+failure: >
+  Silent ingestion loss.
+tests:
+  - name: no buffer fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:osis:us-east-1:111122223333:pipeline/prod"
+      asset_type: aws_osis_pipeline
+      vendor: aws
+      properties:
+        search_service:
+          kind: pipeline
+          config:
+            persistent_buffer: false
+            dlq_enabled: true
+  - name: both on passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:osis:us-east-1:111122223333:pipeline/prod"
+      asset_type: aws_osis_pipeline
+      vendor: aws
+      properties:
+        search_service:
+          kind: pipeline
+          config:
+            persistent_buffer: true
+            dlq_enabled: true

@@ -1,0 +1,26 @@
+id: opensearch_resilience_unsafe
+description: >
+  OpenSearch production domain has multiple
+  resilience defects: single-AZ deployment,
+  with-standby disabled, no dedicated masters,
+  master count below quorum, single data node,
+  or zero replicas on production indices. Each
+  defect alone makes the domain a single
+  failure away from outage; co-occurrence means
+  resilience design was never audited.
+  Threshold of 2 fires when at least two
+  resilience defects coexist on a production
+  domain.
+controls:
+  - CTL.OPENSEARCH.AZ.SINGLE.001
+  - CTL.OPENSEARCH.AZ.NOSTANDBY.001
+  - CTL.OPENSEARCH.MASTER.NODEDICATED.001
+  - CTL.OPENSEARCH.MASTER.COUNT.NONQUORUM.001
+  - CTL.OPENSEARCH.DATA.NODE.SINGLE.001
+  - CTL.OPENSEARCH.NOREPLICAS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.OSIS.SOURCE.UNSAFE.001
+name: OpenSearch Ingestion Pipeline Source Configuration Unsafe
+description: >
+  OpenSearch Ingestion pipeline has unsafe source
+  config: auto-scaling min == max (no headroom),
+  cross-account source without trust validation,
+  or Kafka source without TLS. Each variant
+  produces a brittle / unauthenticated /
+  cleartext ingest path.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, A1.1"
+  pci_dss_v4.0: "1.3.4, 4.2.1"
+  nist_800_53_r5: "SC-7, SC-8, AC-3"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.8.20, A.8.24"
+  ccm_v4: ["IVS-03", "IAM-09"]
+scope_tags:
+  - aws
+  - opensearch
+  - osis
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_osis_pipeline
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    OSIS source config unsafe.
+  action: >
+    Auto-scale: set max > min for headroom.
+    Cross-account: add explicit trust
+    validation. Kafka: enable TLS via
+    bootstrap_servers with security_protocol.
+  example: |
+    {
+      "search_service": {
+        "kind": "pipeline",
+        "config": {
+          "source_config_safe": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: pipeline
+    - field: properties.search_service.config.source_config_safe
+      op: eq
+      value: false
+defect: >
+  Pipeline source config has one or more unsafe
+  options.
+infection: >
+  Brittle ingest, untrusted source, or cleartext
+  Kafka traffic.
+failure: >
+  Ingest-path safety degraded.
+tests:
+  - name: unsafe source fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:osis:us-east-1:111122223333:pipeline/prod"
+      asset_type: aws_osis_pipeline
+      vendor: aws
+      properties:
+        search_service:
+          kind: pipeline
+          config:
+            source_config_safe: false
+  - name: safe source passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:osis:us-east-1:111122223333:pipeline/prod"
+      asset_type: aws_osis_pipeline
+      vendor: aws
+      properties:
+        search_service:
+          kind: pipeline
+          config:
+            source_config_safe: true

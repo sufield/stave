@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.POLICY.SOURCEIP.STRINGEQUALS.001
+name: OpenSearch Access Policy Uses StringEquals On aws:SourceIp
+description: >
+  OpenSearch domain access policy condition uses
+  `StringEquals` (or `StringLike`) operator on
+  `aws:SourceIp`. AWS evaluates `aws:SourceIp` as an
+  IP-address value, requiring `IpAddress` /
+  `NotIpAddress` operators; a `StringEquals` compare
+  on the same key compares the request's IP string
+  to the literal CIDR string. The condition almost
+  never matches (request IP is `203.0.113.7`, CIDR
+  is `203.0.113.0/24`) so the deny / allow effect
+  silently inverts. Common copy-paste error from
+  IAM policy examples that use StringEquals on
+  other condition keys.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.20"
+  ccm_v4: ["IAM-16"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Access policy uses StringEquals on aws:SourceIp.
+    Condition does not match real source IPs.
+  action: >
+    Replace StringEquals/StringLike with IpAddress /
+    NotIpAddress:
+      "Condition": {
+        "IpAddress": { "aws:SourceIp": "203.0.113.0/24" }
+      }
+    Lint policies before applying. AWS IAM Access
+    Analyzer flags this as a finding (PolicyValidation
+    USE_IP_CONDITION).
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "policy_uses_stringequals_on_sourceip": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.policy_uses_stringequals_on_sourceip
+      op: eq
+      value: true
+defect: >
+  Policy condition uses StringEquals on
+  aws:SourceIp; the operator does not match IP
+  addresses against CIDR ranges.
+infection: >
+  Conditions that should restrict access to a CIDR
+  do not match any actual request. If the condition
+  is on an Allow, no client matches and the policy
+  effectively denies. If on a Deny, no client matches
+  and the deny does not fire. Either way, intended
+  access boundary is broken; behavior depends on the
+  rest of the policy.
+failure: >
+  Silent policy failure. Access boundary not in
+  effect; reviewers see a condition and assume
+  scoping that does not exist.
+tests:
+  - name: stringequals on sourceip fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            policy_uses_stringequals_on_sourceip: true
+  - name: ipaddress operator passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            policy_uses_stringequals_on_sourceip: false

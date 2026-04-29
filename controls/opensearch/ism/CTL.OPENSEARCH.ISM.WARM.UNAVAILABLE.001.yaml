@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ISM.WARM.UNAVAILABLE.001
+name: OpenSearch ISM Policy Transitions To Warm With UltraWarm Disabled
+description: >
+  OpenSearch ISM policy declares a `hot → warm`
+  transition but the domain has UltraWarm
+  storage tier disabled. Policy steps fail
+  silently or block; indices stuck in hot tier
+  past their intended lifecycle. Common after
+  policy was authored on a domain with UltraWarm
+  enabled and copied to one without.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.30"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ISM policy uses UltraWarm but domain has
+    no UltraWarm.
+  action: >
+    Either enable UltraWarm on the domain or
+    revise ISM policy to skip warm transition.
+    For cost-sensitive workloads, UltraWarm is
+    the right answer.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "ism": {
+          "warm_transition_consistent": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.ism.uses_warm_transition
+      op: eq
+      value: true
+    - field: properties.search_service.ism.ultrawarm_enabled
+      op: eq
+      value: false
+defect: >
+  ISM uses warm transition but UltraWarm
+  disabled.
+infection: >
+  Policy step fails; indices stuck in hot tier.
+failure: >
+  Lifecycle policy / domain config inconsistency.
+tests:
+  - name: warm without ultrawarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          ism:
+            uses_warm_transition: true
+            ultrawarm_enabled: false
+  - name: ultrawarm enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          ism:
+            uses_warm_transition: true
+            ultrawarm_enabled: true

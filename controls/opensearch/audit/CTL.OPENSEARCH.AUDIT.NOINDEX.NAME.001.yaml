@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AUDIT.NOINDEX.NAME.001
+name: OpenSearch Audit REQUEST Events Do Not Capture Index Name
+description: >
+  OpenSearch audit log REQUEST events are
+  configured to omit the target index name. Audit
+  events show "user X ran a search" but not "on
+  index Y." During incident review, attribution
+  to specific tenants / data classes is
+  impossible without the index name. The
+  `audit_log_resolve_indices` setting is
+  required for index-aware audit.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2.4"
+  nist_800_53_r5: "AU-3, AU-12"
+  fedramp_moderate: "AU-3"
+  iso_27001_2022: "A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Audit log REQUEST events do not capture the
+    target index name.
+  action: >
+    Set audit_log_resolve_indices: true in the
+    FGAC audit config. Verify with sample REQUEST
+    event in CloudWatch — the resolved_indices
+    field should be present.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "audit": {
+          "captures_index_name": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.audit.enabled
+      op: eq
+      value: true
+    - field: properties.search_service.audit.captures_index_name
+      op: eq
+      value: false
+defect: >
+  Audit events omit target index name.
+infection: >
+  Audit attribution to tenants / data classes
+  fails. Investigation of "who accessed which
+  data" requires correlating audit timestamps
+  with separate request-tracing data — slow,
+  often impossible.
+failure: >
+  Per-resource attribution gap. Audit answers
+  "who" but not "what."
+tests:
+  - name: no index name capture fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          audit:
+            enabled: true
+            captures_index_name: false
+  - name: captures index name passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          audit:
+            enabled: true
+            captures_index_name: true

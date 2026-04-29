@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ALARM.JVM.PRESSURE.001
+name: OpenSearch JVM Memory Pressure Has No CloudWatch Alarm
+description: >
+  OpenSearch domain has no CloudWatch alarm on
+  the `JVMMemoryPressure` metric (data nodes).
+  Sustained JVM pressure > 85% causes long GC
+  pauses, search timeouts, and indexer rejects.
+  Master pressure (handled separately) stalls
+  cluster state; data pressure stalls user
+  workload.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "AU-12, SI-4"
+  fedramp_moderate: "AU-12"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No alarm on JVMMemoryPressure.
+  action: >
+    Alarm: JVMMemoryPressure > 85% sustained
+    15min (warn), > 92% (page). Investigate via
+    CloudWatch Container Insights / hot-thread
+    API.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "alarms": {
+          "jvm_pressure_alarm_present": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.alarms.jvm_pressure_alarm_present
+      op: eq
+      value: false
+defect: >
+  No alarm on JVMMemoryPressure.
+infection: >
+  Sustained GC pressure invisible; search /
+  indexing latency drifts up without explanation.
+failure: >
+  Performance-pressure signal absent.
+tests:
+  - name: missing alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            jvm_pressure_alarm_present: false
+  - name: alarm present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            jvm_pressure_alarm_present: true

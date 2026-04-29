@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AZ.NOSTANDBY.001
+name: OpenSearch Multi-AZ With Standby Available But Disabled
+description: >
+  OpenSearch multi-AZ domain has the
+  `with_standby` option available (engine
+  version >= 1.3 / 2.x) but disabled. With
+  standby, one AZ is reserved for failover only —
+  faster recovery (sub-minute) and SLA-eligible.
+  Without standby, multi-AZ failover takes
+  several minutes during which writes fail and
+  reads degrade.
+domain: resilience
+severity: medium
+compliance:
+  soc2: "A1.1, A1.2"
+  nist_800_53_r5: "CP-7"
+  fedramp_moderate: "CP-7"
+  iso_27001_2022: "A.8.14"
+  ccm_v4: ["BCR-04"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Multi-AZ with-standby available but off.
+  action: >
+    Enable via UpdateDomainConfig --cluster-config
+    multi_az_with_standby_enabled=true. Capacity
+    increase: 1 AZ worth of nodes for standby.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "capacity": {
+          "with_standby_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.capacity.with_standby_available
+      op: eq
+      value: true
+    - field: properties.search_service.capacity.with_standby_enabled
+      op: eq
+      value: false
+defect: >
+  with_standby available but disabled.
+infection: >
+  Failover takes several minutes; writes fail
+  during the window; SLA-eligible feature
+  disabled.
+failure: >
+  Slower failover than feasible.
+tests:
+  - name: standby off fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          capacity:
+            with_standby_available: true
+            with_standby_enabled: false
+  - name: standby on passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          capacity:
+            with_standby_available: true
+            with_standby_enabled: true

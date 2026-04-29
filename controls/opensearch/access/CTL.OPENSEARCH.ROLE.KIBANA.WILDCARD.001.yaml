@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ROLE.KIBANA.WILDCARD.001
+name: OpenSearch kibana_user Role Mapped To Wildcard Backend
+description: >
+  OpenSearch FGAC `kibana_user` role mapped to `*`
+  or to "all authenticated users." Anyone who
+  authenticates to the cluster gets Dashboards
+  access. Combined with FGAC's default tenant
+  configuration, this exposes search / dashboards
+  across all tenants to any auth'd caller.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-16"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: lateral_movement
+  blast_radius:
+    type: data_exposure
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    kibana_user mapped to wildcard backend.
+  action: >
+    Restrict kibana_user to specific IAM roles or
+    SAML groups that need Dashboards access.
+    Multi-tenant clusters: scope per-tenant
+    Dashboards roles separately.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "role_mapping_kibana_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.role_mapping_kibana_wildcard
+      op: eq
+      value: true
+defect: >
+  kibana_user role mapped to wildcard backend.
+infection: >
+  Any authenticated caller can open Dashboards
+  and run searches across all indices the default
+  tenant exposes. In multi-tenant deployments,
+  cross-tenant data leakage via the default
+  tenant.
+failure: >
+  Dashboards access ungated. Authentication is
+  the only barrier; authorization is empty.
+tests:
+  - name: kibana wildcard fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            role_mapping_kibana_wildcard: true
+  - name: kibana scoped passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            role_mapping_kibana_wildcard: false

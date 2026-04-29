@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.NOTIFY.SUBSCRIBER.001
+name: OpenSearch Alarms Route To Topic With No Human Subscriber
+description: >
+  OpenSearch domain CloudWatch alarms route to
+  an SNS topic / EventBridge rule that has no
+  active subscriber (or only subscribers that
+  are themselves dormant). Alarms fire and
+  drain into the void; on-call learns of
+  cluster issues via downstream complaints.
+  Common cause: subscriber email account
+  deactivated when team member left.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "AU-12, IR-6"
+  fedramp_moderate: "AU-12"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Alarm topic has no human subscriber.
+  action: >
+    Audit SNS subscriptions on every alarm-
+    routed topic. Confirm each email / Slack
+    / PagerDuty endpoint reaches a person.
+    Quarterly review.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "alarms": {
+          "alarms_have_subscribers": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.alarms.alarms_have_subscribers
+      op: eq
+      value: false
+defect: >
+  Alarm topic has no live subscriber.
+infection: >
+  Alarms fire silently; nobody acts on them.
+failure: >
+  Alarm chain broken at the human end.
+tests:
+  - name: no subscriber fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            alarms_have_subscribers: false
+  - name: subscriber present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            alarms_have_subscribers: true

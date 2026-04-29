@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.MASTER.SAME.INSTANCE.001
+name: OpenSearch Master And Data Nodes On Same Instance Type
+description: >
+  OpenSearch domain has dedicated masters but
+  uses the same instance type / class for both
+  master and data nodes. The two roles have
+  different resource profiles: masters need
+  memory and quick failover, data nodes need
+  IO and bulk memory. Co-typing them either
+  oversizes masters (cost) or undersizes data
+  (perf).
+domain: resilience
+severity: low
+compliance:
+  soc2: "A1.1, A1.2"
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  iso_27001_2022: "A.8.14"
+  ccm_v4: ["BCR-04"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Master and data nodes share instance type.
+  action: >
+    Pick master instance type appropriate to
+    shard count (m6g.large baseline), separately
+    from data instance type (r6g.* / i3.* for
+    IO-heavy). Document the sizing decisions.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "capacity": {
+          "master_data_typed_separately": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.capacity.dedicated_master_enabled
+      op: eq
+      value: true
+    - field: properties.search_service.capacity.master_data_typed_separately
+      op: eq
+      value: false
+defect: >
+  Master and data on same instance type.
+infection: >
+  Sub-optimal sizing: cost or performance
+  trade-off skewed.
+failure: >
+  Topology design indifference.
+tests:
+  - name: shared types fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          capacity:
+            dedicated_master_enabled: true
+            master_data_typed_separately: false
+  - name: typed separately passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          capacity:
+            dedicated_master_enabled: true
+            master_data_typed_separately: true

@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AOSS.ACCESS.WILDCARD.001
+name: OpenSearch Serverless Data-Access Policy Uses Wildcard Principal Or Action
+description: >
+  OpenSearch Serverless collection's data-access
+  policy uses `Principal: "*"`, grants `aoss:*`
+  cluster-wide, or grants delete-class actions
+  (e.g., `aoss:DeleteCollectionItems`) to a
+  read-tier role. Each variant produces an
+  effective access surface much wider than the
+  policy review suggests.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC6.1, CC6.3"
+  pci_dss_v4.0: "7.2.1, 7.2.2"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - opensearch
+  - aoss
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_aoss_collection
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: data_destruction
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    AOSS data-access policy uses wildcard.
+  action: >
+    Replace Principal: "*" with specific IAM
+    ARNs. Replace aoss:* with explicit action
+    list. Move delete actions to a separate
+    write-tier policy.
+  example: |
+    {
+      "search_service": {
+        "kind": "collection",
+        "access": {
+          "data_access_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: collection
+    - field: properties.search_service.access.data_access_wildcard
+      op: eq
+      value: true
+defect: >
+  Data-access policy uses wildcard principal /
+  action.
+infection: >
+  Any IAM identity matching the policy gets
+  cluster-admin equivalent capability.
+failure: >
+  Authorization-layer wildcard.
+tests:
+  - name: wildcard fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          access:
+            data_access_wildcard: true
+  - name: scoped passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          access:
+            data_access_wildcard: false

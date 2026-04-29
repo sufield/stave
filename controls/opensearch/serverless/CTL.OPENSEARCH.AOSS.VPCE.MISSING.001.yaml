@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AOSS.VPCE.MISSING.001
+name: OpenSearch Serverless VPC Endpoint Missing While VPC-Only Network Policy Set
+description: >
+  OpenSearch Serverless collection has a network
+  policy declaring `VPC` access type but no AOSS
+  VPC endpoint exists in the consumer VPC.
+  Clients in the consumer VPC cannot reach the
+  collection; the policy's intent is not
+  implemented end-to-end. Common after policy
+  was applied speculatively without follow-
+  through.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, CC6.1"
+  nist_800_53_r5: "CM-2, SC-7"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["IVS-03", "GRC-08"]
+scope_tags:
+  - aws
+  - opensearch
+  - aoss
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_aoss_collection
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    AOSS VPC-only policy without VPC endpoint.
+  action: >
+    Create AOSS VPC endpoint in the consumer
+    VPC via aoss:CreateVpcEndpoint. Verify
+    network policy references the endpoint ID.
+  example: |
+    {
+      "search_service": {
+        "kind": "collection",
+        "access": {
+          "vpc_endpoint_present": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: collection
+    - field: properties.search_service.access.vpc_required
+      op: eq
+      value: true
+    - field: properties.search_service.access.vpc_endpoint_present
+      op: eq
+      value: false
+defect: >
+  VPC-only policy without VPC endpoint.
+infection: >
+  Clients can't reach collection; integration
+  fails or is forced to fall back through
+  alternative paths.
+failure: >
+  Network policy implementation incomplete.
+tests:
+  - name: missing vpce fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          access:
+            vpc_required: true
+            vpc_endpoint_present: false
+  - name: vpce present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:aoss:us-east-1:111122223333:collection/prod"
+      asset_type: aws_aoss_collection
+      vendor: aws
+      properties:
+        search_service:
+          kind: collection
+          access:
+            vpc_required: true
+            vpc_endpoint_present: true

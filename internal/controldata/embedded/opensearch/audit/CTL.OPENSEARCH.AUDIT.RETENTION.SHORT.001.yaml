@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AUDIT.RETENTION.SHORT.001
+name: OpenSearch Audit Log Retention Below Compliance Window
+description: >
+  OpenSearch audit log destination CloudWatch
+  group has retention shorter than the org's
+  regulatory minimum (HIPAA 6 years, PCI-DSS 1
+  year, SOX 7 years, common generic minimum 13
+  months). For HIPAA / PCI / SOC2 -scoped
+  domains, audit logs that age out before the
+  regulatory window create a compliance failure
+  regardless of how thoroughly they were
+  collected.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.5.1"
+  hipaa: "164.530(j)"
+  nist_800_53_r5: "AU-11"
+  fedramp_moderate: "AU-11"
+  iso_27001_2022: "A.5.33"
+  ccm_v4: ["LOG-04", "LOG-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Audit log retention < 365 days.
+  action: >
+    Update retention to match compliance scope:
+      aws logs put-retention-policy
+        --log-group-name /aws/opensearch/<domain>
+        --retention-in-days 2557
+    HIPAA: 2557 (7y); PCI: 365; SOC2: 365 min.
+    Pair with S3 archival for long retention.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "audit": {
+          "log_retention_days": 2557
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.audit.log_retention_days
+      op: lt
+      value: 365
+defect: >
+  Audit log retention < 365 days.
+infection: >
+  Audit logs age out before regulatory windows
+  close. During audit / incident review, evidence
+  for events older than retention is unavailable.
+failure: >
+  Compliance retention shortfall.
+tests:
+  - name: 30d retention fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          audit:
+            log_retention_days: 30
+  - name: 7y retention passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          audit:
+            log_retention_days: 2557

@@ -1,0 +1,27 @@
+id: opensearch_governance_unsafe
+description: >
+  OpenSearch domain has multiple governance /
+  operational defects: deployed in unauthorized
+  region (data residency violated), snapshot
+  cross-region replication in unauthorized
+  region, deletion protection off on production,
+  IAM not using tag-based access control,
+  break-glass role permanently active, or
+  alarms route to topic with no subscriber.
+  Each defect alone breaches operational
+  hygiene; co-occurrence means governance is
+  unowned. Threshold of 2 fires when at least
+  two governance defects coexist.
+controls:
+  - CTL.OPENSEARCH.REGION.UNAUTHORIZED.001
+  - CTL.OPENSEARCH.SNAPSHOT.UNAUTHORIZED.REGION.001
+  - CTL.OPENSEARCH.DELETION.PROTECTION.OFF.001
+  - CTL.OPENSEARCH.IAM.NOTAGAUTH.001
+  - CTL.OPENSEARCH.OPERATOR.ESSTAR.PERMANENT.001
+  - CTL.OPENSEARCH.NOTIFY.SUBSCRIBER.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access

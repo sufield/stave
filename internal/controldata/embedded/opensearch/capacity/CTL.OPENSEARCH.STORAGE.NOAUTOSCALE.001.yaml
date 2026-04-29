@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.STORAGE.NOAUTOSCALE.001
+name: OpenSearch Domain Has No Storage Auto-Scaling
+description: >
+  OpenSearch domain has no storage auto-scaling
+  enabled. Storage growth (logs ingest spike,
+  ISM backlog, snapshot accumulation) hits the
+  EBS volume cap; cluster goes read-only at
+  flood-stage watermark. Manual EBS expansion
+  takes blue-green deployment time during which
+  writes fail.
+domain: resilience
+severity: medium
+compliance:
+  soc2: "A1.1, A1.2"
+  nist_800_53_r5: "CP-2, SC-5"
+  fedramp_moderate: "CP-2"
+  iso_27001_2022: "A.8.14"
+  ccm_v4: ["BCR-04"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Storage auto-scaling disabled.
+  action: >
+    Enable via UpdateDomainConfig
+    --advanced-options auto-tune-options.
+    Pair with Free-Storage alarms; auto-scale
+    handles slow growth, alarms catch sudden
+    spikes.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "capacity": {
+          "storage_autoscaling_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.capacity.storage_autoscaling_enabled
+      op: eq
+      value: false
+defect: >
+  Storage auto-scaling off.
+infection: >
+  Slow storage growth eventually hits cap;
+  cluster goes read-only.
+failure: >
+  Manual capacity intervention required.
+tests:
+  - name: no autoscale fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          capacity:
+            storage_autoscaling_enabled: false
+  - name: autoscale on passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          capacity:
+            storage_autoscaling_enabled: true

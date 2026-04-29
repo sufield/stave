@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.POLICY.RI.RECON.001
+name: OpenSearch Describe Permissions Over-Shared To Read-Only Roles
+description: >
+  IAM permissions on the domain include
+  `es:DescribeReservedElasticsearchInstances`,
+  `es:ListDomainNames`, and
+  `es:DescribeElasticsearchDomain*` granted
+  broadly (e.g., to all read roles or all
+  authenticated users). Describe APIs reveal
+  topology — instance types, counts, RI
+  commitments, account inventory — that an
+  attacker uses for cost reconnaissance,
+  privilege-escalation target selection, and
+  detection-evasion planning.
+domain: exposure
+severity: low
+compliance:
+  soc2: "CC6.1, CC7.2"
+  nist_800_53_r5: "AC-6, AC-22"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: discovery
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Describe permissions over-shared.
+  action: >
+    Restrict es:Describe* and es:List* to roles
+    that have an operational need (cost dashboards,
+    inventory tooling). Block from generic read
+    roles. Audit via:
+      aws iam simulate-principal-policy
+        --policy-source-arn <role>
+        --action-names es:DescribeElasticsearchDomain
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "describe_actions_overshared": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.describe_actions_overshared
+      op: eq
+      value: true
+defect: >
+  Describe / List permissions granted to roles
+  without operational need.
+infection: >
+  Attacker with compromised read role enumerates
+  domain inventory (count, type, RI commitments),
+  picks targets and timings, and avoids high-cost
+  detection paths. Reconnaissance is a passive
+  discovery step that audit logs catch but humans
+  rarely review.
+failure: >
+  Discovery-stage hardening absent. Inventory
+  enumeration is too cheap.
+tests:
+  - name: describe overshared fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            describe_actions_overshared: true
+  - name: describe scoped passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            describe_actions_overshared: false

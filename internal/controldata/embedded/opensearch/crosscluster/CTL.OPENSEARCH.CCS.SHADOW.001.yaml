@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.CCS.SHADOW.001
+name: OpenSearch Cross-Cluster Connection Not In Inventory
+description: >
+  OpenSearch domain has cross-cluster connections
+  (CCS or CCR) that are not tracked in the
+  organization's inventory / IaC. Shadow trust:
+  source / target cluster setup happened during
+  an integration push, was never captured,
+  and now is outside review. Periodic
+  cross-cluster trust audit misses these
+  entirely.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, CC6.1"
+  nist_800_53_r5: "CM-8, CA-7"
+  fedramp_moderate: "CM-8"
+  iso_27001_2022: "A.5.9, A.5.16"
+  ccm_v4: ["GRC-08", "IVS-09"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Cross-cluster connection not in inventory.
+  action: >
+    Inventory all cross-cluster connections via
+    DescribeOutboundConnections /
+    DescribeInboundConnections. Reconcile
+    against IaC source. Document each connection
+    with owner / purpose / sunset date.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "crosscluster": {
+          "all_in_inventory": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.crosscluster.has_connections
+      op: eq
+      value: true
+    - field: properties.search_service.crosscluster.all_in_inventory
+      op: eq
+      value: false
+defect: >
+  Cross-cluster connection outside IaC /
+  inventory.
+infection: >
+  Shadow trust path persists outside review;
+  privilege accumulates undetected.
+failure: >
+  Trust-audit blind spot.
+tests:
+  - name: shadow trust fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          crosscluster:
+            has_connections: true
+            all_in_inventory: false
+  - name: in inventory passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          crosscluster:
+            has_connections: true
+            all_in_inventory: true

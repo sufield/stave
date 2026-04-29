@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.SAML.NOMAPPING.001
+name: OpenSearch SAML Configured But No Role Mappings
+description: >
+  OpenSearch domain has SAML authentication
+  configured (IdP metadata loaded) but no FGAC
+  role mappings reference SAML group / role
+  attributes. Every SAML-authenticated caller
+  falls to the default FGAC role (commonly
+  `kibana_user` only, sometimes nothing). Either
+  the SAML integration was set up half-finished
+  (operator forgot to map groups) or the
+  organization changed its IdP group structure
+  and the mappings rotted.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  pci_dss_v4.0: "8.2.1"
+  nist_800_53_r5: "IA-2, AC-3"
+  fedramp_moderate: "IA-2"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    SAML configured but no role mappings reference
+    SAML attributes.
+  action: >
+    Map FGAC roles to SAML group attributes:
+      backend_roles: ["okta-engineers"]
+    or explicit user attributes. Decide whether to
+    bind by group, role attribute, or
+    role-attribute-list claim.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "saml_enabled": true,
+          "saml_role_mappings_count": 5
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.saml_enabled
+      op: eq
+      value: true
+    - field: properties.search_service.access.saml_role_mappings_count
+      op: lt
+      value: 1
+defect: >
+  SAML configured with zero role mappings.
+infection: >
+  Every SAML caller maps to the same default
+  role. Per-group authorization broken; SAML
+  contributes only authentication, not
+  authorization. Compliance reports cite
+  per-group access control that does not exist.
+failure: >
+  SAML half-configured. Authorization layer
+  effectively absent for SAML-authenticated
+  callers.
+tests:
+  - name: saml no mappings fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            saml_enabled: true
+            saml_role_mappings_count: 0
+  - name: saml with mappings passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            saml_enabled: true
+            saml_role_mappings_count: 7

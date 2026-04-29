@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.SNAPSHOT.REPO.ROLE.TRUST.001
+name: OpenSearch Snapshot Repository Role Lacks OS Service Trust
+description: >
+  OpenSearch domain manual-snapshot repository's
+  IAM role's trust policy does not include
+  `es.amazonaws.com` (or
+  `opensearchservice.amazonaws.com` in newer
+  consoles) as a trusted service. Snapshot calls
+  fail with assume-role error; existing
+  snapshots cannot be restored. Common after
+  account-migration / role re-creation when
+  trust list was incomplete.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.4, A1.2"
+  nist_800_53_r5: "CP-9, AC-3"
+  fedramp_moderate: "CP-9"
+  iso_27001_2022: "A.5.16, A.8.13"
+  ccm_v4: ["IAM-09", "BCR-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Snapshot repo role lacks OS service trust.
+  action: >
+    Add es.amazonaws.com (or
+    opensearchservice.amazonaws.com) to the
+    role's AssumeRolePolicyDocument with
+    aws:SourceAccount condition matching the
+    domain's account.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "backup": {
+          "repo_role_trust_complete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.backup.manual_repo_registered
+      op: eq
+      value: true
+    - field: properties.search_service.backup.repo_role_trust_complete
+      op: eq
+      value: false
+defect: >
+  Snapshot repo role missing OS service trust.
+infection: >
+  Snapshot create / restore calls fail.
+  Recovery RTO depends on troubleshooting trust
+  policy under outage pressure.
+failure: >
+  Backup workflow broken at trust layer.
+tests:
+  - name: trust missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          backup:
+            manual_repo_registered: true
+            repo_role_trust_complete: false
+  - name: trust complete passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          backup:
+            manual_repo_registered: true
+            repo_role_trust_complete: true

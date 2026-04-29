@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ALARM.AUTOSNAPSHOT.FAILURE.001
+name: OpenSearch Automated Snapshot Failure Has No CloudWatch Alarm
+description: >
+  OpenSearch domain has no CloudWatch alarm on
+  the `AutomatedSnapshotFailure` metric. A run of
+  failed automated snapshots silently degrades
+  the recovery position; by the time on-call is
+  paged for an incident, the available snapshot
+  may be days old. Discovered too late, this is
+  a data-loss-magnifying defect.
+domain: detect
+severity: high
+compliance:
+  soc2: "CC7.2, A1.2"
+  nist_800_53_r5: "AU-12, CP-9"
+  fedramp_moderate: "AU-12"
+  iso_27001_2022: "A.8.16, A.8.13"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No alarm on AutomatedSnapshotFailure.
+  action: >
+    Alarm: AutomatedSnapshotFailure >= 1 for 1
+    datapoint (page). Investigate KMS key
+    accessibility, S3 bucket health, repository
+    role trust.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "alarms": {
+          "autosnapshot_failure_alarm_present": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.alarms.autosnapshot_failure_alarm_present
+      op: eq
+      value: false
+defect: >
+  No alarm on AutomatedSnapshotFailure.
+infection: >
+  Failed snapshots accumulate; recovery position
+  slides backward without warning.
+failure: >
+  Backup-health signal absent. RPO claim
+  unverifiable.
+tests:
+  - name: missing alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            autosnapshot_failure_alarm_present: false
+  - name: alarm present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            autosnapshot_failure_alarm_present: true

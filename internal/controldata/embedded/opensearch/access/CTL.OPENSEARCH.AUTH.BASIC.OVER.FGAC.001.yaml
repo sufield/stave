@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.AUTH.BASIC.OVER.FGAC.001
+name: OpenSearch HTTP Basic Auth Layered In Front Of FGAC
+description: >
+  OpenSearch domain has fine-grained access control
+  (FGAC) enabled, but clients are configured to
+  authenticate via HTTP Basic auth in front of
+  FGAC's identity model. The Basic-auth credential
+  maps to a single FGAC user, and that user
+  effectively becomes a shared service account for
+  all callers behind the Basic credential. Per-call
+  identity is lost; FGAC role mappings, audit
+  logs, and DLS/FLS attribution all collapse to
+  one identity.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  pci_dss_v4.0: "8.2.2, 8.3.1"
+  nist_800_53_r5: "IA-2, IA-5, AU-3"
+  fedramp_moderate: "IA-2"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Basic auth in front of FGAC collapses
+    per-caller identity.
+  action: >
+    Replace shared Basic credential with
+    per-service IAM role + IRSA (Kubernetes) or
+    IAM role assumption. Each caller authenticates
+    with its own identity; FGAC sees the actual
+    role / user; audit attribution works.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "auth_basic_in_front_of_fgac": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.fgac_enabled
+      op: eq
+      value: true
+    - field: properties.search_service.access.auth_basic_in_front_of_fgac
+      op: eq
+      value: true
+defect: >
+  Shared HTTP Basic credential layered over FGAC.
+infection: >
+  All callers behind the shared credential look
+  like one FGAC user. Document- / field-level
+  security configured per-tenant doesn't apply.
+  Audit logs show one user; investigation of any
+  particular caller's actions requires
+  out-of-band correlation.
+failure: >
+  Identity collapse. FGAC's per-caller controls
+  are bypassed; audit attribution is lossy.
+tests:
+  - name: basic over fgac fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            fgac_enabled: true
+            auth_basic_in_front_of_fgac: true
+  - name: per-caller IAM passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            fgac_enabled: true
+            auth_basic_in_front_of_fgac: false

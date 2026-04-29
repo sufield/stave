@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.POLICY.CROSSACCOUNT.WILDCARD.001
+name: OpenSearch Cross-Account Principal Granted Action Wildcard
+description: >
+  OpenSearch domain access policy grants `es:*`
+  (or any other action wildcard) to a principal in
+  another AWS account. Cross-account + action
+  wildcard combines the worst of both: an attacker
+  who gets any role in the foreign account assumes
+  it and inherits full domain control. Most
+  cross-account integrations need a narrow set of
+  actions (commonly `es:ESHttpGet`, sometimes
+  `es:ESHttpPost`); operators paste `es:*` for
+  expediency during integration setup and never
+  narrow it.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC6.1, CC6.3"
+  pci_dss_v4.0: "7.2.1, 7.2.4"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: cross_account
+    scope: cross_account
+    multiplier: 3.5
+remediation:
+  description: >
+    Cross-account principal granted es:* on the
+    domain.
+  action: >
+    Narrow the cross-account grant to the specific
+    actions needed by the integration. Combine with
+    sts:ExternalId condition for confused-deputy
+    protection.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "policy_crossaccount_action_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.policy_crossaccount_action_wildcard
+      op: eq
+      value: true
+defect: >
+  Cross-account principal granted action wildcard
+  (es:*).
+infection: >
+  Foreign-account compromise yields full domain
+  control. Combined with no ExternalId, the attack
+  surface is "any IAM identity in the foreign
+  account assumes the trusted role and operates
+  as domain owner."
+failure: >
+  Cross-account control-plane takeover path.
+  Compromise of any identity in the foreign
+  account ≈ compromise of the domain.
+tests:
+  - name: crossaccount es-star fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            policy_crossaccount_action_wildcard: true
+  - name: crossaccount scoped actions passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            policy_crossaccount_action_wildcard: false

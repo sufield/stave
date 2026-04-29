@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ALARM.MASTER.HEALTH.001
+name: OpenSearch Master Node Health Has No CloudWatch Alarms
+description: >
+  OpenSearch domain has no CloudWatch alarms on
+  master-node health metrics:
+  `MasterReachableFromNode`, `MasterCPUUtilization`,
+  or `MasterJVMMemoryPressure`. The master node
+  drives shard allocation, cluster-state
+  propagation, and routing — degradation here
+  manifests as cluster-wide stalls. The set is
+  load-bearing for any production-tier domain.
+domain: detect
+severity: high
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "AU-12, SI-4"
+  fedramp_moderate: "AU-12"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Master health alarms incomplete.
+  action: >
+    Create alarms: MasterReachableFromNode < 1
+    (page), MasterCPUUtilization > 80% sustained
+    15min (warn), MasterJVMMemoryPressure > 85%
+    (page).
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "alarms": {
+          "master_health_alarms_complete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.alarms.master_health_alarms_complete
+      op: eq
+      value: false
+defect: >
+  Master health alarm set incomplete.
+infection: >
+  Master degradation drives cluster-wide stalls
+  invisibly until customer-visible impact.
+failure: >
+  Critical-path observability gap.
+tests:
+  - name: incomplete master alarms fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            master_health_alarms_complete: false
+  - name: complete master alarms passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          alarms:
+            master_health_alarms_complete: true

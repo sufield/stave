@@ -1,0 +1,25 @@
+id: opensearch_crosscluster_unsafe
+description: >
+  OpenSearch domain has multiple cross-cluster
+  defects: connections over public endpoint, TLS
+  verification skipped, trust pattern unscoped,
+  CCR replicates security index, connections
+  not in inventory, or crosses compliance
+  boundary. Each defect alone produces a
+  cross-cluster trust degradation; co-occurrence
+  indicates the integration is unmaintained.
+  Threshold of 2 fires when at least two
+  cross-cluster defects coexist.
+controls:
+  - CTL.OPENSEARCH.CCS.PUBLIC.001
+  - CTL.OPENSEARCH.CCS.NOTLSVERIFY.001
+  - CTL.OPENSEARCH.CCS.UNSCOPED.001
+  - CTL.OPENSEARCH.CCR.SECURITY.INDEX.001
+  - CTL.OPENSEARCH.CCS.SHADOW.001
+  - CTL.OPENSEARCH.CCS.COMPLIANCE.BOUNDARY.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - cross_account_injection
+postconditions:
+  - data_access

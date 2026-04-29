@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.POLICY.DELETE.READONLY.001
+name: OpenSearch Access Policy Permits Delete Action To Read-Only Role
+description: >
+  OpenSearch domain access policy permits
+  `es:ESHttpDelete` to a role labeled or scoped as
+  read-only. ESHttpDelete maps to HTTP DELETE on the
+  REST API: deleting indices, documents,
+  templates, ISM policies, snapshots. A read-only
+  role with delete is no longer read-only; the
+  label drift is invisible to the IAM-policy-only
+  reviewer who never opens the domain access policy.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  pci_dss_v4.0: "7.2.1, 7.2.2"
+  nist_800_53_r5: "AC-6, AC-3"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: impact
+  blast_radius:
+    type: data_destruction
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Read-only-labeled role granted es:ESHttpDelete.
+  action: >
+    Remove ESHttpDelete from the read-only role's
+    granted actions. Move delete capability to a
+    separate write role with auditable change
+    process.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "policy_delete_to_readonly_role": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.policy_delete_to_readonly_role
+      op: eq
+      value: true
+defect: >
+  Role labeled read-only is granted ESHttpDelete.
+infection: >
+  Compromise of the read-only role enables index /
+  document deletion. Operations team treats role
+  as benign and grants it widely, expanding the
+  blast radius of any single credential leak.
+failure: >
+  Label-vs-permission drift. Audit calls the role
+  read-only; reality is the role can destroy data.
+tests:
+  - name: delete to readonly fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            policy_delete_to_readonly_role: true
+  - name: readonly without delete passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            policy_delete_to_readonly_role: false

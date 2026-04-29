@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.POLICY.ESHTTP.WILDCARD.001
+name: OpenSearch Access Policy Grants es:ESHttp* To Read-Only Role
+description: >
+  OpenSearch domain access policy grants
+  `es:ESHttp*` (all HTTP verbs) to a role labeled
+  read-only. The wildcard includes ESHttpPost,
+  ESHttpPut, and ESHttpDelete — write and delete
+  surface — even though the role's name suggests
+  reads only. ESHttp* is a common shortcut that
+  hides the actual capability under a wildcard
+  that reviewers gloss over.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: data_destruction
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Read-only role granted es:ESHttp* (all HTTP
+    verbs).
+  action: >
+    Replace the wildcard with explicit verbs:
+      es:ESHttpGet, es:ESHttpHead
+    Reserve write/delete verbs for separate
+    write-tier roles. AWS IAM Access Analyzer
+    flags this pattern as least-privilege
+    violation.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "access": {
+          "policy_eshttp_wildcard_readonly": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.access.policy_eshttp_wildcard_readonly
+      op: eq
+      value: true
+defect: >
+  Read-only-labeled role granted es:ESHttp*
+  wildcard.
+infection: >
+  Compromise of the read-only role yields write
+  and delete capability on the data plane.
+  Auditors see "ESHttp*" and don't catch the
+  expansion past read.
+failure: >
+  Read-only-in-name-only. Role's effective
+  capability is full data-plane CRUD.
+tests:
+  - name: ESHttp wildcard readonly fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            policy_eshttp_wildcard_readonly: true
+  - name: scoped get/head passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          access:
+            policy_eshttp_wildcard_readonly: false

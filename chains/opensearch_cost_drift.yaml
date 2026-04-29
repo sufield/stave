@@ -1,0 +1,21 @@
+id: opensearch_cost_drift
+description: >
+  OpenSearch domain has multiple cost / orphan
+  defects: idle domain, over-provisioned domain,
+  orphan resources from deleted domains, or
+  missing cost-allocation / compliance tags.
+  Each defect alone is a cost leak;
+  co-occurrence indicates cost discipline is
+  unmaintained. Threshold of 2 fires when at
+  least two cost defects coexist.
+controls:
+  - CTL.OPENSEARCH.IDLE.001
+  - CTL.OPENSEARCH.OVERPROVISIONED.001
+  - CTL.OPENSEARCH.ORPHAN.001
+  - CTL.OPENSEARCH.NOTAGS.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

@@ -1,0 +1,26 @@
+id: opensearch_capacity_decay
+description: >
+  OpenSearch domain has multiple capacity
+  topology defects: master undersized for shard
+  count, master and data nodes share instance
+  type, shards per node exceed 1000, EBS volume
+  type unsuitable for workload, no storage
+  auto-scaling, or hot-warm-cold tiering
+  disabled. Each defect alone produces a
+  performance / cost ceiling; co-occurrence
+  indicates capacity planning was skipped.
+  Threshold of 2 fires when at least two
+  capacity defects coexist.
+controls:
+  - CTL.OPENSEARCH.MASTER.UNDERSIZED.001
+  - CTL.OPENSEARCH.MASTER.SAME.INSTANCE.001
+  - CTL.OPENSEARCH.SHARD.COUNT.HIGH.001
+  - CTL.OPENSEARCH.EBS.GP2.IO.HEAVY.001
+  - CTL.OPENSEARCH.STORAGE.NOAUTOSCALE.001
+  - CTL.OPENSEARCH.TIERING.OFF.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

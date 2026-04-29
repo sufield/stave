@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.ENGINE.OUTDATED.001
+name: OpenSearch Engine Version Behind Latest Patch
+description: >
+  OpenSearch domain runs an engine version that
+  is one or more minor / patch releases behind
+  the latest available. Newer versions include
+  security patches, performance fixes, and
+  plugin compatibility updates. Stale engine =
+  accumulated CVE exposure.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.1"
+  pci_dss_v4.0: "6.2"
+  nist_800_53_r5: "SI-2"
+  fedramp_moderate: "SI-2"
+  iso_27001_2022: "A.8.8"
+  ccm_v4: ["TVM-04"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Engine version behind latest.
+  action: >
+    Apply pending service software update via
+    StartServiceSoftwareUpdate. AWS handles
+    rolling restart; cluster remains available.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "engine": {
+          "behind_latest": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.engine.behind_latest
+      op: eq
+      value: true
+defect: >
+  Engine behind latest available.
+infection: >
+  Patches not yet applied; CVE exposure window.
+failure: >
+  Patch lag.
+tests:
+  - name: outdated fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          engine:
+            behind_latest: true
+  - name: current passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          engine:
+            behind_latest: false

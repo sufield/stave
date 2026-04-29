@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.IDLE.001
+name: OpenSearch Domain Idle With No Searchable-Document Change
+description: >
+  OpenSearch domain has had no
+  `SearchableDocuments` change for 30+ days and
+  no Reserved Instance commitment justifying
+  the spend. Domain bills full instance + EBS
+  rates for an unused workload. Common cause:
+  workload migrated, decommission was deferred.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-7, CM-8"
+  fedramp_moderate: "CM-7"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Idle domain with cost.
+  action: >
+    Take final snapshot; document decision;
+    DeleteDomain. Or if retention is
+    deliberate, downsize to smallest viable
+    instance class.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "cost": {
+          "is_idle": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.cost.is_idle
+      op: eq
+      value: true
+defect: >
+  Domain idle 30+ days.
+infection: >
+  Full-rate spend on unused capacity.
+failure: >
+  Cost waste.
+tests:
+  - name: idle fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/old"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          cost:
+            is_idle: true
+  - name: active passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          cost:
+            is_idle: false

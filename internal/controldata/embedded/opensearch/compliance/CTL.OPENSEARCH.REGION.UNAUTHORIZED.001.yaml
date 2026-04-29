@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.REGION.UNAUTHORIZED.001
+name: OpenSearch Domain Deployed In Unauthorized Region
+description: >
+  OpenSearch domain deployed in an AWS region
+  not on the org's authorized list. Data
+  residency requirements (GDPR EU-only,
+  Schrems II, country-specific data laws) and
+  internal policy (production data only in
+  eu-west-1 / us-east-1) violated. Common
+  cause: dev experiment promoted to production
+  without region review.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC1.5, CC6.1"
+  pci_dss_v4.0: "12.10.1"
+  hipaa: "164.310(d)"
+  nist_800_53_r5: "AC-3, CA-7"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.10, A.5.34"
+  ccm_v4: ["DSP-04", "DSP-19"]
+scope_tags:
+  - aws
+  - opensearch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_opensearch_domain
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Domain in unauthorized region.
+  action: >
+    Snapshot in current region, restore in an
+    authorized region, then DeleteDomain in
+    unauthorized region. Cross-region restore
+    requires multi-region KMS key handling.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "governance": {
+          "region_authorized": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.search_service.kind
+      op: eq
+      value: domain
+    - field: properties.search_service.governance.region_authorized
+      op: eq
+      value: false
+defect: >
+  Domain in unauthorized region.
+infection: >
+  Data residency / sovereignty violated.
+  Compliance audit failure.
+failure: >
+  Regulatory boundary breach.
+tests:
+  - name: unauth region fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:eu-central-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          governance:
+            region_authorized: false
+  - name: authorized passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          governance:
+            region_authorized: true
