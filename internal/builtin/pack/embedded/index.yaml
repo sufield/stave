@@ -104,3 +104,5 @@ packs:
     path: packs/efs.yaml
   - id: eventbridge
     path: packs/eventbridge.yaml
+  - id: eks
+    path: packs/eks.yaml

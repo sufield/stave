@@ -1,0 +1,577 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "6b6a455b273a233f2510657d8d6107753af37725b520ffa24f510466dd2a3c38",
+        "2026-01-11T000000Z.json": "f6b96e22924f6fbb4cf93cba61879ddcf0c46a1390401ea5849bb7d0015953f4"
+      },
+      "overall": "d696c44738921fed4375a7fbd55e6fc1ef262b9cb67bbdb07b42df2d6cea0cd9"
+    },
+    "policy_fingerprint": "e4d1f7c419be18716264d641bf8e1034c7bfa05b07d645b2c59d1997305de115",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 2
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "omise-cdn-2",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "omise-cdn-2",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:c08ea6c508e37025",
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public S3 Bucket Read",
+      "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
+      "asset_id": "omise-cdn-2",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_read",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.5",
+        "fedramp_moderate": "AC-3",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(1)",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v3.2.1": "1.2.1",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "public_read",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.",
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-3d303074b3ff773c",
+        "target": {
+          "asset_id": "omise-cdn-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      },
+      "exposure_score": 205.47945205479454,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.public_read eq true",
+          "observation_key": "storage.access.public_read",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "omise-cdn-2",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.001",
+          "control_name": "No Public S3 Bucket Read",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous read = true",
+              "observation_key": "storage.access.public_read",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_read",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_read to false"
+          }
+        ],
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket's access configuration grants read permission to the public — either via a bucket policy statement with Principal \"*\" or via an ACL grant to the AllUsers pseudo-group. The bucket is reachable without authentication from the public internet.\n",
+      "infection": "Anyone on the internet can fetch objects from this bucket over anonymous HTTP/HTTPS. Search engines and automated scanners continuously enumerate publicly-indexed bucket names, meaning exposure is active from the moment the policy or ACL is in place — not hypothetical. Once the bucket name is known, every object whose key the caller can guess or enumerate is fetchable.\n",
+      "failure": "Unbounded data exposure. Every file stored in this bucket is readable by arbitrary internet callers, including potentially sensitive operational data, customer information, backup artifacts, or internal documentation that wasn't intended to reach the public surface.\n",
+      "delta": [
+        {
+          "property_label": "public read access",
+          "property_path": "storage.access.public_read",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:d9330865200aa495",
+      "control_id": "CTL.S3.CONTROLS.001",
+      "control_name": "Public Access Block Must Be Enabled",
+      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
+      "asset_id": "omise-cdn-2",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.controls.public_access_fully_blocked",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.5",
+        "cis_aws_v3.0": "2.1.4",
+        "fedramp_moderate": "AC-3",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3",
+        "nist_csf_2.0": "PR.PS",
+        "pci_dss_v3.2.1": "1.3.6",
+        "pci_dss_v4.0": "2.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Public Access Block is not fully enabled. The bucket has no safety net against accidental public exposure from policy or ACL changes.",
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-036969967de51e6b",
+        "target": {
+          "asset_id": "omise-cdn-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "exposure_score": 77.05479452054796,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.controls.public_access_fully_blocked eq false",
+          "observation_key": "storage.controls.public_access_fully_blocked",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "omise-cdn-2",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.CONTROLS.001",
+          "control_name": "Public Access Block Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "all four Public Access Block flags are enabled = false",
+              "observation_key": "storage.controls.public_access_fully_blocked",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_fully_blocked",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_fully_blocked to true"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          }
+        ],
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket's Public Access Block is not fully enabled — at least one of BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets is disabled. The bucket has no catch-all defense against a future ACL or policy change that would expose content publicly.\n",
+      "infection": "PAB is a defense-in-depth control: even if the bucket is currently private, any subsequent change to the bucket policy or ACL can make it public with no intermediate warning. PAB, when fully enabled, rejects the change at configuration time — the AWS API returns an error rather than accepting the unsafe policy. Without PAB, operators performing routine maintenance or automation running at scale can accidentally flip a bucket public. Audit trails attribute the exposure to the operator or script, not to the absent safety net, so investigations often miss that PAB-on-everywhere would have prevented the incident.\n",
+      "failure": "Future accidental exposure through routine bucket changes. The bucket is not currently public, so this control is preventive, not reactive — the failure it describes is whatever would happen if an unrelated configuration change made the bucket public. Enabling PAB eliminates the class entirely for this bucket regardless of which mechanism (ACL, policy, future API surface) would otherwise have opened the exposure.\n",
+      "delta": [
+        {
+          "property_label": "S3 Public Access Block",
+          "property_path": "storage.controls.public_access_fully_blocked",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:1ffe4eb2601a27ce",
+      "asset_id": "omise-cdn-2",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.public_read"
+      ],
+      "headline_finding_id": "sha256:c08ea6c508e37025",
+      "member_finding_ids": [
+        "sha256:c08ea6c508e37025"
+      ],
+      "consolidated_score": 205.47945205479454,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:5e3af449113efda5",
+      "asset_id": "omise-cdn-2",
+      "shared_keys": [
+        "storage.controls",
+        "storage.controls.public_access_fully_blocked"
+      ],
+      "headline_finding_id": "sha256:d9330865200aa495",
+      "member_finding_ids": [
+        "sha256:d9330865200aa495"
+      ],
+      "consolidated_score": 77.05479452054796,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "omise-cdn-2",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-036969967de51e6b",
+        "target": {
+          "asset_id": "omise-cdn-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "contributing_controls": [
+        "CTL.S3.CONTROLS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "omise-cdn-2",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-3d303074b3ff773c",
+        "target": {
+          "asset_id": "omise-cdn-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 1,
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "omise-cdn-2",
+      "exposure_score": 205.47945205479454,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "omise-cdn-2",
+      "exposure_score": 77.05479452054796,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "dirty": false
+    }
+  }
+}

@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NODEGROUP.IMDS.DISABLED.001
+name: EKS Node Group Has IMDS Endpoint Disabled While Workloads Need It
+description: >
+  EKS worker node group's launch template has
+  `MetadataOptions.HttpEndpoint: disabled` while at least
+  one workload on the node group depends on IMDS for
+  AWS API authentication (no IRSA, no Pod Identity).
+  Workloads silently fail to authenticate to AWS APIs.
+  Operators investigating "AWS calls hanging / timing out"
+  trace from the workload through to MetadataOptions.
+  Distinct from the IMDSV2 / hop-limit controls — those
+  catch over-permissive IMDS; this catches IMDS being
+  disabled when it shouldn't be.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, SI-4"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_nodegroup
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS node group has IMDS disabled while workloads on it
+    depend on IMDS for AWS API auth.
+  action: >
+    Either enable IMDS (HttpEndpoint: enabled, with
+    HttpTokens: required + HttpPutResponseHopLimit: 1 for
+    secure config) and rely on the node role for those
+    workloads, OR migrate the workloads to IRSA / Pod
+    Identity for per-pod IAM (preferred). Disabling IMDS
+    cluster-wide is a valid posture only when every
+    workload uses IRSA / Pod Identity exclusively and the
+    cluster operations don't depend on instance metadata.
+  example: |
+    {
+      "k8s": {
+        "nodegroup": {
+          "imds_endpoint_enabled": true,
+          "workloads_depend_on_imds": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.nodegroup.imds_endpoint_enabled
+      op: eq
+      value: false
+    - field: properties.k8s.nodegroup.workloads_depend_on_imds
+      op: eq
+      value: true
+defect: >
+  EKS node group has IMDS endpoint disabled while at
+  least one workload on the node group requires IMDS for
+  AWS API authentication.
+infection: >
+  The launch template's `HttpEndpoint: disabled` blocks
+  all IMDS access from anything on the node — including
+  the kubelet (which uses IMDS for region detection),
+  the AWS SDK in any pod that doesn't use IRSA, and
+  diagnostic tools. AWS API calls from those workloads
+  hang waiting for the credential resolver, eventually
+  fail with timeout. Operators spend time tracing through
+  the workload before realizing the issue is at the
+  metadata-service layer.
+failure: >
+  Silent AWS API failure on workloads. Pods needing IMDS
+  hang on AWS calls; operations and observability that
+  rely on it break.
+tests:
+  - name: IMDS disabled with dependent workloads fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/default"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            imds_endpoint_enabled: false
+            workloads_depend_on_imds: true
+  - name: IMDS enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/default"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            imds_endpoint_enabled: true
+            workloads_depend_on_imds: true
+  - name: IMDS disabled but no workload dependency passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/irsa-only"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            imds_endpoint_enabled: false
+            workloads_depend_on_imds: false

@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.POLICY.IDENTITY.MISMATCH.001
+name: EventBridge Cross-Account Bus Permission Without Matching Target IAM
+description: >
+  EventBridge bus's resource policy grants cross-account
+  PutEvents access, but the target-side IAM (rule invocation
+  role on the receiving account) doesn't grant the
+  corresponding permission. AWS authorization for cross-
+  account event delivery requires BOTH: bus policy permits
+  the call, AND the target's invocation context permits the
+  invoke. A mismatch silently drops events at the
+  permissions check — no error to the publisher, no
+  delivery to the target.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-3, AC-6, CM-2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EventBridge cross-account bus permission is configured
+    but target IAM doesn't permit the invocation.
+  action: >
+    Audit cross-account flows: for each bus policy granting
+    cross-account PutEvents, trace to the target rules in
+    the receiving account and verify their invocation roles
+    permit the target action. Use AWS access analyzer or
+    the IAM policy simulator on a sample event flow.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "cross_account_target_iam_aligned": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.has_cross_account_grant
+      op: eq
+      value: true
+    - field: properties.governance.events.cross_account_target_iam_aligned
+      op: eq
+      value: false
+defect: >
+  EventBridge cross-account bus permission is granted but
+  the target-side invocation IAM doesn't permit the action.
+infection: >
+  The bus policy nominally allows the cross-account
+  delivery; CloudTrail records PutEvents calls succeeding.
+  At delivery time the target's invocation role can't
+  perform the target action — Lambda invoke, SQS send, etc.
+  Events fail at the IAM check on the receiving side.
+  Operators investigating "events arrive at the bus but
+  don't reach the target" find a configuration that looks
+  right at the bus layer but is broken at the target IAM.
+failure: >
+  Silent cross-account delivery failure. Bus accepts events;
+  target IAM rejects them; investigators trace the
+  configuration twice before finding the mismatch.
+tests:
+  - name: bus with cross-account but no target IAM fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/audit"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            has_cross_account_grant: true
+            cross_account_target_iam_aligned: false
+  - name: bus with aligned IAM passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/audit"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            has_cross_account_grant: true
+            cross_account_target_iam_aligned: true

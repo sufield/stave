@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.FEDERATION.GHOST.SPOKE.001
+name: EventBridge Federation Rule Targets Deleted Spoke Bus
+description: >
+  Hub-and-spoke EventBridge federation: a rule on the hub bus
+  forwards events to a spoke bus that has been deleted. The
+  rule pattern continues to match upstream events; every match
+  attempts cross-account/cross-region delivery to a missing
+  destination, which fails. Same ghost-target pattern as the
+  EB-1 controls but specific to federation.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, SI-4"
+  fedramp_moderate: "CM-2, SI-4"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule_target
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge federation rule targets a spoke bus that has
+    been deleted.
+  action: >
+    Recreate the spoke bus at the original ARN, repoint the
+    federation rule target to a live bus, or remove the
+    federation rule.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule_target",
+        "events": {
+          "target_type": "federation_spoke_bus",
+          "target_exists": true,
+          "has_ghost_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule_target
+    - field: properties.governance.events.target_type
+      op: eq
+      value: federation_spoke_bus
+    - field: properties.governance.events.has_ghost_target
+      op: eq
+      value: true
+defect: >
+  EventBridge federation rule's spoke-bus target ARN has been
+  deleted.
+infection: >
+  Hub-side rule continues to match. Each match attempts
+  cross-account / cross-region PutEvents to the named spoke
+  bus — the bus no longer exists, the call fails. Events
+  meant for spoke-side processing are dropped (or sent to
+  the rule's DLQ if configured). The federation appears
+  configured; events stop arriving at the spoke.
+failure: >
+  Silent federation breakdown. Hub-to-spoke delivery fails;
+  spoke-side processing receives nothing while hub metrics
+  show invocations.
+tests:
+  - name: federation to deleted spoke fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/hub-fanout/spoke-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_type: "federation_spoke_bus"
+            target_arn: "arn:aws:events:us-west-2:222233334444:event-bus/spoke-deleted"
+            target_exists: false
+            has_ghost_target: true
+  - name: federation to live spoke passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/hub-fanout/spoke-1"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_type: "federation_spoke_bus"
+            target_arn: "arn:aws:events:us-west-2:222233334444:event-bus/spoke"
+            target_exists: true
+            has_ghost_target: false

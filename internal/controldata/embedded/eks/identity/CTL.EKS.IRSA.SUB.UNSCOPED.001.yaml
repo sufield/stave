@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.IRSA.SUB.UNSCOPED.001
+name: EKS IRSA Role Trust Policy Has No sub Filter
+description: >
+  IRSA (IAM Roles for Service Accounts) role's trust policy
+  authorizes the cluster's OIDC provider but doesn't scope the
+  trust to a specific Kubernetes ServiceAccount via the `sub`
+  condition. Without `sub`, ANY ServiceAccount in the cluster
+  with a properly-formatted token can assume the role. The
+  intent of IRSA — bind specific IAM permissions to specific
+  workloads — is defeated. The role becomes effectively a
+  cluster-wide role available to every pod that knows the role
+  ARN.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6, IA-5"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14", "IAM-16"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_irsa_role
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    IRSA role trust policy authorizes the cluster's OIDC
+    provider without restricting to a specific Kubernetes
+    ServiceAccount.
+  action: >
+    Add a `sub` condition to the trust policy:
+      "Condition": {
+        "StringEquals": {
+          "<oidc-issuer>:sub": "system:serviceaccount:<namespace>:<sa-name>",
+          "<oidc-issuer>:aud": "sts.amazonaws.com"
+        }
+      }
+    Pin to the exact namespace + SA name. For roles serving
+    multiple workloads, list each `sub` explicitly via
+    StringEquals on an array.
+  example: |
+    {
+      "k8s": {
+        "irsa": {
+          "trust_oidc_issuer_set": true,
+          "trust_sub_set": true,
+          "trust_aud_set": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.irsa.trust_oidc_issuer_set
+      op: eq
+      value: true
+    - field: properties.k8s.irsa.trust_sub_set
+      op: eq
+      value: false
+defect: >
+  IRSA role trust policy authorizes the cluster OIDC provider
+  without a `sub` condition restricting the assumable
+  ServiceAccount.
+infection: >
+  Any pod with a properly-formatted ServiceAccount token from
+  the cluster's OIDC provider can assume the IRSA role. The
+  `sub` claim distinguishes "this role is for SA X in
+  namespace Y" from "this role is for any SA in any
+  namespace". Without it, an attacker who compromises any
+  namespace — including dev, staging, or shared system
+  namespaces — can mint a token with the cluster's OIDC
+  provider and assume the role's permissions. The role's
+  per-workload-scope intent collapses into per-cluster scope.
+failure: >
+  IRSA scope collapse. Role permissions intended for one
+  workload are reachable by every workload in the cluster.
+tests:
+  - name: trust without sub fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/eks-orders-irsa"
+      asset_type: aws_eks_irsa_role
+      vendor: aws
+      properties:
+        k8s:
+          irsa:
+            trust_oidc_issuer_set: true
+            trust_sub_set: false
+            trust_aud_set: true
+  - name: trust with sub passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/eks-orders-irsa"
+      asset_type: aws_eks_irsa_role
+      vendor: aws
+      properties:
+        k8s:
+          irsa:
+            trust_oidc_issuer_set: true
+            trust_sub_set: true
+            trust_aud_set: true
+            trust_sub_value: "system:serviceaccount:orders:orders-runtime"

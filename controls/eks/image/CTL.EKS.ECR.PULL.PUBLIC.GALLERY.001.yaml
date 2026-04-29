@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ECR.PULL.PUBLIC.GALLERY.001
+name: EKS Workload Pulls From AWS ECR Public Gallery Without Mirror
+description: >
+  EKS workload pulls an image from public.ecr.aws
+  (AWS ECR Public Gallery) directly rather than
+  mirroring through the org's private ECR. ECR Public
+  is operated by AWS but anyone can publish to it
+  under their own namespace; pulls are subject to
+  rate limits, the same supply-chain risks as any
+  public registry, and the org has no scan-on-push
+  visibility into images they didn't build. Mirror
+  through private ECR for security and rate-limit
+  predictability.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, SR-3"
+  fedramp_moderate: "CM-2, SR-3"
+  iso_27001_2022: "A.5.16, A.8.30"
+  ccm_v4: ["BCR-08", "TVM-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_workload
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    EKS workload pulls directly from public.ecr.aws.
+  action: >
+    Mirror the image into the org's private ECR via
+    skopeo / crane. Configure ECR scan-on-push on the
+    private mirror. Update workload manifests to
+    reference the private ECR copy. For images updated
+    frequently upstream, automate the mirror via a
+    Lambda triggered by CodePipeline / scheduled
+    rebuild.
+  example: |
+    {
+      "k8s": {
+        "workload": {
+          "image_uri": "111122223333.dkr.ecr.us-east-1.amazonaws.com/mirror/k8s/pause:3.9",
+          "pulls_from_ecr_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.workload.pulls_from_ecr_public
+      op: eq
+      value: true
+defect: >
+  EKS workload pulls from public.ecr.aws directly.
+infection: >
+  ECR Public is functionally a public registry — AWS
+  hosts it but doesn't curate uploads. Any account
+  can publish under their gallery namespace.
+  Workloads pulling from it have the same
+  supply-chain exposure as Docker Hub / Quay /
+  GHCR pulls; AWS-hosting doesn't add trust. Rate
+  limits also apply, which means high-pull-volume
+  clusters can hit throttling at unexpected times.
+failure: >
+  Public registry exposure + rate-limit risk. Same
+  supply-chain risks as any public registry; pull
+  reliability subject to AWS Public ECR rate
+  limiting.
+tests:
+  - name: pull from ECR Public fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/sidecar"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "public.ecr.aws/abc/utility:1.2.3"
+            pulls_from_ecr_public: true
+  - name: pull from private ECR mirror passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/sidecar"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "111122223333.dkr.ecr.us-east-1.amazonaws.com/mirror/abc/utility:1.2.3"
+            pulls_from_ecr_public: false

@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NS.MULTITENANT.001
+name: EKS Namespace Houses Workloads From Multiple Tenants
+description: >
+  EKS namespace contains workloads tagged for multiple
+  tenants / teams (per the cluster's
+  `tenant`/`team`/`owner` label convention). Multiple
+  tenants in a single namespace means RBAC granted to
+  one tenant's principals applies to the other's
+  resources, NetworkPolicies designed for one tenant's
+  threat model apply to the other's pods, and cost-
+  attribution by namespace can't separate the bills.
+  Each tenant should have its own namespace.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4"
+  fedramp_moderate: "AC-3, AC-4"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IVS-09", "DSP-17"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_namespace
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    EKS namespace contains workloads from multiple tenants.
+  action: >
+    Move each tenant's workloads to a dedicated namespace.
+    Migration: (1) create per-tenant namespaces; (2) recreate
+    each tenant's workloads in their namespace via
+    Helm / GitOps; (3) replicate ConfigMaps / Secrets
+    needed; (4) update Service references; (5) delete the
+    old shared namespace.
+  example: |
+    {
+      "k8s": {
+        "namespace": {
+          "tenant_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.namespace.tenant_count
+      op: gt
+      value: 1
+    - field: properties.k8s.namespace.is_system_namespace
+      op: eq
+      value: false
+defect: >
+  EKS namespace contains workloads tagged for more than one
+  tenant.
+infection: >
+  RBAC bindings, NetworkPolicies, ResourceQuotas, and
+  LimitRanges all apply at namespace granularity. With
+  multiple tenants in one namespace, tenant A's grants
+  reach tenant B's resources by default. Tenant A's
+  developer with namespace-edit on namespace `shared` can
+  edit tenant B's Deployments. Tenant B's NetworkPolicy
+  designed against tenant B's threat model applies to
+  tenant A's pods. Cost attribution by namespace shows
+  one bill for the shared namespace; per-tenant cost
+  invisible.
+failure: >
+  Cross-tenant access via shared namespace. RBAC, network
+  policy, and quota all blur tenant boundaries.
+tests:
+  - name: namespace with 2 tenants fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/namespace/shared-services"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            tenant_count: 3
+            is_system_namespace: false
+  - name: single-tenant namespace passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            tenant_count: 1
+            is_system_namespace: false

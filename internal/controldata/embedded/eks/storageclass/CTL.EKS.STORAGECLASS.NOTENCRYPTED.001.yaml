@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.STORAGECLASS.NOTENCRYPTED.001
+name: EKS StorageClass Provisions Unencrypted Volumes
+description: >
+  EKS StorageClass parameters don't include `encrypted:
+  "true"` (for EBS CSI) or equivalent encryption flag.
+  PVCs using the StorageClass dynamically provision EBS
+  volumes without encryption at rest. Workload data on
+  these volumes is unprotected; AWS account-level
+  default encryption may catch it (if enabled), but
+  StorageClass-level explicit encryption is the
+  documented EKS pattern.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-28"
+  pci_dss_v4.0: "3.5"
+  fedramp_moderate: "SC-12, SC-28"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_storage_class
+params:
+  attack_stage: collection
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS StorageClass parameters don't include encryption.
+  action: >
+    Update StorageClass parameters to include encrypted:
+    "true" plus optional kmsKeyId for CMK encryption:
+      apiVersion: storage.k8s.io/v1
+      kind: StorageClass
+      metadata: { name: gp3-encrypted }
+      provisioner: ebs.csi.aws.com
+      parameters:
+        type: gp3
+        encrypted: "true"
+        kmsKeyId: "arn:aws:kms:us-east-1:111122223333:key/abc"
+    For new clusters, also enable EBS account-level
+    default encryption as defense in depth.
+  example: |
+    {
+      "k8s": {
+        "storage_class": {
+          "encryption_parameter": "true"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.storage_class.encryption_parameter
+      op: eq
+      value: ""
+defect: >
+  EKS StorageClass parameters don't include explicit
+  encryption.
+infection: >
+  PVCs using the StorageClass provision EBS volumes
+  without encryption at rest. Workload data is stored
+  unencrypted on the underlying EBS volumes. If the
+  workload handles PII, PHI, payment data, or audit
+  records, the storage falls outside compliance
+  encryption requirements regardless of any application-
+  layer encryption.
+failure: >
+  Storage encryption gap. Volumes provisioned via the
+  StorageClass are unencrypted; compliance posture
+  fails for sensitive workloads.
+tests:
+  - name: SC without encryption fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/storageclass/gp3"
+      asset_type: aws_eks_storage_class
+      vendor: aws
+      properties:
+        k8s:
+          storage_class:
+            encryption_parameter: ""
+  - name: SC with encrypted=true passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/storageclass/gp3-encrypted"
+      asset_type: aws_eks_storage_class
+      vendor: aws
+      properties:
+        k8s:
+          storage_class:
+            encryption_parameter: "true"

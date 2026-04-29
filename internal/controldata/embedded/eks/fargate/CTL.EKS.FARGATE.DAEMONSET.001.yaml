@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.FARGATE.DAEMONSET.001
+name: EKS DaemonSet Selector Overlaps With Fargate Profile Selector
+description: >
+  EKS cluster has a DaemonSet whose pod selector matches a
+  namespace covered by a Fargate profile. Fargate doesn't
+  support DaemonSets — pods scheduled to Fargate are
+  one-per-task, not one-per-node. The DaemonSet's pods
+  selected for Fargate-covered namespaces never schedule;
+  the DaemonSet remains "0 of N nodes" and the workload
+  the DaemonSet was meant to run (log forwarding,
+  monitoring agents, security daemons) silently doesn't
+  run for Fargate-targeted pods.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "CM-2, SI-4"
+  fedramp_moderate: "CM-2, SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["BCR-08", "LOG-04"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_daemonset
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS DaemonSet selector overlaps Fargate profile
+    selector.
+  action: >
+    Fargate workloads need their per-pod equivalent of the
+    DaemonSet via sidecars (logging via Fluent Bit
+    sidecar, monitoring via per-pod agent) rather than a
+    DaemonSet. Add the namespace where the DaemonSet
+    needs to schedule to the Fargate profile selector's
+    exclusion list (or move the DaemonSet's targeted
+    workloads off Fargate). Audit the cluster: DaemonSets
+    + Fargate profiles together require explicit per-pod
+    instrumentation for the workloads the DaemonSet would
+    have served.
+  example: |
+    {
+      "k8s": {
+        "daemonset": {
+          "overlaps_fargate_profile": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.daemonset.overlaps_fargate_profile
+      op: eq
+      value: true
+defect: >
+  EKS DaemonSet selector matches a namespace covered by a
+  Fargate profile.
+infection: >
+  Fargate doesn't support DaemonSets. Pods belonging to
+  the DaemonSet that target Fargate-covered namespaces
+  never schedule; the DaemonSet's "Desired / Current /
+  Ready" counts diverge invisibly. The workload the
+  DaemonSet was supposed to deliver — typically log
+  forwarding (Fluent Bit), monitoring (Datadog Agent),
+  or security (Falco) — is silently missing for every
+  Fargate-side pod. Operators see the DaemonSet healthy
+  for EC2-backed pods and miss that it doesn't cover the
+  Fargate pods at all.
+failure: >
+  Silent monitoring / logging gap for Fargate workloads.
+  DaemonSet-delivered observability doesn't reach Fargate
+  pods; the gap is invisible because the DaemonSet
+  appears healthy.
+tests:
+  - name: DaemonSet overlapping Fargate fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/kube-system/daemonset/fluent-bit"
+      asset_type: aws_eks_daemonset
+      vendor: aws
+      properties:
+        k8s:
+          daemonset:
+            target_namespaces: ["default", "orders"]
+            overlaps_fargate_profile: true
+  - name: DaemonSet not overlapping Fargate passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/kube-system/daemonset/fluent-bit"
+      asset_type: aws_eks_daemonset
+      vendor: aws
+      properties:
+        k8s:
+          daemonset:
+            target_namespaces: ["ec2-workloads"]
+            overlaps_fargate_profile: false

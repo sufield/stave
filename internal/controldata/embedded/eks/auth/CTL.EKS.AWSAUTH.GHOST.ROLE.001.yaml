@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.AWSAUTH.GHOST.ROLE.001
+name: EKS aws-auth ConfigMap References Deleted IAM Role
+description: >
+  Legacy EKS authentication via the kube-system/aws-auth ConfigMap
+  carries `mapRoles` entries pointing at IAM role ARNs. When an IAM
+  role is deleted but its ARN remains in aws-auth, the mapping is
+  a ghost grant — no live principal can use it, but the ConfigMap
+  records say the cluster trusts it. If the role ARN is later
+  recreated by a different team / account using the same name
+  pattern, the new role inherits the cluster mapping. Same
+  ghost-reference pattern as IAM cross-account principal ghosts;
+  uniquely dangerous on EKS because aws-auth is the historical
+  source-of-truth for cluster-admin mappings.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, CM-2, CM-3"
+  fedramp_moderate: "AC-3, CM-2"
+  iso_27001_2022: "A.5.15, A.5.16, A.8.32"
+  ccm_v4: ["IAM-04", "IAM-13"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_aws_auth_mapping
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EKS aws-auth ConfigMap maps an IAM role ARN that has been
+    deleted.
+  action: >
+    Remove the orphan mapping from the cluster's aws-auth
+    ConfigMap (kubectl edit configmap aws-auth -n kube-system).
+    For each mapping, verify the IAM role still exists. Pair
+    with an SCP / IaC drift check that prevents future ghost
+    mappings from accumulating. Long-term, migrate from
+    aws-auth to EKS Access Entries (which surface ghost
+    references via the EKS API rather than only via the
+    in-cluster ConfigMap).
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "aws_auth": {
+            "role_arn": "arn:aws:iam::111122223333:role/EKS-Admin",
+            "role_exists": true,
+            "has_ghost_role": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.aws_auth.has_ghost_role
+      op: eq
+      value: true
+defect: >
+  EKS aws-auth ConfigMap mapping references an IAM role ARN that
+  has been deleted.
+infection: >
+  The aws-auth ConfigMap retains a mapRoles entry for a deleted
+  IAM role. The mapping is dormant — no live principal can use
+  it because the role doesn't exist. If the role ARN is later
+  recreated (by another team in the same account, or via
+  IAM-role recreation in a CFN drift-recovery scenario), the
+  new role automatically inherits the original's cluster
+  groups — typically `system:masters` or another high-privilege
+  group. Without an audit of aws-auth, the cluster grants
+  cluster-admin to whoever next claims the role name.
+failure: >
+  Privilege escalation via role-name reuse. A deleted IAM role
+  can be recreated to inherit silent cluster-admin grants.
+tests:
+  - name: aws-auth with ghost role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod#aws-auth-mapRoles[3]"
+      asset_type: aws_eks_aws_auth_mapping
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            aws_auth:
+              role_arn: "arn:aws:iam::111122223333:role/EKS-Admin-deleted"
+              role_exists: false
+              has_ghost_role: true
+              groups: ["system:masters"]
+  - name: aws-auth with live role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod#aws-auth-mapRoles[3]"
+      asset_type: aws_eks_aws_auth_mapping
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            aws_auth:
+              role_arn: "arn:aws:iam::111122223333:role/EKS-Admin"
+              role_exists: true
+              has_ghost_role: false
+              groups: ["system:masters"]

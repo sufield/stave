@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ALARM.API.ERRORS.001
+name: EKS Cluster Has No Alarm On API Server Error Rate
+description: >
+  EKS cluster has no CloudWatch alarm on the
+  apiserver_request_total metric scoped to 5xx (server
+  errors) or persistent 4xx (client errors). The API
+  server is the single coordination point for the
+  cluster; degradation there cascades to every
+  controller, scheduler, and operator. Without an
+  alarm, error-rate spikes go unnoticed until
+  downstream symptoms surface (deploys hanging,
+  scaling failures).
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "SI-4, AU-6"
+  fedramp_moderate: "SI-4, AU-6"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08", "SEF-04"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS cluster has no API-server error-rate alarm.
+  action: >
+    Enable EKS control-plane logs (api type) into
+    CloudWatch Logs, then create a metric filter on
+    apiserver_request_total with code=~"5..". Wire a
+    CloudWatch alarm to SNS for sustained error rate
+    above a threshold (e.g., >1% over 5 minutes).
+    Container Insights enhanced observability also
+    exposes apiserver metrics directly.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "alarm_api_errors_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.alarm_api_errors_configured
+      op: eq
+      value: false
+defect: >
+  EKS cluster has no alarm on the API server error rate.
+infection: >
+  API-server degradation cascades cluster-wide. Without
+  alarm coverage, operators detect the issue via
+  downstream effects: deploys hang, controllers can't
+  reconcile, kubectl returns 5xx. By that point the
+  underlying API-server issue has been ongoing.
+failure: >
+  Silent control-plane degradation. Operators detect
+  cluster issues via downstream symptoms; root-cause
+  diagnosis is delayed.
+tests:
+  - name: cluster without alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_api_errors_configured: false
+  - name: cluster with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_api_errors_configured: true

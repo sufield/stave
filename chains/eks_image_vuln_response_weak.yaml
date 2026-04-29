@@ -1,0 +1,22 @@
+id: eks_image_vuln_response_weak
+description: >
+  EKS cluster has multiple vulnerability-response
+  defects: admission doesn't block HIGH/CRITICAL CVE
+  images, workload images are stale (>180 days), and
+  ECR scan results aren't exported to Security Hub.
+  Combined: vulnerable images run, they accumulate CVEs
+  without rebuild, and the findings aren't visible in
+  the central operational dashboard. Operations is
+  flying blind on container vulnerability posture.
+  Threshold of 2 fires when at least two
+  vulnerability-response defects coexist.
+controls:
+  - CTL.EKS.IMAGE.CVE.BLOCK.001
+  - CTL.EKS.IMAGE.BASE.STALE.001
+  - CTL.EKS.ECR.SCAN.EXPORT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ADDON.GHOST.IRSA.001
+name: EKS Add-on References Deleted IRSA Role
+description: >
+  EKS managed add-on (vpc-cni, coredns, kube-proxy,
+  aws-ebs-csi-driver, aws-efs-csi-driver, aws-load-balancer-
+  controller, etc.) has its `serviceAccountRoleArn`
+  pointing at an IAM role that has been deleted. The
+  add-on's pods can't assume the IRSA role on next start
+  / restart; pods running cached credentials continue
+  until they recycle. Same ghost-IRSA pattern as EKS-1
+  (CTL.EKS.IRSA.OIDC.GHOST.001) but specific to managed
+  add-ons.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, IA-5"
+  fedramp_moderate: "CM-2, IA-5"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["IAM-14", "BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_addon
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS add-on's serviceAccountRoleArn references a deleted
+    IRSA role.
+  action: >
+    Recreate the IAM role with the documented IRSA trust
+    policy for the add-on (each add-on's docs publish the
+    required policy), or update the add-on configuration
+    via aws eks update-addon --service-account-role-arn
+    <new-arn>. After fixing, restart the add-on's pods to
+    pick up the new role.
+  example: |
+    {
+      "k8s": {
+        "addon": {
+          "service_account_role_arn": "arn:aws:iam::111122223333:role/eks-vpc-cni-irsa",
+          "service_account_role_exists": true,
+          "has_ghost_irsa_role": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.addon.has_ghost_irsa_role
+      op: eq
+      value: true
+defect: >
+  EKS add-on has a serviceAccountRoleArn pointing at an
+  IAM role that has been deleted.
+infection: >
+  The add-on's pods need the IRSA role to call AWS APIs.
+  Existing pods running cached STS credentials continue
+  to function until token refresh. New pods (DaemonSet
+  recycle, scaling, node replacement) try to assume the
+  role on start — AssumeRoleWithWebIdentity fails because
+  the role doesn't exist. The add-on's reconcile cycle
+  reports failures; AWS API operations the add-on
+  performs (CNI ENI provisioning, EBS volume attach, ELB
+  programming) silently degrade. Operators see add-on
+  pods CrashLooping or in error states with no obvious
+  cause until they trace the IAM role.
+failure: >
+  Add-on operational failure. Add-on pods can't assume
+  IRSA role; downstream AWS operations the add-on
+  performs degrade or fail entirely.
+tests:
+  - name: addon with ghost IRSA fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:addon/prod/vpc-cni"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "vpc-cni"
+            service_account_role_arn: "arn:aws:iam::111122223333:role/eks-vpc-cni-irsa-deleted"
+            service_account_role_exists: false
+            has_ghost_irsa_role: true
+  - name: addon with live IRSA passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:addon/prod/vpc-cni"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "vpc-cni"
+            service_account_role_arn: "arn:aws:iam::111122223333:role/eks-vpc-cni-irsa"
+            service_account_role_exists: true
+            has_ghost_irsa_role: false

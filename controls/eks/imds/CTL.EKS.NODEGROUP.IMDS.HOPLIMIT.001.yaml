@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NODEGROUP.IMDS.HOPLIMIT.001
+name: EKS Node Group IMDS Hop Limit Permits Pod-Side Reach
+description: >
+  EKS node group's launch template has
+  `MetadataOptions.HttpPutResponseHopLimit` greater than 1.
+  The hop limit is the IP TTL on IMDS responses; a value
+  of 1 means responses can only reach processes on the host
+  itself, not containers (containers add a hop). With
+  HopLimit > 1, container processes — including pods —
+  can directly read IMDS and obtain the node's IAM
+  credentials. Combined with IMDSv2 required (still
+  reachable from containers if hop limit allows), this
+  is the documented EKS hardening required to keep IMDS
+  access node-only.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, IA-2, SC-7"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, IA-2"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IAM-04", "IVS-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_nodegroup
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EKS node group's IMDS hop limit > 1 permits pod-side
+    IMDS access.
+  action: >
+    Update the launch template's MetadataOptions to
+    `HttpPutResponseHopLimit: 1`. Roll the node group to
+    apply. After rollout, verify pods can no longer reach
+    169.254.169.254 by exec-ing into a test pod and
+    curl-ing the metadata service — should time out.
+  example: |
+    {
+      "k8s": {
+        "nodegroup": {
+          "imds_hop_limit": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.nodegroup.imds_hop_limit
+      op: gt
+      value: 1
+defect: >
+  EKS node group's IMDS hop limit is greater than 1,
+  permitting container processes to reach the metadata
+  service.
+infection: >
+  IMDS responses traverse the IP TTL chain; with hop
+  limit > 1, packets reach container processes inside
+  pods. Any pod scheduled on the node can issue a PUT to
+  obtain an IMDSv2 token (if v2 required) or simply GET
+  (if v1 permitted), then read /latest/meta-data/iam/...
+  to extract the node's IAM credentials. Even pods using
+  IRSA correctly for their own AWS API calls have access
+  to the broader node role through this path. Hop limit
+  = 1 keeps IMDS strictly host-only.
+failure: >
+  Pod-to-IMDS IAM credential exfiltration. Pods reach
+  IMDS regardless of IRSA configuration; node role
+  becomes the realistic compromise scope.
+tests:
+  - name: hop limit 2 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/default"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            imds_hop_limit: 2
+  - name: hop limit 1 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/default"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            imds_hop_limit: 1

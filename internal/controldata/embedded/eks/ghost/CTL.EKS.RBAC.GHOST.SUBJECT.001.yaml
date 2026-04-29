@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.RBAC.GHOST.SUBJECT.001
+name: EKS RoleBinding Or ClusterRoleBinding References Deleted Subject
+description: >
+  RoleBinding or ClusterRoleBinding has a subject —
+  ServiceAccount, User, or Group — that no longer exists.
+  The binding persists with permissions still attached. The
+  same name-reuse problem as aws-auth ghost roles: if a
+  ServiceAccount is recreated with the same name + namespace
+  (Helm reapply, namespace recreation), it inherits the
+  ghost binding's permissions automatically.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "AC-3, CM-2, CM-3"
+  fedramp_moderate: "AC-3, CM-2"
+  iso_27001_2022: "A.5.15, A.5.16, A.8.32"
+  ccm_v4: ["IAM-04", "IAM-13"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_rbac_binding
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    RBAC binding has a subject that no longer exists.
+  action: >
+    Delete the binding (kubectl delete rolebinding /
+    clusterrolebinding <name>) OR remove the orphan subject
+    from the subjects list. Audit cluster bindings via
+    `kubectl get clusterrolebinding,rolebinding -A -o yaml`
+    and verify every subject resolves: ServiceAccounts via
+    kubectl get sa, Users / Groups via the cluster's auth
+    provider.
+  example: |
+    {
+      "k8s": {
+        "rbac_binding": {
+          "subject_kind": "ServiceAccount",
+          "subject_name": "orders-runtime",
+          "subject_namespace": "orders",
+          "subject_exists": true,
+          "has_ghost_subject": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.rbac_binding.has_ghost_subject
+      op: eq
+      value: true
+defect: >
+  RBAC binding's subjects list contains an entry referencing
+  a ServiceAccount, User, or Group that no longer exists.
+infection: >
+  The binding persists with its role grants intact. If the
+  subject is later recreated with the same name (SA recreated
+  via Helm reapply, User re-added to identity provider with
+  same name, Group reformed with same membership convention),
+  the new subject inherits the binding's permissions
+  automatically. Privilege escalation through subject-name
+  reuse — the same pattern as aws-auth role-name reuse but
+  at the in-cluster RBAC layer.
+failure: >
+  Privilege escalation via subject-name reuse. A deleted
+  subject can be recreated to silently inherit RBAC grants.
+tests:
+  - name: binding with ghost subject fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/rolebinding/orders-deploy-rb"
+      asset_type: aws_eks_rbac_binding
+      vendor: aws
+      properties:
+        k8s:
+          rbac_binding:
+            subject_kind: "ServiceAccount"
+            subject_name: "deploy-bot-deleted"
+            subject_namespace: "orders"
+            subject_exists: false
+            has_ghost_subject: true
+  - name: binding with live subject passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/rolebinding/orders-deploy-rb"
+      asset_type: aws_eks_rbac_binding
+      vendor: aws
+      properties:
+        k8s:
+          rbac_binding:
+            subject_kind: "ServiceAccount"
+            subject_name: "deploy-bot"
+            subject_namespace: "orders"
+            subject_exists: true
+            has_ghost_subject: false

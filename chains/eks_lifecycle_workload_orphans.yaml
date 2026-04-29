@@ -1,0 +1,22 @@
+id: eks_lifecycle_workload_orphans
+description: >
+  EKS cluster has multiple lifecycle workload-orphan
+  defects: namespaces dormant for over 90 days with
+  zero workloads, LoadBalancer Services with no
+  endpoints (ELB billed with no targets), and Helm
+  releases stuck in failed / pending state past 7
+  days. Each defect represents inventory clutter,
+  cost drift, and CI/CD friction; co-occurrence
+  indicates the cluster's workload lifecycle is
+  unmanaged. Threshold of 2 fires when at least two
+  workload-orphan signals coexist.
+controls:
+  - CTL.EKS.NS.DORMANT.001
+  - CTL.EKS.SERVICE.LB.NOENDPOINTS.001
+  - CTL.EKS.HELM.RELEASE.FAILED.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

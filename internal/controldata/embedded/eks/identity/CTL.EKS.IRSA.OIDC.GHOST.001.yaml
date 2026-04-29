@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.IRSA.OIDC.GHOST.001
+name: EKS IRSA Role Trust Policy References Non-Existent OIDC Provider
+description: >
+  IRSA role's trust policy references a federated OIDC
+  provider URL that doesn't match any IAM identity provider
+  in the account, OR the URL has a typo / extra slash / wrong
+  region / missing thumbprint. The role can never be assumed
+  — every AssumeRoleWithWebIdentity call fails. Workloads
+  depending on the role report "couldn't get caller identity"
+  and operators trace the configuration twice before noticing
+  the URL mismatch. Same ghost-reference pattern as other EB
+  / SQS ghost-target controls but at the federation layer.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, IA-5"
+  fedramp_moderate: "CM-2, IA-5"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["IAM-14", "BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_irsa_role
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    IRSA role's trust policy references an OIDC provider URL
+    that doesn't resolve to a configured IAM identity
+    provider.
+  action: >
+    Verify the OIDC provider exists: aws iam
+    list-open-id-connect-providers. Confirm the URL in the
+    trust policy matches exactly — including the region, the
+    cluster ID segment, and no trailing slash. If the cluster
+    OIDC provider was deleted, recreate via eksctl utils
+    associate-iam-oidc-provider --cluster <name>. Update the
+    trust policy with the new ARN if it changed.
+  example: |
+    {
+      "k8s": {
+        "irsa": {
+          "oidc_provider_url": "oidc.eks.us-east-1.amazonaws.com/id/ABC123",
+          "oidc_provider_exists": true,
+          "has_ghost_oidc_provider": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.irsa.has_ghost_oidc_provider
+      op: eq
+      value: true
+defect: >
+  IRSA role trust policy references an OIDC provider URL
+  that doesn't match any configured IAM identity provider.
+infection: >
+  The role's trust policy is structurally correct, but the
+  OIDC provider URL it references doesn't exist. Every
+  AssumeRoleWithWebIdentity attempt fails with
+  InvalidIdentityToken or NoSuchEntity. Pods depending on
+  the role can't authenticate to AWS APIs; they fall back to
+  the node instance profile (if available, often broader
+  scope than the IRSA role intended) or fail to call AWS.
+  Common causes: cluster recreated with a new OIDC issuer
+  ID, region typo in the URL, OIDC provider deletion during
+  cluster cleanup, copy-paste from another cluster's trust
+  policy.
+failure: >
+  Silent IRSA failure. Role can't be assumed; pods either
+  fall back to broader node-role permissions or fail to
+  call AWS APIs.
+tests:
+  - name: trust with ghost OIDC fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/eks-orders-irsa"
+      asset_type: aws_eks_irsa_role
+      vendor: aws
+      properties:
+        k8s:
+          irsa:
+            oidc_provider_url: "oidc.eks.us-east-1.amazonaws.com/id/DEADBEEF"
+            oidc_provider_exists: false
+            has_ghost_oidc_provider: true
+  - name: trust with live OIDC passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/eks-orders-irsa"
+      asset_type: aws_eks_irsa_role
+      vendor: aws
+      properties:
+        k8s:
+          irsa:
+            oidc_provider_url: "oidc.eks.us-east-1.amazonaws.com/id/ABC123"
+            oidc_provider_exists: true
+            has_ghost_oidc_provider: false

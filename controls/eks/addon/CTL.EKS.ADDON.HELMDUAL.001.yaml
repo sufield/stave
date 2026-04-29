@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ADDON.HELMDUAL.001
+name: EKS Add-on Installed Via Both Helm And EKS Managed Add-ons
+description: >
+  EKS cluster has the same component (vpc-cni, coredns,
+  kube-proxy, aws-load-balancer-controller, ebs-csi-driver,
+  etc.) installed via both EKS managed add-ons and a Helm
+  release. Two reconcile loops contend for the same
+  cluster resources — Helm reconciles to the chart's
+  values, EKS managed-add-on reconciles to the add-on
+  config — and changes from one are silently overwritten
+  by the other on the next reconcile. Configuration drift
+  is constant; troubleshooting becomes "which controller
+  applied this last?"
+domain: governance
+severity: high
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_addon
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS cluster has a component installed via both Helm
+    and EKS managed add-ons.
+  action: >
+    Choose one source of truth. EKS managed add-ons are the
+    AWS-recommended path for the core add-ons (vpc-cni,
+    coredns, kube-proxy) — uninstall the Helm release.
+    For other add-ons (aws-load-balancer-controller,
+    cluster-autoscaler), Helm is often preferred — delete
+    the EKS managed add-on. After consolidating to one
+    source, document the choice in cluster IaC.
+  example: |
+    {
+      "k8s": {
+        "addon": {
+          "addon_name": "vpc-cni",
+          "installed_via_helm": false,
+          "installed_via_managed_addon": true,
+          "is_dual_install": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.addon.is_dual_install
+      op: eq
+      value: true
+defect: >
+  EKS cluster has the same add-on component installed via
+  both Helm and EKS managed add-ons.
+infection: >
+  Two controllers reconcile the same Kubernetes resources.
+  EKS managed add-on reconciles every few minutes to its
+  configured state; Helm operator reconciles on chart
+  diff to the chart values. Each overwrites the other.
+  Operator changes via Helm get reverted by the next
+  managed add-on sync; changes via add-on config get
+  reverted by the next Helm reconcile. Diagnostic
+  experience: "I made this change but it keeps reverting."
+failure: >
+  Constant configuration drift. Manual changes don't
+  persist; troubleshooting hampered by competing
+  reconcile loops.
+tests:
+  - name: addon installed twice fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/cluster/prod/addon/vpc-cni"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "vpc-cni"
+            installed_via_helm: true
+            installed_via_managed_addon: true
+            is_dual_install: true
+  - name: managed-only addon passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/cluster/prod/addon/vpc-cni"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "vpc-cni"
+            installed_via_helm: false
+            installed_via_managed_addon: true
+            is_dual_install: false

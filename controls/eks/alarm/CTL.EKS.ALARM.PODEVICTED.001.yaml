@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ALARM.PODEVICTED.001
+name: EKS Cluster Has No Alarm On Pod Eviction Count
+description: >
+  EKS cluster has no CloudWatch alarm on pod
+  eviction events. Pod evictions occur when a
+  node hits MemoryPressure or DiskPressure (the
+  kubelet evicts to recover capacity), or when
+  preemption fires (a higher-priority pod takes
+  the slot). Persistent evictions indicate
+  capacity sizing problems or scheduler-priority
+  contention; without an alarm, the cluster's
+  effective workload health degrades silently.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS cluster has no alarm on pod eviction count.
+  action: >
+    Enable Container Insights. Create CloudWatch
+    alarm on
+    pod_status_phase{status="Failed",reason="Evicted"}
+    over 5 minutes. Persistent evictions point at
+    either capacity issues (scale up nodes / add
+    requests-correctness) or PriorityClass
+    contention (review per-namespace
+    PriorityClass usage).
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "alarm_pod_evicted_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.alarm_pod_evicted_configured
+      op: eq
+      value: false
+defect: >
+  EKS cluster has no alarm on pod eviction count.
+infection: >
+  Pod evictions kick workloads off the node.
+  Evicted pods reschedule (if capacity exists)
+  but during the gap their service degrades.
+  Persistent evictions concentrated on one node
+  indicate that node has issues; persistent
+  evictions across nodes indicate cluster-wide
+  capacity / priority issues. Both are
+  diagnosable from the eviction-count metric;
+  without an alarm, the operator notices via
+  workload symptoms.
+failure: >
+  Silent capacity / priority pressure.
+  Evictions go unnoticed; effective workload
+  capacity drops; sizing decisions made without
+  data.
+tests:
+  - name: cluster without eviction alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_pod_evicted_configured: false
+  - name: cluster with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_pod_evicted_configured: true

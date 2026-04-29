@@ -1,0 +1,19 @@
+id: eks_workload_identity_leak
+description: >
+  EKS pod has both a mounted ServiceAccount token (without
+  needing K8s API access) AND uses node-instance-profile
+  credentials for AWS APIs (without IRSA / Pod Identity).
+  Pod compromise yields TWO sets of credentials: the K8s
+  ServiceAccount token (cluster API access) and the node
+  IAM role (AWS API access). Both are broader than the
+  workload's legitimate scope. Threshold of 2 fires when
+  both leak vectors coexist on the same pod.
+controls:
+  - CTL.EKS.POD.SATOKEN.AUTOMOUNT.001
+  - CTL.EKS.POD.NODE.PROFILE.INHERIT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - iam_credential_theft

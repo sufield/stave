@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NETPOL.NODEFAULTDENY.EGRESS.001
+name: EKS Namespace Has No Default-Deny Egress NetworkPolicy
+description: >
+  EKS namespace has no NetworkPolicy that selects all pods
+  with empty egress rules — the default-deny-egress
+  baseline. Without it, pods can initiate connections to any
+  destination including external internet, the IMDS
+  endpoint (169.254.169.254), and all internal cluster
+  services. Default-deny egress is the namespace-level
+  exfiltration floor; without it, a pod compromise yields
+  full outbound network access.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6, CC6.7"
+  nist_800_53_r5: "AC-4, SC-7"
+  pci_dss_v4.0: "1.2, 1.3"
+  fedramp_moderate: "AC-4, SC-7"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IVS-09", "DSP-17"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_namespace
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS namespace has no default-deny-egress NetworkPolicy.
+  action: >
+    Apply a default-deny baseline:
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: default-deny-egress
+        namespace: <ns>
+      spec:
+        podSelector: {}
+        policyTypes: [Egress]
+    Then explicitly allow only the egress destinations the
+    workload requires (internal cluster services, AWS
+    endpoints via VPC endpoints, specific external APIs).
+    Block IMDS access by including its IP range in deny
+    rules.
+  example: |
+    {
+      "k8s": {
+        "namespace": {
+          "has_default_deny_egress": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.namespace.has_default_deny_egress
+      op: eq
+      value: false
+    - field: properties.k8s.namespace.is_system_namespace
+      op: eq
+      value: false
+defect: >
+  EKS namespace has no NetworkPolicy establishing default-
+  deny egress.
+infection: >
+  Pods in the namespace can initiate connections to any
+  destination. Compromised pods exfiltrate data to attacker-
+  controlled external servers, fetch payloads from public
+  C2 infrastructure, or call IMDS at 169.254.169.254 to
+  extract node IAM credentials. Cluster operators monitoring
+  ingress (firewalls, ALBs, ingress controllers) see no
+  evidence of the attack — the malicious traffic is
+  outbound.
+failure: >
+  Unbounded data exfiltration surface. Compromised pods
+  can connect anywhere; investigators have no policy-level
+  signal to contain the breach.
+tests:
+  - name: namespace without default-deny-egress fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            has_default_deny_egress: false
+            is_system_namespace: false
+  - name: namespace with default-deny-egress passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            has_default_deny_egress: true
+            is_system_namespace: false

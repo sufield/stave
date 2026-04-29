@@ -1,0 +1,24 @@
+id: eks_image_provenance_unsafe
+description: >
+  EKS workload has multiple image-provenance defects:
+  pulls from non-allowlisted public registry, uses
+  :latest tag, lacks digest pinning, or no
+  signature-verification admission policy. The chain
+  represents the supply-chain attack surface — any of
+  these defects alone allows a tampered image to run;
+  co-occurrence indicates the cluster has no provenance
+  discipline. Threshold of 2 fires when at least two
+  provenance defects coexist on the same workload or
+  cluster.
+controls:
+  - CTL.EKS.IMAGE.PUBLIC.REGISTRY.001
+  - CTL.EKS.IMAGE.LATEST.TAG.001
+  - CTL.EKS.IMAGE.NODIGEST.001
+  - CTL.EKS.IMAGE.NOSIGNATURE.001
+  - CTL.EKS.ECR.PULL.PUBLIC.GALLERY.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - control_plane_code_execution

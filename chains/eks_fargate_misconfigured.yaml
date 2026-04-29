@@ -1,0 +1,22 @@
+id: eks_fargate_misconfigured
+description: >
+  EKS Fargate configuration has multiple operational
+  defects: profile selector matches `*` / `default`
+  namespace, profile pod execution role overprivileged,
+  and / or DaemonSets defined for namespaces covered by
+  Fargate (silent never-schedule). Combined, these mean
+  Fargate is running unintended workloads with broader IAM
+  than needed, and observability / security DaemonSets the
+  operator believes are deployed everywhere don't actually
+  cover the Fargate workloads. Threshold of 2 fires when
+  at least two Fargate defects coexist.
+controls:
+  - CTL.EKS.FARGATE.SELECTOR.WIDE.001
+  - CTL.EKS.FARGATE.PROFILE.OVERPRIV.001
+  - CTL.EKS.FARGATE.DAEMONSET.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

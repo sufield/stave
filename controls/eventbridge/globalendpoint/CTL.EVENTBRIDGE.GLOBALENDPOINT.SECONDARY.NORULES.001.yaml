@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.GLOBALENDPOINT.SECONDARY.NORULES.001
+name: EventBridge Global Endpoint Secondary Bus Has No Rules
+description: >
+  EventBridge Global Endpoint has a secondary region's bus
+  configured for failover, but that bus has zero rules
+  attached. When failover fires, events arrive at the
+  secondary bus and are silently discarded — no rule matches,
+  no target invokes. The Global Endpoint reports a successful
+  failover; downstream automation still doesn't run during
+  the primary-region incident.
+domain: governance
+severity: high
+compliance:
+  soc2: "A1.1, A1.2, CC7.2"
+  nist_800_53_r5: "CP-7, CP-9, CP-10"
+  fedramp_moderate: "CP-7, CP-10"
+  iso_27001_2022: "A.5.30, A.8.13, A.8.16"
+  ccm_v4: ["BCR-08", "BCR-09"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_global_endpoint
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge Global Endpoint's secondary-region bus has no
+    rules; failover would deliver events to a void.
+  action: >
+    Replicate the primary region's rule set to the secondary
+    region. The rule definitions, target ARNs (region-
+    appropriate), invocation roles, and DLQs all need to
+    exist in the secondary region. AWS doesn't auto-replicate
+    rules across Global Endpoint members — this is operator
+    responsibility.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_global_endpoint",
+        "events": {
+          "secondary_rule_count": 12
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_global_endpoint
+    - field: properties.governance.events.secondary_rule_count
+      op: eq
+      value: 0
+defect: >
+  EventBridge Global Endpoint's secondary-region bus has zero
+  rules.
+infection: >
+  Global Endpoint failover is configured. Health check fires;
+  events route to the secondary region. The secondary bus
+  accepts the events (PutEvents succeeds) but no rule
+  matches — every event is silently discarded. The primary
+  outage does not recover via failover; downstream
+  automation experiences the full primary outage even though
+  the Global Endpoint reported successful failover.
+failure: >
+  DR capability is nominal-only. Failover delivers events to
+  a bus with no rules; downstream consumers receive nothing
+  during the primary-region incident.
+tests:
+  - name: secondary bus with no rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:endpoint/orders-ge"
+      asset_type: aws_eventbridge_global_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_global_endpoint
+          events:
+            secondary_rule_count: 0
+  - name: secondary bus with rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:endpoint/orders-ge"
+      asset_type: aws_eventbridge_global_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_global_endpoint
+          events:
+            secondary_rule_count: 12

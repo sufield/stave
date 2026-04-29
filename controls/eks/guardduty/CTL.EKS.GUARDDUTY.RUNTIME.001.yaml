@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.GUARDDUTY.RUNTIME.001
+name: EKS Cluster Has GuardDuty Runtime Monitoring Disabled
+description: >
+  EKS cluster has GuardDuty Runtime Monitoring not
+  enabled. Runtime Monitoring deploys an agent
+  DaemonSet (managed-by-AWS) that observes
+  per-pod system calls, file access, and process
+  execution to detect runtime threats — crypto
+  miners, reverse shells, container escapes,
+  privilege escalation. Without it, runtime
+  threat detection depends on whatever the team
+  deployed (Falco, Sysdig) — typically not
+  installed by default. The control-plane layer
+  alone (covered by GuardDuty EKS Protection)
+  doesn't see runtime activity.
+domain: detection
+severity: high
+compliance:
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "SI-4, IR-4"
+  pci_dss_v4.0: "11.5"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.5.24, A.8.16"
+  ccm_v4: ["LOG-08", "SEF-04"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EKS cluster has GuardDuty Runtime Monitoring
+    disabled.
+  action: >
+    Enable Runtime Monitoring in GuardDuty for the
+    region. Configure automated agent management:
+      aws guardduty update-detector
+        --detector-id <id>
+        --features
+        'Name=RUNTIME_MONITORING,Status=ENABLED,
+        AdditionalConfiguration=[{Name=EKS_ADDON_MANAGEMENT,
+        Status=ENABLED}]'
+    The aws-guardduty-agent EKS add-on deploys
+    automatically to the cluster. Findings flow
+    to Security Hub.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "guardduty_runtime_monitoring_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.guardduty_runtime_monitoring_enabled
+      op: eq
+      value: false
+defect: >
+  EKS cluster has GuardDuty Runtime Monitoring
+  disabled.
+infection: >
+  Runtime threats on cluster workloads — crypto
+  miner deployment, reverse shell from a
+  compromised pod, container-escape attempts —
+  don't surface unless a third-party runtime
+  security tool (Falco, Sysdig, Aqua) is
+  installed and tuned. The control-plane layer
+  alone misses runtime activity entirely.
+  Compromise of any pod can persist for the
+  pod's lifetime without operator awareness.
+failure: >
+  Runtime threat detection gap. Pod-level threats
+  go undetected; only control-plane symptoms
+  (Service-Account abuse, exec-to-pod) surface.
+tests:
+  - name: cluster without Runtime Monitoring fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            guardduty_runtime_monitoring_enabled: false
+  - name: cluster with Runtime Monitoring passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            guardduty_runtime_monitoring_enabled: true

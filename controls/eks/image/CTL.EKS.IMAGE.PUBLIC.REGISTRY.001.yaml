@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.IMAGE.PUBLIC.REGISTRY.001
+name: EKS Workload Pulls Image From Non-Allowlisted Public Registry
+description: >
+  EKS workload's container image is pulled from a public
+  registry not on the org's allowlist (Docker Hub, Quay,
+  GHCR, gcr.io public projects). Public registries can
+  serve tampered images on arbitrary tags; without
+  admission control restricting pulls to allowlisted
+  registries (typically the org's private ECR),
+  workloads are vulnerable to supply-chain attacks
+  including dependency confusion, typosquatting, and
+  upstream account compromise.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, SI-3, SR-3"
+  pci_dss_v4.0: "6.3"
+  fedramp_moderate: "CM-2, SI-3"
+  iso_27001_2022: "A.5.16, A.8.30"
+  ccm_v4: ["TVM-09", "BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_workload
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EKS workload pulls from a non-allowlisted public
+    registry.
+  action: >
+    Mirror upstream public images into the org's private
+    ECR via tools like skopeo / crane, scan on push, and
+    update workload manifests to pull from the private
+    ECR copy. Add an admission policy (Kyverno,
+    OPA Gatekeeper, EKS Pod Identity Agent) that rejects
+    workloads pulling from non-allowlisted registries.
+  example: |
+    {
+      "k8s": {
+        "workload": {
+          "image_uri": "111122223333.dkr.ecr.us-east-1.amazonaws.com/orders:v1.2.3",
+          "image_registry_allowlisted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.workload.image_registry_allowlisted
+      op: eq
+      value: false
+defect: >
+  EKS workload's image is from a public registry not on
+  the org's allowlist.
+infection: >
+  Public registries permit anyone to publish images
+  under any name they control. Dependency-confusion
+  attacks, typosquatting, and account-compromise of
+  upstream maintainers all yield tampered images on
+  expected tags. Workloads pulling these images run
+  attacker code with whatever capabilities the pod
+  was granted. Mirror-and-allowlist breaks the chain:
+  org-controlled registries serve only what the org
+  scanned and approved.
+failure: >
+  Supply-chain attack surface. Tampered images run
+  with the workload's full pod permissions; defenses
+  rely on per-image scanning rather than registry-
+  level allowlisting.
+tests:
+  - name: Docker Hub image fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "docker.io/library/nginx:1.21"
+            image_registry_allowlisted: false
+  - name: private ECR image passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "111122223333.dkr.ecr.us-east-1.amazonaws.com/nginx:1.21"
+            image_registry_allowlisted: true

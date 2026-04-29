@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.SERVICE.GHOST.SG.001
+name: EKS LoadBalancer Service Annotation References Deleted Security Group
+description: >
+  EKS Service of type `LoadBalancer` has the
+  `service.beta.kubernetes.io/aws-load-balancer-security-groups`
+  (or NLB equivalent) annotation pointing at one or more
+  security group IDs that no longer exist. The
+  AWS-load-balancer-controller's reconcile cycle attempts to
+  attach the SGs to the ELB; AWS rejects the call with
+  InvalidSecurityGroup. The Service can't reach Ready;
+  existing traffic routing through a previously-provisioned
+  ELB continues but reconfiguration / ELB recreation fails.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, AC-3"
+  fedramp_moderate: "CM-2, AC-3"
+  iso_27001_2022: "A.5.15, A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_service
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS LoadBalancer Service annotation references a
+    security group that has been deleted.
+  action: >
+    Update the Service's
+    `service.beta.kubernetes.io/aws-load-balancer-security-groups`
+    annotation to a live SG ID (kubectl edit svc <name>),
+    or recreate the SG at the original ID if reproducible.
+    Pair with VPC SG ghost detection (CTL.VPC.SG.GHOST.001)
+    to catch the SG-deletion event earlier.
+  example: |
+    {
+      "k8s": {
+        "service": {
+          "annotated_sg_ids": ["sg-0abc123def456"],
+          "annotated_sg_ids_exist": true,
+          "has_ghost_sg": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.service.has_ghost_sg
+      op: eq
+      value: true
+defect: >
+  EKS LoadBalancer Service annotation references a security
+  group that has been deleted.
+infection: >
+  The Service manifest is structurally correct. The
+  AWS-load-balancer-controller attempts to reconcile —
+  AWS rejects SG attachment with InvalidSecurityGroup.
+  Reconcile errors out; ELB configuration drifts from
+  Service intent; new ELB provisioning (e.g., during a
+  blue-green rollout) fails entirely. Existing traffic
+  routing through a previously-provisioned ELB continues
+  for now, but operational maintenance — SG rule changes,
+  ELB version upgrade, scaling — silently breaks.
+failure: >
+  Silent ELB reconcile failure. Service can't be updated;
+  ELB drifts from declared state.
+tests:
+  - name: Service with ghost SG fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/service/orders-api-lb"
+      asset_type: aws_eks_service
+      vendor: aws
+      properties:
+        k8s:
+          service:
+            annotated_sg_ids: ["sg-deleted"]
+            annotated_sg_ids_exist: false
+            has_ghost_sg: true
+  - name: Service with live SG passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/service/orders-api-lb"
+      asset_type: aws_eks_service
+      vendor: aws
+      properties:
+        k8s:
+          service:
+            annotated_sg_ids: ["sg-0abc123def456"]
+            annotated_sg_ids_exist: true
+            has_ghost_sg: false

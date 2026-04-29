@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.IRSA.AUDIENCE.MISSING.001
+name: EKS IRSA Role Trust Policy Has No Audience Condition
+description: >
+  IRSA role's trust policy doesn't include the `aud` (audience)
+  condition checking for `sts.amazonaws.com`. Without the
+  audience check, tokens minted by the cluster's OIDC provider
+  for non-AWS-STS audiences (other AWS services, third-party
+  audiences) can also be used to assume the role. AWS
+  documentation explicitly requires the `aud` check; omitting
+  it widens the role's assumable scope beyond what the
+  cluster operator likely intended.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, IA-5"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, IA-5"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-14", "IAM-16"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_irsa_role
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    IRSA role trust policy is missing the `aud` condition
+    binding token usage to AWS STS.
+  action: >
+    Add `<oidc-issuer>:aud` = `sts.amazonaws.com` to the trust
+    policy's StringEquals condition. The full per-workload
+    pattern is:
+      "Condition": {
+        "StringEquals": {
+          "<oidc-issuer>:sub": "system:serviceaccount:<ns>:<sa>",
+          "<oidc-issuer>:aud": "sts.amazonaws.com"
+        }
+      }
+  example: |
+    {
+      "k8s": {
+        "irsa": {
+          "trust_aud_set": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.irsa.trust_oidc_issuer_set
+      op: eq
+      value: true
+    - field: properties.k8s.irsa.trust_aud_set
+      op: eq
+      value: false
+defect: >
+  IRSA role trust policy lacks the audience condition binding
+  token usage to sts.amazonaws.com.
+infection: >
+  IRSA tokens minted by the cluster's OIDC provider may carry
+  audiences other than `sts.amazonaws.com` — typically when
+  the same OIDC provider is reused for non-AWS purposes
+  (federated identity for third-party services, custom
+  audiences for internal apps). Without the `aud` check, a
+  token issued for one of those audiences can also assume the
+  IAM role. The intended trust boundary — "AWS STS only" —
+  is silently widened.
+failure: >
+  Trust-boundary widening. Tokens issued for non-AWS
+  audiences can assume IRSA roles intended only for AWS API
+  calls.
+tests:
+  - name: trust without aud fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/eks-orders-irsa"
+      asset_type: aws_eks_irsa_role
+      vendor: aws
+      properties:
+        k8s:
+          irsa:
+            trust_oidc_issuer_set: true
+            trust_aud_set: false
+  - name: trust with aud passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/eks-orders-irsa"
+      asset_type: aws_eks_irsa_role
+      vendor: aws
+      properties:
+        k8s:
+          irsa:
+            trust_oidc_issuer_set: true
+            trust_aud_set: true
+            trust_aud_value: "sts.amazonaws.com"

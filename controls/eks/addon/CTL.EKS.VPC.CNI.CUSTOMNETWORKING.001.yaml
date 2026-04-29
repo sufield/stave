@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.VPC.CNI.CUSTOMNETWORKING.001
+name: EKS VPC CNI Custom Networking Enabled But Not Configured
+description: >
+  EKS VPC CNI add-on has
+  AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG=true (custom
+  networking enabled) but no ENIConfig CRDs are
+  created in the cluster. Pods get IPs from the
+  default subnet ranges instead of the custom
+  per-AZ subnets the operator intended to provision.
+  Multi-tenant clusters depending on custom networking
+  for IP isolation lose the isolation; pods land in
+  the wrong subnets.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, AC-4, SC-7"
+  fedramp_moderate: "CM-2, SC-7"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["IVS-09", "BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_addon
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS VPC CNI custom networking is enabled but no
+    ENIConfig CRDs exist.
+  action: >
+    Create ENIConfig CRDs per AZ, each pointing at the
+    custom subnet for that AZ:
+      apiVersion: crd.k8s.amazonaws.com/v1alpha1
+      kind: ENIConfig
+      metadata: { name: us-east-1a }
+      spec:
+        securityGroups: [sg-...]
+        subnet: subnet-...
+    Then label each node with its AZ's ENIConfig
+    via the VPC CNI's ENI_CONFIG_LABEL_DEF
+    environment variable. Verify pod IPs land in the
+    custom subnets via `kubectl get pods -A -o
+    wide`.
+  example: |
+    {
+      "k8s": {
+        "addon": {
+          "addon_name": "vpc-cni",
+          "custom_networking_enabled": true,
+          "eniconfig_cr_count": 3
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.addon.addon_name
+      op: eq
+      value: vpc-cni
+    - field: properties.k8s.addon.custom_networking_enabled
+      op: eq
+      value: true
+    - field: properties.k8s.addon.eniconfig_cr_count
+      op: eq
+      value: 0
+defect: >
+  EKS VPC CNI custom networking is enabled but no
+  ENIConfig CRDs exist.
+infection: >
+  Custom networking is the EKS pattern for placing
+  pods in subnets distinct from the node subnets —
+  typically used for IP-range expansion (avoiding pod-
+  IP exhaustion) or for tenant network isolation.
+  Without ENIConfig CRDs, the VPC CNI doesn't know
+  which custom subnet to use for each AZ. The
+  fallback behavior is documented as
+  implementation-dependent: some versions error,
+  others silently use the default subnet. The intent
+  of the configuration is silently lost.
+failure: >
+  Pod IP allocation falls back to default subnets;
+  intended IP isolation / expansion not achieved.
+tests:
+  - name: custom networking without ENIConfig fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/cluster/prod/addon/vpc-cni"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "vpc-cni"
+            custom_networking_enabled: true
+            eniconfig_cr_count: 0
+  - name: custom networking with ENIConfig passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/cluster/prod/addon/vpc-cni"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "vpc-cni"
+            custom_networking_enabled: true
+            eniconfig_cr_count: 3
+  - name: custom networking disabled passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/cluster/dev/addon/vpc-cni"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "vpc-cni"
+            custom_networking_enabled: false
+            eniconfig_cr_count: 0

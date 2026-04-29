@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ARGOCD.SPOKE.ADMIN.001
+name: EKS Hub Argo CD Has Cluster-Admin On All Spoke Clusters
+description: >
+  EKS hub-and-spoke architecture: Argo CD installed
+  on a hub cluster has registered each spoke cluster
+  with cluster-admin credentials (typically via a
+  shared kubeconfig). Compromise of the hub Argo CD
+  yields cluster-admin on every spoke. Per-spoke
+  scoped credentials (AppProject restrictions plus
+  per-cluster ServiceAccount with namespace-scoped
+  RBAC) are the documented pattern; broad shared
+  credentials defeat the multi-cluster security
+  boundary.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_argocd_cluster_secret
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EKS hub Argo CD has cluster-admin on spoke
+    clusters.
+  action: >
+    Replace the cluster-admin kubeconfig with per-spoke
+    ServiceAccount credentials. The ServiceAccount
+    should have namespace-scoped permissions matching
+    the apps Argo CD deploys to that spoke. Use
+    AppProject in Argo CD to restrict which apps can
+    target which destinations. Document the per-spoke
+    permission set in the cluster's IaC.
+  example: |
+    {
+      "k8s": {
+        "argocd_cluster_secret": {
+          "spoke_credentials_cluster_admin": false,
+          "uses_per_spoke_scoped_sa": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.argocd_cluster_secret.spoke_credentials_cluster_admin
+      op: eq
+      value: true
+defect: >
+  EKS hub Argo CD's spoke cluster credentials grant
+  cluster-admin.
+infection: >
+  Hub Argo CD has cluster-admin on every spoke. Hub
+  compromise — through a vulnerable Argo CD version,
+  malicious app manifest, or hub-side credential
+  leak — yields cluster-admin on every spoke
+  simultaneously. The org's multi-cluster
+  segmentation provides no defense in depth at the
+  Argo CD layer.
+failure: >
+  Single-point-of-compromise sprawl. Hub Argo CD
+  compromise yields cluster-admin on N spokes;
+  per-spoke isolation defeated.
+tests:
+  - name: spoke with cluster-admin creds fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/argocd/cluster-secret/spoke-prod-orders"
+      asset_type: aws_eks_argocd_cluster_secret
+      vendor: aws
+      properties:
+        k8s:
+          argocd_cluster_secret:
+            spoke_credentials_cluster_admin: true
+  - name: spoke with scoped SA passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/argocd/cluster-secret/spoke-prod-orders"
+      asset_type: aws_eks_argocd_cluster_secret
+      vendor: aws
+      properties:
+        k8s:
+          argocd_cluster_secret:
+            spoke_credentials_cluster_admin: false
+            uses_per_spoke_scoped_sa: true

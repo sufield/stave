@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.SERVICE.LB.NOENDPOINTS.001
+name: EKS LoadBalancer Service Has Zero Endpoints
+description: >
+  EKS Service of type `LoadBalancer` has zero
+  endpoints (no Ready pods match the Service's
+  selector). The ELB / ALB exists in AWS, billed
+  hourly, with no traffic targets. Common causes:
+  workload renamed / labels changed but Service
+  selector wasn't updated, workload deleted but
+  Service wasn't, or all matching pods evicted /
+  CrashLooping. The Service still resolves DNS;
+  clients connect; ELB returns 503s.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_service
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS LoadBalancer Service has zero endpoints.
+  action: >
+    Diagnose root cause: Service selector vs pod
+    labels mismatch (kubectl get pods -l <selector>);
+    workloads CrashLooping (kubectl get pods);
+    workloads scaled to zero. Either fix the
+    underlying workload, update the Service
+    selector, or delete the Service if the workload
+    is decommissioned (also tear down the ELB AWS
+    cost).
+  example: |
+    {
+      "k8s": {
+        "service": {
+          "type": "LoadBalancer",
+          "endpoint_count": 4
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.service.type
+      op: eq
+      value: LoadBalancer
+    - field: properties.k8s.service.endpoint_count
+      op: eq
+      value: 0
+defect: >
+  EKS LoadBalancer Service has zero endpoints.
+infection: >
+  The ELB / ALB AWS resource exists and bills
+  hourly. DNS for the Service resolves; clients
+  connect; the ELB has no targets to forward to,
+  returns 503 / connection refused. Operators
+  typically only notice via consumer-side reports.
+  Cost accumulates at the ELB hourly rate
+  regardless.
+failure: >
+  Cost + service-availability gap. ELB billed
+  with no traffic targets; clients see errors.
+tests:
+  - name: LB service with no endpoints fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/service/orders-api"
+      asset_type: aws_eks_service
+      vendor: aws
+      properties:
+        k8s:
+          service:
+            type: "LoadBalancer"
+            endpoint_count: 0
+  - name: LB service with endpoints passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/service/orders-api"
+      asset_type: aws_eks_service
+      vendor: aws
+      properties:
+        k8s:
+          service:
+            type: "LoadBalancer"
+            endpoint_count: 4
+  - name: ClusterIP service passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/service/internal"
+      asset_type: aws_eks_service
+      vendor: aws
+      properties:
+        k8s:
+          service:
+            type: "ClusterIP"
+            endpoint_count: 0

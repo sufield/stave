@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ALARM.OOMKILLED.001
+name: EKS Cluster Has No Alarm On Pod OOMKilled Count
+description: >
+  EKS cluster has no CloudWatch alarm on container
+  termination with reason=OOMKilled. OOMKilled
+  indicates the workload exceeded its memory
+  limit (or the node ran out of memory and
+  evicted the pod). Memory leaks, traffic spikes,
+  or undersized limits all manifest as OOMKilled;
+  without an alarm, the workload silently restarts
+  at unpredictable cadence, eating capacity.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS cluster has no alarm on OOMKilled count.
+  action: >
+    Enable Container Insights. Create CloudWatch
+    alarm on container_termination{reason=OOMKilled}
+    sum over 5 minutes. Dimension by namespace +
+    pod for team-specific routing. Workloads
+    persistently OOMKilling indicate either memory
+    leak (apply heap profiling) or undersized
+    limits (review actual usage and adjust).
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "alarm_oomkilled_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.alarm_oomkilled_configured
+      op: eq
+      value: false
+defect: >
+  EKS cluster has no alarm on OOMKilled container
+  count.
+infection: >
+  OOMKills cause container restart. The pod's
+  service degrades during restart; if it's
+  serving traffic, requests in flight fail.
+  Persistent OOM events drain a workload's
+  effective capacity invisibly to operators
+  monitoring at the service layer.
+failure: >
+  Silent memory-pressure-driven workload
+  degradation. OOM events aren't surfaced;
+  operators trace performance issues without
+  knowing OOM is the cause.
+tests:
+  - name: cluster without OOM alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_oomkilled_configured: false
+  - name: cluster with OOM alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_oomkilled_configured: true

@@ -1,0 +1,18 @@
+id: eventbridge_globalendpoint_blind
+description: >
+  EventBridge Global Endpoint has both a missing health check
+  and a secondary-region bus with no rules. The Global
+  Endpoint can't trigger failover (no health check signal)
+  AND would deliver events to nothing if it could (no rules
+  in secondary). The DR posture is doubly nonexistent.
+  Threshold of 2 fires when both Global Endpoint defects
+  coexist.
+controls:
+  - CTL.EVENTBRIDGE.GLOBALENDPOINT.NOHEALTHCHECK.001
+  - CTL.EVENTBRIDGE.GLOBALENDPOINT.SECONDARY.NORULES.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

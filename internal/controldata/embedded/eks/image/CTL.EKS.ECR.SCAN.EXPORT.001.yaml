@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ECR.SCAN.EXPORT.001
+name: EKS ECR Scan Findings Not Exported To Security Hub
+description: >
+  EKS cluster's ECR repositories scan-on-push (covered
+  by CTL.ECR.SCAN.001) but the scan findings aren't
+  exported to AWS Security Hub or another central
+  vulnerability dashboard. Findings stay siloed in the
+  ECR console; ops teams running their dashboards
+  against Security Hub don't see container CVEs
+  alongside other findings. Coverage looks complete
+  per-service but is fragmented for operators.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, CC8.1"
+  nist_800_53_r5: "RA-5, SI-4"
+  fedramp_moderate: "RA-5, SI-4"
+  iso_27001_2022: "A.5.16, A.8.8, A.8.16"
+  ccm_v4: ["TVM-09", "LOG-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS cluster's ECR scan findings aren't exported to
+    Security Hub.
+  action: >
+    Enable Security Hub in the region. Enable the
+    Inspector integration with Security Hub (Inspector
+    is the native AWS service that scans ECR images
+    and forwards findings). Verify findings appear:
+      aws securityhub get-findings --filters
+        ProductName=Inspector
+    Create a Security Hub insight on
+    Severity=CRITICAL+HIGH for routing to the on-call
+    queue.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "ecr_findings_in_security_hub": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.ecr_findings_in_security_hub
+      op: eq
+      value: false
+defect: >
+  EKS cluster's ECR scan findings are not forwarded
+  to Security Hub.
+infection: >
+  Vulnerability findings live in the ECR / Inspector
+  console and don't surface in the org's central
+  Security Hub dashboard. Ops teams routing alerts
+  through Security Hub miss container CVEs entirely;
+  vulnerability backlog visibility is per-service
+  rather than cross-service. Findings on workloads
+  near production never bubble up to the operational
+  queue that gets paged.
+failure: >
+  Vulnerability visibility gap. Container CVEs aren't
+  in the central dashboard; ops teams miss findings
+  that don't reach Security Hub.
+tests:
+  - name: cluster without SH integration fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            ecr_findings_in_security_hub: false
+  - name: cluster with SH integration passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            ecr_findings_in_security_hub: true

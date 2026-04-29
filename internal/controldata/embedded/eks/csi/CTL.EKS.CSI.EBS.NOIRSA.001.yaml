@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.CSI.EBS.NOIRSA.001
+name: EKS EBS CSI Driver Has No IRSA Configured
+description: >
+  EKS EBS CSI driver's ServiceAccount has no IRSA
+  annotation linking it to an IAM role with EBS
+  permissions. The driver's pods fall back to the node
+  instance profile for AWS credentials — which gives
+  the driver whatever the node role permits, and gives
+  every other pod on the node those same EBS
+  permissions via the IMDS path. Per-driver IAM scope
+  defeated; cross-pod credential leakage on shared
+  node profiles.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_addon
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    EKS EBS CSI driver lacks IRSA configuration.
+  action: >
+    Create an IAM role with the
+    AmazonEBSCSIDriverPolicy (AWS-managed minimal
+    policy). Trust policy must include the cluster's
+    OIDC issuer + sub for the ebs-csi-controller-sa
+    ServiceAccount. Annotate the SA:
+      kubectl annotate sa ebs-csi-controller-sa -n
+        kube-system
+        eks.amazonaws.com/role-arn=<role-arn>
+    Restart the controller deployment to pick up IRSA.
+  example: |
+    {
+      "k8s": {
+        "addon": {
+          "addon_name": "aws-ebs-csi-driver",
+          "has_irsa": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.addon.addon_name
+      op: eq
+      value: aws-ebs-csi-driver
+    - field: properties.k8s.addon.has_irsa
+      op: eq
+      value: false
+defect: >
+  EKS EBS CSI driver's ServiceAccount has no IRSA
+  annotation.
+infection: >
+  The driver's pods need IAM permissions to provision
+  EBS volumes — CreateVolume, AttachVolume,
+  DescribeVolumes, ModifyVolume, etc. Without IRSA, the
+  AWS SDK falls back to IMDS (the node's instance
+  profile). Every other pod scheduled on the same node
+  has access to those same EBS permissions via IMDS
+  (subject to hop-limit / IMDSv2 configuration). The
+  driver's per-component IAM scope intent collapses
+  into the node-role's broader permission set.
+failure: >
+  Cross-pod IAM scope leakage. EBS permissions
+  reachable by every pod on the node, not just the
+  driver.
+tests:
+  - name: EBS CSI without IRSA fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/cluster/prod/addon/aws-ebs-csi-driver"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "aws-ebs-csi-driver"
+            has_irsa: false
+  - name: EBS CSI with IRSA passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/cluster/prod/addon/aws-ebs-csi-driver"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "aws-ebs-csi-driver"
+            has_irsa: true
+            service_account_role_arn: "arn:aws:iam::111122223333:role/eks-ebs-csi-irsa"

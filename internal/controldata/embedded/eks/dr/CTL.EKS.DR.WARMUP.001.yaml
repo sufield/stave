@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.DR.WARMUP.001
+name: EKS DR Cluster Has Zero Workloads
+description: >
+  EKS DR (disaster recovery) cluster — typically
+  identified by tag `Purpose=DR` or by being the
+  failover target in Route 53 weighted records —
+  has zero workloads deployed (no Deployments,
+  StatefulSets, DaemonSets serving traffic). When
+  failover triggers, the cluster needs full cold-
+  restore from backups before it can serve any
+  traffic. RTO / RPO assumptions in the DR plan
+  rarely match cold-restore reality.
+domain: governance
+severity: high
+compliance:
+  soc2: "A1.1, A1.2, CC7.4"
+  nist_800_53_r5: "CP-7, CP-9, CP-10"
+  fedramp_moderate: "CP-7, CP-9, CP-10"
+  iso_27001_2022: "A.5.30, A.8.13"
+  ccm_v4: ["BCR-08", "BCR-09", "BCR-11"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    EKS DR cluster has no warm workloads.
+  action: >
+    Either deploy minimal warm replicas of critical
+    workloads to the DR cluster (typically 1-2
+    replicas at low resource requests, ready to
+    scale up on failover), or document the
+    cold-restore RTO and validate it against the
+    org's RTO objectives. Cold restore from Velero
+    backups is typically 30+ minutes for clusters of
+    moderate size; warm replicas reduce this to
+    minutes (HPA scales to handle traffic).
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "is_dr_cluster": true,
+          "warm_workload_count": 12
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.is_dr_cluster
+      op: eq
+      value: true
+    - field: properties.k8s.cluster.warm_workload_count
+      op: eq
+      value: 0
+defect: >
+  EKS DR cluster has zero warm workloads.
+infection: >
+  DR cluster is provisioned (control plane running,
+  node groups attached, networking configured) but
+  contains no application Deployments. Failover
+  scenarios assume the cluster can serve traffic
+  once Route 53 fails over; in reality, traffic
+  arrives at a cluster with no application pods and
+  hits 503s until cold restore completes. RTO
+  expectations vs reality diverge by orders of
+  magnitude.
+failure: >
+  DR readiness gap. Failover triggers; DR cluster
+  serves no traffic until cold restore completes
+  (30+ minutes typically, well beyond most
+  documented RTOs).
+tests:
+  - name: DR cluster with no workloads fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-west-2:111122223333:cluster/dr-prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            is_dr_cluster: true
+            warm_workload_count: 0
+  - name: DR cluster with warm workloads passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-west-2:111122223333:cluster/dr-prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            is_dr_cluster: true
+            warm_workload_count: 12
+  - name: non-DR cluster passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            is_dr_cluster: false
+            warm_workload_count: 12

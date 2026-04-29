@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ALARM.ETCD.LATENCY.001
+name: EKS Cluster Has No Alarm On etcd Request Latency
+description: >
+  EKS cluster has no CloudWatch alarm on
+  etcd_request_duration_seconds p99 latency. etcd
+  serves every API-server read and write; latency
+  there directly determines kubectl + controller
+  responsiveness. AWS-managed control plane handles
+  etcd availability, but tenant-driven cluster shape
+  (large numbers of CRDs, many Secrets, frequent
+  audit-log writes) drives latency that AWS doesn't
+  alert on for the tenant. EKS Container Insights
+  enhanced observability exposes etcd metrics
+  directly.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS cluster has no etcd latency alarm.
+  action: >
+    Enable Container Insights enhanced observability
+    for the cluster. Create a CloudWatch alarm on
+    etcd_request_duration_seconds p99 above a baseline
+    threshold (typical: >500ms over 5 minutes for
+    healthy clusters). For high-Secret-density
+    clusters, watch the etcd_db_total_size_in_bytes
+    metric — approaching 8GiB triggers etcd
+    compaction issues.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "alarm_etcd_latency_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.alarm_etcd_latency_configured
+      op: eq
+      value: false
+defect: >
+  EKS cluster has no alarm on etcd request latency.
+infection: >
+  etcd latency increases driven by tenant cluster
+  shape — many CRDs, Secret volume, audit log
+  writes — degrade everything that talks to the API
+  server. Operators see kubectl slow, controllers
+  reconciling slowly, scheduling delayed; the
+  underlying etcd-latency cause requires Container
+  Insights metric drilldown to identify.
+failure: >
+  Silent control-plane latency degradation. Cluster
+  responsiveness drops without alarm notification;
+  diagnosis requires deep metric inspection.
+tests:
+  - name: cluster without etcd alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_etcd_latency_configured: false
+  - name: cluster with etcd alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_etcd_latency_configured: true

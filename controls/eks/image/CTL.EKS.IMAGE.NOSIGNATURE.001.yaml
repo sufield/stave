@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.IMAGE.NOSIGNATURE.001
+name: EKS Cluster Has No Image Signature Verification In Admission
+description: >
+  EKS cluster has no admission controller
+  (Kyverno verify-images, Connaisseur, OPA Gatekeeper
+  with Cosign) that verifies container image
+  signatures before pod creation. Workloads run any
+  image the cluster's pull credentials can access
+  regardless of provenance. Sigstore / Notation /
+  AWS Signer are all viable options; one must be
+  configured and enforced for the cluster's
+  image-trust posture to mean anything.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "CM-2, SR-3, SR-4"
+  pci_dss_v4.0: "6.3"
+  fedramp_moderate: "CM-2, SR-3"
+  iso_27001_2022: "A.5.16, A.8.30"
+  ccm_v4: ["TVM-09", "BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS cluster has no image signature verification.
+  action: >
+    Install Kyverno (or equivalent) and apply a
+    verifyImages policy:
+      apiVersion: kyverno.io/v1
+      kind: ClusterPolicy
+      metadata: { name: verify-image-signatures }
+      spec:
+        validationFailureAction: Enforce
+        rules:
+          - name: verify-signed
+            match: { any: [{ resources: { kinds: [Pod] } }] }
+            verifyImages:
+              - imageReferences: ["111122223333.dkr.ecr.*"]
+                attestors: [...] # public key or Cosign keyless
+    Sign images during CI build with cosign sign or
+    AWS Signer; the policy rejects unsigned pods.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "image_signature_verification_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.image_signature_verification_enabled
+      op: eq
+      value: false
+defect: >
+  EKS cluster has no admission-controller-enforced
+  image signature verification.
+infection: >
+  Pods run any image the cluster's pull credentials can
+  access. Compromise of CI credentials, registry-side
+  attacks, or supply-chain compromise of base images
+  all yield tampered images that admission can't
+  reject. The cluster's image trust depends entirely
+  on what the pull credential allows; there's no
+  cryptographic gate on the runtime.
+failure: >
+  Image trust gap. Tampered images run as legitimate
+  workloads; supply-chain compromise of any image-
+  building path yields cluster code execution.
+tests:
+  - name: cluster without signature verify fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            image_signature_verification_enabled: false
+  - name: cluster with signature verify passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            image_signature_verification_enabled: true
+            verifier: "kyverno"

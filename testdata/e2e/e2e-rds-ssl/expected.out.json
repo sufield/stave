@@ -1,0 +1,334 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "b5a29eecc236a0723793737a4e3ca300be70211da986f61e43915d70e33223c5",
+        "2026-01-11T000000Z.json": "79c550481dca83ce7323cb49c378cb6d55b246505697beed37417a5e4f897db1"
+      },
+      "overall": "c71840b89ce187166fa2fe9b15b08abcadbe7361aabdd95775cb47b1488ed5ce"
+    },
+    "policy_fingerprint": "d0045cfe20d1ed98be12b8ef245f22895d0fd4ac3ba97839da185dec3e293de9",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.RDS.SSL.001",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:2fb1907cd3250569",
+      "control_id": "CTL.RDS.SSL.001",
+      "control_name": "RDS Must Require SSL Connections",
+      "control_description": "RDS instances must enforce SSL/TLS for all client connections. Without require_ssl, database traffic travels unencrypted over the network, exposing query data and credentials to interception.\n",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "database.encryption.require_ssl",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "database.kind",
+            "actual_value": "instance",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.3.3",
+        "fedramp_moderate": "SC-8",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(e)(2)(ii)",
+        "nist_800_53_r5": "SC-8",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.6"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03",
+        "DSP-10"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "RDS instance does not require SSL connections. Database traffic may be transmitted in plaintext.",
+        "action": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group.",
+        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"encryption\": {\n      \"require_ssl\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-4233e63a00340e1b",
+        "target": {
+          "asset_id": "phi-database",
+          "asset_type": "aws_rds_instance"
+        },
+        "action": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group."
+      },
+      "exposure_score": 77.05479452054796,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "database.encryption.require_ssl eq false",
+          "observation_key": "database.encryption.require_ssl",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "database.kind eq \"instance\"",
+          "observation_key": "database.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "phi-database",
+          "type": "aws_rds_instance",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.RDS.SSL.001",
+          "control_name": "RDS Must Require SSL Connections",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the database requires SSL connections = false",
+              "observation_key": "database.encryption.require_ssl",
+              "observed_value": false
+            },
+            {
+              "clause": "database.kind = \"instance\"",
+              "observation_key": "database.kind",
+              "observed_value": "instance"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "database.encryption.require_ssl",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set database.encryption.require_ssl to true"
+          },
+          {
+            "path": "database.kind",
+            "current_value": "instance",
+            "required_value": "any value other than instance",
+            "has_safe_default": false,
+            "description": "Change database.kind away from instance"
+          }
+        ],
+        "action": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "rds"
+      ],
+      "delta": [
+        {
+          "property_label": "encryption require SSL",
+          "property_path": "database.encryption.require_ssl",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:e524a6a8a9085142",
+      "asset_id": "phi-database",
+      "shared_keys": [
+        "database.encryption",
+        "database.encryption.require_ssl",
+        "database.kind"
+      ],
+      "headline_finding_id": "sha256:2fb1907cd3250569",
+      "member_finding_ids": [
+        "sha256:2fb1907cd3250569"
+      ],
+      "consolidated_score": 77.05479452054796,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "fix_plan": {
+        "id": "fix-4233e63a00340e1b",
+        "target": {
+          "asset_id": "phi-database",
+          "asset_type": "aws_rds_instance"
+        },
+        "action": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group."
+      },
+      "contributing_controls": [
+        "CTL.RDS.SSL.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.RDS.SSL.001",
+      "asset_id": "phi-database",
+      "exposure_score": 77.05479452054796,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "dirty": false
+    }
+  }
+}

@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.FEDERATION.NOSOURCEACCOUNT.001
+name: EventBridge Hub Bus Accepts Federated Events Without sourceAccount Validation
+description: >
+  Hub-and-spoke EventBridge federation: hub bus's resource policy
+  grants events:PutEvents to spoke account principals without an
+  aws:SourceAccount or aws:PrincipalOrgID condition narrowing
+  which spokes may publish. Any account that's been granted
+  federation access can spoof events as if they came from any
+  spoke account in the topology — confused-deputy at the
+  federation layer.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, SC-7"
+  pci_dss_v4.0: "1.2, 7.1"
+  fedramp_moderate: "AC-3, SC-7"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-16", "IVS-09"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    Hub bus accepts federated PutEvents without sourceAccount /
+    PrincipalOrgID restriction.
+  action: >
+    Add aws:SourceAccount or aws:PrincipalOrgID conditions to
+    every Statement granting cross-account PutEvents on the hub.
+    Pin to the explicit list of authorized spoke accounts.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "is_federation_hub": true,
+          "federation_source_validated": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.is_federation_hub
+      op: eq
+      value: true
+    - field: properties.governance.events.federation_source_validated
+      op: eq
+      value: false
+defect: >
+  EventBridge hub bus accepts federated PutEvents without
+  aws:SourceAccount or aws:PrincipalOrgID validation.
+infection: >
+  The hub policy grants cross-account PutEvents to spoke
+  principals without binding source account. Any account
+  granted access — or any account that compromises a spoke's
+  IAM — can publish events impersonating any spoke. Hub-side
+  rules consume the spoofed events as if they came from a
+  legitimate spoke; downstream automation runs on attacker-
+  controlled input.
+failure: >
+  Federation-layer cross-account injection. Spokes can spoof
+  each other's events through the hub; hub rules act on
+  attacker-controlled federated input.
+tests:
+  - name: hub without source validation fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/hub"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            is_federation_hub: true
+            federation_source_validated: false
+  - name: hub with source validation passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/hub"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            is_federation_hub: true
+            federation_source_validated: true

@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.AUTH.MIXED.001
+name: EKS Cluster Has Both aws-auth ConfigMap And Access Entries Configured
+description: >
+  EKS cluster's authentication mode is set to API_AND_CONFIG_MAP
+  (or has both legacy aws-auth ConfigMap mappings and modern
+  EKS Access Entries) without explicit migration plan. Two
+  sources of truth for cluster authentication is fragile:
+  changes to either surface can change effective access
+  without the operator realizing both must be reviewed; ghost
+  entries can accumulate in either independently; and audits
+  scanning only one surface miss grants from the other. The
+  cluster should commit to one authentication mode and
+  finish the migration.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-3, CM-2"
+  fedramp_moderate: "AC-3, CM-2"
+  iso_27001_2022: "A.5.15, A.8.32"
+  ccm_v4: ["IAM-04", "BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS cluster has both aws-auth ConfigMap mappings and
+    Access Entries — dual source of truth for authentication.
+  action: >
+    Migrate to Access Entries (recommended) or revert to
+    aws-auth-only (rare). For Access Entries migration: (1)
+    audit aws-auth, (2) recreate every mapping as an Access
+    Entry, (3) set authentication_mode to API, (4) clear the
+    aws-auth ConfigMap. Don't switch authentication_mode to
+    API while aws-auth still has mappings — workloads
+    depending on those mappings will lose access.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "authentication_mode": "API",
+          "aws_auth_mapping_count": 0,
+          "access_entry_count": 12
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.aws_auth_mapping_count
+      op: gt
+      value: 0
+    - field: properties.k8s.cluster.access_entry_count
+      op: gt
+      value: 0
+defect: >
+  EKS cluster has both aws-auth ConfigMap mappings and EKS
+  Access Entries configured.
+infection: >
+  Two parallel authentication sources control access to the
+  cluster. Effective access is the UNION of grants from both
+  surfaces. An operator reviewing aws-auth sees one map of
+  who-can-do-what; an operator reviewing Access Entries sees
+  another. Neither view alone is complete. Removing a mapping
+  from one without removing from the other creates a confused
+  state: the access is removed from one surface and the
+  cluster's audit logs show it as removed, but the principal
+  retains access via the other surface. Migration takes weeks
+  because every workload using cluster auth must be tested
+  against both surfaces.
+failure: >
+  Audit and remediation gap. No single view shows complete
+  cluster access; access changes don't take effect uniformly.
+tests:
+  - name: cluster with both mappings fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            authentication_mode: "API_AND_CONFIG_MAP"
+            aws_auth_mapping_count: 8
+            access_entry_count: 4
+  - name: cluster Access-Entries-only passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            authentication_mode: "API"
+            aws_auth_mapping_count: 0
+            access_entry_count: 12
+  - name: cluster aws-auth-only passes (legacy)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/legacy"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            authentication_mode: "CONFIG_MAP"
+            aws_auth_mapping_count: 8
+            access_entry_count: 0

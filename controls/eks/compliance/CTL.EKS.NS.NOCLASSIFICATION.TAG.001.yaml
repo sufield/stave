@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NS.NOCLASSIFICATION.TAG.001
+name: EKS Namespace Has No Data Classification Label
+description: >
+  EKS namespace has no `data-classification` label
+  (or equivalent per-org convention:
+  `Confidentiality`, `Sensitivity`, `Compliance`).
+  Without classification, automated compliance
+  reports can't determine whether the namespace
+  carries PII / PHI / PCI-scope data, whether
+  encryption / retention controls apply, or whether
+  cross-namespace traffic respects compliance
+  boundaries. Required for compliance frameworks
+  scoped at the workload-tier (HIPAA, PCI-DSS,
+  GDPR).
+domain: governance
+severity: low
+compliance:
+  soc2: "CC6.1, CC6.5"
+  nist_800_53_r5: "CA-7, CM-8"
+  fedramp_moderate: "CA-7, CM-8"
+  iso_27001_2022: "A.5.9, A.5.12"
+  ccm_v4: ["DSP-04", "DSP-19"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_namespace
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS namespace lacks data classification label.
+  action: >
+    Apply org-standard classification labels:
+      kubectl label ns <name>
+        data-classification=internal
+        compliance=hipaa
+        owner=team-name
+    Standardize the label vocabulary across the
+    cluster (Public / Internal / Confidential /
+    Restricted is one common scheme). Compliance
+    reports can then scope by label:
+      kubectl get ns -l data-classification=restricted
+  example: |
+    {
+      "k8s": {
+        "namespace": {
+          "has_classification_label": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.namespace.has_classification_label
+      op: eq
+      value: false
+    - field: properties.k8s.namespace.is_system_namespace
+      op: eq
+      value: false
+defect: >
+  EKS namespace has no data-classification label.
+infection: >
+  Compliance reports scoped by label can't
+  consistently include or exclude the namespace.
+  PII / PHI / PCI-scope determination requires
+  per-namespace investigation rather than tag
+  query. During incident response, the namespace's
+  data-sensitivity is unknown without operator
+  context; classification of leaked data delayed.
+failure: >
+  Compliance scoping opacity. Namespace's
+  data-sensitivity isn't queryable; compliance
+  audits require manual classification.
+tests:
+  - name: namespace without classification fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            has_classification_label: false
+            is_system_namespace: false
+  - name: namespace with classification passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            has_classification_label: true
+            is_system_namespace: false

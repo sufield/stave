@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.POD.RUNASROOT.001
+name: EKS Pod Runs As Root User
+description: >
+  EKS Pod's container runs as root — either explicitly via
+  `securityContext.runAsUser: 0` / `runAsNonRoot: false`,
+  or implicitly because the container image's USER directive
+  is unset / 0 and the pod doesn't override. Root inside the
+  container has all Linux capabilities by default; combined
+  with kernel vulnerabilities, hostPath mounts, or
+  privileged mode, root accelerates every privilege
+  escalation path.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "2.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_pod_spec
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS Pod runs as root.
+  action: >
+    Set `securityContext.runAsNonRoot: true` and
+    `securityContext.runAsUser: <non-zero-uid>` on the pod
+    spec. Build images with a USER directive set to a
+    non-zero UID. For images that legitimately need root
+    capabilities, request only the specific capabilities
+    via `securityContext.capabilities.add` and run as a
+    non-zero UID with those capabilities granted explicitly.
+  example: |
+    {
+      "k8s": {
+        "pod_spec": {
+          "runs_as_root": false,
+          "run_as_non_root": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.pod_spec.runs_as_root
+      op: eq
+      value: true
+defect: >
+  EKS Pod runs as root (UID 0) — either via explicit
+  runAsUser=0 / runAsNonRoot=false, or implicit through
+  the image's USER directive.
+infection: >
+  Root inside the container has all Linux capabilities by
+  default. Even without `privileged: true`, root can write
+  to anywhere the filesystem allows, bind privileged ports,
+  manipulate routing tables, change file ownership, modify
+  capability sets. Combined with any container-escape
+  surface — kernel vulnerability, hostPath mount, runtime
+  vulnerability — root accelerates the path to host-level
+  compromise. Modern container best practice runs every
+  workload as a non-zero UID by default.
+failure: >
+  Privilege escalation acceleration. Container code execution
+  reaches root capability without needing additional
+  privilege; container escapes are easier to weaponize.
+tests:
+  - name: pod with runAsUser=0 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            runs_as_root: true
+            run_as_non_root: false
+  - name: pod with runAsNonRoot=true passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            runs_as_root: false
+            run_as_non_root: true
+            run_as_user: 1000

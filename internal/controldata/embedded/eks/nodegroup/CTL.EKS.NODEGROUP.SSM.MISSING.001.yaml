@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NODEGROUP.SSM.MISSING.001
+name: EKS Node Group Lacks SSM Session Manager Configuration
+description: >
+  EKS worker node group's instance profile doesn't include
+  the AmazonSSMManagedInstanceCore policy (or an equivalent
+  scoping policy granting Session Manager APIs). Without
+  it, SSM Session Manager isn't usable for the workers,
+  which often leads operators to fall back to SSH — see
+  CTL.EKS.NODEGROUP.SSH.OPEN. Session Manager provides the
+  audited, IAM-controlled, no-open-port path for
+  operational shell access; missing it pushes the cluster
+  toward the SSH alternative.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC7.2"
+  nist_800_53_r5: "AC-3, AU-12, IA-2"
+  fedramp_moderate: "AC-3, AU-12"
+  iso_27001_2022: "A.5.15, A.8.15"
+  ccm_v4: ["IAM-04", "LOG-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_nodegroup
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS node group's instance profile lacks SSM Session
+    Manager permissions.
+  action: >
+    Attach AmazonSSMManagedInstanceCore (or a tighter
+    custom policy) to the node group's instance profile.
+    Verify the SSM Agent is running on the AMI (EKS-
+    optimized AMIs include it; custom AMIs may not).
+    Configure CloudWatch logging for Session Manager
+    sessions for audit.
+  example: |
+    {
+      "k8s": {
+        "nodegroup": {
+          "ssm_session_manager_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.nodegroup.ssm_session_manager_configured
+      op: eq
+      value: false
+defect: >
+  EKS node group instance profile lacks SSM Session Manager
+  permissions.
+infection: >
+  Operators needing shell access to workers — for
+  troubleshooting, log inspection, kubelet diagnostics —
+  fall back to SSH (which then commonly drives the
+  CTL.EKS.NODEGROUP.SSH.OPEN configuration). SSH is
+  un-audited at the AWS layer, has no IAM-side
+  authorization gate, and requires an inbound port. With
+  SSM configured, operators have an audited alternative;
+  without it, the path of least resistance is the
+  insecure one.
+failure: >
+  Operational-access incentive misalignment. Without SSM,
+  the cluster's operational tooling tends toward SSH +
+  open ports rather than IAM-audited Session Manager.
+tests:
+  - name: nodegroup without SSM fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/default"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            ssm_session_manager_configured: false
+  - name: nodegroup with SSM passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/default"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            ssm_session_manager_configured: true

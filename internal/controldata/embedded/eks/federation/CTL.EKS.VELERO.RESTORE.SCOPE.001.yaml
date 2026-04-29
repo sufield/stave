@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.VELERO.RESTORE.SCOPE.001
+name: EKS Velero Backup Restorable Across Cluster Boundaries Without Scope Check
+description: >
+  EKS Velero backups are stored in an S3 bucket that
+  multiple clusters can read from / restore from
+  without per-cluster scope validation. A backup
+  taken from one cluster — including its Secrets,
+  ConfigMaps, RBAC, and resource definitions — can
+  be restored to a different cluster without
+  guardrails. Cross-cluster restore is occasionally
+  intentional (DR pattern); unrestricted access is a
+  tenant-data-leakage surface.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6, A1.2"
+  nist_800_53_r5: "AC-3, AC-4, CP-9"
+  fedramp_moderate: "AC-3, CP-9"
+  iso_27001_2022: "A.5.15, A.8.13"
+  ccm_v4: ["IVS-09", "BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_velero_backup_target
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    EKS Velero backups are restorable across clusters
+    without scope check.
+  action: >
+    Per-cluster S3 bucket prefixes with bucket
+    policies restricting reads to that cluster's IAM
+    role. Or per-cluster KMS keys for backup
+    encryption — a different cluster can list the
+    backups but can't decrypt without the source
+    cluster's KMS access. Document the DR plan that
+    distinguishes intentional cross-cluster restore
+    (DR) from accidental cross-cluster overwrite.
+  example: |
+    {
+      "k8s": {
+        "velero_backup_target": {
+          "per_cluster_scope_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.velero_backup_target.per_cluster_scope_enforced
+      op: eq
+      value: false
+defect: >
+  EKS Velero backup target lacks per-cluster scope
+  restriction.
+infection: >
+  Velero backups contain the entirety of the source
+  cluster's state — Secrets, ConfigMaps, custom
+  resources, RBAC bindings. A backup restored to a
+  different cluster delivers all of that to the
+  destination. A malicious operator (or
+  cross-account access) can pull source cluster
+  Secrets via Velero restore-to-target-cluster and
+  read them from the target. Multi-tenant isolation
+  defeated at the backup-target layer.
+failure: >
+  Cross-cluster Secret / state leakage via backups.
+  Backup contents reachable from clusters that
+  shouldn't have access.
+tests:
+  - name: unscoped Velero target fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "s3://eks-backups/velero"
+      asset_type: aws_eks_velero_backup_target
+      vendor: aws
+      properties:
+        k8s:
+          velero_backup_target:
+            per_cluster_scope_enforced: false
+  - name: per-cluster scoped target passes
+    verdict: PASS
+    asset:
+      asset_id: "s3://eks-backups/prod-orders/velero"
+      asset_type: aws_eks_velero_backup_target
+      vendor: aws
+      properties:
+        k8s:
+          velero_backup_target:
+            per_cluster_scope_enforced: true

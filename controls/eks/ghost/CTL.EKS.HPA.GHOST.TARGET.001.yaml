@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.HPA.GHOST.TARGET.001
+name: EKS HorizontalPodAutoscaler Targets Deleted Workload
+description: >
+  HorizontalPodAutoscaler's `scaleTargetRef` points to a
+  Deployment / StatefulSet / ReplicaSet that no longer
+  exists. The HPA continues to evaluate metrics but its
+  scaling decisions have nothing to apply to. Console shows
+  the HPA configured; CloudWatch / Prometheus shows the HPA
+  reporting "unable to fetch pod metrics" or unable to
+  resolve the target. Auto-scaling for the workload that
+  used to own the target is silently inactive.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, CM-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_hpa
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS HPA scaleTargetRef points at a workload that has been
+    deleted.
+  action: >
+    Delete the orphan HPA via kubectl delete hpa <name> -n
+    <namespace>, OR repoint the scaleTargetRef to a live
+    workload if the target was renamed. Audit cluster HPAs
+    for orphan targets via kubectl get hpa -A and verify
+    every scaleTargetRef resolves.
+  example: |
+    {
+      "k8s": {
+        "hpa": {
+          "target_kind": "Deployment",
+          "target_name": "orders-api",
+          "target_exists": true,
+          "has_ghost_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.hpa.has_ghost_target
+      op: eq
+      value: true
+defect: >
+  EKS HorizontalPodAutoscaler's scaleTargetRef points at a
+  workload that has been deleted.
+infection: >
+  The HPA persists in the cluster's autoscaling config. The
+  metrics-server delivers metrics; the HPA's reconcile loop
+  attempts to compute scaling decisions; the target lookup
+  fails because the named Deployment / StatefulSet doesn't
+  exist. Auto-scaling decisions are dropped. Operators
+  expecting elastic scaling find their workload at static
+  capacity. Cost / capacity planning assuming HPA-driven
+  scaling shows discrepancy.
+failure: >
+  Silent autoscaling failure. HPA exists but scales nothing;
+  workload that should auto-scale runs at static replica
+  count.
+tests:
+  - name: HPA with ghost target fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/hpa/orders-api-hpa"
+      asset_type: aws_eks_hpa
+      vendor: aws
+      properties:
+        k8s:
+          hpa:
+            target_kind: "Deployment"
+            target_name: "orders-api-deleted"
+            target_exists: false
+            has_ghost_target: true
+  - name: HPA with live target passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/hpa/orders-api-hpa"
+      asset_type: aws_eks_hpa
+      vendor: aws
+      properties:
+        k8s:
+          hpa:
+            target_kind: "Deployment"
+            target_name: "orders-api"
+            target_exists: true
+            has_ghost_target: false

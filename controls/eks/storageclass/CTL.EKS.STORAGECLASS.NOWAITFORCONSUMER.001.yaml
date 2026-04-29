@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.STORAGECLASS.NOWAITFORCONSUMER.001
+name: EKS StorageClass volumeBindingMode Is Immediate Not WaitForFirstConsumer
+description: >
+  EKS StorageClass has `volumeBindingMode: Immediate`
+  (or unset, defaulting Immediate). With Immediate
+  binding, dynamic PV provisioning happens at PVC
+  creation time — the PV is created in whatever AZ
+  the provisioner picks, before the consuming pod is
+  scheduled. The pod is then constrained to the AZ
+  where its PV lives. WaitForFirstConsumer delays
+  provisioning until the pod is scheduled, letting the
+  scheduler pick the optimal AZ.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.13"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_storage_class
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS StorageClass uses Immediate volumeBindingMode.
+  action: >
+    Update the StorageClass to use
+    volumeBindingMode: WaitForFirstConsumer:
+      apiVersion: storage.k8s.io/v1
+      kind: StorageClass
+      metadata: { name: gp3 }
+      provisioner: ebs.csi.aws.com
+      volumeBindingMode: WaitForFirstConsumer
+    Existing PVs are unaffected; new PVCs get the new
+    binding behavior. WaitForFirstConsumer is the
+    Kubernetes-recommended default for cloud-provider
+    storage that's AZ-bound.
+  example: |
+    {
+      "k8s": {
+        "storage_class": {
+          "volume_binding_mode": "WaitForFirstConsumer"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.storage_class.volume_binding_mode
+      op: ne
+      value: WaitForFirstConsumer
+defect: >
+  EKS StorageClass's volumeBindingMode is Immediate
+  rather than WaitForFirstConsumer.
+infection: >
+  PVCs using the StorageClass create PVs immediately —
+  before any pod is scheduled. The PV lives in
+  whatever AZ the provisioner picked (typically the AZ
+  of the provisioner's leader pod, which can be
+  arbitrary). Pods consuming the PVC are then
+  constrained to that AZ. If node capacity is
+  unavailable in the chosen AZ, the pod stays Pending
+  even when other AZs have capacity. AZ failures
+  also become harder to recover from — bound volumes
+  pin pod scheduling to the failed AZ.
+failure: >
+  Suboptimal PV / pod AZ alignment. Pods bound to PVs
+  in non-optimal AZs; AZ failures harder to recover.
+tests:
+  - name: Immediate binding fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/storageclass/gp3"
+      asset_type: aws_eks_storage_class
+      vendor: aws
+      properties:
+        k8s:
+          storage_class:
+            volume_binding_mode: "Immediate"
+  - name: WaitForFirstConsumer passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/storageclass/gp3"
+      asset_type: aws_eks_storage_class
+      vendor: aws
+      properties:
+        k8s:
+          storage_class:
+            volume_binding_mode: "WaitForFirstConsumer"

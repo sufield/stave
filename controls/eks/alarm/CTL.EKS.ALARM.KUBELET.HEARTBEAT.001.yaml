@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ALARM.KUBELET.HEARTBEAT.001
+name: EKS Cluster Has No Alarm On kubelet Heartbeat Loss
+description: >
+  EKS cluster has no CloudWatch alarm on the
+  kubelet's last-heartbeat-time metric. Kubelet
+  heartbeat loss precedes the node going NotReady
+  (the API server marks the node NotReady after
+  ~40 seconds without heartbeat, by default). An
+  alarm on heartbeat loss gives advance warning
+  before the cluster's documented NotReady-status
+  alarm fires.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS cluster has no alarm on kubelet heartbeat
+    loss.
+  action: >
+    Enable Container Insights enhanced observability
+    plus the
+    kubelet_node_lease_renewal_failure_total
+    metric scrape. Create a CloudWatch alarm on
+    sustained heartbeat-loss rate per node.
+    Pair with the NodeNotReady alarm (which is
+    downstream of heartbeat loss) for layered
+    detection.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "alarm_kubelet_heartbeat_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.alarm_kubelet_heartbeat_configured
+      op: eq
+      value: false
+defect: >
+  EKS cluster has no alarm on kubelet heartbeat
+  loss.
+infection: >
+  Kubelet heartbeat loss precedes NotReady status
+  by ~40 seconds. Without an alarm, the operator's
+  first signal is the downstream NodeNotReady alarm
+  (if even that is configured — see the related
+  control). The earlier heartbeat-loss signal
+  provides actionable lead time for investigation.
+failure: >
+  Late detection of node failure. Kubelet failure
+  surfaces as NodeNotReady downstream rather than
+  at the immediate point of loss.
+tests:
+  - name: cluster without heartbeat alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_kubelet_heartbeat_configured: false
+  - name: cluster with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_kubelet_heartbeat_configured: true

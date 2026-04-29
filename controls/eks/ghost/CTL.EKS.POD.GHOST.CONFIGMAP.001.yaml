@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.POD.GHOST.CONFIGMAP.001
+name: EKS Pod References Deleted ConfigMap In env Or volumes
+description: >
+  Pod / Deployment / StatefulSet manifest references a
+  ConfigMap (in `envFrom`, `valueFrom.configMapKeyRef`, or
+  `volumes.configMap.name`) that no longer exists in the
+  namespace. New pod creation fails; existing pods continue
+  with cached values. Same ghost-reference pattern as the
+  Secret variant; ConfigMaps are typically more frequently
+  edited than Secrets, so ghost references here accumulate
+  faster but the failure mode is identical.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_pod_spec
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Pod spec references a ConfigMap that has been deleted
+    from the namespace.
+  action: >
+    Recreate the ConfigMap at the original name (kubectl
+    create configmap), or update the pod spec to reference
+    a live ConfigMap (kubectl edit deploy <name>). Audit
+    via `kubectl get pods -A -o yaml | grep configMapRef`.
+  example: |
+    {
+      "k8s": {
+        "pod_spec": {
+          "configmap_refs": ["orders-config", "orders-flags"],
+          "configmap_refs_exist": true,
+          "has_ghost_configmap_ref": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.pod_spec.has_ghost_configmap_ref
+      op: eq
+      value: true
+defect: >
+  EKS Pod spec references a ConfigMap that has been deleted
+  from the namespace.
+infection: >
+  The Pod manifest is structurally correct. New Pod creation
+  fails because the named ConfigMap can't be resolved.
+  Existing pods continue with cached values until they
+  recycle, masking the failure. ConfigMap recreation with
+  the same name silently rebinds — new values apply to
+  pods that next start, possibly different from the
+  original ConfigMap's values.
+failure: >
+  Silent Pod startup failure + configuration value swap on
+  ConfigMap recreation.
+tests:
+  - name: Pod with ghost ConfigMap fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            configmap_refs: ["orders-config-deleted"]
+            configmap_refs_exist: false
+            has_ghost_configmap_ref: true
+  - name: Pod with live ConfigMap passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            configmap_refs: ["orders-config"]
+            configmap_refs_exist: true
+            has_ghost_configmap_ref: false

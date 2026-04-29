@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.PODIDENTITY.DEFAULTNS.001
+name: EKS Pod Identity Association In default Namespace
+description: >
+  EKS Pod Identity association binds an IAM role to a
+  ServiceAccount in the `default` namespace. The default
+  namespace has no RBAC isolation from cluster-default
+  identity scope; in shared / multi-tenant clusters every
+  team has at least read access to the default namespace by
+  convention. A Pod Identity binding there grants the IAM
+  role to whichever pod ends up using that ServiceAccount —
+  which in shared clusters can be many unrelated workloads.
+  Pod Identity associations should always be in
+  application-specific namespaces.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-04", "IVS-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_pod_identity_association
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    EKS Pod Identity association is in the default namespace.
+  action: >
+    Move the workload to an application-specific namespace
+    with proper RBAC isolation. Recreate the Pod Identity
+    association pointing at the new namespace + SA. Delete
+    the default-namespace association. As a forward-looking
+    governance move, consider an admission policy that blocks
+    new workloads in default.
+  example: |
+    {
+      "k8s": {
+        "pod_identity": {
+          "namespace": "orders",
+          "is_default_namespace": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.pod_identity.is_default_namespace
+      op: eq
+      value: true
+defect: >
+  EKS Pod Identity association resides in the `default`
+  namespace.
+infection: >
+  The default namespace is a shared namespace with no
+  application-specific RBAC. Workloads from different teams
+  often end up there during onboarding, debugging, or
+  manifests that omit `metadata.namespace`. A Pod Identity
+  association in default grants the role to any pod that
+  uses the named ServiceAccount in default — including
+  workloads from unrelated teams that happen to use a SA
+  with the same name. Cross-tenant privilege escalation in
+  multi-tenant clusters becomes possible without explicit
+  intent.
+failure: >
+  Cross-tenant privilege exposure. The bound IAM role is
+  reachable by unrelated workloads sharing the default
+  namespace.
+tests:
+  - name: Pod Identity in default fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:podidentityassociation/prod/xyz"
+      asset_type: aws_eks_pod_identity_association
+      vendor: aws
+      properties:
+        k8s:
+          pod_identity:
+            namespace: "default"
+            is_default_namespace: true
+  - name: Pod Identity in dedicated namespace passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:podidentityassociation/prod/xyz"
+      asset_type: aws_eks_pod_identity_association
+      vendor: aws
+      properties:
+        k8s:
+          pod_identity:
+            namespace: "orders"
+            is_default_namespace: false

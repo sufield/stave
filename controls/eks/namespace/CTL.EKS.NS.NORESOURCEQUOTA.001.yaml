@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NS.NORESOURCEQUOTA.001
+name: EKS Namespace Has No ResourceQuota
+description: >
+  EKS namespace has no ResourceQuota object. Without a
+  quota, workloads in the namespace can consume unbounded
+  cluster resources — CPU, memory, persistent volumes,
+  pods, services. One namespace's runaway workload can
+  starve the entire cluster of capacity. Multi-tenant
+  clusters require ResourceQuotas to enforce per-tenant
+  resource ceilings.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "SC-5, SC-6"
+  fedramp_moderate: "SC-5"
+  iso_27001_2022: "A.8.6"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_namespace
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    EKS namespace has no ResourceQuota.
+  action: >
+    Apply a ResourceQuota matching the namespace's intended
+    resource budget:
+      apiVersion: v1
+      kind: ResourceQuota
+      metadata:
+        name: <ns>-quota
+        namespace: <ns>
+      spec:
+        hard:
+          requests.cpu: "20"
+          requests.memory: 40Gi
+          limits.cpu: "40"
+          limits.memory: 80Gi
+          pods: "100"
+    Tune the values to the workload's expected steady-state
+    plus headroom.
+  example: |
+    {
+      "k8s": {
+        "namespace": {
+          "resource_quota_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.namespace.resource_quota_count
+      op: eq
+      value: 0
+    - field: properties.k8s.namespace.is_system_namespace
+      op: eq
+      value: false
+defect: >
+  EKS namespace has no ResourceQuota object.
+infection: >
+  Workloads in the namespace can request unbounded CPU,
+  memory, storage, and pod count. A buggy Deployment
+  with replicas=10000, an HPA that scales without limit,
+  or a CronJob that stops cleaning up — any of these can
+  consume cluster capacity that other tenants depend on.
+  Cluster-wide DoS by one tenant; "noisy neighbor" at
+  worst-case scale. Multi-tenant cost accounting also
+  breaks: no per-namespace ceiling means no per-namespace
+  budget.
+failure: >
+  Cross-tenant resource exhaustion. One namespace's
+  workload starves cluster capacity from all others.
+tests:
+  - name: namespace without quota fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            resource_quota_count: 0
+            is_system_namespace: false
+  - name: namespace with quota passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            resource_quota_count: 1
+            is_system_namespace: false

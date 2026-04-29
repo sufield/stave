@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ECR.REPLICATION.GAP.001
+name: EKS Cluster Pulls Images Without ECR Replication To DR Region
+description: >
+  EKS cluster — primary or DR — pulls images from
+  ECR repositories that aren't replicated to the
+  cluster's region. Primary-region clusters work
+  fine; DR clusters in different regions can't pull
+  the same images during failover because ECR
+  replication wasn't configured. Pods restored to DR
+  fail ImagePullBackOff. The DR plan looked
+  complete on paper; failover reveals the
+  cross-region image gap.
+domain: governance
+severity: high
+compliance:
+  soc2: "A1.2, CC8.1"
+  nist_800_53_r5: "CP-9, CM-2"
+  fedramp_moderate: "CP-9, CM-2"
+  iso_27001_2022: "A.5.30, A.8.13"
+  ccm_v4: ["BCR-08", "BCR-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_workload
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    EKS workload's image isn't replicated to the
+    cluster's region.
+  action: >
+    Configure ECR cross-region replication
+    (Replication Configuration) from the primary
+    region to all DR regions. Verify replication
+    via aws ecr describe-replication-configuration.
+    For workloads with private mirror of upstream
+    images (see EKS-7), the mirror process must
+    push to all regions. Test by pulling on the DR
+    cluster.
+  example: |
+    {
+      "k8s": {
+        "workload": {
+          "image_uri": "111122223333.dkr.ecr.us-east-1.amazonaws.com/orders:v1.2.3",
+          "image_replicated_to_dr": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.workload.image_replicated_to_dr
+      op: eq
+      value: false
+    - field: properties.k8s.workload.in_dr_strategy
+      op: eq
+      value: true
+defect: >
+  EKS workload's image isn't replicated to the DR
+  region; cross-region failover can't pull.
+infection: >
+  Primary cluster pulls images from primary-region
+  ECR; pods run normally. DR cluster in a different
+  region tries to pull the same image URI on
+  failover; ECR endpoint resolves to DR region; the
+  repository doesn't exist there. ImagePullBackOff
+  on every pod that depends on a non-replicated
+  image. The DR cluster comes up with control
+  plane, nodes, networking — and then the
+  workloads can't actually start.
+failure: >
+  Silent DR ImagePullBackOff cascade. DR cluster
+  appears ready; workloads fail to pull during
+  failover; recovery delayed by image-replication
+  fix.
+tests:
+  - name: workload without DR replication fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "111122223333.dkr.ecr.us-east-1.amazonaws.com/orders:v1.2.3"
+            image_replicated_to_dr: false
+            in_dr_strategy: true
+  - name: workload with DR replication passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "111122223333.dkr.ecr.us-east-1.amazonaws.com/orders:v1.2.3"
+            image_replicated_to_dr: true
+            in_dr_strategy: true
+  - name: workload not in DR strategy passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/dev/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "111122223333.dkr.ecr.us-east-1.amazonaws.com/orders:dev"
+            image_replicated_to_dr: false
+            in_dr_strategy: false

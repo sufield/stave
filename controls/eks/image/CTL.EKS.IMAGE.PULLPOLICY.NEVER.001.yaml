@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.IMAGE.PULLPOLICY.NEVER.001
+name: EKS Pod Has imagePullPolicy=Never
+description: >
+  EKS Pod has `imagePullPolicy: Never` set on at least
+  one container. The kubelet only uses the cached image
+  on the node; if the image isn't present, the pod
+  fails to start. Common cause: dev / debug
+  configuration left in production manifests; the
+  intent is "use the local image I built", but the
+  effect in production is "use whatever's been cached
+  here, possibly stale, possibly never updated."
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_pod_spec
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS Pod has imagePullPolicy=Never.
+  action: >
+    Change to imagePullPolicy: IfNotPresent (default
+    when image references a specific tag) or Always
+    (default for :latest tag). For local dev
+    environments where Never is appropriate (kind /
+    minikube with locally-built images), keep Never
+    but ensure these manifests don't get applied to
+    production clusters.
+  example: |
+    {
+      "k8s": {
+        "pod_spec": {
+          "image_pull_policy": "IfNotPresent"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.pod_spec.image_pull_policy
+      op: eq
+      value: Never
+defect: >
+  EKS Pod has at least one container with
+  imagePullPolicy=Never.
+infection: >
+  The kubelet only runs cached images. If the image
+  isn't cached on the node (new node, node-replace,
+  cache eviction), the pod can't start. Updates to
+  the image in ECR don't reach the running pod
+  because the kubelet doesn't re-pull. Operators
+  pushing a new image version (security patch, bug
+  fix) see no change in pod behavior because the
+  pull never happens.
+failure: >
+  Image-update silent ignore. Pod runs whatever's
+  cached locally; new image versions don't propagate.
+tests:
+  - name: pod with PullPolicy=Never fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            image_pull_policy: "Never"
+  - name: pod with IfNotPresent passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            image_pull_policy: "IfNotPresent"

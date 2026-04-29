@@ -1,0 +1,22 @@
+id: eks_psa_governance_decay
+description: >
+  EKS namespace-level Pod Security Admission posture is
+  decayed: namespace has no PSA enforce label, production
+  namespace has enforce=privileged, or PSA configured only as
+  audit / warn without enforce. Each defect alone defeats the
+  namespace-level pod-security floor; co-occurrence indicates
+  the cluster has no namespace-level admission discipline —
+  pod-security is delegated entirely to per-pod review (which
+  doesn't happen consistently). Threshold of 2 fires when at
+  least two PSA governance defects coexist within the
+  cluster's namespace inventory.
+controls:
+  - CTL.EKS.PSA.MISSING.001
+  - CTL.EKS.PSA.PRIVILEGED.PROD.001
+  - CTL.EKS.PSA.AUDITONLY.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - control_plane_code_execution

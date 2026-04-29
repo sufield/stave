@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.PVC.GHOST.STORAGECLASS.001
+name: EKS PersistentVolumeClaim References Deleted StorageClass
+description: >
+  PersistentVolumeClaim's `storageClassName` references a
+  StorageClass that no longer exists. New PVCs / pods
+  needing storage from this PVC stall in `Pending` —
+  dynamic provisioning can't proceed because the
+  StorageClass is missing. Existing PVs continue serving
+  bound PVCs, masking the failure until pod recycling
+  triggers a new bind.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.13, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_pvc
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    PVC references a StorageClass that has been deleted.
+  action: >
+    Recreate the StorageClass at the original name (often
+    `gp2` / `gp3` with cluster-default annotation), or
+    update the PVC's storageClassName to a live class.
+    Audit cluster PVCs via kubectl get pvc -A and verify
+    every storageClassName resolves to a live StorageClass.
+  example: |
+    {
+      "k8s": {
+        "pvc": {
+          "storage_class_name": "gp3",
+          "storage_class_exists": true,
+          "has_ghost_storage_class": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.pvc.has_ghost_storage_class
+      op: eq
+      value: true
+defect: >
+  PersistentVolumeClaim's storageClassName references a
+  StorageClass that has been deleted.
+infection: >
+  The PVC persists in cluster state. If the PVC was already
+  bound to a PV before the StorageClass deletion, it
+  continues serving — the pod doesn't notice until something
+  triggers a re-bind. New PVCs needing the same class can't
+  provision and stall in Pending. Pod scheduling for
+  workloads that depend on dynamic provisioning silently
+  breaks. Operators see "PVC pending" and trace through to
+  "no such StorageClass."
+failure: >
+  Silent storage provisioning failure. New volumes can't
+  provision; existing volumes look healthy until pod
+  recycling triggers re-bind.
+tests:
+  - name: PVC with ghost StorageClass fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/pvc/orders-data"
+      asset_type: aws_eks_pvc
+      vendor: aws
+      properties:
+        k8s:
+          pvc:
+            storage_class_name: "gp3-deleted"
+            storage_class_exists: false
+            has_ghost_storage_class: true
+  - name: PVC with live StorageClass passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/pvc/orders-data"
+      asset_type: aws_eks_pvc
+      vendor: aws
+      properties:
+        k8s:
+          pvc:
+            storage_class_name: "gp3"
+            storage_class_exists: true
+            has_ghost_storage_class: false

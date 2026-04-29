@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.LIFECYCLE.BUS.DORMANT.001
+name: EventBridge Custom Bus Has No Rules And No Recent Invocations
+description: >
+  EventBridge custom bus has zero rules attached AND zero
+  PutEvents in the last 90 days. The bus exists but neither
+  produces nor consumes events. It's typically a leftover
+  from an experiment, a partial decommissioning, or a
+  refactor that moved rules elsewhere without removing the
+  empty bus. Long-dormant buses contribute to inventory
+  clutter and may carry stale resource-policy grants.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge custom bus is dormant — no rules and no
+    recent PutEvents activity.
+  action: >
+    Delete the bus via DeleteEventBus, OR if the bus is
+    deliberately maintained (waiting for an integration
+    rollout, etc.), tag it with Lifecycle=Reserved and
+    DocumentedReason. Long-dormant custom buses accumulate
+    audit surface for no operational benefit.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "is_default": false,
+          "rule_count": 5,
+          "days_since_last_putevents": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.is_default
+      op: eq
+      value: false
+    - field: properties.governance.events.rule_count
+      op: eq
+      value: 0
+    - field: properties.governance.events.days_since_last_putevents
+      op: gt
+      value: 90
+defect: >
+  EventBridge custom bus has zero rules and no PutEvents in
+  the last 90 days.
+infection: >
+  The bus exists with no rules and no producer activity.
+  Resource policy grants on the bus may still permit
+  cross-account access; archives associated with the bus
+  may still consume storage; cost reports show the bus as
+  a billable resource. The bus is operationally dead but
+  organizationally alive.
+failure: >
+  Inventory and policy clutter. Dormant custom buses
+  accumulate audit surface, retain stale resource-policy
+  grants, and may carry archives consuming storage without
+  producing operational value.
+tests:
+  - name: dormant bus 100 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/legacy"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            is_default: false
+            rule_count: 0
+            days_since_last_putevents: 100
+  - name: bus with rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/orders"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            is_default: false
+            rule_count: 5
+            days_since_last_putevents: 1
+  - name: default bus does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/default"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            is_default: true
+            rule_count: 0
+            days_since_last_putevents: 100

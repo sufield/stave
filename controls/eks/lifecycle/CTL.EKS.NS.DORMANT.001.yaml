@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NS.DORMANT.001
+name: EKS Namespace Has No Workloads And No Recent API Activity
+description: >
+  EKS namespace has zero Deployments / StatefulSets /
+  DaemonSets / Jobs / Pods AND no kubectl API activity
+  in the last 90 days. The namespace is operationally
+  dead — typically left over from a decommissioned
+  service, a pre-production migration that completed,
+  or a refactor that moved workloads elsewhere
+  without removing the empty namespace. Long-dormant
+  namespaces accumulate stale RBAC, NetworkPolicies,
+  ResourceQuotas, and Secrets that complicate audits
+  without providing operational value.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2, CM-8"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_namespace
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS namespace has been dormant > 90 days.
+  action: >
+    Delete the namespace via kubectl delete ns
+    <name>. If the namespace must be retained for
+    a documented reason (capacity reservation,
+    naming reservation), tag it with
+    Lifecycle=Reserved + DocumentedReason=<reason>.
+    Audit cluster namespace inventory periodically
+    via kubectl get ns plus the
+    `kubernetes.io/cluster-event-history` audit log.
+  example: |
+    {
+      "k8s": {
+        "namespace": {
+          "workload_count": 0,
+          "days_since_last_api_activity": 5
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.namespace.workload_count
+      op: eq
+      value: 0
+    - field: properties.k8s.namespace.days_since_last_api_activity
+      op: gt
+      value: 90
+    - field: properties.k8s.namespace.is_system_namespace
+      op: eq
+      value: false
+defect: >
+  EKS namespace has zero workloads and no API activity
+  for over 90 days.
+infection: >
+  The namespace remains in cluster state with all its
+  resource definitions (RBAC bindings, NetworkPolicies,
+  ResourceQuotas, Secrets) but no operational
+  purpose. Audits include the namespace's resources;
+  cost-attribution dashboards show empty rows.
+  RBAC bindings continue to grant permissions to
+  whichever subjects they reference — if those
+  subjects can later use the namespace's resources,
+  they inherit grants from a forgotten config.
+failure: >
+  Audit-and-RBAC clutter. Long-dormant namespace
+  resources persist with no operational purpose;
+  audit surface grows.
+tests:
+  - name: namespace dormant 120 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/namespace/legacy-billing"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            workload_count: 0
+            days_since_last_api_activity: 120
+            is_system_namespace: false
+  - name: active namespace passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            workload_count: 12
+            days_since_last_api_activity: 0
+            is_system_namespace: false
+  - name: system namespace passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/kube-public"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            workload_count: 0
+            days_since_last_api_activity: 200
+            is_system_namespace: true

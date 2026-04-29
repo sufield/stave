@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NETPOL.NSSELECTOR.WIDE.001
+name: EKS NetworkPolicy Uses Empty namespaceSelector Permitting All Namespaces
+description: >
+  EKS NetworkPolicy has an ingress / egress rule with
+  `namespaceSelector: {}` — every namespace in the cluster
+  matches. Combined with podSelector, the pods covered by
+  the rule are reachable from / can reach pods in every
+  namespace. Multi-tenant isolation between namespaces
+  collapses for the workloads this rule covers.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-4, SC-7"
+  fedramp_moderate: "AC-4, SC-7"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_network_policy
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    EKS NetworkPolicy uses namespaceSelector: {} permitting
+    every namespace.
+  action: >
+    Replace `namespaceSelector: {}` with a selector matching
+    the specific namespaces that should be permitted. Use
+    namespace labels (`team=orders`, `tier=backend`) plus
+    pod labels to scope the rule narrowly. AWS-recommended
+    pattern: every NetworkPolicy peer should select on at
+    least namespace + pod labels, never on empty
+    selectors.
+  example: |
+    {
+      "k8s": {
+        "network_policy": {
+          "has_wide_namespace_selector": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.network_policy.has_wide_namespace_selector
+      op: eq
+      value: true
+defect: >
+  EKS NetworkPolicy has a peer rule with
+  `namespaceSelector: {}` matching every namespace.
+infection: >
+  Cross-namespace traffic is permitted to / from every
+  namespace in the cluster. Workloads in unrelated
+  namespaces — dev, staging, other teams' production —
+  can reach the pods this rule covers. Compromise of any
+  pod in any namespace can lateral-move to the rule's
+  covered pods regardless of policy intent. Multi-tenant
+  isolation defeated.
+failure: >
+  Cross-tenant lateral movement enabled. Pods in any
+  namespace can reach the rule's covered pods.
+tests:
+  - name: policy with empty namespaceSelector fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/networkpolicy/orders-allow-cross-ns"
+      asset_type: aws_eks_network_policy
+      vendor: aws
+      properties:
+        k8s:
+          network_policy:
+            has_wide_namespace_selector: true
+  - name: policy with scoped namespaceSelector passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/networkpolicy/orders-from-frontend"
+      asset_type: aws_eks_network_policy
+      vendor: aws
+      properties:
+        k8s:
+          network_policy:
+            has_wide_namespace_selector: false

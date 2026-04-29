@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.AWSAUTH.MASTERS.BROAD.001
+name: EKS aws-auth Maps Broad IAM Role To system:masters
+description: >
+  EKS aws-auth ConfigMap maps an IAM role to the Kubernetes
+  `system:masters` group via mapRoles. system:masters is the
+  cluster-admin equivalent — full unrestricted access to every
+  resource in every namespace. Mapping broad-scoped IAM roles
+  (workload roles, deployment roles, CI service roles) to this
+  group is the most common path to silent cluster-admin
+  privilege expansion. Should only be reserved for a
+  break-glass admin role, never for service or workload roles.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_aws_auth_mapping
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    EKS aws-auth maps a workload / service / CI role to
+    system:masters.
+  action: >
+    Remove the system:masters mapping. Replace with a scoped
+    Kubernetes RBAC group that grants only the operations the
+    role needs (typically a custom ClusterRole for read-only
+    or namespace-scoped access). system:masters should be
+    reserved for break-glass admin roles tagged
+    Purpose=BreakGlass with explicit on-call rotation
+    documented.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "aws_auth": {
+            "role_arn": "arn:aws:iam::111122223333:role/EKS-Workload",
+            "groups_include_masters": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.aws_auth.groups_include_masters
+      op: eq
+      value: true
+    - field: properties.k8s.cluster.aws_auth.is_break_glass_admin
+      op: eq
+      value: false
+defect: >
+  EKS aws-auth maps a non-break-glass IAM role to
+  system:masters.
+infection: >
+  The aws-auth mapping grants system:masters — full cluster
+  admin — to an IAM role that isn't a break-glass admin role.
+  Common offenders: deployment automation roles, CI service
+  roles, workload-runner roles, "convenient" team roles
+  granted during onboarding and never scoped down. Anyone who
+  can assume the IAM role becomes cluster-admin. Compromise
+  of a CI runner, leak of a deployment-role credential, or
+  successful confused-deputy on the role's trust policy yields
+  cluster-admin. Audit trail records "the mapping was correct"
+  while the actual privilege level is far above what the role's
+  business purpose requires.
+failure: >
+  Cluster-admin grant to over-scoped principals. Compromise of
+  any mapped role yields full cluster control.
+tests:
+  - name: workload role mapped to masters fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod#aws-auth-mapRoles[2]"
+      asset_type: aws_eks_aws_auth_mapping
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            aws_auth:
+              role_arn: "arn:aws:iam::111122223333:role/EKS-Workload"
+              groups_include_masters: true
+              is_break_glass_admin: false
+  - name: break-glass admin role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod#aws-auth-mapRoles[1]"
+      asset_type: aws_eks_aws_auth_mapping
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            aws_auth:
+              role_arn: "arn:aws:iam::111122223333:role/EKS-BreakGlass"
+              groups_include_masters: true
+              is_break_glass_admin: true
+  - name: scoped role mapping passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod#aws-auth-mapRoles[2]"
+      asset_type: aws_eks_aws_auth_mapping
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            aws_auth:
+              role_arn: "arn:aws:iam::111122223333:role/EKS-Workload"
+              groups_include_masters: false
+              is_break_glass_admin: false

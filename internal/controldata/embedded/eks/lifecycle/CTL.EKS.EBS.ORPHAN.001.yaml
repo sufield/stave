@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.EBS.ORPHAN.001
+name: EKS Has Detached EBS Volumes From Terminated Worker Nodes
+description: >
+  EKS account has EBS volumes tagged
+  `kubernetes.io/cluster/<name>` in `available` state
+  (not attached to any instance) where the volume's
+  origin instance has been terminated. The volume
+  represents former workload state from a now-deleted
+  node. CSI-managed volumes typically clean up on
+  node termination; manually-created or migration-era
+  volumes often don't. Cost accumulates per
+  unattached volume.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.10"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_orphan_volume
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS account has detached EBS volumes from
+    terminated worker nodes.
+  action: >
+    Snapshot the volumes (preserves data if needed),
+    then delete via aws ec2 delete-volume. Audit
+    via:
+      aws ec2 describe-volumes
+        --filters Name=status,Values=available
+                  Name=tag-key,Values=kubernetes.io/cluster
+    Set up a recurring CloudWatch Events / Lambda
+    to alert on / auto-delete EKS-tagged orphan
+    volumes after a documented retention period.
+  example: |
+    {
+      "k8s": {
+        "orphan_volume": {
+          "volume_id": "vol-0abc123",
+          "is_eks_tagged": true,
+          "is_orphan": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.orphan_volume.is_eks_tagged
+      op: eq
+      value: true
+    - field: properties.k8s.orphan_volume.is_orphan
+      op: eq
+      value: true
+defect: >
+  EKS-tagged EBS volume is detached and its origin
+  worker node has been terminated.
+infection: >
+  Volume sits in `available` state — not attached,
+  not consumable by current cluster pods. The
+  cluster-tag persists from when the volume was
+  bound to a workload; the workload's pod and node
+  are both gone. AWS bills for the volume capacity
+  whether attached or not. Aggregate cost on
+  long-running clusters with high node turnover
+  can be significant.
+failure: >
+  Storage cost drift. EBS volumes accumulate from
+  decommissioned cluster nodes; cost grows linearly
+  with cluster age.
+tests:
+  - name: EKS-tagged orphan volume fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "vol-0abc123def456"
+      asset_type: aws_eks_orphan_volume
+      vendor: aws
+      properties:
+        k8s:
+          orphan_volume:
+            volume_id: "vol-0abc123def456"
+            is_eks_tagged: true
+            is_orphan: true
+  - name: attached EBS volume passes
+    verdict: PASS
+    asset:
+      asset_id: "vol-0abc123def456"
+      asset_type: aws_eks_orphan_volume
+      vendor: aws
+      properties:
+        k8s:
+          orphan_volume:
+            volume_id: "vol-0abc123def456"
+            is_eks_tagged: true
+            is_orphan: false

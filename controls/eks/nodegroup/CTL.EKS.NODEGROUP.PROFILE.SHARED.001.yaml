@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NODEGROUP.PROFILE.SHARED.001
+name: EKS Node Groups Share One Instance Profile Across Tenants
+description: >
+  Multiple EKS node groups across the cluster — typically
+  serving different tenants, environments, or workload
+  classes — share the same IAM instance profile. Every
+  pod scheduled on any of these node groups inherits the
+  same node-role credentials via IMDS (subject to
+  IMDS hardening). Cross-tenant isolation at the IAM layer
+  is defeated; one tenant's pod compromise yields the same
+  credentials another tenant's pod has access to.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_nodegroup
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS node groups share an IAM instance profile across
+    different tenants / workload classes.
+  action: >
+    Create per-tenant / per-class instance profiles with
+    least-privilege IAM policies scoped to that tenant's
+    AWS resource needs. Update each node group's launch
+    template to use its dedicated instance profile.
+    Combined with IMDSv2 + hop limit 1, this enforces
+    per-node-group IAM isolation.
+  example: |
+    {
+      "k8s": {
+        "nodegroup": {
+          "instance_profile_arn": "arn:aws:iam::111122223333:instance-profile/eks-prod-orders",
+          "instance_profile_shared_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.nodegroup.instance_profile_shared_count
+      op: gt
+      value: 1
+defect: >
+  EKS node group shares an IAM instance profile with at
+  least one other node group of different tenancy or
+  workload class.
+infection: >
+  Pods scheduled on any of the sharing node groups inherit
+  the same IAM credentials via IMDS. The instance profile
+  must contain the union of permissions every workload
+  class needs, which is broader than each class's
+  legitimate scope. Compromise of any pod on any of these
+  node groups yields the full union of permissions —
+  cross-tenant data access, cross-environment writes, etc.
+  Per-tenant IAM scoping at the workload layer (IRSA) only
+  helps if pods don't fall back to the shared node role.
+failure: >
+  Cross-tenant IAM scope leakage. Pod compromise yields
+  permissions broader than the workload's tenant
+  legitimately needs.
+tests:
+  - name: shared profile across 3 node groups fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/orders"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            instance_profile_arn: "arn:aws:iam::111122223333:instance-profile/eks-shared"
+            instance_profile_shared_count: 3
+  - name: dedicated per-tenant profile passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/orders"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            instance_profile_arn: "arn:aws:iam::111122223333:instance-profile/eks-prod-orders"
+            instance_profile_shared_count: 1

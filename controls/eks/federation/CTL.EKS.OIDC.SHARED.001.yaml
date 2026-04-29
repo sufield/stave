@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.OIDC.SHARED.001
+name: EKS Multiple Clusters Share The Same OIDC Issuer URL
+description: >
+  EKS multiple clusters in the account share the same
+  OIDC issuer URL — typically a copy-paste error
+  during cluster bootstrap, or intentional reuse
+  that wasn't reviewed. EKS clusters get unique OIDC
+  issuer URLs by design. Two clusters with the same
+  URL means an IRSA role trusting that URL can be
+  assumed by ServiceAccounts on EITHER cluster — a
+  workload on cluster A's compromised pod can mint
+  tokens that assume the role intended for cluster B.
+  Per-cluster IAM scope intent collapses across
+  clusters.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6, IA-5"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-14", "IAM-16"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    EKS multiple clusters share the same OIDC
+    issuer URL.
+  action: >
+    Verify each cluster's OIDC issuer URL is unique:
+      aws eks describe-cluster --name <c>
+        --query 'cluster.identity.oidc.issuer'
+    If two clusters share an URL, this is a
+    configuration error — recreate the affected
+    cluster (the OIDC URL is set at cluster
+    creation and can't be changed). Re-deploy IRSA
+    roles afterward with the new OIDC URLs.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "oidc_issuer_url": "https://oidc.eks.us-east-1.amazonaws.com/id/ABC123",
+          "oidc_url_unique_in_account": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.oidc_url_unique_in_account
+      op: eq
+      value: false
+defect: >
+  EKS cluster's OIDC issuer URL is shared with at
+  least one other cluster in the account.
+infection: >
+  IRSA roles trust OIDC tokens from a specific
+  issuer URL. With duplicate URLs, a token minted
+  on cluster A's OIDC is indistinguishable from one
+  minted on cluster B's. A workload on cluster A
+  can assume any IRSA role that trusts the shared
+  URL — including roles intended for cluster B's
+  workloads. Per-cluster IAM scope collapses; one
+  cluster's compromise yields the other cluster's
+  IRSA permissions.
+failure: >
+  Cross-cluster IAM scope collapse. Per-cluster
+  IRSA boundaries defeated; one cluster's
+  compromise yields siblings' IAM scope.
+tests:
+  - name: duplicate OIDC URL fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            oidc_issuer_url: "https://oidc.eks.us-east-1.amazonaws.com/id/ABC123"
+            oidc_url_unique_in_account: false
+  - name: unique OIDC URL passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            oidc_issuer_url: "https://oidc.eks.us-east-1.amazonaws.com/id/ABC123"
+            oidc_url_unique_in_account: true

@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.PSA.PRIVILEGED.PROD.001
+name: EKS Production Namespace Has PSA enforce=privileged
+description: >
+  EKS namespace tagged as production carries the PSA label
+  `pod-security.kubernetes.io/enforce: privileged` — the
+  weakest profile, equivalent to no enforcement. The label
+  exists, satisfies "every namespace has a PSA label" audits,
+  but admits any pod regardless of security context. Common
+  cause: namespace inherited the label during PSA migration
+  with intent to tighten later, never tightened.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, CM-2, SI-3"
+  pci_dss_v4.0: "1.4, 2.2"
+  fedramp_moderate: "AC-3, SI-3"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_namespace
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS production namespace has PSA enforce=privileged.
+  action: >
+    Tighten the enforce level. Most application namespaces
+    should be `restricted` (denies privileged, host*, root).
+    Workloads that legitimately need host access — typically
+    DaemonSets like CNI plugins, monitoring agents — should
+    live in dedicated namespaces with `baseline` (denies
+    privileged but allows hostNetwork) rather than the
+    application namespace.
+  example: |
+    {
+      "k8s": {
+        "namespace": {
+          "psa_enforce_level": "restricted",
+          "is_production": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.namespace.psa_enforce_level
+      op: eq
+      value: privileged
+    - field: properties.k8s.namespace.is_production
+      op: eq
+      value: true
+defect: >
+  EKS production namespace has PSA enforce=privileged.
+infection: >
+  The PSA label exists — automated audits scoped to
+  "namespace has a PSA label" pass. The label admits every
+  pod regardless of security context. Effectively no PSA
+  enforcement: pods can run privileged, host*, root. The
+  intent of PSA is defeated by an explicit choice to weaken
+  it on the most-sensitive namespace. The label may be
+  inherited from a phased migration plan that stalled
+  ("we'll tighten this in Q3") with the migration never
+  completing.
+failure: >
+  Production-namespace pods unconstrained. Privileged-mode
+  pods admitted; security contexts go un-enforced.
+tests:
+  - name: production privileged fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/namespace/prod-orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            name: "prod-orders"
+            psa_enforce_level: "privileged"
+            is_production: true
+  - name: production restricted passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/prod-orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            name: "prod-orders"
+            psa_enforce_level: "restricted"
+            is_production: true
+  - name: dev privileged passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/dev-orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            name: "dev-orders"
+            psa_enforce_level: "privileged"
+            is_production: false

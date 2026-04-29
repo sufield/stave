@@ -1,0 +1,1563 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "a0d410a791228d45170a699e9220ba18ecdd0c9b4d32eead3d2cb14a84faef6a",
+        "2026-01-11T000000Z.json": "ee0d1070e79477c798fcb36a3dcea22a3337653a806824396a110d00c75dcf36"
+      },
+      "overall": "f4b9bcc6e6c82a44c59a0910943a2034842089a1dd6f0ea52cf6d3ff2449b9d8"
+    },
+    "policy_fingerprint": "2c01e2c8dbac46208637692fe41dfda0b16d30fd2a4ce5b334fc15727e4b9950",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 8,
+    "exposed_resources": 7,
+    "violations": 7
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.ACCESS.001",
+      "asset_id": "vuln-cross-account",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ACCESS.002",
+      "asset_id": "vuln-wildcard-policy",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.001",
+      "asset_id": "vuln-no-encryption",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.002",
+      "asset_id": "vuln-no-https",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.LOG.001",
+      "asset_id": "vuln-no-logging",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.003",
+      "asset_id": "vuln-public-write",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.VERSION.001",
+      "asset_id": "vuln-no-versioning",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:67a0c2180e432109",
+      "control_id": "CTL.S3.PUBLIC.003",
+      "control_name": "No Public Write Access",
+      "control_description": "S3 buckets must not allow public write or delete access. Public write enables data injection, ransomware, and policy takeover.\n",
+      "asset_id": "vuln-public-write",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_write",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "public_write",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket allows public write or delete access. Attackers can inject malicious content, overwrite existing objects, or hold data ransom.",
+        "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_write\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-3a41bc0c25ab5207",
+        "target": {
+          "asset_id": "vuln-public-write",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
+      },
+      "exposure_score": 205.47945205479454,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.public_write eq true",
+          "observation_key": "storage.access.public_write",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "vuln-public-write",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.003",
+          "control_name": "No Public Write Access",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous write = true",
+              "observation_key": "storage.access.public_write",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_write",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_write to false"
+          }
+        ],
+        "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket's composite storage.access.public_write state is true — via bucket ACL (WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers), via bucket policy (s3:PutObject/Delete/* to Principal \"*\"), or both. Anonymous callers can upload or delete objects.\n",
+      "infection": "Attackers upload arbitrary objects — malware, phishing pages, inflated payloads to exhaust budget, replacement versions of legitimate files — without authenticating. Object-level keys can be chosen to mimic existing content. If the bucket serves a website, CDN origin, or update channel, the attacker- uploaded content propagates to every downstream consumer automatically. Public write also enables ransomware: delete existing objects, re-upload encrypted copies, demand payment for recovery.\n",
+      "failure": "Active tampering with bucket contents: injected malicious files, ransomware encryption, or supply-chain compromise when downstream consumers fetch attacker content. Unlike public read (which is passive exposure), public write is active compromise — every new object is a potential incident and the integrity of existing objects cannot be trusted without independent verification.\n",
+      "delta": [
+        {
+          "property_label": "public write access",
+          "property_path": "storage.access.public_write",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:39aa8d4a21c81d37",
+      "control_id": "CTL.S3.ACCESS.002",
+      "control_name": "No Wildcard Principal Policies",
+      "control_description": "S3 bucket policies must not grant access to a wildcard principal (Principal \"*\" or AWS: \"*\"). A wildcard principal makes every statement in the policy effectively anonymous or cross-account unless a restricting Condition (aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp with a fixed CIDR, aws:SourceArn, etc.) narrows it. Without such a Condition, the policy is a public-access grant regardless of which specific S3 actions are allowed.\n",
+      "asset_id": "vuln-wildcard-policy",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.access.has_wildcard_principal",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-6"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
+      "exposure": {
+        "type": "wildcard_principal",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket policy contains a statement with a wildcard principal. Unless a Condition restricts the caller, any AWS identity or anonymous caller can invoke the statement's allowed actions.",
+        "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"has_wildcard_principal\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-102ed3657bd1f7af",
+        "target": {
+          "asset_id": "vuln-wildcard-policy",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
+      },
+      "exposure_score": 154.10958904109592,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.has_wildcard_principal eq true",
+          "observation_key": "storage.access.has_wildcard_principal",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "vuln-wildcard-policy",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACCESS.002",
+          "control_name": "No Wildcard Principal Policies",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the bucket policy grants to Principal \"*\" = true",
+              "observation_key": "storage.access.has_wildcard_principal",
+              "observed_value": true
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.has_wildcard_principal",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.access.has_wildcard_principal to false"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          }
+        ],
+        "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "access has wildcard principal",
+          "property_path": "storage.access.has_wildcard_principal",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:447b517eb02e207e",
+      "control_id": "CTL.S3.ACCESS.001",
+      "control_name": "No Unauthorized Cross-Account Access",
+      "control_description": "S3 bucket policies must not grant access to external AWS accounts. `allowed_accounts` contains trusted external AWS account IDs (12-digit). Access from accounts outside this allowlist is unsafe.\n",
+      "asset_id": "vuln-cross-account",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.access.external_account_ids",
+            "actual_value": [
+              "999888777666"
+            ],
+            "operator": "not_subset_of_field",
+            "unsafe_value": "params.allowed_accounts"
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "1.16",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v3.2.1": "7.1",
+        "soc2": "CC6.3"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
+      "exposure": {
+        "type": "cross_account_access",
+        "principal_scope": "cross_account"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket policy grants access to external AWS accounts outside your organization. Cross-account access may be unintended.",
+        "action": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"has_external_access\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-68786587685724fa",
+        "target": {
+          "asset_id": "vuln-cross-account",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
+      },
+      "exposure_score": 77.05479452054796,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.external_account_ids not_subset_of_field \"params.allowed_accounts\"",
+          "observation_key": "storage.access.external_account_ids",
+          "operator": "not_subset_of_field",
+          "expected_value": "params.allowed_accounts",
+          "observed_value": [
+            "999888777666"
+          ]
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "vuln-cross-account",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACCESS.001",
+          "control_name": "No Unauthorized Cross-Account Access",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the bucket policy lists external accounts not be a subset of \"params.allowed_accounts\" (observed: [\"999888777666\"])",
+              "observation_key": "storage.access.external_account_ids",
+              "observed_value": [
+                "999888777666"
+              ]
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.external_account_ids",
+            "current_value": "[999888777666]",
+            "required_value": "(see control definition)",
+            "has_safe_default": false,
+            "description": "Change storage.access.external_account_ids from [999888777666]"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          }
+        ],
+        "action": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
+      },
+      "classification": "parameterized_check",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "access external account ids",
+          "property_path": "storage.access.external_account_ids",
+          "current_value": "[999888777666]",
+          "fix_action": "change from current value ([999888777666])"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:57cd3c51cb7f4bf1",
+      "control_id": "CTL.S3.ENCRYPT.001",
+      "control_name": "Encryption at Rest Required",
+      "control_description": "S3 buckets must have server-side encryption enabled. Unencrypted storage is the top audit finding in regulated industries.\n",
+      "asset_id": "vuln-no-encryption",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.encryption.at_rest_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.1",
+        "fedramp_moderate": "SC-28",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(2)(iv)",
+        "iso_27001_2022": "A.8.24",
+        "nist_800_53_r5": "SC-28",
+        "nist_csf_2.0": "PR.DS",
+        "pci_dss_v3.2.1": "3.4",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket does not have server-side encryption enabled. Objects are stored unencrypted at rest.",
+        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"encryption\": {\n      \"at_rest_enabled\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-380cee97b949737e",
+        "target": {
+          "asset_id": "vuln-no-encryption",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
+      },
+      "exposure_score": 77.05479452054796,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.encryption.at_rest_enabled eq false",
+          "observation_key": "storage.encryption.at_rest_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "vuln-no-encryption",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ENCRYPT.001",
+          "control_name": "Encryption at Rest Required",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "server-side encryption at rest is enabled = false",
+              "observation_key": "storage.encryption.at_rest_enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.encryption.at_rest_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.encryption.at_rest_enabled to true"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          }
+        ],
+        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "encryption at rest",
+          "property_path": "storage.encryption.at_rest_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:18b53853355a91aa",
+      "control_id": "CTL.S3.ENCRYPT.002",
+      "control_name": "Transport Encryption Required",
+      "control_description": "S3 buckets must enforce HTTPS via a deny policy on aws:SecureTransport=false. Without this, data transfers occur in plaintext.\n",
+      "asset_id": "vuln-no-https",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.encryption.in_transit_enforced",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.2",
+        "cis_aws_v3.0": "2.1.1",
+        "fedramp_moderate": "SC-8",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(e)(2)(ii)",
+        "iso_27001_2022": "A.8.24",
+        "nist_800_53_r5": "SC-8",
+        "nist_csf_2.0": "PR.DS",
+        "pci_dss_v3.2.1": "4.1",
+        "pci_dss_v4.0": "4.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket does not enforce HTTPS for data transfers. Requests over plain HTTP transmit data in cleartext.",
+        "action": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"encryption\": {\n      \"in_transit_enforced\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-b805dfdfff3fb08e",
+        "target": {
+          "asset_id": "vuln-no-https",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
+      },
+      "exposure_score": 77.05479452054796,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.encryption.in_transit_enforced eq false",
+          "observation_key": "storage.encryption.in_transit_enforced",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "vuln-no-https",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ENCRYPT.002",
+          "control_name": "Transport Encryption Required",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "HTTPS-only (aws:SecureTransport) is enforced = false",
+              "observation_key": "storage.encryption.in_transit_enforced",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.encryption.in_transit_enforced",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.encryption.in_transit_enforced to true"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          }
+        ],
+        "action": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "encryption in transit enforced",
+          "property_path": "storage.encryption.in_transit_enforced",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:68d3599e7b239cd6",
+      "control_id": "CTL.S3.LOG.001",
+      "control_name": "Access Logging Required",
+      "control_description": "S3 buckets must have server access logging enabled for audit trail and visibility into data access patterns.\n",
+      "asset_id": "vuln-no-logging",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.logging.enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.3",
+        "fedramp_moderate": "AU-2",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.30",
+        "hipaa": "164.312(b)",
+        "iso_27001_2022": "A.8.15",
+        "nist_800_53_r5": "AU-2",
+        "pci_dss_v3.2.1": "10.2.1",
+        "pci_dss_v4.0": "10.2.1.3",
+        "soc2": "CC7.2"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-12"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket does not have server access logging enabled. There is no audit trail for data access patterns.",
+        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"logging\": {\n      \"enabled\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-f82341e56ddb44f3",
+        "target": {
+          "asset_id": "vuln-no-logging",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
+      },
+      "exposure_score": 77.05479452054796,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.logging.enabled eq false",
+          "observation_key": "storage.logging.enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "vuln-no-logging",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.LOG.001",
+          "control_name": "Access Logging Required",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "access logging is enabled = false",
+              "observation_key": "storage.logging.enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.logging.enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.logging.enabled to true"
+          }
+        ],
+        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "access logging",
+          "property_path": "storage.logging.enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:56aadad096a67670",
+      "control_id": "CTL.S3.VERSION.001",
+      "control_name": "Versioning Required",
+      "control_description": "S3 buckets must have versioning enabled to protect against accidental deletion and enable recovery from negligent operations.\n",
+      "asset_id": "vuln-no-versioning",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.versioning.enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.3",
+        "hipaa": "164.312(c)(1)",
+        "nist_800_53_r5": "CP-9",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "BCR-08"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket does not have versioning enabled. Objects deleted or overwritten cannot be recovered.",
+        "action": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"versioning\": {\n      \"enabled\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-d0f6fd24dedb5e09",
+        "target": {
+          "asset_id": "vuln-no-versioning",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
+      },
+      "exposure_score": 51.369863013698634,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.versioning.enabled eq false",
+          "observation_key": "storage.versioning.enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "vuln-no-versioning",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.VERSION.001",
+          "control_name": "Versioning Required",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "versioning is enabled = false",
+              "observation_key": "storage.versioning.enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.versioning.enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.versioning.enabled to true"
+          }
+        ],
+        "action": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "versioning",
+          "property_path": "storage.versioning.enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:d9c86e62f54ab81e",
+      "asset_id": "vuln-public-write",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.public_write"
+      ],
+      "headline_finding_id": "sha256:67a0c2180e432109",
+      "member_finding_ids": [
+        "sha256:67a0c2180e432109"
+      ],
+      "consolidated_score": 205.47945205479454,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:0421f893c32aec7e",
+      "asset_id": "vuln-wildcard-policy",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.has_wildcard_principal"
+      ],
+      "headline_finding_id": "sha256:39aa8d4a21c81d37",
+      "member_finding_ids": [
+        "sha256:39aa8d4a21c81d37"
+      ],
+      "consolidated_score": 154.10958904109592,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:3947f01adca0f9b7",
+      "asset_id": "vuln-cross-account",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.external_account_ids"
+      ],
+      "headline_finding_id": "sha256:447b517eb02e207e",
+      "member_finding_ids": [
+        "sha256:447b517eb02e207e"
+      ],
+      "consolidated_score": 77.05479452054796,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:5b7c88584f1dc965",
+      "asset_id": "vuln-no-encryption",
+      "shared_keys": [
+        "storage.encryption",
+        "storage.encryption.at_rest_enabled"
+      ],
+      "headline_finding_id": "sha256:57cd3c51cb7f4bf1",
+      "member_finding_ids": [
+        "sha256:57cd3c51cb7f4bf1"
+      ],
+      "consolidated_score": 77.05479452054796,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:3fada32a4de4a946",
+      "asset_id": "vuln-no-https",
+      "shared_keys": [
+        "storage.encryption",
+        "storage.encryption.in_transit_enforced"
+      ],
+      "headline_finding_id": "sha256:18b53853355a91aa",
+      "member_finding_ids": [
+        "sha256:18b53853355a91aa"
+      ],
+      "consolidated_score": 77.05479452054796,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:465c05cc64c70a7f",
+      "asset_id": "vuln-no-logging",
+      "shared_keys": [
+        "storage.logging",
+        "storage.logging.enabled"
+      ],
+      "headline_finding_id": "sha256:68d3599e7b239cd6",
+      "member_finding_ids": [
+        "sha256:68d3599e7b239cd6"
+      ],
+      "consolidated_score": 77.05479452054796,
+      "consolidated_blast_radius": 1.5
+    },
+    {
+      "issue_id": "sha256:0a1ce63c04e7e282",
+      "asset_id": "vuln-no-versioning",
+      "shared_keys": [
+        "storage.versioning",
+        "storage.versioning.enabled"
+      ],
+      "headline_finding_id": "sha256:56aadad096a67670",
+      "member_finding_ids": [
+        "sha256:56aadad096a67670"
+      ],
+      "consolidated_score": 51.369863013698634,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "vuln-cross-account",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-68786587685724fa",
+        "target": {
+          "asset_id": "vuln-cross-account",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACCESS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "vuln-no-encryption",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-380cee97b949737e",
+        "target": {
+          "asset_id": "vuln-no-encryption",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
+      },
+      "contributing_controls": [
+        "CTL.S3.ENCRYPT.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "vuln-no-https",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-b805dfdfff3fb08e",
+        "target": {
+          "asset_id": "vuln-no-https",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
+      },
+      "contributing_controls": [
+        "CTL.S3.ENCRYPT.002"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "vuln-no-logging",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-f82341e56ddb44f3",
+        "target": {
+          "asset_id": "vuln-no-logging",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
+      },
+      "contributing_controls": [
+        "CTL.S3.LOG.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "vuln-no-versioning",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-d0f6fd24dedb5e09",
+        "target": {
+          "asset_id": "vuln-no-versioning",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
+      },
+      "contributing_controls": [
+        "CTL.S3.VERSION.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "vuln-public-write",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-3a41bc0c25ab5207",
+        "target": {
+          "asset_id": "vuln-public-write",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.003"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "vuln-wildcard-policy",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-102ed3657bd1f7af",
+        "target": {
+          "asset_id": "vuln-wildcard-policy",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACCESS.002"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 5,
+      "control_id": "CTL.S3.PUBLIC.003",
+      "asset_id": "vuln-public-write",
+      "exposure_score": 205.47945205479454,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.S3.ACCESS.002",
+      "asset_id": "vuln-wildcard-policy",
+      "exposure_score": 154.10958904109592,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.ACCESS.001",
+      "asset_id": "vuln-cross-account",
+      "exposure_score": 77.05479452054796,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 2,
+      "control_id": "CTL.S3.ENCRYPT.001",
+      "asset_id": "vuln-no-encryption",
+      "exposure_score": 77.05479452054796,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.S3.ENCRYPT.002",
+      "asset_id": "vuln-no-https",
+      "exposure_score": 77.05479452054796,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 4,
+      "control_id": "CTL.S3.LOG.001",
+      "asset_id": "vuln-no-logging",
+      "exposure_score": 77.05479452054796,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 6,
+      "control_id": "CTL.S3.VERSION.001",
+      "asset_id": "vuln-no-versioning",
+      "exposure_score": 51.369863013698634,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "dirty": false
+    }
+  }
+}

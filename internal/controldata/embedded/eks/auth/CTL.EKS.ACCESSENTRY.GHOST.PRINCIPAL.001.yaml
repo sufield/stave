@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ACCESSENTRY.GHOST.PRINCIPAL.001
+name: EKS Access Entry References Deleted IAM Principal
+description: >
+  EKS Access Entries (the modern replacement for aws-auth)
+  bind a principal ARN to a Kubernetes group set and / or
+  policy. When the IAM principal — role or user — is deleted
+  but the Access Entry remains, the entry is a ghost grant.
+  Like aws-auth ghosts, the danger is principal-name reuse:
+  if a future role is created with the same ARN pattern, it
+  silently inherits the original entry's cluster grants.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "AC-3, CM-2, CM-3"
+  fedramp_moderate: "AC-3, CM-2"
+  iso_27001_2022: "A.5.15, A.5.16, A.8.32"
+  ccm_v4: ["IAM-04", "IAM-13"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_access_entry
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EKS Access Entry references an IAM principal that has been
+    deleted.
+  action: >
+    Delete the orphan Access Entry via aws eks
+    delete-access-entry --cluster-name <c> --principal-arn
+    <arn>. Audit all Access Entries for the cluster
+    (aws eks list-access-entries) and verify each
+    PrincipalArn still resolves. Add a CloudWatch alarm on
+    DeleteAccessEntry / DeleteUser / DeleteRole correlations
+    so future principal deletions surface their orphan
+    Access Entries.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "access_entry": {
+            "principal_arn": "arn:aws:iam::111122223333:role/EKS-Operator",
+            "principal_exists": true,
+            "has_ghost_principal": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.access_entry.has_ghost_principal
+      op: eq
+      value: true
+defect: >
+  EKS Access Entry's PrincipalArn references an IAM principal
+  that has been deleted.
+infection: >
+  The Access Entry persists in the cluster's access
+  configuration. ListAccessEntries returns it. Its
+  KubernetesGroups and AssociatedAccessPolicies still apply if
+  the principal ever re-resolves. If a future role / user is
+  created with the same ARN — same role name, same account —
+  the Access Entry's cluster grants automatically apply to
+  the new principal. Without an audit trail correlating
+  principal deletions to Access Entry cleanup, ghost entries
+  accumulate as the cluster ages.
+failure: >
+  Privilege escalation via principal-name reuse. A deleted
+  principal can be recreated to inherit silent cluster grants.
+tests:
+  - name: Access Entry with ghost principal fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod#access-entry/arn:aws:iam::111122223333:role/EKS-Operator-deleted"
+      asset_type: aws_eks_access_entry
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            access_entry:
+              principal_arn: "arn:aws:iam::111122223333:role/EKS-Operator-deleted"
+              principal_exists: false
+              has_ghost_principal: true
+  - name: Access Entry with live principal passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod#access-entry/arn:aws:iam::111122223333:role/EKS-Operator"
+      asset_type: aws_eks_access_entry
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            access_entry:
+              principal_arn: "arn:aws:iam::111122223333:role/EKS-Operator"
+              principal_exists: true
+              has_ghost_principal: false

@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.PSA.MISSING.001
+name: EKS Namespace Has No Pod Security Admission Enforcement Label
+description: >
+  EKS namespace has no `pod-security.kubernetes.io/enforce`
+  label. Without an enforce label, every pod admitted to the
+  namespace can run with any security profile —
+  `privileged: true`, host network, host path mounts, root
+  user — without admission rejecting it. PSA replaced
+  PodSecurityPolicy in K8s 1.25; clusters that skipped the
+  PSA migration have no namespace-level pod-security floor.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, CM-2, SI-3"
+  pci_dss_v4.0: "1.4, 2.2"
+  fedramp_moderate: "AC-3, SI-3"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_namespace
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EKS namespace has no Pod Security Admission enforce label.
+  action: >
+    Apply a PSA enforce label appropriate to the workload
+    profile. For production application namespaces:
+      kubectl label ns <namespace> \
+        pod-security.kubernetes.io/enforce=restricted \
+        pod-security.kubernetes.io/audit=restricted \
+        pod-security.kubernetes.io/warn=restricted
+    For workloads needing elevated privileges, use `baseline`
+    rather than `privileged` and document the reason in the
+    namespace's annotations.
+  example: |
+    {
+      "k8s": {
+        "namespace": {
+          "psa_enforce_level": "restricted",
+          "has_psa_enforce_label": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.namespace.has_psa_enforce_label
+      op: eq
+      value: false
+    - field: properties.k8s.namespace.is_system_namespace
+      op: eq
+      value: false
+defect: >
+  EKS namespace has no `pod-security.kubernetes.io/enforce`
+  label.
+infection: >
+  PSA admission has nothing to enforce against. Every pod
+  the namespace admits — workload pods, sidecar injections,
+  CI deployment Pods, debug Pods — can run with any
+  security profile. Pods can be `privileged: true`,
+  `hostNetwork: true`, mount `/etc` from the host, run as
+  root. The cluster has no namespace-level pod-security
+  floor; security depends entirely on individual pod manifest
+  review. Compromise of any pod in the namespace yields
+  whatever privileges that specific pod was granted —
+  potentially full node-host access.
+failure: >
+  No namespace-level pod-security floor. Pod-level security
+  contexts go un-enforced; compromise blast radius scales
+  with the most-privileged pod the namespace admits.
+tests:
+  - name: namespace without PSA label fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            name: "orders"
+            has_psa_enforce_label: false
+            is_system_namespace: false
+  - name: namespace with PSA restricted passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            name: "orders"
+            psa_enforce_level: "restricted"
+            has_psa_enforce_label: true
+            is_system_namespace: false

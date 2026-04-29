@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.POD.SATOKEN.AUTOMOUNT.001
+name: EKS Pod Auto-Mounts ServiceAccount Token Without Needing API Access
+description: >
+  EKS Pod has `automountServiceAccountToken: true` (or unset,
+  defaulting true) but doesn't actually need to call the
+  Kubernetes API. Every such pod has a token mounted at
+  /var/run/secrets/kubernetes.io/serviceaccount/token —
+  reachable by any process in the container. If the pod is
+  compromised, the attacker harvests the token and uses it
+  against the K8s API with whatever permissions the
+  ServiceAccount has been granted. For pods that don't need
+  K8s API access (which is most workloads — they call AWS
+  APIs, internal services, or external APIs), the token is
+  unnecessary attack surface.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_pod_spec
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    EKS Pod auto-mounts a ServiceAccount token but doesn't
+    call the Kubernetes API.
+  action: >
+    Set `automountServiceAccountToken: false` on the pod
+    spec. For pods that DO call the K8s API, also enable
+    BoundServiceAccountTokenVolume (default in K8s ≥ 1.21)
+    and review the ServiceAccount's RBAC scope. Workloads
+    using IRSA / Pod Identity for AWS API access do not need
+    a Kubernetes API token by default.
+  example: |
+    {
+      "k8s": {
+        "pod_spec": {
+          "automount_service_account_token": false,
+          "uses_kubernetes_api": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.pod_spec.automount_service_account_token
+      op: eq
+      value: true
+    - field: properties.k8s.pod_spec.uses_kubernetes_api
+      op: eq
+      value: false
+defect: >
+  EKS Pod auto-mounts a ServiceAccount token but does not
+  call the Kubernetes API.
+infection: >
+  Every container process can read the ServiceAccount token
+  at /var/run/secrets/kubernetes.io/serviceaccount/token.
+  Pod compromise — RCE, supply-chain attack, dependency
+  vuln — yields the token to the attacker. The token's
+  effective permissions are whatever the ServiceAccount's
+  RBAC bindings grant; in defaults configurations this can
+  include Secret reads in the namespace, Pod listing,
+  ConfigMap reads — the foundations for cluster
+  reconnaissance and lateral movement. For workloads that
+  don't need K8s API access, the token is pure attack
+  surface with no operational benefit.
+failure: >
+  ServiceAccount token harvest surface. Pod compromise
+  yields cluster API credentials beyond the workload's
+  legitimate need.
+tests:
+  - name: pod with automount + no API use fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            automount_service_account_token: true
+            uses_kubernetes_api: false
+  - name: pod with API use + automount passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/system/deployment/operator"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            automount_service_account_token: true
+            uses_kubernetes_api: true
+  - name: pod without automount passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            automount_service_account_token: false
+            uses_kubernetes_api: false

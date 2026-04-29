@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ALARM.CRASHLOOP.001
+name: EKS Cluster Has No Alarm On Pod CrashLoopBackOff
+description: >
+  EKS cluster has no CloudWatch alarm on
+  CrashLoopBackOff pod count. CrashLoopBackOff
+  indicates a workload's container can't start —
+  application bug, missing config, deleted
+  dependency, or image-pull failure. Without an
+  alarm, the workload remains unhealthy until
+  someone notices via downstream consumer impact
+  (latency, error rate at the application's
+  consumers).
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS cluster has no alarm on CrashLoopBackOff
+    count.
+  action: >
+    Enable Container Insights. Create CloudWatch
+    alarm on
+    pod_status_phase{status="CrashLoopBackOff"}
+    over 5 minutes. Per-namespace dimensions let
+    teams subscribe to alarms scoped to their own
+    workloads.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "alarm_crashloop_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.alarm_crashloop_configured
+      op: eq
+      value: false
+defect: >
+  EKS cluster has no alarm on CrashLoopBackOff pod
+  count.
+infection: >
+  CrashLoopBackOff pods don't serve traffic. The
+  workload's effective replica count drops below
+  the desired count; HPA may scale the
+  Deployment up trying to compensate. Operators
+  notice via consumer-side error rate or via
+  dashboards inspecting the pod status; alarms
+  let them respond proactively.
+failure: >
+  Silent workload degradation. CrashLooping pods
+  go unnoticed; operators learn via consumer
+  impact.
+tests:
+  - name: cluster without crashloop alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_crashloop_configured: false
+  - name: cluster with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_crashloop_configured: true

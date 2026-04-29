@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ADDON.SELFMANAGED.001
+name: EKS Core Add-on Is Self-Managed When Managed Available
+description: >
+  EKS cluster's core add-on (vpc-cni, coredns, kube-proxy)
+  is self-managed (installed via Helm / manifests / kubectl
+  apply) instead of via EKS managed add-ons. Self-managed
+  means the team is responsible for tracking compatibility
+  with the cluster version on every upgrade, applying
+  AWS security patches manually, and re-applying after
+  cluster upgrades. EKS managed add-ons handle this
+  automatically and are the AWS-recommended posture for
+  core add-ons specifically.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.2"
+  nist_800_53_r5: "CM-2, SI-2"
+  fedramp_moderate: "CM-2, SI-2"
+  iso_27001_2022: "A.5.16, A.8.8"
+  ccm_v4: ["BCR-08", "TVM-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_addon
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS core add-on is self-managed when EKS managed
+    add-on is available.
+  action: >
+    Migrate to EKS managed add-ons:
+      aws eks create-addon --cluster-name <c> --addon-name
+        vpc-cni --addon-version <version>
+    Use the
+    `--resolve-conflicts OVERWRITE` flag carefully if the
+    cluster already has the self-managed install. After
+    migration, the self-managed Helm release / manifests
+    can be deleted; EKS managed add-ons now own the
+    component.
+  example: |
+    {
+      "k8s": {
+        "addon": {
+          "addon_name": "vpc-cni",
+          "is_core_addon": true,
+          "is_self_managed": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.addon.is_core_addon
+      op: eq
+      value: true
+    - field: properties.k8s.addon.is_self_managed
+      op: eq
+      value: true
+defect: >
+  EKS core add-on (vpc-cni, coredns, kube-proxy) is
+  self-managed when an EKS managed add-on equivalent
+  exists.
+infection: >
+  The team owns lifecycle management — version
+  compatibility checks against cluster version,
+  security patch application, conflict resolution on
+  cluster upgrade. AWS publishes patches and version
+  matrices for managed add-ons; self-managed installs
+  must consume those manually, which lapses in practice.
+  Cluster upgrades become harder because the add-on
+  doesn't auto-track to the new K8s version.
+failure: >
+  Manual lifecycle management overhead. Add-on patches
+  and compatibility tracking depend on team discipline;
+  practical posture lags AWS-managed alternative.
+tests:
+  - name: self-managed core addon fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/cluster/prod/addon/vpc-cni"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "vpc-cni"
+            is_core_addon: true
+            is_self_managed: true
+  - name: managed addon passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/cluster/prod/addon/vpc-cni"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "vpc-cni"
+            is_core_addon: true
+            is_self_managed: false
+  - name: self-managed non-core addon passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/cluster/prod/addon/aws-load-balancer-controller"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "aws-load-balancer-controller"
+            is_core_addon: false
+            is_self_managed: true

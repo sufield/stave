@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.COREDNS.AUTOSCALE.001
+name: EKS CoreDNS Has No Autoscaling Configured On Large Cluster
+description: >
+  EKS cluster's CoreDNS deployment has the default 2
+  replicas without HPA / cluster-proportional-autoscaler
+  on a cluster with >50 nodes or >500 pods. CoreDNS
+  serves every pod's DNS lookups; under high cluster
+  density, 2 replicas become a bottleneck. Spike traffic
+  produces DNS resolution timeouts, which manifest as
+  intermittent application failures (cache miss + DNS
+  timeout pattern). AWS publishes
+  cluster-proportional-autoscaler as the documented fix.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.1, CC7.2"
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  iso_27001_2022: "A.8.6"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_addon
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    EKS CoreDNS has no autoscaling on a cluster of
+    significant size.
+  action: >
+    Deploy cluster-proportional-autoscaler for CoreDNS:
+      kubectl apply -f
+        https://github.com/kubernetes-sigs/
+        cluster-proportional-autoscaler/...
+    Configure scaling parameters
+    (`coresPerReplica: 256, nodesPerReplica: 16`).
+    Alternative: HPA on CoreDNS deployment with CPU
+    target. AWS-recommended for production EKS clusters
+    above 50 nodes.
+  example: |
+    {
+      "k8s": {
+        "addon": {
+          "addon_name": "coredns",
+          "replica_count": 6,
+          "has_autoscaler": true,
+          "cluster_node_count": 100
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.addon.addon_name
+      op: eq
+      value: coredns
+    - field: properties.k8s.addon.has_autoscaler
+      op: eq
+      value: false
+    - field: properties.k8s.addon.cluster_node_count
+      op: gt
+      value: 50
+defect: >
+  EKS CoreDNS deployment has no autoscaler on a
+  cluster of >50 nodes.
+infection: >
+  Default CoreDNS replicas (2) handle the cluster's
+  full DNS query volume. As cluster density grows,
+  query rate scales with pod count; CoreDNS replicas
+  saturate CPU; queries time out. DNS-dependent
+  application code (every K8s service lookup) sees
+  intermittent ResolveErrors. Diagnostic experience:
+  "this works most of the time but fails for
+  customers under load." Operators add caching
+  workarounds in apps; the underlying CoreDNS scale
+  issue persists.
+failure: >
+  DNS resolution intermittent failure under load.
+  Application errors traced to DNS timeout; CoreDNS
+  capacity bottleneck.
+tests:
+  - name: large cluster CoreDNS without autoscale fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/cluster/prod/addon/coredns"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "coredns"
+            replica_count: 2
+            has_autoscaler: false
+            cluster_node_count: 100
+  - name: large cluster CoreDNS with autoscale passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/cluster/prod/addon/coredns"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "coredns"
+            replica_count: 6
+            has_autoscaler: true
+            cluster_node_count: 100
+  - name: small cluster without autoscale passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/cluster/dev/addon/coredns"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "coredns"
+            replica_count: 2
+            has_autoscaler: false
+            cluster_node_count: 10

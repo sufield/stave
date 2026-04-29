@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.RAM.EXTERNAL.001
+name: EKS Cluster Shared Via RAM With External Accounts
+description: >
+  EKS cluster (or cluster-related shared resources —
+  shared subnets, transit gateway attachments) is
+  shared via AWS Resource Access Manager (RAM) with
+  accounts outside the AWS Organization, without an
+  `aws:PrincipalOrgID` condition restricting access.
+  External accounts get cluster-adjacent permissions
+  that are difficult to audit at the EKS layer because
+  the trust is established at the RAM layer.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, SC-7"
+  pci_dss_v4.0: "1.2, 7.1"
+  fedramp_moderate: "AC-3, SC-7"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EKS cluster shared via RAM with external accounts.
+  action: >
+    Restrict RAM share to accounts within the org by
+    adding `aws:PrincipalOrgID` condition. For
+    legitimately external collaborators, use a
+    dedicated cluster (per-tenant clusters) rather
+    than RAM-share. Audit current RAM shares:
+      aws ram get-resource-share-associations
+        --association-type RESOURCE
+    and remove any non-org principals.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "shared_via_ram": true,
+          "ram_principal_org_id_set": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.shared_via_ram
+      op: eq
+      value: true
+    - field: properties.k8s.cluster.ram_principal_org_id_set
+      op: eq
+      value: false
+defect: >
+  EKS cluster shared via RAM without aws:PrincipalOrgID
+  restriction.
+infection: >
+  External accounts in the RAM share have
+  cluster-adjacent permissions established at the AWS
+  RAM layer, separate from the cluster's own
+  authentication surfaces (aws-auth, Access Entries).
+  Auditing "who has access to the cluster" requires
+  checking BOTH the K8s authentication surfaces AND
+  the RAM-share principals; one alone misses the
+  other. Ad-hoc external sharing accumulates without
+  org boundary enforcement.
+failure: >
+  External-org cluster access without org boundary.
+  RAM-layer trust to non-org accounts; cluster access
+  audit incomplete at the K8s layer.
+tests:
+  - name: cluster shared without OrgID fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            shared_via_ram: true
+            ram_principal_org_id_set: false
+  - name: cluster shared with OrgID passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            shared_via_ram: true
+            ram_principal_org_id_set: true

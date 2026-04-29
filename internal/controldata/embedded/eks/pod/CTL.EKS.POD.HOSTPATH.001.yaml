@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.POD.HOSTPATH.001
+name: EKS Pod Mounts Sensitive Host Path
+description: >
+  EKS Pod mounts a hostPath volume that targets a sensitive
+  host filesystem location: `/`, `/etc`, `/var`,
+  `/var/run/docker.sock`, `/proc`, `/sys`, or
+  `/var/lib/kubelet`. Each gives the container the ability
+  to read or modify host-level state — `/etc` exposes host
+  configuration including SSH keys; the docker / containerd
+  socket lets the container start sibling containers with
+  arbitrary privilege; `/proc` exposes every host process's
+  memory / fd table; `/var/lib/kubelet` carries
+  ServiceAccount tokens for every pod on the node.
+domain: governance
+severity: critical
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6, SC-7"
+  pci_dss_v4.0: "1.4, 2.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09", "TVM-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_pod_spec
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    EKS Pod mounts a sensitive host path.
+  action: >
+    Remove the hostPath mount. Use ConfigMaps / Secrets /
+    PersistentVolumes for application state. For monitoring
+    or troubleshooting workloads that need host filesystem
+    visibility, deploy them in dedicated namespaces with
+    explicit security context exceptions and operator
+    review.
+  example: |
+    {
+      "k8s": {
+        "pod_spec": {
+          "has_sensitive_host_path_mount": false,
+          "is_infrastructure_daemonset": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.pod_spec.has_sensitive_host_path_mount
+      op: eq
+      value: true
+    - field: properties.k8s.pod_spec.is_infrastructure_daemonset
+      op: eq
+      value: false
+defect: >
+  EKS Pod mounts a sensitive host path (`/`, `/etc`, `/var`,
+  `/var/run/docker.sock`, `/proc`, `/sys`,
+  `/var/lib/kubelet`) and is not an infrastructure
+  DaemonSet.
+infection: >
+  hostPath mounts grant the container direct access to the
+  host filesystem at the named path. /etc gives the
+  container readable host configuration including SSH host
+  keys, network configuration, kubelet config; /var/run/
+  docker.sock or the containerd socket lets the container
+  invoke the runtime's API to start sibling containers with
+  arbitrary security context; /proc exposes every host
+  process's command line, environment, and memory; /var/lib/
+  kubelet carries other pods' ServiceAccount tokens. A pod
+  with one of these mounts plus any code execution becomes
+  effectively root on the node.
+failure: >
+  Host filesystem leakage / pivot. Container reads / writes
+  host-level state; pivots to other pods on the node via
+  ServiceAccount tokens or runtime socket abuse.
+tests:
+  - name: pod mounting docker socket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/builder"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            has_sensitive_host_path_mount: true
+            host_path_targets: ["/var/run/docker.sock"]
+            is_infrastructure_daemonset: false
+  - name: pod mounting /etc fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/configreader"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            has_sensitive_host_path_mount: true
+            host_path_targets: ["/etc"]
+            is_infrastructure_daemonset: false
+  - name: CNI DaemonSet mounting /opt/cni/bin passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/kube-system/daemonset/aws-node"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            has_sensitive_host_path_mount: true
+            host_path_targets: ["/opt/cni/bin"]
+            is_infrastructure_daemonset: true
+  - name: pod with no hostPath passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            has_sensitive_host_path_mount: false
+            is_infrastructure_daemonset: false

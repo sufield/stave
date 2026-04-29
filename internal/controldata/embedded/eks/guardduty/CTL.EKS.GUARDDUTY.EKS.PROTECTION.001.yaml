@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.GUARDDUTY.EKS.PROTECTION.001
+name: EKS Cluster Has GuardDuty EKS Protection Disabled
+description: >
+  EKS cluster's region has GuardDuty EKS Protection
+  not enabled. EKS Protection consumes the cluster's
+  control-plane audit logs and applies AWS-managed
+  threat detection signatures: privilege escalation
+  via ServiceAccount tokens, anonymous access,
+  excessive Secret reads, suspicious cluster API
+  calls. Without it, threat detection on the
+  control-plane layer relies on whatever custom
+  detections the team has built — typically less
+  comprehensive than AWS's signature catalog.
+domain: detection
+severity: high
+compliance:
+  soc2: "CC7.2, CC7.3"
+  nist_800_53_r5: "SI-4, IR-4, AU-6"
+  pci_dss_v4.0: "10.2, 11.5"
+  fedramp_moderate: "SI-4, AU-6"
+  iso_27001_2022: "A.5.24, A.8.16"
+  ccm_v4: ["LOG-08", "SEF-04"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS cluster's region has GuardDuty EKS
+    Protection disabled.
+  action: >
+    Enable GuardDuty in the region; enable
+    EKS Protection (audit log monitoring) under
+    GuardDuty's Kubernetes protection settings:
+      aws guardduty update-detector
+        --detector-id <id>
+        --features Name=EKS_AUDIT_LOGS,Status=ENABLED
+    Verify findings flow to Security Hub for
+    central operations dashboard.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "guardduty_eks_protection_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.guardduty_eks_protection_enabled
+      op: eq
+      value: false
+defect: >
+  EKS cluster's region has GuardDuty EKS Protection
+  disabled.
+infection: >
+  Threat detection on the cluster's control-plane
+  audit logs depends on custom detections. AWS's
+  signature catalog — including detections for
+  techniques like service-account-token theft,
+  anonymous-bind exploitation, kubectl-exec to
+  system pods, and Secret-enumeration — isn't
+  applied. The cluster's actual exposure to
+  documented attack patterns goes undetected.
+failure: >
+  Threat detection gap. Documented attack patterns
+  on K8s control plane go undetected; security
+  operations relies on custom detections that
+  typically lag AWS's catalog.
+tests:
+  - name: cluster without EKS Protection fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            guardduty_eks_protection_enabled: false
+  - name: cluster with EKS Protection passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            guardduty_eks_protection_enabled: true

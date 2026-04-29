@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.PARTNER.PENDING.STALE.001
+name: EventBridge Partner Source In PENDING State For Over 30 Days
+description: >
+  EventBridge partner event source is in PENDING state and
+  has been pending for more than 30 days — i.e., the partner
+  registered the source but the AWS-side operator never
+  associated it with a bus. The partner can publish events,
+  but they have no destination; the partner-side billing
+  continues. PENDING is intended as a transient state during
+  initial integration; long-stale PENDING sources are
+  abandoned integrations.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_partner_source
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge partner source has been in PENDING state for
+    over 30 days.
+  action: >
+    Decide whether to complete the integration (associate
+    the source with a bus via CreateEventBus with the
+    source's EventSourceName) or delete it (DeleteEventSource)
+    if the partner integration is no longer needed. Long
+    PENDING sources are typically abandoned integrations
+    that should be cleaned up.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_partner_source",
+        "events": {
+          "state": "ACTIVE"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_partner_source
+    - field: properties.governance.events.state
+      op: eq
+      value: PENDING
+    - field: properties.governance.events.pending_days
+      op: gt
+      value: 30
+defect: >
+  EventBridge partner event source has been in PENDING state
+  for over 30 days.
+infection: >
+  PENDING is intended for the brief window between partner
+  registration and AWS-side bus association. A PENDING
+  source older than 30 days indicates either an integration
+  that was registered but never completed (operator-side
+  stalled) or an integration that was completed and somehow
+  reverted to PENDING. Either way the source occupies a
+  partner-account-pair slot in the AWS limits and may
+  generate partner-side billing without producing events
+  AWS-side.
+failure: >
+  Inventory clutter and potential billing drift. PENDING
+  sources accumulate without integration completion;
+  per-partner per-account quotas are consumed.
+tests:
+  - name: PENDING > 30 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:partner-event-source/datadog/abc"
+      asset_type: aws_eventbridge_partner_source
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_partner_source
+          events:
+            state: "PENDING"
+            pending_days: 90
+  - name: PENDING < 30 days passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:partner-event-source/datadog/abc"
+      asset_type: aws_eventbridge_partner_source
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_partner_source
+          events:
+            state: "PENDING"
+            pending_days: 5
+  - name: ACTIVE source passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:partner-event-source/datadog/abc"
+      asset_type: aws_eventbridge_partner_source
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_partner_source
+          events:
+            state: "ACTIVE"
+            pending_days: 0

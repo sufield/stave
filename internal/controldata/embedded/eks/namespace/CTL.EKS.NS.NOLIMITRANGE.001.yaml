@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NS.NOLIMITRANGE.001
+name: EKS Namespace Has No LimitRange
+description: >
+  EKS namespace has no LimitRange object. Without a
+  LimitRange, individual pods can be created with no
+  resource requests / limits, OR with arbitrarily high
+  values. Per-pod resource consumption is bounded only by
+  what fits on the node — one greedy pod can consume the
+  entire node. Combined with no ResourceQuota, the
+  namespace has no resource discipline at any granularity.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "SC-5, SC-6"
+  fedramp_moderate: "SC-5"
+  iso_27001_2022: "A.8.6"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_namespace
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    EKS namespace has no LimitRange.
+  action: >
+    Apply a LimitRange to enforce default + max per-pod /
+    per-container resource bounds:
+      apiVersion: v1
+      kind: LimitRange
+      metadata: { name: <ns>-limits, namespace: <ns> }
+      spec:
+        limits:
+          - type: Container
+            default:        { cpu: 500m, memory: 512Mi }
+            defaultRequest: { cpu: 100m, memory: 128Mi }
+            max:            { cpu: 2,    memory: 4Gi }
+            min:            { cpu: 50m,  memory: 64Mi }
+    Tune to the workload's expected per-pod range.
+  example: |
+    {
+      "k8s": {
+        "namespace": {
+          "limit_range_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.namespace.limit_range_count
+      op: eq
+      value: 0
+    - field: properties.k8s.namespace.is_system_namespace
+      op: eq
+      value: false
+defect: >
+  EKS namespace has no LimitRange object.
+infection: >
+  Pods can be created without resource requests / limits.
+  Without requests, the scheduler treats them as
+  best-effort — they get scheduled anywhere with available
+  capacity, and once running they can consume up to the
+  node's capacity. Without limits, runaway pod processes
+  (memory leaks, CPU loops) consume the node and trigger
+  evictions for other pods. Operators expecting predictable
+  resource behavior find the namespace misbehaves.
+failure: >
+  Per-pod resource discipline absent. Greedy pods consume
+  node capacity; sibling pods evicted; QoS effectively
+  best-effort.
+tests:
+  - name: namespace without LimitRange fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            limit_range_count: 0
+            is_system_namespace: false
+  - name: namespace with LimitRange passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            limit_range_count: 1
+            is_system_namespace: false

@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.DR.KMS.SINGLEREGION.001
+name: EKS DR Cluster Uses Single-Region KMS Key Without Multi-Region Replication
+description: >
+  EKS DR cluster's etcd encryption uses a regional
+  KMS key in the DR region without a corresponding
+  multi-region key linkage to the primary region's
+  CMK. On failover, etcd Secrets restored from the
+  primary cluster's backup were encrypted with the
+  primary region's CMK; without multi-region key
+  replication, the DR cluster can't decrypt them.
+  The restore appears to succeed; pod startup fails
+  because Secrets can't be read.
+domain: governance
+severity: high
+compliance:
+  soc2: "A1.2, CC6.1"
+  nist_800_53_r5: "CP-9, SC-12, SC-28"
+  fedramp_moderate: "CP-9, SC-12"
+  iso_27001_2022: "A.5.30, A.8.24"
+  ccm_v4: ["BCR-08", "CEK-03"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: resilience
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EKS DR cluster KMS posture incompatible with
+    cross-region restore.
+  action: >
+    Use AWS KMS multi-region keys for etcd
+    encryption: create primary key in source region,
+    replicate to DR region, configure both clusters
+    to use their respective regional replica of the
+    same multi-region key. Backups encrypted with
+    one replica decrypt cleanly with the other.
+    Alternative: use Velero's KMS integration with
+    per-region keys + re-encrypt-on-restore — slower
+    but explicit.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "is_dr_cluster": true,
+          "etcd_kms_multi_region": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.is_dr_cluster
+      op: eq
+      value: true
+    - field: properties.k8s.cluster.etcd_kms_multi_region
+      op: eq
+      value: false
+defect: >
+  EKS DR cluster's etcd KMS key isn't multi-region;
+  cross-region restore can't decrypt source cluster's
+  Secrets.
+infection: >
+  Velero backup from primary cluster includes etcd
+  Secrets encrypted with primary region's CMK. DR
+  cluster's CMK is a different key in the DR region.
+  Restore writes the encrypted Secret bytes to DR
+  etcd; pod startup tries to read the Secret;
+  decryption fails because the DR region's CMK
+  can't decrypt source-region-encrypted bytes. The
+  failure is invisible until pods try to actually
+  use the Secrets.
+failure: >
+  Silent DR restore failure. Secrets restored
+  successfully (operator sees green status); pods
+  fail to read them after start.
+tests:
+  - name: DR with single-region KMS fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-west-2:111122223333:cluster/dr-prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            is_dr_cluster: true
+            etcd_kms_multi_region: false
+  - name: DR with multi-region KMS passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-west-2:111122223333:cluster/dr-prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            is_dr_cluster: true
+            etcd_kms_multi_region: true

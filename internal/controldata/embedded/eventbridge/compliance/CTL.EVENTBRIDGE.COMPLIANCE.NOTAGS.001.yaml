@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.COMPLIANCE.NOTAGS.001
+name: EventBridge Bus Has No Data Classification Tags
+description: >
+  EventBridge bus has no data-classification or compliance-
+  scope tags. Without tags, automated compliance reports
+  (HIPAA / PCI / SOC2) can't determine whether the bus
+  carries regulated data, encryption / retention / audit
+  controls applied appropriately, or who owns the bus.
+  Same governance-tag pattern as similar tagless-resource
+  controls across other services.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC6.1, CC6.5"
+  nist_800_53_r5: "CA-7, CM-8"
+  fedramp_moderate: "CA-7, CM-8"
+  iso_27001_2022: "A.5.9, A.5.12"
+  ccm_v4: ["DSP-04", "DSP-19"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge bus lacks data-classification tags.
+  action: >
+    Tag the bus with at least DataClassification (Public /
+    Internal / Confidential / Restricted) and Owner (team or
+    individual). For buses subject to specific compliance
+    frameworks, also tag Compliance (HIPAA / PCI / SOC2 /
+    GDPR) so compliance-scope reports can scope correctly.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "has_classification_tag": true,
+          "has_owner_tag": true
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - all:
+        - field: properties.governance.kind
+          op: eq
+          value: eventbridge_bus
+        - field: properties.governance.events.has_classification_tag
+          op: eq
+          value: false
+    - all:
+        - field: properties.governance.kind
+          op: eq
+          value: eventbridge_bus
+        - field: properties.governance.events.has_owner_tag
+          op: eq
+          value: false
+defect: >
+  EventBridge bus has no DataClassification or Owner tag.
+infection: >
+  Compliance reports scoped by tag (e.g., HIPAA-only buses,
+  PCI-relevant resources) can't include or exclude the bus
+  consistently. Cost-attribution by team can't bill events
+  ingestion to the right cost center. During incident
+  response, "who owns this bus" requires inspecting rules
+  and target ARNs rather than reading a tag.
+failure: >
+  Compliance and ownership opacity. Bus is invisible to
+  tag-scoped audits; cost attribution unattributed; owner
+  unknown without code archaeology.
+tests:
+  - name: bus without classification tag fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/orders"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            has_classification_tag: false
+            has_owner_tag: true
+  - name: bus without owner tag fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/orders"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            has_classification_tag: true
+            has_owner_tag: false
+  - name: bus with both tags passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/orders"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            has_classification_tag: true
+            has_owner_tag: true

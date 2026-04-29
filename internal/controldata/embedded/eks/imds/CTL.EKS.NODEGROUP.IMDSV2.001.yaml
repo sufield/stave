@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NODEGROUP.IMDSV2.001
+name: EKS Node Group Permits IMDSv1 Access
+description: >
+  EKS managed node group's launch template has
+  `MetadataOptions.HttpTokens: optional` — IMDSv1 (the
+  legacy unauthenticated metadata service) is permitted in
+  addition to IMDSv2. IMDSv1 is reachable via simple HTTP
+  GET to 169.254.169.254 with no token; SSRF / proxy /
+  XSPA exploits in pod workloads commonly target it to
+  exfiltrate the node's IAM instance profile credentials.
+  IMDSv2 (HttpTokens: required) requires a session token
+  obtained via PUT first, which most SSRF surfaces can't
+  produce.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, IA-2, SC-7"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, IA-2"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IAM-04", "IVS-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_nodegroup
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EKS node group's launch template permits IMDSv1.
+  action: >
+    Update the launch template's MetadataOptions to require
+    IMDSv2:
+      MetadataOptions:
+        HttpTokens: required
+        HttpPutResponseHopLimit: 1
+        HttpEndpoint: enabled
+    Roll the node group to apply (replace nodes). Verify
+    every node group in the cluster — IMDSv2 must be
+    cluster-wide; one node group permitting v1 is enough
+    for an SSRF-targeted pod.
+  example: |
+    {
+      "k8s": {
+        "nodegroup": {
+          "imds_http_tokens": "required",
+          "imdsv2_required": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.nodegroup.imdsv2_required
+      op: eq
+      value: false
+defect: >
+  EKS node group's MetadataOptions.HttpTokens is `optional`
+  rather than `required`.
+infection: >
+  Any pod scheduled on the node group can reach IMDSv1 via
+  simple HTTP GET. SSRF, XSPA, or proxy-binding
+  vulnerabilities in pod workloads — common in image-
+  fetching, URL-validation, and webhook-handling code —
+  let an attacker fetch the node's IAM instance profile
+  credentials at /latest/meta-data/iam/security-credentials/.
+  From there: assume the node role and pivot. Even with
+  IRSA configured for workload IAM, SSRF on the legacy
+  metadata service yields the broader node role.
+failure: >
+  IAM credential exfiltration via SSRF. Pod-side SSRF
+  surfaces extract the node's IAM credentials; pod compromise
+  becomes node-role compromise.
+tests:
+  - name: node group permitting IMDSv1 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/default"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            imds_http_tokens: "optional"
+            imdsv2_required: false
+  - name: node group requiring IMDSv2 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/default"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            imds_http_tokens: "required"
+            imdsv2_required: true

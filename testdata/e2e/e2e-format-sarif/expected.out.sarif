@@ -1,0 +1,70 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/cos02/schemas/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "stave",
+          "version": "edge",
+          "rules": [
+            {
+              "id": "CTL.EXP.DURATION.001",
+              "name": "Unsafe Exposure Duration Bound",
+              "shortDescription": {
+                "text": "An asset must not remain unsafe beyond the configured time window."
+              },
+              "help": {
+                "text": "Review the misconfigured properties and revert to compliant values."
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CTL.EXP.DURATION.001",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "CTL.EXP.DURATION.001: Unsafe Exposure Duration Bound on res:aws:s3:bucket:public-bucket (storage_bucket). Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "main.tf"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "Review the misconfigured properties and revert to compliant values."
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "stave/issue_id": "sha256:c3097f841f2213c3"
+          },
+          "properties": {
+            "reasoning_trace": [
+              {
+                "expected_value": true,
+                "observation_key": "public",
+                "observed_value": true,
+                "operator": "eq",
+                "predicate_expr": "public eq true"
+              }
+            ],
+            "stave/classification": "aggregate_check"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.GLOBALENDPOINT.NOHEALTHCHECK.001
+name: EventBridge Global Endpoint Has No Health Check Configured
+description: >
+  EventBridge Global Endpoint is configured without a Route 53
+  health check on the primary region. Failover from primary to
+  secondary depends on a health check signaling primary is
+  unhealthy; without one, failover never triggers — when the
+  primary region's bus is unhealthy, events still route there
+  and fail. The Global Endpoint then provides no DR value.
+domain: governance
+severity: high
+compliance:
+  soc2: "A1.1, CC7.2"
+  nist_800_53_r5: "CP-7, CP-9"
+  fedramp_moderate: "CP-7"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["BCR-08", "BCR-09"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_global_endpoint
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    EventBridge Global Endpoint has no Route 53 health check.
+  action: >
+    Create a Route 53 health check that monitors the primary
+    region's bus health. Wire it to the Global Endpoint's
+    routing-config / failover-config. The health check is the
+    signal that triggers failover; without it the Global
+    Endpoint never switches to the secondary.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_global_endpoint",
+        "events": {
+          "healthcheck_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_global_endpoint
+    - field: properties.governance.events.healthcheck_configured
+      op: eq
+      value: false
+defect: >
+  EventBridge Global Endpoint has no Route 53 health check
+  configured.
+infection: >
+  The Global Endpoint is configured to route events to a
+  primary bus with failover to a secondary, but the failover
+  trigger requires a Route 53 health check signaling primary
+  unhealth. Without one, failover never fires. When primary
+  region experiences a bus-side incident, events continue
+  routing there, the bus fails to accept them, and the
+  Global Endpoint's nominal DR posture provides no protection.
+failure: >
+  DR capability nonexistent. Global Endpoint exists; failover
+  never triggers; primary-region incidents take down the
+  event flow.
+tests:
+  - name: Global Endpoint without healthcheck fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:endpoint/orders-ge"
+      asset_type: aws_eventbridge_global_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_global_endpoint
+          events:
+            healthcheck_configured: false
+  - name: Global Endpoint with healthcheck passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:endpoint/orders-ge"
+      asset_type: aws_eventbridge_global_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_global_endpoint
+          events:
+            healthcheck_configured: true

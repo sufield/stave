@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ALARM.NODE.PRESSURE.001
+name: EKS Cluster Has No Alarm On Node Memory Disk Or PID Pressure
+description: >
+  EKS cluster has no CloudWatch alarm on per-node
+  MemoryPressure, DiskPressure, or PIDPressure
+  conditions. These conditions trigger pod evictions;
+  by the time they reach steady-state pressure, the
+  node is already evicting workload pods. Operators
+  notice via "why are my pods getting evicted?";
+  alarms on the leading-indicator pressure conditions
+  give earlier warning.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS cluster has no node-pressure alarms.
+  action: >
+    Enable Container Insights metrics. Create
+    CloudWatch alarms on each pressure condition:
+    node_memory_pressure, node_disk_pressure,
+    node_pid_pressure (set to >0 over 5 minutes —
+    any node under pressure is operationally
+    significant). PIDPressure especially is rare in
+    healthy clusters; firing PIDPressure typically
+    indicates a fork-bomb-style runaway.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "alarm_node_pressure_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.alarm_node_pressure_configured
+      op: eq
+      value: false
+defect: >
+  EKS cluster has no alarm on node pressure
+  conditions.
+infection: >
+  Pressure conditions are leading indicators of pod
+  eviction. MemoryPressure → kubelet evicts
+  best-effort pods first, then burstable, then
+  guaranteed. DiskPressure → kubelet evicts +
+  garbage-collects images. PIDPressure → no
+  established eviction policy; new pods can't fork.
+  Without alarms, operators miss the leading
+  indicator and respond to the trailing symptom
+  (pods evicted) instead.
+failure: >
+  Late detection of capacity pressure. Operators
+  respond to evictions rather than the conditions
+  that cause them.
+tests:
+  - name: cluster without pressure alarms fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_node_pressure_configured: false
+  - name: cluster with pressure alarms passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_node_pressure_configured: true

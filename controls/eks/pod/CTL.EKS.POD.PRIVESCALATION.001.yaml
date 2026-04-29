@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.POD.PRIVESCALATION.001
+name: EKS Pod Allows Privilege Escalation
+description: >
+  EKS Pod's container has
+  `securityContext.allowPrivilegeEscalation: true` (or unset,
+  which defaults to true in some Kubernetes versions). With
+  this set, a process inside the container can call
+  setuid binaries to gain capabilities the original process
+  didn't have. Combined with any setuid binary on the image
+  (sudo, su, mount, ping with capabilities) the container's
+  capability ceiling becomes the union of capabilities of
+  every setuid binary it contains.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "2.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_pod_spec
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    EKS Pod allows privilege escalation.
+  action: >
+    Set `securityContext.allowPrivilegeEscalation: false` on
+    every container. As a defense-in-depth measure also
+    drop all Linux capabilities
+    (`securityContext.capabilities.drop: ["ALL"]`) and add
+    only the specific capabilities the workload needs.
+  example: |
+    {
+      "k8s": {
+        "pod_spec": {
+          "allow_privilege_escalation": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.pod_spec.allow_privilege_escalation
+      op: eq
+      value: true
+defect: >
+  EKS Pod has allowPrivilegeEscalation=true (or unset,
+  defaulting true).
+infection: >
+  Inside-container processes can call setuid binaries to
+  expand their capability set. Modern container images
+  often retain setuid binaries left over from base-image
+  packages — `mount`, `umount`, `ping`, `su`, `sudo` —
+  some of which carry meaningful capabilities (CAP_NET_ADMIN
+  on ping, CAP_DAC_OVERRIDE on mount). Without
+  allowPrivilegeEscalation=false, container code that
+  exploits a vulnerable setuid binary inherits those
+  capabilities. With it set to false, the kernel's no_new_privs
+  flag denies setuid escalation.
+failure: >
+  Capability expansion through setuid. Container processes
+  can gain capabilities beyond their original entrypoint's
+  set by exploiting setuid binaries in the image.
+tests:
+  - name: pod allowing priv escalation fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            allow_privilege_escalation: true
+  - name: pod denying priv escalation passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            allow_privilege_escalation: false

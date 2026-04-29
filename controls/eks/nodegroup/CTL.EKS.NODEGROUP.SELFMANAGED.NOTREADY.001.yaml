@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NODEGROUP.SELFMANAGED.NOTREADY.001
+name: EKS Self-Managed Node Joined But Never Reached Ready
+description: >
+  EKS self-managed node has joined the cluster (kubelet
+  registered with the API server) but has been in `NotReady`
+  state for more than 30 minutes. Common causes: CNI plugin
+  failed to install, kubelet bootstrap script error, IAM
+  trust mismatch, network connectivity to the cluster API
+  endpoint blocked. The node consumes IAM trust,
+  CloudWatch metrics, and node-license cost without
+  serving any pods. Workloads requesting matching node
+  selectors stall in Pending.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, CM-8, SI-4"
+  fedramp_moderate: "CM-2, SI-4"
+  iso_27001_2022: "A.5.16, A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_node
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS self-managed node has been NotReady for over 30
+    minutes.
+  action: >
+    Check kubelet logs (`journalctl -u kubelet`) for the
+    bootstrap failure. Common causes: CNI plugin
+    incompatibility (re-run aws-node DaemonSet), IAM trust
+    policy doesn't include
+    "Principal": { "Service": "ec2.amazonaws.com" }, network
+    path to the cluster API endpoint blocked by SG / NACL.
+    If the node is genuinely not recoverable, terminate it
+    and remove from the cluster (kubectl delete node
+    <name>).
+  example: |
+    {
+      "k8s": {
+        "node": {
+          "is_self_managed": true,
+          "ready": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.node.is_self_managed
+      op: eq
+      value: true
+    - field: properties.k8s.node.ready
+      op: eq
+      value: false
+    - field: properties.k8s.node.notready_minutes
+      op: gt
+      value: 30
+defect: >
+  EKS self-managed node has been NotReady for over 30
+  minutes.
+infection: >
+  The node holds IAM trust and reports to CloudWatch; the
+  cluster sees it in node listings; metrics-server tries
+  to reach it. The kubelet either failed to register, or
+  registered and then immediately reported NotReady. Pods
+  scheduled with selectors matching this node remain
+  Pending. Operators investigating "pods are stuck
+  Pending" eventually find the NotReady node — typically
+  long after the original bootstrap failure.
+failure: >
+  Cluster capacity drift. Node consumes IAM and metric
+  cost without serving pods; pod scheduling for matching
+  selectors fails until the node is removed or recovered.
+tests:
+  - name: self-managed node NotReady > 30min fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/node/ip-10-0-1-100.ec2.internal"
+      asset_type: aws_eks_node
+      vendor: aws
+      properties:
+        k8s:
+          node:
+            is_self_managed: true
+            ready: false
+            notready_minutes: 75
+  - name: self-managed node Ready passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/node/ip-10-0-1-100.ec2.internal"
+      asset_type: aws_eks_node
+      vendor: aws
+      properties:
+        k8s:
+          node:
+            is_self_managed: true
+            ready: true
+            notready_minutes: 0
+  - name: managed nodegroup not in scope passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/node/ip-10-0-1-101.ec2.internal"
+      asset_type: aws_eks_node
+      vendor: aws
+      properties:
+        k8s:
+          node:
+            is_self_managed: false
+            ready: false
+            notready_minutes: 60

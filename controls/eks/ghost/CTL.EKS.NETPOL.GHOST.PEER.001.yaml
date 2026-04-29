@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NETPOL.GHOST.PEER.001
+name: EKS NetworkPolicy Peer Selectors Match No Live Pods
+description: >
+  NetworkPolicy's ingress / egress peer selectors (`podSelector`
+  + `namespaceSelector`) match zero live pods. The policy
+  persists with allow / deny rules pointing at nothing. Same
+  ghost pattern as RBAC bindings to deleted subjects but on
+  the network-policy surface. The danger is label re-use: if
+  a namespace or pod is later created with matching labels,
+  it silently inherits the policy's connectivity (which may
+  be broader or narrower than the new workload needs).
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "AC-3, CM-2, CM-3"
+  fedramp_moderate: "AC-3, CM-2"
+  iso_27001_2022: "A.5.16, A.8.16, A.8.32"
+  ccm_v4: ["IVS-09", "BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_network_policy
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    NetworkPolicy peer selectors match no live pods.
+  action: >
+    Either delete the orphan policy (kubectl delete
+    networkpolicy <name>) if the workload it protected is
+    decommissioned, or update the selectors to match the
+    current workload labels if the labels have shifted.
+    Audit cluster network policies via `kubectl get netpol -A`
+    + a label-match dry run.
+  example: |
+    {
+      "k8s": {
+        "network_policy": {
+          "peer_match_count": 4,
+          "has_ghost_peer": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.network_policy.peer_match_count
+      op: eq
+      value: 0
+    - field: properties.k8s.network_policy.has_ghost_peer
+      op: eq
+      value: true
+defect: >
+  NetworkPolicy peer selectors match zero live pods.
+infection: >
+  The policy persists in cluster state. With zero matched
+  peers, the policy is effectively inert: no pod is being
+  allowed-to or denied-from anyone via this policy. Operators
+  reviewing network posture see the policy and assume it's
+  enforcing intended connectivity; in fact it's enforcing
+  nothing. When labels are later reused (workload moved to a
+  new namespace with same labels, or new workload uses the
+  old labels), the policy's connectivity rules — written
+  against the old workload's threat model — apply to the new
+  workload regardless of whether they're appropriate.
+failure: >
+  Inert network policy + label-reuse silent activation.
+  Future label collisions reactivate stale connectivity
+  rules without operator intent.
+tests:
+  - name: policy matching no peers fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/networkpolicy/orders-egress-deny"
+      asset_type: aws_eks_network_policy
+      vendor: aws
+      properties:
+        k8s:
+          network_policy:
+            peer_match_count: 0
+            has_ghost_peer: true
+  - name: policy matching live peers passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/networkpolicy/orders-egress-deny"
+      asset_type: aws_eks_network_policy
+      vendor: aws
+      properties:
+        k8s:
+          network_policy:
+            peer_match_count: 4
+            has_ghost_peer: false

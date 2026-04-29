@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NS.PRIORITYCLASS.SYSTEM.001
+name: EKS Pod Uses System PriorityClass To Bypass Tenant Isolation
+description: >
+  EKS Pod in a tenant namespace uses
+  `priorityClassName: system-cluster-critical` or
+  `system-node-critical` — the highest-priority classes
+  reserved for cluster-system pods. The scheduler grants
+  these pods preferential placement and preempts lower-
+  priority pods to fit them. Tenant workloads using system
+  priority classes bypass per-namespace ResourceQuotas
+  (priority classes scoped via ResourceQuota may not catch
+  this) and can starve other tenants by triggering
+  preemption.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6, CC8.1"
+  nist_800_53_r5: "AC-3, SC-5"
+  fedramp_moderate: "AC-3, SC-5"
+  iso_27001_2022: "A.5.15, A.8.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_pod_spec
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    EKS Pod in a tenant namespace uses system PriorityClass.
+  action: >
+    Remove the `priorityClassName` from tenant pods or
+    change it to a tenant-appropriate class. Use the
+    cluster's RBAC + ResourceQuota with `scopes:
+    [PriorityClass]` to restrict which priority classes a
+    namespace can request. System priority classes should
+    be limited to `kube-system` and equivalent
+    infrastructure namespaces.
+  example: |
+    {
+      "k8s": {
+        "pod_spec": {
+          "priority_class_name": "default",
+          "uses_system_priority": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.pod_spec.uses_system_priority
+      op: eq
+      value: true
+    - field: properties.k8s.pod_spec.is_system_namespace
+      op: eq
+      value: false
+defect: >
+  EKS Pod in a non-system namespace uses
+  `system-cluster-critical` or `system-node-critical`
+  PriorityClass.
+infection: >
+  The scheduler treats the pod as cluster-system priority.
+  When node capacity is constrained, the scheduler can
+  preempt lower-priority pods (which is every other tenant's
+  workload by default) to fit this pod. Tenant boundaries
+  defeated at the scheduler level: one tenant's pods can
+  evict another tenant's pods even though both have
+  matching ResourceQuotas. ResourceQuota ceilings still
+  apply to the namespace itself, but the cross-tenant
+  starvation goes around the quota.
+failure: >
+  Cross-tenant scheduling preemption. Pod priority bypasses
+  per-namespace isolation; one tenant evicts another's pods
+  during capacity contention.
+tests:
+  - name: tenant pod with system priority fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            priority_class_name: "system-cluster-critical"
+            uses_system_priority: true
+            is_system_namespace: false
+  - name: kube-system pod with system priority passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/kube-system/daemonset/kube-proxy"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            priority_class_name: "system-node-critical"
+            uses_system_priority: true
+            is_system_namespace: true
+  - name: tenant pod with default priority passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_pod_spec
+      vendor: aws
+      properties:
+        k8s:
+          pod_spec:
+            priority_class_name: "default"
+            uses_system_priority: false
+            is_system_namespace: false

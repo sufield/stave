@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.IMAGE.BASE.STALE.001
+name: EKS Workload Image Was Built More Than 180 Days Ago
+description: >
+  EKS workload's image has a build timestamp older than
+  180 days. Container base images (ubuntu, alpine,
+  node, python) accumulate CVEs over time as
+  vulnerabilities are disclosed in their package
+  contents. An image built 6+ months ago carries every
+  CVE disclosed since the build; even with no
+  changes to application code, the security posture
+  degrades silently. The remediation is rebuild-and-
+  redeploy, not just patching.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, CC7.2"
+  nist_800_53_r5: "SI-2, RA-5"
+  pci_dss_v4.0: "6.3, 11.2"
+  fedramp_moderate: "SI-2, RA-5"
+  iso_27001_2022: "A.5.16, A.8.8"
+  ccm_v4: ["TVM-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_workload
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    EKS workload image is more than 180 days old.
+  action: >
+    Rebuild the workload's image on a current base
+    image and redeploy. For low-change services that
+    don't have a regular rebuild cadence, automate via
+    CI: trigger a base-image-refresh build weekly /
+    monthly that rebuilds on the latest tag of the
+    upstream base. Pair with ECR scan-on-push to
+    identify regressions in the rebuild output.
+  example: |
+    {
+      "k8s": {
+        "workload": {
+          "image_age_days": 30
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.workload.image_age_days
+      op: gt
+      value: 180
+defect: >
+  EKS workload image was built more than 180 days ago.
+infection: >
+  Base images accumulate CVEs continuously. An image
+  built today on Alpine 3.20 carries N CVEs disclosed
+  by tomorrow; the same image deployed for 6 months
+  carries hundreds. Without rebuild discipline,
+  workloads silently drift into vulnerability backlog.
+  Application code may be perfectly sound; the base-
+  image OS packages are the attack surface.
+failure: >
+  Accumulated CVE exposure. Workloads carry every CVE
+  disclosed since their build date; rebuild is the
+  remediation, not patching.
+tests:
+  - name: image 250 days old fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_age_days: 250
+  - name: image 30 days old passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_age_days: 30

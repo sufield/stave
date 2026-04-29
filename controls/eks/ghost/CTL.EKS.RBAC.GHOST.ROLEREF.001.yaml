@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.RBAC.GHOST.ROLEREF.001
+name: EKS RoleBinding Or ClusterRoleBinding References Deleted Role
+description: >
+  RoleBinding or ClusterRoleBinding's `roleRef` points at a
+  Role / ClusterRole that no longer exists. The binding is
+  inert — kubectl auth checks against it return "no" because
+  the role can't resolve. But the binding persists in cluster
+  state. If the role is later recreated under the same name
+  with broader scope than the original, the binding's
+  subjects silently inherit the new permissions.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "AC-3, CM-2, CM-3"
+  fedramp_moderate: "AC-3, CM-2"
+  iso_27001_2022: "A.5.15, A.5.16, A.8.32"
+  ccm_v4: ["IAM-04", "IAM-13"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_rbac_binding
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    RBAC binding's roleRef points at a Role/ClusterRole that
+    has been deleted.
+  action: >
+    Delete the orphan binding via kubectl delete
+    rolebinding / clusterrolebinding <name>. If the role
+    name will be reused, audit who the binding granted to
+    BEFORE deletion to confirm the intended grants.
+  example: |
+    {
+      "k8s": {
+        "rbac_binding": {
+          "role_kind": "ClusterRole",
+          "role_name": "orders-deploy",
+          "role_exists": true,
+          "has_ghost_role_ref": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.rbac_binding.has_ghost_role_ref
+      op: eq
+      value: true
+defect: >
+  RBAC binding's roleRef references a Role / ClusterRole
+  that has been deleted.
+infection: >
+  The binding persists with subjects intact. While the role
+  is missing, kubectl auth returns "not authorized" for
+  bindings's subjects. If a role with the same name is later
+  created — possibly with different (broader) permissions —
+  the binding silently activates with the new role's
+  permissions. Subjects of the binding gain whatever
+  permissions the new role grants. Same name-reuse pattern
+  as RBAC.GHOST.SUBJECT but with the role name as the
+  reusable identifier.
+failure: >
+  Silent permission inheritance via role-name reuse. A
+  recreated role grants permissions to bindings the operator
+  may not remember exist.
+tests:
+  - name: binding with ghost roleRef fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/rolebinding/orders-deploy-rb"
+      asset_type: aws_eks_rbac_binding
+      vendor: aws
+      properties:
+        k8s:
+          rbac_binding:
+            role_kind: "ClusterRole"
+            role_name: "orders-deploy-deleted"
+            role_exists: false
+            has_ghost_role_ref: true
+  - name: binding with live roleRef passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/rolebinding/orders-deploy-rb"
+      asset_type: aws_eks_rbac_binding
+      vendor: aws
+      properties:
+        k8s:
+          rbac_binding:
+            role_kind: "ClusterRole"
+            role_name: "orders-deploy"
+            role_exists: true
+            has_ghost_role_ref: false

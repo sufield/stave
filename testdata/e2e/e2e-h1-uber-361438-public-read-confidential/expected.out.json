@@ -1,0 +1,670 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "e24124653b4dbe892908d0712f57d7dd3d44f8c970f2e876eec4b616c89d6aaf",
+        "2026-01-11T000000Z.json": "ed0eb56de4feffaaf0e563cf51534efc156e9b4499f2d2e649a122e454945433"
+      },
+      "overall": "cb047b89cca314e6b7201f86f2e7ea3d9f0097526fc5bc8cb14bf327ad330179"
+    },
+    "policy_fingerprint": "3875069cb6e55e06b11be184f722121eacc6bbd33c29f434a8c775c9c2546adb",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 2
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "ubergreece",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.002",
+      "asset_id": "ubergreece",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:3f665eca42cfc415",
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_name": "No Public S3 Bucket Read",
+      "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
+      "asset_id": "ubergreece",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_read",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.5",
+        "fedramp_moderate": "AC-3",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "hipaa": "164.312(a)(1)",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3",
+        "pci_dss_v3.2.1": "1.2.1",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "public_read",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket has public read access enabled via policy or ACL. Anyone on the internet can access objects in this bucket.",
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-95dbc091a26df4b5",
+        "target": {
+          "asset_id": "ubergreece",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      },
+      "exposure_score": 205.47945205479454,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.public_read eq true",
+          "observation_key": "storage.access.public_read",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "ubergreece",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.001",
+          "control_name": "No Public S3 Bucket Read",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous read = true",
+              "observation_key": "storage.access.public_read",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_read",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_read to false"
+          }
+        ],
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket's access configuration grants read permission to the public — either via a bucket policy statement with Principal \"*\" or via an ACL grant to the AllUsers pseudo-group. The bucket is reachable without authentication from the public internet.\n",
+      "infection": "Anyone on the internet can fetch objects from this bucket over anonymous HTTP/HTTPS. Search engines and automated scanners continuously enumerate publicly-indexed bucket names, meaning exposure is active from the moment the policy or ACL is in place — not hypothetical. Once the bucket name is known, every object whose key the caller can guess or enumerate is fetchable.\n",
+      "failure": "Unbounded data exposure. Every file stored in this bucket is readable by arbitrary internet callers, including potentially sensitive operational data, customer information, backup artifacts, or internal documentation that wasn't intended to reach the public surface.\n",
+      "delta": [
+        {
+          "property_label": "public read access",
+          "property_path": "storage.access.public_read",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:79defb15a797b64c",
+      "control_id": "CTL.S3.PUBLIC.002",
+      "control_name": "No Public S3 Buckets With Sensitive Data",
+      "control_description": "S3 buckets tagged with sensitive data classifications (PHI, PII, confidential) must not allow any public access.\n",
+      "asset_id": "ubergreece",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_list",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.access.public_read",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "confidential",
+            "operator": "eq",
+            "unsafe_value": "confidential"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "confidential",
+            "operator": "eq",
+            "unsafe_value": "phi"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "confidential",
+            "operator": "eq",
+            "unsafe_value": "pii"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "public_read",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "A bucket containing sensitive data (PHI, PII, or confidential) has public read or list access. This data is accessible to anyone on the internet.",
+        "action": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false,\n      \"public_list\": false\n    },\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-95dbc091a26df4b5",
+        "target": {
+          "asset_id": "ubergreece",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window."
+      },
+      "exposure_score": 205.47945205479454,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.public_list eq true",
+          "observation_key": "storage.access.public_list",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "storage.access.public_read eq true",
+          "observation_key": "storage.access.public_read",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification eq \"confidential\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "eq",
+          "expected_value": "confidential",
+          "observed_value": "confidential"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification eq \"phi\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "eq",
+          "expected_value": "phi",
+          "observed_value": "confidential"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification eq \"pii\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "eq",
+          "expected_value": "pii",
+          "observed_value": "confidential"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "ubergreece",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.PUBLIC.002",
+          "control_name": "No Public S3 Buckets With Sensitive Data",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous list = false",
+              "observation_key": "storage.access.public_list",
+              "observed_value": false
+            },
+            {
+              "clause": "the bucket allows anonymous read = true",
+              "observation_key": "storage.access.public_read",
+              "observed_value": true
+            },
+            {
+              "clause": "the bucket's data-classification tag = \"confidential\"",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "confidential"
+            },
+            {
+              "clause": "the bucket's data-classification tag = \"confidential\"",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "confidential"
+            },
+            {
+              "clause": "the bucket's data-classification tag = \"confidential\"",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "confidential"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_list",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_list to true"
+          },
+          {
+            "path": "storage.access.public_read",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_read to false"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "confidential",
+            "required_value": "any value other than confidential",
+            "has_safe_default": false,
+            "description": "Change storage.tags.data-classification away from confidential"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "confidential",
+            "required_value": "any value other than phi",
+            "has_safe_default": false,
+            "description": "Change storage.tags.data-classification away from phi"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "confidential",
+            "required_value": "any value other than pii",
+            "has_safe_default": false,
+            "description": "Change storage.tags.data-classification away from pii"
+          }
+        ],
+        "action": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3",
+        "sensitive-data"
+      ],
+      "defect": "A bucket tagged with a sensitive-data classification (PHI, PII, or confidential) is exposed via public read or public list. The tag declares the data's sensitivity; the access state contradicts that declaration.\n",
+      "infection": "Any internet caller can fetch the sensitive objects via anonymous GET or enumerate them via anonymous ListBucket. Search engines and compliance scanners specifically match data-classification tags against access state, so a single tagged-sensitive + public bucket becomes the highest-priority finding in most posture dashboards. Regulators treat the classification tag as evidence of awareness: the organization has labeled this data sensitive and nonetheless exposed it publicly, which weakens claims of accidental oversight.\n",
+      "failure": "Regulated-data breach. PHI exposure triggers HIPAA breach notification; PII exposure triggers GDPR/CCPA obligations; confidential data exposure typically triggers contractual disclosure and customer notification. Remediation scope is bounded by the exposure window — audit CloudTrail to bound who accessed during that window and produce the notification roster.\n",
+      "delta": [
+        {
+          "property_label": "public list access",
+          "property_path": "storage.access.public_list",
+          "current_value": "false",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "public read access",
+          "property_path": "storage.access.public_read",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "confidential",
+          "fix_action": "change from \"confidential\" to any other value, or remove"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "confidential",
+          "fix_action": "change from \"phi\" to any other value, or remove"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "confidential",
+          "fix_action": "change from \"pii\" to any other value, or remove"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:6f6dfe42cf34a99a",
+      "asset_id": "ubergreece",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.public_list",
+        "storage.access.public_read",
+        "storage.tags",
+        "storage.tags.data-classification"
+      ],
+      "headline_finding_id": "sha256:3f665eca42cfc415",
+      "member_finding_ids": [
+        "sha256:3f665eca42cfc415",
+        "sha256:79defb15a797b64c"
+      ],
+      "consolidated_score": 205.47945205479454,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "ubergreece",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-95dbc091a26df4b5",
+        "target": {
+          "asset_id": "ubergreece",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.002"
+      ],
+      "finding_count": 2
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "ubergreece",
+      "exposure_score": 205.47945205479454,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.S3.PUBLIC.002",
+      "asset_id": "ubergreece",
+      "exposure_score": 205.47945205479454,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "dirty": false
+    }
+  }
+}

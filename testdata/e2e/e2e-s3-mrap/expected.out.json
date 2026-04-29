@@ -1,0 +1,511 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "now": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "c87cacb23d55a1a26041ff28fe16c78edbe08234b832d4cef8854c8018285dca",
+        "2026-01-10T000000Z.json": "c3e723e3bd68819b93705e67a15428ab26ed01340fdb748a8102e1ba19f314e8"
+      },
+      "overall": "0044dc0b64dd3cab31a58af2c93dd84465fd1f10e9845211813504dc9f755b49"
+    },
+    "policy_fingerprint": "89d1379ac1eb66132cffcce44a86b2b723667276ee9fb82ff50c3bc222ab281b",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 2
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.S3.MRAP.PAB.001",
+      "asset_id": "mrap-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.MRAP.POLICY.001",
+      "asset_id": "mrap-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:99e24f781f3cd3ad",
+      "control_id": "CTL.S3.MRAP.PAB.001",
+      "control_name": "Multi-Region Access Point Must Have Block Public Access Enabled",
+      "control_description": "MRAPs have their own PAB settings independent of bucket PAB. A bucket can have PAB enabled while the MRAP has PAB disabled.\n",
+      "asset_id": "mrap-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.mrap_public_access_blocked",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "hipaa": "164.312(a)(1)",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DCS-07",
+        "DSP-07",
+        "IAM-16",
+        "IVS-03"
+      ],
+      "exposure": {
+        "type": "public_read",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "A Multi-Region Access Point exists with Block Public Access disabled.",
+        "action": "Enable all four PAB flags on the MRAP.",
+        "example": "{ \"storage\": { \"mrap_public_access_blocked\": true } }\n"
+      },
+      "fix_plan": {
+        "id": "fix-8c16b151c9ecab6c",
+        "target": {
+          "asset_id": "mrap-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable all four PAB flags on the MRAP."
+      },
+      "exposure_score": 205.47945205479454,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.mrap_public_access_blocked eq false",
+          "observation_key": "storage.mrap_public_access_blocked",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "mrap-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.MRAP.PAB.001",
+          "control_name": "Multi-Region Access Point Must Have Block Public Access Enabled",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the Multi-Region Access Point blocks public access = false",
+              "observation_key": "storage.mrap_public_access_blocked",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.mrap_public_access_blocked",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.mrap_public_access_blocked to true"
+          }
+        ],
+        "action": "Enable all four PAB flags on the MRAP."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "MRAP public access",
+          "property_path": "storage.mrap_public_access_blocked",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:4dc192f371721197",
+      "control_id": "CTL.S3.MRAP.POLICY.001",
+      "control_name": "Multi-Region Access Point Policy Must Not Be Public",
+      "control_description": "MRAPs can have their own resource policy evaluated independently of the bucket policy. A public MRAP policy creates a public access path.\n",
+      "asset_id": "mrap-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.mrap_policy_is_public",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance_ccm_v4": [
+        "DCS-07",
+        "IAM-16",
+        "IVS-03"
+      ],
+      "exposure": {
+        "type": "public_read",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "A Multi-Region Access Point has a public policy.",
+        "action": "Remove public access from the MRAP policy.",
+        "example": "{ \"storage\": { \"mrap_policy_is_public\": false } }\n"
+      },
+      "fix_plan": {
+        "id": "fix-8c16b151c9ecab6c",
+        "target": {
+          "asset_id": "mrap-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Remove public access from the MRAP policy."
+      },
+      "exposure_score": 205.47945205479454,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.mrap_policy_is_public eq true",
+          "observation_key": "storage.mrap_policy_is_public",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "mrap-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.MRAP.POLICY.001",
+          "control_name": "Multi-Region Access Point Policy Must Not Be Public",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the Multi-Region Access Point policy is public = true",
+              "observation_key": "storage.mrap_policy_is_public",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.mrap_policy_is_public",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.mrap_policy_is_public to false"
+          }
+        ],
+        "action": "Remove public access from the MRAP policy."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "MRAP policy is public",
+          "property_path": "storage.mrap_policy_is_public",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:36bf2ae8d67d5efd",
+      "asset_id": "mrap-bucket",
+      "shared_keys": [
+        "storage.mrap_policy_is_public"
+      ],
+      "headline_finding_id": "sha256:4dc192f371721197",
+      "member_finding_ids": [
+        "sha256:4dc192f371721197"
+      ],
+      "consolidated_score": 205.47945205479454,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:39a55775082a5c89",
+      "asset_id": "mrap-bucket",
+      "shared_keys": [
+        "storage.mrap_public_access_blocked"
+      ],
+      "headline_finding_id": "sha256:99e24f781f3cd3ad",
+      "member_finding_ids": [
+        "sha256:99e24f781f3cd3ad"
+      ],
+      "consolidated_score": 205.47945205479454,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "mrap-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-8c16b151c9ecab6c",
+        "target": {
+          "asset_id": "mrap-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable all four PAB flags on the MRAP."
+      },
+      "contributing_controls": [
+        "CTL.S3.MRAP.PAB.001",
+        "CTL.S3.MRAP.POLICY.001"
+      ],
+      "finding_count": 2
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.MRAP.PAB.001",
+      "asset_id": "mrap-bucket",
+      "exposure_score": 205.47945205479454,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
+      "control_id": "CTL.S3.MRAP.POLICY.001",
+      "asset_id": "mrap-bucket",
+      "exposure_score": 205.47945205479454,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    },
+    "git": {
+      "repo_root": "/home/zepho/work/bizacademy",
+      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "dirty": false
+    }
+  }
+}

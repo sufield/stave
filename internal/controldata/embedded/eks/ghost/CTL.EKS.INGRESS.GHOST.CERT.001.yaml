@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.INGRESS.GHOST.CERT.001
+name: EKS Ingress References Deleted ACM Certificate
+description: >
+  EKS Ingress (typically ALB Ingress Controller) has the
+  `alb.ingress.kubernetes.io/certificate-arn` annotation
+  pointing at an ACM certificate that no longer exists.
+  When the ALB Ingress Controller reconciles, the ALB can't
+  bind the certificate; HTTPS listener fails to provision
+  or breaks on next reconcile cycle. Console shows the
+  Ingress configured; clients see TLS handshake failures.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.7, CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, SC-13"
+  fedramp_moderate: "CM-2, SC-13"
+  iso_27001_2022: "A.5.16, A.8.24, A.8.32"
+  ccm_v4: ["BCR-08", "DSP-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_ingress
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    EKS Ingress references an ACM certificate that has been
+    deleted.
+  action: >
+    Update the Ingress annotation to a live ACM certificate
+    ARN (kubectl edit ingress <name>), or recreate the
+    deleted certificate at the original ARN if it was
+    intentional and the original is still needed. Pair with
+    cert expiry monitoring so future ACM deletions / expiry
+    surfaces immediately.
+  example: |
+    {
+      "k8s": {
+        "ingress": {
+          "certificate_arn": "arn:aws:acm:us-east-1:111122223333:certificate/abc",
+          "certificate_exists": true,
+          "has_ghost_certificate": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.ingress.has_ghost_certificate
+      op: eq
+      value: true
+defect: >
+  EKS Ingress's certificate-arn annotation references an
+  ACM certificate that has been deleted.
+infection: >
+  The Ingress manifest is structurally correct. The ALB
+  Ingress Controller's reconcile cycle attempts to apply
+  the certificate to the ALB listener — ACM resolution
+  fails. Depending on controller version, the listener is
+  either created without the certificate (HTTPS broken) or
+  the reconcile errors out and the existing listener
+  configuration drifts. Clients hit TLS errors; operators
+  trace from "certificate working" through to a deleted
+  ACM ARN.
+failure: >
+  Silent TLS-listener degradation. Clients can't establish
+  HTTPS; the Ingress manifest looks correct.
+tests:
+  - name: Ingress with ghost cert fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/ingress/orders-api"
+      asset_type: aws_eks_ingress
+      vendor: aws
+      properties:
+        k8s:
+          ingress:
+            certificate_arn: "arn:aws:acm:us-east-1:111122223333:certificate/deleted"
+            certificate_exists: false
+            has_ghost_certificate: true
+  - name: Ingress with live cert passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/ingress/orders-api"
+      asset_type: aws_eks_ingress
+      vendor: aws
+      properties:
+        k8s:
+          ingress:
+            certificate_arn: "arn:aws:acm:us-east-1:111122223333:certificate/abc"
+            certificate_exists: true
+            has_ghost_certificate: false

@@ -1,0 +1,125 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.HELM.RELEASE.FAILED.001
+name: EKS Helm Release Stuck In Failed State Over 7 Days
+description: >
+  EKS cluster has at least one Helm release in
+  `failed` / `pending-install` / `pending-upgrade`
+  state for more than 7 days. The release's last
+  operation didn't complete; the cluster's
+  resources are in whatever partial state the
+  failed operation left them. Operators commonly
+  let failed releases sit because the deploy
+  succeeded the second time on a different release
+  name; the original failed release accumulates as
+  inventory clutter and blocks future releases
+  with the same name.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_helm_release
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS Helm release in failed state > 7 days.
+  action: >
+    Decide whether to retry or remove. Retry:
+      helm rollback <release> 0 (or upgrade with
+      --reset-values to a known-good chart version).
+    Remove: helm uninstall <release> deletes the
+    release record + cluster resources. Audit
+    cluster Helm state regularly:
+      helm list -A --pending --failed
+  example: |
+    {
+      "k8s": {
+        "helm_release": {
+          "status": "deployed"
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - all:
+        - field: properties.k8s.helm_release.status
+          op: eq
+          value: failed
+        - field: properties.k8s.helm_release.days_in_status
+          op: gt
+          value: 7
+    - all:
+        - field: properties.k8s.helm_release.status
+          op: eq
+          value: pending-install
+        - field: properties.k8s.helm_release.days_in_status
+          op: gt
+          value: 7
+    - all:
+        - field: properties.k8s.helm_release.status
+          op: eq
+          value: pending-upgrade
+        - field: properties.k8s.helm_release.days_in_status
+          op: gt
+          value: 7
+defect: >
+  EKS Helm release is in failed / pending state for
+  over 7 days.
+infection: >
+  Release is stuck mid-operation. Cluster resources
+  reflect a partial deploy: some templates rendered
+  and applied, others not; some annotations updated,
+  others not. The release name is unusable for new
+  installs without manual cleanup. CI / CD
+  pipelines targeting this release name fail or
+  get blocked. Operators work around by deploying
+  to new release names; the failed releases
+  accumulate as inventory.
+failure: >
+  Release-name pollution + partial-deploy state.
+  Helm-driven CI / CD breaks; cluster state
+  doesn't match any known-good chart version.
+tests:
+  - name: failed release 14 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/helm-release/orders-api"
+      asset_type: aws_eks_helm_release
+      vendor: aws
+      properties:
+        k8s:
+          helm_release:
+            status: "failed"
+            days_in_status: 14
+  - name: deployed release passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/helm-release/orders-api"
+      asset_type: aws_eks_helm_release
+      vendor: aws
+      properties:
+        k8s:
+          helm_release:
+            status: "deployed"
+            days_in_status: 30
+  - name: recently-failed release passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/helm-release/orders-api"
+      asset_type: aws_eks_helm_release
+      vendor: aws
+      properties:
+        k8s:
+          helm_release:
+            status: "failed"
+            days_in_status: 2

@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.CSI.EFS.NOIRSA.001
+name: EKS EFS CSI Driver Has No IRSA Configured
+description: >
+  EKS EFS CSI driver's ServiceAccount has no IRSA
+  annotation. Same posture as the EBS variant — pods
+  fall back to the node instance profile, EFS
+  permissions leak across pods on the same node. EFS
+  CSI permissions cover access-point management and
+  mount target operations, both of which can be
+  abused (cross-tenant access-point creation, mount
+  hijacking).
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_addon
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    EKS EFS CSI driver lacks IRSA configuration.
+  action: >
+    Create an IAM role with the
+    AmazonEFSCSIDriverPolicy (AWS-managed minimal
+    policy). Trust policy must include the cluster's
+    OIDC issuer + sub for the efs-csi-controller-sa
+    ServiceAccount. Annotate the SA and restart the
+    controller deployment.
+  example: |
+    {
+      "k8s": {
+        "addon": {
+          "addon_name": "aws-efs-csi-driver",
+          "has_irsa": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.addon.addon_name
+      op: eq
+      value: aws-efs-csi-driver
+    - field: properties.k8s.addon.has_irsa
+      op: eq
+      value: false
+defect: >
+  EKS EFS CSI driver's ServiceAccount has no IRSA
+  annotation.
+infection: >
+  The driver's pods need EFS permissions to provision
+  access points and mount filesystems. Without IRSA,
+  IMDS fallback grants those permissions to every pod
+  on the node. Cross-pod access-point creation +
+  mount-target abuse becomes possible — one pod
+  creates an access point with broader path access
+  and mounts via a sibling pod.
+failure: >
+  Cross-pod IAM scope leakage on EFS access. Pods can
+  manipulate EFS access points and mounts beyond the
+  driver's intended scope.
+tests:
+  - name: EFS CSI without IRSA fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/cluster/prod/addon/aws-efs-csi-driver"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "aws-efs-csi-driver"
+            has_irsa: false
+  - name: EFS CSI with IRSA passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/cluster/prod/addon/aws-efs-csi-driver"
+      asset_type: aws_eks_addon
+      vendor: aws
+      properties:
+        k8s:
+          addon:
+            addon_name: "aws-efs-csi-driver"
+            has_irsa: true
+            service_account_role_arn: "arn:aws:iam::111122223333:role/eks-efs-csi-irsa"

@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.STORAGECLASS.GP2DEFAULT.001
+name: EKS Cluster Default StorageClass Is gp2
+description: >
+  EKS cluster has gp2 marked as the default StorageClass
+  (`storageclass.kubernetes.io/is-default-class:
+  "true"`). gp2 is the legacy AWS EBS general-purpose
+  volume type — superseded by gp3, which AWS prices
+  lower, performs better at small sizes, and supports
+  independent IOPS / throughput tuning. New clusters
+  should default to gp3; existing clusters should
+  migrate.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-2"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_storage_class
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS cluster default StorageClass is gp2 rather than
+    gp3.
+  action: >
+    Create a gp3 StorageClass with the default annotation,
+    then remove the default annotation from gp2.
+    Existing PVs bound to gp2 continue to function;
+    new PVCs without an explicit storageClassName get
+    gp3. Migrate existing volumes by snapshot + restore
+    onto a new gp3 PV at the application's next
+    maintenance window.
+  example: |
+    {
+      "k8s": {
+        "storage_class": {
+          "name": "gp3",
+          "is_default": true,
+          "type": "gp3"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.storage_class.is_default
+      op: eq
+      value: true
+    - field: properties.k8s.storage_class.type
+      op: eq
+      value: gp2
+defect: >
+  EKS cluster's default StorageClass is gp2 rather than
+  gp3.
+infection: >
+  PVCs that don't specify storageClassName get the
+  default — gp2. gp2 is more expensive for the same
+  capacity than gp3, has fixed IOPS-per-GB ratios, and
+  doesn't support the independent throughput tuning gp3
+  offers. New volumes provisioned through the default
+  inherit those characteristics. Cost grows linearly
+  with PVC count.
+failure: >
+  Cost + performance suboptimality. Default volumes are
+  more expensive and less tunable than the modern gp3
+  alternative.
+tests:
+  - name: gp2 default fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/storageclass/gp2"
+      asset_type: aws_eks_storage_class
+      vendor: aws
+      properties:
+        k8s:
+          storage_class:
+            name: "gp2"
+            is_default: true
+            type: "gp2"
+  - name: gp3 default passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/storageclass/gp3"
+      asset_type: aws_eks_storage_class
+      vendor: aws
+      properties:
+        k8s:
+          storage_class:
+            name: "gp3"
+            is_default: true
+            type: "gp3"
+  - name: gp2 not default passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/storageclass/gp2"
+      asset_type: aws_eks_storage_class
+      vendor: aws
+      properties:
+        k8s:
+          storage_class:
+            name: "gp2"
+            is_default: false
+            type: "gp2"

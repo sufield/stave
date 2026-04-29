@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.IRSA.CROSSACCOUNT.001
+name: EKS IRSA Trust Policy Permits Cross-Account Assumption Without OrgID
+description: >
+  EKS IRSA role's trust policy permits assumption from
+  an OIDC issuer in a different AWS account
+  (cross-account IRSA) without an
+  `aws:PrincipalOrgID` condition. Cross-account IRSA
+  is occasionally legitimate (shared services
+  account pattern), but unrestricted cross-account
+  trust means any compromised cluster's OIDC tokens
+  can assume the role across the organization
+  boundary.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, IA-5"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-3, IA-5"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-14", "IAM-16"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_irsa_role
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    EKS IRSA role trust permits cross-account
+    assumption without org boundary.
+  action: >
+    Add aws:PrincipalOrgID condition to the trust
+    policy. For legitimate cross-account IRSA
+    (shared services pattern), restrict to the
+    specific source-account ID and source-cluster
+    OIDC issuer rather than allowing any cluster's
+    OIDC.
+  example: |
+    {
+      "k8s": {
+        "irsa": {
+          "trust_is_cross_account": true,
+          "trust_principal_org_id_set": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.irsa.trust_is_cross_account
+      op: eq
+      value: true
+    - field: properties.k8s.irsa.trust_principal_org_id_set
+      op: eq
+      value: false
+defect: >
+  EKS IRSA role trust permits cross-account assumption
+  without aws:PrincipalOrgID restriction.
+infection: >
+  Cross-account IRSA roles have trust extended to
+  OIDC issuers in other accounts. Without
+  aws:PrincipalOrgID, the trust applies to any
+  principal that can mint a matching token —
+  potentially principals outside the AWS
+  Organization. A compromised cluster (in any
+  account that can mint tokens for the trusted
+  OIDC) can assume the role and use its
+  permissions.
+failure: >
+  Cross-org IAM scope leakage via IRSA. IRSA role
+  permissions reachable from clusters outside the
+  org boundary.
+tests:
+  - name: cross-account IRSA without OrgID fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/eks-cross-account-irsa"
+      asset_type: aws_eks_irsa_role
+      vendor: aws
+      properties:
+        k8s:
+          irsa:
+            trust_is_cross_account: true
+            trust_principal_org_id_set: false
+  - name: cross-account IRSA with OrgID passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/eks-cross-account-irsa"
+      asset_type: aws_eks_irsa_role
+      vendor: aws
+      properties:
+        k8s:
+          irsa:
+            trust_is_cross_account: true
+            trust_principal_org_id_set: true
+  - name: same-account IRSA passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/eks-orders-irsa"
+      asset_type: aws_eks_irsa_role
+      vendor: aws
+      properties:
+        k8s:
+          irsa:
+            trust_is_cross_account: false
+            trust_principal_org_id_set: false

@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ALARM.NODES.NOTREADY.001
+name: EKS Cluster Has No Alarm On Node-Not-Ready Count
+description: >
+  EKS cluster has no CloudWatch alarm on the count of
+  nodes in NotReady state. Node failures from kubelet
+  crashes, network partitions, kernel issues, or
+  underlying EC2 instance failures show up as NotReady
+  before pods evict. Without an alarm, the cluster
+  loses capacity without notification; pod scheduling
+  hits unscheduable, workloads degrade.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EKS cluster has no alarm on NotReady node count.
+  action: >
+    Enable Container Insights metrics. Create a
+    CloudWatch alarm on cluster_node_count -
+    cluster_node_running_count (the diff is NotReady
+    nodes). Threshold of >1 over 5 minutes catches
+    most node failures while avoiding spurious alarms
+    from rolling node replacements.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "alarm_nodes_notready_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.alarm_nodes_notready_configured
+      op: eq
+      value: false
+defect: >
+  EKS cluster has no alarm on NotReady node count.
+infection: >
+  Node failures reduce cluster capacity. Pods
+  scheduled on a NotReady node enter Eviction after
+  toleration timeout; replacement pods need capacity
+  on remaining nodes. Without an alarm, the operator
+  notices via secondary symptoms — pods Pending,
+  HPA target replica count > current. Diagnosis
+  takes longer than direct alarm.
+failure: >
+  Silent capacity loss. Node failures degrade
+  cluster capacity; recovery starts when downstream
+  scheduling failures surface.
+tests:
+  - name: cluster without nodes-notready alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_nodes_notready_configured: false
+  - name: cluster with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            alarm_nodes_notready_configured: true

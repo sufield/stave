@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.FARGATE.SELECTOR.WIDE.001
+name: EKS Fargate Profile Selector Matches All Pods Or Default Namespace
+description: >
+  EKS Fargate profile selector matches `*` namespace, the
+  `default` namespace, or has empty label selectors that
+  match every pod. Every workload that drops into the
+  matched scope gets scheduled on Fargate — including
+  workloads the operator didn't intend to run there.
+  Common surprise: a cluster with a "catch-all" Fargate
+  profile silently runs DaemonSets, system pods, and
+  short-lived Jobs on Fargate at a per-pod cost premium.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, AC-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["BCR-08", "IVS-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_fargate_profile
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS Fargate profile selector matches too broadly.
+  action: >
+    Tighten the selector to the specific namespace + label
+    combination Fargate is intended for. Avoid matching the
+    `default` namespace (workloads frequently land there
+    accidentally) or empty label selectors. For a cluster
+    that's mostly EC2-backed with a Fargate exception, scope
+    the profile to a dedicated namespace + a deliberate label
+    (e.g., `compute=fargate`).
+  example: |
+    {
+      "k8s": {
+        "fargate_profile": {
+          "selector_namespace": "fargate-jobs",
+          "selector_is_default_or_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.fargate_profile.selector_is_default_or_wildcard
+      op: eq
+      value: true
+defect: >
+  EKS Fargate profile selector matches the default
+  namespace, `*`, or has empty label selectors.
+infection: >
+  Every workload created in the matched namespace lands on
+  Fargate. DaemonSets that should run on every node never
+  schedule (Fargate doesn't support DaemonSets — see the
+  related FARGATE.DAEMONSET control). System pods that
+  fall into default get Fargate-billed at a premium.
+  Short-lived Jobs / CronJobs that should run on
+  on-demand EC2 capacity instead provision a Fargate task
+  per invocation. Cost surprise + operational surprises.
+failure: >
+  Unintended Fargate workload placement. Pods land on
+  Fargate without the operator intending it; cost surge
+  + DaemonSet incompatibilities.
+tests:
+  - name: Fargate profile matching default fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:fargateprofile/prod/catch-all"
+      asset_type: aws_eks_fargate_profile
+      vendor: aws
+      properties:
+        k8s:
+          fargate_profile:
+            selector_namespace: "default"
+            selector_is_default_or_wildcard: true
+  - name: scoped Fargate profile passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:fargateprofile/prod/jobs"
+      asset_type: aws_eks_fargate_profile
+      vendor: aws
+      properties:
+        k8s:
+          fargate_profile:
+            selector_namespace: "fargate-jobs"
+            selector_is_default_or_wildcard: false

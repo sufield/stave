@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.PV.RELEASED.STALE.001
+name: EKS PersistentVolume In Released State Over 30 Days
+description: >
+  EKS PersistentVolume in `Released` phase — its
+  bound PVC was deleted but the PV itself remains
+  with the data intact (default reclaim policy is
+  `Retain` for manually-provisioned PVs, `Delete`
+  for dynamically-provisioned). PVs in Released
+  state are operationally orphan: not bound to
+  any PVC, not consumable by new PVCs without
+  manual edit, but still consuming the underlying
+  EBS / EFS storage cost. After 30+ days of
+  Released, the data is either decommissioned (and
+  the PV should be deleted) or someone forgot
+  about it.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.10"
+  ccm_v4: ["BCR-08", "DSP-16"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_persistent_volume
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS PV has been in Released state > 30 days.
+  action: >
+    Decide: delete the PV (kubectl delete pv) — its
+    underlying storage is also released — OR re-bind
+    by creating a matching PVC with the same name.
+    For PVs that contain data still needed, snapshot
+    the underlying EBS / EFS first, then attach to a
+    new PVC in the workload's current namespace.
+  example: |
+    {
+      "k8s": {
+        "persistent_volume": {
+          "phase": "Bound",
+          "released_days": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.persistent_volume.phase
+      op: eq
+      value: Released
+    - field: properties.k8s.persistent_volume.released_days
+      op: gt
+      value: 30
+defect: >
+  EKS PersistentVolume has been in Released state
+  for over 30 days.
+infection: >
+  The PV holds data with no PVC binding it. AWS
+  bills for the underlying EBS volume / EFS file
+  system regardless of K8s state. Cost grows
+  linearly per orphan PV; over months /
+  quarters, this accumulates meaningfully on
+  large clusters with high PVC churn (CI/CD
+  patterns, dev-namespace recycling). The data
+  is also operationally inaccessible —
+  nothing's reading it; nothing's verifying its
+  state; deleting it requires re-evaluating
+  whether it's needed.
+failure: >
+  Storage cost drift + orphan data. Released
+  PVs accumulate AWS storage charges; data
+  inaccessible without re-binding intervention.
+tests:
+  - name: PV released 60 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/pv/pvc-abc-123"
+      asset_type: aws_eks_persistent_volume
+      vendor: aws
+      properties:
+        k8s:
+          persistent_volume:
+            phase: "Released"
+            released_days: 60
+  - name: bound PV passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/pv/pvc-xyz-456"
+      asset_type: aws_eks_persistent_volume
+      vendor: aws
+      properties:
+        k8s:
+          persistent_volume:
+            phase: "Bound"
+            released_days: 0
+  - name: recently-released PV passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/pv/pvc-def-789"
+      asset_type: aws_eks_persistent_volume
+      vendor: aws
+      properties:
+        k8s:
+          persistent_volume:
+            phase: "Released"
+            released_days: 5

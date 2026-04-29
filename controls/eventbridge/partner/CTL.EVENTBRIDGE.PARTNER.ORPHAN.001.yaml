@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.PARTNER.ORPHAN.001
+name: EventBridge Partner Event Source Has No Rules Consuming It
+description: >
+  EventBridge partner event source is associated with a bus
+  but no rules on that bus match the partner's source pattern
+  — no rule consumes the partner events. The partner
+  continues to publish; events accumulate (in archive if
+  configured) or are dropped; no automation runs on them.
+  Common cause: integration was decommissioned but the
+  partner source was not deleted, or the rules consuming the
+  partner were deleted while the source association remained.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-8"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_partner_source
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge partner event source has no rules consuming
+    its events.
+  action: >
+    Decide whether the partner integration is decommissioned
+    (delete the partner event source via DeleteEventSource —
+    this also stops the partner from billing for events
+    delivered to AWS) or whether rules are missing (recreate
+    the consuming rules). Long-lived orphan partner sources
+    accumulate cost (partner-side per-event charges) and
+    inventory clutter.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_partner_source",
+        "events": {
+          "consuming_rule_count": 2
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_partner_source
+    - field: properties.governance.events.consuming_rule_count
+      op: eq
+      value: 0
+defect: >
+  EventBridge partner event source has zero consuming rules.
+infection: >
+  The partner source is associated with a bus; the partner
+  publishes events; AWS receives them. No rule on the bus
+  matches the partner's source pattern. Events flow into the
+  bus, archive (if configured), and otherwise vanish. The
+  partner integration looks alive (events arriving at AWS,
+  partner bills for them), but no downstream consumer ever
+  runs. Cost accumulates without operational benefit.
+failure: >
+  Orphan partner integration. Partner-side events flow into
+  AWS without consumers; integration is dead but billing
+  continues.
+tests:
+  - name: partner source with no consumers fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:partner-event-source/datadog/abc"
+      asset_type: aws_eventbridge_partner_source
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_partner_source
+          events:
+            consuming_rule_count: 0
+  - name: partner source with consumers passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:partner-event-source/datadog/abc"
+      asset_type: aws_eventbridge_partner_source
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_partner_source
+          events:
+            consuming_rule_count: 2

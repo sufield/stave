@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NETPOL.INGRESSONLY.001
+name: EKS Namespace Configures Ingress Policies But No Egress Policies
+description: >
+  EKS namespace has at least one ingress NetworkPolicy but
+  no egress NetworkPolicies — one-way isolation. Operators
+  often configure ingress-side NetworkPolicies first
+  (visible failure mode: "X can't talk to me"), then never
+  return to add egress (silent failure mode: "I can talk to
+  anywhere"). The result is half-applied isolation: the
+  cluster appears to have NetworkPolicy discipline because
+  ingress rules exist, but pods retain unbounded egress.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-4, SC-7"
+  fedramp_moderate: "AC-4, SC-7"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_namespace
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    EKS namespace has ingress NetworkPolicies but no egress
+    policies — one-way isolation.
+  action: >
+    Add a default-deny-egress NetworkPolicy plus explicit
+    egress allow rules matching the workload's intended
+    outbound connections (internal services by namespace +
+    pod selector, external APIs by CIDR via egress-allow
+    rules with cidr blocks).
+  example: |
+    {
+      "k8s": {
+        "namespace": {
+          "ingress_policy_count": 4,
+          "egress_policy_count": 3
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.namespace.ingress_policy_count
+      op: gt
+      value: 0
+    - field: properties.k8s.namespace.egress_policy_count
+      op: eq
+      value: 0
+defect: >
+  EKS namespace has ingress NetworkPolicies but no egress
+  NetworkPolicies.
+infection: >
+  Pods in the namespace are protected from inbound
+  unauthorized connections (the ingress policies do their
+  job). Outbound connections are unbounded — pods can
+  call IMDS, exfiltrate to external C2, fetch malicious
+  payloads, or connect to internal services they shouldn't
+  have access to. Reviewers seeing ingress policies often
+  conclude "this namespace has NetworkPolicies in place"
+  without checking egress, which is the silent half.
+failure: >
+  Half-applied isolation. Ingress is constrained; egress
+  is unbounded. Compromise still has full outbound reach.
+tests:
+  - name: ingress-only namespace fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            ingress_policy_count: 4
+            egress_policy_count: 0
+  - name: namespace with both passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            ingress_policy_count: 4
+            egress_policy_count: 3
+  - name: namespace with neither passes (different control)
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/dev"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            ingress_policy_count: 0
+            egress_policy_count: 0

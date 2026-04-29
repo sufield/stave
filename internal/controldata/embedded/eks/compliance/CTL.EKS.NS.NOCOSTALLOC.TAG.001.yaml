@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NS.NOCOSTALLOC.TAG.001
+name: EKS Namespace Has No Cost-Allocation Label
+description: >
+  EKS namespace has no cost-allocation label
+  (`cost-center`, `team`, or `owner` per org
+  convention). Cluster-level cost (compute, storage,
+  network) reaches AWS billing as one undivided
+  bucket; without per-namespace cost-allocation
+  labels, attribution to specific teams /
+  applications / cost centers requires manual
+  review. Multi-tenant clusters lose chargeback
+  capability; cost optimization decisions are made
+  without per-team visibility.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-8, PM-3"
+  fedramp_moderate: "CM-8"
+  iso_27001_2022: "A.5.9, A.5.30"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_namespace
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS namespace lacks cost-allocation label.
+  action: >
+    Apply org-standard labels:
+      kubectl label ns <name>
+        cost-center=engineering-billing
+        team=billing
+        owner=billing-leads@example.com
+    Consider AWS Cost Allocation Tags (activate via
+    Billing Console) so per-namespace costs roll up
+    to AWS Cost Explorer. EKS-specific tools like
+    Kubecost / CloudWatch Container Insights
+    consume namespace labels directly for
+    chargeback reports.
+  example: |
+    {
+      "k8s": {
+        "namespace": {
+          "has_cost_allocation_label": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.namespace.has_cost_allocation_label
+      op: eq
+      value: false
+    - field: properties.k8s.namespace.is_system_namespace
+      op: eq
+      value: false
+defect: >
+  EKS namespace has no cost-allocation label.
+infection: >
+  Compute, storage, and network cost attributed to
+  this namespace gets bundled into the cluster's
+  total without per-team breakdown. Cost-attribution
+  reports show "cluster cost" rather than
+  "team / application cost." Tighter cost decisions
+  (right-sizing per workload class, identifying
+  expensive tenants) require manual investigation
+  rather than dashboard query.
+failure: >
+  Cost attribution opacity. Per-namespace costs
+  bundled with cluster total; chargeback impossible
+  without manual review.
+tests:
+  - name: namespace without cost label fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            has_cost_allocation_label: false
+            is_system_namespace: false
+  - name: namespace with cost label passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/namespace/orders"
+      asset_type: aws_eks_namespace
+      vendor: aws
+      properties:
+        k8s:
+          namespace:
+            has_cost_allocation_label: true
+            is_system_namespace: false

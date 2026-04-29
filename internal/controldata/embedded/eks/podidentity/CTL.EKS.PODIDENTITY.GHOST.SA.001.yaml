@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.PODIDENTITY.GHOST.SA.001
+name: EKS Pod Identity Association References Deleted ServiceAccount
+description: >
+  EKS Pod Identity association binds an IAM role to a
+  specific Kubernetes ServiceAccount. When the ServiceAccount
+  is deleted but the Pod Identity association persists, the
+  association is a ghost grant. If the ServiceAccount is
+  later recreated with the same name in the same namespace —
+  by Helm chart redeploy, manifest reapply, or namespace
+  recreation — the new SA inherits the original Pod Identity
+  binding. Same ghost-reference pattern as IRSA OIDC ghosts
+  but on the newer Pod Identity surface.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "AC-3, CM-2, CM-3"
+  fedramp_moderate: "AC-3, CM-2"
+  iso_27001_2022: "A.5.15, A.5.16, A.8.32"
+  ccm_v4: ["IAM-04", "IAM-13", "IAM-14"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_pod_identity_association
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS Pod Identity association references a Kubernetes
+    ServiceAccount that has been deleted.
+  action: >
+    Delete the orphan association via aws eks
+    delete-pod-identity-association. Audit cluster Pod
+    Identity associations against current ServiceAccounts
+    (kubectl get sa -A) — every association's
+    serviceAccount + namespace pair should resolve to a
+    live SA.
+  example: |
+    {
+      "k8s": {
+        "pod_identity": {
+          "service_account_name": "orders-runtime",
+          "namespace": "orders",
+          "service_account_exists": true,
+          "has_ghost_service_account": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.pod_identity.has_ghost_service_account
+      op: eq
+      value: true
+defect: >
+  EKS Pod Identity association references a ServiceAccount
+  that has been deleted.
+infection: >
+  The Pod Identity association persists in the cluster's
+  configuration. ListPodIdentityAssociations returns it; its
+  IAM role binding still applies if the SA ever re-resolves.
+  When a Helm chart redeploys, a manifest reapplies, or a
+  namespace is recreated — all common ops events — the new
+  ServiceAccount with the same name + namespace inherits the
+  Pod Identity role grant. Operators see a familiar SA name
+  and don't realize an old role binding is still attached.
+failure: >
+  Privilege escalation via SA-name reuse. A deleted
+  ServiceAccount can be recreated to inherit silent IAM role
+  grants.
+tests:
+  - name: Pod Identity with ghost SA fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:podidentityassociation/prod/abc"
+      asset_type: aws_eks_pod_identity_association
+      vendor: aws
+      properties:
+        k8s:
+          pod_identity:
+            service_account_name: "orders-runtime-deleted"
+            namespace: "orders"
+            service_account_exists: false
+            has_ghost_service_account: true
+  - name: Pod Identity with live SA passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:podidentityassociation/prod/abc"
+      asset_type: aws_eks_pod_identity_association
+      vendor: aws
+      properties:
+        k8s:
+          pod_identity:
+            service_account_name: "orders-runtime"
+            namespace: "orders"
+            service_account_exists: true
+            has_ghost_service_account: false

@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.WORKLOAD.GHOST.IMAGE.001
+name: EKS Workload References Image From Deleted ECR Repository
+description: >
+  EKS workload (Deployment / StatefulSet / DaemonSet / Job /
+  Pod) specifies a container image whose ECR repository has
+  been deleted. Pod scheduling proceeds; the kubelet attempts
+  ImagePullBackOff and never recovers. New pods can't start —
+  scaling, rolling updates, and node replacements all
+  silently break. Existing pods continue running on cached
+  layers but become unrunable when their nodes recycle.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, SI-4"
+  fedramp_moderate: "CM-2, SI-4"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_workload
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS workload references a container image from an ECR
+    repository that has been deleted.
+  action: >
+    Either recreate the ECR repo + republish the expected
+    image, or update the workload spec to point at a live
+    repository (kubectl set image deploy/<name>
+    container=<new-image>). For the long term: add an ECR
+    repository policy that prevents accidental deletion plus
+    a CloudWatch alarm on DeleteRepository events.
+  example: |
+    {
+      "k8s": {
+        "workload": {
+          "image_uri": "111122223333.dkr.ecr.us-east-1.amazonaws.com/orders:v1.2.3",
+          "image_repo_exists": true,
+          "has_ghost_image_repo": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.workload.has_ghost_image_repo
+      op: eq
+      value: true
+defect: >
+  EKS workload's container image URI points to an ECR
+  repository that has been deleted.
+infection: >
+  The workload spec is structurally correct — image URI is
+  well-formed, pull credentials are configured, the
+  Deployment / StatefulSet / DaemonSet is healthy at
+  manifest level. But the named repository is gone. Existing
+  pods running cached image layers continue, masking the
+  failure. New pods (replica scale-up, node-recycle replace,
+  rolling deploy) hit ImagePullBackOff and never recover.
+  Operators triggered to scale or recover see pods stuck
+  Pending; investigation traces image URI → ECR repo
+  doesn't exist.
+failure: >
+  Silent scaling / recovery failure. Workload reports healthy
+  at manifest level; pod scheduling fails on every new
+  replica.
+tests:
+  - name: workload with ghost image fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "111122223333.dkr.ecr.us-east-1.amazonaws.com/orders-deleted:v1.2.3"
+            image_repo_exists: false
+            has_ghost_image_repo: true
+  - name: workload with live image passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "111122223333.dkr.ecr.us-east-1.amazonaws.com/orders:v1.2.3"
+            image_repo_exists: true
+            has_ghost_image_repo: false

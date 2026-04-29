@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.IMAGE.NODIGEST.001
+name: EKS Production Workload Image Pinned By Tag Without Digest
+description: >
+  EKS production workload's image reference uses a
+  semver / build-ID tag without an accompanying SHA256
+  digest. While tags are typically immutable in
+  well-governed registries, ECR's
+  imageTagMutability=MUTABLE setting allows tag
+  reassignment, and supply-chain attacks (including
+  registry compromise) can swap image bytes under an
+  unchanged tag. Pinning by `image@sha256:digest`
+  guarantees the running image matches what was
+  scanned and approved.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, SR-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.30"
+  ccm_v4: ["BCR-08", "TVM-09"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_workload
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EKS production workload pins image by tag without
+    digest.
+  action: >
+    Update workload manifests to reference image by
+    `image:tag@sha256:digest`. The tag stays for
+    operator readability; the digest is cryptographic
+    proof. CI / Helm chart values should record both.
+    Verify ECR repo's imageTagMutability=IMMUTABLE for
+    defense in depth.
+  example: |
+    {
+      "k8s": {
+        "workload": {
+          "image_uri": "ecr/orders:v1.2.3@sha256:abc123...",
+          "image_has_digest": true,
+          "is_production": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.workload.image_has_digest
+      op: eq
+      value: false
+    - field: properties.k8s.workload.is_production
+      op: eq
+      value: true
+defect: >
+  EKS production workload pins image by tag only,
+  without an SHA256 digest.
+infection: >
+  Tags can be reassigned (in mutable repos) or be
+  silently swapped under the same tag by a registry-
+  side compromise. Without digest pinning, the running
+  image bytes aren't cryptographically tied to what
+  was scanned and approved at deploy time. Compromised
+  upstream maintainers, supply-chain attacks like
+  Codecov, or compromise of CI credentials that can
+  push to ECR all yield silent image substitution.
+failure: >
+  Tag-mutability supply-chain risk. Image bytes can
+  diverge from what was reviewed; pod restart pulls
+  whatever the tag currently resolves to.
+tests:
+  - name: production tag-only fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "ecr/orders:v1.2.3"
+            image_has_digest: false
+            is_production: true
+  - name: production with digest passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/orders/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "ecr/orders:v1.2.3@sha256:abc"
+            image_has_digest: true
+            is_production: true
+  - name: dev tag-only passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/dev/deployment/orders-api"
+      asset_type: aws_eks_workload
+      vendor: aws
+      properties:
+        k8s:
+          workload:
+            image_uri: "ecr/orders:v1.2.3"
+            image_has_digest: false
+            is_production: false

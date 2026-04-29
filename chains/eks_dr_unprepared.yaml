@@ -1,0 +1,22 @@
+id: eks_dr_unprepared
+description: >
+  EKS DR cluster has multiple readiness defects: zero
+  warm workloads (cold-restore on failover), single-
+  region etcd KMS (cross-region restore can't
+  decrypt Secrets), or workload images not
+  replicated to DR region (ImagePullBackOff after
+  failover). Each defect alone makes the failover
+  RTO worse than documented; co-occurrence indicates
+  the DR plan was authored without testing.
+  Threshold of 2 fires when at least two DR
+  defects coexist on the DR cluster's footprint.
+controls:
+  - CTL.EKS.DR.WARMUP.001
+  - CTL.EKS.DR.KMS.SINGLEREGION.001
+  - CTL.EKS.ECR.REPLICATION.GAP.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

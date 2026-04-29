@@ -1,0 +1,121 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.STORAGECLASS.GHOST.KMS.001
+name: EKS StorageClass References Deleted KMS Key
+description: >
+  StorageClass parameters reference a KMS key (kmsKeyId for
+  EBS CSI; encryption KeyId for FSx) that has been deleted.
+  Existing volumes encrypted with the key continue to be
+  decryptable so long as the key exists in
+  PendingDeletion / Disabled state, but new volume
+  provisioning fails. Combined with the key actually being
+  deleted past the recovery window, existing volumes also
+  become unrecoverable. The same control fires whether the
+  key is pending deletion (catch up via KMS-1 cross-cut) or
+  fully gone — it's the EKS-side check that the
+  StorageClass references a key the cluster can still use.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1, CC7.4"
+  nist_800_53_r5: "CM-2, CM-3, SC-12"
+  fedramp_moderate: "CM-2, SC-12"
+  iso_27001_2022: "A.5.16, A.8.24, A.8.32"
+  ccm_v4: ["BCR-08", "CEK-03"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_storage_class
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    StorageClass references a KMS key that has been deleted
+    or is unavailable.
+  action: >
+    Cancel the key deletion if it's within the recovery
+    window (aws kms cancel-key-deletion); update the
+    StorageClass parameters to a live KMS key ARN;
+    re-encrypt affected volumes by snapshot-and-restore
+    onto the new key. Pair with a CloudWatch alarm on
+    KMS DisableKey / ScheduleKeyDeletion / DeleteAlias for
+    keys referenced by StorageClasses.
+  example: |
+    {
+      "k8s": {
+        "storage_class": {
+          "kms_key_arn": "arn:aws:kms:us-east-1:111122223333:key/abc",
+          "kms_key_exists": true,
+          "kms_key_state": "Enabled",
+          "has_ghost_kms_key": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.storage_class.has_ghost_kms_key
+      op: eq
+      value: true
+defect: >
+  StorageClass parameters reference a KMS key that has been
+  deleted or is in a non-usable state.
+infection: >
+  The StorageClass persists. New volume provisioning fails
+  at the encrypt step — either AWS rejects the
+  CreateVolume call (key not found) or the volume is
+  created but the cluster can't mount it (key disabled).
+  Existing volumes mounted before the key issue continue
+  serving as long as the EBS / CSI driver retains its
+  cached key context, but reboot / node-replace / re-mount
+  fails. Combined with full key deletion past the recovery
+  window, existing volumes become permanently unrecoverable.
+failure: >
+  Silent storage provisioning failure or, in the worst case,
+  permanent volume loss when the key passes its
+  PendingDeletion window.
+tests:
+  - name: StorageClass with deleted key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/storageclass/gp3-encrypted"
+      asset_type: aws_eks_storage_class
+      vendor: aws
+      properties:
+        k8s:
+          storage_class:
+            kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/deleted"
+            kms_key_exists: false
+            kms_key_state: "Deleted"
+            has_ghost_kms_key: true
+  - name: StorageClass with disabled key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "k8s/storageclass/gp3-encrypted"
+      asset_type: aws_eks_storage_class
+      vendor: aws
+      properties:
+        k8s:
+          storage_class:
+            kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/abc"
+            kms_key_exists: true
+            kms_key_state: "Disabled"
+            has_ghost_kms_key: true
+  - name: StorageClass with live enabled key passes
+    verdict: PASS
+    asset:
+      asset_id: "k8s/storageclass/gp3-encrypted"
+      asset_type: aws_eks_storage_class
+      vendor: aws
+      properties:
+        k8s:
+          storage_class:
+            kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/abc"
+            kms_key_exists: true
+            kms_key_state: "Enabled"
+            has_ghost_kms_key: false

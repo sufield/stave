@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.AUDIT.RETENTION.SHORT.001
+name: EKS Control Plane Audit Log Retention Below Compliance Window
+description: >
+  EKS cluster's control-plane audit logs are stored
+  in a CloudWatch Logs group with retention
+  shorter than the org's regulatory minimum (HIPAA
+  6 years, PCI-DSS 1 year, SOX 7 years, common
+  generic minimum 13 months). For HIPAA / PCI / SOC2
+  -scoped clusters, audit logs that age out before
+  the regulatory window create a compliance
+  failure regardless of how thoroughly they were
+  collected.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.2"
+  nist_800_53_r5: "AU-11"
+  pci_dss_v4.0: "10.5"
+  hipaa: "164.530(j)"
+  fedramp_moderate: "AU-11"
+  iso_27001_2022: "A.5.33"
+  ccm_v4: ["LOG-04", "LOG-08"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS control-plane audit log retention is below
+    compliance minimum.
+  action: >
+    Update the CloudWatch Logs group's retention to
+    match the cluster's compliance scope:
+      aws logs put-retention-policy
+        --log-group-name /aws/eks/<cluster>/cluster
+        --retention-in-days 2557
+    For HIPAA: 2557 days (7 years to be safe). For
+    PCI: 365. For SOC2: 365 minimum. Pair with
+    log archival to S3 Glacier for cost-effective
+    long-retention.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "audit_log_retention_days": 2557,
+          "compliance_min_retention_days": 2557
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.audit_log_retention_days
+      op: lt
+      value: 365
+defect: >
+  EKS audit log retention is shorter than 365 days
+  (the most permissive common regulatory minimum).
+infection: >
+  Audit logs age out and are deleted by CloudWatch
+  before regulatory windows close. During audit /
+  incident investigation, the audit trail for
+  events older than the retention window is
+  unavailable. Compliance reports cite the
+  retention shortfall; evidence collection for
+  past incidents fails.
+failure: >
+  Compliance retention shortfall. Audit logs
+  expire before regulatory window; evidence
+  unavailable for compliance audits.
+tests:
+  - name: 30-day retention fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            audit_log_retention_days: 30
+  - name: 1-year retention passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            audit_log_retention_days: 365
+  - name: 7-year retention passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            audit_log_retention_days: 2557

@@ -1,0 +1,20 @@
+id: eks_lifecycle_storage_orphans
+description: >
+  EKS cluster has multiple lifecycle storage-orphan
+  defects: PersistentVolumes stuck in `Released`
+  phase past 30 days, and EBS volumes tagged for the
+  cluster but detached from terminated worker nodes.
+  Each defect alone represents storage cost drift and
+  potential orphan data; co-occurrence indicates the
+  cluster's storage cleanup is unowned. Threshold of
+  2 fires when both PV and EBS orphan signals coexist
+  on the same cluster footprint.
+controls:
+  - CTL.EKS.PV.RELEASED.STALE.001
+  - CTL.EKS.EBS.ORPHAN.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

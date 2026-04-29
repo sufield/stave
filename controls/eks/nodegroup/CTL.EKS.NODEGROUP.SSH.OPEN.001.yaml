@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NODEGROUP.SSH.OPEN.001
+name: EKS Worker Node Security Group Permits SSH Inbound
+description: >
+  EKS worker node group's security group permits inbound
+  TCP/22 (SSH) from any source — including 0.0.0.0/0 or
+  broad CIDRs. EKS-managed Kubernetes doesn't require SSH
+  access to workers; the recommended pattern is SSM
+  Session Manager (no inbound port required, fully
+  audited). SSH on worker nodes is an unnecessary attack
+  surface that bypasses Kubernetes RBAC and audit
+  logging.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-17, SC-7"
+  pci_dss_v4.0: "1.2, 2.2"
+  fedramp_moderate: "AC-3, SC-7"
+  iso_27001_2022: "A.5.15, A.8.16"
+  ccm_v4: ["IVS-09", "IAM-04"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_nodegroup
+params:
+  attack_stage: lateral_movement
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EKS worker security group permits SSH inbound.
+  action: >
+    Remove the SSH inbound rule from the worker SG. For
+    operational access, deploy SSM Agent on the AMI (the
+    EKS-optimized AMI includes it) and use Session Manager:
+      aws ssm start-session --target <instance-id>
+    Session Manager doesn't require open inbound ports,
+    integrates with IAM for authorization, and logs every
+    session to CloudWatch Logs for audit.
+  example: |
+    {
+      "k8s": {
+        "nodegroup": {
+          "worker_sg_ssh_open": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.nodegroup.worker_sg_ssh_open
+      op: eq
+      value: true
+defect: >
+  EKS worker node security group permits TCP/22 inbound
+  from any source.
+infection: >
+  Worker nodes are reachable on SSH from whatever source
+  the rule permits. If the source is 0.0.0.0/0, the
+  workers are SSH-reachable from the internet (subject to
+  whether the subnet has an internet route — if it's a
+  private subnet, the rule is dormant but still risky if
+  the subnet ever gains internet routing). SSH access
+  bypasses Kubernetes RBAC and audit; an SSH session on
+  a worker can read other pods' secrets via /var/lib/
+  kubelet, harvest IAM credentials via IMDS, and pivot
+  arbitrarily. The Kubernetes audit trail records nothing
+  about SSH-side activity.
+failure: >
+  Out-of-band node access. SSH access bypasses
+  Kubernetes audit; node compromise via SSH yields
+  full host capabilities + all pods' Secrets.
+tests:
+  - name: worker SG with SSH open fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/default"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            worker_sg_ssh_open: true
+  - name: worker SG without SSH passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:nodegroup/prod/default"
+      asset_type: aws_eks_nodegroup
+      vendor: aws
+      properties:
+        k8s:
+          nodegroup:
+            worker_sg_ssh_open: false

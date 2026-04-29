@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.IMAGE.CVE.BLOCK.001
+name: EKS Cluster Admission Does Not Block Images With HIGH Or CRITICAL CVEs
+description: >
+  EKS cluster has no admission policy that rejects pods
+  whose container images carry HIGH or CRITICAL CVEs
+  per the latest scan results. ECR scan-on-push
+  identifies vulnerabilities; admission control should
+  consume those scan results to gate pod creation.
+  Without enforcement at the admission layer, scan
+  reports are advisory — vulnerable images continue
+  running, the scan dashboard accumulates findings, no
+  one acts.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, CC7.2"
+  nist_800_53_r5: "RA-5, SI-2"
+  pci_dss_v4.0: "11.2"
+  fedramp_moderate: "RA-5, SI-2"
+  iso_27001_2022: "A.5.16, A.8.8"
+  ccm_v4: ["TVM-09", "TVM-10"]
+scope_tags:
+  - aws
+  - eks
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    EKS cluster admission doesn't block images with
+    HIGH/CRITICAL CVEs.
+  action: >
+    Install an admission controller that consults ECR /
+    Inspector / Trivy scan results. Common patterns:
+    Kyverno + ECR scan API (validate against scan
+    findings before admit), Trivy operator with
+    ValidatingAdmissionPolicy, or AWS-native via
+    Inspector + EKS audit. Configure the policy to
+    block CRITICAL severities outright; warn or block
+    HIGH; allow MEDIUM / LOW with annotation
+    documenting acceptance.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "cve_block_admission_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.cve_block_admission_enabled
+      op: eq
+      value: false
+defect: >
+  EKS cluster has no admission-controller-enforced CVE
+  block.
+infection: >
+  ECR / Inspector identify vulnerabilities; the findings
+  populate dashboards. Workloads with HIGH/CRITICAL CVEs
+  continue admitting because nothing in the admission
+  pipeline rejects them. CVE remediation depends on
+  team discipline (ticket closure, rebuild cadence)
+  rather than admission enforcement. Long-lived
+  vulnerable workloads accumulate; the scanner shows
+  them; no one acts until incident.
+failure: >
+  CVE-aware admission absent. Vulnerable images
+  continue running; scan results are advisory rather
+  than enforced.
+tests:
+  - name: cluster without CVE block fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            cve_block_admission_enabled: false
+  - name: cluster with CVE block passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            cve_block_admission_enabled: true
