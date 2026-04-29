@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ALARM.DEADLETTER.001
+name: EventBridge Rule DLQ Has No CloudWatch Alarm On Depth
+description: >
+  EventBridge rule has a DLQ configured but no CloudWatch
+  alarm on the DLQ's ApproximateNumberOfMessagesVisible
+  metric. Failed events route to the DLQ; without an alarm,
+  the DLQ silently accumulates events that the rule failed
+  to deliver. By the time operators notice the depth, the
+  oldest failed events may have already aged out per the
+  DLQ's retention.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.2"
+  nist_800_53_r5: "SI-4, AU-6"
+  fedramp_moderate: "SI-4, AU-6"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08", "BCR-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EventBridge rule's DLQ has no CloudWatch alarm on depth.
+  action: >
+    Create a CloudWatch alarm on the SQS DLQ's
+    ApproximateNumberOfMessagesVisible metric in
+    AWS/SQS namespace, scoped to the DLQ's QueueName.
+    Threshold typically 0 over a 5-minute window — any DLQ
+    accumulation is operationally noteworthy and warrants
+    investigation while the DLQ retention window still has
+    the failed events available for inspection.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "has_dlq": true,
+          "alarm_dlq_depth_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.has_dlq
+      op: eq
+      value: true
+    - field: properties.governance.events.alarm_dlq_depth_configured
+      op: eq
+      value: false
+defect: >
+  EventBridge rule has a DLQ but no CloudWatch alarm on the
+  DLQ's depth metric.
+infection: >
+  Failed events route to the DLQ. Without an alarm,
+  accumulation is invisible until the operator manually
+  inspects the queue. If the rule begins failing systemically
+  (target deletion, IAM compromise, downstream outage),
+  hundreds or thousands of events can accumulate before
+  detection. By that point the oldest may have exceeded the
+  DLQ retention and been silently expired — investigation
+  has fewer records to work with than initially failed.
+failure: >
+  Silent failure-path accumulation. DLQ depth grows without
+  operator notice; some events expire from the DLQ before
+  triage.
+tests:
+  - name: rule with DLQ but no alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            has_dlq: true
+            alarm_dlq_depth_configured: false
+  - name: rule with DLQ and alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            has_dlq: true
+            alarm_dlq_depth_configured: true
+  - name: rule without DLQ does not fire (different control)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/non-critical"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            has_dlq: false
+            alarm_dlq_depth_configured: false

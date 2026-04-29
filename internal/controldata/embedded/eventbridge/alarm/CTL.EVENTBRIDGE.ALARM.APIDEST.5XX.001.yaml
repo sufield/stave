@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ALARM.APIDEST.5XX.001
+name: EventBridge API Destination Has No Alarm On 5xx Invocation Rate
+description: >
+  EventBridge API destination has no CloudWatch alarm on the
+  partner-endpoint 5xx response rate. API destinations
+  invoke external partner endpoints; without monitoring on
+  the response code distribution, partner-side outages
+  surface only via downstream symptoms (the partner stops
+  receiving events; some other system flags the gap). For
+  destinations on critical-path partner integrations
+  (incident notification, audit forwarding), the alarm is
+  the early-warning that the partner is failing.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_apidestination
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EventBridge API destination has no alarm on 5xx response
+    rate.
+  action: >
+    Create a CloudWatch alarm on InvocationsHttpResponseCode
+    (5xx bucket) for the destination. Threshold should be
+    tight enough to catch partner-side incidents (e.g.,
+    >5% over a 5-minute window) and wired to SNS for
+    on-call. For low-volume destinations, the alarm should
+    fire on absolute count rather than rate.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_apidestination",
+        "events": {
+          "alarm_5xx_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_apidestination
+    - field: properties.governance.events.alarm_5xx_configured
+      op: eq
+      value: false
+defect: >
+  EventBridge API destination has no alarm on partner 5xx
+  response rate.
+infection: >
+  Partner-side outages — endpoint down, partner-API
+  rate-limiting, partner-side configuration drift — produce
+  5xx responses. Without an alarm, the destination metrics
+  show invocations and the partner sees fewer events than
+  AWS sent, but operators don't get an immediate alert. For
+  partner integrations on the critical path (incident
+  notifications going to PagerDuty, audit forwarding to a
+  SIEM), partner outages are operationally significant and
+  should trigger immediate response.
+failure: >
+  Silent partner-side failure. Destination invocations fail
+  at the partner without operator notification; partner
+  consumers see degraded delivery.
+tests:
+  - name: destination without 5xx alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:api-destination/partner"
+      asset_type: aws_eventbridge_apidestination
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_apidestination
+          events:
+            alarm_5xx_configured: false
+  - name: destination with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:api-destination/partner"
+      asset_type: aws_eventbridge_apidestination
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_apidestination
+          events:
+            alarm_5xx_configured: true

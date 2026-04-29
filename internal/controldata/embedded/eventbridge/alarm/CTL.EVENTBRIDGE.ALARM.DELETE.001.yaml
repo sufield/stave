@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ALARM.DELETE.001
+name: EventBridge Bus Has No Alarm For DeleteEventBus / DeleteRule
+description: >
+  EventBridge bus has no CloudWatch alarm wired to CloudTrail
+  for the destructive operations DeleteEventBus and DeleteRule.
+  These are the two most-impactful API calls: DeleteEventBus
+  removes the bus and every rule on it; DeleteRule silently
+  ends every downstream invocation the rule was driving.
+  Without an alarm, destructive operations land without
+  immediate operator awareness — by the time monitoring catches
+  the symptoms (rule no longer firing, downstream automation
+  silent), the deletion is already minutes-to-hours old.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.2, A1.2"
+  nist_800_53_r5: "AU-6, IR-5, SI-4"
+  pci_dss_v4.0: "10.2, 10.4"
+  fedramp_moderate: "AU-6, SI-4"
+  iso_27001_2022: "A.5.24, A.8.15, A.8.16"
+  ccm_v4: ["LOG-08", "SEF-04"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    No CloudWatch alarm covers EventBridge DeleteEventBus /
+    DeleteRule API events.
+  action: >
+    Create a CloudTrail-derived metric filter matching
+    eventName = DeleteEventBus or DeleteRule on the bus's
+    region trail. Wire a CloudWatch alarm on that metric to
+    SNS for immediate notification. Pair with an SCP denying
+    these operations from non-admin roles for defense in
+    depth.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "alarm_delete_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.alarm_delete_configured
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm covers DeleteEventBus / DeleteRule for
+  the bus.
+infection: >
+  Destructive operations on the bus go unnoticed in real time.
+  When DeleteEventBus or DeleteRule fires — accidentally during
+  ops work, maliciously by an attacker, or as collateral
+  damage from a CloudFormation drift — operators only learn
+  about it later, when downstream automation stops working or
+  monitoring of dependent services surfaces the gap.
+  Rebuilding the bus / rule and re-validating downstream
+  integrations takes meaningfully longer than catching the
+  delete in the moment it happens.
+failure: >
+  Silent destructive-op exposure. Bus or rule deletion lands
+  without immediate alert; recovery latency is the time
+  between the API call and downstream symptom-surfacing.
+tests:
+  - name: bus without delete alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/audit"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            alarm_delete_configured: false
+  - name: bus with delete alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/audit"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            alarm_delete_configured: true

@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ALARM.FAILEDINVOCATIONS.001
+name: EventBridge Rule Has No Alarm On FailedInvocations Metric
+description: >
+  EventBridge rule has no CloudWatch alarm on the
+  FailedInvocations metric. Every event that fails target
+  invocation after retries exhaust contributes to this metric.
+  Without an alarm, transient downstream failures go unnoticed
+  until volume crosses operationally-visible thresholds — by
+  which time the cause may already be self-correcting and
+  diagnostic context (target health, IAM status, network)
+  is harder to recover.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "SI-4, AU-6"
+  fedramp_moderate: "SI-4, AU-6"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08", "SEF-04"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EventBridge rule has no CloudWatch alarm on
+    FailedInvocations.
+  action: >
+    Create a CloudWatch alarm on the FailedInvocations metric
+    in AWS/Events namespace, scoped to the specific RuleName.
+    Threshold should be tighter than the rule's expected
+    background failure rate (often 0 over a 5-minute window
+    for low-volume rules). Wire to SNS for notification.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "alarm_failed_invocations_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.alarm_failed_invocations_configured
+      op: eq
+      value: false
+defect: >
+  EventBridge rule has no CloudWatch alarm on
+  FailedInvocations.
+infection: >
+  Failed deliveries — Lambda throttle, ECS RunTask capacity,
+  target service 5xx, IAM role compromise — increment
+  FailedInvocations but go unnoticed without an alarm.
+  Operators detect the failures only when downstream consumers
+  surface the gap (data missing, automation silent). For
+  rules driving security automation or audit pipelines, the
+  alarm is the early-warning that the rule's downstream is
+  unhealthy.
+failure: >
+  Silent target-failure exposure. Failed deliveries accumulate
+  without immediate notification; the rule appears active in
+  the console while a fraction of events fail delivery.
+tests:
+  - name: rule without alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            alarm_failed_invocations_configured: false
+  - name: rule with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            alarm_failed_invocations_configured: true

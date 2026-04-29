@@ -1,0 +1,21 @@
+id: eventbridge_subproduct_blind
+description: >
+  EventBridge sub-products (Pipes, Scheduler, API
+  Destinations) have multiple monitoring gaps. Pipes without
+  ExecutionFailed alarms, Schedulers without
+  InvocationDroppedCount alarms, API Destinations without
+  partner-5xx alarms — each alone leaves a sub-product blind
+  to its primary failure mode. Co-occurrence means the
+  org's EB sub-product monitoring discipline isn't applied
+  consistently. Threshold of 2 fires when at least two
+  sub-product alarm gaps coexist within the EB inventory.
+controls:
+  - CTL.EVENTBRIDGE.ALARM.PIPE.FAILED.001
+  - CTL.EVENTBRIDGE.ALARM.SCHEDULER.DROPPED.001
+  - CTL.EVENTBRIDGE.ALARM.APIDEST.5XX.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction

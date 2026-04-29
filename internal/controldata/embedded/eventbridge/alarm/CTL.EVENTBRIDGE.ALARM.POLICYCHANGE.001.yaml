@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ALARM.POLICYCHANGE.001
+name: EventBridge Bus Has No Alarm For Resource-Policy Changes
+description: >
+  EventBridge bus has no CloudWatch alarm covering
+  PutPermission / PutResourcePolicy API events. These
+  operations expand the bus's access policy — the typical
+  failure mode is "an integration rollout temporarily added
+  a broad principal grant and forgot to remove it" or "a
+  cross-account configuration accidentally permitted external
+  publishers." Without an alarm, expanded policy persists
+  until the next manual policy review.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC7.2"
+  nist_800_53_r5: "AC-3, AU-6, SI-4"
+  pci_dss_v4.0: "7.2, 10.2"
+  fedramp_moderate: "AC-3, SI-4"
+  iso_27001_2022: "A.5.15, A.5.24, A.8.15"
+  ccm_v4: ["IAM-04", "LOG-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No CloudWatch alarm covers EventBridge PutPermission /
+    PutResourcePolicy API events.
+  action: >
+    Create a CloudTrail metric filter matching eventName =
+    PutPermission OR PutResourcePolicy on the bus's region
+    trail. Wire a CloudWatch alarm on that metric to SNS.
+    Tag the alarm so on-call understands the alert means
+    "bus access policy expanded — review immediately for
+    intended principal scope."
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "alarm_policy_change_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.alarm_policy_change_configured
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm covers PutPermission / PutResourcePolicy
+  for the bus.
+infection: >
+  Bus policy expansions land without immediate operator
+  notification. Common scenarios: a deployment temporarily
+  granting a broad principal scope and forgetting to revert;
+  a cross-account integration config accidentally permitting
+  external publishers; an attacker-driven policy expansion
+  during a credential-compromise pivot. Without alarm
+  coverage, expanded policy persists until policy review
+  catches it — typically days to weeks later.
+failure: >
+  Silent policy expansion exposure. Bus access policy
+  changes don't trigger immediate review; broad-grant windows
+  remain open between change and next scheduled audit.
+tests:
+  - name: bus without policy-change alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/audit"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            alarm_policy_change_configured: false
+  - name: bus with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/audit"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            alarm_policy_change_configured: true

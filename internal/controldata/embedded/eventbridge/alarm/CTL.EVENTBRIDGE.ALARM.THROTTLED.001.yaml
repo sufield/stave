@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ALARM.THROTTLED.001
+name: EventBridge Rule Has No Alarm On ThrottledRules Metric
+description: >
+  EventBridge rule has no CloudWatch alarm on the
+  ThrottledRules metric. EventBridge throttles rules when
+  they hit per-rule or per-account quotas; throttled events
+  are dropped (or sent to DLQ if configured). Without an
+  alarm, throttling goes unnoticed and the operator only
+  notices via downstream gaps. For high-volume rules,
+  throttling is a real production failure mode that
+  compounds whenever upstream events spike.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EventBridge rule has no CloudWatch alarm on
+    ThrottledRules.
+  action: >
+    Create a CloudWatch alarm on the ThrottledRules metric in
+    AWS/Events namespace. For most rules the threshold should
+    be 0 (any throttling is operationally noteworthy); for
+    high-volume rules near per-rule quotas, set a tighter
+    threshold matching expected steady-state volume.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule",
+        "events": {
+          "alarm_throttled_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule
+    - field: properties.governance.events.alarm_throttled_configured
+      op: eq
+      value: false
+defect: >
+  EventBridge rule has no CloudWatch alarm on ThrottledRules.
+infection: >
+  Throttled events are dropped (or sent to DLQ). Without an
+  alarm, throttling is invisible to operators. The first
+  symptom is downstream gaps — Lambda invocation count
+  doesn't match upstream event count, the audit pipeline has
+  fewer records than expected. Diagnosis takes longer than
+  immediate alert because operators have to correlate
+  multiple metrics rather than seeing a direct signal.
+failure: >
+  Silent throttling exposure. Events are dropped or DLQ'd
+  without operator notification; downstream consumers see
+  fewer events than producers emitted.
+tests:
+  - name: rule without throttled alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            alarm_throttled_configured: false
+  - name: rule with throttled alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/orders"
+      asset_type: aws_eventbridge_rule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule
+          events:
+            alarm_throttled_configured: true

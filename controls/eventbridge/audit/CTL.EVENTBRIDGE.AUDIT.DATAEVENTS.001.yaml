@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.AUDIT.DATAEVENTS.001
+name: EventBridge PutEvents Data Events Not Logged In CloudTrail
+description: >
+  EventBridge management events (PutRule, DeleteEventBus,
+  PutPermission, etc.) are logged in CloudTrail by default, but
+  data-tier events (PutEvents — every PutEvents call into a bus)
+  are NOT logged unless explicitly enabled via CloudTrail event
+  selectors. Without data-event logging, there's no
+  reconstruction path for "who put which event into the bus" —
+  only the management-plane API calls are auditable. For buses
+  carrying audit-grade event traffic, this is a forensic gap.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2"
+  nist_800_53_r5: "AU-2, AU-3, AU-12"
+  pci_dss_v4.0: "10.2"
+  fedramp_moderate: "AU-2, AU-3"
+  iso_27001_2022: "A.5.28, A.8.15"
+  ccm_v4: ["LOG-04", "LOG-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_bus
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EventBridge PutEvents data events are not logged in
+    CloudTrail.
+  action: >
+    Enable CloudTrail data events for EventBridge: in the
+    trail's event selectors, add a DataResource for the
+    AWS::Events::EventBus type (with the specific bus ARN
+    or "All" for organization-wide capture). Ensure the trail
+    destination is sufficient for the volume — PutEvents on a
+    busy bus generates significant CloudTrail data.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_bus",
+        "events": {
+          "data_events_logged": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_bus
+    - field: properties.governance.events.data_events_logged
+      op: eq
+      value: false
+defect: >
+  EventBridge bus has no CloudTrail data-event logging.
+infection: >
+  CloudTrail captures management plane events by default —
+  PutRule, DeleteRule, PutPermission, etc. Data plane events
+  (every PutEvents call) are off by default and require
+  explicit event-selector configuration. Without it, the
+  forensic record contains "the rule was created" but not
+  "the event was published". Investigations into security
+  events that arrived via the bus have no source record.
+failure: >
+  Forensic gap on event ingestion. Investigators can audit
+  who configured the bus but not who put events into it.
+tests:
+  - name: bus without data events fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/audit"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            data_events_logged: false
+  - name: bus with data events passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:event-bus/audit"
+      asset_type: aws_eventbridge_bus
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_bus
+          events:
+            data_events_logged: true

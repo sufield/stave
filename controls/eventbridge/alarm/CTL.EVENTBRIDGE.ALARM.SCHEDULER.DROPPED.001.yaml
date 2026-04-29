@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ALARM.SCHEDULER.DROPPED.001
+name: EventBridge Scheduler Has No Alarm On InvocationDroppedCount
+description: >
+  EventBridge Scheduler schedule has no CloudWatch alarm on
+  the InvocationDroppedCount metric (failed invocations
+  after retry exhaustion that were dropped because there was
+  no DLQ or the DLQ was unavailable). Combined with EB-5's
+  SCHEDULER.NODLQ.001, this is the detection layer: the
+  configuration control catches "DLQ missing"; this control
+  catches "alarm on the silent-drop counter missing", so
+  drops have no preservation surface AND no alert.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.2"
+  nist_800_53_r5: "SI-4, AU-6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_schedule
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EventBridge Scheduler schedule has no alarm on
+    InvocationDroppedCount.
+  action: >
+    Create a CloudWatch alarm on InvocationDroppedCount and
+    TargetErrorThrottledCount metrics in AWS/Scheduler
+    namespace, scoped to the ScheduleName. Threshold of 0
+    over a 5-minute window for most schedules; tighter
+    thresholds for high-volume schedules. Pair with a DLQ
+    so drops are preserved.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_schedule",
+        "events": {
+          "alarm_dropped_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_schedule
+    - field: properties.governance.events.alarm_dropped_configured
+      op: eq
+      value: false
+defect: >
+  EventBridge Scheduler schedule has no alarm on
+  InvocationDroppedCount.
+infection: >
+  Failed invocations after retry exhaustion increment
+  InvocationDroppedCount but, without an alarm, go unnoticed.
+  Combined with no DLQ, drops are gone with no record. The
+  schedule appears active; the work it was supposed to drive
+  silently doesn't happen for some fraction of fires.
+failure: >
+  Silent invocation loss. Failed scheduled invocations are
+  dropped without operator notification; downstream work
+  doesn't run for some fires.
+tests:
+  - name: schedule without dropped alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/nightly"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            alarm_dropped_configured: false
+  - name: schedule with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:scheduler:us-east-1:111122223333:schedule/default/nightly"
+      asset_type: aws_eventbridge_schedule
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_schedule
+          events:
+            alarm_dropped_configured: true

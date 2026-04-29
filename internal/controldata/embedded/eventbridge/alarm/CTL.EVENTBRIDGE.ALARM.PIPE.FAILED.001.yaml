@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.ALARM.PIPE.FAILED.001
+name: EventBridge Pipe Has No Alarm On ExecutionFailed Or State Transitions
+description: >
+  EventBridge Pipe has no CloudWatch alarm on
+  ExecutionFailed / ExecutionThrottled metrics, and no
+  alarm on pipe state-machine transitions to CREATE_FAILED /
+  UPDATE_FAILED / STOPPED. Pipes are long-running data-plane
+  components; without alarms, state failures (which leave
+  the pipe non-functional but its source bindings active)
+  go unnoticed for weeks.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.2"
+  nist_800_53_r5: "SI-4, AU-6"
+  fedramp_moderate: "SI-4"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - eventbridge
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_pipe
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    EventBridge Pipe has no alarm on execution failures or
+    state transitions.
+  action: >
+    Create CloudWatch alarms on (a) Pipe ExecutionFailed and
+    ExecutionThrottled metrics in AWS/Pipes namespace, scoped
+    to the PipeName, and (b) an EventBridge rule + alarm
+    chain that watches CloudTrail for Pipe state transitions
+    to CREATE_FAILED / UPDATE_FAILED / STOPPED. Pair with a
+    DLQ so failed records have a preservation surface.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_pipe",
+        "events": {
+          "alarm_failed_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_pipe
+    - field: properties.governance.events.alarm_failed_configured
+      op: eq
+      value: false
+defect: >
+  EventBridge Pipe has no alarm on ExecutionFailed,
+  ExecutionThrottled, or state transitions.
+infection: >
+  Pipe-level failures (ExecutionFailed from poison records,
+  ExecutionThrottled from source-rate spikes, state
+  transitions to CREATE_FAILED / UPDATE_FAILED / STOPPED)
+  go unnoticed in real time. Combined with EB-4's
+  LIFECYCLE.CREATEFAILED.001, this is the
+  detection-vs-prevention pair: the lifecycle control fires
+  when state IS broken; this control fires when there's
+  no alarm to catch the next break.
+failure: >
+  Silent pipe failure. Pipes break — data-plane execution
+  errors, state-machine transitions — without operator
+  notification; recovery starts when downstream symptoms
+  surface.
+tests:
+  - name: pipe without failure alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            alarm_failed_configured: false
+  - name: pipe with alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:pipes:us-east-1:111122223333:pipe/orders-ingest"
+      asset_type: aws_eventbridge_pipe
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_pipe
+          events:
+            alarm_failed_configured: true

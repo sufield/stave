@@ -1,0 +1,20 @@
+id: eventbridge_destructive_ops_blind
+description: >
+  EventBridge bus has multiple destructive-operation alarms
+  missing: DeleteEventBus / DeleteRule, PutPermission /
+  PutResourcePolicy, RemoveTargets / DisableRule. Missing one
+  is a gap; missing two or more means the bus's
+  destructive-op detection layer is not wired up — operators
+  rely on downstream symptoms instead of immediate
+  notification. Threshold of 2 fires when at least two
+  destructive-op alarms are absent.
+controls:
+  - CTL.EVENTBRIDGE.ALARM.DELETE.001
+  - CTL.EVENTBRIDGE.ALARM.POLICYCHANGE.001
+  - CTL.EVENTBRIDGE.ALARM.REMOVETARGETS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

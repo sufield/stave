@@ -1,0 +1,19 @@
+id: eventbridge_delivery_blind
+description: >
+  EventBridge rule has multiple delivery-monitoring alarms
+  missing: FailedInvocations, ThrottledRules, DLQ depth.
+  Each absence is a real gap; co-occurrence means the rule's
+  delivery health is not monitored — failures, throttling,
+  and DLQ accumulation all surface only via downstream
+  symptom-watching. Threshold of 2 fires when at least two
+  delivery alarms are absent on the same rule.
+controls:
+  - CTL.EVENTBRIDGE.ALARM.FAILEDINVOCATIONS.001
+  - CTL.EVENTBRIDGE.ALARM.THROTTLED.001
+  - CTL.EVENTBRIDGE.ALARM.DEADLETTER.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
