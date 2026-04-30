@@ -37,10 +37,15 @@ func TestSanitizer_ScrubMessage(t *testing.T) {
 		t.Errorf("ScrubMessage() with PathBase = %q", got)
 	}
 
+	// Per Phase 13 P13.4.1: PathMode no longer gates message
+	// scrubbing. PathFull is about output path rendering; it does
+	// not control whether credential-style paths in error messages
+	// get reduced to their basename. The previous coupling let
+	// secrets like `/secret/token` slip through whenever
+	// `--path-mode=full` was set for unrelated reasons.
 	fullSan := Policy{SanitizeIDs: true, PathMode: PathFull}.NewSanitizer()
-	msg := "cannot read /home/user/data/obs.json: no such file"
-	if got := fullSan.ScrubMessage(msg); got != msg {
-		t.Errorf("ScrubMessage() with PathFull should be no-op, got %q", got)
+	if got := fullSan.ScrubMessage("cannot read /home/user/data/obs.json: no such file"); got != "cannot read obs.json: no such file" {
+		t.Errorf("ScrubMessage() should always scrub credential paths regardless of PathMode; got %q", got)
 	}
 }
 

@@ -162,6 +162,7 @@ func predicateRuleToDomain(y yamlPredicateRule) policy.PredicateRule {
 		Op:             y.Op,
 		Value:          policy.NewOperand(y.Value),
 		ValueFromParam: predicate.ParamRef(y.ValueFromParam),
+		FailOnMissing:  y.FailOnMissing,
 		Any:            predicateRulesToDomain(y.Any),
 		All:            predicateRulesToDomain(y.All),
 	}

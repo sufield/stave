@@ -190,7 +190,18 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 	case predicate.OpEq:
 		return fmt.Sprintf("(%s && %s == %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpNe:
-		// Field must exist for inequality to be meaningful — missing field is not a violation.
+		// Default: field must exist for inequality to be meaningful;
+		// a missing field is not a violation. Backwards-compatible
+		// "fail-open on missing" semantics.
+		//
+		// fail_on_missing=true flips the logic to fail-closed: the
+		// missing field is itself the violation. Use for
+		// security-critical controls where the absence of a
+		// required field is more dangerous than its wrong value
+		// (e.g. require_tls=true: missing → TLS might be off).
+		if r.FailOnMissing {
+			return fmt.Sprintf("(!(%s) || %s != %s)", hf, fa, resolveValueExpr(val)), nil
+		}
 		return fmt.Sprintf("(%s && %s != %s)", hf, fa, resolveValueExpr(val)), nil
 	case predicate.OpGt:
 		return fmt.Sprintf("(%s && %s > %s)", hf, fa, resolveValueExpr(val)), nil
@@ -277,7 +288,14 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 		ohf := scopedHasField(other, scopeVar)
 		return fmt.Sprintf("(%s && %s && %s.exists(x, x in %s))", hf, ohf, fa, ofa), nil
 	case predicate.OpAnyMatch:
-		return ruleToExprAnyMatch(r, val, scopeVar)
+		return ruleToExprAnyMatch(r, val, scopeVar, false)
+	case predicate.OpAnyIdentityMatch:
+		// Explicit identity-iteration shorthand. Field can be empty
+		// or "identities" — both mean the same thing. The control
+		// author writes `op: any_identity_match` so the iteration
+		// target is unambiguous, instead of relying on the legacy
+		// silent default that any_match used to apply.
+		return ruleToExprAnyMatch(r, val, scopeVar, true)
 	default:
 		return "", fmt.Errorf("unsupported operator: %s", op)
 	}
@@ -317,7 +335,14 @@ func coerceBool(val any, defaultVal bool) (bool, error) {
 // "identities", which silently broke any_match on any other list field
 // (per-resource lists, asset properties, etc.) by always testing the
 // identities slot regardless of what the rule asked for.
-func ruleToExprAnyMatch(r *policy.PredicateRule, val any, outerScope string) (string, error) {
+//
+// `identityShorthand=true` means the caller used the explicit
+// any_identity_match operator: an empty Field defaults to
+// `identities` without erroring. With identityShorthand=false (plain
+// any_match), an empty Field is now an error — silent defaulting
+// produced controls that compiled cleanly but iterated the wrong
+// list.
+func ruleToExprAnyMatch(r *policy.PredicateRule, val any, outerScope string, identityShorthand bool) (string, error) {
 	var nested *policy.UnsafePredicate
 	switch v := val.(type) {
 	case *policy.UnsafePredicate:
@@ -347,9 +372,15 @@ func ruleToExprAnyMatch(r *policy.PredicateRule, val any, outerScope string) (st
 
 	field := r.Field.String()
 	if field == "" {
-		// Back-compat: pre-existing controls assumed any_match always
-		// iterated the asset's identity list. Treat an empty field as
-		// the identities default so legacy YAML keeps compiling.
+		if !identityShorthand {
+			// Plain any_match without an explicit field used to
+			// default silently to `identities`, which broke any
+			// control that intended to iterate a different list.
+			// Reject so the author rewrites with an explicit field
+			// (or switches to any_identity_match).
+			return "", errors.New("any_match: `field` is required (use `any_identity_match` for the identities-list shorthand)")
+		}
+		// any_identity_match: identities-list shorthand.
 		return fmt.Sprintf("identities.exists(__id, %s)", innerExpr), nil
 	}
 	fa := scopedFieldAccess(field, outerScope)
@@ -423,6 +454,9 @@ func parseRuleList(v any) ([]policy.PredicateRule, error) {
 		// resolveValueExpr in ruleToExpr can emit the correct CEL.
 		if vfp, ok := m["value_from_param"].(string); ok {
 			rule.ValueFromParam = predicate.ParamRef(vfp)
+		}
+		if fom, ok := m["fail_on_missing"].(bool); ok {
+			rule.FailOnMissing = fom
 		}
 
 		// Handle nested any/all blocks within the rule

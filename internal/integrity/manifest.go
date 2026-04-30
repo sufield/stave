@@ -63,7 +63,17 @@ type canonicalManifest struct {
 // signing and signature verification. It uses a proxy struct with plain
 // string types so encoding/json produces deterministic compact JSON with
 // sorted map keys.
+//
+// Defense in depth: refuses to canonicalize a manifest with an
+// empty Overall digest. The signing and signature-verification paths
+// both flow through here, so rejecting at this gate prevents any
+// caller (including ones that skip Verify's empty-Overall check)
+// from producing or accepting a signed manifest whose aggregate
+// digest is missing.
 func (m Manifest) CanonicalBytes() ([]byte, error) {
+	if m.Overall == "" {
+		return nil, fmt.Errorf("%w: cannot canonicalize manifest without an Overall digest", ErrIntegrityViolation)
+	}
 	proxy := canonicalManifest{
 		Files:   make(map[string]string, len(m.Files)),
 		Overall: string(m.Overall),
@@ -80,7 +90,15 @@ func (m Manifest) CanonicalBytes() ([]byte, error) {
 }
 
 // VerifySignedManifest validates a detached Ed25519 signature for a manifest.
+// Rejects manifests with an empty Overall digest before signature
+// verification proceeds: a signed-but-empty-Overall manifest would
+// authenticate the *signature* but leave the per-file map
+// effectively unconstrained, since Verify's aggregate check has no
+// reference to compare against.
 func VerifySignedManifest(sm SignedManifest, v ports.Verifier) error {
+	if sm.Manifest.Overall == "" {
+		return fmt.Errorf("%w: signed manifest has empty Overall digest; refusing to verify a manifest whose aggregate constraint is missing", ErrIntegrityViolation)
+	}
 	message, err := sm.Manifest.CanonicalBytes()
 	if err != nil {
 		return fmt.Errorf("canonicalize manifest: %w", err)

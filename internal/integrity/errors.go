@@ -14,4 +14,5 @@ var (
 	ErrHashMismatch       = fmt.Errorf("%w: file hash mismatch", ErrIntegrityViolation)
 	ErrUntrustedFile      = fmt.Errorf("%w: untrusted file found", ErrIntegrityViolation)
 	ErrMissingFile        = fmt.Errorf("%w: required file missing", ErrIntegrityViolation)
+	ErrEmptyManifest      = fmt.Errorf("%w: manifest contains no files", ErrIntegrityViolation)
 )

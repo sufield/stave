@@ -98,11 +98,22 @@ func (s *Sanitizer) Path(p string) string {
 	return filepath.Base(p)
 }
 
-// ScrubMessage replaces absolute paths in a free-form string (e.g. an error
-// message) with their basenames. Returns the message unchanged when path
-// mode is PathFull or the message is empty.
+// ScrubMessage replaces absolute paths in a free-form string (e.g. an
+// error message) with their basenames.
+//
+// PathMode no longer gates this redaction. PathFull is about how
+// the operator-supplied paths render in user-facing output; it is
+// not about whether credentials embedded in error messages get
+// scrubbed. The previous shape conflated the two and let secrets
+// like `/secret/token` slip through whenever the operator had set
+// `--path-mode=full` for any other reason. Credential-style paths
+// in error messages are always reduced to their basename.
+//
+// If a future caller needs fine-grained control (e.g. "I'm in dev
+// and want full paths in error messages too"), add a separate
+// ScrubCredentialPaths flag rather than re-tying this to PathMode.
 func (s *Sanitizer) ScrubMessage(msg string) string {
-	if msg == "" || (s != nil && s.pathMode == PathFull) {
+	if msg == "" {
 		return msg
 	}
 	return messagePathRe.ReplaceAllString(msg, "$1")

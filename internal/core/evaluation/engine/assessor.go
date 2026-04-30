@@ -116,7 +116,21 @@ func (a *Assessor) sortSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
 // referenceTime establishes the "audit now" timestamp.
 // If --now was set (FixedClock), the user's explicit time takes precedence.
 // Otherwise, the latest snapshot's CapturedAt is used for reproducibility.
+//
+// Assess validates a.Clock != nil before calling here, but a future
+// caller that constructs an Assessor without going through Assess
+// (or skips that gate) would otherwise panic on the type assertion
+// and the .Now() calls below. Fall back to time.Now() when Clock is
+// nil so the function is robust to misuse — the production caller
+// always passes a non-nil Clock, but the fallback prevents a nil
+// dereference from corrupting an in-flight evaluation.
 func (a *Assessor) referenceTime(snapshots []asset.Snapshot) time.Time {
+	if a.Clock == nil {
+		if len(snapshots) > 0 {
+			return snapshots[len(snapshots)-1].CapturedAt
+		}
+		return time.Now()
+	}
 	if _, isFixed := a.Clock.(ports.FixedClock); isFixed {
 		return a.Clock.Now()
 	}

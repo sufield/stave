@@ -3,6 +3,7 @@ package kernel
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -38,6 +39,14 @@ func ParseByteSize(s string) (int64, error) {
 		}
 		if n <= 0 {
 			return 0, fmt.Errorf("byte size must be positive: %q", s)
+		}
+		// Overflow guard: a value like "9000000000GB" would silently
+		// wrap to a small positive int64 after multiplication and
+		// then survive the > 0 check above, breaking downstream
+		// limit assumptions in the most subtle way possible.
+		if n > math.MaxInt64/sf.multiplier {
+			return 0, fmt.Errorf("byte size %q overflows int64 (max %d %s)",
+				s, math.MaxInt64/sf.multiplier, sf.label)
 		}
 		return n * sf.multiplier, nil
 	}

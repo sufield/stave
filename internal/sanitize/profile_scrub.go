@@ -8,7 +8,10 @@
 // and bug-report subsystems.
 package sanitize
 
-import "regexp"
+import (
+	"regexp"
+	"strings"
+)
 
 // SanitizedValue is the canonical placeholder for redacted values.
 const SanitizedValue = "[SANITIZED]"
@@ -54,20 +57,26 @@ type Profile struct {
 }
 
 // ShouldRemove reports whether the key is marked for removal.
+// Match is case-insensitive — extractors that emit `Tags` instead
+// of `tags` (a real production drift between cloud SDKs) used to
+// slip through because the lookup was exact-case. Lowercasing the
+// lookup key matches the canonical-form policy used by the
+// SensitiveArgNames map.
 func (p Profile) ShouldRemove(key string) bool {
 	if p.Remove == nil {
 		return false
 	}
-	_, ok := p.Remove[key]
+	_, ok := p.Remove[strings.ToLower(key)]
 	return ok
 }
 
 // ShouldSanitize reports whether the key is marked for sanitization.
+// See ShouldRemove for the case-insensitivity rationale.
 func (p Profile) ShouldSanitize(key string) bool {
 	if p.Sanitize == nil {
 		return false
 	}
-	_, ok := p.Sanitize[key]
+	_, ok := p.Sanitize[strings.ToLower(key)]
 	return ok
 }
 

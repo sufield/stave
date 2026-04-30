@@ -193,17 +193,23 @@ func (a *App) startCPUProfile() error {
 		_ = f.Close()
 		return fmt.Errorf("start CPU profile: %w", err)
 	}
-	a.cpuProfileFile = f
+	a.cpuProfileFile.Store(f)
 	return nil
 }
 
 func (a *App) stopCPUProfile() {
-	if a.cpuProfileFile == nil {
+	// Atomic swap-to-nil is the load-and-take pattern: whichever
+	// concurrent caller wins the swap closes the file; the other
+	// gets nil and no-ops. Without this, two stop paths firing
+	// near-simultaneously (panic recovery + post-run, or signal
+	// handler + finalize) would both call f.Close() on the same
+	// descriptor — undefined-behavior double-close.
+	f := a.cpuProfileFile.Swap(nil)
+	if f == nil {
 		return
 	}
 	pprof.StopCPUProfile()
-	_ = a.cpuProfileFile.Close()
-	a.cpuProfileFile = nil
+	_ = f.Close()
 }
 
 func (a *App) writeMemProfile(cmd *cobra.Command) {

@@ -11,6 +11,27 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
+// MaxConfigurable* upper-bound the values an operator can set via
+// stave.yaml. Beyond these caps the underlying subsystems either
+// allocate dangerously large buffers (snapshot scanning at 10M
+// files) or amplify a single bad input file into millions of
+// validation-error rows that no consumer can render. Capping is
+// done in the bootstrap path with a warning so operators see what
+// they asked for and what they got.
+const (
+	// MaxConfigurableSnapshotFiles bounds pruner.SetDefaultMaxFiles
+	// at 1M — a flat directory of 1M JSON files is already absurd
+	// for any realistic snapshot workload, and the upstream Walk
+	// allocates a metadata struct per file.
+	MaxConfigurableSnapshotFiles = 1_000_000
+	// MaxConfigurableValidationErrors bounds the per-document
+	// validation-error count at 10K. Above that, downstream
+	// reporters (text, JSON, SARIF) all become unreadable; SARIF
+	// in particular OOMs on a single document with millions of
+	// findings.
+	MaxConfigurableValidationErrors = 10_000
+)
+
 // resolveConfigurableLimits applies user-configurable runtime limits
 // from stave.yaml. Invalid values are warned about (so the operator
 // knows their config did not take effect) and then ignored — the
@@ -50,6 +71,11 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 
 	// Max snapshot files for directory scanning (default 100,000)
 	if n := eval.MaxSnapshotFiles(); n > 0 {
+		if n > MaxConfigurableSnapshotFiles {
+			logger.Warn("config: clamping max_snapshot_files to configured maximum",
+				"requested", n, "max", MaxConfigurableSnapshotFiles)
+			n = MaxConfigurableSnapshotFiles
+		}
 		pruner.SetDefaultMaxFiles(n)
 	}
 
@@ -60,6 +86,11 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 
 	// Max validation errors reported (default 3)
 	if n := eval.MaxValidationErrors(); n > 0 {
+		if n > MaxConfigurableValidationErrors {
+			logger.Warn("config: clamping max_validation_errors to configured maximum",
+				"requested", n, "max", MaxConfigurableValidationErrors)
+			n = MaxConfigurableValidationErrors
+		}
 		report.SetMaxValidationErrors(n)
 	}
 }

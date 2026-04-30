@@ -35,6 +35,14 @@ func (v *Validator) Verify(m Manifest) error {
 	if m.Overall == "" {
 		return fmt.Errorf("%w: manifest is missing the overall aggregate digest; refusing to verify per-file hashes against an unbounded manifest", ErrIntegrityViolation)
 	}
+	if len(m.Files) == 0 {
+		// An empty Files map paired with a non-empty Overall is a
+		// malformed manifest: the Overall hashes "no files" while
+		// the recipient has actual files to verify against. Reject
+		// outright with the typed sentinel so callers can branch on
+		// errors.Is(err, ErrEmptyManifest).
+		return ErrEmptyManifest
+	}
 	if err := m.ValidateOverall(); err != nil {
 		return fmt.Errorf("%w: %w", ErrIntegrityViolation, err)
 	}

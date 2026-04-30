@@ -220,7 +220,16 @@ func filterAndNormalizeRefs(checkID string, refs []ControlRef, allowed map[Frame
 }
 
 func normalize(v string) string {
-	return strings.ReplaceAll(strings.ToLower(strings.TrimSpace(v)), "-", "_")
+	// Lower-case + replace dashes AND spaces with underscores so a
+	// framework name written as "PCI DSS v3.2.1" canonicalizes to
+	// the same key as "pci_dss_v3.2.1". Without the space rule the
+	// crosswalk silently treated the two as different frameworks
+	// and the human-readable form never matched any registered
+	// canonical name.
+	v = strings.ToLower(strings.TrimSpace(v))
+	v = strings.ReplaceAll(v, "-", "_")
+	v = strings.ReplaceAll(v, " ", "_")
+	return v
 }
 
 // FrameworkStrings converts a slice of Framework to a slice of strings.

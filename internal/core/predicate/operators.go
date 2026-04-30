@@ -42,7 +42,15 @@ const (
 	// OpContains matches when the field value contains a substring or element.
 	OpContains Operator = "contains"
 	// OpAnyMatch matches when any element in a list satisfies the condition.
+	// Requires an explicit `field` referencing the list to iterate. See
+	// OpAnyIdentityMatch for the identity-iterating shorthand.
 	OpAnyMatch Operator = "any_match"
+	// OpAnyIdentityMatch is the explicit form of "iterate the asset's
+	// identities list and apply the nested predicate to each
+	// identity." Equivalent to writing
+	//   { field: identities, op: any_match, value: { ... } }
+	// but more readable for the common identity-traversal case.
+	OpAnyIdentityMatch Operator = "any_identity_match"
 	// OpAnyInField matches when the field is a list containing at least one
 	// element that also appears in another field's list. Used for
 	// list-intersects-list checks where one side is typically a params
@@ -60,7 +68,7 @@ var supportedOps = func() []Operator {
 		OpEq, OpNe, OpGt, OpLt, OpGte, OpLte,
 		OpMissing, OpPresent, OpIn, OpListEmpty,
 		OpNotSubsetOfField, OpNeqField, OpNotInField,
-		OpContains, OpAnyMatch, OpAnyInField,
+		OpContains, OpAnyMatch, OpAnyIdentityMatch, OpAnyInField,
 	}
 	slices.SortFunc(ops, func(a, b Operator) int {
 		return cmp.Compare(string(a), string(b))
@@ -74,7 +82,7 @@ func IsSupported(op Operator) bool {
 	case OpEq, OpNe, OpGt, OpLt, OpGte, OpLte,
 		OpMissing, OpPresent, OpIn, OpListEmpty, OpContains,
 		OpNeqField, OpNotInField, OpNotSubsetOfField,
-		OpAnyMatch, OpAnyInField:
+		OpAnyMatch, OpAnyIdentityMatch, OpAnyInField:
 		return true
 	}
 	return false

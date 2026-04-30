@@ -13,6 +13,7 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/profile"
 
 	"gopkg.in/yaml.v3"
@@ -76,13 +77,25 @@ type StaveConfig struct {
 
 // LoadExceptions loads exception declarations from a stave.yaml file.
 // Returns nil with no error if the file does not exist.
+//
+// Path traversal hygiene: LoadExceptions runs before any other
+// command-side input validation, so a maliciously crafted relative
+// path (e.g. `../../etc/passwd`) used to be passed straight into
+// os.ReadFile and leaked file contents through the YAML-parse
+// error message. CleanUserPath normalizes the path lexically and
+// rejects the canonical traversal sequences before we touch the
+// filesystem.
 func LoadExceptions(path string) ([]Config, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // path from user config
+	clean := fsutil.CleanUserPath(path)
+	if strings.Contains(clean, "..") {
+		return nil, fmt.Errorf("exceptions path %q contains parent-directory traversal", path)
+	}
+	data, err := os.ReadFile(clean) //nolint:gosec // path normalized via CleanUserPath above
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("read %s: %w", path, err)
+		return nil, fmt.Errorf("read %s: %w", clean, err)
 	}
 
 	var cfg StaveConfig

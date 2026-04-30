@@ -61,12 +61,17 @@ type App struct {
 	// binary is running.
 	Edition Edition
 
-	Flags          globalFlagsType
-	Logger         *slog.Logger
-	LogCloser      *logging.LogCloser
-	ExitFunc       func(int)
-	Root           *cobra.Command
-	cpuProfileFile *os.File // held open during execution, closed in postRun
+	Flags     globalFlagsType
+	Logger    *slog.Logger
+	LogCloser *logging.LogCloser
+	ExitFunc  func(int)
+	Root      *cobra.Command
+	// cpuProfileFile is the open profile file held while a CPU
+	// profile is recording. Stored atomically so the bootstrap-
+	// path startCPUProfile and the panic-recovery / signal-path
+	// stopCPUProfile cannot race when both fire near the same
+	// instant (mocked ExitFunc in tests, mid-execution panic).
+	cpuProfileFile atomic.Pointer[os.File]
 	// cancel is published by bootstrap (phaseContext) and read by the
 	// signal-handler goroutine. atomic.Pointer makes the publish/load
 	// race-free without locking the read path.

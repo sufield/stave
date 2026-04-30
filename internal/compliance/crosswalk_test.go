@@ -61,3 +61,17 @@ func TestParseFramework(t *testing.T) {
 		}
 	}
 }
+
+func TestNormalize_Spaces(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"PCI DSS v3.2.1", "pci_dss_v3.2.1"},
+		{"NIST 800-53 r5", "nist_800_53_r5"},
+		{"  ISO 27001  ", "iso_27001"},
+		{"already_normalized", "already_normalized"},
+	}
+	for _, tc := range cases {
+		if got := normalize(tc.in); got != tc.want {
+			t.Errorf("normalize(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -112,9 +113,19 @@ func (a *App) installInterruptHandler() func() {
 		}
 	}()
 
+	// sync.Once-guarded closure. Both the deferred-cleanup path
+	// (Execute → defer cleanupInterrupt) and the panic-recovery
+	// path (recoverExecutePanic explicitly invokes
+	// a.cleanupInterrupt before ExitFunc) can reach this closure;
+	// without the Once, the second invocation would
+	// `close(done)` a channel already closed by the first and
+	// panic the goroutine that's tearing the process down.
+	var once sync.Once
 	return func() {
-		signal.Stop(sigCh)
-		close(done)
+		once.Do(func() {
+			signal.Stop(sigCh)
+			close(done)
+		})
 	}
 }
 

@@ -340,3 +340,69 @@ func TestSignedManifest_RoundTrip(t *testing.T) {
 		t.Fatalf("VerifySignedManifest roundtrip error = %v", err)
 	}
 }
+
+func TestValidator_Verify_EmptyFilesMap(t *testing.T) {
+	// An empty Files map plus a non-empty Overall is a malformed
+	// manifest. Verify must reject with ErrEmptyManifest so callers
+	// can distinguish from "missing file" / "hash mismatch" cases.
+	files := map[evaluation.FilePath]kernel.Digest{}
+	m := Manifest{Files: files, Overall: ComputeOverall(files)}
+	v := &Validator{ActualHashes: &evaluation.InputHashes{
+		Files: map[evaluation.FilePath]kernel.Digest{
+			"a.json": "aaa",
+		},
+	}}
+	err := v.Verify(m)
+	if err == nil {
+		t.Fatal("expected error for empty manifest, got nil")
+	}
+	if !errors.Is(err, ErrEmptyManifest) {
+		t.Errorf("expected ErrEmptyManifest, got %v", err)
+	}
+	if !errors.Is(err, ErrIntegrityViolation) {
+		t.Errorf("ErrEmptyManifest should wrap ErrIntegrityViolation, got %v", err)
+	}
+}
+
+func TestVerifySignedManifest_EmptyOverall(t *testing.T) {
+	// Signed manifest with empty Overall: signature might be valid
+	// over an empty-aggregate canonical form, but the per-file map
+	// has no integrity constraint. Reject before signature check.
+	sm := SignedManifest{
+		Manifest: Manifest{
+			Files: map[evaluation.FilePath]kernel.Digest{"a.json": "aaa"},
+			// Overall intentionally empty
+		},
+		// Signature value irrelevant — we should reject before
+		// reaching the verifier.
+	}
+	err := VerifySignedManifest(sm, panicVerifier{})
+	if err == nil {
+		t.Fatal("expected error for empty Overall, got nil")
+	}
+	if !errors.Is(err, ErrIntegrityViolation) {
+		t.Errorf("expected ErrIntegrityViolation, got %v", err)
+	}
+}
+
+func TestCanonicalBytes_EmptyOverall(t *testing.T) {
+	// Defense-in-depth: signing path must not produce a canonical
+	// form for a manifest missing its Overall digest.
+	m := Manifest{Files: map[evaluation.FilePath]kernel.Digest{"a.json": "aaa"}}
+	_, err := m.CanonicalBytes()
+	if err == nil {
+		t.Fatal("expected error for empty Overall, got nil")
+	}
+	if !errors.Is(err, ErrIntegrityViolation) {
+		t.Errorf("expected ErrIntegrityViolation, got %v", err)
+	}
+}
+
+// panicVerifier panics if Verify is called — used to prove the
+// pre-signature rejection paths short-circuit before reaching the
+// verifier.
+type panicVerifier struct{}
+
+func (panicVerifier) Verify(_ []byte, _ kernel.Signature) error {
+	panic("VerifySignedManifest reached signature verification despite invalid manifest")
+}
