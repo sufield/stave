@@ -4,6 +4,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"sync"
 
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -12,11 +13,19 @@ import (
 type LogCloser struct {
 	Logger *slog.Logger
 	closer io.Closer
+	once   sync.Once
+	err    error
 }
 
-// Close closes the underlying writer.
+// Close closes the underlying writer. Safe to call multiple times —
+// the panic-recovery path in cmd/executor_panic.go and the post-run
+// path in cmd/bootstrap.go can both reach Close on the same instance,
+// and a second os.File.Close would return "file already closed."
 func (lc *LogCloser) Close() error {
-	return lc.closer.Close()
+	lc.once.Do(func() {
+		lc.err = lc.closer.Close()
+	})
+	return lc.err
 }
 
 // NewLogger creates a new logger based on configuration.

@@ -130,11 +130,13 @@ func collectGraphMLKeys(rdf *RDFGraph) []graphmlKey {
 	add := func(forVal, name, attrType string) {
 		k := seenKey{forVal, name}
 		if existing, ok := seen[k]; ok {
-			// "string" is the conservative-cover type — once we've
-			// inferred a string anywhere, that's the declared type
-			// even if other rows had numbers, since GraphML doesn't
-			// support per-row attribute typing.
-			if existing.attrType == "string" {
+			// GraphML <key> declarations are document-global: every row
+			// for the same (for, name) must share one type. Promote to
+			// the most-permissive type that covers both — int → double
+			// → string, with boolean joining either side as string —
+			// instead of letting whichever row was visited last decide.
+			attrType = promoteAttrType(existing.attrType, attrType)
+			if attrType == existing.attrType {
 				return
 			}
 		}
@@ -193,6 +195,20 @@ func inferAttrType(v any) string {
 	default:
 		return "string"
 	}
+}
+
+// promoteAttrType picks the GraphML attribute type that covers both
+// operands when two rows disagree. Same type → unchanged. Compatible
+// numeric pair (int/double) → double. Anything else → string, the
+// universal fallback that the GraphML reader can always parse.
+func promoteAttrType(a, b string) string {
+	if a == b {
+		return a
+	}
+	if (a == "int" && b == "double") || (a == "double" && b == "int") {
+		return "double"
+	}
+	return "string"
 }
 
 func keyElement(k graphmlKey) string {

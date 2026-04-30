@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -41,10 +42,17 @@ type Config struct {
 // Monitor runs the continuous assessment loop. The mutex protects
 // runCycle's state read/write because file-write debounce timers
 // fire runCycle on their own goroutine while the ticker / event
-// loop also calls runCycle from the main goroutine.
+// loop also calls runCycle from the main goroutine. The atomic
+// running flag coalesces overlapping triggers: if a new debounce
+// timer fires while a previous cycle is still running, the new
+// trigger is dropped instead of queueing behind the mutex —
+// otherwise a slow assessment plus a burst of file writes could
+// pile up an unbounded backlog of cycles all observing nearly the
+// same input.
 type Monitor struct {
 	cfg           Config
 	mu            sync.Mutex
+	running       atomic.Bool
 	previousState string
 	previousIDs   map[string]bool
 }
@@ -122,6 +130,15 @@ func (m *Monitor) runCycle(ctx context.Context) {
 	if ctx.Err() != nil {
 		return
 	}
+
+	// Coalesce: if a previous cycle is still running, drop this
+	// trigger entirely rather than queueing behind the mutex. The
+	// next debounce/tick will pick up whatever changed between the
+	// drop and that next trigger.
+	if !m.running.CompareAndSwap(false, true) {
+		return
+	}
+	defer m.running.Store(false)
 
 	// Serialize state mutation across the ticker, fsnotify-debounce
 	// timer, and initial-run paths. Held for the full cycle so two

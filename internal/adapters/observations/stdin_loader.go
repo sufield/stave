@@ -72,6 +72,14 @@ func NewStdinObservationLoader(loader appcontracts.SnapshotReader, r io.Reader) 
 // leak; the only resource held is the read syscall itself, which is a
 // caller-side responsibility (this loader does not own the reader and
 // must not close it).
+//
+// Caller-side guidance: if you need bounded shutdown, the caller must
+// either (a) close the underlying *os.File / pipe so the read syscall
+// returns EOF, or (b) accept that the goroutine outlives ctx until the
+// process exits. Without OS-specific tricks (SetReadDeadline on socket
+// readers, signaling a process group on a pipe peer) Go cannot
+// interrupt a blocked read syscall — wrapping a timeout context here
+// is necessary but not sufficient.
 func (s *StdinObservationLoader) LoadSnapshots(ctx context.Context, _ string) (appcontracts.LoadResult, error) {
 	// Read stdin with context cancellation support — if the upstream
 	// process hangs, the context deadline will unblock the caller.

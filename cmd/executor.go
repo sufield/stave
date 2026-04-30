@@ -144,6 +144,15 @@ func (a *App) handleExecutionError(err error, args []string) {
 }
 
 func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMarkerPath string) {
+	// Release the bootstrap-allocated context so its goroutine and any
+	// timer associated with WithCancel are reclaimed. Without this, a
+	// normal (non-signal) command exit leaves the cancelCtx pinned for
+	// the lifetime of the process — fine for one-shot CLI runs but
+	// observable in long-lived test harnesses that re-execute the
+	// binary in-process.
+	if cancel := a.cancel.Load(); cancel != nil {
+		(*cancel)()
+	}
 	markFirstRunHintSeenIfNeeded(showFirstRunHint, firstRunMarkerPath)
 	a.printNoProjectHintIfNeeded(args)
 

@@ -210,7 +210,15 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 		}
 		return isPresent, nil
 	case predicate.OpListEmpty:
-		return fmt.Sprintf("(!(%s) || size(%s) == 0)", hf, fa), nil
+		// size() in CEL accepts list, map, string, and bytes — anything
+		// else is a runtime error that bubbles up as a control failure.
+		// Treat a non-collection field as "empty" (the field has no
+		// list-shaped contents to count) so an upstream extractor that
+		// emits an int/bool there does not crash predicate evaluation.
+		return fmt.Sprintf(
+			"(!(%s) || (type(%s) in [type([]), type({}), type(\"\")] && size(%s) == 0))",
+			hf, fa, fa,
+		), nil
 	case predicate.OpNeqField:
 		// Cross-field inequality. Both fields must exist for the
 		// comparison to be meaningful — a missing target is treated as
@@ -245,7 +253,7 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 		ohf := scopedHasField(other, scopeVar)
 		return fmt.Sprintf("(%s && %s && %s.exists(x, x in %s))", hf, ohf, fa, ofa), nil
 	case predicate.OpAnyMatch:
-		return ruleToExprAnyMatch(r, val)
+		return ruleToExprAnyMatch(r, val, scopeVar)
 	default:
 		return "", fmt.Errorf("unsupported operator: %s", op)
 	}
@@ -280,8 +288,12 @@ func coerceBool(val any, defaultVal bool) (bool, error) {
 
 // ruleToExprAnyMatch compiles an any_match rule into a CEL exists() macro.
 // The nested predicate is compiled with "__id" scope so field references
-// resolve against the iterator variable.
-func ruleToExprAnyMatch(_ *policy.PredicateRule, val any) (string, error) {
+// resolve against the iterator variable. The list to iterate is
+// determined by r.Field — previously the implementation hardcoded
+// "identities", which silently broke any_match on any other list field
+// (per-resource lists, asset properties, etc.) by always testing the
+// identities slot regardless of what the rule asked for.
+func ruleToExprAnyMatch(r *policy.PredicateRule, val any, outerScope string) (string, error) {
 	var nested *policy.UnsafePredicate
 	switch v := val.(type) {
 	case *policy.UnsafePredicate:
@@ -309,7 +321,16 @@ func ruleToExprAnyMatch(_ *policy.PredicateRule, val any) (string, error) {
 		return "", errors.New("any_match: empty nested predicate")
 	}
 
-	return fmt.Sprintf("identities.exists(__id, %s)", innerExpr), nil
+	field := r.Field.String()
+	if field == "" {
+		// Back-compat: pre-existing controls assumed any_match always
+		// iterated the asset's identity list. Treat an empty field as
+		// the identities default so legacy YAML keeps compiling.
+		return fmt.Sprintf("identities.exists(__id, %s)", innerExpr), nil
+	}
+	fa := scopedFieldAccess(field, outerScope)
+	hf := scopedHasField(field, outerScope)
+	return fmt.Sprintf("(%s && %s.exists(__id, %s))", hf, fa, innerExpr), nil
 }
 
 // parseNestedPredicate converts a raw value (map[string]any from YAML) into

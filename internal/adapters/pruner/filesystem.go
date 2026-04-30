@@ -34,7 +34,9 @@ type ScannerOptions struct {
 	// ExcludeDirs are absolute paths that the recursive scanner should skip.
 	ExcludeDirs []string
 
-	// MaxFiles limits the number of files scanned to prevent memory exhaustion.
+	// MaxFiles limits the number of files scanned to prevent memory
+	// exhaustion. A directory with exactly MaxFiles snapshot files is
+	// accepted; adding one more (MaxFiles+1) returns ErrTooManySnapshots.
 	// Zero uses the default (100,000).
 	MaxFiles int
 }
@@ -98,6 +100,12 @@ func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts Sca
 		if entry.Type()&os.ModeSymlink != 0 {
 			continue
 		}
+		// Check before appending: when len(candidates) already equals
+		// limit, we have `limit` files admitted and *this* iteration
+		// would push the count to limit+1 — i.e. "more than limit",
+		// matching the error wording. Switching to `>` would silently
+		// admit one extra file (limit+1 in candidates) before erroring
+		// on the limit+2 entry. Keep `>=`.
 		if len(candidates) >= limit {
 			return nil, snapshotLimitError(observationsDir, limit)
 		}

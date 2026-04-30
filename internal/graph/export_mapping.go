@@ -179,6 +179,10 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 		// findings link the same (resource, control) pair, the
 		// strongest severity wins — this matches the principle "a
 		// resource is as exposed as its most dangerous finding".
+		// Don't break on the first match: multiple Finding nodes can
+		// share the same ID slot (different snapshot times, retries,
+		// or partial duplicates from different builders), and only by
+		// scanning all of them can we pick the maximum-severity weight.
 		var weight float64
 		for j := range g.Nodes {
 			if g.Nodes[j].ID != findingID {
@@ -189,7 +193,6 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 					weight = w
 				}
 			}
-			break
 		}
 
 		out.Edges = append(out.Edges, RDFEdge{
