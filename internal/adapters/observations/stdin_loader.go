@@ -61,6 +61,17 @@ func NewStdinObservationLoader(loader appcontracts.SnapshotReader, r io.Reader) 
 // LoadSnapshots implements contracts.ObservationRepository by reading from stdin.
 // The dir parameter is ignored; data is read from the configured reader.
 // Stdin data is hashed so that integrity verification can proceed normally.
+//
+// Cancellation note: if ctx is cancelled while LimitedReadAll is blocked
+// on a hung reader (most realistically a TTY or hung pipe), the caller
+// returns immediately but the read goroutine continues until the
+// underlying read unblocks or the process exits. The channel write is
+// buffered (capacity 1) so the goroutine never blocks on send — when
+// the read finally completes, the result is silently dropped and the
+// goroutine exits cleanly. There is no permanent goroutine or memory
+// leak; the only resource held is the read syscall itself, which is a
+// caller-side responsibility (this loader does not own the reader and
+// must not close it).
 func (s *StdinObservationLoader) LoadSnapshots(ctx context.Context, _ string) (appcontracts.LoadResult, error) {
 	// Read stdin with context cancellation support — if the upstream
 	// process hangs, the context deadline will unblock the caller.
@@ -68,6 +79,8 @@ func (s *StdinObservationLoader) LoadSnapshots(ctx context.Context, _ string) (a
 		data []byte
 		err  error
 	}
+	// Buffered so the goroutine's send always succeeds even if the
+	// caller has already returned via the ctx.Done() branch.
 	ch := make(chan readResult, 1)
 	go func() {
 		data, err := fsutil.LimitedReadAll(s.reader, "stdin")

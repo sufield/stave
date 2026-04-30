@@ -125,14 +125,20 @@ func recordAssetObservation(
 
 		isUnsafe, evalErr := checkUnsafe(*ctl, a, snap, celEval)
 		if evalErr != nil {
+			// Per AGENTS.md, core/ avoids stderr-level side effects:
+			// the inconclusive condition is the return-value channel
+			// (RecordInconclusive below) and operators see it in the
+			// assessment output. Diagnostic detail is logged at Info
+			// so operators with -v can correlate the underlying CEL
+			// error with the inconclusive verdict without the message
+			// implying an actionable Error/Warn.
 			errStr := evalErr.Error()
+			category := "inconclusive"
 			if strings.Contains(errStr, "compile") || strings.Contains(errStr, "parse") || strings.Contains(errStr, "undeclared") {
-				slog.Error("control predicate compilation failed",
-					"control", ctl.ID, "asset", a.ID, "error", evalErr)
-			} else {
-				slog.Warn("inconclusive check",
-					"control", ctl.ID, "asset", a.ID, "error", evalErr)
+				category = "compilation_failed"
 			}
+			slog.Info("control evaluation inconclusive",
+				"control", ctl.ID, "asset", a.ID, "category", category, "error", evalErr)
 			if recErr := t.RecordInconclusive(snap.CapturedAt); recErr != nil {
 				return fmt.Errorf("record inconclusive for control %s, asset %s: %w", ctl.ID, a.ID, recErr)
 			}
