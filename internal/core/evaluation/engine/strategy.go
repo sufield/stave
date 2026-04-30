@@ -261,8 +261,17 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 	span := s.deps.currentSpan()
 
 	if !p.Enabled() {
+		// "Disabled" here means the control's params don't carry the
+		// recurrence_limit and window_days fields the policy needs to
+		// run. The earlier shape returned VerdictPass, which read as
+		// "we evaluated this and the asset is fine" — but in fact the
+		// evaluator never executed any check. Downstream reporters
+		// rolled the row up into the clean count, hiding the
+		// configuration gap. VerdictSkipped is the documented "not
+		// evaluated" verdict; downstream consumers (reporting, risk
+		// scoring) treat it as a hole in coverage, not a clean state.
 		observation.Reason = "missing recurrence parameters"
-		return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
+		return finalizeRow(observation, evaluation.VerdictSkipped, evaluation.ConfidenceHigh), nil
 	}
 
 	span.RecordStep("predicate_evaluation", map[string]any{

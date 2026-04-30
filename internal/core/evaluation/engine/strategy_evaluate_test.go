@@ -269,8 +269,15 @@ func TestUnsafeRecurrenceStrategy_DisabledPolicy(t *testing.T) {
 	}
 
 	row, findings := s.Evaluate(tl, now, IdentityIndex{})
-	if row.Verdict != evaluation.VerdictPass {
-		t.Fatalf("expected Pass (disabled recurrence), got %v", row.Verdict)
+	// Disabled recurrence reports VerdictSkipped, not Pass. Pass
+	// would have been read as "evaluated and clean", but the
+	// evaluator never ran any check; coverage reporters need the
+	// "not evaluated" signal so configuration gaps surface.
+	if row.Verdict != evaluation.VerdictSkipped {
+		t.Fatalf("expected Skipped (disabled recurrence), got %v", row.Verdict)
+	}
+	if row.Reason != "missing recurrence parameters" {
+		t.Errorf("expected reason 'missing recurrence parameters', got %q", row.Reason)
 	}
 	if len(findings) != 0 {
 		t.Fatalf("expected 0 findings, got %d", len(findings))

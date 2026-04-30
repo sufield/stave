@@ -191,6 +191,17 @@ func (l *ExposureLifecycle) handleSecure(at time.Time) {
 		// duration math.
 		l.hasClampedWindow = true
 	}
+	// A non-clamped zero-duration window (resolveAt == openedAt) is
+	// also unreliable for dwell-time math: same scan caught the
+	// asset both unsafe and safe, which usually means flapping
+	// state mid-scan or extractor-side ordering noise, not a
+	// genuine "exposure for zero seconds." Mark it so coverage
+	// validators can tell apart "exposure was real but resolved
+	// instantly" (questionable) from the typical multi-scan
+	// resolution where dwell time is meaningful.
+	if resolved.OpenedAt().Equal(resolved.ResolvedAt()) {
+		l.hasClampedWindow = true
+	}
 	l.history.Record(resolved)
 	l.activeWindow = nil
 }

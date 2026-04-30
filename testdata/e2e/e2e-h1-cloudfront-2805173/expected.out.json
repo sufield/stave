@@ -117,6 +117,362 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:a3acb432af776825",
+      "control_id": "CTL.IAM.NEP.ADMIN.001",
+      "control_name": "Net Effective Permissions Must Not Include Admin-Equivalent Actions",
+      "control_description": "After resolving all policy layers (SCPs, permission boundaries, identity-based policies, explicit denies), a principal not designated as administrative must not have admin-equivalent effective permissions. This is distinct from CTL.IAM.POLICY.ADMIN.001 which checks policy content — this control checks the resolved effective permissions after organizational constraints are applied. A principal may have an AdminAccess policy attached but be effectively constrained by an SCP.\n",
+      "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "identity.nep.is_admin",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6",
+        "hipaa": "164.312(a)(1)",
+        "nist_800_53_r5": "AC-6",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Principal has admin-equivalent net effective permissions after all policy layers are resolved.",
+        "action": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
+      },
+      "fix_plan": {
+        "id": "fix-938ac73fdcc102b4",
+        "target": {
+          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+          "asset_type": "aws_iam_role"
+        },
+        "action": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.nep.is_admin eq true",
+          "observation_key": "identity.nep.is_admin",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+          "type": "aws_iam_role",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.NEP.ADMIN.001",
+          "control_name": "Net Effective Permissions Must Not Include Admin-Equivalent Actions",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "this identity has net-effective admin privileges = true",
+              "observation_key": "identity.nep.is_admin",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.nep.is_admin",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set identity.nep.is_admin to false"
+          }
+        ],
+        "action": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ],
+      "defect": "After resolving every policy layer (SCPs, permission boundaries, identity-based policies, explicit denies), this principal's net effective permissions include admin-equivalent actions such as iam:*, *:*, or a large set of high-impact actions that together equal administrative authority. The principal is not tagged as intentionally administrative.\n",
+      "infection": "Any compromise of this principal — a leaked access key, a misconfigured assume-role chain, a captured session token — yields the full admin surface. The effective-permissions resolver has already confirmed that no SCP, boundary, or deny statement constrains the admin actions at runtime, so attackers do not have to bypass organizational controls. When combined with access paths from public-facing resources (public functions, exposed IAM roles in compromised containers), admin-equivalent NEP converts one foothold into full account compromise.\n",
+      "failure": "Account-wide compromise. The attacker has the same authority as a deliberate administrator: create users, remove logging, disable guardrails, exfiltrate any resource. Containment requires organizational-level rotation and recovery, not a scoped fix.\n",
+      "delta": [
+        {
+          "property_label": "nep is admin",
+          "property_path": "identity.nep.is_admin",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:0d2f8798db3789f3",
+      "control_id": "CTL.IAM.NEP.ESCALATION.001",
+      "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
+      "control_description": "After resolving all policy layers including transitive role assumption chains, no non-administrative principal may have effective permissions to escalate beyond their intended privilege scope. Escalation is detected in two forms: direct escalation primitives (iam:CreatePolicyVersion, iam:AttachRolePolicy, etc.) in the resolved effective allow set, and transitive escalation through role chains that reach higher privilege levels than the principal's direct permissions. A developer role that can assume a pipeline role that can assume an admin role has effective admin access — neither individual role appears dangerous, but the chain is the finding.\n",
+      "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "identity.nep.has_escalation_path",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_aws_v3.0": "1.16",
+        "fedramp_moderate": "AC-6",
+        "hipaa": "164.312(a)(1)",
+        "nist_800_53_r5": "AC-6",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Principal has effective privilege escalation capability — either a direct escalation primitive or a transitive role chain reaching admin-equivalent permissions.",
+        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      },
+      "fix_plan": {
+        "id": "fix-273b414e03981490",
+        "target": {
+          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+          "asset_type": "aws_iam_role"
+        },
+        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.nep.has_escalation_path eq true",
+          "observation_key": "identity.nep.has_escalation_path",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
+          "type": "aws_iam_role",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.NEP.ESCALATION.001",
+          "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "a net-effective privilege escalation path exists for this identity = true",
+              "observation_key": "identity.nep.has_escalation_path",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.nep.has_escalation_path",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set identity.nep.has_escalation_path to false"
+          }
+        ],
+        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ],
+      "defect": "The principal's resolved net effective permissions include at least one action that enables privilege escalation — for example iam:AttachRolePolicy, iam:CreateRole, iam:PassRole on an unscoped resource, or a transitive sts:AssumeRole path to a higher-privileged role. The escalation is present in the policy graph even if the individual statements don't look dangerous in isolation.\n",
+      "infection": "Any compromise of this principal becomes a compromise of every privilege the escalation path can reach. An attacker with code execution in a service running under this identity (a Lambda, an EC2 instance, a CI runner, a human-assumed role) exercises the escalation primitive and mints themselves broader credentials in a single IAM call. For direct primitives, one API call crosses the privilege boundary. For transitive chains, a short sequence of assume-role calls does the same.\n",
+      "failure": "Credential-boundary collapse. The account's intended privilege separation (dev vs. prod, service vs. admin) no longer holds for any attacker who reaches this principal. Post-incident forensics typically show a single initial compromise expanding to admin- equivalent authority within minutes of discovery.\n",
+      "delta": [
+        {
+          "property_label": "nep has escalation path",
+          "property_path": "identity.nep.has_escalation_path",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:c6ed7d32277555dd",
+      "control_id": "CTL.IAM.NEP.ESCALATION.001",
+      "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
+      "control_description": "After resolving all policy layers including transitive role assumption chains, no non-administrative principal may have effective permissions to escalate beyond their intended privilege scope. Escalation is detected in two forms: direct escalation primitives (iam:CreatePolicyVersion, iam:AttachRolePolicy, etc.) in the resolved effective allow set, and transitive escalation through role chains that reach higher privilege levels than the principal's direct permissions. A developer role that can assume a pipeline role that can assume an admin role has effective admin access — neither individual role appears dangerous, but the chain is the finding.\n",
+      "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "identity.nep.has_escalation_path",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_aws_v3.0": "1.16",
+        "fedramp_moderate": "AC-6",
+        "hipaa": "164.312(a)(1)",
+        "nist_800_53_r5": "AC-6",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Principal has effective privilege escalation capability — either a direct escalation primitive or a transitive role chain reaching admin-equivalent permissions.",
+        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      },
+      "fix_plan": {
+        "id": "fix-938ac73fdcc102b4",
+        "target": {
+          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+          "asset_type": "aws_iam_role"
+        },
+        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.nep.has_escalation_path eq true",
+          "observation_key": "identity.nep.has_escalation_path",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+          "type": "aws_iam_role",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.NEP.ESCALATION.001",
+          "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "a net-effective privilege escalation path exists for this identity = true",
+              "observation_key": "identity.nep.has_escalation_path",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.nep.has_escalation_path",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set identity.nep.has_escalation_path to false"
+          }
+        ],
+        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ],
+      "defect": "The principal's resolved net effective permissions include at least one action that enables privilege escalation — for example iam:AttachRolePolicy, iam:CreateRole, iam:PassRole on an unscoped resource, or a transitive sts:AssumeRole path to a higher-privileged role. The escalation is present in the policy graph even if the individual statements don't look dangerous in isolation.\n",
+      "infection": "Any compromise of this principal becomes a compromise of every privilege the escalation path can reach. An attacker with code execution in a service running under this identity (a Lambda, an EC2 instance, a CI runner, a human-assumed role) exercises the escalation primitive and mints themselves broader credentials in a single IAM call. For direct primitives, one API call crosses the privilege boundary. For transitive chains, a short sequence of assume-role calls does the same.\n",
+      "failure": "Credential-boundary collapse. The account's intended privilege separation (dev vs. prod, service vs. admin) no longer holds for any attacker who reaches this principal. Post-incident forensics typically show a single initial compromise expanding to admin- equivalent authority within minutes of discovery.\n",
+      "delta": [
+        {
+          "property_label": "nep has escalation path",
+          "property_path": "identity.nep.has_escalation_path",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    },
+    {
       "finding_id": "sha256:d028664301f23de0",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
@@ -176,7 +532,7 @@
         },
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "exposure_score": 115.58219178082193,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -322,7 +678,7 @@
         },
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "exposure_score": 115.58219178082193,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -468,7 +824,7 @@
         },
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "exposure_score": 115.58219178082193,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -614,7 +970,7 @@
         },
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "exposure_score": 115.58219178082193,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -760,7 +1116,7 @@
         },
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "exposure_score": 115.58219178082193,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -906,7 +1262,7 @@
         },
         "action": "Scope the execution role policy to only the specific actions and resource ARNs the function needs. Replace managed policies like AmazonS3FullAccess with inline policies scoped to specific buckets and actions. Use IAM Access Analyzer to identify unused permissions and generate a least-privilege policy from actual function activity."
       },
-      "exposure_score": 115.58219178082193,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -991,449 +1347,9 @@
           "fix_action": "set to false (disable)"
         }
       ]
-    },
-    {
-      "finding_id": "sha256:a3acb432af776825",
-      "control_id": "CTL.IAM.NEP.ADMIN.001",
-      "control_name": "Net Effective Permissions Must Not Include Admin-Equivalent Actions",
-      "control_description": "After resolving all policy layers (SCPs, permission boundaries, identity-based policies, explicit denies), a principal not designated as administrative must not have admin-equivalent effective permissions. This is distinct from CTL.IAM.POLICY.ADMIN.001 which checks policy content — this control checks the resolved effective permissions after organizational constraints are applied. A principal may have an AdminAccess policy attached but be effectively constrained by an SCP.\n",
-      "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
-      "asset_type": "aws_iam_role",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "misconfigurations": [
-          {
-            "property": "identity.nep.is_admin",
-            "actual_value": true,
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "control_severity": "critical",
-      "control_compliance": {
-        "fedramp_moderate": "AC-6",
-        "hipaa": "164.312(a)(1)",
-        "nist_800_53_r5": "AC-6",
-        "pci_dss_v4.0": "7.2.1",
-        "soc2": "CC6.1"
-      },
-      "control_compliance_ccm_v4": [
-        "IAM-05"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Principal has admin-equivalent net effective permissions after all policy layers are resolved.",
-        "action": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
-      },
-      "fix_plan": {
-        "id": "fix-938ac73fdcc102b4",
-        "target": {
-          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
-          "asset_type": "aws_iam_role"
-        },
-        "action": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
-      },
-      "exposure_score": 102.73972602739727,
-      "score_breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "identity.nep.is_admin eq true",
-          "observation_key": "identity.nep.is_admin",
-          "operator": "eq",
-          "expected_value": true,
-          "observed_value": true
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
-          "type": "aws_iam_role",
-          "vendor": "aws",
-          "arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr"
-        },
-        "violation": {
-          "control_id": "CTL.IAM.NEP.ADMIN.001",
-          "control_name": "Net Effective Permissions Must Not Include Admin-Equivalent Actions",
-          "severity": "critical",
-          "reasoning": [
-            {
-              "clause": "this identity has net-effective admin privileges = true",
-              "observation_key": "identity.nep.is_admin",
-              "observed_value": true
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "identity.nep.is_admin",
-            "current_value": "true",
-            "required_value": "false",
-            "has_safe_default": true,
-            "description": "Set identity.nep.is_admin to false"
-          }
-        ],
-        "action": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "iam"
-      ],
-      "defect": "After resolving every policy layer (SCPs, permission boundaries, identity-based policies, explicit denies), this principal's net effective permissions include admin-equivalent actions such as iam:*, *:*, or a large set of high-impact actions that together equal administrative authority. The principal is not tagged as intentionally administrative.\n",
-      "infection": "Any compromise of this principal — a leaked access key, a misconfigured assume-role chain, a captured session token — yields the full admin surface. The effective-permissions resolver has already confirmed that no SCP, boundary, or deny statement constrains the admin actions at runtime, so attackers do not have to bypass organizational controls. When combined with access paths from public-facing resources (public functions, exposed IAM roles in compromised containers), admin-equivalent NEP converts one foothold into full account compromise.\n",
-      "failure": "Account-wide compromise. The attacker has the same authority as a deliberate administrator: create users, remove logging, disable guardrails, exfiltrate any resource. Containment requires organizational-level rotation and recovery, not a scoped fix.\n",
-      "delta": [
-        {
-          "property_label": "nep is admin",
-          "property_path": "identity.nep.is_admin",
-          "current_value": "true",
-          "fix_action": "set to false (disable)"
-        }
-      ]
-    },
-    {
-      "finding_id": "sha256:0d2f8798db3789f3",
-      "control_id": "CTL.IAM.NEP.ESCALATION.001",
-      "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
-      "control_description": "After resolving all policy layers including transitive role assumption chains, no non-administrative principal may have effective permissions to escalate beyond their intended privilege scope. Escalation is detected in two forms: direct escalation primitives (iam:CreatePolicyVersion, iam:AttachRolePolicy, etc.) in the resolved effective allow set, and transitive escalation through role chains that reach higher privilege levels than the principal's direct permissions. A developer role that can assume a pipeline role that can assume an admin role has effective admin access — neither individual role appears dangerous, but the chain is the finding.\n",
-      "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
-      "asset_type": "aws_iam_role",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "misconfigurations": [
-          {
-            "property": "identity.nep.has_escalation_path",
-            "actual_value": true,
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "control_severity": "critical",
-      "control_compliance": {
-        "cis_aws_v3.0": "1.16",
-        "fedramp_moderate": "AC-6",
-        "hipaa": "164.312(a)(1)",
-        "nist_800_53_r5": "AC-6",
-        "pci_dss_v4.0": "7.2.1",
-        "soc2": "CC6.1"
-      },
-      "control_compliance_ccm_v4": [
-        "IAM-05"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Principal has effective privilege escalation capability — either a direct escalation primitive or a transitive role chain reaching admin-equivalent permissions.",
-        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
-      },
-      "fix_plan": {
-        "id": "fix-273b414e03981490",
-        "target": {
-          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
-          "asset_type": "aws_iam_role"
-        },
-        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
-      },
-      "exposure_score": 102.73972602739727,
-      "score_breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "identity.nep.has_escalation_path eq true",
-          "observation_key": "identity.nep.has_escalation_path",
-          "operator": "eq",
-          "expected_value": true,
-          "observed_value": true
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
-          "type": "aws_iam_role",
-          "vendor": "aws",
-          "arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh"
-        },
-        "violation": {
-          "control_id": "CTL.IAM.NEP.ESCALATION.001",
-          "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
-          "severity": "critical",
-          "reasoning": [
-            {
-              "clause": "a net-effective privilege escalation path exists for this identity = true",
-              "observation_key": "identity.nep.has_escalation_path",
-              "observed_value": true
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "identity.nep.has_escalation_path",
-            "current_value": "true",
-            "required_value": "false",
-            "has_safe_default": true,
-            "description": "Set identity.nep.has_escalation_path to false"
-          }
-        ],
-        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "iam"
-      ],
-      "defect": "The principal's resolved net effective permissions include at least one action that enables privilege escalation — for example iam:AttachRolePolicy, iam:CreateRole, iam:PassRole on an unscoped resource, or a transitive sts:AssumeRole path to a higher-privileged role. The escalation is present in the policy graph even if the individual statements don't look dangerous in isolation.\n",
-      "infection": "Any compromise of this principal becomes a compromise of every privilege the escalation path can reach. An attacker with code execution in a service running under this identity (a Lambda, an EC2 instance, a CI runner, a human-assumed role) exercises the escalation primitive and mints themselves broader credentials in a single IAM call. For direct primitives, one API call crosses the privilege boundary. For transitive chains, a short sequence of assume-role calls does the same.\n",
-      "failure": "Credential-boundary collapse. The account's intended privilege separation (dev vs. prod, service vs. admin) no longer holds for any attacker who reaches this principal. Post-incident forensics typically show a single initial compromise expanding to admin- equivalent authority within minutes of discovery.\n",
-      "delta": [
-        {
-          "property_label": "nep has escalation path",
-          "property_path": "identity.nep.has_escalation_path",
-          "current_value": "true",
-          "fix_action": "set to false (disable)"
-        }
-      ]
-    },
-    {
-      "finding_id": "sha256:c6ed7d32277555dd",
-      "control_id": "CTL.IAM.NEP.ESCALATION.001",
-      "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
-      "control_description": "After resolving all policy layers including transitive role assumption chains, no non-administrative principal may have effective permissions to escalate beyond their intended privilege scope. Escalation is detected in two forms: direct escalation primitives (iam:CreatePolicyVersion, iam:AttachRolePolicy, etc.) in the resolved effective allow set, and transitive escalation through role chains that reach higher privilege levels than the principal's direct permissions. A developer role that can assume a pipeline role that can assume an admin role has effective admin access — neither individual role appears dangerous, but the chain is the finding.\n",
-      "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
-      "asset_type": "aws_iam_role",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "misconfigurations": [
-          {
-            "property": "identity.nep.has_escalation_path",
-            "actual_value": true,
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "control_severity": "critical",
-      "control_compliance": {
-        "cis_aws_v3.0": "1.16",
-        "fedramp_moderate": "AC-6",
-        "hipaa": "164.312(a)(1)",
-        "nist_800_53_r5": "AC-6",
-        "pci_dss_v4.0": "7.2.1",
-        "soc2": "CC6.1"
-      },
-      "control_compliance_ccm_v4": [
-        "IAM-05"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Principal has effective privilege escalation capability — either a direct escalation primitive or a transitive role chain reaching admin-equivalent permissions.",
-        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
-      },
-      "fix_plan": {
-        "id": "fix-938ac73fdcc102b4",
-        "target": {
-          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
-          "asset_type": "aws_iam_role"
-        },
-        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
-      },
-      "exposure_score": 102.73972602739727,
-      "score_breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "identity.nep.has_escalation_path eq true",
-          "observation_key": "identity.nep.has_escalation_path",
-          "operator": "eq",
-          "expected_value": true,
-          "observed_value": true
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
-          "type": "aws_iam_role",
-          "vendor": "aws",
-          "arn": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr"
-        },
-        "violation": {
-          "control_id": "CTL.IAM.NEP.ESCALATION.001",
-          "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
-          "severity": "critical",
-          "reasoning": [
-            {
-              "clause": "a net-effective privilege escalation path exists for this identity = true",
-              "observation_key": "identity.nep.has_escalation_path",
-              "observed_value": true
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "identity.nep.has_escalation_path",
-            "current_value": "true",
-            "required_value": "false",
-            "has_safe_default": true,
-            "description": "Set identity.nep.has_escalation_path to false"
-          }
-        ],
-        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "iam"
-      ],
-      "defect": "The principal's resolved net effective permissions include at least one action that enables privilege escalation — for example iam:AttachRolePolicy, iam:CreateRole, iam:PassRole on an unscoped resource, or a transitive sts:AssumeRole path to a higher-privileged role. The escalation is present in the policy graph even if the individual statements don't look dangerous in isolation.\n",
-      "infection": "Any compromise of this principal becomes a compromise of every privilege the escalation path can reach. An attacker with code execution in a service running under this identity (a Lambda, an EC2 instance, a CI runner, a human-assumed role) exercises the escalation primitive and mints themselves broader credentials in a single IAM call. For direct primitives, one API call crosses the privilege boundary. For transitive chains, a short sequence of assume-role calls does the same.\n",
-      "failure": "Credential-boundary collapse. The account's intended privilege separation (dev vs. prod, service vs. admin) no longer holds for any attacker who reaches this principal. Post-incident forensics typically show a single initial compromise expanding to admin- equivalent authority within minutes of discovery.\n",
-      "delta": [
-        {
-          "property_label": "nep has escalation path",
-          "property_path": "identity.nep.has_escalation_path",
-          "current_value": "true",
-          "fix_action": "set to false (disable)"
-        }
-      ]
     }
   ],
   "issues": [
-    {
-      "issue_id": "sha256:3e761a78df744dab",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_exporter",
-      "shared_keys": [
-        "compute.execution_role",
-        "compute.execution_role.is_overprivileged"
-      ],
-      "headline_finding_id": "sha256:d028664301f23de0",
-      "member_finding_ids": [
-        "sha256:d028664301f23de0"
-      ],
-      "consolidated_score": 115.58219178082193,
-      "consolidated_blast_radius": 1.5
-    },
-    {
-      "issue_id": "sha256:d7cf389df915c25e",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager",
-      "shared_keys": [
-        "compute.execution_role",
-        "compute.execution_role.is_overprivileged"
-      ],
-      "headline_finding_id": "sha256:3bd75724de9608f7",
-      "member_finding_ids": [
-        "sha256:3bd75724de9608f7"
-      ],
-      "consolidated_score": 115.58219178082193,
-      "consolidated_blast_radius": 1.5
-    },
-    {
-      "issue_id": "sha256:29b5866644ba2911",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager_graphql",
-      "shared_keys": [
-        "compute.execution_role",
-        "compute.execution_role.is_overprivileged"
-      ],
-      "headline_finding_id": "sha256:3589e399b5df2a40",
-      "member_finding_ids": [
-        "sha256:3589e399b5df2a40"
-      ],
-      "consolidated_score": 115.58219178082193,
-      "consolidated_blast_radius": 1.5
-    },
-    {
-      "issue_id": "sha256:028b78346c294eb7",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructExtDeployer-1uHGWxrjog9S",
-      "shared_keys": [
-        "compute.execution_role",
-        "compute.execution_role.is_overprivileged"
-      ],
-      "headline_finding_id": "sha256:da5eaa3c60700baa",
-      "member_finding_ids": [
-        "sha256:da5eaa3c60700baa"
-      ],
-      "consolidated_score": 115.58219178082193,
-      "consolidated_blast_radius": 1.5
-    },
-    {
-      "issue_id": "sha256:050eef4e3c6600a5",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructSyncExtensi-ydrYwNGQCoFr",
-      "shared_keys": [
-        "compute.execution_role",
-        "compute.execution_role.is_overprivileged"
-      ],
-      "headline_finding_id": "sha256:e4433a0bee175ad8",
-      "member_finding_ids": [
-        "sha256:e4433a0bee175ad8"
-      ],
-      "consolidated_score": 115.58219178082193,
-      "consolidated_blast_radius": 1.5
-    },
-    {
-      "issue_id": "sha256:2b665c2345f74c79",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-SingletonLambdaf7d4f7304-ZbLF9YFgQ4eq",
-      "shared_keys": [
-        "compute.execution_role",
-        "compute.execution_role.is_overprivileged"
-      ],
-      "headline_finding_id": "sha256:4942c3d80f3e1e24",
-      "member_finding_ids": [
-        "sha256:4942c3d80f3e1e24"
-      ],
-      "consolidated_score": 115.58219178082193,
-      "consolidated_blast_radius": 1.5
-    },
     {
       "issue_id": "sha256:1150b1b5fe3337e3",
       "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
@@ -1445,7 +1361,7 @@
       "member_finding_ids": [
         "sha256:0d2f8798db3789f3"
       ],
-      "consolidated_score": 102.73972602739727,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -1461,8 +1377,92 @@
         "sha256:a3acb432af776825",
         "sha256:c6ed7d32277555dd"
       ],
-      "consolidated_score": 102.73972602739727,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:3e761a78df744dab",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_exporter",
+      "shared_keys": [
+        "compute.execution_role",
+        "compute.execution_role.is_overprivileged"
+      ],
+      "headline_finding_id": "sha256:d028664301f23de0",
+      "member_finding_ids": [
+        "sha256:d028664301f23de0"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1.5
+    },
+    {
+      "issue_id": "sha256:d7cf389df915c25e",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager",
+      "shared_keys": [
+        "compute.execution_role",
+        "compute.execution_role.is_overprivileged"
+      ],
+      "headline_finding_id": "sha256:3bd75724de9608f7",
+      "member_finding_ids": [
+        "sha256:3bd75724de9608f7"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1.5
+    },
+    {
+      "issue_id": "sha256:29b5866644ba2911",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager_graphql",
+      "shared_keys": [
+        "compute.execution_role",
+        "compute.execution_role.is_overprivileged"
+      ],
+      "headline_finding_id": "sha256:3589e399b5df2a40",
+      "member_finding_ids": [
+        "sha256:3589e399b5df2a40"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1.5
+    },
+    {
+      "issue_id": "sha256:028b78346c294eb7",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructExtDeployer-1uHGWxrjog9S",
+      "shared_keys": [
+        "compute.execution_role",
+        "compute.execution_role.is_overprivileged"
+      ],
+      "headline_finding_id": "sha256:da5eaa3c60700baa",
+      "member_finding_ids": [
+        "sha256:da5eaa3c60700baa"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1.5
+    },
+    {
+      "issue_id": "sha256:050eef4e3c6600a5",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructSyncExtensi-ydrYwNGQCoFr",
+      "shared_keys": [
+        "compute.execution_role",
+        "compute.execution_role.is_overprivileged"
+      ],
+      "headline_finding_id": "sha256:e4433a0bee175ad8",
+      "member_finding_ids": [
+        "sha256:e4433a0bee175ad8"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1.5
+    },
+    {
+      "issue_id": "sha256:2b665c2345f74c79",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-SingletonLambdaf7d4f7304-ZbLF9YFgQ4eq",
+      "shared_keys": [
+        "compute.execution_role",
+        "compute.execution_role.is_overprivileged"
+      ],
+      "headline_finding_id": "sha256:4942c3d80f3e1e24",
+      "member_finding_ids": [
+        "sha256:4942c3d80f3e1e24"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1.5
     }
   ],
   "remediation_groups": [
@@ -1598,106 +1598,10 @@
   ],
   "top_exposures": [
     {
-      "finding_index": 3,
-      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_exporter",
-      "exposure_score": 115.58219178082193,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1.5,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 4,
-      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager",
-      "exposure_score": 115.58219178082193,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1.5,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 5,
-      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager_graphql",
-      "exposure_score": 115.58219178082193,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1.5,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 6,
-      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructExtDeployer-1uHGWxrjog9S",
-      "exposure_score": 115.58219178082193,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1.5,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 7,
-      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructSyncExtensi-ydrYwNGQCoFr",
-      "exposure_score": 115.58219178082193,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1.5,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 8,
-      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
-      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-SingletonLambdaf7d4f7304-ZbLF9YFgQ4eq",
-      "exposure_score": 115.58219178082193,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1.5,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "silent_killer": false
-    },
-    {
       "finding_index": 0,
       "control_id": "CTL.IAM.NEP.ADMIN.001",
       "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
-      "exposure_score": 102.73972602739727,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -1713,7 +1617,7 @@
       "finding_index": 1,
       "control_id": "CTL.IAM.NEP.ESCALATION.001",
       "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-CloudFrontConfigVersionCo-rAgdktzDTPRh",
-      "exposure_score": 102.73972602739727,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -1729,11 +1633,107 @@
       "finding_index": 2,
       "control_id": "CTL.IAM.NEP.ESCALATION.001",
       "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
-      "exposure_score": 102.73972602739727,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_exporter",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 4,
+      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 5,
+      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_manager_graphql",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 6,
+      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructExtDeployer-1uHGWxrjog9S",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 7,
+      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-RepoConstructSyncExtensi-ydrYwNGQCoFr",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 8,
+      "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
+      "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-SingletonLambdaf7d4f7304-ZbLF9YFgQ4eq",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1.5,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
         "blind_multiplier": 1.0273972602739727,
@@ -1835,7 +1835,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

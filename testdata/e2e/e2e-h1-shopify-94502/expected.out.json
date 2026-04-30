@@ -14,13 +14,13 @@
       },
       "overall": "dc22b6fe3206dca1fdda772ee929e95ec8c40c8f8120b2715161ab23a137f093"
     },
-    "policy_fingerprint": "fc40083a0aa1045bfb81bb3f74e3419d9b6590a0221aef01af5fa6d1081f236b",
+    "policy_fingerprint": "fdb7018de74042e9e7f74cb31f3151530f720369ceb4475e8b936a4c88e7d8f4",
     "evaluated_state": "deployed"
   },
   "summary": {
     "total_assets": 3,
     "exposed_resources": 3,
-    "violations": 10
+    "violations": 13
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
@@ -85,6 +85,36 @@
       "threshold_hours": 168
     },
     {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -89544,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -89544,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2015-10-25T00:00:00Z",
+      "remaining_hours": -89544,
+      "first_unsafe_at": "2015-10-18T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-owned-1",
       "asset_type": "aws_s3_bucket",
@@ -126,6 +156,1128 @@
     }
   ],
   "findings": [
+    {
+      "finding_id": "sha256:d81c1dac4e7e312a",
+      "control_id": "CTL.S3.CONTROLS.001",
+      "control_name": "Public Access Block Must Be Enabled",
+      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 89712,
+        "misconfigurations": [
+          {
+            "property": "storage.controls.public_access_fully_blocked",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.5",
+        "cis_aws_v3.0": "2.1.4",
+        "fedramp_moderate": "AC-3",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3",
+        "nist_csf_2.0": "PR.PS",
+        "pci_dss_v3.2.1": "1.3.6",
+        "pci_dss_v4.0": "2.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Public Access Block is not fully enabled. The bucket has no safety net against accidental public exposure from policy or ACL changes.",
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-615ea15597343a26",
+        "target": {
+          "asset_id": "shopify-owned-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.controls.public_access_fully_blocked eq false",
+          "observation_key": "storage.controls.public_access_fully_blocked",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.CONTROLS.001",
+          "control_name": "Public Access Block Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "all four Public Access Block flags are enabled = false",
+              "observation_key": "storage.controls.public_access_fully_blocked",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_fully_blocked",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_fully_blocked to true"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          }
+        ],
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket's Public Access Block is not fully enabled — at least one of BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets is disabled. The bucket has no catch-all defense against a future ACL or policy change that would expose content publicly.\n",
+      "infection": "PAB is a defense-in-depth control: even if the bucket is currently private, any subsequent change to the bucket policy or ACL can make it public with no intermediate warning. PAB, when fully enabled, rejects the change at configuration time — the AWS API returns an error rather than accepting the unsafe policy. Without PAB, operators performing routine maintenance or automation running at scale can accidentally flip a bucket public. Audit trails attribute the exposure to the operator or script, not to the absent safety net, so investigations often miss that PAB-on-everywhere would have prevented the incident.\n",
+      "failure": "Future accidental exposure through routine bucket changes. The bucket is not currently public, so this control is preventive, not reactive — the failure it describes is whatever would happen if an unrelated configuration change made the bucket public. Enabling PAB eliminates the class entirely for this bucket regardless of which mechanism (ACL, policy, future API surface) would otherwise have opened the exposure.\n",
+      "delta": [
+        {
+          "property_label": "S3 Public Access Block",
+          "property_path": "storage.controls.public_access_fully_blocked",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:748776a78c800b08",
+      "control_id": "CTL.S3.CONTROLS.001",
+      "control_name": "Public Access Block Must Be Enabled",
+      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 89712,
+        "misconfigurations": [
+          {
+            "property": "storage.controls.public_access_fully_blocked",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.5",
+        "cis_aws_v3.0": "2.1.4",
+        "fedramp_moderate": "AC-3",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3",
+        "nist_csf_2.0": "PR.PS",
+        "pci_dss_v3.2.1": "1.3.6",
+        "pci_dss_v4.0": "2.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Public Access Block is not fully enabled. The bucket has no safety net against accidental public exposure from policy or ACL changes.",
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-7e4244a99e10acdb",
+        "target": {
+          "asset_id": "shopify-owned-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.controls.public_access_fully_blocked eq false",
+          "observation_key": "storage.controls.public_access_fully_blocked",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-2",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.CONTROLS.001",
+          "control_name": "Public Access Block Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "all four Public Access Block flags are enabled = false",
+              "observation_key": "storage.controls.public_access_fully_blocked",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_fully_blocked",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_fully_blocked to true"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          }
+        ],
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket's Public Access Block is not fully enabled — at least one of BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets is disabled. The bucket has no catch-all defense against a future ACL or policy change that would expose content publicly.\n",
+      "infection": "PAB is a defense-in-depth control: even if the bucket is currently private, any subsequent change to the bucket policy or ACL can make it public with no intermediate warning. PAB, when fully enabled, rejects the change at configuration time — the AWS API returns an error rather than accepting the unsafe policy. Without PAB, operators performing routine maintenance or automation running at scale can accidentally flip a bucket public. Audit trails attribute the exposure to the operator or script, not to the absent safety net, so investigations often miss that PAB-on-everywhere would have prevented the incident.\n",
+      "failure": "Future accidental exposure through routine bucket changes. The bucket is not currently public, so this control is preventive, not reactive — the failure it describes is whatever would happen if an unrelated configuration change made the bucket public. Enabling PAB eliminates the class entirely for this bucket regardless of which mechanism (ACL, policy, future API surface) would otherwise have opened the exposure.\n",
+      "delta": [
+        {
+          "property_label": "S3 Public Access Block",
+          "property_path": "storage.controls.public_access_fully_blocked",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:d14260350514a42e",
+      "control_id": "CTL.S3.CONTROLS.001",
+      "control_name": "Public Access Block Must Be Enabled",
+      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 89712,
+        "misconfigurations": [
+          {
+            "property": "storage.controls.public_access_fully_blocked",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "2.1.5",
+        "cis_aws_v3.0": "2.1.4",
+        "fedramp_moderate": "AC-3",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-3",
+        "nist_csf_2.0": "PR.PS",
+        "pci_dss_v3.2.1": "1.3.6",
+        "pci_dss_v4.0": "2.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Public Access Block is not fully enabled. The bucket has no safety net against accidental public exposure from policy or ACL changes.",
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-655489696a02bf28",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.controls.public_access_fully_blocked eq false",
+          "observation_key": "storage.controls.public_access_fully_blocked",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-writeable-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.CONTROLS.001",
+          "control_name": "Public Access Block Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "all four Public Access Block flags are enabled = false",
+              "observation_key": "storage.controls.public_access_fully_blocked",
+              "observed_value": false
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.controls.public_access_fully_blocked",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set storage.controls.public_access_fully_blocked to true"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          }
+        ],
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket's Public Access Block is not fully enabled — at least one of BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets is disabled. The bucket has no catch-all defense against a future ACL or policy change that would expose content publicly.\n",
+      "infection": "PAB is a defense-in-depth control: even if the bucket is currently private, any subsequent change to the bucket policy or ACL can make it public with no intermediate warning. PAB, when fully enabled, rejects the change at configuration time — the AWS API returns an error rather than accepting the unsafe policy. Without PAB, operators performing routine maintenance or automation running at scale can accidentally flip a bucket public. Audit trails attribute the exposure to the operator or script, not to the absent safety net, so investigations often miss that PAB-on-everywhere would have prevented the incident.\n",
+      "failure": "Future accidental exposure through routine bucket changes. The bucket is not currently public, so this control is preventive, not reactive — the failure it describes is whatever would happen if an unrelated configuration change made the bucket public. Enabling PAB eliminates the class entirely for this bucket regardless of which mechanism (ACL, policy, future API surface) would otherwise have opened the exposure.\n",
+      "delta": [
+        {
+          "property_label": "S3 Public Access Block",
+          "property_path": "storage.controls.public_access_fully_blocked",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:85b25efe79473e4b",
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_name": "Sensitive Data Requires KMS Encryption",
+      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 89712,
+        "misconfigurations": [
+          {
+            "property": "storage.encryption.algorithm",
+            "actual_value": null,
+            "operator": "ne",
+            "unsafe_value": "aws:kms"
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "potentially_sensitive",
+            "operator": "ne",
+            "unsafe_value": "non-sensitive"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "potentially_sensitive",
+            "operator": "ne",
+            "unsafe_value": "public"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "potentially_sensitive",
+            "operator": "present",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket with classified data is using SSE-S3 (AES256) instead of SSE-KMS. AWS-managed keys provide no customer control over key rotation, access policies, or audit trails.",
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"confidential\"\n    },\n    \"encryption\": {\n      \"algorithm\": \"aws:kms\"\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-615ea15597343a26",
+        "target": {
+          "asset_id": "shopify-owned-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.encryption.algorithm ne \"aws:kms\"",
+          "observation_key": "storage.encryption.algorithm",
+          "operator": "ne",
+          "expected_value": "aws:kms"
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification ne \"non-sensitive\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "ne",
+          "expected_value": "non-sensitive",
+          "observed_value": "potentially_sensitive"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification ne \"public\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "ne",
+          "expected_value": "public",
+          "observed_value": "potentially_sensitive"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification present true",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "present",
+          "expected_value": true,
+          "observed_value": "potentially_sensitive"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ENCRYPT.004",
+          "control_name": "Sensitive Data Requires KMS Encryption",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the encryption algorithm not equal \"aws:kms\" (observed: not set)",
+              "observation_key": "storage.encryption.algorithm"
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the bucket's data-classification tag not equal \"non-sensitive\" (observed: \"potentially_sensitive\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "potentially_sensitive"
+            },
+            {
+              "clause": "the bucket's data-classification tag not equal \"public\" (observed: \"potentially_sensitive\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "potentially_sensitive"
+            },
+            {
+              "clause": "the bucket's data-classification tag is set (observed: \"potentially_sensitive\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "potentially_sensitive"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.encryption.algorithm",
+            "current_value": "",
+            "required_value": "aws:kms",
+            "has_safe_default": false,
+            "description": "Set storage.encryption.algorithm to aws:kms"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "potentially_sensitive",
+            "required_value": "non-sensitive",
+            "has_safe_default": false,
+            "description": "Set storage.tags.data-classification to non-sensitive"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "potentially_sensitive",
+            "required_value": "public",
+            "has_safe_default": false,
+            "description": "Set storage.tags.data-classification to public"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "potentially_sensitive",
+            "required_value": "absent",
+            "has_safe_default": false,
+            "description": "Remove storage.tags.data-classification"
+          }
+        ],
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "encryption algorithm",
+          "property_path": "storage.encryption.algorithm",
+          "current_value": "",
+          "fix_action": "set to aws:kms"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "potentially_sensitive",
+          "fix_action": "set to non-sensitive"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "potentially_sensitive",
+          "fix_action": "set to public"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "potentially_sensitive",
+          "fix_action": "remove this property from the configuration"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:d6768aae03c059be",
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_name": "Sensitive Data Requires KMS Encryption",
+      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 89712,
+        "misconfigurations": [
+          {
+            "property": "storage.encryption.algorithm",
+            "actual_value": null,
+            "operator": "ne",
+            "unsafe_value": "aws:kms"
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "potentially_sensitive",
+            "operator": "ne",
+            "unsafe_value": "non-sensitive"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "potentially_sensitive",
+            "operator": "ne",
+            "unsafe_value": "public"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "potentially_sensitive",
+            "operator": "present",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket with classified data is using SSE-S3 (AES256) instead of SSE-KMS. AWS-managed keys provide no customer control over key rotation, access policies, or audit trails.",
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"confidential\"\n    },\n    \"encryption\": {\n      \"algorithm\": \"aws:kms\"\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-7e4244a99e10acdb",
+        "target": {
+          "asset_id": "shopify-owned-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.encryption.algorithm ne \"aws:kms\"",
+          "observation_key": "storage.encryption.algorithm",
+          "operator": "ne",
+          "expected_value": "aws:kms"
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification ne \"non-sensitive\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "ne",
+          "expected_value": "non-sensitive",
+          "observed_value": "potentially_sensitive"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification ne \"public\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "ne",
+          "expected_value": "public",
+          "observed_value": "potentially_sensitive"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification present true",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "present",
+          "expected_value": true,
+          "observed_value": "potentially_sensitive"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-owned-2",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ENCRYPT.004",
+          "control_name": "Sensitive Data Requires KMS Encryption",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the encryption algorithm not equal \"aws:kms\" (observed: not set)",
+              "observation_key": "storage.encryption.algorithm"
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the bucket's data-classification tag not equal \"non-sensitive\" (observed: \"potentially_sensitive\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "potentially_sensitive"
+            },
+            {
+              "clause": "the bucket's data-classification tag not equal \"public\" (observed: \"potentially_sensitive\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "potentially_sensitive"
+            },
+            {
+              "clause": "the bucket's data-classification tag is set (observed: \"potentially_sensitive\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "potentially_sensitive"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.encryption.algorithm",
+            "current_value": "",
+            "required_value": "aws:kms",
+            "has_safe_default": false,
+            "description": "Set storage.encryption.algorithm to aws:kms"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "potentially_sensitive",
+            "required_value": "non-sensitive",
+            "has_safe_default": false,
+            "description": "Set storage.tags.data-classification to non-sensitive"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "potentially_sensitive",
+            "required_value": "public",
+            "has_safe_default": false,
+            "description": "Set storage.tags.data-classification to public"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "potentially_sensitive",
+            "required_value": "absent",
+            "has_safe_default": false,
+            "description": "Remove storage.tags.data-classification"
+          }
+        ],
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "encryption algorithm",
+          "property_path": "storage.encryption.algorithm",
+          "current_value": "",
+          "fix_action": "set to aws:kms"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "potentially_sensitive",
+          "fix_action": "set to non-sensitive"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "potentially_sensitive",
+          "fix_action": "set to public"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "potentially_sensitive",
+          "fix_action": "remove this property from the configuration"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:a7ac33d3a9f8b48e",
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_name": "Sensitive Data Requires KMS Encryption",
+      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-10-18T00:00:00Z",
+        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
+        "unsafe_duration_hours": 89712,
+        "misconfigurations": [
+          {
+            "property": "storage.encryption.algorithm",
+            "actual_value": null,
+            "operator": "ne",
+            "unsafe_value": "aws:kms"
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "potentially_sensitive",
+            "operator": "ne",
+            "unsafe_value": "non-sensitive"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "potentially_sensitive",
+            "operator": "ne",
+            "unsafe_value": "public"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "potentially_sensitive",
+            "operator": "present",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket with classified data is using SSE-S3 (AES256) instead of SSE-KMS. AWS-managed keys provide no customer control over key rotation, access policies, or audit trails.",
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"confidential\"\n    },\n    \"encryption\": {\n      \"algorithm\": \"aws:kms\"\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-655489696a02bf28",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.encryption.algorithm ne \"aws:kms\"",
+          "observation_key": "storage.encryption.algorithm",
+          "operator": "ne",
+          "expected_value": "aws:kms"
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification ne \"non-sensitive\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "ne",
+          "expected_value": "non-sensitive",
+          "observed_value": "potentially_sensitive"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification ne \"public\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "ne",
+          "expected_value": "public",
+          "observed_value": "potentially_sensitive"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification present true",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "present",
+          "expected_value": true,
+          "observed_value": "potentially_sensitive"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-writeable-1",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ENCRYPT.004",
+          "control_name": "Sensitive Data Requires KMS Encryption",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the encryption algorithm not equal \"aws:kms\" (observed: not set)",
+              "observation_key": "storage.encryption.algorithm"
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the bucket's data-classification tag not equal \"non-sensitive\" (observed: \"potentially_sensitive\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "potentially_sensitive"
+            },
+            {
+              "clause": "the bucket's data-classification tag not equal \"public\" (observed: \"potentially_sensitive\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "potentially_sensitive"
+            },
+            {
+              "clause": "the bucket's data-classification tag is set (observed: \"potentially_sensitive\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "potentially_sensitive"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.encryption.algorithm",
+            "current_value": "",
+            "required_value": "aws:kms",
+            "has_safe_default": false,
+            "description": "Set storage.encryption.algorithm to aws:kms"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "potentially_sensitive",
+            "required_value": "non-sensitive",
+            "has_safe_default": false,
+            "description": "Set storage.tags.data-classification to non-sensitive"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "potentially_sensitive",
+            "required_value": "public",
+            "has_safe_default": false,
+            "description": "Set storage.tags.data-classification to public"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "potentially_sensitive",
+            "required_value": "absent",
+            "has_safe_default": false,
+            "description": "Remove storage.tags.data-classification"
+          }
+        ],
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "encryption algorithm",
+          "property_path": "storage.encryption.algorithm",
+          "current_value": "",
+          "fix_action": "set to aws:kms"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "potentially_sensitive",
+          "fix_action": "set to non-sensitive"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "potentially_sensitive",
+          "fix_action": "set to public"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "potentially_sensitive",
+          "fix_action": "remove this property from the configuration"
+        }
+      ]
+    },
     {
       "finding_id": "sha256:5414a7d05efd5406",
       "control_id": "CTL.S3.PUBLIC.001",
@@ -216,7 +1368,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 5000,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
@@ -371,7 +1523,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 5000,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
@@ -526,7 +1678,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 5000,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
@@ -669,7 +1821,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
       },
-      "exposure_score": 5000,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
@@ -812,7 +1964,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
-      "exposure_score": 2500,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 5,
@@ -955,7 +2107,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
-      "exposure_score": 2500,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 5,
@@ -1098,7 +2250,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
-      "exposure_score": 2500,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 5,
@@ -1162,456 +2314,6 @@
           "fix_action": "set to false (disable)"
         }
       ]
-    },
-    {
-      "finding_id": "sha256:d81c1dac4e7e312a",
-      "control_id": "CTL.S3.CONTROLS.001",
-      "control_name": "Public Access Block Must Be Enabled",
-      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 89712,
-        "misconfigurations": [
-          {
-            "property": "storage.controls.public_access_fully_blocked",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "bucket",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "2.1.5",
-        "cis_aws_v3.0": "2.1.4",
-        "fedramp_moderate": "AC-3",
-        "ffiec": "ISH-4",
-        "gdpr": "Art.32",
-        "iso_27001_2022": "A.8.3",
-        "nist_800_53_r5": "AC-3",
-        "nist_csf_2.0": "PR.PS",
-        "pci_dss_v3.2.1": "1.3.6",
-        "pci_dss_v4.0": "2.2.1",
-        "soc2": "CC6.1"
-      },
-      "control_compliance_ccm_v4": [
-        "DSP-07",
-        "DSP-17"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Public Access Block is not fully enabled. The bucket has no safety net against accidental public exposure from policy or ACL changes.",
-        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-615ea15597343a26",
-        "target": {
-          "asset_id": "shopify-owned-1",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
-      },
-      "exposure_score": 1875,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "storage.controls.public_access_fully_blocked eq false",
-          "observation_key": "storage.controls.public_access_fully_blocked",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        },
-        {
-          "predicate_expr": "storage.kind eq \"bucket\"",
-          "observation_key": "storage.kind",
-          "operator": "eq",
-          "expected_value": "bucket",
-          "observed_value": "bucket"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "shopify-owned-1",
-          "type": "aws_s3_bucket",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.S3.CONTROLS.001",
-          "control_name": "Public Access Block Must Be Enabled",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "all four Public Access Block flags are enabled = false",
-              "observation_key": "storage.controls.public_access_fully_blocked",
-              "observed_value": false
-            },
-            {
-              "clause": "storage.kind = \"bucket\"",
-              "observation_key": "storage.kind",
-              "observed_value": "bucket"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "storage.controls.public_access_fully_blocked",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set storage.controls.public_access_fully_blocked to true"
-          },
-          {
-            "path": "storage.kind",
-            "current_value": "bucket",
-            "required_value": "any value other than bucket",
-            "has_safe_default": false,
-            "description": "Change storage.kind away from bucket"
-          }
-        ],
-        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "s3"
-      ],
-      "defect": "The bucket's Public Access Block is not fully enabled — at least one of BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets is disabled. The bucket has no catch-all defense against a future ACL or policy change that would expose content publicly.\n",
-      "infection": "PAB is a defense-in-depth control: even if the bucket is currently private, any subsequent change to the bucket policy or ACL can make it public with no intermediate warning. PAB, when fully enabled, rejects the change at configuration time — the AWS API returns an error rather than accepting the unsafe policy. Without PAB, operators performing routine maintenance or automation running at scale can accidentally flip a bucket public. Audit trails attribute the exposure to the operator or script, not to the absent safety net, so investigations often miss that PAB-on-everywhere would have prevented the incident.\n",
-      "failure": "Future accidental exposure through routine bucket changes. The bucket is not currently public, so this control is preventive, not reactive — the failure it describes is whatever would happen if an unrelated configuration change made the bucket public. Enabling PAB eliminates the class entirely for this bucket regardless of which mechanism (ACL, policy, future API surface) would otherwise have opened the exposure.\n",
-      "delta": [
-        {
-          "property_label": "S3 Public Access Block",
-          "property_path": "storage.controls.public_access_fully_blocked",
-          "current_value": "false",
-          "fix_action": "set to true (enable)"
-        }
-      ]
-    },
-    {
-      "finding_id": "sha256:748776a78c800b08",
-      "control_id": "CTL.S3.CONTROLS.001",
-      "control_name": "Public Access Block Must Be Enabled",
-      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 89712,
-        "misconfigurations": [
-          {
-            "property": "storage.controls.public_access_fully_blocked",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "bucket",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "2.1.5",
-        "cis_aws_v3.0": "2.1.4",
-        "fedramp_moderate": "AC-3",
-        "ffiec": "ISH-4",
-        "gdpr": "Art.32",
-        "iso_27001_2022": "A.8.3",
-        "nist_800_53_r5": "AC-3",
-        "nist_csf_2.0": "PR.PS",
-        "pci_dss_v3.2.1": "1.3.6",
-        "pci_dss_v4.0": "2.2.1",
-        "soc2": "CC6.1"
-      },
-      "control_compliance_ccm_v4": [
-        "DSP-07",
-        "DSP-17"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Public Access Block is not fully enabled. The bucket has no safety net against accidental public exposure from policy or ACL changes.",
-        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-7e4244a99e10acdb",
-        "target": {
-          "asset_id": "shopify-owned-2",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
-      },
-      "exposure_score": 1875,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "storage.controls.public_access_fully_blocked eq false",
-          "observation_key": "storage.controls.public_access_fully_blocked",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        },
-        {
-          "predicate_expr": "storage.kind eq \"bucket\"",
-          "observation_key": "storage.kind",
-          "operator": "eq",
-          "expected_value": "bucket",
-          "observed_value": "bucket"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "shopify-owned-2",
-          "type": "aws_s3_bucket",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.S3.CONTROLS.001",
-          "control_name": "Public Access Block Must Be Enabled",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "all four Public Access Block flags are enabled = false",
-              "observation_key": "storage.controls.public_access_fully_blocked",
-              "observed_value": false
-            },
-            {
-              "clause": "storage.kind = \"bucket\"",
-              "observation_key": "storage.kind",
-              "observed_value": "bucket"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "storage.controls.public_access_fully_blocked",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set storage.controls.public_access_fully_blocked to true"
-          },
-          {
-            "path": "storage.kind",
-            "current_value": "bucket",
-            "required_value": "any value other than bucket",
-            "has_safe_default": false,
-            "description": "Change storage.kind away from bucket"
-          }
-        ],
-        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "s3"
-      ],
-      "defect": "The bucket's Public Access Block is not fully enabled — at least one of BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets is disabled. The bucket has no catch-all defense against a future ACL or policy change that would expose content publicly.\n",
-      "infection": "PAB is a defense-in-depth control: even if the bucket is currently private, any subsequent change to the bucket policy or ACL can make it public with no intermediate warning. PAB, when fully enabled, rejects the change at configuration time — the AWS API returns an error rather than accepting the unsafe policy. Without PAB, operators performing routine maintenance or automation running at scale can accidentally flip a bucket public. Audit trails attribute the exposure to the operator or script, not to the absent safety net, so investigations often miss that PAB-on-everywhere would have prevented the incident.\n",
-      "failure": "Future accidental exposure through routine bucket changes. The bucket is not currently public, so this control is preventive, not reactive — the failure it describes is whatever would happen if an unrelated configuration change made the bucket public. Enabling PAB eliminates the class entirely for this bucket regardless of which mechanism (ACL, policy, future API surface) would otherwise have opened the exposure.\n",
-      "delta": [
-        {
-          "property_label": "S3 Public Access Block",
-          "property_path": "storage.controls.public_access_fully_blocked",
-          "current_value": "false",
-          "fix_action": "set to true (enable)"
-        }
-      ]
-    },
-    {
-      "finding_id": "sha256:d14260350514a42e",
-      "control_id": "CTL.S3.CONTROLS.001",
-      "control_name": "Public Access Block Must Be Enabled",
-      "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 89712,
-        "misconfigurations": [
-          {
-            "property": "storage.controls.public_access_fully_blocked",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "bucket",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_aws_v1.4.0": "2.1.5",
-        "cis_aws_v3.0": "2.1.4",
-        "fedramp_moderate": "AC-3",
-        "ffiec": "ISH-4",
-        "gdpr": "Art.32",
-        "iso_27001_2022": "A.8.3",
-        "nist_800_53_r5": "AC-3",
-        "nist_csf_2.0": "PR.PS",
-        "pci_dss_v3.2.1": "1.3.6",
-        "pci_dss_v4.0": "2.2.1",
-        "soc2": "CC6.1"
-      },
-      "control_compliance_ccm_v4": [
-        "DSP-07",
-        "DSP-17"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Public Access Block is not fully enabled. The bucket has no safety net against accidental public exposure from policy or ACL changes.",
-        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets.",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"controls\": {\n      \"public_access_fully_blocked\": true\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-655489696a02bf28",
-        "target": {
-          "asset_id": "shopify-writeable-1",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
-      },
-      "exposure_score": 1875,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "storage.controls.public_access_fully_blocked eq false",
-          "observation_key": "storage.controls.public_access_fully_blocked",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        },
-        {
-          "predicate_expr": "storage.kind eq \"bucket\"",
-          "observation_key": "storage.kind",
-          "operator": "eq",
-          "expected_value": "bucket",
-          "observed_value": "bucket"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "shopify-writeable-1",
-          "type": "aws_s3_bucket",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.S3.CONTROLS.001",
-          "control_name": "Public Access Block Must Be Enabled",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "all four Public Access Block flags are enabled = false",
-              "observation_key": "storage.controls.public_access_fully_blocked",
-              "observed_value": false
-            },
-            {
-              "clause": "storage.kind = \"bucket\"",
-              "observation_key": "storage.kind",
-              "observed_value": "bucket"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "storage.controls.public_access_fully_blocked",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set storage.controls.public_access_fully_blocked to true"
-          },
-          {
-            "path": "storage.kind",
-            "current_value": "bucket",
-            "required_value": "any value other than bucket",
-            "has_safe_default": false,
-            "description": "Change storage.kind away from bucket"
-          }
-        ],
-        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "s3"
-      ],
-      "defect": "The bucket's Public Access Block is not fully enabled — at least one of BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets is disabled. The bucket has no catch-all defense against a future ACL or policy change that would expose content publicly.\n",
-      "infection": "PAB is a defense-in-depth control: even if the bucket is currently private, any subsequent change to the bucket policy or ACL can make it public with no intermediate warning. PAB, when fully enabled, rejects the change at configuration time — the AWS API returns an error rather than accepting the unsafe policy. Without PAB, operators performing routine maintenance or automation running at scale can accidentally flip a bucket public. Audit trails attribute the exposure to the operator or script, not to the absent safety net, so investigations often miss that PAB-on-everywhere would have prevented the incident.\n",
-      "failure": "Future accidental exposure through routine bucket changes. The bucket is not currently public, so this control is preventive, not reactive — the failure it describes is whatever would happen if an unrelated configuration change made the bucket public. Enabling PAB eliminates the class entirely for this bucket regardless of which mechanism (ACL, policy, future API surface) would otherwise have opened the exposure.\n",
-      "delta": [
-        {
-          "property_label": "S3 Public Access Block",
-          "property_path": "storage.controls.public_access_fully_blocked",
-          "current_value": "false",
-          "fix_action": "set to true (enable)"
-        }
-      ]
     }
   ],
   "issues": [
@@ -1628,7 +2330,37 @@
         "sha256:5414a7d05efd5406",
         "sha256:9885b41f3e8e5b79"
       ],
-      "consolidated_score": 5000,
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:94beec8e6c7d048b",
+      "asset_id": "shopify-owned-1",
+      "shared_keys": [
+        "storage.controls",
+        "storage.controls.public_access_fully_blocked"
+      ],
+      "headline_finding_id": "sha256:d81c1dac4e7e312a",
+      "member_finding_ids": [
+        "sha256:d81c1dac4e7e312a"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:bca48dc12ebbdad3",
+      "asset_id": "shopify-owned-1",
+      "shared_keys": [
+        "storage.encryption",
+        "storage.encryption.algorithm",
+        "storage.tags",
+        "storage.tags.data-classification"
+      ],
+      "headline_finding_id": "sha256:85b25efe79473e4b",
+      "member_finding_ids": [
+        "sha256:85b25efe79473e4b"
+      ],
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -1644,7 +2376,37 @@
         "sha256:482a1ac6937bd145",
         "sha256:e9b8512b9fed396b"
       ],
-      "consolidated_score": 5000,
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:a7cb459e48026ab7",
+      "asset_id": "shopify-owned-2",
+      "shared_keys": [
+        "storage.controls",
+        "storage.controls.public_access_fully_blocked"
+      ],
+      "headline_finding_id": "sha256:748776a78c800b08",
+      "member_finding_ids": [
+        "sha256:748776a78c800b08"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:dd07a3d9d174fb5f",
+      "asset_id": "shopify-owned-2",
+      "shared_keys": [
+        "storage.encryption",
+        "storage.encryption.algorithm",
+        "storage.tags",
+        "storage.tags.data-classification"
+      ],
+      "headline_finding_id": "sha256:d6768aae03c059be",
+      "member_finding_ids": [
+        "sha256:d6768aae03c059be"
+      ],
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -1662,35 +2424,23 @@
         "sha256:94fd30ba678b6000",
         "sha256:afd4d52b25be3baa"
       ],
-      "consolidated_score": 5000,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
-      "issue_id": "sha256:94beec8e6c7d048b",
-      "asset_id": "shopify-owned-1",
+      "issue_id": "sha256:b0f9a76a900a5c2e",
+      "asset_id": "shopify-writeable-1",
       "shared_keys": [
-        "storage.controls",
-        "storage.controls.public_access_fully_blocked"
+        "storage.encryption",
+        "storage.encryption.algorithm",
+        "storage.tags",
+        "storage.tags.data-classification"
       ],
-      "headline_finding_id": "sha256:d81c1dac4e7e312a",
+      "headline_finding_id": "sha256:a7ac33d3a9f8b48e",
       "member_finding_ids": [
-        "sha256:d81c1dac4e7e312a"
+        "sha256:a7ac33d3a9f8b48e"
       ],
-      "consolidated_score": 1875,
-      "consolidated_blast_radius": 1
-    },
-    {
-      "issue_id": "sha256:a7cb459e48026ab7",
-      "asset_id": "shopify-owned-2",
-      "shared_keys": [
-        "storage.controls",
-        "storage.controls.public_access_fully_blocked"
-      ],
-      "headline_finding_id": "sha256:748776a78c800b08",
-      "member_finding_ids": [
-        "sha256:748776a78c800b08"
-      ],
-      "consolidated_score": 1875,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -1704,7 +2454,7 @@
       "member_finding_ids": [
         "sha256:d14260350514a42e"
       ],
-      "consolidated_score": 1875,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     }
   ],
@@ -1721,9 +2471,10 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001"
+        "CTL.S3.CONTROLS.001",
+        "CTL.S3.ENCRYPT.004"
       ],
-      "finding_count": 1
+      "finding_count": 2
     },
     {
       "asset_id": "shopify-owned-1",
@@ -1781,9 +2532,10 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001"
+        "CTL.S3.CONTROLS.001",
+        "CTL.S3.ENCRYPT.004"
       ],
-      "finding_count": 1
+      "finding_count": 2
     },
     {
       "asset_id": "shopify-owned-2",
@@ -1886,129 +2638,18 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001"
+        "CTL.S3.CONTROLS.001",
+        "CTL.S3.ENCRYPT.004"
       ],
-      "finding_count": 1
+      "finding_count": 2
     }
   ],
   "top_exposures": [
     {
-      "finding_index": 3,
-      "control_id": "CTL.S3.PUBLIC.001",
-      "asset_id": "shopify-owned-1",
-      "exposure_score": 5000,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 4,
-      "control_id": "CTL.S3.PUBLIC.001",
-      "asset_id": "shopify-owned-2",
-      "exposure_score": 5000,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 5,
-      "control_id": "CTL.S3.PUBLIC.001",
-      "asset_id": "shopify-writeable-1",
-      "exposure_score": 5000,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 6,
-      "control_id": "CTL.S3.PUBLIC.003",
-      "asset_id": "shopify-writeable-1",
-      "exposure_score": 5000,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 7,
-      "control_id": "CTL.S3.PUBLIC.004",
-      "asset_id": "shopify-owned-1",
-      "exposure_score": 2500,
-      "breakdown": {
-        "base_score": 50,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 8,
-      "control_id": "CTL.S3.PUBLIC.004",
-      "asset_id": "shopify-owned-2",
-      "exposure_score": 2500,
-      "breakdown": {
-        "base_score": 50,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 9,
-      "control_id": "CTL.S3.PUBLIC.004",
-      "asset_id": "shopify-writeable-1",
-      "exposure_score": 2500,
-      "breakdown": {
-        "base_score": 50,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
       "finding_index": 0,
       "control_id": "CTL.S3.CONTROLS.001",
       "asset_id": "shopify-owned-1",
-      "exposure_score": 1875,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
@@ -2024,7 +2665,7 @@
       "finding_index": 1,
       "control_id": "CTL.S3.CONTROLS.001",
       "asset_id": "shopify-owned-2",
-      "exposure_score": 1875,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
@@ -2040,12 +2681,172 @@
       "finding_index": 2,
       "control_id": "CTL.S3.CONTROLS.001",
       "asset_id": "shopify-writeable-1",
-      "exposure_score": 1875,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-owned-1",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 4,
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-owned-2",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 5,
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "shopify-writeable-1",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 6,
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-owned-1",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 7,
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-owned-2",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 8,
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "shopify-writeable-1",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 9,
+      "control_id": "CTL.S3.PUBLIC.003",
+      "asset_id": "shopify-writeable-1",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 10,
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-owned-1",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 11,
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-owned-2",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3738
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 12,
+      "control_id": "CTL.S3.PUBLIC.004",
+      "asset_id": "shopify-writeable-1",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
         "chain_bonus": 1,
         "blind_multiplier": 5,
         "days_blind": 3738
@@ -2146,7 +2947,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

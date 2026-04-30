@@ -240,4 +240,11 @@ func (o *Options) validate() error {
 func (o *Options) markMutuallyExclusive(cmd *cobra.Command) {
 	cmd.MarkFlagsMutuallyExclusive("profile", "controls")
 	cmd.MarkFlagsMutuallyExclusive("profile", "observations")
+	// --new-only collapses to "new-since-the-last-assessment", so
+	// combining it with --new-since (which provides an explicit
+	// window) is contradictory: one says "diff against latest", the
+	// other says "diff against everything in the window". Reject
+	// the combination at flag parse so operators don't silently get
+	// one mode's output while believing they configured the other.
+	cmd.MarkFlagsMutuallyExclusive("new-only", "new-since")
 }

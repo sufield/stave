@@ -106,7 +106,7 @@
         },
         "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
       },
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -253,7 +253,7 @@
         },
         "action": "Replace the bucket ACL with \"BucketOwnerFullControl\" or remove the FULL_CONTROL grant to public groups. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
       },
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -354,7 +354,7 @@
       "member_finding_ids": [
         "sha256:2a489a7678baa433"
       ],
-      "consolidated_score": 205.47945205479454,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -369,7 +369,7 @@
       "member_finding_ids": [
         "sha256:e1ee3d00f05f9f46"
       ],
-      "consolidated_score": 205.47945205479454,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     }
   ],
@@ -412,7 +412,7 @@
       "finding_index": 0,
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "asset_id": "fullcontrol-auth-bucket",
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -428,7 +428,7 @@
       "finding_index": 1,
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "asset_id": "fullcontrol-public-bucket",
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -534,7 +534,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

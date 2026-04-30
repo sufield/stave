@@ -114,7 +114,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove the underlying public-granting policy statement or ACL entry so the bucket does not depend solely on PAB for protection. Then verify PAB remains enabled as defense-in-depth."
       },
-      "exposure_score": 102.73972602739727,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
@@ -189,7 +189,7 @@
       "member_finding_ids": [
         "sha256:e2cd995700dd0179"
       ],
-      "consolidated_score": 102.73972602739727,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     }
   ],
@@ -243,7 +243,7 @@
       "finding_index": 0,
       "control_id": "CTL.S3.PUBLIC.005",
       "asset_id": "latent-bucket",
-      "exposure_score": 102.73972602739727,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
@@ -349,7 +349,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

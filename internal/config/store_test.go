@@ -138,3 +138,26 @@ func TestResolveStorePath_RelativeEnv_ResolvedFromCwd(t *testing.T) {
 		t.Errorf("relative path not anchored to cwd: got %q want %q", got, want)
 	}
 }
+
+
+// TestValidateName_RejectsEmbeddedSpace pins that ASCII space is in
+// the forbidden set. Names with spaces would silently break: shell
+// scripts that pass $STAVE_CONTEXT through unquoted variables would
+// see a tokenized argument list, and YAML map keys with spaces force
+// parsers to quote-and-escape on every emit.
+func TestValidateName_RejectsEmbeddedSpace(t *testing.T) {
+	cases := []string{"prod env", "my context", " leading", "trailing "}
+	for _, name := range cases {
+		if err := ValidateName(name); err == nil {
+			t.Errorf("ValidateName(%q) accepted; want error", name)
+		}
+	}
+}
+
+func TestValidateName_AcceptsPlainName(t *testing.T) {
+	for _, name := range []string{"prod", "prod-east", "prod_2026", "a1b2c3"} {
+		if err := ValidateName(name); err != nil {
+			t.Errorf("ValidateName(%q) rejected: %v", name, err)
+		}
+	}
+}

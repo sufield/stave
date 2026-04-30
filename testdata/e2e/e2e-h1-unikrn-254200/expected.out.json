@@ -47,178 +47,6 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:0a7ad2a7c249ba40",
-      "control_id": "CTL.S3.WRITE.SCOPE.001",
-      "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
-      "control_description": "Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.\n",
-      "asset_id": "upload-api-unikrn-files",
-      "asset_type": "s3_upload_policy",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2017-07-25T00:00:00Z",
-        "last_seen_unsafe_at": "2017-08-02T00:00:00Z",
-        "unsafe_duration_hours": 74208,
-        "misconfigurations": [
-          {
-            "property": "s3_upload.allowed_key_mode",
-            "actual_value": "prefix",
-            "operator": "eq",
-            "unsafe_value": "prefix"
-          },
-          {
-            "property": "s3_upload.operation",
-            "actual_value": "write",
-            "operator": "eq",
-            "unsafe_value": "write"
-          },
-          {
-            "property": "type",
-            "actual_value": "s3_upload_policy",
-            "operator": "eq",
-            "unsafe_value": "s3_upload_policy"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 74208 hours (SLA: 0 hours). Exposed since 2017-07-25T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance_ccm_v4": [
-        "DSP-17",
-        "IAM-16"
-      ],
-      "exposure": {
-        "type": "write_scope_prefix",
-        "principal_scope": "public"
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Signed upload policy uses prefix-wide write permissions instead of binding to an exact object key. This enables arbitrary overwrite and cross-tenant tampering.",
-        "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side.",
-        "example": "{\n  \"s3_upload\": {\n    \"operation\": \"write\",\n    \"allowed_key_mode\": \"exact\"\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-7899bb837c98d454",
-        "target": {
-          "asset_id": "upload-api-unikrn-files",
-          "asset_type": "s3_upload_policy"
-        },
-        "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
-      },
-      "exposure_score": 3750,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3092
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "s3_upload.allowed_key_mode eq \"prefix\"",
-          "observation_key": "s3_upload.allowed_key_mode",
-          "operator": "eq",
-          "expected_value": "prefix",
-          "observed_value": "prefix"
-        },
-        {
-          "predicate_expr": "s3_upload.operation eq \"write\"",
-          "observation_key": "s3_upload.operation",
-          "operator": "eq",
-          "expected_value": "write",
-          "observed_value": "write"
-        },
-        {
-          "predicate_expr": "type eq \"s3_upload_policy\"",
-          "observation_key": "type",
-          "operator": "eq",
-          "expected_value": "s3_upload_policy",
-          "observed_value": "s3_upload_policy"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "upload-api-unikrn-files",
-          "type": "s3_upload_policy",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.S3.WRITE.SCOPE.001",
-          "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "the S3 upload key-allowlist mode = \"prefix\"",
-              "observation_key": "s3_upload.allowed_key_mode",
-              "observed_value": "prefix"
-            },
-            {
-              "clause": "the S3 upload operation = \"write\"",
-              "observation_key": "s3_upload.operation",
-              "observed_value": "write"
-            },
-            {
-              "clause": "the asset type = \"s3_upload_policy\"",
-              "observation_key": "type",
-              "observed_value": "s3_upload_policy"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "s3_upload.allowed_key_mode",
-            "current_value": "prefix",
-            "required_value": "any value other than prefix",
-            "has_safe_default": false,
-            "description": "Change s3_upload.allowed_key_mode away from prefix"
-          },
-          {
-            "path": "s3_upload.operation",
-            "current_value": "write",
-            "required_value": "any value other than write",
-            "has_safe_default": false,
-            "description": "Change s3_upload.operation away from write"
-          },
-          {
-            "path": "type",
-            "current_value": "s3_upload_policy",
-            "required_value": "any value other than s3_upload_policy",
-            "has_safe_default": false,
-            "description": "Change type away from s3_upload_policy"
-          }
-        ],
-        "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "s3"
-      ],
-      "defect": "A signed S3 upload policy uses prefix-mode key scoping (allowed_key_mode: \"prefix\") rather than binding to an exact object key. The resulting presigned URL can upload to any key under the prefix, not just the intended destination.\n",
-      "infection": "Any caller receiving a presigned URL issued from this policy can upload to any key under the allowed prefix. The application's authentication layer typically assumes the URL is good for exactly one upload to one key — the URL's fine print, however, permits broader writes. In multi-tenant applications, the prefix often covers multiple tenants' storage; a URL issued for one tenant's upload is writable against another tenant's destination. In overwrite scenarios, a crafted PUT can replace existing objects under the prefix, including legitimate content other users uploaded earlier. The attack requires only the presigned URL and knowledge of the target key format — both often derivable from the application's upload endpoint.\n",
-      "failure": "Cross-tenant write or legitimate-content overwrite within the prefix scope. Detection is difficult because S3 sees a valid signed request from the application's signer — the bucket policy, ACLs, and audit trail all show routine behavior. Remediation is policy-side: replace starts-with with eq in the upload policy's key condition and generate per-request object keys server-side.\n",
-      "delta": [
-        {
-          "property_label": "allowed key mode",
-          "property_path": "s3_upload.allowed_key_mode",
-          "current_value": "prefix",
-          "fix_action": "change from \"prefix\" to any other value, or remove"
-        },
-        {
-          "property_label": "operation",
-          "property_path": "s3_upload.operation",
-          "current_value": "write",
-          "fix_action": "change from \"write\" to any other value, or remove"
-        }
-      ]
-    },
-    {
       "finding_id": "sha256:30cb3aa1f0378f75",
       "control_id": "CTL.S3.TENANT.ISOLATION.001",
       "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
@@ -313,7 +141,7 @@
         },
         "action": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
       },
-      "exposure_score": 1875,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 5,
@@ -465,24 +293,181 @@
           "fix_action": "remove this property from the configuration"
         }
       ]
+    },
+    {
+      "finding_id": "sha256:0a7ad2a7c249ba40",
+      "control_id": "CTL.S3.WRITE.SCOPE.001",
+      "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
+      "control_description": "Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.\n",
+      "asset_id": "upload-api-unikrn-files",
+      "asset_type": "s3_upload_policy",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2017-07-25T00:00:00Z",
+        "last_seen_unsafe_at": "2017-08-02T00:00:00Z",
+        "unsafe_duration_hours": 74208,
+        "misconfigurations": [
+          {
+            "property": "s3_upload.allowed_key_mode",
+            "actual_value": "prefix",
+            "operator": "eq",
+            "unsafe_value": "prefix"
+          },
+          {
+            "property": "s3_upload.operation",
+            "actual_value": "write",
+            "operator": "eq",
+            "unsafe_value": "write"
+          },
+          {
+            "property": "type",
+            "actual_value": "s3_upload_policy",
+            "operator": "eq",
+            "unsafe_value": "s3_upload_policy"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 74208 hours (SLA: 0 hours). Exposed since 2017-07-25T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
+      "exposure": {
+        "type": "write_scope_prefix",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Signed upload policy uses prefix-wide write permissions instead of binding to an exact object key. This enables arbitrary overwrite and cross-tenant tampering.",
+        "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side.",
+        "example": "{\n  \"s3_upload\": {\n    \"operation\": \"write\",\n    \"allowed_key_mode\": \"exact\"\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-7899bb837c98d454",
+        "target": {
+          "asset_id": "upload-api-unikrn-files",
+          "asset_type": "s3_upload_policy"
+        },
+        "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3092
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "s3_upload.allowed_key_mode eq \"prefix\"",
+          "observation_key": "s3_upload.allowed_key_mode",
+          "operator": "eq",
+          "expected_value": "prefix",
+          "observed_value": "prefix"
+        },
+        {
+          "predicate_expr": "s3_upload.operation eq \"write\"",
+          "observation_key": "s3_upload.operation",
+          "operator": "eq",
+          "expected_value": "write",
+          "observed_value": "write"
+        },
+        {
+          "predicate_expr": "type eq \"s3_upload_policy\"",
+          "observation_key": "type",
+          "operator": "eq",
+          "expected_value": "s3_upload_policy",
+          "observed_value": "s3_upload_policy"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "upload-api-unikrn-files",
+          "type": "s3_upload_policy",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.WRITE.SCOPE.001",
+          "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the S3 upload key-allowlist mode = \"prefix\"",
+              "observation_key": "s3_upload.allowed_key_mode",
+              "observed_value": "prefix"
+            },
+            {
+              "clause": "the S3 upload operation = \"write\"",
+              "observation_key": "s3_upload.operation",
+              "observed_value": "write"
+            },
+            {
+              "clause": "the asset type = \"s3_upload_policy\"",
+              "observation_key": "type",
+              "observed_value": "s3_upload_policy"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "s3_upload.allowed_key_mode",
+            "current_value": "prefix",
+            "required_value": "any value other than prefix",
+            "has_safe_default": false,
+            "description": "Change s3_upload.allowed_key_mode away from prefix"
+          },
+          {
+            "path": "s3_upload.operation",
+            "current_value": "write",
+            "required_value": "any value other than write",
+            "has_safe_default": false,
+            "description": "Change s3_upload.operation away from write"
+          },
+          {
+            "path": "type",
+            "current_value": "s3_upload_policy",
+            "required_value": "any value other than s3_upload_policy",
+            "has_safe_default": false,
+            "description": "Change type away from s3_upload_policy"
+          }
+        ],
+        "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "A signed S3 upload policy uses prefix-mode key scoping (allowed_key_mode: \"prefix\") rather than binding to an exact object key. The resulting presigned URL can upload to any key under the prefix, not just the intended destination.\n",
+      "infection": "Any caller receiving a presigned URL issued from this policy can upload to any key under the allowed prefix. The application's authentication layer typically assumes the URL is good for exactly one upload to one key — the URL's fine print, however, permits broader writes. In multi-tenant applications, the prefix often covers multiple tenants' storage; a URL issued for one tenant's upload is writable against another tenant's destination. In overwrite scenarios, a crafted PUT can replace existing objects under the prefix, including legitimate content other users uploaded earlier. The attack requires only the presigned URL and knowledge of the target key format — both often derivable from the application's upload endpoint.\n",
+      "failure": "Cross-tenant write or legitimate-content overwrite within the prefix scope. Detection is difficult because S3 sees a valid signed request from the application's signer — the bucket policy, ACLs, and audit trail all show routine behavior. Remediation is policy-side: replace starts-with with eq in the upload policy's key condition and generate per-request object keys server-side.\n",
+      "delta": [
+        {
+          "property_label": "allowed key mode",
+          "property_path": "s3_upload.allowed_key_mode",
+          "current_value": "prefix",
+          "fix_action": "change from \"prefix\" to any other value, or remove"
+        },
+        {
+          "property_label": "operation",
+          "property_path": "s3_upload.operation",
+          "current_value": "write",
+          "fix_action": "change from \"write\" to any other value, or remove"
+        }
+      ]
     }
   ],
   "issues": [
-    {
-      "issue_id": "sha256:e41ce43290a6e5bc",
-      "asset_id": "upload-api-unikrn-files",
-      "shared_keys": [
-        "s3_upload.allowed_key_mode",
-        "s3_upload.operation",
-        "type"
-      ],
-      "headline_finding_id": "sha256:0a7ad2a7c249ba40",
-      "member_finding_ids": [
-        "sha256:0a7ad2a7c249ba40"
-      ],
-      "consolidated_score": 3750,
-      "consolidated_blast_radius": 1
-    },
     {
       "issue_id": "sha256:f72f178b27c83812",
       "asset_id": "unikrn-files",
@@ -496,7 +481,22 @@
       "member_finding_ids": [
         "sha256:30cb3aa1f0378f75"
       ],
-      "consolidated_score": 1875,
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:e41ce43290a6e5bc",
+      "asset_id": "upload-api-unikrn-files",
+      "shared_keys": [
+        "s3_upload.allowed_key_mode",
+        "s3_upload.operation",
+        "type"
+      ],
+      "headline_finding_id": "sha256:0a7ad2a7c249ba40",
+      "member_finding_ids": [
+        "sha256:0a7ad2a7c249ba40"
+      ],
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     }
   ],
@@ -536,15 +536,15 @@
   ],
   "top_exposures": [
     {
-      "finding_index": 1,
-      "control_id": "CTL.S3.WRITE.SCOPE.001",
-      "asset_id": "upload-api-unikrn-files",
-      "exposure_score": 3750,
+      "finding_index": 0,
+      "control_id": "CTL.S3.TENANT.ISOLATION.001",
+      "asset_id": "unikrn-files",
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
-        "exposure_multiplier": 2,
+        "exposure_multiplier": 1,
         "chain_bonus": 1,
         "blind_multiplier": 5,
         "days_blind": 3092
@@ -552,15 +552,15 @@
       "silent_killer": true
     },
     {
-      "finding_index": 0,
-      "control_id": "CTL.S3.TENANT.ISOLATION.001",
-      "asset_id": "unikrn-files",
-      "exposure_score": 1875,
+      "finding_index": 1,
+      "control_id": "CTL.S3.WRITE.SCOPE.001",
+      "asset_id": "upload-api-unikrn-files",
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
+        "exposure_multiplier": 2,
         "chain_bonus": 1,
         "blind_multiplier": 5,
         "days_blind": 3092
@@ -661,7 +661,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

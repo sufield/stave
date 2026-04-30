@@ -136,7 +136,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -279,7 +279,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
-      "exposure_score": 102.73972602739727,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
@@ -359,7 +359,7 @@
         "sha256:011146815d21ed0b",
         "sha256:2e48317513355283"
       ],
-      "consolidated_score": 205.47945205479454,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     }
   ],
@@ -414,7 +414,7 @@
       "finding_index": 0,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "exposed-bucket",
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -430,7 +430,7 @@
       "finding_index": 1,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "exposed-bucket",
-      "exposure_score": 102.73972602739727,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
@@ -536,7 +536,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

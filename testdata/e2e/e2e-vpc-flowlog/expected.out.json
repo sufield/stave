@@ -97,7 +97,7 @@
         },
         "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
       },
-      "exposure_score": 154.10958904109592,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -192,7 +192,7 @@
       "member_finding_ids": [
         "sha256:f78119ae6823a874"
       ],
-      "consolidated_score": 154.10958904109592,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 2
     }
   ],
@@ -219,7 +219,7 @@
       "finding_index": 0,
       "control_id": "CTL.VPC.FLOWLOG.001",
       "asset_id": "vpc-test-001",
-      "exposure_score": 154.10958904109592,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -325,7 +325,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

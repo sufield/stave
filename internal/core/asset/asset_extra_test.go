@@ -374,6 +374,29 @@ func TestExposureLifecycleExceedsUnsafeThreshold(t *testing.T) {
 	}
 }
 
+// TestExposureLifecycleZeroDurationWindowFlagsClamped pins that a
+// resolveAt equal to openedAt is treated as unreliable. Same-scan
+// resolution usually means flapping state or extractor ordering
+// noise, not a genuine zero-second exposure; the clamped flag tells
+// downstream coverage analysis to mark the verdict inconclusive
+// rather than feed a zero-dwell window into duration math.
+func TestExposureLifecycleZeroDurationWindowFlagsClamped(t *testing.T) {
+	a := Asset{ID: ID("bucket-1")}
+	tl := NewExposureLifecycle(a)
+	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	// Open and close at the same instant.
+	if err := tl.RecordCheck(t1, true); err != nil {
+		t.Fatal(err)
+	}
+	if err := tl.RecordCheck(t1, false); err != nil {
+		t.Fatal(err)
+	}
+	if !tl.HasClampedWindow() {
+		t.Error("zero-duration window must set hasClampedWindow")
+	}
+}
+
 func TestExposureLifecycleSecureObservationAdvancesLastObservedAt(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
 	tl := NewExposureLifecycle(a)

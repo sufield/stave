@@ -391,7 +391,12 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	// Pass Exemptions so the risk pipeline filters exempted assets
 	// the same way the main finding pipeline does — otherwise an
 	// exempted asset can still flip overall posture to AT_RISK
-	// through risk signals.
+	// through risk signals. Pass SuppressedFindings derived from
+	// excepted/acknowledged findings for the same reason: a fully
+	// acknowledged report must not surface AT_RISK posture via
+	// upcoming threshold signals on findings the operator has
+	// already accepted.
+	suppressed := buildSuppressionSet(exceptedFindings, acknowledgedFindings)
 	riskSignals := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                s.assessor.Controls,
 		Snapshots:               s.snapshots,
@@ -399,6 +404,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		Now:                     s.auditTime,
 		PredicateEval:           s.assessor.PredicateEval,
 		Exemptions:              s.assessor.Exemptions,
+		SuppressedFindings:      suppressed,
 	})
 
 	posture := evaluation.DeriveSecurityState(len(activeFindings), riskSignals)
@@ -467,6 +473,32 @@ func partitionFindings(
 	return active, excepted
 }
 
+// buildSuppressionSet collects the (controlID, assetID) tuples for
+// every excepted or validly-acknowledged finding so risk signals
+// computed from raw snapshots can skip the same items the active
+// finding pipeline already filtered out. Invalid acknowledgments
+// (expired, compensating-control failing) are NOT suppressed:
+// their findings stay active and risk should still surface.
+func buildSuppressionSet(
+	excepted []evaluation.ExceptedFinding,
+	acknowledged []policy.AcknowledgedFinding,
+) map[risk.SuppressionKey]struct{} {
+	if len(excepted) == 0 && len(acknowledged) == 0 {
+		return nil
+	}
+	out := make(map[risk.SuppressionKey]struct{}, len(excepted)+len(acknowledged))
+	for i := range excepted {
+		out[risk.SuppressionKey{ControlID: excepted[i].ControlID, AssetID: excepted[i].AssetID}] = struct{}{}
+	}
+	for i := range acknowledged {
+		if !acknowledged[i].Valid {
+			continue
+		}
+		out[risk.SuppressionKey{ControlID: acknowledged[i].ControlID, AssetID: acknowledged[i].AssetID}] = struct{}{}
+	}
+	return out
+}
+
 // applyAcknowledgments separates acknowledged findings from active findings.
 // Returns remaining active findings and a slice of acknowledged finding records.
 // Compensating control validation uses the active findings set — already-excepted
@@ -480,12 +512,24 @@ func applyAcknowledgments(
 		return findings, nil
 	}
 
-	// Build set of failing control IDs from the active (non-excepted) findings only.
-	// Using allFindings here would allow already-excepted findings to invalidate
-	// unrelated acknowledgments whose compensating controls were also excepted.
-	failingControls := make(map[kernel.ControlID]bool)
+	// Build per-asset failing-control sets from the active (non-excepted)
+	// findings only. The earlier shape used a single global set keyed by
+	// ControlID, so a failure of CTL.X on asset B invalidated every
+	// acknowledgment for CTL.X on asset A — even though A's compensating
+	// control was passing on A. Per-asset partitioning preserves the
+	// original intent: a compensating control is "passing" relative to
+	// the asset whose acknowledgment we're validating.
+	//
+	// Using allFindings here would allow already-excepted findings to
+	// invalidate unrelated acknowledgments whose compensating controls
+	// were also excepted.
+	failingByAsset := make(map[asset.ID]map[kernel.ControlID]bool)
 	for i := range findings {
-		failingControls[findings[i].ControlID] = true
+		assetID := findings[i].AssetID
+		if failingByAsset[assetID] == nil {
+			failingByAsset[assetID] = make(map[kernel.ControlID]bool)
+		}
+		failingByAsset[assetID][findings[i].ControlID] = true
 	}
 
 	var active []evaluation.Finding
@@ -520,11 +564,14 @@ func applyAcknowledgments(
 			continue
 		}
 
-		// Check compensating controls.
+		// Check compensating controls scoped to *this* asset's failures.
+		// A different asset's failure of the same control does not
+		// invalidate this acknowledgment.
+		assetFailing := failingByAsset[f.AssetID]
 		allCompPassing := true
 		for _, cc := range rule.CompensatingControls {
 			status := "pass"
-			if failingControls[cc] {
+			if assetFailing[cc] {
 				status = "fail"
 				allCompPassing = false
 			}

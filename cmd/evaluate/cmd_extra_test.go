@@ -2,12 +2,14 @@ package evaluate
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	ui "github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -18,24 +20,21 @@ func TestExitCode_Nil(t *testing.T) {
 	}
 }
 
-func TestExitCode_ExitError(t *testing.T) {
-	err := &exitError{code: 1, msg: "test"}
+func TestExitCode_SecurityAuditFindings(t *testing.T) {
+	err := fmt.Errorf("%w: 2 CRITICAL", ui.ErrSecurityAuditFindings)
 	if ExitCode(err) != 1 {
 		t.Fatalf("expected 1, got %d", ExitCode(err))
 	}
 }
 
 func TestExitCode_OtherError(t *testing.T) {
+	// Unclassified errors map to ExitInternal (4) in the global
+	// classifier. The earlier private exitError shape mapped them
+	// to 2; the integration with ui.ExitCode now drives the
+	// reclassification.
 	err := io.EOF
-	if ExitCode(err) != 2 {
-		t.Fatalf("expected 2, got %d", ExitCode(err))
-	}
-}
-
-func TestExitError_Error(t *testing.T) {
-	err := &exitError{code: 1, msg: "something failed"}
-	if err.Error() != "something failed" {
-		t.Fatalf("got %q", err.Error())
+	if got := ExitCode(err); got != 4 {
+		t.Fatalf("expected 4, got %d", got)
 	}
 }
 

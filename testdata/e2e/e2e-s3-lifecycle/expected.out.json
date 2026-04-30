@@ -14,7 +14,7 @@
       },
       "overall": "801a4ac85e5a20d16af4d0f9ddf5cc226e1f9e7d84ff0172d69b72d68a94ace6"
     },
-    "policy_fingerprint": "acb32ab894490f1806f2b0702991c16ef1b3e745044c92ba6e1f4dd4cd2c5850",
+    "policy_fingerprint": "def65b691b2f641d5de53223096e8ec1269e80a6577304f6ba9833b913b93486",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -211,8 +211,7 @@
           {
             "property": "storage.lifecycle.min_expiration_days",
             "actual_value": 90,
-            "operator": "lt",
-            "unsafe_value": "params.min_retention_days"
+            "operator": "lt"
           },
           {
             "property": "storage.tags.data-classification",
@@ -269,10 +268,9 @@
           "observed_value": true
         },
         {
-          "predicate_expr": "storage.lifecycle.min_expiration_days lt \"params.min_retention_days\"",
+          "predicate_expr": "storage.lifecycle.min_expiration_days lt",
           "observation_key": "storage.lifecycle.min_expiration_days",
           "operator": "lt",
-          "expected_value": "params.min_retention_days",
           "observed_value": 90
         },
         {
@@ -300,7 +298,7 @@
               "observed_value": true
             },
             {
-              "clause": "the minimum lifecycle expiration in days be less than \"params.min_retention_days\" (observed: 90)",
+              "clause": "the minimum lifecycle expiration in days be less than not set (observed: 90)",
               "observation_key": "storage.lifecycle.min_expiration_days",
               "observed_value": 90
             },
@@ -352,7 +350,7 @@
           "property_label": "lifecycle min expiration days",
           "property_path": "storage.lifecycle.min_expiration_days",
           "current_value": "90",
-          "fix_action": "increase to params.min_retention_days or above"
+          "fix_action": "increase to \u003cnil\u003e or above"
         },
         {
           "property_label": "data classification tag",
@@ -559,7 +557,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

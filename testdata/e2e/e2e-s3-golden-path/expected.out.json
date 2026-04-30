@@ -14,18 +14,38 @@
       },
       "overall": "37d6a574667ceb6671f51d0bf8f53e7b24e51144bcd782c675b3303992aaa84c"
     },
-    "policy_fingerprint": "7a934c94815fb174472a3850b0d9191f4f7082a7a0fee4f3d54e89b2d526b7d9",
+    "policy_fingerprint": "2578487d83778142a82e96145bebdcf0ba6166fbb0ee99fb53d85186f7e5e283",
     "evaluated_state": "deployed"
   },
   "summary": {
     "total_assets": 2,
     "exposed_resources": 2,
-    "violations": 16
+    "violations": 18
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
     {
       "control_id": "CTL.S3.CONTROLS.001",
+      "asset_id": "public-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "asset_id": "public-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
       "asset_id": "public-phi-bucket",
       "asset_type": "aws_s3_bucket",
       "status": "OVERDUE",
@@ -196,7 +216,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -363,7 +383,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Immediately enable S3 Public Access Block (all four settings). Remove bucket policy statements granting access to Principal \"*\". Remove ACL grants to AllUsers or AuthenticatedUsers. Audit CloudTrail logs for unauthorized access during the exposure window."
       },
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -607,7 +627,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Identify the identity-based policy statement granting read access and either remove it, scope it to specific bucket/object ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first."
       },
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -747,7 +767,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Identify the identity-based policy statement granting s3:ListBucket and remove it, scope it to specific bucket ARNs, or add conditions restricting the requesting principal. If a widely-trusted role is the root cause, tighten that role's trust policy first."
       },
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -887,7 +907,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove bucket policy statements that grant s3:ListBucket to Principal \"*\". Remove ACL grants that allow READ to AllUsers. Enable S3 Public Access Block."
       },
-      "exposure_score": 154.10958904109592,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -1045,7 +1065,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
       },
-      "exposure_score": 154.10958904109592,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -1253,7 +1273,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -1344,12 +1364,12 @@
           },
           {
             "property": "protected_prefix",
-            "actual_value": "internal/",
+            "actual_value": "secrets/",
             "operator": "eq",
-            "unsafe_value": "internal/"
+            "unsafe_value": "secrets/"
           }
         ],
-        "temporal_risk": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
       "control_compliance_ccm_v4": [
@@ -1404,7 +1424,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -1423,11 +1443,11 @@
           "observed_value": "missing_evidence"
         },
         {
-          "predicate_expr": "protected_prefix eq \"internal/\"",
+          "predicate_expr": "protected_prefix eq \"secrets/\"",
           "observation_key": "protected_prefix",
           "operator": "eq",
-          "expected_value": "internal/",
-          "observed_value": "internal/"
+          "expected_value": "secrets/",
+          "observed_value": "secrets/"
         }
       ],
       "remediation_context": {
@@ -1447,9 +1467,9 @@
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix = \"internal/\"",
+              "clause": "the protected prefix = \"secrets/\"",
               "observation_key": "protected_prefix",
-              "observed_value": "internal/"
+              "observed_value": "secrets/"
             }
           ]
         },
@@ -1463,10 +1483,10 @@
           },
           {
             "path": "protected_prefix",
-            "current_value": "internal/",
-            "required_value": "any value other than internal/",
+            "current_value": "secrets/",
+            "required_value": "any value other than secrets/",
             "has_safe_default": false,
-            "description": "Change protected_prefix away from internal/"
+            "description": "Change protected_prefix away from secrets/"
           }
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -1555,7 +1575,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -1646,12 +1666,12 @@
           },
           {
             "property": "protected_prefix",
-            "actual_value": "secrets/",
+            "actual_value": "internal/",
             "operator": "eq",
-            "unsafe_value": "secrets/"
+            "unsafe_value": "internal/"
           }
         ],
-        "temporal_risk": "Protected prefix \"secrets/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"internal/\" is publicly readable via missing_evidence."
       },
       "control_severity": "high",
       "control_compliance_ccm_v4": [
@@ -1706,7 +1726,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -1725,11 +1745,11 @@
           "observed_value": "missing_evidence"
         },
         {
-          "predicate_expr": "protected_prefix eq \"secrets/\"",
+          "predicate_expr": "protected_prefix eq \"internal/\"",
           "observation_key": "protected_prefix",
           "operator": "eq",
-          "expected_value": "secrets/",
-          "observed_value": "secrets/"
+          "expected_value": "internal/",
+          "observed_value": "internal/"
         }
       ],
       "remediation_context": {
@@ -1749,9 +1769,9 @@
               "observed_value": "missing_evidence"
             },
             {
-              "clause": "the protected prefix = \"secrets/\"",
+              "clause": "the protected prefix = \"internal/\"",
               "observation_key": "protected_prefix",
-              "observed_value": "secrets/"
+              "observed_value": "internal/"
             }
           ]
         },
@@ -1765,10 +1785,10 @@
           },
           {
             "path": "protected_prefix",
-            "current_value": "secrets/",
-            "required_value": "any value other than secrets/",
+            "current_value": "internal/",
+            "required_value": "any value other than internal/",
             "has_safe_default": false,
-            "description": "Change protected_prefix away from secrets/"
+            "description": "Change protected_prefix away from internal/"
           }
         ],
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
@@ -1857,7 +1877,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -2008,7 +2028,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -2159,7 +2179,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -2310,7 +2330,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -2534,6 +2554,408 @@
       ]
     },
     {
+      "finding_id": "sha256:43ab6c2fa0c5cc92",
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
+      "control_description": "S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.\n",
+      "asset_id": "public-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.encryption.algorithm",
+            "actual_value": null,
+            "operator": "ne",
+            "unsafe_value": "aws:kms"
+          },
+          {
+            "property": "storage.encryption.kms_key_id",
+            "actual_value": null,
+            "operator": "eq",
+            "unsafe_value": ""
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "phi",
+            "operator": "eq",
+            "unsafe_value": "phi"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "fedramp_moderate": "SC-28",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.32",
+        "iso_27001_2022": "A.8.24",
+        "nist_800_53_r5": "SC-28",
+        "nist_csf_2.0": "PR.DS",
+        "pci_dss_v4.0": "3.5.1",
+        "soc2": "CC6.7"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "PHI bucket is not using SSE-KMS with a customer-managed key. The organization lacks control over key rotation, access policies, and audit logging for PHI data at rest.",
+        "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation.",
+        "example": "{\n  \"storage\": {\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    },\n    \"encryption\": {\n      \"algorithm\": \"aws:kms\",\n      \"kms_key_id\": \"arn:aws:kms:us-east-1:123456789012:key/example-key-id\"\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-e80ea979b508da8c",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation."
+      },
+      "exposure_score": 77.05479452054796,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.encryption.algorithm ne \"aws:kms\"",
+          "observation_key": "storage.encryption.algorithm",
+          "operator": "ne",
+          "expected_value": "aws:kms"
+        },
+        {
+          "predicate_expr": "storage.encryption.kms_key_id eq \"\"",
+          "observation_key": "storage.encryption.kms_key_id",
+          "operator": "eq",
+          "expected_value": ""
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification eq \"phi\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "eq",
+          "expected_value": "phi",
+          "observed_value": "phi"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ENCRYPT.003",
+          "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the encryption algorithm not equal \"aws:kms\" (observed: not set)",
+              "observation_key": "storage.encryption.algorithm"
+            },
+            {
+              "clause": "the KMS key ARN used for encryption = not set",
+              "observation_key": "storage.encryption.kms_key_id"
+            },
+            {
+              "clause": "the bucket's data-classification tag = \"phi\"",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "phi"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.encryption.algorithm",
+            "current_value": "",
+            "required_value": "aws:kms",
+            "has_safe_default": false,
+            "description": "Set storage.encryption.algorithm to aws:kms"
+          },
+          {
+            "path": "storage.encryption.kms_key_id",
+            "current_value": "",
+            "required_value": "any value other than ",
+            "has_safe_default": false,
+            "description": "Change storage.encryption.kms_key_id away from "
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "phi",
+            "required_value": "any value other than phi",
+            "has_safe_default": false,
+            "description": "Change storage.tags.data-classification away from phi"
+          }
+        ],
+        "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3",
+        "sensitive-data",
+        "hipaa"
+      ],
+      "delta": [
+        {
+          "property_label": "encryption algorithm",
+          "property_path": "storage.encryption.algorithm",
+          "current_value": "",
+          "fix_action": "set to aws:kms"
+        },
+        {
+          "property_label": "encryption KMS key id",
+          "property_path": "storage.encryption.kms_key_id",
+          "current_value": "",
+          "fix_action": "change from \"\" to any other value, or remove"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "change from \"phi\" to any other value, or remove"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:83f15999648c5a1f",
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_name": "Sensitive Data Requires KMS Encryption",
+      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
+      "asset_id": "public-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "storage.encryption.algorithm",
+            "actual_value": null,
+            "operator": "ne",
+            "unsafe_value": "aws:kms"
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "phi",
+            "operator": "ne",
+            "unsafe_value": "non-sensitive"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "phi",
+            "operator": "ne",
+            "unsafe_value": "public"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "phi",
+            "operator": "present",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket with classified data is using SSE-S3 (AES256) instead of SSE-KMS. AWS-managed keys provide no customer control over key rotation, access policies, or audit trails.",
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"confidential\"\n    },\n    \"encryption\": {\n      \"algorithm\": \"aws:kms\"\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-e80ea979b508da8c",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "exposure_score": 77.05479452054796,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.encryption.algorithm ne \"aws:kms\"",
+          "observation_key": "storage.encryption.algorithm",
+          "operator": "ne",
+          "expected_value": "aws:kms"
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification ne \"non-sensitive\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "ne",
+          "expected_value": "non-sensitive",
+          "observed_value": "phi"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification ne \"public\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "ne",
+          "expected_value": "public",
+          "observed_value": "phi"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification present true",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "present",
+          "expected_value": true,
+          "observed_value": "phi"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-phi-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ENCRYPT.004",
+          "control_name": "Sensitive Data Requires KMS Encryption",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the encryption algorithm not equal \"aws:kms\" (observed: not set)",
+              "observation_key": "storage.encryption.algorithm"
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the bucket's data-classification tag not equal \"non-sensitive\" (observed: \"phi\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "phi"
+            },
+            {
+              "clause": "the bucket's data-classification tag not equal \"public\" (observed: \"phi\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "phi"
+            },
+            {
+              "clause": "the bucket's data-classification tag is set (observed: \"phi\")",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "phi"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.encryption.algorithm",
+            "current_value": "",
+            "required_value": "aws:kms",
+            "has_safe_default": false,
+            "description": "Set storage.encryption.algorithm to aws:kms"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "phi",
+            "required_value": "non-sensitive",
+            "has_safe_default": false,
+            "description": "Set storage.tags.data-classification to non-sensitive"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "phi",
+            "required_value": "public",
+            "has_safe_default": false,
+            "description": "Set storage.tags.data-classification to public"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "phi",
+            "required_value": "absent",
+            "has_safe_default": false,
+            "description": "Remove storage.tags.data-classification"
+          }
+        ],
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "encryption algorithm",
+          "property_path": "storage.encryption.algorithm",
+          "current_value": "",
+          "fix_action": "set to aws:kms"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "set to non-sensitive"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "set to public"
+        },
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "remove this property from the configuration"
+        }
+      ]
+    },
+    {
       "finding_id": "sha256:04376e057daa240f",
       "control_id": "CTL.S3.GOVERNANCE.001",
       "control_name": "Data Classification Tag Required",
@@ -2671,31 +3093,6 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:16865eb8ca711f5b",
-      "asset_id": "public-phi-bucket",
-      "shared_keys": [
-        "storage.access",
-        "storage.access.list_via_identity",
-        "storage.access.public_list",
-        "storage.access.public_read",
-        "storage.access.read_via_identity",
-        "storage.tags",
-        "storage.tags.data-classification",
-        "storage.tags.public_list_intended"
-      ],
-      "headline_finding_id": "sha256:4213b4640ec19233",
-      "member_finding_ids": [
-        "sha256:2d804935b823b211",
-        "sha256:3e039dfc23916f37",
-        "sha256:4213b4640ec19233",
-        "sha256:5ce777d4af066e45",
-        "sha256:5d1205a18974cf1c",
-        "sha256:a8db07ec8df71531"
-      ],
-      "consolidated_score": 205.47945205479454,
-      "consolidated_blast_radius": 1
-    },
-    {
       "issue_id": "sha256:88ea9b904638ddc7",
       "asset_id": "private-bucket",
       "shared_keys": [
@@ -2709,7 +3106,7 @@
         "sha256:cfc8d5e23f723d4e",
         "sha256:cfc8d5e23f723d4e"
       ],
-      "consolidated_score": 150,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -2726,7 +3123,37 @@
         "sha256:d94d878f0d5908e3",
         "sha256:d94d878f0d5908e3"
       ],
-      "consolidated_score": 150,
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:bccfb67190c36697",
+      "asset_id": "public-phi-bucket",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.list_via_identity",
+        "storage.access.public_list",
+        "storage.access.public_read",
+        "storage.access.read_via_identity",
+        "storage.encryption",
+        "storage.encryption.algorithm",
+        "storage.encryption.kms_key_id",
+        "storage.tags",
+        "storage.tags.data-classification",
+        "storage.tags.public_list_intended"
+      ],
+      "headline_finding_id": "sha256:4213b4640ec19233",
+      "member_finding_ids": [
+        "sha256:2d804935b823b211",
+        "sha256:3e039dfc23916f37",
+        "sha256:4213b4640ec19233",
+        "sha256:43ab6c2fa0c5cc92",
+        "sha256:5ce777d4af066e45",
+        "sha256:5d1205a18974cf1c",
+        "sha256:83f15999648c5a1f",
+        "sha256:a8db07ec8df71531"
+      ],
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -2879,49 +3306,19 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001"
+        "CTL.S3.CONTROLS.001",
+        "CTL.S3.ENCRYPT.003",
+        "CTL.S3.ENCRYPT.004"
       ],
-      "finding_count": 1
+      "finding_count": 3
     }
   ],
   "top_exposures": [
     {
-      "finding_index": 2,
+      "finding_index": 4,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "public-phi-bucket",
-      "exposure_score": 205.47945205479454,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 3,
-      "control_id": "CTL.S3.PUBLIC.002",
-      "asset_id": "public-phi-bucket",
-      "exposure_score": 205.47945205479454,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 4,
-      "control_id": "CTL.S3.PUBLIC.007",
-      "asset_id": "public-phi-bucket",
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -2935,9 +3332,9 @@
     },
     {
       "finding_index": 5,
-      "control_id": "CTL.S3.PUBLIC.008",
+      "control_id": "CTL.S3.PUBLIC.002",
       "asset_id": "public-phi-bucket",
-      "exposure_score": 205.47945205479454,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -2951,11 +3348,11 @@
     },
     {
       "finding_index": 6,
-      "control_id": "CTL.S3.PUBLIC.LIST.001",
+      "control_id": "CTL.S3.PUBLIC.007",
       "asset_id": "public-phi-bucket",
-      "exposure_score": 154.10958904109592,
+      "exposure_score": 100,
       "breakdown": {
-        "base_score": 75,
+        "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
@@ -2967,9 +3364,25 @@
     },
     {
       "finding_index": 7,
-      "control_id": "CTL.S3.PUBLIC.LIST.002",
+      "control_id": "CTL.S3.PUBLIC.008",
       "asset_id": "public-phi-bucket",
-      "exposure_score": 154.10958904109592,
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 8,
+      "control_id": "CTL.S3.PUBLIC.LIST.001",
+      "asset_id": "public-phi-bucket",
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -2982,34 +3395,18 @@
       "silent_killer": false
     },
     {
-      "finding_index": 8,
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "asset_id": "private-bucket",
-      "exposure_score": 150,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1,
-        "days_blind": 0
-      },
-      "silent_killer": false
-    },
-    {
       "finding_index": 9,
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "asset_id": "private-bucket",
-      "exposure_score": 150,
+      "control_id": "CTL.S3.PUBLIC.LIST.002",
+      "asset_id": "public-phi-bucket",
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
         "chain_bonus": 1,
-        "blind_multiplier": 1,
-        "days_blind": 0
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
       },
       "silent_killer": false
     },
@@ -3017,7 +3414,39 @@
       "finding_index": 10,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "asset_id": "private-bucket",
-      "exposure_score": 150,
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 13,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "private-bucket",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 12,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "private-bucket",
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -3033,39 +3462,7 @@
       "finding_index": 11,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "asset_id": "private-bucket",
-      "exposure_score": 150,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1,
-        "days_blind": 0
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 12,
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "asset_id": "public-phi-bucket",
-      "exposure_score": 150,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 1,
-        "days_blind": 0
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 13,
-      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
-      "asset_id": "public-phi-bucket",
-      "exposure_score": 150,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -3081,7 +3478,7 @@
       "finding_index": 14,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "asset_id": "public-phi-bucket",
-      "exposure_score": 150,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -3097,7 +3494,39 @@
       "finding_index": 15,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "asset_id": "public-phi-bucket",
-      "exposure_score": 150,
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 16,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "public-phi-bucket",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 17,
+      "control_id": "CTL.S3.PUBLIC.PREFIX.001",
+      "asset_id": "public-phi-bucket",
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -3127,6 +3556,38 @@
     },
     {
       "finding_index": 1,
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "asset_id": "public-phi-bucket",
+      "exposure_score": 77.05479452054796,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 2,
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "asset_id": "public-phi-bucket",
+      "exposure_score": 77.05479452054796,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 3,
       "control_id": "CTL.S3.GOVERNANCE.001",
       "asset_id": "private-bucket",
       "exposure_score": 25.684931506849317,
@@ -3235,7 +3696,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

@@ -23,6 +23,7 @@ import (
 	"github.com/sufield/stave/internal/core/compliance/compound"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/profile"
 	"github.com/sufield/stave/internal/profile/exception"
 	"github.com/sufield/stave/internal/profile/reporter"
@@ -81,21 +82,23 @@ Exit Codes:
 }
 
 func run(w io.Writer, opts *options) error {
-	// Load snapshot.
+	// Load snapshot. A missing or malformed snapshot file is a user
+	// input failure, not an internal error — wrap as ui.UserError so
+	// the global ExitCode classifier maps it to ExitInputError (=2).
 	snap, err := loadSnapshot(opts.SnapshotPath)
 	if err != nil {
-		return fmt.Errorf("load snapshot: %w", err)
+		return &ui.UserError{Err: fmt.Errorf("load snapshot: %w", err)}
 	}
 
 	// Validate schema version.
 	if schemaErr := validateSchema(snap.SchemaVersion); schemaErr != nil {
-		return fmt.Errorf("validate schema: %w", schemaErr)
+		return &ui.UserError{Err: fmt.Errorf("validate schema: %w", schemaErr)}
 	}
 
 	// Load profile.
 	prof, err := profile.LoadProfile(opts.ProfileID)
 	if err != nil {
-		return fmt.Errorf("load profile: %w", err)
+		return &ui.UserError{Err: fmt.Errorf("load profile: %w", err)}
 	}
 
 	// Evaluate.
@@ -226,42 +229,33 @@ func run(w io.Writer, opts *options) error {
 	criticalCount := report.FailCounts[policy.SeverityCritical]
 	compoundCount := len(report.CompoundFindings)
 	if criticalCount > 0 || compoundCount > 0 {
+		var msg string
 		switch {
 		case criticalCount > 0 && compoundCount > 0:
-			return &exitError{
-				code: 1,
-				msg: fmt.Sprintf("%d CRITICAL control(s) failed and %d compound risk chain(s) active",
-					criticalCount, compoundCount),
-			}
+			msg = fmt.Sprintf("%d CRITICAL control(s) failed and %d compound risk chain(s) active",
+				criticalCount, compoundCount)
 		case criticalCount > 0:
-			return &exitError{code: 1, msg: fmt.Sprintf("%d CRITICAL control(s) failed", criticalCount)}
+			msg = fmt.Sprintf("%d CRITICAL control(s) failed", criticalCount)
 		default:
-			return &exitError{code: 1, msg: fmt.Sprintf("%d compound risk chain(s) active", compoundCount)}
+			msg = fmt.Sprintf("%d compound risk chain(s) active", compoundCount)
 		}
+		// Wrap with ui.ErrSecurityAuditFindings so the global
+		// handleExecutionError routing maps this to ExitSecurity (=1)
+		// and renders it through the standard error reporter. The
+		// previous private exitError type duplicated that mapping
+		// inside this package and short-circuited the global error
+		// renderer, so two paths drifted out of sync over time.
+		return fmt.Errorf("%w: %s", ui.ErrSecurityAuditFindings, msg)
 	}
 
 	return nil
 }
 
-// exitError signals a non-zero exit code without being a "real" error
-// for Cobra's error handling.
-type exitError struct {
-	code int
-	msg  string
-}
-
-func (e *exitError) Error() string { return e.msg }
-
-// ExitCode returns the exit code from an evaluate error, or 0 if nil.
+// ExitCode returns the exit code from an evaluate error, delegating
+// to the global ui.ExitCode classifier so the evaluate command
+// participates in the same exit-code map as every other command.
 func ExitCode(err error) int {
-	if err == nil {
-		return 0
-	}
-	var ee *exitError
-	if errors.As(err, &ee) {
-		return ee.code
-	}
-	return 2
+	return ui.ExitCode(err)
 }
 
 func loadSnapshot(path string) (asset.Snapshot, error) {
@@ -322,7 +316,15 @@ func resolveOutput(path string, stdout io.Writer) (io.Writer, func(*error), erro
 	if path == "" {
 		return stdout, func(*error) {}, nil
 	}
-	f, err := os.Create(path) //nolint:gosec // path from CLI flag
+	// SafeCreateFile rejects symlinks at the destination path by
+	// default (resists symlink-attack on a writable directory) and
+	// uses 0o600 perms so a finding artifact written to a shared
+	// host doesn't leak through world-readable defaults. Overwrite
+	// is allowed because re-running `stave evaluate` over the same
+	// output file is a normal workflow.
+	opts := fsutil.DefaultWriteOpts()
+	opts.Overwrite = true
+	f, err := fsutil.SafeCreateFile(fsutil.CleanUserPath(path), opts)
 	if err != nil {
 		return nil, nil, err
 	}

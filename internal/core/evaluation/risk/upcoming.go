@@ -162,6 +162,21 @@ type ThresholdRequest struct {
 	// finding pipeline. Without this, exempted assets could surface
 	// as risk signals and still flip overall posture to AT_RISK.
 	Exemptions *policy.ExemptionConfig
+	// SuppressedFindings is an optional set of (controlID, assetID)
+	// pairs that have been excepted or acknowledged at the report
+	// boundary. ComputeItems skips matching items so a fully-
+	// acknowledged report does not produce AT_RISK posture via
+	// upcoming threshold signals. Distinct from Exemptions, which
+	// suppress the asset entirely; Suppression is per-(control,asset).
+	SuppressedFindings map[SuppressionKey]struct{}
+}
+
+// SuppressionKey is the (control, asset) tuple used to mark a finding
+// as already accepted by the operator (via security exception or
+// acknowledgment) so risk signal computation can skip it.
+type SuppressionKey struct {
+	ControlID kernel.ControlID
+	AssetID   asset.ID
 }
 
 type assetState struct {
@@ -172,16 +187,18 @@ type assetState struct {
 	AssetType       kernel.AssetType
 }
 
-// ComputeItems returns deterministic upcoming threshold items for currently-unsafe assets.
+// ComputeItems returns deterministic upcoming threshold items for
+// currently-unsafe assets.
 //
-// TODO(risk-vs-acknowledgment): Risk signals are generated from
-// control applicability, not from active findings. Exception and
-// acknowledgment filters are not applied here. This means risk
-// signals may appear for controls whose findings have been
-// excepted or acknowledged. This is intentional: risk exists
-// regardless of acceptance — accepting risk does not erase it.
-// If this causes user confusion, consider generating risk signals
-// from post-filter active findings instead.
+// Suppression model: callers pass `SuppressedFindings` for the
+// (control, asset) pairs the operator has already accepted via
+// exception or acknowledgment. Those pairs are excluded from the
+// returned items so a fully-accepted-risk report cannot flip
+// overall posture to AT_RISK via the upcoming-threshold signal
+// path. The earlier shape generated signals from raw control
+// applicability, ignoring acceptance state — accepting risk did
+// not erase the AT_RISK posture, which is the wrong default for
+// most operators (the "I have decided this is OK" workflow).
 func ComputeItems(req ThresholdRequest) ThresholdItems {
 	if len(req.Snapshots) == 0 || len(req.Controls) == 0 {
 		return nil
@@ -207,6 +224,9 @@ func ComputeItems(req ThresholdRequest) ThresholdItems {
 		// 3. Convert states to risk items
 		for id, st := range states {
 			if !st.CurrentlyUnsafe || st.FirstUnsafeAt.IsZero() {
+				continue
+			}
+			if _, suppressed := req.SuppressedFindings[SuppressionKey{ControlID: ctl.ID, AssetID: id}]; suppressed {
 				continue
 			}
 

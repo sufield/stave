@@ -233,21 +233,43 @@ func overlap(a, b map[string]struct{}) bool {
 }
 
 // buildIssue constructs a single Issue from a cluster's member
-// finding indices.
+// finding indices. Iterates the indices in stable order so the
+// headline pick (max ExposureScore) is deterministic when scores
+// tie. The earlier shape iterated in the cluster-build's traversal
+// order, which depended on map iteration; ties broke arbitrarily
+// across runs and IssueID flapped.
 func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue {
-	// Collect member IDs + find the headline (max score).
-	memberIDs := make([]kernel.FindingID, 0, len(memberIndices))
+	// Sort by ExposureScore desc, then FindingID asc for tie-break.
+	// The IssueID hashes the headline's ControlID, so a non-
+	// deterministic headline pick produces a non-deterministic
+	// IssueID; consumers that diffed assessments across runs saw
+	// flapping issue lists.
+	indices := slices.Clone(memberIndices)
+	slices.SortFunc(indices, func(a, b int) int {
+		fa := &findings[a]
+		fb := &findings[b]
+		if fa.ExposureScore != fb.ExposureScore {
+			if fa.ExposureScore > fb.ExposureScore {
+				return -1
+			}
+			return 1
+		}
+		return cmp.Compare(string(fa.FindingID), string(fb.FindingID))
+	})
+
+	// Collect member IDs + find the headline (already first after sort).
+	memberIDs := make([]kernel.FindingID, 0, len(indices))
 	sharedSet := make(map[string]struct{})
 	var headlineIdx int
 	var headlineScore float64
 	var maxBlast float64
-	for i, idx := range memberIndices {
+	for i, idx := range indices {
 		f := &findings[idx]
 		memberIDs = append(memberIDs, kernel.FindingID(f.FindingID))
 		for k := range rootCauseKeys(f.ReasoningTrace) {
 			sharedSet[k] = struct{}{}
 		}
-		if i == 0 || f.ExposureScore > headlineScore {
+		if i == 0 {
 			headlineIdx = idx
 			headlineScore = f.ExposureScore
 		}

@@ -69,12 +69,23 @@ func BuildTrace(
 
 	cp, err := compiler.Compile(ctl.UnsafePredicate)
 	if err != nil {
-		expr, _ := PredicateToExpr(ctl.UnsafePredicate)
+		// Capture both the original compile error and any
+		// predicate-to-expression conversion error so a malformed
+		// predicate (e.g. unsupported literal type, missing
+		// operator) doesn't disappear into a "compile" message
+		// that names the wrong root cause. The earlier shape
+		// silently dropped the conversion error, leaving operators
+		// without the actual reason the trace is incomplete.
+		expr, exprErr := PredicateToExpr(ctl.UnsafePredicate)
+		errMsg := fmt.Sprintf("CEL compile: %v", err)
+		if exprErr != nil {
+			errMsg = fmt.Sprintf("%s; predicate-to-expression: %v", errMsg, exprErr)
+		}
 		return &TraceResult{
 			ControlID:  ctl.ID,
 			AssetID:    a.ID,
 			Expression: expr,
-			Error:      fmt.Sprintf("CEL compile: %v", err),
+			Error:      errMsg,
 		}, nil
 	}
 

@@ -231,7 +231,7 @@
           "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         }
       ],
-      "exposure_score": 200.54794520547946,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -386,7 +386,7 @@
           "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         }
       ],
-      "exposure_score": 200.54794520547946,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -468,6 +468,484 @@
       ]
     },
     {
+      "finding_id": "sha256:aea5c891baf7d41e",
+      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
+      "control_name": "API Server Audit Logging Must Be Enabled",
+      "control_description": "The Kubernetes API server must have audit logging enabled. Without audit logs, security-relevant API calls are not recorded.\n",
+      "asset_id": "apiserver-dev-01",
+      "asset_type": "k8s_apiserver",
+      "asset_vendor": "kubernetes",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
+        "unsafe_duration_hours": 24,
+        "misconfigurations": [
+          {
+            "property": "apiserver.audit_log_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "type",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "k8s_apiserver"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 24 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_k8s_v1.9": "1.2.22"
+      },
+      "control_compliance_ccm_v4": [
+        "IVS-04",
+        "LOG-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "API server audit logging is not enabled. API access is not recorded.",
+        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
+      },
+      "fix_plan": {
+        "id": "fix-6166d9a9de2dd7ce",
+        "target": {
+          "asset_id": "apiserver-dev-01",
+          "asset_type": "k8s_apiserver"
+        },
+        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
+      },
+      "chain_membership": [
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "stage_span": [
+            "initial_access",
+            "detection_evasion"
+          ],
+          "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        },
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "stage_span": [
+            "initial_access",
+            "detection_evasion"
+          ],
+          "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        }
+      ],
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 2,
+        "blind_multiplier": 1.0027397260273974,
+        "days_blind": 1
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "apiserver.audit_log_enabled eq false",
+          "observation_key": "apiserver.audit_log_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "type eq \"k8s_apiserver\"",
+          "observation_key": "type",
+          "operator": "eq",
+          "expected_value": "k8s_apiserver",
+          "observed_value": "[SANITIZED]"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "apiserver-dev-01",
+          "type": "k8s_apiserver",
+          "vendor": "kubernetes"
+        },
+        "violation": {
+          "control_id": "CTL.K8S.APISERVER.AUDIT.001",
+          "control_name": "API Server Audit Logging Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "apiserver.audit_log_enabled = false",
+              "observation_key": "apiserver.audit_log_enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "the asset type = \"[SANITIZED]\"",
+              "observation_key": "type",
+              "observed_value": "[SANITIZED]"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "apiserver.audit_log_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set apiserver.audit_log_enabled to true"
+          },
+          {
+            "path": "type",
+            "current_value": "[SANITIZED]",
+            "required_value": "any value other than k8s_apiserver",
+            "has_safe_default": false,
+            "description": "Change type away from k8s_apiserver"
+          }
+        ],
+        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "kubernetes",
+        "apiserver"
+      ],
+      "delta": [
+        {
+          "property_label": "audit log",
+          "property_path": "apiserver.audit_log_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:644608e3122eb9d7",
+      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
+      "control_name": "API Server Audit Logging Must Be Enabled",
+      "control_description": "The Kubernetes API server must have audit logging enabled. Without audit logs, security-relevant API calls are not recorded.\n",
+      "asset_id": "apiserver-staging-01",
+      "asset_type": "k8s_apiserver",
+      "asset_vendor": "kubernetes",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
+        "unsafe_duration_hours": 24,
+        "misconfigurations": [
+          {
+            "property": "apiserver.audit_log_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "type",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "k8s_apiserver"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 24 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_k8s_v1.9": "1.2.22"
+      },
+      "control_compliance_ccm_v4": [
+        "IVS-04",
+        "LOG-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "API server audit logging is not enabled. API access is not recorded.",
+        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
+      },
+      "fix_plan": {
+        "id": "fix-1426885accaf2b9c",
+        "target": {
+          "asset_id": "apiserver-staging-01",
+          "asset_type": "k8s_apiserver"
+        },
+        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
+      },
+      "chain_membership": [
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "stage_span": [
+            "initial_access",
+            "detection_evasion"
+          ],
+          "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        },
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "stage_span": [
+            "initial_access",
+            "detection_evasion"
+          ],
+          "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        }
+      ],
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 2,
+        "blind_multiplier": 1.0027397260273974,
+        "days_blind": 1
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "apiserver.audit_log_enabled eq false",
+          "observation_key": "apiserver.audit_log_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "type eq \"k8s_apiserver\"",
+          "observation_key": "type",
+          "operator": "eq",
+          "expected_value": "k8s_apiserver",
+          "observed_value": "[SANITIZED]"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "apiserver-staging-01",
+          "type": "k8s_apiserver",
+          "vendor": "kubernetes"
+        },
+        "violation": {
+          "control_id": "CTL.K8S.APISERVER.AUDIT.001",
+          "control_name": "API Server Audit Logging Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "apiserver.audit_log_enabled = false",
+              "observation_key": "apiserver.audit_log_enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "the asset type = \"[SANITIZED]\"",
+              "observation_key": "type",
+              "observed_value": "[SANITIZED]"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "apiserver.audit_log_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set apiserver.audit_log_enabled to true"
+          },
+          {
+            "path": "type",
+            "current_value": "[SANITIZED]",
+            "required_value": "any value other than k8s_apiserver",
+            "has_safe_default": false,
+            "description": "Change type away from k8s_apiserver"
+          }
+        ],
+        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "kubernetes",
+        "apiserver"
+      ],
+      "delta": [
+        {
+          "property_label": "audit log",
+          "property_path": "apiserver.audit_log_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:c0a83f4566913a64",
+      "control_id": "CTL.K8S.APISERVER.AUTHZ.001",
+      "control_name": "API Server Must Use RBAC Authorization",
+      "control_description": "The API server authorization mode must include RBAC and must not include AlwaysAllow. RBAC enforces fine-grained access control; AlwaysAllow permits any authenticated user to perform any action.\n",
+      "asset_id": "apiserver-staging-01",
+      "asset_type": "k8s_apiserver",
+      "asset_vendor": "kubernetes",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
+        "unsafe_duration_hours": 24,
+        "misconfigurations": [
+          {
+            "property": "apiserver.authorization_mode",
+            "actual_value": "AlwaysAllow",
+            "operator": "contains",
+            "unsafe_value": "AlwaysAllow"
+          },
+          {
+            "property": "apiserver.authorization_mode",
+            "actual_value": "AlwaysAllow",
+            "operator": "missing",
+            "unsafe_value": true
+          },
+          {
+            "property": "type",
+            "actual_value": "[SANITIZED]",
+            "operator": "eq",
+            "unsafe_value": "k8s_apiserver"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 24 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_k8s_v1.9": "1.2.7"
+      },
+      "control_compliance_ccm_v4": [
+        "IVS-04"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "API server authorization mode does not include RBAC or includes AlwaysAllow.",
+        "action": "Set --authorization-mode=RBAC,Node on the API server. Remove AlwaysAllow from the mode list."
+      },
+      "fix_plan": {
+        "id": "fix-1426885accaf2b9c",
+        "target": {
+          "asset_id": "apiserver-staging-01",
+          "asset_type": "k8s_apiserver"
+        },
+        "action": "Set --authorization-mode=RBAC,Node on the API server. Remove AlwaysAllow from the mode list."
+      },
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0027397260273974,
+        "days_blind": 1
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "apiserver.authorization_mode contains \"AlwaysAllow\"",
+          "observation_key": "apiserver.authorization_mode",
+          "operator": "contains",
+          "expected_value": "AlwaysAllow",
+          "observed_value": "AlwaysAllow"
+        },
+        {
+          "predicate_expr": "apiserver.authorization_mode missing true",
+          "observation_key": "apiserver.authorization_mode",
+          "operator": "missing",
+          "expected_value": true,
+          "observed_value": "AlwaysAllow"
+        },
+        {
+          "predicate_expr": "type eq \"k8s_apiserver\"",
+          "observation_key": "type",
+          "operator": "eq",
+          "expected_value": "k8s_apiserver",
+          "observed_value": "[SANITIZED]"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "apiserver-staging-01",
+          "type": "k8s_apiserver",
+          "vendor": "kubernetes"
+        },
+        "violation": {
+          "control_id": "CTL.K8S.APISERVER.AUTHZ.001",
+          "control_name": "API Server Must Use RBAC Authorization",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "apiserver.authorization_mode contain \"AlwaysAllow\" (observed: \"AlwaysAllow\")",
+              "observation_key": "apiserver.authorization_mode",
+              "observed_value": "AlwaysAllow"
+            },
+            {
+              "clause": "apiserver.authorization_mode is not set (observed: \"AlwaysAllow\")",
+              "observation_key": "apiserver.authorization_mode",
+              "observed_value": "AlwaysAllow"
+            },
+            {
+              "clause": "the asset type = \"[SANITIZED]\"",
+              "observation_key": "type",
+              "observed_value": "[SANITIZED]"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "apiserver.authorization_mode",
+            "current_value": "AlwaysAllow",
+            "required_value": "(see control definition)",
+            "has_safe_default": false,
+            "description": "Change apiserver.authorization_mode from AlwaysAllow"
+          },
+          {
+            "path": "apiserver.authorization_mode",
+            "current_value": "AlwaysAllow",
+            "required_value": "present",
+            "has_safe_default": false,
+            "description": "Ensure apiserver.authorization_mode is present"
+          },
+          {
+            "path": "type",
+            "current_value": "[SANITIZED]",
+            "required_value": "any value other than k8s_apiserver",
+            "has_safe_default": false,
+            "description": "Change type away from k8s_apiserver"
+          }
+        ],
+        "action": "Set --authorization-mode=RBAC,Node on the API server. Remove AlwaysAllow from the mode list."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "kubernetes",
+        "apiserver"
+      ],
+      "delta": [
+        {
+          "property_label": "authorization mode",
+          "property_path": "apiserver.authorization_mode",
+          "current_value": "AlwaysAllow",
+          "fix_action": "remove AlwaysAllow from the list"
+        },
+        {
+          "property_label": "authorization mode",
+          "property_path": "apiserver.authorization_mode",
+          "current_value": "AlwaysAllow",
+          "fix_action": "populate this property in the configuration"
+        }
+      ]
+    },
+    {
       "finding_id": "sha256:08c3e2a2b62a00e5",
       "control_id": "CTL.K8S.ETCD.CERT.001",
       "control_name": "etcd Must Use TLS Certificates",
@@ -545,7 +1023,7 @@
           "narrative": "etcd exposed without TLS and without client certificate authentication. Entire cluster state (secrets, configs) readable by any actor with network access to the etcd port.\n"
         }
       ],
-      "exposure_score": 200.54794520547946,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -729,7 +1207,7 @@
           "narrative": "etcd exposed without TLS and without client certificate authentication. Entire cluster state (secrets, configs) readable by any actor with network access to the etcd port.\n"
         }
       ],
-      "exposure_score": 200.54794520547946,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -907,7 +1385,7 @@
           "narrative": "etcd exposed without TLS and without client certificate authentication. Entire cluster state (secrets, configs) readable by any actor with network access to the etcd port.\n"
         }
       ],
-      "exposure_score": 200.54794520547946,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -1060,7 +1538,7 @@
           "narrative": "etcd exposed without TLS and without client certificate authentication. Entire cluster state (secrets, configs) readable by any actor with network access to the etcd port.\n"
         }
       ],
-      "exposure_score": 200.54794520547946,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -1142,484 +1620,6 @@
       ]
     },
     {
-      "finding_id": "sha256:aea5c891baf7d41e",
-      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
-      "control_name": "API Server Audit Logging Must Be Enabled",
-      "control_description": "The Kubernetes API server must have audit logging enabled. Without audit logs, security-relevant API calls are not recorded.\n",
-      "asset_id": "apiserver-dev-01",
-      "asset_type": "k8s_apiserver",
-      "asset_vendor": "kubernetes",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
-        "unsafe_duration_hours": 24,
-        "misconfigurations": [
-          {
-            "property": "apiserver.audit_log_enabled",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "type",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "k8s_apiserver"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 24 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_k8s_v1.9": "1.2.22"
-      },
-      "control_compliance_ccm_v4": [
-        "IVS-04",
-        "LOG-05"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "API server audit logging is not enabled. API access is not recorded.",
-        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
-      },
-      "fix_plan": {
-        "id": "fix-6166d9a9de2dd7ce",
-        "target": {
-          "asset_id": "apiserver-dev-01",
-          "asset_type": "k8s_apiserver"
-        },
-        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
-      },
-      "chain_membership": [
-        {
-          "chain_id": "k8s_anonymous_access_path",
-          "chain_severity": "critical",
-          "stage_span": [
-            "initial_access",
-            "detection_evasion"
-          ],
-          "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
-        },
-        {
-          "chain_id": "k8s_anonymous_access_path",
-          "chain_severity": "critical",
-          "stage_span": [
-            "initial_access",
-            "detection_evasion"
-          ],
-          "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
-        }
-      ],
-      "exposure_score": 150.4109589041096,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 2,
-        "blind_multiplier": 1.0027397260273974,
-        "days_blind": 1
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "apiserver.audit_log_enabled eq false",
-          "observation_key": "apiserver.audit_log_enabled",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        },
-        {
-          "predicate_expr": "type eq \"k8s_apiserver\"",
-          "observation_key": "type",
-          "operator": "eq",
-          "expected_value": "k8s_apiserver",
-          "observed_value": "[SANITIZED]"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "apiserver-dev-01",
-          "type": "k8s_apiserver",
-          "vendor": "kubernetes"
-        },
-        "violation": {
-          "control_id": "CTL.K8S.APISERVER.AUDIT.001",
-          "control_name": "API Server Audit Logging Must Be Enabled",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "apiserver.audit_log_enabled = false",
-              "observation_key": "apiserver.audit_log_enabled",
-              "observed_value": false
-            },
-            {
-              "clause": "the asset type = \"[SANITIZED]\"",
-              "observation_key": "type",
-              "observed_value": "[SANITIZED]"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "apiserver.audit_log_enabled",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set apiserver.audit_log_enabled to true"
-          },
-          {
-            "path": "type",
-            "current_value": "[SANITIZED]",
-            "required_value": "any value other than k8s_apiserver",
-            "has_safe_default": false,
-            "description": "Change type away from k8s_apiserver"
-          }
-        ],
-        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "kubernetes",
-        "apiserver"
-      ],
-      "delta": [
-        {
-          "property_label": "audit log",
-          "property_path": "apiserver.audit_log_enabled",
-          "current_value": "false",
-          "fix_action": "set to true (enable)"
-        }
-      ]
-    },
-    {
-      "finding_id": "sha256:644608e3122eb9d7",
-      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
-      "control_name": "API Server Audit Logging Must Be Enabled",
-      "control_description": "The Kubernetes API server must have audit logging enabled. Without audit logs, security-relevant API calls are not recorded.\n",
-      "asset_id": "apiserver-staging-01",
-      "asset_type": "k8s_apiserver",
-      "asset_vendor": "kubernetes",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
-        "unsafe_duration_hours": 24,
-        "misconfigurations": [
-          {
-            "property": "apiserver.audit_log_enabled",
-            "actual_value": false,
-            "operator": "eq",
-            "unsafe_value": false
-          },
-          {
-            "property": "type",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "k8s_apiserver"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 24 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "cis_k8s_v1.9": "1.2.22"
-      },
-      "control_compliance_ccm_v4": [
-        "IVS-04",
-        "LOG-05"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "API server audit logging is not enabled. API access is not recorded.",
-        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
-      },
-      "fix_plan": {
-        "id": "fix-1426885accaf2b9c",
-        "target": {
-          "asset_id": "apiserver-staging-01",
-          "asset_type": "k8s_apiserver"
-        },
-        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
-      },
-      "chain_membership": [
-        {
-          "chain_id": "k8s_anonymous_access_path",
-          "chain_severity": "critical",
-          "stage_span": [
-            "initial_access",
-            "detection_evasion"
-          ],
-          "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
-        },
-        {
-          "chain_id": "k8s_anonymous_access_path",
-          "chain_severity": "critical",
-          "stage_span": [
-            "initial_access",
-            "detection_evasion"
-          ],
-          "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
-        }
-      ],
-      "exposure_score": 150.4109589041096,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 2,
-        "blind_multiplier": 1.0027397260273974,
-        "days_blind": 1
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "apiserver.audit_log_enabled eq false",
-          "observation_key": "apiserver.audit_log_enabled",
-          "operator": "eq",
-          "expected_value": false,
-          "observed_value": false
-        },
-        {
-          "predicate_expr": "type eq \"k8s_apiserver\"",
-          "observation_key": "type",
-          "operator": "eq",
-          "expected_value": "k8s_apiserver",
-          "observed_value": "[SANITIZED]"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "apiserver-staging-01",
-          "type": "k8s_apiserver",
-          "vendor": "kubernetes"
-        },
-        "violation": {
-          "control_id": "CTL.K8S.APISERVER.AUDIT.001",
-          "control_name": "API Server Audit Logging Must Be Enabled",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "apiserver.audit_log_enabled = false",
-              "observation_key": "apiserver.audit_log_enabled",
-              "observed_value": false
-            },
-            {
-              "clause": "the asset type = \"[SANITIZED]\"",
-              "observation_key": "type",
-              "observed_value": "[SANITIZED]"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "apiserver.audit_log_enabled",
-            "current_value": "false",
-            "required_value": "true",
-            "has_safe_default": true,
-            "description": "Set apiserver.audit_log_enabled to true"
-          },
-          {
-            "path": "type",
-            "current_value": "[SANITIZED]",
-            "required_value": "any value other than k8s_apiserver",
-            "has_safe_default": false,
-            "description": "Change type away from k8s_apiserver"
-          }
-        ],
-        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "kubernetes",
-        "apiserver"
-      ],
-      "delta": [
-        {
-          "property_label": "audit log",
-          "property_path": "apiserver.audit_log_enabled",
-          "current_value": "false",
-          "fix_action": "set to true (enable)"
-        }
-      ]
-    },
-    {
-      "finding_id": "sha256:c0a83f4566913a64",
-      "control_id": "CTL.K8S.APISERVER.AUTHZ.001",
-      "control_name": "API Server Must Use RBAC Authorization",
-      "control_description": "The API server authorization mode must include RBAC and must not include AlwaysAllow. RBAC enforces fine-grained access control; AlwaysAllow permits any authenticated user to perform any action.\n",
-      "asset_id": "apiserver-staging-01",
-      "asset_type": "k8s_apiserver",
-      "asset_vendor": "kubernetes",
-      "evidence": {
-        "first_unsafe_at": "2026-01-10T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-10T00:00:00Z",
-        "unsafe_duration_hours": 24,
-        "misconfigurations": [
-          {
-            "property": "apiserver.authorization_mode",
-            "actual_value": "AlwaysAllow",
-            "operator": "contains",
-            "unsafe_value": "AlwaysAllow"
-          },
-          {
-            "property": "apiserver.authorization_mode",
-            "actual_value": "AlwaysAllow",
-            "operator": "missing",
-            "unsafe_value": true
-          },
-          {
-            "property": "type",
-            "actual_value": "[SANITIZED]",
-            "operator": "eq",
-            "unsafe_value": "k8s_apiserver"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 24 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
-      },
-      "control_severity": "critical",
-      "control_compliance": {
-        "cis_k8s_v1.9": "1.2.7"
-      },
-      "control_compliance_ccm_v4": [
-        "IVS-04"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "API server authorization mode does not include RBAC or includes AlwaysAllow.",
-        "action": "Set --authorization-mode=RBAC,Node on the API server. Remove AlwaysAllow from the mode list."
-      },
-      "fix_plan": {
-        "id": "fix-1426885accaf2b9c",
-        "target": {
-          "asset_id": "apiserver-staging-01",
-          "asset_type": "k8s_apiserver"
-        },
-        "action": "Set --authorization-mode=RBAC,Node on the API server. Remove AlwaysAllow from the mode list."
-      },
-      "exposure_score": 100.27397260273973,
-      "score_breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0027397260273974,
-        "days_blind": 1
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "apiserver.authorization_mode contains \"AlwaysAllow\"",
-          "observation_key": "apiserver.authorization_mode",
-          "operator": "contains",
-          "expected_value": "AlwaysAllow",
-          "observed_value": "AlwaysAllow"
-        },
-        {
-          "predicate_expr": "apiserver.authorization_mode missing true",
-          "observation_key": "apiserver.authorization_mode",
-          "operator": "missing",
-          "expected_value": true,
-          "observed_value": "AlwaysAllow"
-        },
-        {
-          "predicate_expr": "type eq \"k8s_apiserver\"",
-          "observation_key": "type",
-          "operator": "eq",
-          "expected_value": "k8s_apiserver",
-          "observed_value": "[SANITIZED]"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "apiserver-staging-01",
-          "type": "k8s_apiserver",
-          "vendor": "kubernetes"
-        },
-        "violation": {
-          "control_id": "CTL.K8S.APISERVER.AUTHZ.001",
-          "control_name": "API Server Must Use RBAC Authorization",
-          "severity": "critical",
-          "reasoning": [
-            {
-              "clause": "apiserver.authorization_mode contain \"AlwaysAllow\" (observed: \"AlwaysAllow\")",
-              "observation_key": "apiserver.authorization_mode",
-              "observed_value": "AlwaysAllow"
-            },
-            {
-              "clause": "apiserver.authorization_mode is not set (observed: \"AlwaysAllow\")",
-              "observation_key": "apiserver.authorization_mode",
-              "observed_value": "AlwaysAllow"
-            },
-            {
-              "clause": "the asset type = \"[SANITIZED]\"",
-              "observation_key": "type",
-              "observed_value": "[SANITIZED]"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "apiserver.authorization_mode",
-            "current_value": "AlwaysAllow",
-            "required_value": "(see control definition)",
-            "has_safe_default": false,
-            "description": "Change apiserver.authorization_mode from AlwaysAllow"
-          },
-          {
-            "path": "apiserver.authorization_mode",
-            "current_value": "AlwaysAllow",
-            "required_value": "present",
-            "has_safe_default": false,
-            "description": "Ensure apiserver.authorization_mode is present"
-          },
-          {
-            "path": "type",
-            "current_value": "[SANITIZED]",
-            "required_value": "any value other than k8s_apiserver",
-            "has_safe_default": false,
-            "description": "Change type away from k8s_apiserver"
-          }
-        ],
-        "action": "Set --authorization-mode=RBAC,Node on the API server. Remove AlwaysAllow from the mode list."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "kubernetes",
-        "apiserver"
-      ],
-      "delta": [
-        {
-          "property_label": "authorization mode",
-          "property_path": "apiserver.authorization_mode",
-          "current_value": "AlwaysAllow",
-          "fix_action": "remove AlwaysAllow from the list"
-        },
-        {
-          "property_label": "authorization mode",
-          "property_path": "apiserver.authorization_mode",
-          "current_value": "AlwaysAllow",
-          "fix_action": "populate this property in the configuration"
-        }
-      ]
-    },
-    {
       "finding_id": "sha256:f3723452f0162be4",
       "control_id": "CTL.K8S.KUBELET.ANON.001",
       "control_name": "Kubelet Anonymous Authentication Must Be Disabled",
@@ -1673,7 +1673,7 @@
         },
         "action": "Set authentication.anonymous.enabled=false in the kubelet config or pass --anonymous-auth=false."
       },
-      "exposure_score": 100.27397260273973,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -1808,7 +1808,7 @@
         },
         "action": "Set authentication.anonymous.enabled=false in the kubelet config or pass --anonymous-auth=false."
       },
-      "exposure_score": 100.27397260273973,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -1943,7 +1943,7 @@
         },
         "action": "Set authorization.mode=Webhook in the kubelet config or pass --authorization-mode=Webhook."
       },
-      "exposure_score": 100.27397260273973,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -2244,7 +2244,7 @@
         "sha256:aea5c891baf7d41e",
         "sha256:db73b532f51cfd39"
       ],
-      "consolidated_score": 200.54794520547946,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -2262,7 +2262,7 @@
         "sha256:644608e3122eb9d7",
         "sha256:c0a83f4566913a64"
       ],
-      "consolidated_score": 200.54794520547946,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -2279,7 +2279,7 @@
         "sha256:08c3e2a2b62a00e5",
         "sha256:7f736839dc3ec9ca"
       ],
-      "consolidated_score": 200.54794520547946,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -2296,7 +2296,7 @@
         "sha256:8dda0d0e5b96b16d",
         "sha256:edef89b486119e9f"
       ],
-      "consolidated_score": 200.54794520547946,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -2310,7 +2310,7 @@
       "member_finding_ids": [
         "sha256:f3723452f0162be4"
       ],
-      "consolidated_score": 100.27397260273973,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -2328,7 +2328,7 @@
         "sha256:1e91e0304ceaaee3",
         "sha256:e78c7fdb7b886a6a"
       ],
-      "consolidated_score": 100.27397260273973,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     }
   ],
@@ -2442,7 +2442,7 @@
       "finding_index": 0,
       "control_id": "CTL.K8S.APISERVER.ANON.001",
       "asset_id": "apiserver-dev-01",
-      "exposure_score": 200.54794520547946,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -2458,71 +2458,7 @@
       "finding_index": 1,
       "control_id": "CTL.K8S.APISERVER.ANON.001",
       "asset_id": "apiserver-staging-01",
-      "exposure_score": 200.54794520547946,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 2,
-        "blind_multiplier": 1.0027397260273974,
-        "days_blind": 1
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 5,
-      "control_id": "CTL.K8S.ETCD.CERT.001",
-      "asset_id": "etcd-dev-01",
-      "exposure_score": 200.54794520547946,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 2,
-        "blind_multiplier": 1.0027397260273974,
-        "days_blind": 1
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 6,
-      "control_id": "CTL.K8S.ETCD.CERT.001",
-      "asset_id": "etcd-staging-01",
-      "exposure_score": 200.54794520547946,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 2,
-        "blind_multiplier": 1.0027397260273974,
-        "days_blind": 1
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 7,
-      "control_id": "CTL.K8S.ETCD.CLIENT.AUTH.001",
-      "asset_id": "etcd-dev-01",
-      "exposure_score": 200.54794520547946,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 2,
-        "blind_multiplier": 1.0027397260273974,
-        "days_blind": 1
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 8,
-      "control_id": "CTL.K8S.ETCD.CLIENT.AUTH.001",
-      "asset_id": "etcd-staging-01",
-      "exposure_score": 200.54794520547946,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -2538,7 +2474,7 @@
       "finding_index": 2,
       "control_id": "CTL.K8S.APISERVER.AUDIT.001",
       "asset_id": "apiserver-dev-01",
-      "exposure_score": 150.4109589041096,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -2554,7 +2490,7 @@
       "finding_index": 3,
       "control_id": "CTL.K8S.APISERVER.AUDIT.001",
       "asset_id": "apiserver-staging-01",
-      "exposure_score": 150.4109589041096,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -2570,7 +2506,7 @@
       "finding_index": 4,
       "control_id": "CTL.K8S.APISERVER.AUTHZ.001",
       "asset_id": "apiserver-staging-01",
-      "exposure_score": 100.27397260273973,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -2583,10 +2519,74 @@
       "silent_killer": false
     },
     {
+      "finding_index": 5,
+      "control_id": "CTL.K8S.ETCD.CERT.001",
+      "asset_id": "etcd-dev-01",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 2,
+        "blind_multiplier": 1.0027397260273974,
+        "days_blind": 1
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 6,
+      "control_id": "CTL.K8S.ETCD.CERT.001",
+      "asset_id": "etcd-staging-01",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 2,
+        "blind_multiplier": 1.0027397260273974,
+        "days_blind": 1
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 7,
+      "control_id": "CTL.K8S.ETCD.CLIENT.AUTH.001",
+      "asset_id": "etcd-dev-01",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 2,
+        "blind_multiplier": 1.0027397260273974,
+        "days_blind": 1
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 8,
+      "control_id": "CTL.K8S.ETCD.CLIENT.AUTH.001",
+      "asset_id": "etcd-staging-01",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 2,
+        "blind_multiplier": 1.0027397260273974,
+        "days_blind": 1
+      },
+      "silent_killer": false
+    },
+    {
       "finding_index": 9,
       "control_id": "CTL.K8S.KUBELET.ANON.001",
       "asset_id": "kubelet-dev-node-01",
-      "exposure_score": 100.27397260273973,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -2602,7 +2602,7 @@
       "finding_index": 10,
       "control_id": "CTL.K8S.KUBELET.ANON.001",
       "asset_id": "kubelet-staging-node-01",
-      "exposure_score": 100.27397260273973,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -2618,7 +2618,7 @@
       "finding_index": 11,
       "control_id": "CTL.K8S.KUBELET.AUTHZ.001",
       "asset_id": "kubelet-staging-node-01",
-      "exposure_score": 100.27397260273973,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -2740,7 +2740,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

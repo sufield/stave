@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"strings"
 
@@ -136,6 +137,13 @@ func (l *ControlLoader) loadOne(path string) (policy.ControlDefinition, error) {
 // enrichAndPrepare resolves predicate aliases, prepares the control, and
 // validates it. Validation runs at load time so user-authored controls
 // fail fast with clear errors instead of silently producing wrong results.
+//
+// Errors abort the load with a descriptive message; SeverityWarning
+// issues are emitted via slog at warn level so operators can see
+// non-fatal problems (e.g. a deprecated field, a control marked for
+// removal) without losing the affected control. The earlier shape
+// dropped warning-level issues silently, which left authoring
+// problems invisible until they escalated.
 func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
 	if err := l.resolveAlias(ctl); err != nil {
 		return fmt.Errorf("semantic error: %w", err)
@@ -148,8 +156,13 @@ func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
 	}
 	if issues := ctl.Validate(); len(issues) > 0 {
 		for _, issue := range issues {
-			if issue.Severity == diag.SeverityError {
+			switch issue.Severity {
+			case diag.SeverityError:
 				return fmt.Errorf("control %s: %s", ctl.ID, issue.Message)
+			case diag.SeverityWarn:
+				slog.Warn("control validation warning",
+					"control_id", ctl.ID,
+					"message", issue.Message)
 			}
 		}
 	}

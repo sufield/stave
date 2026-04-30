@@ -132,10 +132,12 @@ const maxContextNameLen = 100
 // ValidateName checks that a normalized context name is well-formed.
 // It rejects empty strings, overlong inputs, and characters that are
 // unsafe in filesystem paths or YAML keys. The forbidden set includes
-// path separators, control bytes, and YAML structural/indicator
-// characters — a name persisted as a YAML map key must not require
-// quoting or escaping, and a name interpolated into a filesystem path
-// must not let an attacker traverse, glob, or alias.
+// path separators, control bytes, embedded ASCII space, and YAML
+// structural/indicator characters — a name persisted as a YAML map
+// key must not require quoting or escaping, and a name interpolated
+// into a filesystem path must not let an attacker traverse, glob,
+// alias, or smuggle multi-token values into shell commands that read
+// the active context.
 func ValidateName(name string) error {
 	if name == "" {
 		return errors.New("context name cannot be empty")
@@ -143,8 +145,8 @@ func ValidateName(name string) error {
 	if len(name) > maxContextNameLen {
 		return fmt.Errorf("context name exceeds %d characters", maxContextNameLen)
 	}
-	if strings.ContainsAny(name, "/\\\x00\n\r\t:{}[]#*&!|>'\"%") {
-		return errors.New(`context name contains forbidden characters (/, \, NUL, whitespace control, or YAML indicators :{}[]#*&!|>'"%)`)
+	if strings.ContainsAny(name, "/\\\x00\n\r\t :{}[]#*&!|>'\"%") {
+		return errors.New(`context name contains forbidden characters (/, \, NUL, embedded space, whitespace control, or YAML indicators :{}[]#*&!|>'"%)`)
 	}
 	return nil
 }
@@ -189,6 +191,14 @@ func (s *Store) ResolveSelected() (string, *Context, bool, error) {
 			ErrContextNotFound, name, source, available)
 	}
 
+	// Return a pointer to the local copy. The pointer is a
+	// READ-ONLY SNAPSHOT — mutations through it do NOT propagate
+	// back to the store's map (Go maps return values by value, not
+	// reference). Callers that need to update a context must do so
+	// through a Set/Update method on the store, not by mutating
+	// what ResolveSelected hands back. The pointer return is
+	// preserved (vs. returning the value) so existing call sites
+	// can still test for presence with a nil check.
 	return name, &selected, true, nil
 }
 

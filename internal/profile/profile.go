@@ -124,7 +124,21 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Contro
 		})
 	}
 
-	// Sort: failures first, then by severity descending.
+	// Capture outcomes in the original control-iteration order
+	// before the display sort runs. compound.Detect's chain rules
+	// can be order-sensitive (the same set of failing controls
+	// across different orderings could produce different chain
+	// matches if a rule short-circuits on the first hit), so the
+	// detection input must come from the deterministic pre-sort
+	// view rather than the post-sort display order.
+	preSortOutcomes := make([]compliance.Outcome, len(results))
+	for i, r := range results {
+		preSortOutcomes[i] = r.Outcome
+	}
+
+	// Sort: failures first, then by severity descending. This is
+	// for display only; compound detection ran above against the
+	// stable pre-sort input.
 	sort.SliceStable(results, func(i, j int) bool {
 		if results[i].Pass != results[j].Pass {
 			return !results[i].Pass // failures first
@@ -132,12 +146,7 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Contro
 		return results[i].Severity > results[j].Severity
 	})
 
-	// Detect compound risks from the raw control results.
-	rawResults := make([]compliance.Outcome, len(results))
-	for i, r := range results {
-		rawResults[i] = r.Outcome
-	}
-	compoundFindings := compound.Detect(compound.DefaultRules(), rawResults)
+	compoundFindings := compound.Detect(compound.DefaultRules(), preSortOutcomes)
 
 	counts := make(map[policy.Severity]int)
 	failCounts := make(map[policy.Severity]int)

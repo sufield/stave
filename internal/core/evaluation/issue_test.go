@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // mkFinding builds a minimal Finding with the given asset, ID, score,
@@ -142,5 +143,43 @@ func TestBuildIssues_IssueIDStability(t *testing.T) {
 	b := BuildIssues(findings)
 	if a[0].IssueID != b[0].IssueID {
 		t.Errorf("IssueID not stable: %q vs %q", a[0].IssueID, b[0].IssueID)
+	}
+}
+
+// TestBuildIssues_TieBreakDeterministic pins the headline-pick fix:
+// when two findings share an asset and have equal ExposureScore,
+// the headline is chosen deterministically by FindingID. The earlier
+// shape iterated cluster members in map-traversal order, so ties
+// broke arbitrarily across runs and the IssueID flapped (it hashes
+// the headline ControlID).
+func TestBuildIssues_TieBreakDeterministic(t *testing.T) {
+	// Two findings on the same asset with the same exposure score
+	// and a shared reasoning-trace key so they cluster.
+	mk := func(fid, ctlID string) Finding {
+		f := mkFinding(fid, "bucket-a", 50, "storage.access.shared")
+		// ControlID is what stableIssueID hashes; vary it so we can
+		// observe whether the headline pick was stable.
+		f.ControlID = kernel.ControlID("CTL." + ctlID + ".001")
+		return f
+	}
+	findings := []Finding{mk("fA", "B"), mk("fB", "A")}
+
+	// Run BuildIssues with both orderings of the input. The
+	// headline pick must come from the lexically-smallest FindingID
+	// (fA), so the IssueID is identical across both inputs.
+	first := BuildIssues(findings)
+	swapped := []Finding{findings[1], findings[0]}
+	second := BuildIssues(swapped)
+
+	if len(first) != 1 || len(second) != 1 {
+		t.Fatalf("clustering must produce 1 issue per run, got %d/%d", len(first), len(second))
+	}
+	if first[0].HeadlineFindingID != "fA" || second[0].HeadlineFindingID != "fA" {
+		t.Errorf("headline pick must be fA (lex-smallest tie-break), got %q/%q",
+			first[0].HeadlineFindingID, second[0].HeadlineFindingID)
+	}
+	if first[0].IssueID != second[0].IssueID {
+		t.Errorf("IssueID flapped across input orderings: %q vs %q",
+			first[0].IssueID, second[0].IssueID)
 	}
 }

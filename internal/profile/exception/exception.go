@@ -221,9 +221,21 @@ func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucke
 			continue // not evaluated or already passing
 		}
 
-		// Check compensating controls.
+		// Check compensating controls. validateException already
+		// rejects empty RequiresPassing at load time, but a callsite
+		// that bypasses validation (tests constructing Config
+		// literals, future code paths, etc.) must not silently
+		// suppress findings without ANY compensating-control
+		// assertion. An exception with no listed compensating
+		// controls is functionally "trust me", which violates the
+		// design contract — flag it invalid so the finding stays
+		// active. Sets allPassing = false to surface the gap rather
+		// than panicking, which would abort an entire evaluation.
 		controls := make([]CompensatingControl, len(exc.RequiresPassing))
 		allPassing := true
+		if len(exc.RequiresPassing) == 0 {
+			allPassing = false
+		}
 		for i, reqID := range exc.RequiresPassing {
 			passing := false
 			if req, ok := resultMap[reqID]; ok {

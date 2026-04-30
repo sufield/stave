@@ -99,7 +99,7 @@
         },
         "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
       },
-      "exposure_score": 3750,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 5,
@@ -222,7 +222,7 @@
       "member_finding_ids": [
         "sha256:6aad0908e47e6a3c"
       ],
-      "consolidated_score": 3750,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     }
   ],
@@ -249,7 +249,7 @@
       "finding_index": 0,
       "control_id": "CTL.S3.WRITE.SCOPE.001",
       "asset_id": "upload-api-bcm-hk",
-      "exposure_score": 3750,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 5,
@@ -355,7 +355,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

@@ -143,6 +143,48 @@ Important behavior for control authors:
 Use explicit predicates for absent/optional data to avoid accidental
 matches.
 
+### Fail-Open vs Fail-Closed by Operator
+
+Stave's predicate operators split into two camps when the field they
+test is absent. Knowing which camp matters when an extractor drops a
+field — different operators interpret the absence differently.
+
+| Operator | Missing-field interpretation | Reason |
+|----------|------------------------------|--------|
+| `eq`     | Field absent → rule does NOT match (fail-open)  | Cannot equal a value that was never set |
+| `ne`     | Field absent → rule MATCHES (**fail-closed**)   | The author wrote `ne true` because that is the safety property; absence means "we cannot prove safety" |
+| `gt`/`lt`/`gte`/`lte` | Field absent → does NOT match (fail-open) | A comparison against a missing number is undefined; "no signal" is not a violation |
+| `in`     | Field absent → does NOT match (fail-open)       | Cannot be in a list when no value exists |
+| `contains` | Field absent → does NOT match (fail-open)     | Same logic as `in` |
+| `missing` | Field absent → matches when `value: true` (explicit) | This is the test for absence |
+| `present` | Field absent → matches when `value: false` (explicit) | This is the test for presence |
+| `list_empty` | Field absent → matches (treats absence as empty) | "Empty" includes "not there" |
+| `*_field` operators | Either side absent → does NOT match (fail-open) | Cross-field comparisons need both to be present |
+
+The asymmetry between `eq` and `ne` is **intentional**. A control
+author writes `ne true` for properties that must be true to be safe
+(`encryption_enabled`, `require_tls`). If the extractor drops that
+field, a fail-open `ne` would silently pass the asset, which is the
+opposite of what the author asked for. Fail-closed `ne` matches the
+operator's safety reading: "I assert the field is NOT this value;
+if there is no field, my assertion is unverified."
+
+If you need `ne` to fail open (treat missing as pass), pair it with
+an explicit `present` check:
+
+```yaml
+all:
+  - field: properties.encryption_enabled
+    op: present
+    value: true
+  - field: properties.encryption_enabled
+    op: ne
+    value: true
+```
+
+The `present` clause guards the `ne` so missing fields short-circuit
+the rule before `ne`'s fail-closed semantics fire.
+
 ## Output Contract Version
 
 Evaluation output uses schema version `out.v0.1` in the `schema_version`

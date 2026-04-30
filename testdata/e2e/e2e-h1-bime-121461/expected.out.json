@@ -119,7 +119,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket."
       },
-      "exposure_score": 5000,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 5,
@@ -222,7 +222,7 @@
       "member_finding_ids": [
         "sha256:177ac764bd4ba493"
       ],
-      "consolidated_score": 5000,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     }
   ],
@@ -276,7 +276,7 @@
       "finding_index": 0,
       "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
       "asset_id": "bime-a2-cname-ref",
-      "exposure_score": 5000,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 5,
@@ -382,7 +382,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }
