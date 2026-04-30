@@ -17,9 +17,30 @@ type Validator struct {
 
 // Verify checks that actual hashes match the manifest exactly:
 // no missing files, no extra files, no mismatched hashes.
+//
+// For unsigned manifests (those that did not flow through
+// UnmarshalSigned, where signature verification establishes the
+// manifest's internal consistency), call ValidateOverall first so
+// we don't accept a manifest whose `overall` digest disagrees with
+// its own per-file hashes — otherwise an attacker could rewrite
+// `overall` in the on-disk file and have Verify pass purely on the
+// per-file string comparison while the aggregate check at the bottom
+// of this function compares attacker-supplied data against
+// attacker-supplied data.
 func (v *Validator) Verify(m Manifest) error {
 	if v.ActualHashes == nil {
 		return fmt.Errorf("%w: no hashes provided for verification", ErrIntegrityViolation)
+	}
+	// Only validate when an overall digest is provided. A manifest
+	// without `overall` set is treated as "per-file checks only" —
+	// this preserves callers that synthesize a Manifest from external
+	// data and don't bother computing the aggregate. When `overall`
+	// IS present, it must be internally consistent before we trust
+	// the bottom-of-function string compare.
+	if m.Overall != "" {
+		if err := m.ValidateOverall(); err != nil {
+			return fmt.Errorf("%w: %w", ErrIntegrityViolation, err)
+		}
 	}
 
 	for name, expected := range m.Files {

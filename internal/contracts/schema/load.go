@@ -2,12 +2,19 @@ package schema
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
 )
+
+// ErrSchemaNotFound signals that no embedded schema is registered for
+// the requested (kind, version). Callers can treat this as
+// "validation unavailable for this kind" without parsing nil bytes
+// as malformed JSON.
+var ErrSchemaNotFound = errors.New("schema not found")
 
 // Kind identifies the functional category of a schema.
 type Kind string
@@ -85,7 +92,12 @@ func LoadSchema(kind Kind, version string) ([]byte, error) {
 
 	path, ok := registry[k][v]
 	if !ok {
-		return nil, nil // Missing schema mapping = validation not available for this kind
+		// Returning (nil, nil) here let callers parse nil bytes as
+		// JSON downstream and produce "unexpected end of JSON input"
+		// — a misleading error that hid the real "no schema for this
+		// kind" case. Surface a typed sentinel so the caller can
+		// branch on errors.Is(err, ErrSchemaNotFound).
+		return nil, fmt.Errorf("%w: kind=%q version=%q", ErrSchemaNotFound, kind, v)
 	}
 
 	data, err := embeddedFS.ReadFile(path)

@@ -23,11 +23,25 @@ func Evaluate(cp CompiledPredicate, a asset.Asset, identities []asset.CloudIdent
 		params = map[string]any{}
 	}
 
+	// `identity` is the convenience accessor for the *first* identity
+	// when a control wants to talk about "the" identity attached to an
+	// asset (single-principal resources, IAM-bound services).
+	// Multi-identity controls iterate `identities` instead. Hardcoding
+	// an empty map silently masked all per-identity field reads in
+	// single-identity controls — predicates like
+	// `identity.type == "service_role"` evaluated against `{}`,
+	// returning false on every asset regardless of input.
+	identity := map[string]any{}
+	if len(idList) > 0 {
+		if first, ok := idList[0].(map[string]any); ok {
+			identity = first
+		}
+	}
 	activation := map[string]any{
 		"properties": props,
 		"params":     params,
 		"identities": idList,
-		"identity":   map[string]any{},
+		"identity":   identity,
 	}
 
 	out, _, err := cp.Program.Eval(activation)
@@ -78,9 +92,23 @@ func stringifyValue(v any) any {
 		return cp
 	default:
 		rv := reflect.ValueOf(v)
-		if rv.Kind() == reflect.String {
+		switch rv.Kind() {
+		case reflect.String:
 			return rv.String()
+		case reflect.Slice, reflect.Array:
+			// Concrete typed slices like []map[string]any or
+			// []asset.CloudIdentity do not match `case []any` above,
+			// but we still need to walk their elements so any
+			// named-string types nested inside (e.g. asset.ID,
+			// kernel.AssetType) are converted before CEL sees them.
+			n := rv.Len()
+			cp := make([]any, n)
+			for i := range n {
+				cp[i] = stringifyValue(rv.Index(i).Interface())
+			}
+			return cp
+		default:
+			return v
 		}
-		return v
 	}
 }

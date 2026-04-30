@@ -39,6 +39,13 @@ func ParseBundle(data []byte) ([]asset.Snapshot, error) {
 		if bundle.Snapshots[i].CapturedAt.IsZero() {
 			return nil, fmt.Errorf("observation bundle snapshot %d is missing required `captured_at` timestamp", i)
 		}
+		// Mirror loader_core.go: bundle and directory loaders must
+		// produce snapshots with the same shape, otherwise predicates
+		// that depend on type-coerced fields (asset.ID, kernel.AssetType)
+		// silently behave differently between the two intake paths.
+		if err := normalizeSnapshotTypes(&bundle.Snapshots[i]); err != nil {
+			return nil, fmt.Errorf("normalize snapshot %d: %w", i, err)
+		}
 	}
 	return bundle.Snapshots, nil
 }

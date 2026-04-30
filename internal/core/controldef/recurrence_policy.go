@@ -14,6 +14,13 @@ const (
 // RecurrencePolicy defines the thresholds for frequency-based security violations.
 // Example: "Flag if an asset becomes unsafe 3 times within a 7-day window."
 type RecurrencePolicy struct {
+	// Limit is the count at which a finding fires — *not* a tolerance.
+	// `Limit: 3` means "the third occurrence already triggers a
+	// violation"; counts strictly less than Limit are compliant. This
+	// is asymmetric on purpose: the configured number is the count
+	// the operator considers unacceptable, not the last one they're
+	// willing to ignore. See engine/recurrence.go and the
+	// TestRecurrence_ExactlyAtLimitFires fixture for the contract.
 	Limit      int
 	WindowDays int
 }

@@ -30,7 +30,13 @@ func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error)
 	a := in.ExposureLifecycle.Asset()
 	duration, durationErr := in.ExposureLifecycle.ExposureDuration(in.Now)
 	if durationErr != nil {
-		duration = -1
+		// Sentinel: -1 hour. Plain `-1` is a Duration of -1 nanosecond,
+		// and -1ns.Hours() ≈ -2.78e-13, which downstream renderers
+		// would print as "0.00 hours" — visually indistinguishable
+		// from a real "no exposure observed" result. Using -1 hour
+		// makes the sentinel render as "-1.00" so the failed
+		// calculation is obvious in evidence output.
+		duration = -1 * time.Hour
 	}
 	ctx := policy.NewAssetEvalContext(a, in.Control.Params, in.PredicateParser, in.Identities...)
 	misconfigs := policy.ExtractMisconfigurations(&in.Control.UnsafePredicate, ctx)

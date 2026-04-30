@@ -263,7 +263,6 @@ func NewEmbeddedRegistry() (*Index, error) {
 
 	r := &Index{
 		version:   strings.TrimSpace(manifest.Version),
-		hash:      crypto.HashBytes(data),
 		packs:     make(map[string]Pack, len(manifest.Packs)),
 		controls:  map[string]ControlRef{},
 		packNames: make([]string, 0, len(manifest.Packs)),
@@ -274,7 +273,13 @@ func NewEmbeddedRegistry() (*Index, error) {
 		return nil, fmt.Errorf("derive control refs: %w", err)
 	}
 
-	// Load each pack file from the manifest.
+	// Load each pack file from the manifest, in manifest order so the
+	// registry-level hash is reproducible. Hashing only index.yaml
+	// previously made tampering with a pack's control list invisible
+	// to integrity checks; fold the pack file bytes into the hash so
+	// any byte-level change to a pack invalidates the registry hash.
+	hashParts := make([]string, 0, 1+2*len(manifest.Packs))
+	hashParts = append(hashParts, string(data))
 	specs := make(map[string]packSpec, len(manifest.Packs))
 	for _, ref := range manifest.Packs {
 		packData, readErr := embeddedRegistryFS.ReadFile("embedded/" + ref.Path)
@@ -289,7 +294,9 @@ func NewEmbeddedRegistry() (*Index, error) {
 			spec.ID = ref.ID
 		}
 		specs[spec.ID] = spec
+		hashParts = append(hashParts, ref.Path, string(packData))
 	}
+	r.hash = crypto.HashDelimited(hashParts, 0x00)
 
 	if err := r.loadPacks(specs); err != nil {
 		return nil, err

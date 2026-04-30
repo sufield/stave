@@ -114,9 +114,21 @@ func FindingIRI(findingID string) string {
 // InvariantIRI builds the IRI for an invariant/control. category and
 // number can be derived by splitting a full control ID on the last
 // '.', or both passed in by the caller. The exporter splits the
-// internal "CTL.S3.PUBLIC.001" into ("CTL.S3.PUBLIC", "001").
+// internal "CTL.S3.PUBLIC.001" into ("CTL.S3.PUBLIC", "001"). When
+// either component is empty (e.g. a non-standard control ID with no
+// dot separator), drop the dot so the IRI does not gain a leading
+// or trailing "." that downstream RDF parsers reject.
 func InvariantIRI(category, number string) string {
-	return invariantPrefix + iriSegment(category) + "." + iriSegment(number)
+	switch {
+	case category == "" && number == "":
+		return invariantPrefix
+	case category == "":
+		return invariantPrefix + iriSegment(number)
+	case number == "":
+		return invariantPrefix + iriSegment(category)
+	default:
+		return invariantPrefix + iriSegment(category) + "." + iriSegment(number)
+	}
 }
 
 // ScopeIRI builds the IRI for a tenant scope (account).

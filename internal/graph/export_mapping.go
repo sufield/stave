@@ -347,10 +347,18 @@ func findingSeverityWeight(nodeID string, g *GraphData) float64 {
 // into ("CTL.S3.PUBLIC", "001"). The user's URI shape is
 // stave:invariant/{category}.{number}; category is everything up to
 // the last dot, number is the suffix.
+//
+// When the ID has no dot at all (a malformed input or a custom
+// control ID that does not follow the standard shape), return the
+// whole ID as the *number* and an empty *category*. InvariantIRI
+// renders the result as `category.number`, so an empty number would
+// produce a trailing-dot IRI like `urn:stave:invariant/CTRL001.`,
+// which downstream RDF parsers reject — putting the whole ID into
+// the number slot keeps the IRI well-formed.
 func splitControlID(id string) (category, number string) {
 	idx := strings.LastIndex(id, ".")
 	if idx < 0 {
-		return id, ""
+		return "", id
 	}
 	return id[:idx], id[idx+1:]
 }

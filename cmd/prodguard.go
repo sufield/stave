@@ -100,11 +100,14 @@ func (p *SafetyPolicy) Set(cmds []string) {
 
 // DefaultSafetyPolicy blocks commands that permanently destroy evidence.
 // Override with SetBlockedCommands to customize for your environment.
-var DefaultSafetyPolicy = &SafetyPolicy{
-	blockedCommands: map[string]bool{
-		"prune": true,
-	},
-}
+// Initialized via Set() rather than direct field assignment so the
+// init path takes the same write lock as runtime updates — keeps a
+// single canonical write sequence for the package-level default.
+var DefaultSafetyPolicy = func() *SafetyPolicy {
+	p := &SafetyPolicy{}
+	p.Set([]string{"prune"})
+	return p
+}()
 
 // SetBlockedCommands replaces the production guard blocked command list
 // on the package-level default. Pass nil or empty to keep the default.
