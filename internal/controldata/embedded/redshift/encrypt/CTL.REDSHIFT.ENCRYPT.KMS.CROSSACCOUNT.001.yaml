@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.ENCRYPT.KMS.CROSSACCOUNT.001
+name: Redshift Cluster KMS Key Must Not Permit Cross-Org Decrypt
+description: >
+  The KMS key encrypting a Redshift cluster (and its automated /
+  manual snapshots, plus any cross-region copies via the snapshot
+  copy grant) must not have a key policy granting `kms:Decrypt` to
+  principals outside the organization's allow-list. A snapshot
+  copy encrypted with such a key is decryptable wherever those
+  principals reach — turning a cross-account snapshot share into a
+  clear-text exfil path even when storage encryption is "on" and
+  snapshot sharing is restricted, because the recipient still
+  legitimately holds Decrypt against the source key. The
+  combination is the least-visible warehouse exfil pattern: the
+  share looks compliant, the encryption looks compliant, only the
+  key policy breaks containment.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: AC-3
+  soc2: CC6.6
+  pci_dss_v4.0: 3.6.1
+  ccm_v4:
+  - CEK-04
+  - IAM-09
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Cluster's KMS key policy permits `kms:Decrypt` to a principal
+    outside the organization's allow-list. Snapshot recipients can
+    decrypt the data wherever the policy admits them.
+  action: >
+    Tighten the key policy: scope `kms:Decrypt` to specific
+    `aws:PrincipalOrgID` or explicit account ARNs that legitimately
+    need to read the encrypted data, and add `aws:ViaService =
+    redshift.<region>.amazonaws.com` so the grant only applies
+    through the Redshift integration path. Re-issue any cross-region
+    snapshot-copy grants against the tightened key.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.encryption.kms_key_crossaccount_decrypt
+    op: eq
+    value: true

@@ -149,12 +149,13 @@ func TestNormalizePath(t *testing.T) {
 
 func TestPredicateToExpr_Empty(t *testing.T) {
 	t.Parallel()
-	expr, err := PredicateToExpr(policy.UnsafePredicate{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if expr != "false" {
-		t.Fatalf("empty predicate should produce 'false', got %q", expr)
+	// Per Phase 9 P9.2 Task 2.1: empty predicates now return an error
+	// instead of silently compiling to "false". A control with no
+	// rules is malformed; load-time rejection is preferable to a
+	// runtime no-op gate that never fires.
+	_, err := PredicateToExpr(policy.UnsafePredicate{})
+	if err == nil {
+		t.Fatal("empty predicate must return an error, got nil")
 	}
 }
 
@@ -185,10 +186,12 @@ func TestCompile_EmptyPredicate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Per Phase 9 P9.2 Task 2.1: empty predicates fail at compile
+	// instead of silently producing the no-op "false" expression
+	// that never fires regardless of input.
 	_, err = compiler.Compile(policy.UnsafePredicate{})
-	// empty predicate produces "false" which compiles fine
-	if err != nil {
-		t.Fatalf("empty predicate should compile: %v", err)
+	if err == nil {
+		t.Fatal("empty predicate must fail compile, got nil error")
 	}
 }
 

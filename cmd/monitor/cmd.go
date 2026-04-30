@@ -185,10 +185,21 @@ func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState
 	}
 	// If fsnotify unavailable, fsCh is nil — select ignores nil channels.
 
-	// Keyboard: read single bytes from stdin in a goroutine.
+	// Keyboard: read single bytes from stdin in a goroutine. The
+	// done channel signals the goroutine to drop any further read
+	// result on the floor when runLiveLoop exits — we cannot
+	// portably interrupt the blocked stdin Read syscall (no
+	// SetReadDeadline on a TTY across all platforms), so the
+	// goroutine still parks on the syscall until the user presses
+	// a key or the process terminates. Signaling done at least
+	// keeps the goroutine from sending into a channel no one is
+	// reading from anymore, which used to leak the goroutine plus
+	// one buffered byte for the lifetime of the parent process.
 	keyCh := make(chan byte, 1)
+	keyDone := make(chan struct{})
+	defer close(keyDone)
 	if isTerminalFd(os.Stdin.Fd()) {
-		go readKeys(keyCh)
+		go readKeys(keyCh, keyDone)
 	}
 
 	// Initial render.
@@ -227,14 +238,21 @@ func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState
 	}
 }
 
-func readKeys(ch chan<- byte) {
+func readKeys(ch chan<- byte, done <-chan struct{}) {
 	buf := make([]byte, 1)
 	for {
 		n, err := os.Stdin.Read(buf)
 		if err != nil || n == 0 {
 			return
 		}
-		ch <- buf[0]
+		// If runLiveLoop has exited, drop the byte and exit instead
+		// of blocking on a send no one is reading. The goroutine
+		// effectively wakes up on the next keystroke and notices.
+		select {
+		case ch <- buf[0]:
+		case <-done:
+			return
+		}
 	}
 }
 

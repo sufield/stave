@@ -1,0 +1,19 @@
+control: CTL.REDSHIFT.HSM.MISCONFIG.001
+defect: >
+  Compliance profile mandates HSM-backed key custody but
+  cluster's `hsm_status` is not `active`. Encryption is in effect
+  but not against an HSM-rooted key.
+infection: >
+  HSM attachment is fragile: a snapshot restore re-creates the
+  cluster without re-attaching the HSM client certificate or
+  HSM configuration unless the operator passes the right flags.
+  The restored cluster comes up encrypted with a software KMS
+  key — the cluster keeps running, applications keep
+  connecting, the encryption-at-rest checkbox stays green. The
+  compliance attestation requirement (FedRAMP High, FIPS 140-2
+  Level 3, certain financial-services frameworks) silently
+  lapses. Discovery is typically the next audit cycle.
+failure: >
+  Compliance gap that masquerades as a working configuration.
+  The cluster is fine; the attestation period during which it
+  ran without HSM-rooted keys is not.

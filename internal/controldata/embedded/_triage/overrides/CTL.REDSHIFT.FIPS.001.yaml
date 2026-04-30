@@ -1,0 +1,20 @@
+control: CTL.REDSHIFT.FIPS.001
+defect: >
+  Cluster parameter group has `use_fips_ssl=false` while the
+  organization's compliance profile requires FIPS-validated
+  cipher suites for transport encryption.
+infection: >
+  `require_ssl=true` enforces TLS but does not constrain which
+  cipher suites the SSL endpoint serves — non-FIPS suites are
+  accepted by default. Frameworks that mandate FIPS-validated
+  cryptography (FedRAMP Moderate / High, DoD IL2+, certain
+  healthcare data residencies) treat the cluster as
+  non-conformant the moment a non-FIPS suite is negotiated.
+  Operators frequently miss this because every TLS-related
+  toggle except this one is visible in the standard "is SSL on"
+  audits.
+failure: >
+  Compliance attestation gap that does not surface until audit.
+  The cluster keeps running, traffic is encrypted, but the
+  framework's attestation is invalid for the period the
+  parameter was wrong.

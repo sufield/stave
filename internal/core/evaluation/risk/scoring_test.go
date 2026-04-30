@@ -189,3 +189,70 @@ func TestUpdateReport(t *testing.T) {
 		t.Errorf("expected 2 findings, got %d", len(r.Findings))
 	}
 }
+
+func TestEvaluate_PublicListOnly(t *testing.T) {
+	// List-only public access scores Info (information disclosure
+	// via bucket enumeration) — neither read nor write, but the
+	// existence and naming pattern of every object is public,
+	// which is the standard precursor to targeted attacks.
+	res := StatementContext{
+		Permissions: PermList,
+		IsPublic:    true,
+		IsAllow:     true,
+	}.Evaluate()
+	if res.Score != ScoreInfo {
+		t.Errorf("public list-only: score = %d, want ScoreInfo (%d)", res.Score, ScoreInfo)
+	}
+	if !res.IsPublic {
+		t.Error("public list-only: IsPublic should be true")
+	}
+	if len(res.Findings) == 0 {
+		t.Error("public list-only: expected at least one finding")
+	}
+}
+
+func TestEvaluate_PublicListPlusRead_TakesReadPath(t *testing.T) {
+	// Read takes precedence over List in the score ladder. With
+	// both present the result must be ScoreWarning, not ScoreInfo.
+	res := StatementContext{
+		Permissions: PermList | PermRead,
+		IsPublic:    true,
+		IsAllow:     true,
+	}.Evaluate()
+	if res.Score != ScoreWarning {
+		t.Errorf("public list+read: score = %d, want ScoreWarning (%d)", res.Score, ScoreWarning)
+	}
+}
+
+func TestEvaluate_PublicListPlusWrite_TakesWritePath(t *testing.T) {
+	// Write takes precedence over both Read and List. With Write
+	// present the result must be ScoreCritical regardless of the
+	// other bits.
+	res := StatementContext{
+		Permissions: PermList | PermWrite,
+		IsPublic:    true,
+		IsAllow:     true,
+	}.Evaluate()
+	if res.Score != ScoreCritical {
+		t.Errorf("public list+write: score = %d, want ScoreCritical (%d)", res.Score, ScoreCritical)
+	}
+}
+
+func TestEvaluate_NoPermsPublic_NoFinding(t *testing.T) {
+	// IsPublic with empty Permissions still triggers the public
+	// branch but produces no finding (Score stays at zero). This
+	// pins the behavior: an Allow with literally no actions is a
+	// well-formed-but-useless statement and shouldn't produce
+	// noise.
+	res := StatementContext{
+		Permissions: 0,
+		IsPublic:    true,
+		IsAllow:     true,
+	}.Evaluate()
+	if res.Score != ScoreSafe {
+		t.Errorf("public no-perms: score = %d, want ScoreSafe (%d)", res.Score, ScoreSafe)
+	}
+	if len(res.Findings) != 0 {
+		t.Errorf("public no-perms: expected no findings, got %d", len(res.Findings))
+	}
+}

@@ -81,11 +81,21 @@ func runInventory(stdout io.Writer, opts *options) error {
 
 	switch opts.Format {
 	case "csv":
+		// csv.Writer buffers internally; a per-row Write returns the
+		// first deferred error encountered, but subsequent calls will
+		// keep returning the same sticky error and the user just
+		// sees a truncated file. Fail fast on the header and each row
+		// so partial output is impossible — the previous shape
+		// silently dropped both the header and the row writes.
 		cw := csv.NewWriter(w)
-		_ = cw.Write([]string{"asset_id", "asset_type", "version_field", "version", "cpe", "package_ecosystem"})
+		if err := cw.Write([]string{"asset_id", "asset_type", "version_field", "version", "cpe", "package_ecosystem"}); err != nil {
+			return fmt.Errorf("write csv header: %w", err)
+		}
 		for i := range versions {
 			v := &versions[i]
-			_ = cw.Write([]string{v.AssetID, v.AssetType, v.VersionField, v.Version, v.CPE, v.PackageEcosystem})
+			if err := cw.Write([]string{v.AssetID, v.AssetType, v.VersionField, v.Version, v.CPE, v.PackageEcosystem}); err != nil {
+				return fmt.Errorf("write csv row %d (asset %q): %w", i, v.AssetID, err)
+			}
 		}
 		cw.Flush()
 		return cw.Error()

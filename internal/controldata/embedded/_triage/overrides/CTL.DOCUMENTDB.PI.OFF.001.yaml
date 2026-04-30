@@ -1,0 +1,16 @@
+control: CTL.DOCUMENTDB.PI.OFF.001
+defect: >
+  Production cluster has Performance Insights disabled.
+infection: >
+  PI captures the wait-state and load-by-wait data that the
+  audit log and profiler do not. Without it, the post-incident
+  picture of a slowdown reduces to "the cluster was slow then
+  it wasn't" — operators can see *that* a query saturation
+  happened, but not which wait events drove it. The next time
+  the same root cause surfaces, the team starts the
+  investigation with no historical baseline to compare
+  against, lengthening every incident's MTTR.
+failure: >
+  Forensic gap that lengthens MTTR for repeat incidents. Not
+  a security failure on its own; it materially weakens
+  incident response when paired with one.

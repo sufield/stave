@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/profile"
@@ -155,7 +156,7 @@ func TestApplyExceptions_ExceptionForUnknownControl(t *testing.T) {
 		Rationale:       "test",
 		RequiresPassing: []kernel.ControlID{"COMP.001"},
 	}}
-	acks := ApplyExceptions(excs, results, "")
+	acks := ApplyExceptions(excs, results, "", time.Time{})
 	if len(acks) != 0 {
 		t.Errorf("expected 0 acks for unknown control, got %d", len(acks))
 	}

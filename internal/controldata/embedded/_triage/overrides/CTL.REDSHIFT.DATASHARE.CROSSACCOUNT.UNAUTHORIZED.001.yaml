@@ -1,0 +1,19 @@
+control: CTL.REDSHIFT.DATASHARE.CROSSACCOUNT.UNAUTHORIZED.001
+defect: >
+  Datashare lists at least one consumer account ARN that is not
+  in the organization's datashare allow-list.
+infection: >
+  Datashares grant in-place query access — the consumer reads
+  the producer's tables without copying them, leaving little
+  producer-side trail beyond the initial association event.
+  The failure mode is a former data partner, an acquired-and-
+  divested business unit, or a one-off project consumer that
+  was added once and never removed. As long as the association
+  persists, the consumer can run continuous queries against
+  the producer's data; the producer sees only the original
+  share event in audit history.
+failure: >
+  Continuous warehouse access from an untrusted account on a
+  schedule the producer no longer controls. Unlike snapshot
+  shares (point-in-time copies), datashare access is live — the
+  consumer reads what the producer commits today.

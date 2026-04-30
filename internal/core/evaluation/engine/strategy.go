@@ -130,12 +130,23 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 			Identities:        ids.At(t.LastObservedAt()),
 			PredicateParser:   s.deps.predicateParser(),
 		})
+		// CreateDurationFinding's contract is "(*Finding, error)" with
+		// the finding always non-nil — but the slice append-via-literal
+		// below would crash if a future refactor returned nil. Guard
+		// here so a contract regression downgrades to "violation
+		// recorded without a Finding" instead of a panic during
+		// engine evaluation.
+		var findings []*evaluation.Finding
+		if finding != nil {
+			findings = []*evaluation.Finding{finding}
+		}
 		if durErr != nil {
-			s.deps.logger().Warn("duration calculation failed; finding emitted with sentinel duration",
-				"control", s.ctl.ID, "asset", t.ID, "error", durErr)
+			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration",
+				"control", s.ctl.ID, "asset", t.ID, "error", durErr,
+				"finding_emitted", finding != nil)
 		}
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
-		return finalizeRow(observation, evaluation.VerdictViolation, confidence), []*evaluation.Finding{finding}
+		return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings
 	}
 
 	span.RecordStep("verdict_decision", nil, map[string]any{
@@ -192,12 +203,23 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 			Identities:        ids.At(t.LastObservedAt()),
 			PredicateParser:   s.deps.predicateParser(),
 		})
+		// CreateDurationFinding's contract is "(*Finding, error)" with
+		// the finding always non-nil — but the slice append-via-literal
+		// below would crash if a future refactor returned nil. Guard
+		// here so a contract regression downgrades to "violation
+		// recorded without a Finding" instead of a panic during
+		// engine evaluation.
+		var findings []*evaluation.Finding
+		if finding != nil {
+			findings = []*evaluation.Finding{finding}
+		}
 		if durErr != nil {
-			s.deps.logger().Warn("duration calculation failed; finding emitted with sentinel duration",
-				"control", s.ctl.ID, "asset", t.ID, "error", durErr)
+			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration",
+				"control", s.ctl.ID, "asset", t.ID, "error", durErr,
+				"finding_emitted", finding != nil)
 		}
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
-		return finalizeRow(observation, evaluation.VerdictViolation, confidence), []*evaluation.Finding{finding}
+		return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings
 	}
 
 	// 2. Coverage Check (Is the data sufficient to say it's a PASS?)

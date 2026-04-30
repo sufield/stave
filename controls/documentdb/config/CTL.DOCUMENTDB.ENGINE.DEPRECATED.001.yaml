@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.ENGINE.DEPRECATED.001
+name: DocumentDB Engine Version Must Not Be End-of-Life
+description: >
+  DocumentDB clusters must run an engine version that AWS still
+  supports — not one on the end-of-life list. AWS publishes a
+  deprecation calendar per engine major version; clusters left
+  on a deprecated version no longer receive security patches and
+  will eventually be force-upgraded by AWS during a maintenance
+  window the operator did not choose. The same scenario as
+  CTL.REDSHIFT.MAINTENANCE.DEFERRED.001 / CTL.REDSHIFT.UPGRADE.001
+  but for the document store.
+domain: hygiene
+severity: medium
+compliance:
+  nist_800_53_r5: SI-2
+  soc2: CC7.1
+  pci_dss_v4.0: 6.3.3
+  ccm_v4:
+  - TVM-04
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Cluster runs an engine version on the AWS end-of-life list.
+    Security patches are no longer issued and a forced upgrade
+    is queued.
+  action: >
+    Upgrade the cluster to a supported major version with
+    `aws docdb modify-db-cluster --engine-version <ver>
+    --apply-immediately`. Coordinate the upgrade window with
+    application teams — major-version upgrades can require
+    driver updates on the client side.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.config.engine_version_deprecated
+    op: eq
+    value: true

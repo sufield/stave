@@ -112,6 +112,20 @@ func (sc StatementContext) Evaluate() StatementAssessment {
 			// Warning: Public Read
 			assessment.Score = ScoreWarning
 			assessment.Findings = append(assessment.Findings, "Unrestricted Public Read Access")
+		} else if sc.Permissions.Has(PermList) {
+			// Info: Public List-Only.
+			//
+			// List-only public access does not disclose object
+			// contents but does disclose the existence and naming
+			// pattern of every object — bucket enumeration is the
+			// classic precursor to a targeted credential-stuffing or
+			// path-guessing attack against the objects themselves.
+			// Without this branch the previous shape scored a
+			// list-only public statement as ScoreSafe (the same as
+			// no public access at all), missing the
+			// information-disclosure finding entirely.
+			assessment.Score = ScoreInfo
+			assessment.Findings = append(assessment.Findings, "Unrestricted Public List Access")
 		}
 	}
 

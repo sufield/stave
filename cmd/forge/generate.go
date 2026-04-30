@@ -112,9 +112,13 @@ func validateGeneratedControl(w io.Writer, controlID, outDir string) error {
 		outDir = "testdata/e2e"
 	}
 
-	// Find the generated YAML by walking the output directory for the control ID.
+	// Find the generated YAML by walking the output directory for
+	// the control ID. Surface walk errors instead of swallowing
+	// them — a permission-denied or vanished subtree used to
+	// silently produce "YAML file not found" and trigger the
+	// SKIPPED path, masking the real cause from the operator.
 	var yamlPath string
-	_ = filepath.Walk(outDir, func(path string, info os.FileInfo, err error) error {
+	walkErr := filepath.Walk(outDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -127,6 +131,11 @@ func validateGeneratedControl(w io.Writer, controlID, outDir string) error {
 		}
 		return nil
 	})
+	if walkErr != nil {
+		fmt.Fprintf(w, "\nValidating generated control...  WARNING\n  walk error: %v\n", walkErr)
+		// Continue — the file may still have been found before the
+		// walk encountered the problematic entry.
+	}
 
 	if yamlPath == "" {
 		fmt.Fprintln(w, "\nValidating generated control...  SKIPPED (YAML file not found)")

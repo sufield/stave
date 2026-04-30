@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.PI.OFF.001
+name: DocumentDB Performance Insights Should Be Enabled in Production
+description: >
+  Production DocumentDB clusters should enable Performance
+  Insights so per-query wait-state and load-by-wait data are
+  retained for post-incident analysis. PI captures information
+  that the audit log and profiler do not — specifically, which
+  wait events dominated during an outage or query saturation
+  episode. Without PI, root-cause analysis of a slowdown reduces
+  to "the cluster was slow then it wasn't" because the
+  underlying wait-state data was never recorded.
+domain: audit
+severity: low
+compliance:
+  nist_800_53_r5: AU-12
+  soc2: CC7.2
+  ccm_v4:
+  - LOG-08
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Performance Insights is disabled. Wait-state forensics for
+    cluster slowdowns are unavailable.
+  action: >
+    Enable Performance Insights:
+    `aws docdb modify-db-instance --enable-performance-insights`
+    on each member instance. Default retention is 7 days; extend
+    to 731 days if the operator wants long-baseline trend data.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.config.is_production
+    op: eq
+    value: true
+  - field: properties.database.logging.performance_insights_enabled
+    op: eq
+    value: false

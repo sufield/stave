@@ -106,6 +106,20 @@ func validateException(exc Config) error {
 	if strings.TrimSpace(exc.Rationale) == "" {
 		return errors.New("rationale is required")
 	}
+	// Audit-field requirements. An acknowledged exception is a
+	// human-attributable security decision; without `acknowledged_by`
+	// there is no person to reach when the exception's
+	// compensating-control assumption breaks, and without
+	// `acknowledged_date` the expiry check (MaxExceptionAge) has no
+	// reference point and would treat the exception as never
+	// expiring. Both must be present at validation, not just
+	// "filled in eventually."
+	if strings.TrimSpace(exc.AcknowledgedBy) == "" {
+		return errors.New("acknowledged_by is required — exceptions must be human-attributable")
+	}
+	if exc.AcknowledgedDate.IsZero() {
+		return errors.New("acknowledged_date is required — exceptions must carry the date they were accepted so expiry can be computed")
+	}
 	if len(exc.RequiresPassing) == 0 {
 		return errors.New("requires_passing is mandatory — compensating controls must be specified")
 	}
@@ -143,12 +157,28 @@ type CompensatingControl struct {
 	Passing   bool             `json:"passing"`
 }
 
+// MaxExceptionAge is the default validity period for an
+// acknowledged exception. After this many days from the
+// AcknowledgedDate, the exception is treated as expired and stops
+// suppressing the finding. Operators must re-acknowledge with a
+// fresh date to keep the exception in effect — the rule prevents
+// "I said it was OK once in 2019" from suppressing findings
+// indefinitely.
+const MaxExceptionAge = 365 * 24 * time.Hour
+
 // ApplyExceptions processes exception declarations against profile results.
 // It modifies results in place: valid exceptions change FAIL to ACKNOWLEDGED.
 // currentBucket is the bucket name being evaluated; exceptions scoped to a
 // different bucket (non-empty Bucket field that does not match) are skipped.
 // Returns the list of acknowledged results for reporting.
-func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucket string) []AcknowledgedResult {
+//
+// `now` anchors the expiry check: an exception whose
+// AcknowledgedDate is more than MaxExceptionAge before `now` is
+// rejected with InvalidReasonExpired and does NOT suppress the
+// finding. Pass time.Time{} (the zero value) to disable the
+// expiry check — useful for fixture tests that want to assert the
+// non-expiry branches without the date drifting under them.
+func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucket string, now time.Time) []AcknowledgedResult {
 	if len(exceptions) == 0 {
 		return nil
 	}
@@ -186,6 +216,16 @@ func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucke
 			}
 		}
 
+		// Expiry check runs before compensating-control check. An
+		// expired exception is invalid regardless of whether the
+		// compensating controls happen to still pass — the
+		// operator's promise that they were watching has aged out.
+		expired := false
+		if !now.IsZero() && !exc.AcknowledgedDate.IsZero() {
+			expiresAt := exc.AcknowledgedDate.Add(MaxExceptionAge)
+			expired = now.After(expiresAt)
+		}
+
 		ack := AcknowledgedResult{
 			ControlID:            exc.ControlID,
 			Bucket:               exc.Bucket,
@@ -193,7 +233,21 @@ func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucke
 			AcknowledgedBy:       exc.AcknowledgedBy,
 			AcknowledgedDate:     exc.AcknowledgedDate,
 			CompensatingControls: controls,
-			Valid:                allPassing,
+			Valid:                allPassing && !expired,
+		}
+
+		if expired {
+			ack.InvalidReason = InvalidReasonExpired
+			expiresAt := exc.AcknowledgedDate.Add(MaxExceptionAge)
+			ack.InvalidDetail = fmt.Sprintf(
+				"acknowledged %s, validity period (%d days) ended %s — re-acknowledge with a fresh date to keep the exception in effect",
+				exc.AcknowledgedDate, int(MaxExceptionAge.Hours()/24),
+				expiresAt.Format("2006-01-02"))
+			r.Finding = r.Finding + fmt.Sprintf(
+				" [Exception expired on %s; re-acknowledge to suppress]",
+				expiresAt.Format("2006-01-02"))
+			acknowledged = append(acknowledged, ack)
+			continue
 		}
 
 		if allPassing {

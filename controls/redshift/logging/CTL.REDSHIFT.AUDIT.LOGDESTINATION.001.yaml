@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.AUDIT.LOGDESTINATION.001
+name: Redshift Audit Log Destination Must Be Bucket-Hardened
+description: >
+  When Redshift audit logging is configured to deliver to S3
+  (`logging.log_destination_type=s3`), the destination bucket must
+  itself be hardened: a bucket policy restricting writes to the
+  Redshift service principal, a deny-without-MFA policy on
+  delete, and a configured lifecycle policy. A misconfigured
+  destination bucket means audit logs land in storage anyone can
+  delete or overwrite — turning the audit trail into something an
+  attacker reaches *as part of* covering their tracks. The
+  control is paired with CTL.REDSHIFT.LOG.AUDIT.001 (which only
+  asserts logging is on); this one asserts where logging lands
+  is itself defended.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: AU-9
+  soc2: CC7.2
+  pci_dss_v4.0: 10.3.1
+  ccm_v4:
+  - LOG-04
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Audit logs deliver to an S3 bucket lacking the hardening
+    controls (no service-principal-scoped bucket policy, no
+    delete-protection, no lifecycle policy). The audit trail can
+    be tampered with or aged out unintentionally.
+  action: >
+    Update the destination bucket: add a bucket policy granting
+    PutObject only to `redshift.amazonaws.com`, deny `s3:Delete*`
+    without MFA, configure a lifecycle policy aligned with the
+    organization's retention requirement, and enable bucket-level
+    Object Lock if the framework demands write-once retention.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.logging.audit_logging_enabled
+    op: eq
+    value: true
+  - field: properties.database.logging.log_destination_hardened
+    op: eq
+    value: false

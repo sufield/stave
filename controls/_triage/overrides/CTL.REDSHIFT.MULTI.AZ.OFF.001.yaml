@@ -1,0 +1,18 @@
+control: CTL.REDSHIFT.MULTI.AZ.OFF.001
+defect: >
+  Production RA3 cluster runs single-AZ. A single Availability
+  Zone outage takes the warehouse offline.
+infection: >
+  Multi-AZ is RA3-only and opt-in per cluster. Operators provision
+  RA3 clusters with the default single-AZ configuration during
+  initial setup and rarely revisit it. The cluster runs fine
+  every day until the AZ outage that the operator was implicitly
+  betting against. Recovery is automatic when the AZ comes back,
+  but the dependent BI / analytics workload was unavailable for
+  the duration — typically the duration of any AWS regional
+  incident.
+failure: >
+  Production warehouse downtime concurrent with any AZ-level
+  AWS incident. The cost is opportunity (analyses delayed,
+  dashboards stale) rather than data loss, but it lands on the
+  worst possible day.

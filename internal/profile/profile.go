@@ -80,6 +80,16 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Contro
 	if len(controls) == 0 {
 		controls = discoverControls(p.ID, registries)
 	}
+	// Zero-controls guard. A profile that resolves to no controls
+	// would silently produce a Report with allPass=true — making it
+	// look as if the snapshot satisfied the profile when in fact
+	// nothing was checked. The previous shape produced exactly that
+	// false-positive when a profile ID was misspelled, when its
+	// catalog membership had been removed in a refactor, or when
+	// the wrong registry set was passed to Evaluate.
+	if len(controls) == 0 {
+		return Report{}, fmt.Errorf("profile %q resolved to zero controls (registries searched: %d) — check the profile ID and that the controls in this profile are loaded into the registry", p.ID, len(registries))
+	}
 
 	// Collect all control IDs for profile validation.
 	ids := make([]kernel.ControlID, len(controls))

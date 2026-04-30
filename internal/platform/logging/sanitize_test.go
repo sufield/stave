@@ -87,12 +87,34 @@ func TestSanitizeArgs(t *testing.T) {
 			[]string{"--file=mykey.txt"},
 		},
 		{
+			// Per Phase 11 P11.4 task 3: aggressive redaction. The
+			// value position after a sensitive flag is always
+			// redacted regardless of whether it looks like another
+			// flag. Tradeoff: an operator who passed
+			// `--token --path /tmp` (intending --token to take no
+			// value) now sees --path redacted; the alternative
+			// (leaking a real password that legitimately starts
+			// with `-`) is materially worse.
 			[]string{"--token", "--path", "/tmp"},
-			[]string{"--token", "--path", "/tmp"},
+			[]string{"--token", sanitize.SanitizedValue, "/tmp"},
 		},
 		{
 			[]string{"--token", "-1"},
 			[]string{"--token", sanitize.SanitizedValue},
+		},
+		{
+			// Sensitive flag with value starting with `-`: previously
+			// passed through unredacted because isLikelyFlagToken
+			// short-circuited the redaction. Now redacted.
+			[]string{"--password", "-very-secret-pass"},
+			[]string{"--password", sanitize.SanitizedValue},
+		},
+		{
+			// Sensitive flag as the trailing arg: structurally
+			// missing value. Render as "[SANITIZED:missing]" so the
+			// log line still communicates the shape.
+			[]string{"--ok", "--api-key"},
+			[]string{"--ok", "--api-key " + sanitize.SanitizedValue + ":missing"},
 		},
 		{
 			[]string{"--ACCESS-TOKEN", "abc123"},

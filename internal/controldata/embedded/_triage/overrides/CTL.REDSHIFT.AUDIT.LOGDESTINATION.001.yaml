@@ -1,0 +1,18 @@
+control: CTL.REDSHIFT.AUDIT.LOGDESTINATION.001
+defect: >
+  Redshift audit logs deliver to an S3 bucket that lacks
+  hardening: no service-principal-scoped bucket policy, no
+  delete-protection, no lifecycle policy.
+infection: >
+  Audit logging is the post-incident "what did they do" record,
+  so its destination is itself a high-value target. A bucket
+  anyone in the account can write to lets an attacker forge
+  benign log entries; a bucket anyone can delete from lets them
+  remove the entries that recorded their actions; a bucket with
+  no lifecycle policy quietly fills up and silently drops new
+  events. Each gap individually is a different way to defeat
+  the audit trail. The control fires when any of them is
+  present.
+failure: >
+  Tamperable or expirable audit trail. The producer believes
+  audit logging is on; the trail itself is unreliable.

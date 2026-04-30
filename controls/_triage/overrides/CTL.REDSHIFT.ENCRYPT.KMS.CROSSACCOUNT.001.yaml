@@ -1,0 +1,18 @@
+control: CTL.REDSHIFT.ENCRYPT.KMS.CROSSACCOUNT.001
+defect: >
+  KMS key policy on the cluster's at-rest key permits
+  `kms:Decrypt` to principals outside the organization's
+  allow-list.
+infection: >
+  Snapshots, snapshot copies in other regions, and any future
+  share targets remain encrypted at rest, but the recipient's
+  principal legitimately holds Decrypt against the source key.
+  The producer's containment boundary is wholly the key policy,
+  and that boundary now spans accounts. Cross-account snapshot
+  share + cross-account Decrypt grant turns into clear-text data
+  egress without any policy violation on the recipient side.
+failure: >
+  Cross-tenant warehouse exfil that looks compliant from every
+  side except the key policy. Snapshot share is restricted,
+  encryption is on, audit logging records "share to account X" —
+  but X has Decrypt the producer never reviewed.

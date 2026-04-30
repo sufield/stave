@@ -188,12 +188,19 @@ func crossDeviceMove(src, dst string, opts MoveOptions) error {
 	}
 	tmpPath := tmp.Name()
 
-	// On any error, clean up the temp file.
+	// On any error, clean up the temp file. `closed` tracks whether
+	// the explicit Close below already ran, so the defer does not
+	// double-close the descriptor (a double Close on *os.File is not
+	// catastrophic on Linux but is undefined behavior per the os
+	// package contract and produced "file already closed" errors
+	// that masked the real failure on macOS / Windows).
 	committed := false
+	closed := false
 	defer func() {
 		if !committed {
-			// Best-effort cleanup; tmp may already be closed or removed.
-			_ = tmp.Close()
+			if !closed {
+				_ = tmp.Close()
+			}
 			_ = os.Remove(tmpPath)
 		}
 	}()
@@ -212,6 +219,7 @@ func crossDeviceMove(src, dst string, opts MoveOptions) error {
 	if err := tmp.Close(); err != nil {
 		return err
 	}
+	closed = true
 
 	// Enforce destination policies and atomically place the file.
 	if !opts.AllowSymlink {

@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.DATASHARE.CROSSACCOUNT.UNAUTHORIZED.001
+name: Redshift Datashare Consumers Must Stay Inside the Allow-List
+description: >
+  Each cross-account consumer associated with a Redshift datashare
+  must be in the organization's datashare allow-list. Datashare is
+  a legitimate cross-account data-handoff mechanism, but the
+  failure mode is a former partner / acquired-and-divested
+  business unit / one-off project consumer that was never removed
+  from the producer's datashare. Once associated, the consumer
+  account can query the producer's tables in place — no snapshot
+  copy, no audit on the producer side beyond the initial share —
+  for as long as the association persists. The control is the
+  cross-account sibling of CTL.REDSHIFT.DATASHARE.PUBLIC.001:
+  that one catches `AllowPubliclyAccessibleConsumers=true`; this
+  one catches consumer ARNs that drift outside the allow-list.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: AC-3
+  soc2: CC6.6
+  pci_dss_v4.0: 7.2.5
+  ccm_v4:
+  - DSP-17
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Datashare lists at least one consumer account ARN that is not
+    in the organization's datashare allow-list. The unauthorized
+    consumer can query producer data continuously.
+  action: >
+    Disassociate each unauthorized consumer:
+    `aws redshift disassociate-data-share-consumer --data-share-arn <arn> --consumer-arn <arn>`.
+    If a consumer is genuinely still authorized, register them in
+    the allow-list first so the deviation does not return on the
+    next audit.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.datashare.consumer_outside_allowlist
+    op: eq
+    value: true

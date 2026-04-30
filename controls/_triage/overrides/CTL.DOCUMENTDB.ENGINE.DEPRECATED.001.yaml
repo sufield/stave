@@ -1,0 +1,16 @@
+control: CTL.DOCUMENTDB.ENGINE.DEPRECATED.001
+defect: >
+  Cluster runs an engine version on the AWS end-of-life list.
+infection: >
+  AWS publishes a deprecation calendar per engine major
+  version. Clusters on a deprecated version stop receiving
+  security patches the moment the version reaches end-of-life
+  and stay vulnerable until the operator upgrades or AWS
+  force-upgrades them. The forced upgrade lands during the
+  next maintenance window AWS picks — typically not the window
+  the operator would have chosen, and often during peak
+  business hours for the dependent application.
+failure: >
+  Unpatched document store plus an inevitable forced upgrade.
+  The operator gets the worst of both — known CVEs in
+  production and a maintenance disruption they did not choose.

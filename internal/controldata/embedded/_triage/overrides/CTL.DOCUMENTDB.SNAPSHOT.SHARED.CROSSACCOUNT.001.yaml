@@ -1,0 +1,18 @@
+control: CTL.DOCUMENTDB.SNAPSHOT.SHARED.CROSSACCOUNT.001
+defect: >
+  Manual snapshot is shared with one or more AWS account IDs
+  that are outside the organization's snapshot-sharing
+  allow-list.
+infection: >
+  Snapshot sharing is the legitimate cross-account data-handoff
+  mechanism. The failure mode is sharing with an account that
+  used to be a partner, has been compromised, or was never
+  authorized — and then forgetting about the share. Once
+  shared, the recipient can restore at any time, typically
+  months after the share was set up. The producer has no
+  ongoing visibility into when the recipient restores, so the
+  data leaves the organization on the recipient's schedule.
+failure: >
+  Exfiltration via a stale partnership. The data leaves on the
+  recipient's schedule, not the producer's, with the producer
+  unable to observe the access pattern.

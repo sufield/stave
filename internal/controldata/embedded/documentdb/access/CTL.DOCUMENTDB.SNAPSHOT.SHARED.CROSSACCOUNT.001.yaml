@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.SNAPSHOT.SHARED.CROSSACCOUNT.001
+name: DocumentDB Snapshots Must Not Be Shared With Out-of-Org Accounts
+description: >
+  A DocumentDB manual snapshot must not be shared with AWS
+  account IDs outside the organization's snapshot-sharing
+  allow-list. Snapshot sharing is the legitimate cross-account
+  data-handoff mechanism for DocDB — but the failure mode is
+  sharing with an account that used to be a partner, has been
+  compromised, or was never authorized. Once shared, the
+  recipient can restore at any time, typically months after the
+  share was set up and forgotten. Distinct from
+  CTL.DOCUMENTDB.SNAPSHOT.PUBLIC.001 (which catches `all`); this
+  one catches specific out-of-org account IDs.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: AC-3
+  soc2: CC6.6
+  pci_dss_v4.0: 7.2.5
+  ccm_v4:
+  - DSP-17
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Manual snapshot is shared with one or more AWS account IDs
+    outside the organization's snapshot-sharing allow-list.
+  action: >
+    Revoke each unauthorized account's restore access:
+    `aws docdb modify-db-cluster-snapshot-attribute --db-cluster-snapshot-identifier <id> --attribute-name restore --values-to-remove <acct>`.
+    If cross-account sharing is genuinely required, register the
+    target account in the allow-list first.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.snapshot_sharing.shared_with_external_accounts
+    op: eq
+    value: true

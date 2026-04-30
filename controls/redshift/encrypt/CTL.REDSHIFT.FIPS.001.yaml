@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.FIPS.001
+name: Redshift Cluster Must Use FIPS-Validated SSL When Required
+description: >
+  Redshift clusters subject to FIPS 140-2 / FIPS 140-3 compliance
+  obligations (FedRAMP Moderate / High, DoD IL2+, certain
+  healthcare data residencies) must set `use_fips_ssl=true` in the
+  cluster parameter group so the SSL endpoint serves only
+  FIPS-validated cipher suites. The default `use_fips_ssl=false`
+  permits non-FIPS ciphers and disqualifies the cluster from
+  attestation under those frameworks even when `require_ssl` is
+  enabled.
+domain: compliance
+severity: medium
+compliance:
+  nist_800_53_r5: SC-13
+  fedramp_moderate: SC-13
+  fedramp_high: SC-13
+  pci_dss_v4.0: 4.2.1
+  ccm_v4:
+  - CEK-09
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Cluster has `use_fips_ssl=false` in its parameter group. The
+    SSL endpoint serves non-FIPS-validated cipher suites and the
+    cluster cannot be attested under FedRAMP / FIPS-mandated
+    frameworks.
+  action: >
+    Update the cluster parameter group so `use_fips_ssl=true` and
+    apply the change. Verify with
+    `aws redshift describe-cluster-parameters` that the parameter
+    actually applied — Redshift sometimes silently retains the
+    previous value when the parameter group is detached and
+    reattached.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.ssl.fips_required
+    op: eq
+    value: true
+  - field: properties.database.ssl.use_fips_ssl
+    op: eq
+    value: false

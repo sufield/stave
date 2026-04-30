@@ -225,13 +225,22 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 		}
 		return isPresent, nil
 	case predicate.OpListEmpty:
-		// size() in CEL accepts list, map, string, and bytes — anything
-		// else is a runtime error that bubbles up as a control failure.
-		// Treat a non-collection field as "empty" (the field has no
-		// list-shaped contents to count) so an upstream extractor that
-		// emits an int/bool there does not crash predicate evaluation.
+		// "empty" semantics:
+		//   field absent          → true  (nothing there to be non-empty)
+		//   collection size == 0  → true  (list/map/string with no elements)
+		//   not a collection type → true  (an int / bool / number can't
+		//                                  hold a list-shaped value, so
+		//                                  it's logically empty for the
+		//                                  purpose of this operator)
+		//
+		// The previous shape returned false for non-collection types,
+		// causing controls that asked "is this list empty?" to fail
+		// closed against legitimately-non-list extractor output.
+		// size() in CEL errors on non-collection types, so the type()
+		// guard must run *before* size() — short-circuiting with `!hf`
+		// first, then collection-type membership, then size.
 		return fmt.Sprintf(
-			"(!(%s) || (type(%s) in [type([]), type({}), type(\"\")] && size(%s) == 0))",
+			"(!(%s) || !(type(%s) in [type([]), type({}), type(\"\")]) || size(%s) == 0)",
 			hf, fa, fa,
 		), nil
 	case predicate.OpNeqField:

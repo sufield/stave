@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -109,7 +110,7 @@ func run(w io.Writer, opts *options) error {
 		return fmt.Errorf("load exceptions: %w", excErr)
 	}
 	if len(excs) > 0 {
-		acks := exception.ApplyExceptions(excs, report.Results, extractBucketName(snap))
+		acks := exception.ApplyExceptions(excs, report.Results, extractBucketName(snap), time.Now())
 		// Only valid exceptions belong in the public Acknowledged list.
 		// Previously, invalid acks (where the compensating control
 		// wasn't in place) were also appended, making it look as if

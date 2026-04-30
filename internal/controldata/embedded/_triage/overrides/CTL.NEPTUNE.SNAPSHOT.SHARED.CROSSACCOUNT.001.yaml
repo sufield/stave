@@ -1,0 +1,21 @@
+control: CTL.NEPTUNE.SNAPSHOT.SHARED.CROSSACCOUNT.001
+defect: >
+  Manual snapshot is shared with one or more AWS account IDs
+  that are outside the organization's snapshot-sharing
+  allow-list.
+infection: >
+  Snapshot sharing is the legitimate cross-account graph
+  handoff mechanism. The failure mode is sharing with an
+  account that used to be a partner, has been compromised, or
+  was never authorized — and then forgetting about the share.
+  Once shared, the recipient can restore the graph in their
+  own VPC and traverse every relationship the snapshot
+  captured. For a graph workload the snapshot typically
+  contains every identity-asset-policy relationship the
+  organization tracks, so the concentration of leaked
+  intelligence is materially higher than for a typical
+  document or relational store.
+failure: >
+  Cross-tenant exposure of the organizational relationship
+  graph via a stale partnership. The recipient queries the
+  graph at their leisure with no producer-side observability.

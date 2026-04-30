@@ -1,0 +1,19 @@
+control: CTL.REDSHIFT.WLM.QUERY.LIMIT.001
+defect: >
+  Default WLM queue has no Query Monitoring Rules. There is no
+  cap on per-query resource consumption against the queue most
+  callers land in.
+infection: >
+  Without QMRs, a single malformed query — typically an analyst
+  forgetting a join predicate, but also a deliberate
+  denial-of-service from a compromised dbuser — can saturate
+  the cluster and starve every other workload until manual
+  intervention. The cluster keeps running, but every other
+  query queues behind the runaway one. Operators discover the
+  issue when the BI dashboard stops updating, not when the
+  saturating query starts.
+failure: >
+  Self-inflicted warehouse outage from a single bad query. Mean
+  time to detection is roughly the dashboard refresh interval;
+  mean time to remediation is roughly the time to find the
+  cluster connection in the on-call runbook.

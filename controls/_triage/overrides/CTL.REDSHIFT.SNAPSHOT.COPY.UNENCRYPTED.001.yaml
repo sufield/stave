@@ -1,0 +1,20 @@
+control: CTL.REDSHIFT.SNAPSHOT.COPY.UNENCRYPTED.001
+defect: >
+  Cross-region snapshot copying is enabled but no snapshot copy
+  grant is configured (or the grant points at the AWS-managed
+  default key). Copies in the destination region are not
+  encrypted with a customer-managed key.
+infection: >
+  Cross-region copying is intentional — it's the standard DR
+  pattern. The failure mode is enabling it without ensuring the
+  destination region has a customer-managed key registered as
+  the copy target. Copies land plaintext-equivalent in the DR
+  region: any account principal with
+  `redshift:RestoreFromClusterSnapshot` in that region reads them
+  without ever touching the source key. The source region's
+  encryption posture is irrelevant — the data has crossed the
+  boundary.
+failure: >
+  Plaintext-equivalent warehouse data in the DR region. The
+  source region's containment is intact; the DR region's is
+  bypassed by construction.

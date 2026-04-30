@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.WLM.QUERY.LIMIT.001
+name: Redshift Default WLM Queue Should Have Query Monitoring Rules
+description: >
+  Production Redshift clusters should have at least one Query
+  Monitoring Rule (QMR) on the default WLM queue. QMRs cap
+  per-query resource consumption — query_execution_time, scan_row_count,
+  return_row_count, query_temp_blocks_to_disk — and abort or log
+  outliers that exceed thresholds. Without any rule, a single
+  malformed query (or a deliberate denial-of-service from a
+  compromised dbuser) can saturate the cluster and starve every
+  other workload until manual intervention. The default queue is
+  the one most callers land in, so a QMR there is the simplest
+  way to bound the worst-case query.
+domain: resilience
+severity: low
+compliance:
+  nist_800_53_r5: SC-5
+  soc2: A1.2
+  ccm_v4:
+  - BCR-08
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Default WLM queue has no Query Monitoring Rules. Any single
+    query can saturate the cluster.
+  action: >
+    Add at least one QMR to the default queue via the parameter
+    group's `wlm_json_configuration` — typical baseline:
+    abort queries running >300s, log queries scanning >1B rows,
+    abort queries spilling >50GB to disk. Tune to the workload's
+    actual baseline rather than copying the example values
+    verbatim.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.wlm.default_queue_has_qmr
+    op: eq
+    value: false

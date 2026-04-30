@@ -1,0 +1,16 @@
+control: CTL.DOCUMENTDB.INSTANCE.PUBLIC.001
+defect: >
+  At least one member instance of the DocumentDB cluster has
+  `publicly_accessible=true`. The cluster has a public DNS
+  endpoint regardless of security-group rules.
+infection: >
+  The cluster connection string routes to whichever member is
+  the current writer. If even one member is publicly
+  accessible, internet scanners can reach the document store
+  through that member's public endpoint. Operators sometimes
+  set `publicly_accessible=true` on a single instance during
+  initial debugging and never revert it; the cluster keeps
+  working, the public endpoint stays exposed.
+failure: >
+  Direct internet reach to the document store, bypassing every
+  network control short of the security group's ingress rules.

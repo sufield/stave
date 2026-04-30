@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.MULTI.AZ.OFF.001
+name: Redshift RA3 Cluster Should Run Multi-AZ for Production
+description: >
+  Production Redshift clusters on the RA3 node family should run
+  with `multi_az=true` so a single Availability Zone outage does
+  not take the warehouse offline. The setting is RA3-only — DC2
+  / DS2 nodes do not support Multi-AZ — and is opt-in per
+  cluster. Running production warehouses single-AZ is a quiet
+  availability bet: the cluster comes back online when the AZ
+  recovers, but the dependent BI / analytics workload was
+  unavailable for the duration of the outage.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: CP-7
+  soc2: A1.2
+  ccm_v4:
+  - BCR-08
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    RA3 cluster in production is configured single-AZ. A single
+    AZ outage takes the warehouse offline.
+  action: >
+    Modify the cluster with `--multi-az=true`. The conversion is
+    online for RA3 clusters but applies during the next
+    maintenance window — schedule outside business hours so the
+    intermediate brief failover is invisible.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.config.is_production
+    op: eq
+    value: true
+  - field: properties.database.config.node_family
+    op: eq
+    value: ra3
+  - field: properties.database.config.multi_az
+    op: eq
+    value: false

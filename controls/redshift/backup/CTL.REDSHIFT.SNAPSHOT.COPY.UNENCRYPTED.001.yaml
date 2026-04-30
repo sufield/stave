@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.SNAPSHOT.COPY.UNENCRYPTED.001
+name: Redshift Cross-Region Snapshot Copies Must Be Encrypted
+description: >
+  When Redshift cross-region snapshot copying is enabled
+  (`snapshot_copy.destination_region` set), every copy in the
+  destination region must be encrypted with a customer-managed
+  KMS key registered through a snapshot copy grant. Copies that
+  land unencrypted in the destination region defeat the source
+  region's encryption: the snapshot data exists in plaintext on
+  AWS infrastructure, and any account principal with
+  `redshift:RestoreFromClusterSnapshot` in the destination region
+  reads it without ever touching the source key.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SC-28
+  soc2: CC6.7
+  pci_dss_v4.0: 3.4.1
+  ccm_v4:
+  - CEK-03
+  - DSP-17
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Cross-region snapshot copy is configured but the destination
+    region has no snapshot copy grant or the grant points at the
+    AWS-managed default key. Copies land plaintext-equivalent in
+    the destination.
+  action: >
+    Create a customer-managed KMS key in the destination region,
+    create a snapshot copy grant on it, and re-enable cross-region
+    copying with `--snapshot-copy-grant-name`. Re-copy any
+    in-flight snapshots so the historical chain is also encrypted.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.snapshot_copy.cross_region_enabled
+    op: eq
+    value: true
+  - field: properties.database.snapshot_copy.copies_encrypted
+    op: eq
+    value: false

@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.INSTANCE.PUBLIC.001
+name: DocumentDB Instances Must Not Be Publicly Accessible
+description: >
+  No member instance of a DocumentDB cluster may have
+  `publicly_accessible=true`. The cluster-level connection
+  string routes to whichever member is the current writer; even
+  one publicly accessible member exposes the document store to
+  internet scanners. Distinct from CTL.DOCUMENTDB.SG.OPEN.001
+  (which catches the security-group dimension): this control
+  catches the per-instance flag that drives DNS / public IP
+  assignment regardless of SG configuration.
+domain: network
+severity: critical
+compliance:
+  nist_800_53_r5: AC-3
+  soc2: CC6.6
+  pci_dss_v4.0: 1.3.4
+  ccm_v4:
+  - IVS-03
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    At least one member instance has `publicly_accessible=true`.
+    The cluster has a public endpoint regardless of SG rules.
+  action: >
+    Modify each affected member instance with
+    `--no-publicly-accessible`. Per-instance changes apply during
+    the next maintenance window — schedule outside business
+    hours so the brief failover is invisible.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.network.any_member_publicly_accessible
+    op: eq
+    value: true
