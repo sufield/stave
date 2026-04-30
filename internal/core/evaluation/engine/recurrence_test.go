@@ -30,7 +30,7 @@ func recurrenceControl(id string, limit, windowDays int) *policy.ControlDefiniti
 func recurrenceLifecycle(t *testing.T, exposureWindows []struct{ start, end time.Time }) *asset.ExposureLifecycle {
 	t.Helper()
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
-	tl := asset.NewExposureLifecycle(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 
 	for _, ep := range exposureWindows {
 		// Record unsafe start
@@ -106,7 +106,7 @@ func TestRecurrence_ActiveWindowCountedTowardLimit(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
-	tl := asset.NewExposureLifecycle(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 
 	// Window 1: resolved
 	_ = tl.RecordCheck(base, true)
@@ -139,7 +139,7 @@ func TestRecurrence_ActiveWindowOutsideRange(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
-	tl := asset.NewExposureLifecycle(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 
 	// Active window started 30 days ago (before the 7-day range)
 	_ = tl.RecordCheck(base, true)
@@ -160,7 +160,7 @@ func TestCreateRecurrenceFinding_Fields(t *testing.T) {
 	ctl := recurrenceControl("CTL.REC.001", 2, 7)
 
 	a := asset.Asset{ID: "bucket-1", Type: kernel.AssetType("s3_bucket")}
-	tl := asset.NewExposureLifecycle(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 	_ = tl.RecordCheck(base, false)
 
 	stats := RecurrenceStats{

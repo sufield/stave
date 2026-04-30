@@ -392,17 +392,20 @@ func findingSeverityWeight(nodeID string, nodesByID map[string]*Node) float64 {
 // stave:invariant/{category}.{number}; category is everything up to
 // the last dot, number is the suffix.
 //
-// When the ID has no dot at all (a malformed input or a custom
-// control ID that does not follow the standard shape), return the
-// whole ID as the *number* and an empty *category*. InvariantIRI
-// renders the result as `category.number`, so an empty number would
-// produce a trailing-dot IRI like `urn:stave:invariant/CTRL001.`,
-// which downstream RDF parsers reject — putting the whole ID into
-// the number slot keeps the IRI well-formed.
+// A dot-free control ID is a data-quality issue (custom or
+// malformed input) — log a warning so operators can find and fix
+// the source, and use the whole ID as the *number* with category
+// "default". InvariantIRI renders the result as `category.number`,
+// so an empty number would produce a trailing-dot IRI like
+// `urn:stave:invariant/CTRL001.`, which downstream RDF parsers
+// reject; using "default" as the category keeps the IRI well-formed
+// AND surfaces the data issue in a recognizable way.
 func splitControlID(id string) (category, number string) {
 	idx := strings.LastIndex(id, ".")
 	if idx < 0 {
-		return "", id
+		slog.Warn("graph export: control ID has no dot separator; using 'default' category",
+			"control_id", id)
+		return "default", id
 	}
 	return id[:idx], id[idx+1:]
 }

@@ -49,6 +49,33 @@ func TestSanitizer_ScrubMessage(t *testing.T) {
 	}
 }
 
+// TestSanitizer_ScrubMessage_PreservesURLs pins that URL paths are
+// not eaten by the path-scrubbing regex. The earlier shape collapsed
+// `http://example.com/secret` to `http://example.comsecret` because
+// the leading-slash rule matched the URL's first path slash and
+// consumed it during basename replacement.
+func TestSanitizer_ScrubMessage_PreservesURLs(t *testing.T) {
+	s := Policy{SanitizeIDs: true, PathMode: PathBase}.NewSanitizer()
+	cases := []struct {
+		in   string
+		want string
+	}{
+		{"failed to fetch http://example.com/secret",
+			"failed to fetch http://example.com/secret"},
+		{"upload to https://bucket.s3.amazonaws.com/data/x.json",
+			"upload to https://bucket.s3.amazonaws.com/data/x.json"},
+		// Path-and-URL mixed: URL preserved, file path scrubbed.
+		{"cannot reach http://example.com/x: open /home/u/data: denied",
+			"cannot reach http://example.com/x: open data: denied"},
+	}
+	for _, tc := range cases {
+		got := s.ScrubMessage(tc.in)
+		if got != tc.want {
+			t.Errorf("ScrubMessage(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
 func TestSanitizer_ScrubMessage_SingleComponentPath(t *testing.T) {
 	// Single-component absolute paths (e.g. `/secret`) used to slip
 	// through because the regex required at least one intermediate

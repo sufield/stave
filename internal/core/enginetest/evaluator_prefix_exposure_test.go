@@ -225,7 +225,7 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 				"storage": storage,
 			},
 		}
-		lifecycle := asset.NewExposureLifecycle(resource)
+		lifecycle, _ := asset.NewExposureLifecycle(resource)
 		if err := lifecycle.RecordCheck(now, true); err != nil {
 			t.Fatal(err)
 		}

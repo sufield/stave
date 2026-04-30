@@ -219,9 +219,28 @@ func fieldAccess(dotPath string) string {
 // Bare fields like "type" are normalized to "properties.type" first.
 func hasField(dotPath string) string {
 	dotPath = normalizePath(dotPath)
+	if dotPath == "" {
+		// An empty path cannot exist. Returning "true" used to
+		// short-circuit predicates against malformed control YAML
+		// into a false-pass — prefer "false" so the rule visibly
+		// fails rather than silently passing.
+		return "false"
+	}
 	parts := strings.Split(dotPath, ".")
-	if len(parts) <= 1 {
-		return "true"
+	if len(parts) == 1 {
+		// Single-segment path after normalization is always a known
+		// top-level CEL variable (properties, params, identities,
+		// identity); normalizePath prefixes anything else with
+		// "properties.". Top-level vars are declared in NewEnv and
+		// always present at evaluation time, so "true" is the
+		// correct answer for genuinely-known namespaces. Guard
+		// against an unknown name slipping through (e.g. a future
+		// addition to knownNamespaces that isn't declared on the
+		// CEL env) by emitting a runtime size() probe — `size(x)
+		// >= 0` evaluates against the variable and surfaces the
+		// missing-binding case as an error instead of a silent
+		// "true".
+		return fmt.Sprintf("size(%s) >= 0", parts[0])
 	}
 
 	checks := make([]string, 0, len(parts)-1)

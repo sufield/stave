@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -119,7 +120,21 @@ func recordAssetObservation(
 
 		t, exists := lcs[a.ID]
 		if !exists {
-			t = asset.NewExposureLifecycle(a)
+			newLC, lcErr := asset.NewExposureLifecycle(a)
+			if lcErr != nil {
+				// Empty asset ID means upstream produced a
+				// malformed observation row. Skip this asset
+				// only — the rest of the assessment must keep
+				// running so a single bad row doesn't blank the
+				// whole report.
+				if errors.Is(lcErr, asset.ErrEmptyAssetID) {
+					slog.Warn("skipping asset with empty ID",
+						"control", ctl.ID, "asset_type", a.Type)
+					continue
+				}
+				return lcErr
+			}
+			t = newLC
 			lcs[a.ID] = t
 		}
 

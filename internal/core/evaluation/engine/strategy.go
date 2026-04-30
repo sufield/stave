@@ -130,29 +130,26 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 			Identities:        ids.At(t.LastObservedAt()),
 			PredicateParser:   s.deps.predicateParser(),
 		})
-		// CreateDurationFinding's contract is "(*Finding, error)" with
-		// the finding always non-nil — but the slice append-via-literal
-		// below would crash if a future refactor returned nil. Guard
-		// here so a contract regression downgrades to "violation
-		// recorded without a Finding" instead of a panic during
-		// engine evaluation.
-		var findings []*evaluation.Finding
-		if finding != nil {
-			findings = []*evaluation.Finding{finding}
-		} else {
-			// Violation verdict with no finding diverges the
-			// assessor's violation count from the findings list
-			// for this control/asset. Surface it so a downstream
-			// telemetry scrape catches the contract breach
-			// instead of papering over it.
-			s.deps.logger().Warn("violation verdict with nil finding (contract violation)",
-				"control", s.ctl.ID, "asset", t.ID,
-				"verdict", "VIOLATION")
+		// CreateDurationFinding's contract is "(*Finding, error)"
+		// with the finding always non-nil. If a future refactor
+		// returns nil anyway, we cannot describe the violation —
+		// downgrade to INCONCLUSIVE so the assessor's violation
+		// count stays consistent with the findings list. The
+		// alternative (emit VerdictViolation with empty findings)
+		// inflates the violations summary above the visible
+		// finding count and makes report totals diverge in a way
+		// that's hard to debug from the user-facing output.
+		if finding == nil {
+			s.deps.logger().Warn("CreateDurationFinding returned nil finding; downgrading verdict to INCONCLUSIVE to keep counts consistent",
+				"control", s.ctl.ID, "asset", t.ID)
+			observation.MarkInconclusive("violation finding could not be constructed")
+			return observation, nil
 		}
+		findings := []*evaluation.Finding{finding}
 		if durErr != nil {
 			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration",
 				"control", s.ctl.ID, "asset", t.ID, "error", durErr,
-				"finding_emitted", finding != nil)
+				"finding_emitted", true)
 		}
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
 		return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings
@@ -212,29 +209,26 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 			Identities:        ids.At(t.LastObservedAt()),
 			PredicateParser:   s.deps.predicateParser(),
 		})
-		// CreateDurationFinding's contract is "(*Finding, error)" with
-		// the finding always non-nil — but the slice append-via-literal
-		// below would crash if a future refactor returned nil. Guard
-		// here so a contract regression downgrades to "violation
-		// recorded without a Finding" instead of a panic during
-		// engine evaluation.
-		var findings []*evaluation.Finding
-		if finding != nil {
-			findings = []*evaluation.Finding{finding}
-		} else {
-			// Violation verdict with no finding diverges the
-			// assessor's violation count from the findings list
-			// for this control/asset. Surface it so a downstream
-			// telemetry scrape catches the contract breach
-			// instead of papering over it.
-			s.deps.logger().Warn("violation verdict with nil finding (contract violation)",
-				"control", s.ctl.ID, "asset", t.ID,
-				"verdict", "VIOLATION")
+		// CreateDurationFinding's contract is "(*Finding, error)"
+		// with the finding always non-nil. If a future refactor
+		// returns nil anyway, we cannot describe the violation —
+		// downgrade to INCONCLUSIVE so the assessor's violation
+		// count stays consistent with the findings list. The
+		// alternative (emit VerdictViolation with empty findings)
+		// inflates the violations summary above the visible
+		// finding count and makes report totals diverge in a way
+		// that's hard to debug from the user-facing output.
+		if finding == nil {
+			s.deps.logger().Warn("CreateDurationFinding returned nil finding; downgrading verdict to INCONCLUSIVE to keep counts consistent",
+				"control", s.ctl.ID, "asset", t.ID)
+			observation.MarkInconclusive("violation finding could not be constructed")
+			return observation, nil
 		}
+		findings := []*evaluation.Finding{finding}
 		if durErr != nil {
 			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration",
 				"control", s.ctl.ID, "asset", t.ID, "error", durErr,
-				"finding_emitted", finding != nil)
+				"finding_emitted", true)
 		}
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
 		return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings

@@ -17,11 +17,20 @@ import (
 
 // messagePathRe matches absolute POSIX-style paths embedded inside free-form
 // strings (e.g. wrapped error messages), capturing the basename as group 1.
-// Single-component absolute paths (e.g. `/secret`) match too — the previous
-// shape required at least one intermediate directory and let those slip
-// through, which is the exact form a leaked secret-token filename takes
-// in error messages from CI runners that mount tokens at the root.
-var messagePathRe = regexp.MustCompile(`/(?:[^\s:]+/)*([^\s:/]+)`)
+// messagePathRe alternates: branch 1 matches a URL (kept verbatim);
+// branch 2 matches an absolute path with a captured basename. The
+// alternation lets ScrubMessage pass URLs through unchanged while
+// still scrubbing credential-style paths. The earlier shape was
+// path-only, which corrupted URLs like `http://example.com/secret`
+// into `http://example.comsecret` — the `/secret` was matched and
+// replaced, eating the slash that separated host from path.
+//
+// Single-component absolute paths (e.g. `/secret`) match too — the
+// previous shape required at least one intermediate directory and
+// let those slip through, which is the exact form a leaked secret-
+// token filename takes in error messages from CI runners that mount
+// tokens at the root.
+var messagePathRe = regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9+.\-]*://[^\s]+)|/(?:[^\s:]+/)*([^\s:/]+)`)
 
 // Compile-time check that Sanitizer implements kernel.Sanitizer.
 var _ kernel.Sanitizer = (*Sanitizer)(nil)
@@ -116,7 +125,22 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 	if msg == "" {
 		return msg
 	}
-	return messagePathRe.ReplaceAllString(msg, "$1")
+	return messagePathRe.ReplaceAllStringFunc(msg, func(match string) string {
+		// Re-match to recover capture groups: ReplaceAllStringFunc
+		// gives only the full match, so we have to ask the regex
+		// for sub-groups against the same input slice.
+		groups := messagePathRe.FindStringSubmatch(match)
+		// groups[1] is the URL branch, groups[2] is the path
+		// basename. Exactly one is non-empty per match because the
+		// alternation is mutually exclusive at the top level.
+		if len(groups) > 1 && groups[1] != "" {
+			return groups[1] // URL — preserve verbatim
+		}
+		if len(groups) > 2 && groups[2] != "" {
+			return groups[2] // credential-style path — keep basename only
+		}
+		return match
+	})
 }
 
 // sanitizeRaw applies prefix-aware sanitization to a raw identifier string.

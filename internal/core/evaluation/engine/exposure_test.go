@@ -37,7 +37,7 @@ func exposureLifecycle(t *testing.T, props map[string]any) *asset.ExposureLifecy
 		Type:       kernel.AssetType("s3_bucket"),
 		Properties: props,
 	}
-	tl := asset.NewExposureLifecycle(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	if err := tl.RecordCheck(base, false); err != nil {
 		t.Fatalf("RecordObservation: %v", err)

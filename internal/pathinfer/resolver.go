@@ -16,8 +16,19 @@ import (
 )
 
 // BaseDir returns the base directory for path inference.
-// If STAVE_PROJECT_ROOT is set and points to a valid directory, it is
-// returned. Otherwise, the current working directory is returned.
+//
+// Resolution order:
+//  1. If STAVE_PROJECT_ROOT is set and points to a valid directory,
+//     return it.
+//  2. If STAVE_PROJECT_ROOT is set but invalid (missing path,
+//     not-a-directory, permission error), log a warning and fall
+//     back to the current working directory. The earlier shape
+//     fell back silently, which made operator typos in the
+//     environment invisible — runs that should have used a
+//     specific project root quietly resolved relative to wherever
+//     the binary happened to be invoked.
+//  3. Otherwise, return the current working directory.
+//
 // The environ parameter controls environment lookups (pass os.Getenv
 // in production; inject a stub in tests).
 func BaseDir(environ ...func(string) string) (string, error) {
@@ -27,7 +38,14 @@ func BaseDir(environ ...func(string) string) (string, error) {
 	}
 	if root := lookup(env.ProjectRoot.Name); root != "" {
 		fi, err := os.Stat(root)
-		if err == nil && fi.IsDir() {
+		switch {
+		case err != nil:
+			slog.Warn("STAVE_PROJECT_ROOT is set but the path could not be statted; falling back to cwd",
+				"path", root, "error", err)
+		case !fi.IsDir():
+			slog.Warn("STAVE_PROJECT_ROOT is set but the path is not a directory; falling back to cwd",
+				"path", root)
+		default:
 			return root, nil
 		}
 	}

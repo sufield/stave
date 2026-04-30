@@ -273,7 +273,7 @@ func TestBaselineEntryKey(t *testing.T) {
 
 func TestComputePostureDrift_SafeLifecycle(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl := asset.NewExposureLifecycle(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	if err := tl.RecordCheck(base, false); err != nil {
 		t.Fatal(err)
@@ -285,7 +285,7 @@ func TestComputePostureDrift_SafeLifecycle(t *testing.T) {
 
 func TestComputePostureDrift_Persistent(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl := asset.NewExposureLifecycle(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	if err := tl.RecordCheck(base, true); err != nil {
 		t.Fatal(err)
@@ -308,7 +308,7 @@ func TestComputePostureDrift_Persistent(t *testing.T) {
 
 func TestComputePostureDrift_Degraded(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl := asset.NewExposureLifecycle(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	// First safe, then unsafe
 	if err := tl.RecordCheck(base, false); err != nil {
@@ -332,7 +332,7 @@ func TestComputePostureDrift_Degraded(t *testing.T) {
 
 func TestComputePostureDrift_Intermittent(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl := asset.NewExposureLifecycle(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	// unsafe -> safe -> unsafe
 	if err := tl.RecordCheck(base, true); err != nil {

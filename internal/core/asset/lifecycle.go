@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -37,16 +38,26 @@ func (l *ExposureLifecycle) HasClampedWindow() bool {
 	return l.hasClampedWindow
 }
 
-// NewExposureLifecycle constructs a new lifecycle tracker for a cloud asset.
-// Panics if the asset ID is empty — this is a programming error at the call site.
-func NewExposureLifecycle(a Asset) *ExposureLifecycle {
+// ErrEmptyAssetID is returned by NewExposureLifecycle when the input
+// Asset has an empty ID. Callers should log the offending observation
+// and skip the asset rather than abort the whole evaluation, since a
+// single malformed snapshot row should not invalidate the entire run.
+var ErrEmptyAssetID = errors.New("asset ID must be non-empty")
+
+// NewExposureLifecycle constructs a new lifecycle tracker for a cloud
+// asset. Returns ErrEmptyAssetID when the asset ID is empty — the
+// earlier shape panicked, which aborted the entire assessment if a
+// single malformed observation slipped past upstream validation.
+// Returning an error lets the lifecycle builder skip just the bad
+// row and continue processing the rest of the snapshot.
+func NewExposureLifecycle(a Asset) (*ExposureLifecycle, error) {
 	if a.ID.IsEmpty() {
-		panic("contract violated: NewExposureLifecycle requires non-empty asset ID")
+		return nil, ErrEmptyAssetID
 	}
 	return &ExposureLifecycle{
 		ID:    a.ID,
 		asset: a,
-	}
+	}, nil
 }
 
 // Asset returns the latest observed state of the cloud asset.

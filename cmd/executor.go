@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"strings"
@@ -162,15 +163,24 @@ func collectVisibleCommandNames(root *cobra.Command) []string {
 func (a *App) handleExecutionError(err error, args []string) {
 	exitCode := ExitCode(err)
 
-	if a.Logger != nil {
-		// Log only the root error message, not presentation decoration
-		// (Next: …, More info: … lines appended by hint wrappers).
-		msg := err.Error()
-		if idx := strings.Index(msg, "\n"); idx > 0 {
-			msg = msg[:idx]
-		}
-		a.Logger.Debug("command failed", "error", msg, "exit_code", exitCode)
+	// Log only the root error message, not presentation decoration
+	// (Next: …, More info: … lines appended by hint wrappers).
+	logger := a.Logger
+	if logger == nil {
+		// Bootstrap can fail before the structured logger is wired
+		// up (config resolution error, env-var parse error, etc.).
+		// Falling back to slog.Default() ensures those early-phase
+		// errors land *somewhere* — the previous nil-guard simply
+		// dropped them, so a failed startup looked indistinguishable
+		// from a successful one until the user noticed the exit
+		// code.
+		logger = slog.Default()
 	}
+	msg := err.Error()
+	if idx := strings.Index(msg, "\n"); idx > 0 {
+		msg = msg[:idx]
+	}
+	logger.Debug("command failed", "error", msg, "exit_code", exitCode)
 
 	if !isSentinelError(err) {
 		a.writeCommandError(err, args)

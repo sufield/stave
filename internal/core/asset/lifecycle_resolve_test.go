@@ -10,7 +10,7 @@ import (
 // window closes at t (not at the last unsafe scan). Closing at the
 // last unsafe scan would undercount dwell time by one scan interval.
 func TestExposureLifecycle_SecureClosesWindowAtSecureScan(t *testing.T) {
-	l := NewExposureLifecycle(Asset{ID: "x"})
+	l, _ := NewExposureLifecycle(Asset{ID: "x"})
 
 	t0 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	t1 := time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)

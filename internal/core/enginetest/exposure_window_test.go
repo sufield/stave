@@ -77,7 +77,7 @@ func TestExposureLifecycle_RecordObservation_FloorsArchivedExposureWindowEnd(t *
 	start := time.Date(2026, 2, 1, 10, 0, 0, 0, time.UTC)
 	outOfOrderSafe := start.Add(-1 * time.Hour)
 
-	lifecycle := asset.NewExposureLifecycle(asset.Asset{ID: "res:test"})
+	lifecycle, _ := asset.NewExposureLifecycle(asset.Asset{ID: "res:test"})
 	if err := lifecycle.RecordCheck(start, true); err != nil {
 		t.Fatal(err)
 	}

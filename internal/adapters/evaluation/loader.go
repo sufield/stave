@@ -102,12 +102,18 @@ func (l *Loader) parseResult(data []byte, source string) (*evaluation.Compliance
 // `{"kind":"ASSESSMENT","findings":[]}` cannot drive remediation /
 // gating into a "clean" verdict — it fails schema validation on
 // missing required fields (schema_version, run, summary, status).
-func (l *Loader) LoadEnvelopeFromFile(_ context.Context, path string) (*report.Assessment, error) {
+func (l *Loader) LoadEnvelopeFromFile(ctx context.Context, path string) (*report.Assessment, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	path = fsutil.CleanUserPath(path)
 
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading evaluation file %q: %w", path, err)
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 
 	// Schema-validate before unmarshaling into the typed struct so
@@ -153,12 +159,18 @@ func (l *Loader) LoadEnvelopeFromFile(_ context.Context, path string) (*report.A
 }
 
 // LoadBaselineFromFile loads a baseline finding file and ensures findings are sorted deterministically.
-func (l *Loader) LoadBaselineFromFile(_ context.Context, path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error) {
+func (l *Loader) LoadBaselineFromFile(ctx context.Context, path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	path = fsutil.CleanUserPath(path)
 
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading baseline file %q: %w", path, err)
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 
 	var base evaluation.Baseline

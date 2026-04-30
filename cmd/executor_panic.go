@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"runtime/debug"
+	"strconv"
+	"strings"
 
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
@@ -105,11 +107,47 @@ func (a *App) sanitizeExecuteMessage(message string) string {
 var fallbackScrubPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`arn:aws:[a-z0-9-]+:[a-z0-9-]*:\d{12}:[^\s"'<>]+`),
 	regexp.MustCompile(`\b\d{12}\b`),                         // account IDs
-	regexp.MustCompile(`\b\d{1,3}(?:\.\d{1,3}){3}\b`),        // IPv4
 	regexp.MustCompile(`/(?:[^/\s:"'<>]+/){2,}[^/\s:"'<>]+`), // absolute paths
 }
 
+// ipv4Candidate matches a four-octet dotted candidate. The regex is
+// permissive on its own: each octet is 1-3 digits without range
+// validation. The accompanying scrubber routine rejects matches that
+// fail octet-range validation (any octet > 255) or that look like
+// software version strings (preceded by `v` or followed by another
+// dotted numeric segment, suggesting a fifth piece). The earlier
+// shape was a single `\b\d{1,3}(?:\.\d{1,3}){3}\b` that produced
+// false-positives on version strings (`1.12.3.4` → `[REDACTED]`)
+// and false-negatives on URL-embedded IPs (`10.0.0.1:8080` was
+// caught only because `:` is not `\w`, but `https://10.0.0.1` has
+// alphanumeric context that `\b` already ignores).
+var ipv4Candidate = regexp.MustCompile(`(\bv?)(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\.\d+)?`)
+
 func fallbackScrubMessage(s string) string {
+	// Octet-validated IPv4 redaction first so the absolute-path
+	// regex below can't eat an IP-looking suffix.
+	s = ipv4Candidate.ReplaceAllStringFunc(s, func(m string) string {
+		groups := ipv4Candidate.FindStringSubmatch(m)
+		if len(groups) < 4 {
+			return m
+		}
+		// Version-string heuristics:
+		//   - `v` prefix (group 1 == "v"): treat as a version.
+		//   - Trailing `.<digits>` (group 3 non-empty): suggests a
+		//     5+ segment number, also a version.
+		if groups[1] == "v" || groups[3] != "" {
+			return m
+		}
+		// Octet range validation: every part must fit 0..255 to
+		// be a real IPv4.
+		for _, octet := range strings.Split(groups[2], ".") {
+			n, err := strconv.Atoi(octet)
+			if err != nil || n > 255 {
+				return m
+			}
+		}
+		return groups[1] + "[REDACTED]"
+	})
 	for _, re := range fallbackScrubPatterns {
 		s = re.ReplaceAllString(s, "[REDACTED]")
 	}

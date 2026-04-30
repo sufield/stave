@@ -155,6 +155,12 @@ const (
 	InvalidReasonCompensatingFailed InvalidReason = "compensating_controls_failing"
 	// InvalidReasonExpired means the exception has exceeded its validity period.
 	InvalidReasonExpired InvalidReason = "expired"
+	// InvalidReasonNoCompensatingControls means the exception was
+	// constructed without any compensating controls, which is a
+	// "trust me" suppression — rejected so the finding stays
+	// active. validateException already catches this at load time;
+	// the constant covers callsites that bypass validation.
+	InvalidReasonNoCompensatingControls InvalidReason = "no_compensating_controls"
 )
 
 // AcknowledgedResult represents the outcome of applying an exception.
@@ -289,18 +295,31 @@ func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucke
 			r.Pass = true
 			r.Severity = policy.SeverityLow
 		} else {
-			// Exception invalid: keep FAIL, note the failure.
-			var failing []string
-			for _, c := range controls {
-				if !c.Passing {
-					failing = append(failing, string(c.ControlID))
+			// Exception invalid: keep FAIL, set a specific reason.
+			// Two distinct cases produce !allPassing here:
+			//   1. RequiresPassing is empty (validation bypass)
+			//   2. one or more listed controls are failing
+			// Distinguishing them lets reports show operators
+			// exactly what to fix, and prevents the empty-list
+			// case from displaying as "compensating controls
+			// failing" (which suggests a different remediation).
+			if len(exc.RequiresPassing) == 0 {
+				ack.InvalidReason = InvalidReasonNoCompensatingControls
+				ack.InvalidDetail = "exception declared no compensating controls; an empty RequiresPassing list is rejected"
+				r.Finding = r.Finding + " [Exception declared without any compensating controls]"
+			} else {
+				var failing []string
+				for _, c := range controls {
+					if !c.Passing {
+						failing = append(failing, string(c.ControlID))
+					}
 				}
+				ack.InvalidReason = InvalidReasonCompensatingFailed
+				ack.InvalidDetail = "compensating control(s) not passing: " + strings.Join(failing, ", ")
+				r.Finding = r.Finding + fmt.Sprintf(
+					" [Exception declared but compensating control %s is not passing]",
+					strings.Join(failing, ", "))
 			}
-			ack.InvalidReason = InvalidReasonCompensatingFailed
-			ack.InvalidDetail = "compensating control(s) not passing: " + strings.Join(failing, ", ")
-			r.Finding = r.Finding + fmt.Sprintf(
-				" [Exception declared but compensating control %s is not passing]",
-				strings.Join(failing, ", "))
 		}
 
 		acknowledged = append(acknowledged, ack)

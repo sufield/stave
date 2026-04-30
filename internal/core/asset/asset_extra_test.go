@@ -2,6 +2,7 @@ package asset
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
@@ -245,7 +246,7 @@ func TestExposureHistoryWindowSummary(t *testing.T) {
 
 func TestExposureLifecycleBasic(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	if tl.ID != "bucket-1" {
 		t.Fatalf("ID = %v", tl.ID)
 	}
@@ -257,18 +258,27 @@ func TestExposureLifecycleBasic(t *testing.T) {
 	}
 }
 
+// TestExposureLifecycleEmptyID pins the new contract: an empty
+// asset ID is a returned error (ErrEmptyAssetID), not a panic. The
+// earlier shape panicked, which aborted the entire evaluation when
+// a single malformed observation row slipped through; the lifecycle
+// builder now skips the bad row and continues processing the rest.
 func TestExposureLifecycleEmptyID(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("expected panic for empty ID")
-		}
-	}()
-	NewExposureLifecycle(Asset{})
+	lc, err := NewExposureLifecycle(Asset{})
+	if err == nil {
+		t.Fatal("expected error for empty ID, got nil")
+	}
+	if !errors.Is(err, ErrEmptyAssetID) {
+		t.Errorf("error = %v, want ErrEmptyAssetID", err)
+	}
+	if lc != nil {
+		t.Errorf("lifecycle should be nil on error path, got %v", lc)
+	}
 }
 
 func TestExposureLifecycleRecordObservation(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// Zero time should error
@@ -307,7 +317,7 @@ func TestExposureLifecycleRecordObservation(t *testing.T) {
 
 func TestExposureLifecycleUnsafeDuration(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	if err := tl.RecordCheck(base, true); err != nil {
@@ -324,7 +334,7 @@ func TestExposureLifecycleUnsafeDuration(t *testing.T) {
 	}
 
 	// Safe lifecycle
-	tl2 := NewExposureLifecycle(Asset{ID: "bucket-2"})
+	tl2, _ := NewExposureLifecycle(Asset{ID: "bucket-2"})
 	if recErr := tl2.RecordCheck(base, false); recErr != nil {
 		t.Fatal(recErr)
 	}
@@ -336,7 +346,7 @@ func TestExposureLifecycleUnsafeDuration(t *testing.T) {
 
 func TestExposureLifecycleUnsafeDurationNowBeforeStart(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC)
 
 	if err := tl.RecordCheck(base, true); err != nil {
@@ -352,7 +362,7 @@ func TestExposureLifecycleUnsafeDurationNowBeforeStart(t *testing.T) {
 
 func TestExposureLifecycleExceedsUnsafeThreshold(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	if err := tl.RecordCheck(base, true); err != nil {
@@ -382,7 +392,7 @@ func TestExposureLifecycleExceedsUnsafeThreshold(t *testing.T) {
 // rather than feed a zero-dwell window into duration math.
 func TestExposureLifecycleZeroDurationWindowFlagsClamped(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// Open and close at the same instant.
@@ -399,7 +409,7 @@ func TestExposureLifecycleZeroDurationWindowFlagsClamped(t *testing.T) {
 
 func TestExposureLifecycleSecureObservationAdvancesLastObservedAt(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	t2 := t1.Add(24 * time.Hour)
 	t3 := t2.Add(24 * time.Hour)
@@ -431,7 +441,7 @@ func TestExposureLifecycleSecureObservationAdvancesLastObservedAt(t *testing.T) 
 
 func TestExposureLifecycleZeroThresholdImmediateBreach(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// Before any observation: no active window → must not breach
@@ -474,7 +484,7 @@ func TestExposureLifecycleZeroThresholdImmediateBreach(t *testing.T) {
 
 func TestExposureLifecycleFormatUnsafeSummary(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	if err := tl.RecordCheck(base, true); err != nil {
@@ -490,7 +500,7 @@ func TestExposureLifecycleFormatUnsafeSummary(t *testing.T) {
 
 func TestExposureLifecycleExposureWindowClosure(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// Unsafe -> safe transition closes exposure window
@@ -514,7 +524,7 @@ func TestExposureLifecycleExposureWindowClosure(t *testing.T) {
 
 func TestExposureLifecycleSetAsset(t *testing.T) {
 	a := Asset{ID: ID("bucket-1"), Type: "old_type"}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 
 	newAsset := Asset{ID: ID("bucket-1"), Type: "new_type"}
 	tl.SetAsset(newAsset)
@@ -525,7 +535,7 @@ func TestExposureLifecycleSetAsset(t *testing.T) {
 
 func TestExposureLifecycleHasActiveWindow(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 
 	if tl.HasActiveWindow() {
 		t.Fatal("no observation yet")

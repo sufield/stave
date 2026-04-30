@@ -79,6 +79,14 @@ func Build(input BuildInput) *GraphData {
 	seenControls := sets.New[kernel.ControlID]()
 	seenRequirements := sets.New[string]()
 	seenAccounts := sets.New[string]()
+	// seenMapsTo tracks (control, requirement) pairs already emitted
+	// as MAPS_TO edges so the findings loop doesn't generate
+	// duplicates when the same control violates the same requirement
+	// across multiple findings. The earlier shape relied on
+	// deduplicateEdges to clean up the duplicates after the fact —
+	// O(N) wasted work in the hot path and a latent correctness
+	// dependency on the post-pass dedup actually running.
+	seenMapsTo := sets.New[string]()
 
 	// Findings → Finding nodes, Resource nodes, Control nodes,
 	// ComplianceRequirement nodes, TenantScope nodes, and edges.
@@ -170,9 +178,13 @@ func Build(input BuildInput) *GraphData {
 					},
 				})
 			}
-			g.Edges = append(g.Edges, Edge{
-				From: string(f.ControlID), To: reqNodeID, Type: "MAPS_TO",
-			})
+			mapsKey := string(f.ControlID) + "->" + reqNodeID
+			if !seenMapsTo.Contains(mapsKey) {
+				seenMapsTo.Add(mapsKey)
+				g.Edges = append(g.Edges, Edge{
+					From: string(f.ControlID), To: reqNodeID, Type: "MAPS_TO",
+				})
+			}
 			g.Edges = append(g.Edges, Edge{
 				From: findingID, To: reqNodeID, Type: "VIOLATES",
 				Properties: map[string]any{"verdict": "fail"},

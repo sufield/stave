@@ -42,6 +42,23 @@ func TestSet_NewPrePopulated(t *testing.T) {
 	}
 }
 
+// TestSet_NilReadsAreTotal pins the documented contract: read-only
+// methods on a nil Set return zero values rather than panicking.
+// Add still panics (writes need a map). Together these match the
+// natural semantics of Go's nil-map reads vs writes.
+func TestSet_NilReadsAreTotal(t *testing.T) {
+	var s Set[string]
+	if s.Contains("anything") {
+		t.Error("Contains on nil Set must return false")
+	}
+	if s.Len() != 0 {
+		t.Errorf("Len on nil Set must return 0, got %d", s.Len())
+	}
+	if got := s.Slice(); got != nil {
+		t.Errorf("Slice on nil Set must return nil, got %v", got)
+	}
+}
+
 // TestSet_AddOnNilPanicsClearly pins that Add(item) on a nil Set
 // surfaces a named panic. Without the guard, the runtime fired its
 // generic "assignment to entry in nil map" and the call site was

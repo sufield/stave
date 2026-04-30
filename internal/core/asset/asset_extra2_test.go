@@ -375,7 +375,7 @@ func TestScopeFilter_DiscardableKey(t *testing.T) {
 
 func TestExposureLifecycle_Stats(t *testing.T) {
 	a := Asset{ID: "bucket-1"}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	stats := tl.Stats()
 	if stats.HasFirstObservation() {
 		t.Fatal("empty lifecycle should not have first observation")
@@ -384,7 +384,7 @@ func TestExposureLifecycle_Stats(t *testing.T) {
 
 func TestExposureLifecycle_SetAsset_EmptyID(t *testing.T) {
 	a := Asset{ID: "bucket-1"}
-	tl := NewExposureLifecycle(a)
+	tl, _ := NewExposureLifecycle(a)
 	// SetAsset with same ID is fine
 	tl.SetAsset(Asset{ID: "bucket-1", Type: "s3_bucket"})
 	if tl.Asset().Type != "s3_bucket" {

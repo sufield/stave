@@ -324,7 +324,7 @@ func TestAssessorAssess_BasicViolation(t *testing.T) {
 
 func TestCoverageValidator(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl := asset.NewExposureLifecycle(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// Single observation
@@ -342,7 +342,7 @@ func TestCoverageValidator(t *testing.T) {
 
 func TestCoverageValidator_Sufficient(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
-	tl := asset.NewExposureLifecycle(a)
+	tl, _ := asset.NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	_ = tl.RecordCheck(base, false)

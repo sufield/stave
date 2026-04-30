@@ -63,7 +63,10 @@ type Writer struct {
 // caller believed it persisted. Atomic rename + close-error capture
 // makes either the new or the previous baseline visible, never a
 // half-written hybrid.
-func (w *Writer) WriteBaseline(_ context.Context, path string, findings []reporting.BaselineFinding, createdAt time.Time, sourcePath string) (retErr error) {
+func (w *Writer) WriteBaseline(ctx context.Context, path string, findings []reporting.BaselineFinding, createdAt time.Time, sourcePath string) (retErr error) {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	entries, err := domainToEntries(findings)
 	if err != nil {
 		return fmt.Errorf("convert baseline findings: %w", err)
@@ -91,6 +94,15 @@ func (w *Writer) WriteBaseline(_ context.Context, path string, findings []report
 			_ = os.Remove(tmpPath)
 		}
 	}()
+
+	// Re-check the context before the write phase: a long-running
+	// caller (CI gate, signal-driven shutdown) may have cancelled
+	// while the temp file was being created. The committed=false
+	// defer cleans up the partial temp.
+	if err := ctx.Err(); err != nil {
+		_ = f.Close()
+		return err
+	}
 
 	if writeErr := jsonutil.WriteIndented(f, baseline); writeErr != nil {
 		_ = f.Close()

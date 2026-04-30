@@ -194,6 +194,15 @@ func resolveFrameworks(raw []string) ([]Framework, error) {
 
 	for _, r := range raw {
 		for token := range strings.SplitSeq(r, ",") {
+			// Skip empty tokens left by trailing commas, double
+			// commas, or whitespace-only entries — these are
+			// common operator typos (`--frameworks=soc2,`) and
+			// the strict shape used to surface as a confusing
+			// "unsupported compliance framework \"\"" error
+			// instead of just accepting the trimmed list.
+			if strings.TrimSpace(token) == "" {
+				continue
+			}
 			f, err := ParseFramework(token)
 			if err != nil {
 				return nil, err
