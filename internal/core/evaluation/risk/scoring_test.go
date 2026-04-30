@@ -141,7 +141,7 @@ func TestEvaluate_AuthenticatedFullControl(t *testing.T) {
 	if res.Score != ScoreWarning {
 		t.Errorf("expected warning, got %d", res.Score)
 	}
-	if len(res.Findings) != 1 || res.Findings[0] != "Full Admin access granted to all Authenticated Users" {
+	if len(res.Findings) != 1 || res.Findings[0] != "Elevated access granted to all Authenticated Users" {
 		t.Errorf("unexpected findings: %#v", res.Findings)
 	}
 }

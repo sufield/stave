@@ -77,6 +77,66 @@ func TestPath(t *testing.T) {
 // Compile-time check that Sanitizer implements kernel.Sanitizer.
 var _ kernel.Sanitizer = (*Sanitizer)(nil)
 
+// TestScrubMap_NeutralKeyPreservesPrimitive pins that an unrecognized
+// (neutral) map key preserves its scalar value as-is. The earlier
+// shape recursed unconditionally and scrubbed strings/ints/bools
+// under any non-classified key, so plain readable properties became
+// SANITIZED_<hash> for no reason. Containers under a neutral key
+// must still recurse so deeper Remove/Sanitize matches apply.
+func TestScrubMap_NeutralKeyPreservesPrimitive(t *testing.T) {
+	prof := NewProfile(
+		map[string]struct{}{"secret": {}}, // remove
+		map[string]struct{}{"name": {}},   // sanitize
+	)
+	s := New(WithIDSanitization(true))
+	in := map[string]any{
+		"description":  "public bucket",
+		"display_name": "shared",
+		"size":         int64(42),
+		"public":       true,
+		"name":         "redact-me",
+		"secret":       "drop-me",
+		"nested": map[string]any{
+			"description": "still public",
+			"name":        "redact-this-too",
+			"secret":      "drop-this",
+		},
+	}
+	out := s.ScrubMap(in, prof)
+
+	if got := out["description"]; got != "public bucket" {
+		t.Errorf("neutral string key 'description' = %v, want preserved", got)
+	}
+	if got := out["display_name"]; got != "shared" {
+		t.Errorf("neutral string key 'display_name' = %v, want preserved", got)
+	}
+	if got := out["size"]; got != int64(42) {
+		t.Errorf("neutral int key 'size' = %v, want 42", got)
+	}
+	if got := out["public"]; got != true {
+		t.Errorf("neutral bool key 'public' = %v, want true", got)
+	}
+	if _, present := out["secret"]; present {
+		t.Error("Remove key 'secret' must be dropped at top level")
+	}
+	if name, _ := out["name"].(string); name == "redact-me" {
+		t.Errorf("Sanitize key 'name' should be redacted; got %q", name)
+	}
+
+	// Nested map under neutral key must still recurse: 'description'
+	// preserved, 'name' sanitized, 'secret' removed.
+	nested, ok := out["nested"].(map[string]any)
+	if !ok {
+		t.Fatalf("nested should be a map; got %T", out["nested"])
+	}
+	if got := nested["description"]; got != "still public" {
+		t.Errorf("deep neutral 'description' = %v, want preserved", got)
+	}
+	if _, present := nested["secret"]; present {
+		t.Error("deep Remove key 'secret' must be dropped under a neutral parent")
+	}
+}
+
 // TestScrubMap_NestedRemoveBeneathSanitize pins that nested Remove
 // rules apply even when reached through a Sanitize-flagged parent.
 // Earlier shape called s.scrubValue (empty profile) for Sanitize

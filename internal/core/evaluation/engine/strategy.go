@@ -139,6 +139,15 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 		var findings []*evaluation.Finding
 		if finding != nil {
 			findings = []*evaluation.Finding{finding}
+		} else {
+			// Violation verdict with no finding diverges the
+			// assessor's violation count from the findings list
+			// for this control/asset. Surface it so a downstream
+			// telemetry scrape catches the contract breach
+			// instead of papering over it.
+			s.deps.logger().Warn("violation verdict with nil finding (contract violation)",
+				"control", s.ctl.ID, "asset", t.ID,
+				"verdict", "VIOLATION")
 		}
 		if durErr != nil {
 			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration",
@@ -212,6 +221,15 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 		var findings []*evaluation.Finding
 		if finding != nil {
 			findings = []*evaluation.Finding{finding}
+		} else {
+			// Violation verdict with no finding diverges the
+			// assessor's violation count from the findings list
+			// for this control/asset. Surface it so a downstream
+			// telemetry scrape catches the contract breach
+			// instead of papering over it.
+			s.deps.logger().Warn("violation verdict with nil finding (contract violation)",
+				"control", s.ctl.ID, "asset", t.ID,
+				"verdict", "VIOLATION")
 		}
 		if durErr != nil {
 			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration",

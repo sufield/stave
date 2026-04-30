@@ -141,7 +141,13 @@ func (sc StatementContext) Evaluate() StatementAssessment {
 		if ScoreWarning > assessment.Score {
 			assessment.Score = ScoreWarning
 		}
-		assessment.Findings = append(assessment.Findings, "Full Admin access granted to all Authenticated Users")
+		// Message reads "Elevated" rather than "Full Admin" because
+		// the trigger is Overlap(PermFullControl) — any dangerous bit
+		// in the FullControl set, not the full set. The old wording
+		// suggested an admin grant even when only one elevated
+		// permission was present, which was misleading on partial
+		// grants like read+write+delete.
+		assessment.Findings = append(assessment.Findings, "Elevated access granted to all Authenticated Users")
 	}
 
 	return assessment

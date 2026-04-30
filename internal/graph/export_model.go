@@ -207,6 +207,13 @@ const (
 var wireToPredicate = map[string]string{
 	"TARGETS":              predTargets,
 	"VIOLATES":             predViolatesRequirement,
+	// VIOLATES_INVARIANT names the edge from a finding to the
+	// invariant the control was checking. The earlier shape was
+	// missing this entry, so any builder that emitted the wire name
+	// dropped its edges with the generic "unmapped edge type"
+	// warning. The matching predicate constant predViolatesInvariant
+	// already exists; route to it.
+	"VIOLATES_INVARIANT":   predViolatesInvariant,
 	"MAPS_TO":              predMapsTo,
 	"BELONGS_TO_SCOPE":     predBelongsToScope,
 	"MEMBER_OF":            predMemberOf,

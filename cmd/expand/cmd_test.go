@@ -158,8 +158,8 @@ func TestRenderList_JSONIncludesCounts(t *testing.T) {
 	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
 		t.Fatalf("unmarshal: %v\noutput: %s", err, buf.String())
 	}
-	if len(got.Archetypes) != 12 {
-		t.Fatalf("archetypes len = %d, want 12", len(got.Archetypes))
+	if len(got.Archetypes) != 13 {
+		t.Fatalf("archetypes len = %d, want 13", len(got.Archetypes))
 	}
 	counts := map[string]int{}
 	for _, a := range got.Archetypes {

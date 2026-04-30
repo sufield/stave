@@ -159,12 +159,18 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 	}
 
 	field := r.Field.String()
-	if field == "" {
-		return "", nil
-	}
-
 	op := r.Op
 	val := r.Value.Raw()
+	// Empty field name is only valid for the any_identity_match
+	// shorthand, which iterates the implicit `identities` list. Every
+	// other operator needs a field to resolve against; the earlier
+	// shape returned "" and predicateToExpr filtered the empty
+	// expression out, silently dropping the rule. A rule that does
+	// nothing is a control-authoring defect — surface it at compile
+	// time instead of producing an evaluator that never fires.
+	if field == "" && op != predicate.OpAnyIdentityMatch {
+		return "", errors.New("rule has empty field name")
+	}
 
 	// Resolve field access and existence check using current scope
 	fa := scopedFieldAccess(field, scopeVar)

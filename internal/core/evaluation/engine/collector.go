@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"log/slog"
 	"sync"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -33,6 +34,13 @@ type AssessmentCollector struct {
 	seenAssets         assetRegistry
 	nonCompliantAssets assetRegistry
 	exemptAssets       assetRegistry
+	// findingIDs deduplicates batches across multiple
+	// RecordFindings calls. Strategies that emit overlapping
+	// findings (e.g. a recurrence strategy that re-fires for the
+	// same control on the same asset across snapshots) used to
+	// double-count, inflating the violations summary and producing
+	// duplicate report rows.
+	findingIDs map[kernel.FindingID]struct{}
 }
 
 // NewCollector initializes the assessment collector.
@@ -42,6 +50,7 @@ func NewCollector(assetHint int) *AssessmentCollector {
 		seenAssets:         make(assetRegistry, assetHint),
 		nonCompliantAssets: make(assetRegistry, assetHint),
 		exemptAssets:       make(assetRegistry, assetHint),
+		findingIDs:         make(map[kernel.FindingID]struct{}, assetHint),
 	}
 }
 
@@ -83,13 +92,29 @@ func (c *AssessmentCollector) RecordCheck(check evaluation.ResourceCheck) {
 }
 
 // RecordFindings appends a batch of identified security violations.
+// Findings sharing a FindingID with an already-recorded entry are
+// dropped: strategies that fire on overlapping inputs (recurrence
+// over multiple snapshots, identity matchers across iterations) used
+// to double-count and inflate the violations summary. Duplicates
+// are logged so the source of the duplication is visible without
+// having to inspect every strategy by hand.
 func (c *AssessmentCollector) RecordFindings(findings []*evaluation.Finding) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	for _, f := range findings {
-		if f != nil {
-			c.findings = append(c.findings, *f)
+		if f == nil {
+			continue
 		}
+		fid := kernel.FindingID(f.FindingID)
+		if fid != "" {
+			if _, dup := c.findingIDs[fid]; dup {
+				slog.Warn("collector: duplicate finding suppressed",
+					"finding_id", fid, "control_id", f.ControlID)
+				continue
+			}
+			c.findingIDs[fid] = struct{}{}
+		}
+		c.findings = append(c.findings, *f)
 	}
 }
 

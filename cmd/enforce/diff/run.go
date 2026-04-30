@@ -57,7 +57,11 @@ func (r *runner) Run(ctx context.Context, cfg config) error {
 		return err
 	}
 
-	stop()
+	// `defer stop()` (above) handles the cleanup; the explicit call
+	// here used to fire stop() twice — harmless for the current
+	// progress runtime, but a future implementation that frees
+	// resources on Stop would double-free. The deferred form is
+	// the single source of truth for ending the progress span.
 
 	delta = output.SanitizeObservationDelta(r.Sanitizer, delta)
 

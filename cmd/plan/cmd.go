@@ -139,27 +139,22 @@ func runPlan(stdout io.Writer, opts *options) error {
 			if fErr != nil {
 				return fmt.Errorf("create output: %w", fErr)
 			}
-			enc := json.NewEncoder(f)
-			enc.SetIndent("", "  ")
-			encErr := enc.Encode(result)
+			writeErr := writeComplianceFormat(f, result, opts.Format)
 			closeErr := f.Close()
-			if encErr != nil {
-				return encErr
+			if writeErr != nil {
+				return writeErr
 			}
-			// A successful Encode followed by a failing Close is the
-			// silent-corruption window: the buffered write may not
-			// have reached disk, and the previous `defer f.Close()`
-			// dropped that error so callers saw success. Mirror the
-			// writePerTeam pattern below — propagate the close error.
+			// A successful write followed by a failing Close is the
+			// silent-corruption window: buffered output may not have
+			// reached disk. Propagate the close error so callers
+			// don't exit 0 with a truncated file.
 			if closeErr != nil {
 				return fmt.Errorf("close %s: %w", opts.OutPath, closeErr)
 			}
 			return nil
 		}
 
-		enc := json.NewEncoder(stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(result)
+		return writeComplianceFormat(stdout, result, opts.Format)
 	}
 
 	// Load manifest.
@@ -208,6 +203,55 @@ func runPlan(stdout io.Writer, opts *options) error {
 	}
 
 	return writeFormat(stdout, p, opts.Format)
+}
+
+// writeComplianceFormat renders a compliance-path result. The result
+// is structurally a JSON object with a small list of remediation
+// suggestions; JSON and Markdown make sense, CSV has no meaningful
+// tabular representation, and text falls back to indented JSON for
+// human reading. The earlier shape always emitted JSON regardless of
+// --format, so an operator running `stave plan --format=md` against
+// a compliance assessment got machine output with no warning.
+func writeComplianceFormat(w io.Writer, result *compliancepath.PathResult, format string) error {
+	switch format {
+	case "json", "text", "":
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(result)
+	case "csv":
+		return &ui.UserError{Err: fmt.Errorf("--format csv is not supported in compliance-path mode (use json or md)")}
+	default:
+		// Markdown / "md" — render a small section per missing
+		// control. Falling through to plan.WriteMarkdown isn't
+		// possible (different shape), so emit the structured form
+		// we can.
+		return writeComplianceMarkdown(w, result)
+	}
+}
+
+func writeComplianceMarkdown(w io.Writer, result *compliancepath.PathResult) error {
+	if _, err := fmt.Fprintf(w, "# Compliance Path: %s\n\n", result.TargetFramework); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(w, "Target readiness: %.0f%%\nCurrent readiness: %.0f%%\n\n",
+		result.TargetReadiness*100, result.CurrentReadiness*100); err != nil {
+		return err
+	}
+	if len(result.Bundles) == 0 {
+		_, err := fmt.Fprintln(w, "No remediation bundles required to reach target readiness.")
+		return err
+	}
+	if _, err := fmt.Fprintln(w, "## Sprint Bundles"); err != nil {
+		return err
+	}
+	for i := range result.Bundles {
+		b := &result.Bundles[i]
+		if _, err := fmt.Fprintf(w, "\n### %s\nControls: %d, effort: %.1fh\n",
+			b.Action, len(b.ControlIDs), b.EffortHours); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func writeFormat(w io.Writer, p *plan.Plan, format string) error {

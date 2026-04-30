@@ -123,6 +123,17 @@ func runScoreSingle(ctx context.Context, stdout io.Writer, opts *options, weight
 		return err
 	}
 
+	// A zero-finding assessment is technically a valid input, but it
+	// is also the symptom of "wrong file" or "evaluation aborted
+	// before producing findings". Surface a warning so the operator
+	// can confirm the input is what they intended; the score is
+	// still computed because empty findings are a legitimate
+	// "everything passed" reading.
+	if len(assessment.Findings) == 0 {
+		fmt.Fprintf(os.Stderr, "warning: %s contains zero findings — verify the path is the correct assessment\n",
+			opts.OutputFile)
+	}
+
 	result := computeFromAssessment(assessment, weights, chainDefs, maxChainWeight, opts.Compliance)
 	return renderResult(stdout, result, opts.Format)
 }

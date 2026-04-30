@@ -2,6 +2,7 @@ package cel
 
 import (
 	"fmt"
+	"log/slog"
 	"slices"
 	"strconv"
 	"strings"
@@ -121,6 +122,16 @@ func isMissing(val ref.Val) bool {
 			if strings.Contains(msg, pattern) {
 				return true
 			}
+		}
+		// Type errors (overload mismatch) and runtime errors
+		// (div-by-zero) intentionally read as "not missing" so the
+		// evaluator sees them as inconclusive. Log the unmatched
+		// error path so a future runtime error pattern that *should*
+		// have been classified as missing-data is visible to
+		// operators rather than silently buried in "not missing".
+		if !IsTypeError(val) {
+			slog.Debug("isMissing: unrecognized CEL error pattern; treating as inconclusive",
+				"error", msg)
 		}
 		return false
 	}

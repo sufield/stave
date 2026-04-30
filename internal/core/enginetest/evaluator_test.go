@@ -246,8 +246,11 @@ func TestEvaluator_UnsafeStreakReset(t *testing.T) {
 		t.Errorf("Expected 0 violations (unsafe streak reset), got %d", result.Summary.Violations)
 	}
 
-	if result.Summary.ExposedResources != 1 {
-		t.Errorf("Expected 1 currently unsafe, got %d", result.Summary.ExposedResources)
+	// ExposedResources tracks violation verdicts now, so a reset
+	// streak with no violation produces 0 even when the asset is
+	// currently in an open exposure window.
+	if result.Summary.ExposedResources != 0 {
+		t.Errorf("Expected 0 ExposedResources (no violation), got %d", result.Summary.ExposedResources)
 	}
 }
 
@@ -574,9 +577,11 @@ func TestEvaluator_AbsenceDoesNotCloseExposureWindow(t *testing.T) {
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
-	// Should have 1 currently unsafe (bucket remains in open exposure window)
-	if result.Summary.ExposedResources != 1 {
-		t.Errorf("Expected 1 currently unsafe, got %d", result.Summary.ExposedResources)
+	// ExposedResources now follows verdicts, not raw lifecycle.
+	// 48h dwell == threshold → no violation, so the counter is 0
+	// even though the bucket is in an open exposure window.
+	if result.Summary.ExposedResources != 0 {
+		t.Errorf("Expected 0 ExposedResources (no violation), got %d", result.Summary.ExposedResources)
 	}
 
 	// Duration should be from t0 (Jan 1) to now (Jan 3) = 48h
@@ -648,9 +653,14 @@ func TestEvaluator_OpenWindowNotInWindowsList(t *testing.T) {
 	evaluator := NewEvaluator(controls, maxUnsafe, clock)
 	result := evaluator.Evaluate(snapshots)
 
-	// Should have 1 currently unsafe
-	if result.Summary.ExposedResources != 1 {
-		t.Errorf("Expected 1 currently unsafe, got %d", result.Summary.ExposedResources)
+	// ExposedResources now tracks assets with VIOLATION verdicts,
+	// not assets that happen to be in an active unsafe window. The
+	// new contract aligns the counter with the violations summary
+	// so the two columns add up; an asset that is currently unsafe
+	// but inside its SLA / below recurrence threshold is "exposed
+	// but tolerated" and does not register here.
+	if result.Summary.ExposedResources != 0 {
+		t.Errorf("Expected 0 ExposedResources (no violation verdicts), got %d", result.Summary.ExposedResources)
 	}
 
 	// Recurrence check: 2 completed exposure windows, limit is 3
@@ -1721,50 +1731,44 @@ func TestEvaluator_RecurrenceOpenExposureWindowNotCounted(t *testing.T) {
 		},
 	}
 
-	// Create snapshots with:
-	// - asset.ExposureWindow 1: Jan 1-5 (outside 30-day window from Apr 10)
-	// - asset.ExposureWindow 2: currently open starting Apr 1
-	// Only 1 exposure window in window (open), should not trigger violation (limit = 3)
-	snapshots := []asset.Snapshot{
-		// asset.ExposureWindow 1 (outside window)
-		{
-			CapturedAt: mustParseTime("2026-01-01T00:00:00Z"),
+	// Snapshots dense enough to satisfy the recurrence strategy's
+	// coverage validator (MaxAllowedGap = DefaultContinuityLimit =
+	// 12h). The earlier shape used 27+ day gaps between scans,
+	// which was a legitimate "we can't tell what happened in that
+	// hole" condition; the strategy correctly emitted INCONCLUSIVE.
+	// To exercise the count-less-than-limit path the test claims
+	// to test, the in-window history must be continuous.
+	//
+	// Layout:
+	//   - exposure window 1: Jan 1 → Jan 5 (outside the 30-day
+	//     recurrence window ending Apr 10).
+	//   - 6h-spaced safe scans through the recurrence window
+	//     (Mar 11 → Apr 1).
+	//   - exposure window 2 opens Apr 1 and stays unsafe through
+	//     Apr 10 with 6h-spaced confirmations.
+	var snapshots []asset.Snapshot
+	addSnap := func(t time.Time, public bool) {
+		snapshots = append(snapshots, asset.Snapshot{
+			CapturedAt: t,
 			Assets: []asset.Asset{
-				{ID: "bucket", Properties: map[string]any{"public": true}},
+				{ID: "bucket", Properties: map[string]any{"public": public}},
 			},
-		},
-		{
-			CapturedAt: mustParseTime("2026-01-05T00:00:00Z"),
-			Assets: []asset.Asset{
-				{ID: "bucket", Properties: map[string]any{"public": false}},
-			},
-		},
-		// Long safe period
-		{
-			CapturedAt: mustParseTime("2026-02-01T00:00:00Z"),
-			Assets: []asset.Asset{
-				{ID: "bucket", Properties: map[string]any{"public": false}},
-			},
-		},
-		{
-			CapturedAt: mustParseTime("2026-03-01T00:00:00Z"),
-			Assets: []asset.Asset{
-				{ID: "bucket", Properties: map[string]any{"public": false}},
-			},
-		},
-		// asset.ExposureWindow 2 (open, in window)
-		{
-			CapturedAt: mustParseTime("2026-04-01T00:00:00Z"),
-			Assets: []asset.Asset{
-				{ID: "bucket", Properties: map[string]any{"public": true}},
-			},
-		},
-		{
-			CapturedAt: mustParseTime("2026-04-10T00:00:00Z"),
-			Assets: []asset.Asset{
-				{ID: "bucket", Properties: map[string]any{"public": true}},
-			},
-		},
+		})
+	}
+	// Window 1 closes Mar 8 (outside the 30-day recurrence window
+	// from Apr 10, which starts Mar 11). Three 6h-spaced unsafe
+	// probes then a safe close.
+	for d := mustParseTime("2026-03-05T00:00:00Z"); d.Before(mustParseTime("2026-03-08T00:00:00Z")); d = d.Add(6 * time.Hour) {
+		addSnap(d, true)
+	}
+	addSnap(mustParseTime("2026-03-08T00:00:00Z"), false)
+	// Continuous safe coverage Mar 8 → Apr 1, every 6 hours.
+	for d := mustParseTime("2026-03-08T06:00:00Z"); d.Before(mustParseTime("2026-04-01T00:00:00Z")); d = d.Add(6 * time.Hour) {
+		addSnap(d, false)
+	}
+	// Window 2 opens Apr 1 and remains unsafe through Apr 10.
+	for d := mustParseTime("2026-04-01T00:00:00Z"); !d.After(mustParseTime("2026-04-10T00:00:00Z")); d = d.Add(6 * time.Hour) {
+		addSnap(d, true)
 	}
 
 	maxUnsafe := 168 * time.Hour

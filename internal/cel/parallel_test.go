@@ -96,10 +96,7 @@ func TestCELParallelEvaluation(t *testing.T) {
 
 func loadControlsFromDir(t *testing.T, dir string) []policy.ControlDefinition {
 	t.Helper()
-	loader, err := ctlyaml.NewControlLoader()
-	if err != nil {
-		t.Fatalf("create control loader: %v", err)
-	}
+	loader := ctlyaml.NewControlLoader()
 	controls, err := loader.LoadControls(context.Background(), dir)
 	if err != nil {
 		t.Skipf("load controls from %s: %v", dir, err)

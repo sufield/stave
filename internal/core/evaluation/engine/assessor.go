@@ -117,19 +117,17 @@ func (a *Assessor) sortSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
 // If --now was set (FixedClock), the user's explicit time takes precedence.
 // Otherwise, the latest snapshot's CapturedAt is used for reproducibility.
 //
-// Assess validates a.Clock != nil before calling here, but a future
-// caller that constructs an Assessor without going through Assess
-// (or skips that gate) would otherwise panic on the type assertion
-// and the .Now() calls below. Fall back to time.Now() when Clock is
-// nil so the function is robust to misuse — the production caller
-// always passes a non-nil Clock, but the fallback prevents a nil
-// dereference from corrupting an in-flight evaluation.
+// Contract: a.Clock MUST be non-nil. Assess (the only public entry
+// point that reaches here) validates this before dispatching, so a
+// nil Clock is a programmer error in a test setup or refactor.
+// The earlier defensive fallback called wall-clock time directly,
+// which snuck a side effect into the core runtime — caught by the
+// TestCoreRuntimeNoHardwiredSideEffects architecture test.
+// Panic with a clear message instead so the misuse is surfaced
+// immediately rather than producing a non-reproducible verdict.
 func (a *Assessor) referenceTime(snapshots []asset.Snapshot) time.Time {
 	if a.Clock == nil {
-		if len(snapshots) > 0 {
-			return snapshots[len(snapshots)-1].CapturedAt
-		}
-		return time.Now()
+		panic("Assessor.referenceTime: Clock is nil; construct via NewAssessor or set Clock explicitly")
 	}
 	if _, isFixed := a.Clock.(ports.FixedClock); isFixed {
 		return a.Clock.Now()
@@ -319,10 +317,16 @@ func (s *assessmentSession) applyControl(
 		//    mutex-protected entry points. The collector itself is
 		//    concurrent-safe; applyControl is currently called
 		//    sequentially from Assess (see assessmentSession type doc).
+		// RecordNonCompliantAsset moves below the strategy.Evaluate
+		// call so the counter reflects findings, not raw lifecycle
+		// state. IsExposed() is true any time a snapshot caught the
+		// asset in an unsafe configuration, regardless of whether
+		// any control actually fires (e.g. an asset is "publicly
+		// readable" but the control catalog doesn't include the
+		// matching predicate). Counting on IsExposed inflated the
+		// "exposed resources" summary above the violation count,
+		// confusing operators reading the report's totals.
 		s.collector.RecordSeenAsset(id)
-		if lifecycle != nil && lifecycle.IsExposed() {
-			s.collector.RecordNonCompliantAsset(id)
-		}
 
 		// 3. Evaluate the security strategy against the asset lifecycle.
 		//    Set the active span so strategies can record their decision steps,
@@ -356,6 +360,14 @@ func (s *assessmentSession) applyControl(
 
 		s.collector.RecordCheck(check)
 		s.collector.RecordFindings(findings)
+		// Increment exposed-resource count only when a violation
+		// verdict actually came back from the strategy. Recording
+		// pre-evaluation on lifecycle.IsExposed inflated the
+		// counter past the violation total because it included
+		// snapshots that no control matched.
+		if check.Verdict == evaluation.VerdictViolation {
+			s.collector.RecordNonCompliantAsset(id)
+		}
 	}
 }
 

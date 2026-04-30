@@ -64,7 +64,7 @@ func DefaultFactories() Factories {
 			return observations.NewStdinObservationLoader(observations.NewObservationLoader(), r), nil
 		},
 		NewCtlRepo: func() (appcontracts.ControlRepository, error) {
-			return ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(predicate.ResolverFunc()))
+			return ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(predicate.ResolverFunc())), nil
 		},
 		NewFindingWriter: DefaultFindingWriter,
 		NewCELEvaluator:  stavecel.NewPredicateEval,

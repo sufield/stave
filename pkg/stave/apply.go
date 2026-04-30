@@ -165,10 +165,7 @@ func loadChainDefs(dir string) ([]policy.ChainDefinition, error) {
 // from disk.
 func resolveControls(dir string) ([]policy.ControlDefinition, appcontracts.ControlRepository, error) {
 	if dir != "" {
-		loader, err := ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc()))
-		if err != nil {
-			return nil, nil, fmt.Errorf("create control loader: %w", err)
-		}
+		loader := ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc()))
 		return nil, loader, nil
 	}
 	store := ctlbuiltin.NewControlStore(

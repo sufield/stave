@@ -218,7 +218,9 @@ func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState
 				// Small delay to let file finish writing.
 				time.Sleep(200 * time.Millisecond)
 				if err := renderOnce(ctx, stdout, opts, loadState); err != nil {
-					fmt.Fprintf(stdout, "\nRefresh error (fsnotify): %v\n", err)
+					if _, werr := fmt.Fprintf(stdout, "\nRefresh error (fsnotify): %v\n", err); werr != nil {
+						return werr
+					}
 				}
 			}
 		case key := <-keyCh:
@@ -227,12 +229,23 @@ func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState
 				return nil
 			case 'r', 'R':
 				if err := renderOnce(ctx, stdout, opts, loadState); err != nil {
-					fmt.Fprintf(stdout, "\nRefresh error (manual): %v\n", err)
+					if _, werr := fmt.Fprintf(stdout, "\nRefresh error (manual): %v\n", err); werr != nil {
+						return werr
+					}
 				}
 			}
 		case <-ticker.C:
 			if err := renderOnce(ctx, stdout, opts, loadState); err != nil {
-				fmt.Fprintf(stdout, "\nRefresh error: %v\n", err)
+				// Stdout write failures (broken pipe to a terminal
+				// that the user closed, or `stave monitor | head`
+				// where head closed early) used to be ignored, so
+				// the loop kept running and burning CPU on every
+				// tick attempting to write to a dead descriptor.
+				// Exiting on the first write failure stops the
+				// busy loop.
+				if _, werr := fmt.Fprintf(stdout, "\nRefresh error: %v\n", err); werr != nil {
+					return werr
+				}
 			}
 		}
 	}
@@ -256,8 +269,18 @@ func readKeys(ch chan<- byte, done <-chan struct{}) {
 	}
 }
 
-func isTerminalFd(_ uintptr) bool {
-	fi, err := os.Stdin.Stat()
+// isTerminalFd reports whether the given file descriptor refers to
+// a character device (a terminal). The earlier shape ignored the fd
+// parameter and always Stat'd os.Stdin, so callers asking about a
+// non-stdin fd (e.g. checking stdout for live-display compatibility)
+// got the wrong answer when the binary was invoked with stdin
+// redirected from a file but stdout still attached to the terminal.
+func isTerminalFd(fd uintptr) bool {
+	f := os.NewFile(fd, "")
+	if f == nil {
+		return false
+	}
+	fi, err := f.Stat()
 	if err != nil {
 		return false
 	}

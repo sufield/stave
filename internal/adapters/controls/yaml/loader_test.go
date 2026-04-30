@@ -32,11 +32,8 @@ unsafe_predicate:
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
-	_, err = loader.LoadControls(context.Background(), dir)
+	loader := NewControlLoader()
+	_, err := loader.LoadControls(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected error for missing dsl_version")
 	}
@@ -70,11 +67,8 @@ unsafe_predicate:
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
-	_, err = loader.LoadControls(context.Background(), dir)
+	loader := NewControlLoader()
+	_, err := loader.LoadControls(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected error for unsupported dsl_version")
 	}
@@ -105,10 +99,7 @@ unsafe_predicate:
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader()
 	controls, err := loader.LoadControls(context.Background(), dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -140,11 +131,8 @@ unsafe_predicate:
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
-	_, err = loader.LoadControls(context.Background(), dir)
+	loader := NewControlLoader()
+	_, err := loader.LoadControls(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected semantic validation error for whitespace type")
 	}
@@ -170,11 +158,8 @@ unsafe_predicate:
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
-	_, err = loader.LoadControls(context.Background(), dir)
+	loader := NewControlLoader()
+	_, err := loader.LoadControls(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected error for missing id")
 	}
@@ -221,11 +206,8 @@ unsafe_predicate:
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
-	_, err = loader.LoadControls(context.Background(), dir)
+	loader := NewControlLoader()
+	_, err := loader.LoadControls(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected error for duplicate control ID")
 	}
@@ -251,11 +233,7 @@ func TestControlLoader_CanonicalS3DirNoDuplicates(t *testing.T) {
 		t.Skip("controls/s3/ not found (running outside repo)")
 	}
 
-	loader, err := NewControlLoader(WithAliasResolver(predicate.ResolverFunc()))
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
-
+	loader := NewControlLoader(WithAliasResolver(predicate.ResolverFunc()))
 	controls, err := loader.LoadControls(context.Background(), s3Dir)
 	if err != nil {
 		t.Fatalf("canonical S3 controls failed to load: %v", err)
@@ -329,12 +307,9 @@ unsafe_predicate:
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader()
 
-	_, err = loader.LoadControls(context.Background(), dir)
+	_, err := loader.LoadControls(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected error when two files define the same PUBLIC.001 control ID")
 	}
@@ -366,10 +341,7 @@ remediation:
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader()
 	controls, err := loader.LoadControls(context.Background(), dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -397,10 +369,7 @@ func TestControlLoader_LoadsRemediationExampleField(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader()
 	controls, err := loader.LoadControls(context.Background(), dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -439,10 +408,7 @@ unsafe_predicate:
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader()
 	controls, err := loader.LoadControls(context.Background(), dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -468,11 +434,8 @@ description: Test
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
-	_, err = loader.LoadControls(context.Background(), dir)
+	loader := NewControlLoader()
+	_, err := loader.LoadControls(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected error for missing unsafe_predicate")
 	}
@@ -524,10 +487,7 @@ func TestControlLoader_RecursiveLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader()
 
 	controls, err := loader.LoadControls(context.Background(), dir)
 	if err != nil {
@@ -562,10 +522,7 @@ func TestControlLoader_SkipsUnderscoreDirs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader()
 
 	controls, err := loader.LoadControls(context.Background(), dir)
 	if err != nil {
@@ -606,10 +563,7 @@ func TestControlLoader_DeterministicOrderByID(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader()
 
 	controls, err := loader.LoadControls(context.Background(), dir)
 	if err != nil {
@@ -650,12 +604,9 @@ func TestControlLoader_DuplicateIDsAcrossSubdirs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader()
 
-	_, err = loader.LoadControls(context.Background(), dir)
+	_, err := loader.LoadControls(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected error for duplicate control ID across subdirectories")
 	}
@@ -691,12 +642,9 @@ func TestControlLoader_RegistryTraversalRejected(t *testing.T) {
 		t.Logf("could not create escape file (expected in sandboxed dirs): %v", err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader()
 
-	_, err = loader.LoadControls(context.Background(), dir)
+	_, err := loader.LoadControls(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected error for registry path traversal, got nil")
 	}
@@ -722,10 +670,7 @@ unsafe_predicate_alias: s3.is_public_readable
 	if err := os.WriteFile(filepath.Join(dir, "alias.yaml"), []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	loader, err := NewControlLoader(WithAliasResolver(predicate.ResolverFunc()))
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader(WithAliasResolver(predicate.ResolverFunc()))
 	controls, err := loader.LoadControls(context.Background(), dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -752,11 +697,8 @@ unsafe_predicate_alias: s3.unknown_alias
 	if err := os.WriteFile(filepath.Join(dir, "alias_bad.yaml"), []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	loader, err := NewControlLoader(WithAliasResolver(predicate.ResolverFunc()))
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
-	_, err = loader.LoadControls(context.Background(), dir)
+	loader := NewControlLoader(WithAliasResolver(predicate.ResolverFunc()))
+	_, err := loader.LoadControls(context.Background(), dir)
 	if err == nil {
 		t.Fatal("expected unknown alias error")
 	}
@@ -783,10 +725,7 @@ func TestControlLoader_SkipsExampleFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
-	if err != nil {
-		t.Fatalf("failed to create loader: %v", err)
-	}
+	loader := NewControlLoader()
 
 	controls, err := loader.LoadControls(context.Background(), dir)
 	if err != nil {
@@ -819,7 +758,9 @@ unsafe_predicate:
 		t.Fatal(err)
 	}
 
-	loader, err := NewControlLoader()
+	loader := NewControlLoader()
+	var err error
+	_ = err
 	if err != nil {
 		t.Fatalf("NewControlLoader: %v", err)
 	}

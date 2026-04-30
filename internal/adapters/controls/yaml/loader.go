@@ -42,14 +42,22 @@ func WithAliasResolver(r policy.AliasResolver) LoaderOption {
 // NewControlLoader creates a new YAML control loader.
 // It initializes with a default validator unless overridden by options.
 // The returned loader is ready to use immediately — no lazy initialization.
-func NewControlLoader(opts ...LoaderOption) (*ControlLoader, error) {
+//
+// The signature does not return an error: contractvalidator.New() and
+// every existing LoaderOption are total, so no failure mode exists.
+// The earlier shape returned (*ControlLoader, error) anyway and every
+// caller checked for an error that never fired. Reduced to the
+// natural signature so call sites are simpler. If a future option
+// needs to fail at construction, return an error from that option
+// itself and surface it from a constructor variant.
+func NewControlLoader(opts ...LoaderOption) *ControlLoader {
 	l := &ControlLoader{
 		validator: contractvalidator.New(),
 	}
 	for _, opt := range opts {
 		opt(l)
 	}
-	return l, nil
+	return l
 }
 
 // LoadControls loads all YAML control definitions from the given directory,
@@ -162,6 +170,15 @@ func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
 			case diag.SeverityWarn:
 				slog.Warn("control validation warning",
 					"control_id", ctl.ID,
+					"message", issue.Message)
+			default:
+				// An unknown Severity value almost always means
+				// someone added a new severity tier upstream and
+				// didn't update this switch. Log so the gap is
+				// visible instead of silently dropped.
+				slog.Warn("control validation: unknown severity level",
+					"control_id", ctl.ID,
+					"severity", string(issue.Severity),
 					"message", issue.Message)
 			}
 		}

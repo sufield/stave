@@ -103,7 +103,15 @@ func BuildTrace(
 		Result:     result,
 	}
 	if evalErr != nil {
+		// Evaluation failures get returned as the function's error
+		// so callers can decide whether to abort their workflow,
+		// while the readable form still lives on tr.Error for
+		// rendering. The earlier shape only captured the message
+		// on tr.Error, so a downstream caller that ignored the
+		// (TraceResult, nil) pair processed an inconclusive trace
+		// as if it were definitive.
 		tr.Error = fmt.Sprintf("CEL eval: %v", evalErr)
+		return tr, evalErr
 	}
 	return tr, nil
 }

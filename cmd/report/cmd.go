@@ -206,7 +206,7 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	chainsSection := buildChainsSection(latest)
 
 	// ATT&CK coverage (static from catalog).
-	attck := buildATTCKSection(opts.ControlsDir, ctx)
+	attck := buildATTCKSection(ctx, opts.ControlsDir)
 
 	// Honest ControlsTotal: count what's actually loaded from
 	// opts.ControlsDir. Falling back to the previous TacticsTotal*10
@@ -215,10 +215,9 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	// reported as "140 controls total" regardless of reality.
 	controlsTotal := 0
 	if opts.ControlsDir != "" {
-		if ctlLoader, ctlErr := ctlyaml.NewControlLoader(); ctlErr == nil {
-			if loaded, loadErr := ctlLoader.LoadControls(ctx, opts.ControlsDir); loadErr == nil {
-				controlsTotal = len(loaded)
-			}
+		ctlLoader := ctlyaml.NewControlLoader()
+		if loaded, loadErr := ctlLoader.LoadControls(ctx, opts.ControlsDir); loadErr == nil {
+			controlsTotal = len(loaded)
 		}
 	}
 
@@ -508,7 +507,7 @@ func buildChainsSection(a *corereport.Assessment) er.ChainsSection {
 	}
 }
 
-func buildATTCKSection(controlsDir string, ctx context.Context) er.AttackCoverageSection {
+func buildATTCKSection(ctx context.Context, controlsDir string) er.AttackCoverageSection {
 	total := len(appcoverage.AllTactics)
 
 	// Without controls, we cannot honestly say what's covered. Fall
@@ -535,10 +534,7 @@ func buildATTCKSection(controlsDir string, ctx context.Context) er.AttackCoverag
 	if controlsDir == "" {
 		return emptyReport("not_covered")
 	}
-	loader, err := ctlyaml.NewControlLoader()
-	if err != nil {
-		return emptyReport("not_covered")
-	}
+	loader := ctlyaml.NewControlLoader()
 	controls, err := loader.LoadControls(ctx, controlsDir)
 	if err != nil {
 		return emptyReport("not_covered")
@@ -610,6 +606,7 @@ func loadHistory(ctx context.Context, dir string) ([]*corereport.Assessment, err
 	}
 	loader := artifact.NewLoader()
 	var out []*corereport.Assessment
+	skipped := 0
 	for _, e := range entries {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
 			continue
@@ -624,9 +621,18 @@ func loadHistory(ctx context.Context, dir string) ([]*corereport.Assessment, err
 			// long enough that the report would just trim its time
 			// series and look like nothing was wrong.
 			slog.Warn("report: skipping corrupt history file", "path", path, "err", loadErr)
+			skipped++
 			continue
 		}
 		out = append(out, a)
+	}
+	// All-skipped is different from "directory was empty": empty
+	// dir is a fresh setup ("nothing to report yet"), all-skipped
+	// is corrupt rotations that need an operator's eyes. Surface
+	// the gap as an error so the report doesn't silently render
+	// an empty trend chart on top of broken inputs.
+	if len(out) == 0 && skipped > 0 {
+		return nil, fmt.Errorf("no valid assessments in %s (%d files skipped due to errors)", dir, skipped)
 	}
 	return out, nil
 }

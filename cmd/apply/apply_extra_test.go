@@ -777,7 +777,7 @@ func TestCheckSLAPolicy_StrictFailsOnAnyBreach(t *testing.T) {
 	var stderr bytes.Buffer
 	res := EvaluateResult{HasSLABreach: true}
 	err := checkSLAPolicy(&stderr, "strict", res, false)
-	if !errors.Is(err, ui.ErrSecurityAuditFindings) {
+	if !errors.Is(err, ui.ErrViolationsFound) {
 		t.Fatalf("strict should fail on SLA breach, got: %v", err)
 	}
 }
@@ -795,7 +795,7 @@ func TestCheckSLAPolicy_CriticalOnlyFailsOnCritical(t *testing.T) {
 	var stderr bytes.Buffer
 	res := EvaluateResult{HasSLABreach: true, HasCriticalSLABreach: true}
 	err := checkSLAPolicy(&stderr, "critical-only", res, false)
-	if !errors.Is(err, ui.ErrSecurityAuditFindings) {
+	if !errors.Is(err, ui.ErrViolationsFound) {
 		t.Fatalf("critical-only should fail on critical breach, got: %v", err)
 	}
 }

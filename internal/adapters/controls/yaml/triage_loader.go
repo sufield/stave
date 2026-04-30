@@ -126,12 +126,14 @@ func LoadTriageIndexFS(fsys fs.FS, root string) (*TriageIndex, error) {
 func loadOverridesFS(fsys fs.FS, dir string, idx *TriageIndex) error {
 	entries, err := fs.ReadDir(fsys, dir)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		// embed.FS returns a different error type for missing dirs.
-		var pathErr *fs.PathError
-		if errors.As(err, &pathErr) && os.IsNotExist(pathErr.Err) {
+		// errors.Is(err, fs.ErrNotExist) covers os.PathError, embed.FS's
+		// internal error types, and any future filesystem implementation
+		// that wraps the canonical sentinel. The earlier double-check
+		// (os.IsNotExist + errors.As to *fs.PathError) was the
+		// pre-Go-1.13 spelling; consolidating to the modern form
+		// avoids drift if a new fs.FS implementation introduces a
+		// different error type.
+		if errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
 		return err
@@ -167,11 +169,9 @@ func loadOverridesFS(fsys fs.FS, dir string, idx *TriageIndex) error {
 func loadFamiliesFS(fsys fs.FS, dir string, idx *TriageIndex) error {
 	entries, err := fs.ReadDir(fsys, dir)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		var pathErr *fs.PathError
-		if errors.As(err, &pathErr) && os.IsNotExist(pathErr.Err) {
+		// See loadOverridesFS: errors.Is(err, fs.ErrNotExist) is the
+		// modern, consolidated spelling for "directory missing".
+		if errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
 		return err

@@ -2,6 +2,7 @@ package graph
 
 import (
 	"fmt"
+	"log/slog"
 	"slices"
 	"time"
 
@@ -382,6 +383,18 @@ func mergeEdgeProperties(dst, src map[string]any) {
 		if _, exists := dst[pk]; !exists {
 			dst[pk] = pv
 		}
+		// If the plural key is already populated with something
+		// other than the expected map[string]struct{} (e.g. a
+		// caller pre-stamped a []string), warn before resetting:
+		// the previous values are about to be discarded and the
+		// silent rebuild made plural-key drift hard to diagnose.
+		if existing, present := dst[pluralKey]; present {
+			if _, ok := existing.(map[string]struct{}); !ok {
+				slog.Warn("graph dedup: plural property has unexpected type, discarding existing values",
+					"plural_key", pluralKey,
+					"existing_type", fmt.Sprintf("%T", existing))
+			}
+		}
 		set := asAnySet(dst[pluralKey])
 		set[fmt.Sprint(pv)] = struct{}{}
 		set[fmt.Sprint(dst[pk])] = struct{}{}
@@ -421,10 +434,21 @@ func finalizeMultiValueProps(edges []Edge) {
 	}
 }
 
+// asAnySet returns the input as a map[string]struct{} accumulator.
+// A nil input legitimately falls through to the new-map path (first
+// merge into the plural slot). A non-nil input of any other concrete
+// type is unexpected — callers should have run a type-check first;
+// this function logs and returns a fresh map so the merge can
+// proceed rather than panic, but the warning surfaces the data loss.
 func asAnySet(v any) map[string]struct{} {
+	if v == nil {
+		return make(map[string]struct{}, 2)
+	}
 	if s, ok := v.(map[string]struct{}); ok {
 		return s
 	}
+	slog.Warn("graph dedup: asAnySet given non-set type, discarding existing values",
+		"type", fmt.Sprintf("%T", v))
 	return make(map[string]struct{}, 2)
 }
 

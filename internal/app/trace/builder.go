@@ -23,23 +23,24 @@ func (b *Builder) BuildTrace(req evaluation.TraceRequest) *evaluation.FindingTra
 	}
 
 	tr, err := stavecel.BuildTrace(req.Control, found, snapshot)
+	if tr != nil {
+		// BuildTrace now returns a populated trace even when eval
+		// fails, with the error attached on tr.Error. Prefer the
+		// real trace (it has the compiled expression) over a
+		// synthetic one — only fall through to the synthetic path
+		// when tr is nil (compiler-init failure or contract guard).
+		return &evaluation.FindingTrace{
+			Raw:         tr,
+			FinalResult: tr.Result,
+		}
+	}
 	if err != nil {
-		// A trace-build error means we cannot describe how this
-		// finding was decided. Surface as a synthetic FindingTrace so
-		// the consumer can still render the failure rather than seeing
-		// a silent nil.
 		return &evaluation.FindingTrace{
 			Raw:         &stavecel.TraceResult{Error: err.Error()},
 			FinalResult: false,
 		}
 	}
-	if tr == nil {
-		return nil
-	}
-	return &evaluation.FindingTrace{
-		Raw:         tr,
-		FinalResult: tr.Result,
-	}
+	return nil
 }
 
 // findAssetInSnapshots locates an asset in the loaded snapshots,

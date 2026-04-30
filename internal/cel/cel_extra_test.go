@@ -212,6 +212,32 @@ func TestCompile_EmptyPredicate(t *testing.T) {
 	}
 }
 
+// TestCompile_EmptyFieldRule pins the new contract: a rule with an
+// empty field is a defect (the rule does nothing). The compiler
+// errors instead of returning the empty string and letting
+// predicateToExpr filter it out silently. Identity-shorthand
+// (any_identity_match) is the documented exception and still
+// compiles when field is empty.
+func TestCompile_EmptyFieldRule(t *testing.T) {
+	t.Parallel()
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Op: predicate.OpEq, Value: policy.Bool(true)}, // no Field
+		},
+	}
+	_, err = compiler.Compile(pred)
+	if err == nil {
+		t.Fatal("expected error for empty-field rule, got nil")
+	}
+	if !strings.Contains(err.Error(), "empty field") {
+		t.Errorf("error %q should mention 'empty field'", err.Error())
+	}
+}
+
 func TestCompile_UnsupportedOperator(t *testing.T) {
 	t.Parallel()
 	compiler, err := NewCompiler()

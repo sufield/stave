@@ -130,8 +130,17 @@ func printReadinessIssue(w io.Writer, issue validation.ValidationFinding) error 
 	return nil
 }
 
-// checkSLAPolicy returns an error (exit code 1) when SLA breaches violate
+// checkSLAPolicy returns an error (exit code 3) when SLA breaches violate
 // the configured policy. Default "warn" never triggers a non-zero exit.
+//
+// SLA breaches are findings, not security-audit gating events. The
+// earlier shape returned ErrSecurityAuditFindings, which the global
+// classifier maps to exit code 1 (security-audit gating) — but
+// `apply` emits SLA breach findings as part of normal evaluation,
+// not as a gate. Routing them through ErrViolationsFound (exit 3)
+// keeps the exit-code map's semantic split intact: 1 is reserved
+// for the dedicated `security-audit` command, 3 is "evaluation
+// completed with findings".
 func checkSLAPolicy(stderr io.Writer, policy string, res EvaluateResult, quiet bool) error {
 	switch policy {
 	case "strict":
@@ -139,14 +148,14 @@ func checkSLAPolicy(stderr io.Writer, policy string, res EvaluateResult, quiet b
 			if !quiet {
 				fmt.Fprintln(stderr, "SLA policy: strict — SLA breach detected, failing.")
 			}
-			return ui.ErrSecurityAuditFindings
+			return ui.ErrViolationsFound
 		}
 	case "critical-only":
 		if res.HasCriticalSLABreach {
 			if !quiet {
 				fmt.Fprintln(stderr, "SLA policy: critical-only — critical SLA breach detected, failing.")
 			}
-			return ui.ErrSecurityAuditFindings
+			return ui.ErrViolationsFound
 		}
 	}
 	// "warn" (default) — no exit code change.

@@ -328,7 +328,19 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 				out[k] = s.scrubValueWithProfile(sub, profile)
 				continue
 			}
-			out[k] = s.scrubValueWithProfile(sub, profile)
+			// Neutral key: the key itself isn't classified, so the
+			// scalar value at this slot is data the operator wants
+			// to read. Preserve primitives as-is. Only recurse into
+			// containers, where deeper keys may match Remove or
+			// Sanitize. The earlier shape recursed unconditionally,
+			// which scrubbed primitive scalars under non-classified
+			// keys (every plain string became `SANITIZED_<hash>`).
+			switch sub.(type) {
+			case map[string]any, []any:
+				out[k] = s.scrubValueWithProfile(sub, profile)
+			default:
+				out[k] = sub
+			}
 		}
 		return out
 	default:

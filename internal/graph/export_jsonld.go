@@ -6,7 +6,9 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"log/slog"
 	"sort"
 )
 
@@ -313,9 +315,17 @@ func encodeJSONString(buf *bytes.Buffer, s string) {
 // encodeJSONValue writes any JSON-encodable value into the buffer.
 // Used for datatype property values where the type is map[string]any
 // from upstream JSON parsing.
+//
+// On marshal failure the function emits `null` to keep the JSON-LD
+// document well-formed — but logs a warning first so the data loss
+// is visible. Earlier shape silently swallowed the marshal error,
+// which made unsupported values (channels, function pointers, NaN
+// floats) appear in the output as null with no signal.
 func encodeJSONValue(buf *bytes.Buffer, v any) {
 	b, err := json.Marshal(v)
 	if err != nil {
+		slog.Warn("graph jsonld: property value failed to marshal; emitting null",
+			"error", err, "type", fmt.Sprintf("%T", v))
 		buf.WriteString("null")
 		return
 	}
