@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.ENCRYPT.KMS.AWSMANAGED.001
+name: DocumentDB Cluster Must Use a Customer-Managed KMS Key
+description: >
+  DocumentDB clusters must encrypt at rest with a customer-managed
+  KMS key, not the AWS-managed `aws/rds` default. The AWS-managed
+  key is shared across every RDS-family cluster in the account, has
+  a key policy the customer cannot edit, and cannot be revoked or
+  rotated on the customer's schedule. Using it satisfies the
+  at-rest encryption checkbox but eliminates the per-tenant
+  key-policy and per-incident key-revocation controls customer-
+  managed keys provide.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: 3.6.1
+  ccm_v4:
+  - CEK-04
+  - CEK-08
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Cluster is encrypted with the AWS-managed default `aws/rds`
+    key. Per-tenant key-policy and revocation controls are
+    unavailable.
+  action: >
+    Create a customer-managed KMS key with a scoped key policy,
+    then re-encrypt the cluster (requires a snapshot restore to a
+    new cluster pointed at the customer-managed key). Rotate any
+    cross-region snapshot copy grants to use the same CMK.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.encryption.at_rest_enabled
+    op: eq
+    value: true
+  - field: properties.database.encryption.kms_key_managed_by
+    op: eq
+    value: aws

@@ -1,0 +1,16 @@
+control: CTL.DOCUMENTDB.PROFILER.OFF.001
+defect: >
+  Cluster parameter group has `profiler=disabled`. Slow-query
+  shape data is not captured.
+infection: >
+  The audit log records the operation category (find / update /
+  delete / aggregate) and the principal, but not the query body.
+  After an incident, "what data did the attacker query?" is
+  reconstructed from the profiler output — its absence converts
+  a specific incident scope into "any document the attacker's
+  user could read", which on a multi-tenant DocumentDB is the
+  whole cluster.
+failure: >
+  Inflated incident scope. Without query-shape data, the only
+  defensible disclosure is "everything the compromised user
+  could see."

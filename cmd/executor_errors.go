@@ -17,6 +17,10 @@ type errorTemplate struct {
 }
 
 // sentinelTemplates maps exit codes to their error presentation metadata.
+// Every exit code that ui.IsSentinel can attach to an error must have an
+// entry here, otherwise errorInfoFromError falls through to the generic
+// "Command failed" path and the operator sees less specific guidance
+// than they could.
 var sentinelTemplates = map[int]errorTemplate{
 	ui.ExitSecurity: {
 		Code:   ui.CodeSecurityAuditFindings,
@@ -32,6 +36,16 @@ var sentinelTemplates = map[int]errorTemplate{
 		Code:   ui.CodeInvalidInput,
 		Title:  "Input validation failed",
 		Action: "Run `stave validate` with the same inputs to get actionable fix hints.",
+	},
+	ui.ExitInternal: {
+		Code:   ui.CodeInternalError,
+		Title:  "Internal error",
+		Action: "Rerun with -vv to capture the full trace, then file an issue with the captured output.",
+	},
+	ui.ExitInterrupted: {
+		Code:   ui.CodeInternalError,
+		Title:  "Interrupted",
+		Action: "Command was canceled before completion (Ctrl-C / SIGTERM). Re-run when ready; partial outputs may be incomplete.",
 	},
 }
 

@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.AUDIT.PARAM.OFF.001
+name: DocumentDB Audit Log Parameter Must Be Enabled
+description: >
+  DocumentDB clusters must have the `audit_logs` cluster parameter
+  set to `enabled` so authentication, authorization, and CRUD events
+  are recorded by the engine. Distinct from the existing
+  CTL.DOCUMENTDB.LOG.AUDIT.001 — which checks the *export* of audit
+  logs to CloudWatch — this control catches the upstream gap where
+  no audit events are produced in the first place. With
+  `audit_logs=disabled`, the CWL exporter receives nothing and the
+  forensic trail is empty even though the operator believes audit
+  logging is "on".
+domain: audit
+severity: high
+compliance:
+  nist_800_53_r5: AU-2
+  soc2: CC7.2
+  pci_dss_v4.0: 10.2.1
+  hipaa: "164.312(b)"
+  ccm_v4:
+  - LOG-02
+  - LOG-03
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Cluster parameter group has `audit_logs=disabled`. The engine
+    is producing no audit events for the CloudWatch exporter to
+    forward.
+  action: >
+    Update the cluster parameter group so `audit_logs=enabled` and
+    apply the change. Verify
+    CTL.DOCUMENTDB.LOG.AUDIT.001 (CloudWatch export) is also
+    satisfied — both are needed for an end-to-end audit trail.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.parameter_group.audit_logs_enabled
+    op: eq
+    value: false

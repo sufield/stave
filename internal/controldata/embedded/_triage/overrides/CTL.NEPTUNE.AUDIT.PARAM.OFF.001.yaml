@@ -1,0 +1,16 @@
+control: CTL.NEPTUNE.AUDIT.PARAM.OFF.001
+defect: >
+  Cluster parameter group has `neptune_enable_audit_log=0`. The
+  engine produces no audit events at all.
+infection: >
+  Operators who configured CloudWatch log export via
+  `enabled_cloudwatch_logs_exports[audit]` reasonably believe
+  audit logging is "on". The exporter is on; the audit-event
+  source is off, so the exporter forwards an empty stream. The
+  audit gap is invisible until a post-incident query returns no
+  results — at which point the trail has been missing for as
+  long as the parameter has been disabled.
+failure: >
+  Forensic blackout. Every authentication, authorization, and
+  query event since the parameter was disabled has produced no
+  log entry anywhere.

@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.QUERY.LOG.OFF.001
+name: Neptune Slow-Query Log Must Be Enabled in Production
+description: >
+  Neptune clusters in production should have the
+  `neptune_query_log_mode` cluster parameter set to a recording
+  mode (e.g. `enabledForAllQueries` or
+  `enabledForSlowQueriesOnly`). Without slow-query logging, the
+  audit log records that a query happened but not what it
+  queried — post-incident "what data did the attacker traverse?"
+  reduces to "every node and edge the compromised principal could
+  reach", which on a graph workload is typically the entire
+  organizational map.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: AU-12
+  soc2: CC7.2
+  pci_dss_v4.0: 10.2.5
+  ccm_v4:
+  - LOG-08
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Cluster parameter group has `neptune_query_log_mode` set to
+    none / disabled. Query-shape forensics are unavailable.
+  action: >
+    Update the cluster parameter group so
+    `neptune_query_log_mode=enabledForSlowQueriesOnly` and set
+    `neptune_query_log_slow_query_threshold` to a value matching
+    the team's slow-query baseline. Pair with
+    CTL.NEPTUNE.LOG.AUDIT.001 so the query log reaches CloudWatch.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.parameter_group.query_log_enabled
+    op: eq
+    value: false

@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.CONFIG.ADMIN.001
+name: DocumentDB Must Not Use a Default Admin Username
+description: >
+  DocumentDB clusters must not be configured with a guessable
+  default master username (`admin`, `docdb`, `root`,
+  `administrator`, `superuser`). The master username appears in
+  every connection string and CloudTrail event, and credential-
+  stuffing tools test the well-known defaults first. Picking a
+  non-default username eliminates the easiest enumeration path and
+  forces an attacker to harvest the username separately before any
+  password attempt becomes useful.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: IA-5
+  ccm_v4:
+  - IAM-05
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Cluster's master username is one of the well-known defaults.
+    Credential-stuffing attempts already know it.
+  action: >
+    Provision a new cluster with a non-default master username
+    (e.g. `svc_<team>_admin`) and migrate. The master username
+    cannot be renamed in place; replacement requires a
+    snapshot-restore-and-cutover rotation.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.config.uses_default_admin
+    op: eq
+    value: true

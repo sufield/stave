@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.IAM.AUTH.OFF.001
+name: DocumentDB Cluster Must Permit IAM Database Authentication
+description: >
+  DocumentDB clusters must have IAM database authentication enabled
+  so human and service principals authenticate with short-lived
+  IAM-derived credentials instead of long-lived database-local
+  passwords. AWS added IAM auth to DocumentDB after the engine had
+  already been in production for years — most existing clusters
+  still rely exclusively on the master password and any rotated-in
+  application user, leaving no IAM-side audit trail tying a
+  connection to a human identity.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: IA-2
+  soc2: CC6.1
+  pci_dss_v4.0: 8.3.1
+  hipaa: "164.312(d)"
+  ccm_v4:
+  - IAM-08
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Cluster has `iam_database_authentication_enabled=false`.
+    Authentication relies on long-lived database-local passwords
+    and produces no IAM-level attribution.
+  action: >
+    Modify the cluster with
+    `--enable-iam-database-authentication`. Create dbuser entries
+    that authenticate via IAM, attach `rds-db:connect` IAM policies
+    to the human / service principals that need access, and rotate
+    the existing database-local passwords out.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.iam.db_auth_enabled
+    op: eq
+    value: false

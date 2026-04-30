@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.LOADER.ROLE.WILDCARD.001
+name: Neptune Loader IAM Role Must Not Use Wildcard S3 Resource
+description: >
+  An IAM role attached to a Neptune cluster's `LOADER` feature must
+  not grant `s3:*` or `Resource: "*"` on any S3 statement. The
+  loader role is assumed by the cluster when an operator runs
+  `loader` against an S3 source — any database principal with
+  Gremlin/SPARQL execute can issue that load call, so a role with
+  wildcard S3 access turns graph-query execute into arbitrary-
+  bucket *write* (the loader can also stage transformed data back
+  to S3) and exfiltration vector.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: AC-6
+  soc2: CC6.3
+  pci_dss_v4.0: 7.2.5
+  ccm_v4:
+  - IAM-09
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    A LOADER-feature IAM role attached to the cluster has an S3
+    statement with a wildcard resource. Any cluster query principal
+    that can issue `loader` can read or write any bucket the role
+    reaches.
+  action: >
+    Replace `Resource: "*"` with explicit bucket ARNs the cluster
+    legitimately ingests data from. Split read and write into
+    separate roles when the data sources differ, and limit the
+    `LOADER` association to the read-only role.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.iam.loader_role_has_wildcard_resource
+    op: eq
+    value: true

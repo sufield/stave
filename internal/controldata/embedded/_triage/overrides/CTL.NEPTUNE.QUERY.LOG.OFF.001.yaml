@@ -1,0 +1,16 @@
+control: CTL.NEPTUNE.QUERY.LOG.OFF.001
+defect: >
+  Cluster parameter group has `neptune_query_log_mode` set to
+  none / disabled. Slow-query and query-shape data are not
+  captured.
+infection: >
+  The audit log records that a query happened (principal,
+  endpoint, timestamp) but not what graph traversal it executed.
+  After an incident, "what did the attacker traverse?" reduces
+  to "every node and edge the compromised principal could
+  reach", which on a graph workload is typically the entire
+  organizational map. Slow-query logging is the only mechanism
+  that captures the actual Gremlin / SPARQL request body.
+failure: >
+  Inflated incident scope. Without query-shape data, the only
+  defensible disclosure is "the entire reachable subgraph."

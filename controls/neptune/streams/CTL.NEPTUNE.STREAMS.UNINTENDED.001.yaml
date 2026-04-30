@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.STREAMS.UNINTENDED.001
+name: Neptune Streams Must Have a Bounded Consumer Policy
+description: >
+  When `neptune_streams=1` is enabled at the cluster parameter
+  group, the cluster exposes a change-feed endpoint that any
+  in-VPC consumer can poll. Streams are intentional for some
+  pipelines (Lambda subscribers, ETL into a search index) but
+  unintentional exposure is the failure mode: the parameter is
+  toggled on for a one-off integration and never paired with a
+  bounded consumer-policy registry, so any newly-deployed
+  workload in the VPC can subscribe to the stream and receive
+  every mutation. The control fires when streams are on and the
+  registered consumer-policy list is empty.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: AC-3
+  soc2: CC6.6
+  ccm_v4:
+  - DSP-17
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Streams are enabled but no consumer-policy allow-list governs
+    which workloads can subscribe. Any in-VPC consumer can read
+    every mutation.
+  action: >
+    Register the legitimate stream consumers (Lambda ARNs, EC2
+    role ARNs) in the cluster's stream consumer-policy list. If
+    no consumer is currently using the stream, set
+    `neptune_streams=0` until a real subscriber arrives.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.streams.enabled_without_consumer_policy
+    op: eq
+    value: true

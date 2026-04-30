@@ -27,8 +27,16 @@ func DefaultWeights() Weights {
 }
 
 // SeverityDetail holds breakdown data for the severity component.
+//
+// Both TotalViolations and FailingFindings count entries in the input
+// Findings slice — which is itself already filtered to violations
+// upstream. The two fields share a value by construction; they exist
+// separately so consumers that want "violations seen" and consumers
+// that want "violations contributing to the failing-count signal" can
+// pick the one matching their semantic. The legacy `total_findings`
+// JSON tag is preserved for stable wire-format consumers.
 type SeverityDetail struct {
-	TotalFindings   int     `json:"total_findings"`
+	TotalViolations int     `json:"total_findings"`
 	FailingFindings int     `json:"failing_findings"`
 	MaxRiskExposure float64 `json:"max_risk_exposure"`
 	ActualExposure  float64 `json:"actual_exposure"`
@@ -224,12 +232,39 @@ func Compute(input Input) Result {
 		failingCount++
 	}
 	maxExposure := input.TotalCheckWeight
-	if maxExposure <= 0 {
-		maxExposure = actualExposure
-	}
 	sevScore := 1.0
 	if maxExposure > 0 {
+		// Standard path: severity score is 1 - (exposure / max).
+		// Clamp to [0, 1] — TotalCheckWeight under-counting (catalog
+		// drift, fixture truncation) used to produce negative scores
+		// that displayed as nonsense rubric bands; cap at 0 so a
+		// fully-saturated cluster reports the worst score, not below it.
 		sevScore = 1.0 - (actualExposure / maxExposure)
+	} else if failingCount > 0 {
+		// Fallback when total-check-weight is unavailable: the previous
+		// behavior set maxExposure = actualExposure, which collapsed
+		// every fallback to score 0 regardless of how mild the
+		// findings actually were. Instead, compute a meaningful
+		// "average severity" score: 1 - (avg severity weight / max
+		// severity weight). A cluster with only Low findings scores
+		// near 0.9; one with all Critical findings scores 0. Still
+		// flagged as a fallback shape (TotalCheckWeight==0) so the
+		// caller can warn that the upstream count is missing.
+		avgWeight := actualExposure / float64(failingCount)
+		maxSev := severityWeight[policy.SeverityCritical]
+		if maxSev > 0 {
+			sevScore = 1.0 - (avgWeight / maxSev)
+		}
+	}
+	// Clamp to [0, 1] regardless of which branch produced the value
+	// — both paths can drift outside the range with adversarial input
+	// (negative TotalCheckWeight, severity weights tuned >Critical).
+	sevScore = math.Max(0, math.Min(1.0, sevScore))
+	// MaxRiskExposure reported in the result reflects the value
+	// actually used in the score calc — including the fallback.
+	reportedMaxExposure := maxExposure
+	if reportedMaxExposure <= 0 {
+		reportedMaxExposure = actualExposure
 	}
 
 	// SLA score.
@@ -269,9 +304,14 @@ func Compute(input Input) Result {
 		covScore = input.CoveragePct / 100.0
 	}
 
-	// Weighted sum.
+	// Weighted sum. Each sub-score is in [0, 1] and the weights sum to
+	// 1.0 (DefaultWeights enforces this; ParseWeights normalizes), so
+	// `total` is also in [0, 1]. The rounding step rescales to the
+	// reported 0–100 range with one decimal place: total*1000 lands in
+	// [0, 1000], Round() pins to integer tenths-of-a-percent, /10 maps
+	// back to [0.0, 100.0].
 	total := w.Severity*sevScore + w.SLA*slaScore + w.Chain*chainScore + w.Coverage*covScore
-	finalScore := math.Round(total*1000) / 10 // one decimal place
+	finalScore := math.Round(total*1000) / 10
 
 	band, desc := rubric(finalScore)
 
@@ -288,9 +328,9 @@ func Compute(input Input) Result {
 				Contribution: w.Severity * sevScore * 100, MaxContribution: w.Severity * 100,
 			},
 			Detail: SeverityDetail{
-				TotalFindings:   len(input.Findings),
+				TotalViolations: len(input.Findings),
 				FailingFindings: failingCount,
-				MaxRiskExposure: maxExposure,
+				MaxRiskExposure: reportedMaxExposure,
 				ActualExposure:  actualExposure,
 			},
 		},

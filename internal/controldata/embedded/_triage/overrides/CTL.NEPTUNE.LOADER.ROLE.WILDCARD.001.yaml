@@ -1,0 +1,18 @@
+control: CTL.NEPTUNE.LOADER.ROLE.WILDCARD.001
+defect: >
+  An IAM role attached to the cluster's `LOADER` feature grants
+  `s3:*` or `Resource: "*"` on at least one S3 statement.
+infection: >
+  Neptune's loader is invoked from a Gremlin / SPARQL session via
+  the `loader` HTTP endpoint. The cluster assumes the LOADER
+  role and reads from the supplied S3 source — so the role's S3
+  reach defines the loader's reach. Any database query principal
+  who can issue `loader` becomes able to read or write any
+  bucket the wildcard covers, with the loader role's
+  credentials, not their own. Graph query execute becomes a
+  one-step cross-bucket exfiltration pivot.
+failure: >
+  Lateral movement from graph-query execute to arbitrary S3
+  read/write. A compromised graph-query principal can stage
+  cross-bucket data movement without ever exiting the cluster's
+  HTTP API.

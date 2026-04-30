@@ -1,0 +1,20 @@
+id: neptune_anon_query_undetected
+description: >
+  Neptune cluster has IAM database authentication disabled and
+  the audit log parameter off. Neptune has no DB-local
+  authentication mechanism — IAM auth is the only authentication —
+  so `iam_authentication_enabled=false` means anyone with VPC
+  reach can issue Gremlin / SPARQL queries anonymously. With
+  audit logging also off, those anonymous queries produce no
+  engine-level event at all. The two controls together make the
+  graph store an unauthenticated, unlogged query target. Either
+  one alone is recoverable; together they are the worst-case
+  silent-read posture for a graph workload.
+controls:
+  - CTL.NEPTUNE.AUTH.IAM.001
+  - CTL.NEPTUNE.AUDIT.PARAM.OFF.001
+escalation_threshold: 2
+compound_severity: critical
+postconditions:
+  - data_access
+  - invisible_data_exfiltration

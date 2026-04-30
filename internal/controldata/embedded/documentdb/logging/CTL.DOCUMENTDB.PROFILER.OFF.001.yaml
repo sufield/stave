@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.PROFILER.OFF.001
+name: DocumentDB Profiler Must Be Enabled in Production
+description: >
+  DocumentDB clusters in production should have the `profiler`
+  cluster parameter enabled so slow-query operations are captured
+  alongside the audit log. The profiler is the only mechanism that
+  records query *shape* (collection, predicate fields, sort order)
+  for queries that exceed the profiling threshold — without it, a
+  post-incident question of "what did the attacker query?" is
+  unanswerable because the audit log only records the operation
+  category, not the query body.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: AU-12
+  soc2: CC7.2
+  pci_dss_v4.0: 10.2.5
+  ccm_v4:
+  - LOG-08
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Cluster parameter group has `profiler=disabled`. Slow-query
+    forensics are unavailable — only operation-category audit
+    events are captured.
+  action: >
+    Update the cluster parameter group so `profiler=enabled`,
+    set `profiler_threshold_ms` to a value matching the team's
+    slow-query baseline (typically 100–500 ms), and apply the
+    change. Pair with `LOG.AUDIT.001` so the profiler output
+    reaches CloudWatch.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.parameter_group.profiler_enabled
+    op: eq
+    value: false

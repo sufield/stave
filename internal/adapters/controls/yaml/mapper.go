@@ -1,7 +1,7 @@
 package yaml
 
 import (
-	"log/slog"
+	"fmt"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/exposure"
@@ -12,8 +12,12 @@ import (
 
 // --- YAML DTO → Domain ---
 
-func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition {
+func controlDefinitionToDomain(y yamlControlDefinition) (policy.ControlDefinition, error) {
 	mapping, ccmV4 := splitComplianceBlock(y.Compliance)
+	exp, err := exposureToDomain(y.Exposure)
+	if err != nil {
+		return policy.ControlDefinition{}, fmt.Errorf("control %q: %w", y.ID, err)
+	}
 	return policy.ControlDefinition{
 		DSLVersion:           y.DSLVersion,
 		ID:                   y.ID,
@@ -31,7 +35,7 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		UnsafePredicate:      unsafePredicateToDomain(y.UnsafePredicate),
 		UnsafePredicateAlias: y.UnsafePredicateAlias,
 		Remediation:          remediationToDomain(y.Remediation),
-		Exposure:             exposureToDomain(y.Exposure),
+		Exposure:             exp,
 		ObservationFields:    y.ObservationFields,
 		Alternatives:         alternativesToDomain(y.Alternatives),
 		Tests:                y.Tests,
@@ -39,7 +43,7 @@ func controlDefinitionToDomain(y yamlControlDefinition) policy.ControlDefinition
 		Infection:            y.Infection,
 		Failure:              y.Failure,
 		Archetype:            y.Archetype,
-	}
+	}, nil
 }
 
 // alternativesToDomain translates the YAML wire entries to domain values.
@@ -170,18 +174,25 @@ func remediationToDomain(y *yamlRemediationSpec) *policy.RemediationSpec {
 	return policy.NewRemediationSpec(y.Description, y.Action, y.Example)
 }
 
-func exposureToDomain(y *yamlExposure) *policy.Exposure {
+func exposureToDomain(y *yamlExposure) (*policy.Exposure, error) {
 	if y == nil {
-		return nil
+		return nil, nil
 	}
+	// A non-empty principal_scope that fails to parse used to log a
+	// warning and silently fall back to the zero-value scope, which
+	// downstream evaluation interpreted as "any principal." Operators
+	// who typed `principal_scope: cross_acount` (typo) thereby
+	// defaulted into the most permissive interpretation. Now an
+	// explicit non-empty value must parse cleanly or the control fails
+	// validation, so authoring mistakes surface at load.
 	scope, err := kernel.ParsePrincipalScope(y.PrincipalScope)
 	if err != nil && y.PrincipalScope != "" {
-		slog.Warn("invalid principal_scope in exposure", "value", y.PrincipalScope, "error", err)
+		return nil, fmt.Errorf("invalid principal_scope %q: %w", y.PrincipalScope, err)
 	}
 	return &policy.Exposure{
 		Type:           exposure.Type(y.Type),
 		PrincipalScope: scope,
-	}
+	}, nil
 }
 
 // UnmarshalControlDefinition unmarshals YAML bytes into a domain ControlDefinition.
@@ -190,5 +201,5 @@ func UnmarshalControlDefinition(data []byte) (policy.ControlDefinition, error) {
 	if err := yaml.Unmarshal(data, &dto); err != nil {
 		return policy.ControlDefinition{}, err
 	}
-	return controlDefinitionToDomain(dto), nil
+	return controlDefinitionToDomain(dto)
 }

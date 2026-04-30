@@ -1,0 +1,17 @@
+control: CTL.DOCUMENTDB.ENCRYPT.KMS.CROSSACCOUNT.001
+defect: >
+  KMS key policy on the cluster's at-rest key permits
+  `kms:Decrypt` to principals outside the organization's
+  allow-list.
+infection: >
+  Snapshot copies and replication targets remain encrypted, but
+  the recipient's principal legitimately holds Decrypt against
+  the source key. Cross-account snapshot share + cross-account
+  Decrypt grant turns into clear-text data egress without any
+  policy violation on the recipient side — the producer's
+  containment boundary is wholly the key policy, and that
+  boundary now spans accounts.
+failure: >
+  Cross-tenant data exposure via encrypted-but-decryptable
+  snapshots. Restricting snapshot sharing alone does not contain
+  the leak; the key policy itself must be tightened.

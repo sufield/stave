@@ -1,0 +1,15 @@
+control: CTL.DOCUMENTDB.CONFIG.ADMIN.001
+defect: >
+  Cluster's master username is one of the well-known defaults
+  (`admin`, `docdb`, `root`, `administrator`, `superuser`).
+infection: >
+  Credential-stuffing tools test the well-known defaults first.
+  The master username appears in every connection string,
+  CloudTrail event, and dependent secret-store entry, so an
+  attacker who reaches any of those reads it for free. Picking a
+  non-default username forces a separate username-harvest step
+  before any password attempt becomes useful.
+failure: >
+  Trivial username enumeration plus cheaper credential stuffing.
+  No exploit needed; the attacker just tries `admin` /
+  `password` first.

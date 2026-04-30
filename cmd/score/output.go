@@ -119,8 +119,12 @@ func scoreMovers(r appscore.Result) []string {
 }
 
 func scoreBar(score float64) string {
-	filled := int(math.Round(score / 5))
-	empty := max(20-filled, 0)
+	// Clamp to [0, 20]: a score above 100 (which compute() now never
+	// produces, but a future caller passing a raw weighted total
+	// could) would otherwise drive strings.Repeat past 20 cells and
+	// blow the bar's width. A negative score becomes an all-empty bar.
+	filled := max(0, min(int(math.Round(score/5)), 20))
+	empty := 20 - filled
 	return strings.Repeat("\u2588", filled) + strings.Repeat("\u2591", empty)
 }
 

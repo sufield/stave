@@ -1,0 +1,18 @@
+control: CTL.DOCUMENTDB.TLS.DISABLED.001
+defect: >
+  Cluster parameter group has `tls=disabled`. Connections are
+  accepted without TLS and the engine does not negotiate transport
+  encryption.
+infection: >
+  Pre-2024 DocumentDB defaults shipped with TLS optional, and many
+  long-lived production clusters still inherit that setting via
+  custom parameter groups copied from the original default. With
+  TLS off, the MongoDB wire protocol's SCRAM authentication
+  exchange travels the VPC in clear text. Any in-VPC packet
+  capture — a misconfigured VPC flow log destination, a sidecar
+  proxy, an attacker-controlled EC2 instance — recovers the
+  cluster's master credentials without exploiting any
+  vulnerability.
+failure: >
+  Cleartext credential exposure on every authenticated connection.
+  One in-VPC tcpdump replays into a working master login.

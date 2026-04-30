@@ -1,0 +1,20 @@
+control: CTL.NEPTUNE.STREAMS.UNINTENDED.001
+defect: >
+  `neptune_streams=1` is enabled at the cluster parameter group
+  but no consumer-policy allow-list governs which workloads can
+  subscribe to the change feed.
+infection: >
+  Streams are intentional for some pipelines (Lambda
+  subscribers, ETL into a search index, audit forwarders). The
+  failure mode is the parameter being toggled on for a one-off
+  integration and never paired with a bounded consumer-policy
+  registry. Any newly-deployed workload in the VPC — or any
+  workload that later inherits the cluster's IAM grants — can
+  begin polling the stream and receive every node and edge
+  mutation, including ones that would otherwise have been
+  recorded only in the audit log.
+failure: >
+  Real-time graph-mutation egress to any in-VPC consumer that
+  arrives after the misconfiguration. Detection is unlikely
+  because the consumer never authenticates against a stream
+  policy that would have logged the subscription event.

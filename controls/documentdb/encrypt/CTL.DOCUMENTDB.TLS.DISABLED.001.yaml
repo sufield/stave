@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.DOCUMENTDB.TLS.DISABLED.001
+name: DocumentDB Cluster Must Require TLS
+description: >
+  DocumentDB clusters must have the `tls` cluster parameter set to
+  `enabled` so connections without TLS are rejected. The pre-2024
+  default for newly created clusters used `disabled`, and many
+  long-lived production clusters still inherit that setting through
+  custom parameter groups copied from the original default. With
+  TLS off, MongoDB-wire-protocol authentication frames (including
+  the SCRAM challenge/response) traverse the VPC in clear and any
+  in-VPC packet capture recovers the cluster's master credentials.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: SC-8
+  soc2: CC6.7
+  pci_dss_v4.0: 4.2.1
+  hipaa: "164.312(e)(1)"
+  ccm_v4:
+  - CEK-03
+  - DSP-10
+scope_tags:
+- aws
+- documentdb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Cluster parameter group has `tls=disabled`. MongoDB-wire-protocol
+    authentication frames travel the VPC in clear text.
+  action: >
+    Update (or replace) the cluster parameter group so `tls=enabled`,
+    associate it with the cluster, and apply the change immediately
+    (`ApplyImmediately=true`). Drivers connecting without
+    `tls=true` / `ssl=true` will then fail closed instead of falling
+    back to clear text.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: documentdb_cluster
+  - field: properties.database.tls.enabled
+    op: eq
+    value: false

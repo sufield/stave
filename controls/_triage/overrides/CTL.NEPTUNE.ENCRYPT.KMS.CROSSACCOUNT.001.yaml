@@ -1,0 +1,19 @@
+control: CTL.NEPTUNE.ENCRYPT.KMS.CROSSACCOUNT.001
+defect: >
+  KMS key policy on the cluster's at-rest key permits
+  `kms:Decrypt` to principals outside the organization's
+  allow-list.
+infection: >
+  Snapshots remain encrypted, but the recipient's principal
+  legitimately holds Decrypt against the source key. Cross-
+  account snapshot share + cross-account Decrypt grant turns
+  into clear-text data egress without any policy violation on
+  the recipient side. Especially material for graph workloads:
+  one snapshot captures every relationship the organization
+  tracks — identity-to-asset, asset-to-policy, role-to-
+  permission — far higher concentration than a typical document
+  store.
+failure: >
+  Cross-tenant exposure of the organizational relationship
+  graph. The producer's containment boundary is wholly the key
+  policy, and that boundary spans accounts.

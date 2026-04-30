@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.ENCRYPT.KMS.CROSSACCOUNT.001
+name: Neptune Cluster KMS Key Must Not Permit Cross-Org Decrypt
+description: >
+  The KMS key encrypting a Neptune cluster (and its snapshots)
+  must not have a key policy granting `kms:Decrypt` to principals
+  outside the organization's allow-list. A snapshot copy
+  encrypted with such a key is decryptable wherever those
+  principals reach — turning a cross-account snapshot share into
+  a clear-text exfil path. Especially material for graph
+  workloads since a single Neptune snapshot typically captures
+  the relationships between *every* identity / asset / policy
+  the organization tracks.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: AC-3
+  soc2: CC6.6
+  pci_dss_v4.0: 3.6.1
+  ccm_v4:
+  - CEK-04
+  - IAM-09
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Cluster's KMS key policy permits `kms:Decrypt` to a principal
+    outside the organization's allow-list. Snapshot recipients can
+    decrypt the data wherever the policy admits them.
+  action: >
+    Tighten the key policy: scope `kms:Decrypt` to specific
+    `aws:PrincipalOrgID` or explicit account ARNs that legitimately
+    need to read the encrypted data, and add `aws:ViaService =
+    rds.<region>.amazonaws.com` so the grant only applies through
+    the Neptune integration path.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.encryption.kms_key_crossaccount_decrypt
+    op: eq
+    value: true

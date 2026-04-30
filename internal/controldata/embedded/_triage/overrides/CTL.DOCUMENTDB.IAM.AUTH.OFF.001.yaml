@@ -1,0 +1,17 @@
+control: CTL.DOCUMENTDB.IAM.AUTH.OFF.001
+defect: >
+  Cluster has `iam_database_authentication_enabled=false`.
+  Authentication is database-local-password only.
+infection: >
+  Long-lived database-local passwords are typically shared
+  across an application tier, hard to rotate, and produce no
+  IAM-level audit trail. A leaked password persists in CI logs,
+  secret scanners, and stale local shell history indefinitely.
+  Without IAM DB auth there is also no per-human attribution in
+  CloudTrail — every connection appears as the shared dbuser,
+  even when the operator review process assumes one human per
+  session.
+failure: >
+  Credential stuffing window plus broken attribution. Once a
+  password leaks, every connection that reuses it is logged
+  identically to a legitimate one.

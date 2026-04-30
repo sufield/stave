@@ -45,8 +45,12 @@ func (a *App) execute() {
 
 	showFirstRunHint, firstRunMarkerPath := prepareFirstRunHint(args)
 
-	cleanupInterrupt := a.installInterruptHandler()
-	defer cleanupInterrupt()
+	a.cleanupInterrupt = a.installInterruptHandler()
+	defer func() {
+		if a.cleanupInterrupt != nil {
+			a.cleanupInterrupt()
+		}
+	}()
 	defer a.recoverExecutePanic()
 
 	a.executeRootCommand(args)
@@ -140,7 +144,26 @@ func (a *App) handleExecutionError(err error, args []string) {
 		a.writeCommandError(err, args)
 	}
 
+	// postRun is skipped on the error-exit path (Cobra's RunE returned
+	// non-nil before postRun could fire), so stop the CPU profile and
+	// close the log file ourselves. Mirrors recoverExecutePanic's
+	// cleanup order; without it a long-running CI run that errored
+	// would leave a half-written cpuprofile and lose any buffered
+	// audit log entries describing the failure itself.
+	a.cleanupBeforeExit()
+
 	a.ExitFunc(exitCode)
+}
+
+// cleanupBeforeExit releases process-level resources that postRun
+// would normally close (CPU profile, log file). Idempotent: each
+// underlying close is itself idempotent (LogCloser uses sync.Once,
+// stopCPUProfile no-ops if no profile is active).
+func (a *App) cleanupBeforeExit() {
+	a.stopCPUProfile()
+	if a.LogCloser != nil {
+		_ = a.LogCloser.Close()
+	}
 }
 
 func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMarkerPath string) {

@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.AUDIT.PARAM.OFF.001
+name: Neptune Audit Log Cluster Parameter Must Be Enabled
+description: >
+  Neptune clusters must have the `neptune_enable_audit_log` cluster
+  parameter set to 1 so authentication, authorization, and query
+  events are produced by the engine. Distinct from
+  CTL.NEPTUNE.LOG.AUDIT.001 (CloudWatch export): if the parameter
+  is 0, no audit events are produced in the first place and the
+  CloudWatch exporter has nothing to forward — the operator sees
+  CWL log groups but they remain empty until something actually
+  generates events.
+domain: audit
+severity: high
+compliance:
+  nist_800_53_r5: AU-2
+  soc2: CC7.2
+  pci_dss_v4.0: 10.2.1
+  hipaa: "164.312(b)"
+  ccm_v4:
+  - LOG-02
+  - LOG-03
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Cluster parameter group has `neptune_enable_audit_log=0`. The
+    engine produces no audit events for the CloudWatch exporter
+    to forward.
+  action: >
+    Update the cluster parameter group so
+    `neptune_enable_audit_log=1` and apply the change. Verify
+    CTL.NEPTUNE.LOG.AUDIT.001 (CloudWatch export) is also
+    satisfied — both are required for an end-to-end audit trail.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.parameter_group.audit_log_enabled
+    op: eq
+    value: false

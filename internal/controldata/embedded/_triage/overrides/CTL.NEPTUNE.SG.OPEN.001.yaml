@@ -1,0 +1,18 @@
+control: CTL.NEPTUNE.SG.OPEN.001
+defect: >
+  A VPC security group attached to the Neptune cluster permits
+  ingress from 0.0.0.0/0 on the Gremlin / SPARQL endpoint port
+  (8182).
+infection: >
+  Neptune has no database-local password — IAM auth is the only
+  authentication mechanism, so the security boundary is entirely
+  the network policy plus IAM. With the SG open, anyone with VPC
+  reach (transit gateway peer, misconfigured NAT, public subnet
+  drift) can issue Gremlin or SPARQL queries directly. Combined
+  with CTL.NEPTUNE.AUTH.IAM.001 (IAM auth off) it produces fully
+  anonymous query access from the internet.
+failure: >
+  Direct query reachability against the graph store. The graph
+  is structurally a map of who-can-reach-what — typically the
+  most concentrated piece of relationship intelligence the
+  organization holds.

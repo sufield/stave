@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"regexp"
 	"runtime/debug"
 
 	"github.com/sufield/stave/internal/cli/ui"
@@ -23,17 +24,22 @@ func (a *App) recoverExecutePanic() {
 		}
 
 		// postRun is skipped on panic-recovery, so stop any active CPU
-		// profile here to avoid leaking the open profile file and
-		// truncated profile data.
-		a.stopCPUProfile()
+		// profile and flush the log file before exit. cleanupBeforeExit
+		// captures both in one place handleExecutionError shares.
+		a.cleanupBeforeExit()
 
 		errInfo := a.buildPanicErrorInfo(sanitized)
 		a.writeErrorInfo(errInfo)
-		// Flush buffered log entries before exit so the panic event
-		// makes it to disk even on panic-recovery — postRun, which
-		// normally closes the LogCloser, is skipped.
-		if a.LogCloser != nil {
-			_ = a.LogCloser.Close()
+
+		// Stop signal delivery and unblock the signal-handler
+		// goroutine before ExitFunc. In production ExitFunc is os.Exit
+		// and the goroutine dies with the process; in tests ExitFunc
+		// is mocked, and without this explicit cleanup the handler
+		// goroutine stays blocked on its select for the rest of the
+		// test run, leaking against future tests.
+		if a.cleanupInterrupt != nil {
+			a.cleanupInterrupt()
+			a.cleanupInterrupt = nil
 		}
 		a.ExitFunc(ui.ExitInternal)
 	}
@@ -67,13 +73,43 @@ func panicMessageFromValue(recovered any) string {
 	}
 }
 
+// sanitizeExecuteMessage redacts panic message contents before they
+// reach the structured log. The sanitizer is initialized in bootstrap
+// phaseLogging — a panic in an earlier phase (validate, config,
+// context) reaches here with a nil sanitizer.
+//
+// Security note: when the operator passed --sanitize but the panic
+// fired before bootstrap could wire the sanitizer, returning the raw
+// message would leak the very identifiers --sanitize was meant to
+// protect. Apply a conservative fallback redactor that strips the
+// patterns most likely to carry sensitive data — bucket ARNs, account
+// IDs, IP addresses, file paths — so the panic event can still be
+// logged without disclosing what the operator explicitly asked to be
+// hidden. Operators who did not request sanitization see the raw
+// message unchanged.
 func (a *App) sanitizeExecuteMessage(message string) string {
-	// The sanitizer is initialized in bootstrap phaseLogging. A panic
-	// before that phase (validate, config, context) reaches here with
-	// a nil sanitizer; returning the raw message is safer than
-	// dereferencing nil.
-	if a.sanitizer == nil {
-		return message
+	if a.sanitizer != nil {
+		return a.sanitizer.ScrubMessage(message)
 	}
-	return a.sanitizer.ScrubMessage(message)
+	if a.Flags.Sanitize {
+		return fallbackScrubMessage(message)
+	}
+	return message
+}
+
+// fallbackScrubMessage applies a minimal set of redactions for the
+// pre-bootstrap panic path. Conservative on purpose — better to over-
+// redact in this rare path than to leak through it.
+var fallbackScrubPatterns = []*regexp.Regexp{
+	regexp.MustCompile(`arn:aws:[a-z0-9-]+:[a-z0-9-]*:\d{12}:[^\s"'<>]+`),
+	regexp.MustCompile(`\b\d{12}\b`),                         // account IDs
+	regexp.MustCompile(`\b\d{1,3}(?:\.\d{1,3}){3}\b`),        // IPv4
+	regexp.MustCompile(`/(?:[^/\s:"'<>]+/){2,}[^/\s:"'<>]+`), // absolute paths
+}
+
+func fallbackScrubMessage(s string) string {
+	for _, re := range fallbackScrubPatterns {
+		s = re.ReplaceAllString(s, "[REDACTED]")
+	}
+	return s
 }

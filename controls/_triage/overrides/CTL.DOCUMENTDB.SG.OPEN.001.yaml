@@ -1,0 +1,15 @@
+control: CTL.DOCUMENTDB.SG.OPEN.001
+defect: >
+  A VPC security group attached to the DocumentDB cluster permits
+  ingress from 0.0.0.0/0 on the cluster port (27017).
+infection: >
+  Even with `publicly_accessible=false` on every member instance,
+  the cluster can be reached from any source the VPC's network
+  path admits — a public subnet, a misconfigured NAT, a transit
+  gateway peer. Internet scanners enumerate MongoDB-compatible
+  endpoints continuously; an open SG turns the document store
+  into a credential-stuffing target.
+failure: >
+  Direct cluster reachability for credential attacks. The MongoDB
+  wire protocol's authentication exchange is the only thing
+  between a scanner and the database contents.

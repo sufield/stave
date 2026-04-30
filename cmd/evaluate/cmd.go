@@ -201,9 +201,30 @@ func run(w io.Writer, opts *options) error {
 		return fmt.Errorf("write report: %w", err)
 	}
 
-	// Exit code based on CRITICAL failures.
-	if report.FailCounts[policy.SeverityCritical] > 0 {
-		return &exitError{code: 1, msg: fmt.Sprintf("%d CRITICAL control(s) failed", report.FailCounts[policy.SeverityCritical])}
+	// Exit code: gate on CRITICAL per-control failures *and* on any
+	// active compound (chain) finding regardless of severity. The
+	// previous gate only checked SeverityCritical, which let
+	// chain-detected compound risks (e.g. two High controls combining
+	// into a Critical kill-chain) pass CI even though the
+	// CompoundFindings list captured the chain. Any chain that
+	// reached the active list is by definition above the noise
+	// threshold the chain catalog encoded — exit non-zero so CI
+	// blocks the release.
+	criticalCount := report.FailCounts[policy.SeverityCritical]
+	compoundCount := len(report.CompoundFindings)
+	if criticalCount > 0 || compoundCount > 0 {
+		switch {
+		case criticalCount > 0 && compoundCount > 0:
+			return &exitError{
+				code: 1,
+				msg: fmt.Sprintf("%d CRITICAL control(s) failed and %d compound risk chain(s) active",
+					criticalCount, compoundCount),
+			}
+		case criticalCount > 0:
+			return &exitError{code: 1, msg: fmt.Sprintf("%d CRITICAL control(s) failed", criticalCount)}
+		default:
+			return &exitError{code: 1, msg: fmt.Sprintf("%d compound risk chain(s) active", compoundCount)}
+		}
 	}
 
 	return nil

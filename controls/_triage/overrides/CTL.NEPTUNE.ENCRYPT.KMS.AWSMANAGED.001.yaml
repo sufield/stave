@@ -1,0 +1,17 @@
+control: CTL.NEPTUNE.ENCRYPT.KMS.AWSMANAGED.001
+defect: >
+  Cluster is encrypted at rest with the AWS-managed default key,
+  not a customer-managed key.
+infection: >
+  The default key has a key policy customers cannot edit and is
+  shared across every RDS-family cluster in the account
+  (Neptune sits on the RDS control plane). There is no way to
+  scope decrypt to a specific principal, no way to revoke access
+  during containment, and no per-tenant blast-radius control.
+  The encryption-at-rest checkbox is satisfied without any of the
+  operational properties customer-managed keys provide.
+failure: >
+  Cryptographic neglect. Containment options are limited to
+  re-encrypting the entire cluster — too slow to be a real
+  incident response, especially for graph workloads where the
+  cluster size grows with the number of edges, not records.

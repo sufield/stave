@@ -219,8 +219,8 @@ func TestCompute_DetailFields(t *testing.T) {
 		Weights:   DefaultWeights(),
 	})
 
-	if r.Severity.Detail.TotalFindings != 3 {
-		t.Errorf("total_findings = %d, want 3", r.Severity.Detail.TotalFindings)
+	if r.Severity.Detail.TotalViolations != 3 {
+		t.Errorf("total_findings = %d, want 3", r.Severity.Detail.TotalViolations)
 	}
 	if r.Severity.Detail.FailingFindings != 3 {
 		t.Errorf("failing_findings = %d, want 3", r.Severity.Detail.FailingFindings)
@@ -312,5 +312,63 @@ func TestCompute_CoverageImpact(t *testing.T) {
 	}
 	if r.Coverage.Detail.CoveragePct != 50.0 {
 		t.Errorf("coverage detail pct = %f, want 50.0", r.Coverage.Detail.CoveragePct)
+	}
+}
+
+func TestCompute_SeverityScore_ZeroTotalWeight_FallbackUsesAvgSeverity(t *testing.T) {
+	// Fallback path: TotalCheckWeight unavailable. Previously this
+	// collapsed to severity score 0 regardless of finding severity.
+	// Now: Low-only findings score near 0.9, Critical-only score 0.
+	low := []remediation.Finding{
+		{Finding: evaluation.Finding{ControlSeverity: policy.SeverityLow}},
+	}
+	rLow := Compute(Input{Findings: low, Weights: DefaultWeights()})
+	if rLow.Severity.SubScore < 0.85 {
+		t.Errorf("low-only fallback severity = %.3f, want >= 0.85", rLow.Severity.SubScore)
+	}
+
+	crit := []remediation.Finding{
+		{Finding: evaluation.Finding{ControlSeverity: policy.SeverityCritical}},
+	}
+	rCrit := Compute(Input{Findings: crit, Weights: DefaultWeights()})
+	if rCrit.Severity.SubScore != 0 {
+		t.Errorf("critical-only fallback severity = %.3f, want 0", rCrit.Severity.SubScore)
+	}
+}
+
+func TestCompute_SeverityScore_NegativeTotalWeight_ClampsTo01(t *testing.T) {
+	// Adversarial input: a negative TotalCheckWeight would have driven
+	// 1 - (exposure/-N) past 1.0 before clamping, which then displayed
+	// as a rubric band not in the catalog.
+	r := Compute(Input{
+		Findings: []remediation.Finding{
+			{Finding: evaluation.Finding{ControlSeverity: policy.SeverityHigh}},
+		},
+		TotalCheckWeight: -100,
+		Weights:          DefaultWeights(),
+	})
+	if r.Severity.SubScore < 0 || r.Severity.SubScore > 1 {
+		t.Errorf("severity sub_score = %.3f, want in [0, 1]", r.Severity.SubScore)
+	}
+}
+
+func TestCompute_SeverityScore_WeightLessThanExposure_ClampsToZero(t *testing.T) {
+	// TotalCheckWeight underestimates real exposure (catalog drift,
+	// truncated fixture). 1 - (exposure/weight) goes negative; we
+	// clamp to 0 so the worst-possible severity reports as 0, not
+	// negative-something that the rubric can't render.
+	findings := make([]remediation.Finding, 5)
+	for i := range findings {
+		findings[i] = remediation.Finding{
+			Finding: evaluation.Finding{ControlSeverity: policy.SeverityCritical},
+		}
+	}
+	r := Compute(Input{
+		Findings:         findings,
+		TotalCheckWeight: 5, // exposure = 5*10 = 50, way bigger than weight
+		Weights:          DefaultWeights(),
+	})
+	if r.Severity.SubScore != 0 {
+		t.Errorf("under-counted weight severity = %.3f, want 0", r.Severity.SubScore)
 	}
 }

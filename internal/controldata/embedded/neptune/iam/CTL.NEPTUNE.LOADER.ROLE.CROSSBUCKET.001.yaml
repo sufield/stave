@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.LOADER.ROLE.CROSSBUCKET.001
+name: Neptune Loader Role Must Stay Inside the Bucket Allow-List
+description: >
+  An IAM role attached to a Neptune cluster's `LOADER` feature
+  must permit only the buckets explicitly registered in the
+  organization's data-source allow-list. Even when the role does
+  not use a wildcard resource, granting access to buckets outside
+  the curated list (a former data partner, a stale staging
+  bucket) lets a Gremlin/SPARQL execute principal pivot the
+  loader into clear-text reads against data the warehouse has no
+  business touching. The control is the cross-bucket complement
+  to LOADER.ROLE.WILDCARD.001 — that one catches `s3:*`; this one
+  catches narrowly scoped roles that drift outside the allow-list.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: AC-6
+  soc2: CC6.3
+  ccm_v4:
+  - IAM-09
+  - DSP-17
+scope_tags:
+- aws
+- neptune
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    A LOADER-feature IAM role attached to the cluster lists at
+    least one bucket ARN that is not in the data-source allow-list.
+  action: >
+    Inventory the role's S3 statements against the allow-list and
+    remove each unauthorized bucket ARN. If the bucket genuinely
+    needs to be a Neptune data source, register it in the allow-
+    list first so the deviation does not return on the next audit.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.iam.loader_role_outside_bucket_allowlist
+    op: eq
+    value: true

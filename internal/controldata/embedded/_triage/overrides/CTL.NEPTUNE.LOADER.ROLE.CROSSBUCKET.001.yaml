@@ -1,0 +1,17 @@
+control: CTL.NEPTUNE.LOADER.ROLE.CROSSBUCKET.001
+defect: >
+  An IAM role attached to the cluster's LOADER feature lists at
+  least one bucket ARN that is not in the data-source allow-list.
+infection: >
+  The role does not use a wildcard, but it does grant access to
+  buckets the data-source registry never registered as Neptune
+  inputs. Typical drift sources: a former data partner whose
+  bucket the role was granted as a one-off, a stale staging
+  bucket from a deprecated migration, a sibling data-team's
+  bucket added "while we're here." Each of those is a quiet
+  exfil pivot waiting for a graph-query principal to invoke
+  `loader` against it.
+failure: >
+  Targeted cross-bucket exfiltration via graph-query execute.
+  Less broad than a wildcard role, but specifically points at
+  data the cluster was never authorized to ingest from.

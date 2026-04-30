@@ -1,0 +1,16 @@
+id: docdb_destructive_undetected
+description: >
+  DocumentDB cluster has deletion protection disabled and the
+  automated backup retention period is too short for the
+  organization's policy. A ransomware delete or accidental drop
+  takes the cluster offline immediately and leaves no usable
+  point-in-time restore window. The two controls together turn a
+  single API call (DeleteDBCluster) into total data loss; either
+  one alone is degraded but recoverable.
+controls:
+  - CTL.DOCUMENTDB.DELETEPROT.001
+  - CTL.DOCUMENTDB.BACKUP.001
+escalation_threshold: 2
+compound_severity: critical
+postconditions:
+  - data_destruction

@@ -72,6 +72,13 @@ type App struct {
 	// race-free without locking the read path.
 	cancel atomic.Pointer[context.CancelFunc]
 
+	// cleanupInterrupt is the closure returned by installInterruptHandler
+	// that stops signal delivery and unblocks the handler goroutine.
+	// Stored on the App so the panic-recovery path can invoke it before
+	// ExitFunc — otherwise a mocked ExitFunc (test) leaves the handler
+	// goroutine blocked in its select forever.
+	cleanupInterrupt func()
+
 	// Confidence holds the configurable confidence thresholds, set during
 	// bootstrap from stave.yaml. Passed to the engine Runner.
 	Confidence evaluation.ConfidenceCalculator
