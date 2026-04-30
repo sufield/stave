@@ -12,11 +12,24 @@ func evaluateWithParams(cp CompiledPredicate, props map[string]any, params map[s
 		identities = []any{}
 	}
 
+	// Mirror production Evaluate(): the `identity` slot is the first
+	// element of `identities` so single-identity controls work the
+	// same way in tests as they do in production. Hardcoding it to
+	// {} (the previous shape) hid the real production bug Phase 7
+	// fixed — single-identity-control predicates evaluated against
+	// an empty map and silently never matched.
+	identity := map[string]any{}
+	if len(identities) > 0 {
+		if first, ok := identities[0].(map[string]any); ok {
+			identity = first
+		}
+	}
+
 	activation := map[string]any{
 		"properties": props,
 		"params":     params,
 		"identities": identities,
-		"identity":   map[string]any{},
+		"identity":   identity,
 	}
 
 	out, _, err := cp.Program.Eval(activation)

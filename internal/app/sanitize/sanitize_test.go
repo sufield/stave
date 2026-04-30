@@ -137,3 +137,47 @@ func TestSanitize_AccountIDsHashed(t *testing.T) {
 		t.Error("account ID was not sanitized from ARN property")
 	}
 }
+
+func TestSanitizeAccountIDs_Array(t *testing.T) {
+	// Array values containing account IDs (typical for
+	// `allowed_principals` / ARN lists). Previously slipped
+	// through because the list branch did not exist.
+	props := map[string]any{
+		"principals": []any{
+			"arn:aws:iam::111122223333:role/admin",
+			"arn:aws:iam::444455556666:user/bob",
+			"not-an-arn",
+		},
+	}
+	sanitizeAccountIDs(props)
+	got := props["principals"].([]any)
+	if got[0] == "arn:aws:iam::111122223333:role/admin" {
+		t.Errorf("array element 0 was not sanitized: %v", got[0])
+	}
+	if got[1] == "arn:aws:iam::444455556666:user/bob" {
+		t.Errorf("array element 1 was not sanitized: %v", got[1])
+	}
+	if got[2] != "not-an-arn" {
+		t.Errorf("non-account-id string changed: %v", got[2])
+	}
+}
+
+func TestSanitizeAccountIDs_NestedArrayInMap(t *testing.T) {
+	// Array nested inside a map that's nested in another map —
+	// exercises the recursion path through both branches.
+	props := map[string]any{
+		"policy": map[string]any{
+			"statements": []any{
+				map[string]any{
+					"Principal": []any{"arn:aws:iam::111122223333:root"},
+				},
+			},
+		},
+	}
+	sanitizeAccountIDs(props)
+	stmts := props["policy"].(map[string]any)["statements"].([]any)
+	principals := stmts[0].(map[string]any)["Principal"].([]any)
+	if principals[0] == "arn:aws:iam::111122223333:root" {
+		t.Errorf("deeply nested account ID was not sanitized: %v", principals[0])
+	}
+}

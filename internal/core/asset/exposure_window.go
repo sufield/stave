@@ -17,6 +17,13 @@ type ExposureWindow struct {
 	openedAt   time.Time
 	resolvedAt time.Time
 	active     bool
+	// clamped flags windows whose resolvedAt was clamped to openedAt
+	// because the caller supplied a resolvedAt earlier than the open
+	// time (clock skew, snapshot reorder, fixture bug). The window
+	// reads as zero-duration but the caller can branch on
+	// WasClamped() to log / fail / mark the lifecycle inconclusive
+	// rather than silently accept a fabricated zero-dwell.
+	clamped bool
 }
 
 // OpenedAt returns the timestamp when the security violation was first detected.
@@ -58,18 +65,30 @@ func (w ExposureWindow) Resolve(resolvedAt time.Time) ExposureWindow {
 	}
 
 	effectiveEnd := resolvedAt
+	clamped := false
 	if effectiveEnd.Before(w.openedAt) {
 		slog.Warn("ExposureWindow.Resolve: resolvedAt before openedAt; clamping to zero-duration window",
 			"opened_at", w.openedAt.Format(time.RFC3339),
 			"resolved_at", resolvedAt.Format(time.RFC3339))
 		effectiveEnd = w.openedAt
+		clamped = true
 	}
 
 	return ExposureWindow{
 		openedAt:   w.openedAt,
 		resolvedAt: effectiveEnd,
 		active:     false,
+		clamped:    clamped,
 	}
+}
+
+// WasClamped reports whether the window's resolvedAt was clamped to
+// openedAt because the resolver-supplied time was earlier than the
+// window's open time. Callers that need to flag the lifecycle as
+// inconclusive (rather than silently use the zero-duration window)
+// branch on this.
+func (w ExposureWindow) WasClamped() bool {
+	return w.clamped
 }
 
 // NewResolvedWindow creates a completed exposure window (OpenedAt <= ResolvedAt).

@@ -142,15 +142,37 @@ func hashToken(value string) string {
 }
 
 // sanitizeAccountIDs replaces 12-digit AWS account IDs in string values.
+// Recurses through nested maps and arrays so account IDs nested inside
+// list-shaped properties (e.g. an `allowed_principals` array of ARNs)
+// are scrubbed too. Without the array branch, account IDs lurking in
+// `principals: ["arn:aws:iam::111122223333:role/x"]` slipped through
+// because the list element was neither a string at the top level nor
+// a map.
 func sanitizeAccountIDs(props map[string]any) {
 	for key, val := range props {
-		switch v := val.(type) {
-		case string:
-			props[key] = accountIDRegexp.ReplaceAllStringFunc(v, func(match string) string {
-				return hashToken(match)
-			})
-		case map[string]any:
-			sanitizeAccountIDs(v)
+		props[key] = sanitizeAccountIDValue(val)
+	}
+}
+
+// sanitizeAccountIDValue is the recursive worker that handles the
+// scalar / map / array shapes a single property value can take.
+// Returning the (possibly rewritten) value keeps string replacement
+// composable with array iteration: arrays are mutated in place, but
+// string elements need a return path because slices can't take a
+// pointer to an element typed as `any` directly.
+func sanitizeAccountIDValue(val any) any {
+	switch v := val.(type) {
+	case string:
+		return accountIDRegexp.ReplaceAllStringFunc(v, hashToken)
+	case map[string]any:
+		sanitizeAccountIDs(v)
+		return v
+	case []any:
+		for i := range v {
+			v[i] = sanitizeAccountIDValue(v[i])
 		}
+		return v
+	default:
+		return val
 	}
 }

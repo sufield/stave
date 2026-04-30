@@ -76,14 +76,30 @@ func SanitizeArgs(args []string) []string {
 				result[i] = arg + " " + sanitizedValueMissing
 				continue
 			}
-			// Sensitive value: always redact. The previous shape
-			// skipped redaction when the value `looks like a flag`
-			// (starts with `-`), but a legitimate
-			// password / token / api-key starting with `-` is a
-			// real input pattern — over-redacting an actual flag
-			// is far cheaper than under-redacting a credential.
+			// If the next arg is itself a known sensitive flag,
+			// don't consume it — let the next loop iteration
+			// redact it independently. The previous shape consumed
+			// blindly, so `--token --password mysecret` redacted
+			// only `--password` (treated as --token's value) and
+			// left `mysecret` exposed in position 2.
+			//
+			// The look-ahead requires the next arg to start with
+			// `--` so a *value* that happens to contain a
+			// sensitive token (e.g. `-very-secret-pass`) is not
+			// mistaken for a flag. A value beginning with `-` plus
+			// a single non-flag character keeps the redaction
+			// path; only the `--name` shape is treated as a
+			// fresh sensitive-flag declaration.
+			if strings.HasPrefix(args[i+1], "--") && isSensitiveKey(args[i+1]) {
+				result[i] = arg + " " + sanitizedValueMissing
+				continue
+			}
+			// Otherwise: always redact. A legitimate password /
+			// token / api-key value can start with `-`; over-
+			// redacting an actual flag is cheaper than under-
+			// redacting a credential.
 			result[i+1] = sanitize.SanitizedValue
-			i++
+			i++ // skip the consumed value position so the outer loop's i++ doesn't reprocess it as a flag
 		}
 	}
 

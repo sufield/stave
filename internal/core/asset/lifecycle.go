@@ -18,6 +18,23 @@ type ExposureLifecycle struct {
 
 	history ExposureHistory
 	stats   ObservationStats
+
+	// hasClampedWindow becomes true the first time any window in the
+	// lifecycle's history was clamped to zero duration because the
+	// resolver-supplied time was earlier than the open time
+	// (out-of-order snapshots, clock skew). Sticky: stays true once
+	// set so the engine can flag the verdict inconclusive even after
+	// further well-ordered observations replace the active window.
+	hasClampedWindow bool
+}
+
+// HasClampedWindow reports whether any window in this lifecycle was
+// clamped to zero duration during Resolve. Engine callers branch on
+// this to mark the resulting ResourceCheck inconclusive — the
+// clamped window's "zero dwell" reading would otherwise feed
+// duration math as if no exposure had occurred.
+func (l *ExposureLifecycle) HasClampedWindow() bool {
+	return l.hasClampedWindow
 }
 
 // NewExposureLifecycle constructs a new lifecycle tracker for a cloud asset.
@@ -155,6 +172,15 @@ func (l *ExposureLifecycle) handleSecure(at time.Time) {
 		return
 	}
 	resolved := l.activeWindow.Resolve(resolveAt)
+	if resolved.WasClamped() {
+		// The window was clamped to a zero-duration result because
+		// resolveAt landed earlier than openedAt — clock skew or a
+		// snapshot reorder. Record the clamp on the lifecycle so the
+		// engine can mark the resulting verdict inconclusive instead
+		// of silently using the zero-dwell window for downstream
+		// duration math.
+		l.hasClampedWindow = true
+	}
 	l.history.Record(resolved)
 	l.activeWindow = nil
 	// Do not clear lastObservedAt — it records when asset was last seen

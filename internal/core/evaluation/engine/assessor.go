@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	stavecel "github.com/sufield/stave/internal/cel"
@@ -141,14 +142,22 @@ type AssessmentOptions struct {
 // otherwise concurrent writers will race and the strategy will see the
 // wrong span. The collector's own RecordCheck path is mutex-protected
 // independently, so it is safe to call from a future concurrent caller.
+//
+// applyControlInUse is the runtime assertion guard. It is set
+// non-zero while applyControl is executing; a second concurrent
+// caller would see it already non-zero and panic with a clear
+// message identifying the contract violation. The cost is one
+// atomic load/store per applyControl call, negligible against the
+// per-asset CEL evaluation that dominates the runtime.
 type assessmentSession struct {
-	assessor   *Assessor
-	snapshots  []asset.Snapshot
-	auditTime  time.Time
-	collector  *AssessmentCollector
-	idIndex    IdentityIndex
-	opts       AssessmentOptions
-	activeSpan ports.AssessmentSpan // current control×asset span for strategy access; sequential-only, see type doc
+	assessor          *Assessor
+	snapshots         []asset.Snapshot
+	auditTime         time.Time
+	collector         *AssessmentCollector
+	idIndex           IdentityIndex
+	opts              AssessmentOptions
+	activeSpan        ports.AssessmentSpan // current control×asset span for strategy access; sequential-only, see type doc
+	applyControlInUse atomic.Bool
 }
 
 // beginTrace starts a trace span for a control×asset evaluation.
@@ -232,6 +241,16 @@ func (s *assessmentSession) applyControl(
 	ctl *policy.ControlDefinition,
 	lifecycles map[asset.ID]*asset.ExposureLifecycle,
 ) {
+	// Detect any future caller that violates the sequential
+	// contract. CompareAndSwap returns false when the flag is
+	// already set, which means another goroutine is in
+	// applyControl right now — bug, not a recoverable runtime
+	// condition, so panic with a message that points at the
+	// type-doc explanation.
+	if !s.applyControlInUse.CompareAndSwap(false, true) {
+		panic("engine: applyControl invoked concurrently — see assessmentSession concurrency contract; activeSpan is not goroutine-safe")
+	}
+	defer s.applyControlInUse.Store(false)
 
 	// Ensure deterministic output by processing assets in ID order.
 	assetIDs := make([]asset.ID, 0, len(lifecycles))

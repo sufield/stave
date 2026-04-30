@@ -284,7 +284,17 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 	}
 
 	// 2. Coverage Check
-	coverage := CoverageValidator{MinRequiredSpan: p.WindowDuration()}
+	//
+	// Mirrors unsafeDurationStrategy: pass MaxAllowedGap so the
+	// validator emits INCONCLUSIVE when snapshots have a hole big
+	// enough to hide a recurrence. Without it, a recurrence
+	// control would PASS on a sparse snapshot history that
+	// could legitimately be missing several recurrence windows
+	// inside the gap, producing a false-clean verdict.
+	coverage := CoverageValidator{
+		MinRequiredSpan: p.WindowDuration(),
+		MaxAllowedGap:   s.deps.continuityLimit(),
+	}
 	if reason, ok := coverage.IsSufficient(t); !ok {
 		span.RecordStep("coverage_check", nil, map[string]any{
 			"sufficient": false,

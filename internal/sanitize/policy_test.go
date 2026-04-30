@@ -43,3 +43,26 @@ func TestSanitizer_ScrubMessage(t *testing.T) {
 		t.Errorf("ScrubMessage() with PathFull should be no-op, got %q", got)
 	}
 }
+
+func TestSanitizer_ScrubMessage_SingleComponentPath(t *testing.T) {
+	// Single-component absolute paths (e.g. `/secret`) used to slip
+	// through because the regex required at least one intermediate
+	// directory. CI runners that mount secret-token files at the
+	// root surface them in error messages exactly this way.
+	baseSan := Policy{SanitizeIDs: true, PathMode: PathBase}.NewSanitizer()
+	cases := []struct {
+		in   string
+		want string
+	}{
+		{"cannot read /secret: permission denied", "cannot read secret: permission denied"},
+		{"open /token failed", "open token failed"},
+		{"existing /home/user/data/obs.json untouched", "existing obs.json untouched"},
+		{"empty path / not collapsed", "empty path / not collapsed"}, // bare slash, no basename
+	}
+	for _, tc := range cases {
+		got := baseSan.ScrubMessage(tc.in)
+		if got != tc.want {
+			t.Errorf("ScrubMessage(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}

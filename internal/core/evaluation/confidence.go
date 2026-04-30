@@ -27,9 +27,20 @@ func DefaultConfidenceCalculator() ConfidenceCalculator {
 
 // Derive classifies confidence based on the largest observation gap
 // relative to the required evaluation window.
+//
+// `requiredWindow <= 0` means the caller has no window-based signal
+// to classify against — typically because the control omits
+// max_unsafe_duration entirely. The previous behavior returned
+// ConfidenceInconclusive in that case, which then degraded a
+// verdict that had already been determined by other means (e.g. a
+// state-based predicate that matched). Return ConfidenceHigh
+// instead: the verdict's source of truth is the caller's
+// predicate-evaluation chain, and Derive's job here is to *add*
+// confidence from the window-coverage check, not subtract from
+// the caller's existing certainty.
 func (c ConfidenceCalculator) Derive(maxGap, requiredWindow time.Duration) ConfidenceLevel {
 	if requiredWindow <= 0 {
-		return ConfidenceInconclusive
+		return ConfidenceHigh
 	}
 	if maxGap*time.Duration(c.HighMultiplier) <= requiredWindow {
 		return ConfidenceHigh

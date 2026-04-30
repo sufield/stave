@@ -89,8 +89,12 @@ func TestDeriveConfidenceLevel(t *testing.T) {
 		maxGap, required time.Duration
 		want             ConfidenceLevel
 	}{
-		{0, 0, ConfidenceInconclusive},                     // Zero required
-		{time.Hour, 0, ConfidenceInconclusive},             // Zero required
+		// requiredWindow <= 0 means "no window-based signal to add"
+		// — Derive returns High because the verdict is whatever the
+		// caller already determined; subtracting confidence here
+		// would degrade a known-good predicate-driven verdict.
+		{0, 0, ConfidenceHigh},
+		{time.Hour, 0, ConfidenceHigh},
 		{2 * time.Hour, 24 * time.Hour, ConfidenceHigh},    // 2h gap / 24h window = 8.3%
 		{10 * time.Hour, 24 * time.Hour, ConfidenceMedium}, // 10h gap / 24h = 41.6%
 		{20 * time.Hour, 24 * time.Hour, ConfidenceLow},    // 20h gap / 24h = 83%

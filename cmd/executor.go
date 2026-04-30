@@ -67,6 +67,21 @@ func (a *App) execute() {
 
 // installInterruptHandler uses os.Stderr directly because signal handlers
 // run outside the Cobra command lifecycle — cmd.ErrOrStderr() is not available.
+//
+// Signal-arrival timing breaks down into two windows:
+//
+//  1. Post-bootstrap: phaseContext has stored the cancel function on
+//     a.cancel. The handler cancels the root context, RunE returns
+//     with ctx.Err()==Canceled, finalizeExecute runs the normal
+//     cleanup path, and the process exits.
+//  2. Pre-bootstrap: phaseContext has not run yet (signal landed
+//     during alias expansion, first-run hint setup, or
+//     installInterruptHandler itself). a.cancel is nil and there is
+//     no in-flight Cobra command to cancel — the handler runs the
+//     same cleanupBeforeExit as the normal path and then exits.
+//
+// Both windows print "Interrupted" to stderr so the operator gets a
+// consistent message regardless of timing.
 func (a *App) installInterruptHandler() func() {
 	sigCh := make(chan os.Signal, 1)
 	done := make(chan struct{})
@@ -83,10 +98,15 @@ func (a *App) installInterruptHandler() func() {
 			fmt.Fprintln(os.Stderr, "Interrupted")
 			if cancel := a.cancel.Load(); cancel != nil {
 				(*cancel)()
-			} else {
-				// Pre-bootstrap signal: context not yet available.
-				a.ExitFunc(ui.ExitInterrupted)
+				return
 			}
+			// Pre-bootstrap signal: cancel function not yet stored.
+			// Run minimum cleanup ourselves before exiting so a
+			// CPU profile started by an even earlier startCPUProfile
+			// call (or a log file opened by phaseLogging) is closed
+			// instead of left half-flushed on disk.
+			a.cleanupBeforeExit()
+			a.ExitFunc(ui.ExitInterrupted)
 		case <-done:
 			return
 		}
@@ -185,9 +205,18 @@ func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMark
 	// reason at Warn so operators can correlate missing hints with the
 	// underlying cause.
 	resolver, resolverErr := projctx.NewResolver()
-	if resolverErr != nil && a.Logger != nil {
-		a.Logger.Warn("project resolver init failed during finalize",
-			"error", resolverErr)
+	if resolverErr != nil {
+		if a.Logger != nil {
+			a.Logger.Warn("project resolver init failed during finalize",
+				"error", resolverErr)
+		}
+		// Skip both downstream calls when resolver init failed.
+		// persistSessionStateIfApplicable would have to nil-check
+		// resolver internally on every access, and printWorkflowHandoff
+		// reads the resolver-derived project root — both produce
+		// degenerate output when the resolver is nil. Return early so
+		// the operator gets the warning without the secondary noise.
+		return
 	}
 	projectRoot := persistSessionStateIfApplicable(resolver, args)
 	a.printWorkflowHandoff(args, projectRoot)

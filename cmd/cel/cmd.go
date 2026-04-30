@@ -65,7 +65,7 @@ Exit Codes:
 			if inputPath == "" && !useStdin {
 				return &ui.UserError{Err: errors.New("either --input or --stdin is required")}
 			}
-			return runCELEval(cmd.OutOrStdout(), cmd.InOrStdin(), expr, inputPath, assetType, format, useStdin)
+			return runCELEval(cmd.OutOrStdout(), cmd.ErrOrStderr(), cmd.InOrStdin(), expr, inputPath, assetType, format, useStdin)
 		},
 	}
 
@@ -117,7 +117,7 @@ func (b *celBridge) EvalBool(expr string, props map[string]any) (bool, error) {
 	return result, nil
 }
 
-func runCELEval(stdout io.Writer, stdin io.Reader, expr, inputPath, assetType, format string, useStdin bool) error {
+func runCELEval(stdout, stderr io.Writer, stdin io.Reader, expr, inputPath, assetType, format string, useStdin bool) error {
 	var data []byte
 	var err error
 
@@ -130,9 +130,19 @@ func runCELEval(stdout io.Writer, stdin io.Reader, expr, inputPath, assetType, f
 		return &ui.UserError{Err: fmt.Errorf("read input: %w", err)}
 	}
 
-	assets, err := parseAssets(data)
+	assets, snapshotCount, err := parseAssets(data)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("parse observation: %w", err)}
+	}
+	if snapshotCount > 1 {
+		// Bundle contains multiple snapshots. The previous behavior
+		// silently used only the last snapshot's assets, so a user
+		// running `stave cel` against a multi-snapshot bundle saw
+		// results that omitted assets that only existed in earlier
+		// snapshots. Now all snapshots' assets are flattened into
+		// one list, with a stderr notice so the operator knows the
+		// scope they're seeing.
+		fmt.Fprintf(stderr, "Note: input contains %d snapshots; evaluating expression against the union of all assets across snapshots.\n", snapshotCount)
 	}
 
 	bridge := &celBridge{}
@@ -154,16 +164,27 @@ func runCELEval(stdout io.Writer, stdin io.Reader, expr, inputPath, assetType, f
 	return renderCELText(stdout, result)
 }
 
-func parseAssets(data []byte) ([]asset.Asset, error) {
+// parseAssets returns the union of all assets across the input
+// (single snapshot or multi-snapshot bundle) plus the bundle's
+// snapshot count. The previous behavior used only the *last*
+// snapshot's assets in the bundle case, so a `stave cel`
+// expression run against a multi-snapshot input silently omitted
+// every asset that didn't survive into the final snapshot — the
+// classic "where did my asset go" reporting bug.
+//
+// Snapshots are taken in order; an asset that appears in multiple
+// snapshots is included once per snapshot it appears in. Callers
+// that want to dedupe by AssetID can do so on the returned slice.
+func parseAssets(data []byte) ([]asset.Asset, int, error) {
 	// Try single snapshot format first.
 	var snapshot struct {
 		Assets []asset.Asset `json:"assets"`
 	}
 	if err := json.Unmarshal(data, &snapshot); err != nil {
-		return nil, fmt.Errorf("parse JSON: %w", err)
+		return nil, 0, fmt.Errorf("parse JSON: %w", err)
 	}
 	if len(snapshot.Assets) > 0 {
-		return snapshot.Assets, nil
+		return snapshot.Assets, 1, nil
 	}
 
 	// Try bundle format with snapshots array.
@@ -173,11 +194,14 @@ func parseAssets(data []byte) ([]asset.Asset, error) {
 		} `json:"snapshots"`
 	}
 	if err := json.Unmarshal(data, &bundle); err == nil && len(bundle.Snapshots) > 0 {
-		last := bundle.Snapshots[len(bundle.Snapshots)-1]
-		return last.Assets, nil
+		var all []asset.Asset
+		for _, snap := range bundle.Snapshots {
+			all = append(all, snap.Assets...)
+		}
+		return all, len(bundle.Snapshots), nil
 	}
 
-	return nil, errors.New("no assets found in input")
+	return nil, 0, errors.New("no assets found in input")
 }
 
 func renderCELText(w io.Writer, result *celeval.EvalResult) error {

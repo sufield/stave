@@ -17,7 +17,11 @@ import (
 
 // messagePathRe matches absolute POSIX-style paths embedded inside free-form
 // strings (e.g. wrapped error messages), capturing the basename as group 1.
-var messagePathRe = regexp.MustCompile(`/(?:[^\s:]+/)+([^\s:/]+)`)
+// Single-component absolute paths (e.g. `/secret`) match too — the previous
+// shape required at least one intermediate directory and let those slip
+// through, which is the exact form a leaked secret-token filename takes
+// in error messages from CI runners that mount tokens at the root.
+var messagePathRe = regexp.MustCompile(`/(?:[^\s:]+/)*([^\s:/]+)`)
 
 // Compile-time check that Sanitizer implements kernel.Sanitizer.
 var _ kernel.Sanitizer = (*Sanitizer)(nil)

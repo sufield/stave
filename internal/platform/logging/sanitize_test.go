@@ -87,14 +87,11 @@ func TestSanitizeArgs(t *testing.T) {
 			[]string{"--file=mykey.txt"},
 		},
 		{
-			// Per Phase 11 P11.4 task 3: aggressive redaction. The
-			// value position after a sensitive flag is always
-			// redacted regardless of whether it looks like another
-			// flag. Tradeoff: an operator who passed
-			// `--token --path /tmp` (intending --token to take no
-			// value) now sees --path redacted; the alternative
-			// (leaking a real password that legitimately starts
-			// with `-`) is materially worse.
+			// `--token --path /tmp`: --path is not a known sensitive
+			// flag, so it is redacted as --token's value (per the
+			// "value can start with -" rule from P11.4). /tmp is
+			// then position 2 with no preceding sensitive flag, so
+			// it stays unchanged.
 			[]string{"--token", "--path", "/tmp"},
 			[]string{"--token", sanitize.SanitizedValue, "/tmp"},
 		},
@@ -119,6 +116,26 @@ func TestSanitizeArgs(t *testing.T) {
 		{
 			[]string{"--ACCESS-TOKEN", "abc123"},
 			[]string{"--ACCESS-TOKEN", sanitize.SanitizedValue},
+		},
+		{
+			// Consecutive sensitive flags: the first treats its
+			// "missing" position then yields, the second consumes
+			// the actual value. Without the look-ahead, the first
+			// flag would have eaten the second as its value, the
+			// second would be skipped, and the actual credential
+			// would be exposed in position 2.
+			[]string{"--token", "--password", "mysecret"},
+			[]string{"--token " + sanitize.SanitizedValue + ":missing", "--password", sanitize.SanitizedValue},
+		},
+		{
+			// Three consecutive sensitive flags. The trailing one
+			// has no following value at all.
+			[]string{"--token", "--password", "--api-key"},
+			[]string{
+				"--token " + sanitize.SanitizedValue + ":missing",
+				"--password " + sanitize.SanitizedValue + ":missing",
+				"--api-key " + sanitize.SanitizedValue + ":missing",
+			},
 		},
 	}
 
