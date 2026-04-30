@@ -398,7 +398,7 @@ func TestReadFileLimited_ExceedsLimit(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	if truncErr := f.Truncate(maxInputFileBytes + 1); truncErr != nil {
+	if truncErr := f.Truncate(maxInputFileBytes.Load() + 1); truncErr != nil {
 		t.Fatalf("truncate sparse file: %v", truncErr)
 	}
 
@@ -440,11 +440,11 @@ func TestLimitedReadAll_WithinLimit(t *testing.T) {
 func TestLimitedReadAll_ExceedsLimit(t *testing.T) {
 	// Use a small limit to avoid OOM under the race detector
 	// (which adds ~10x memory overhead to the 256MB default).
-	origLimit := maxInputFileBytes
-	maxInputFileBytes = 1 << 20 // 1MB
-	t.Cleanup(func() { maxInputFileBytes = origLimit })
+	origLimit := maxInputFileBytes.Load()
+	maxInputFileBytes.Store(1 << 20) // 1MB
+	t.Cleanup(func() { maxInputFileBytes.Store(origLimit) })
 
-	_, err := LimitedReadAll(io.LimitReader(zeroReader{}, maxInputFileBytes+2), "oversized-stdin")
+	_, err := LimitedReadAll(io.LimitReader(zeroReader{}, maxInputFileBytes.Load()+2), "oversized-stdin")
 	if err == nil {
 		t.Fatal("expected error for oversized input")
 	}

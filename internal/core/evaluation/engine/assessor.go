@@ -218,6 +218,16 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 	return sess.compileReport(), nil
 }
 
+// applyControl evaluates a single control across the asset set.
+//
+// Concurrency contract: this method MUST remain sequential. It writes
+// `s.activeSpan` mid-loop without synchronization, so any future
+// parallelization (e.g., one goroutine per control) would race the
+// per-asset span assignment with the strategy's read of activeSpan.
+// If parallelization becomes necessary, move activeSpan into a per-
+// call local that the strategy receives as a parameter — do NOT add a
+// mutex around the field assignment, because that only serializes the
+// write and the strategy still reads the wrong span.
 func (s *assessmentSession) applyControl(
 	ctl *policy.ControlDefinition,
 	lifecycles map[asset.ID]*asset.ExposureLifecycle,

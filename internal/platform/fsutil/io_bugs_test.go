@@ -18,9 +18,9 @@ func TestLimitedReadAll_ProbeDetectsOverflow(t *testing.T) {
 	// (no +1 overshoot), then probes one byte from the original reader.
 	// This prevents io.ReadAll from doubling its buffer past the limit.
 
-	origLimit := maxInputFileBytes
-	maxInputFileBytes = 1024 // 1KB limit for test
-	t.Cleanup(func() { maxInputFileBytes = origLimit })
+	origLimit := maxInputFileBytes.Load()
+	maxInputFileBytes.Store(1024) // 1KB limit for test
+	t.Cleanup(func() { maxInputFileBytes.Store(origLimit) })
 
 	// Input is 2x the limit — rejected via the 1-byte probe.
 	oversized := strings.NewReader(strings.Repeat("x", 2048))
@@ -35,9 +35,9 @@ func TestLimitedReadAll_ProbeDetectsOverflow(t *testing.T) {
 }
 
 func TestLimitedReadAll_ExactlyAtLimit(t *testing.T) {
-	origLimit := maxInputFileBytes
-	maxInputFileBytes = 1024
-	t.Cleanup(func() { maxInputFileBytes = origLimit })
+	origLimit := maxInputFileBytes.Load()
+	maxInputFileBytes.Store(1024)
+	t.Cleanup(func() { maxInputFileBytes.Store(origLimit) })
 
 	// Input is exactly at the limit — should succeed.
 	exact := strings.NewReader(strings.Repeat("x", 1024))
@@ -52,9 +52,9 @@ func TestLimitedReadAll_ExactlyAtLimit(t *testing.T) {
 }
 
 func TestLimitedReadAll_OneByteOverLimit(t *testing.T) {
-	origLimit := maxInputFileBytes
-	maxInputFileBytes = 1024
-	t.Cleanup(func() { maxInputFileBytes = origLimit })
+	origLimit := maxInputFileBytes.Load()
+	maxInputFileBytes.Store(1024)
+	t.Cleanup(func() { maxInputFileBytes.Store(origLimit) })
 
 	// Input is 1 byte over the limit — rejected by the probe.
 	over := strings.NewReader(strings.Repeat("x", 1025))
@@ -71,9 +71,9 @@ func TestLimitedReadAll_OneByteOverLimit(t *testing.T) {
 func TestReadFileOrStdin_UsesLimit(t *testing.T) {
 	// Verify that ReadFileOrStdin applies the safety limit to stdin,
 	// not raw io.ReadAll (which had no limit at all).
-	origLimit := maxInputFileBytes
-	maxInputFileBytes = 1024
-	t.Cleanup(func() { maxInputFileBytes = origLimit })
+	origLimit := maxInputFileBytes.Load()
+	maxInputFileBytes.Store(1024)
+	t.Cleanup(func() { maxInputFileBytes.Store(origLimit) })
 
 	oversized := strings.NewReader(strings.Repeat("x", 2048))
 	_, err := ReadFileOrStdin("", oversized)

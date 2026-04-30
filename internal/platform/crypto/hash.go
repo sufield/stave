@@ -23,10 +23,15 @@ func HashBytes(data []byte) kernel.Digest {
 	return kernel.Digest(hex.EncodeToString(sum[:]))
 }
 
-// ShortToken returns a deterministic 8-hex-char token (first 4 bytes of SHA-256).
+// ShortToken returns a deterministic 16-hex-char token (first 8 bytes
+// of SHA-256). 32 bits of token entropy was below the threshold where
+// birthday collisions are likely on large sanitized output corpora —
+// at 1M sanitized identifiers the collision probability under 32-bit
+// truncation was ≈12%; at 64 bits it drops to ≈3e-8, comfortably
+// safe for any token volume Stave realistically processes.
 func ShortToken(value string) string {
 	sum := sha256.Sum256([]byte(value))
-	return hex.EncodeToString(sum[:4])
+	return hex.EncodeToString(sum[:8])
 }
 
 // StableID returns a prefixed, deterministic 16-hex-char identifier (first 8 bytes of SHA-256).

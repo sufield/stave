@@ -79,6 +79,19 @@ func stripStaveVersion(v any) {
 // TestApplyProfileE2E runs e2e golden file tests for apply --profile aws-s3.
 func TestApplyProfileE2E(t *testing.T) {
 	t.Parallel()
+	// These fixture goldens are managed by the regengoldens tool
+	// (`make golden-fixture FILTER=...`), not by the in-process
+	// UPDATE_GOLDEN env var. The CI "Regenerate goldens and sync"
+	// step runs `make golden-update-all` with UPDATE_GOLDEN=1 across
+	// the whole module; that target is for Go-marshalled in-process
+	// goldens only, and running this binary-driven test under it
+	// produced empty stdout / exit-code-0 false-positives that
+	// looked like a CLI regression. Skip explicitly so the same
+	// breakage cannot reappear in any future workflow that sets
+	// UPDATE_GOLDEN=1.
+	if os.Getenv("UPDATE_GOLDEN") == "1" {
+		t.Skip("skipping profile fixture-golden checks during UPDATE_GOLDEN (use `make golden-fixture FILTER=...`)")
+	}
 	if testing.Short() {
 		t.Skip("skipping: builds CLI binary and runs e2e golden-file checks")
 	}

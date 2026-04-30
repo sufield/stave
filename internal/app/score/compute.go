@@ -137,7 +137,7 @@ func ParseWeights(s string) (Weights, error) {
 	if s == "" {
 		return w, nil
 	}
-	for pair := range strings.SplitSeq(s, ",") {
+	for _, pair := range strings.Split(s, ",") {
 		pair = strings.TrimSpace(pair)
 		if pair == "" {
 			continue

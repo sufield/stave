@@ -64,10 +64,11 @@ type RDFEdge struct {
 // graph.GraphData by mapToRDFGraph; consumed by MarshalJSONLD and
 // MarshalGraphML.
 type RDFGraph struct {
-	OntologyIRI string    // urn:stave:ontology
-	GeneratedAt string    // RFC3339
-	Nodes       []RDFNode // sorted by ID for determinism
-	Edges       []RDFEdge // sorted by (From, Predicate, To)
+	OntologyIRI   string         // urn:stave:ontology
+	GeneratedAt   string         // RFC3339
+	Nodes         []RDFNode      // sorted by ID for determinism
+	Edges         []RDFEdge      // sorted by (From, Predicate, To)
+	UnmappedEdges []UnmappedEdge // edges dropped because Type was outside the wireToPredicate vocabulary
 }
 
 // --- URI builders ----------------------------------------------------

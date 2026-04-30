@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.IAM.DBAUTH.OFF.001
+name: Redshift Cluster Must Permit IAM Database Authentication
+description: >
+  Redshift clusters must permit IAM-based database authentication via
+  `GetClusterCredentials` so that human and service principals
+  authenticate with short-lived credentials tied to IAM identity,
+  not with long-lived database-local passwords. A cluster that
+  accepts only DB-local credentials is one shared password rotation
+  away from a credential-stuffing incident, and offers no audit trail
+  back to a human IAM user.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: IA-2
+  soc2: CC6.1
+  pci_dss_v4.0: 8.3.1
+  ccm_v4:
+  - IAM-08
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Cluster has no IAM principals authorized to call
+    GetClusterCredentials. Authentication relies on long-lived
+    database-local passwords.
+  action: >
+    Create an IAM policy granting `redshift:GetClusterCredentials`
+    scoped to the specific dbuser/dbgroup on this cluster, attach
+    it to the human/service principals that need warehouse access,
+    and rotate the existing database-local passwords out.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.iam.db_auth_enabled
+    op: eq
+    value: false

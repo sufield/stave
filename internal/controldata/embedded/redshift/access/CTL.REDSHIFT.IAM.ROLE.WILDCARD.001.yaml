@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.IAM.ROLE.WILDCARD.001
+name: Redshift Attached IAM Role Must Not Use Wildcard Resource
+description: >
+  An IAM role attached to a Redshift cluster (used by COPY, UNLOAD,
+  Redshift Spectrum) must not grant `s3:*` or `Resource: "*"` on any
+  S3 statement. The cluster's role is assumable by anyone with
+  database-level execute on COPY/UNLOAD; an `s3:GetObject` /
+  `s3:PutObject` with `Resource: "*"` turns SQL execute into
+  arbitrary-bucket read/write — a one-step exfiltration pivot.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: AC-6
+  soc2: CC6.3
+  pci_dss_v4.0: 7.2.5
+  ccm_v4:
+  - IAM-09
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    An IAM role attached to the cluster has an S3 statement with a
+    wildcard resource. SQL-level COPY / UNLOAD execute can read or
+    write any bucket the role can reach.
+  action: >
+    Replace `Resource: "*"` with explicit bucket ARNs that the
+    warehouse legitimately ingests from or exports to. Split read
+    and write privileges into separate roles if they target
+    different buckets, and attach roles via cluster IAM role
+    associations rather than via the cluster's primary execution
+    role where possible.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.iam.attached_role_has_wildcard_resource
+    op: eq
+    value: true

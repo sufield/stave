@@ -83,7 +83,7 @@ func TestEnvList_ShowsCurrentValue(t *testing.T) {
 
 	out := buf.String()
 	// The line for STAVE_DEBUG should show the value "1" (not "(not set)").
-	for line := range strings.SplitSeq(out, "\n") {
+	for _, line := range strings.Split(out, "\n") {
 		if strings.Contains(line, staveenv.Debug.Name) {
 			if strings.Contains(line, "(not set)") {
 				t.Fatal("expected STAVE_DEBUG value to be shown, got (not set)")
@@ -108,7 +108,7 @@ func TestEnvList_ShowsDefaultValue(t *testing.T) {
 	}
 
 	out := buf.String()
-	for line := range strings.SplitSeq(out, "\n") {
+	for _, line := range strings.Split(out, "\n") {
 		if strings.Contains(line, staveenv.MaxUnsafe.Name) {
 			if !strings.Contains(line, "168h") {
 				t.Fatalf("expected effective default 168h for MaxUnsafe, got line: %s", line)

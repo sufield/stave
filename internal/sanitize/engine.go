@@ -163,7 +163,13 @@ func (s *Sanitizer) ScrubMap(props map[string]any, profile Profile) map[string]a
 			continue
 		}
 		if profile.ShouldSanitize(k) {
-			out[k] = s.scrubValue(v)
+			// When the value itself is a nested map / list, keep
+			// applying the Profile rules at deeper levels so a child
+			// key still in the Remove set drops out and a child key
+			// still in the Sanitize set is redacted at value level —
+			// rather than blanket-scrubbing the whole subtree's
+			// scalar values uniformly.
+			out[k] = s.scrubValueWithProfile(v, profile)
 			continue
 		}
 		if nested, ok := v.(map[string]any); ok {
@@ -241,6 +247,17 @@ func (s *Sanitizer) scrubSource(src *asset.SourceRef) *asset.SourceRef {
 // redacted — a zero-value Sanitizer (sanitizeIDs=false) still strips
 // values whose property names are profile-classified as sensitive.
 func (s *Sanitizer) scrubValue(v any) any {
+	return s.scrubValueWithProfile(v, Profile{})
+}
+
+// scrubValueWithProfile performs the same redaction as scrubValue but
+// continues to apply the Profile's ShouldRemove / ShouldSanitize rules
+// at every nested map level. The non-Profile shape (scrubValue) is the
+// "blanket scrub everything" path used when the parent key is itself
+// in the sanitize set; this variant is the recursive path that lets a
+// nested safe field stay readable while sibling sensitive fields get
+// redacted, mirroring ScrubMap's behavior all the way down.
+func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 	switch val := v.(type) {
 	case nil:
 		return nil
@@ -284,13 +301,20 @@ func (s *Sanitizer) scrubValue(v any) any {
 	case []any:
 		out := make([]any, len(val))
 		for i, item := range val {
-			out[i] = s.scrubValue(item)
+			out[i] = s.scrubValueWithProfile(item, profile)
 		}
 		return out
 	case map[string]any:
 		out := make(map[string]any, len(val))
 		for k, sub := range val {
-			out[k] = s.scrubValue(sub)
+			if profile.ShouldRemove(k) {
+				continue
+			}
+			if profile.ShouldSanitize(k) {
+				out[k] = s.scrubValue(sub)
+				continue
+			}
+			out[k] = s.scrubValueWithProfile(sub, profile)
 		}
 		return out
 	default:

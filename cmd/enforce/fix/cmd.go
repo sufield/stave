@@ -20,8 +20,12 @@ type LoopDeps struct {
 }
 
 // Deps groups the infrastructure implementations for the fix command.
+// The Loader is constructed lazily via NewLoader so that CEL evaluator
+// initialization (which compiles every embedded predicate) does not
+// run on every CLI startup — only when `stave ci fix` is actually
+// invoked. This mirrors the lazy pattern used by LoopDeps.
 type Deps struct {
-	UseCaseDeps usecase.FixDeps
+	NewLoader func() (usecase.FindingLoaderPort, error)
 }
 
 // NewFixCmd constructs the fix command.
@@ -56,12 +60,16 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			loader, err := deps.NewLoader()
+			if err != nil {
+				return err
+			}
 			req := usecase.FixRequest{
 				InputPath:  opts.InputPath,
 				FindingRef: opts.FindingRef,
 			}
 
-			resp, err := usecase.Fix(cmd.Context(), req, deps.UseCaseDeps)
+			resp, err := usecase.Fix(cmd.Context(), req, usecase.FixDeps{Loader: loader})
 			if err != nil {
 				return err
 			}

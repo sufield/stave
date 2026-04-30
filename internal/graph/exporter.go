@@ -39,10 +39,21 @@ func NewJSONLDExporter() *JSONLDExporter { return &JSONLDExporter{Format: "jsonl
 // ontology. The returned bytes are a single JSON document with
 // @context and @graph; see ontology.ttl for the term definitions
 // and shortcut-edge annotations.
+//
+// When an edge in the input has a Type that is not in the
+// wireToPredicate vocabulary, that edge is dropped from the output
+// and the Type is recorded. The bytes are still valid (the rest of
+// the graph exported cleanly); the error is a non-nil
+// *UnmappedEdgesError that callers can introspect via errors.As to
+// decide whether to treat lossy export as fatal.
 func (e *JSONLDExporter) Export(graph *FindingsGraph) ([]byte, error) {
 	var buf bytes.Buffer
-	if err := MarshalJSONLD(&buf, graph); err != nil {
+	unmapped, err := MarshalJSONLDWithDiagnostics(&buf, graph)
+	if err != nil {
 		return nil, fmt.Errorf("export jsonld: %w", err)
+	}
+	if len(unmapped) > 0 {
+		return buf.Bytes(), &UnmappedEdgesError{Edges: unmapped}
 	}
 	return buf.Bytes(), nil
 }
@@ -57,11 +68,16 @@ func NewGraphMLExporter() *GraphMLExporter { return &GraphMLExporter{Format: "gr
 
 // Export serializes the graph as GraphML XML. Schema-first: typed
 // <key> declarations precede the <graph> body so consumers know the
-// data types of every attribute up front.
+// data types of every attribute up front. See JSONLDExporter.Export
+// for the unmapped-edges error contract.
 func (e *GraphMLExporter) Export(graph *FindingsGraph) ([]byte, error) {
 	var buf bytes.Buffer
-	if err := MarshalGraphML(&buf, graph); err != nil {
+	unmapped, err := MarshalGraphMLWithDiagnostics(&buf, graph)
+	if err != nil {
 		return nil, fmt.Errorf("export graphml: %w", err)
+	}
+	if len(unmapped) > 0 {
+		return buf.Bytes(), &UnmappedEdgesError{Edges: unmapped}
 	}
 	return buf.Bytes(), nil
 }

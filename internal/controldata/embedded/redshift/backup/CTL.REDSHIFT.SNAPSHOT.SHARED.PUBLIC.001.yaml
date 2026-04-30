@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.SNAPSHOT.SHARED.PUBLIC.001
+name: Redshift Manual Snapshot Must Not Be Shared Publicly
+description: >
+  A Redshift manual snapshot must not be shared with `all` (every AWS
+  account in the world). A public snapshot is the data-warehouse
+  equivalent of a public S3 bucket: any AWS account can restore the
+  snapshot into their own cluster and read the contents at their
+  leisure. This is the single highest-impact misconfiguration on a
+  warehouse — full historical data egress with no in-VPC log trail.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: SC-28
+  soc2: CC6.7
+  pci_dss_v4.0: 3.4.1
+  ccm_v4:
+  - DSP-17
+  - CEK-03
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Manual snapshot is shared with every AWS account. Anyone can
+    restore the snapshot into a cluster they control.
+  action: >
+    Revoke the public share immediately:
+    `aws redshift revoke-snapshot-access --snapshot-identifier <id> --account-with-restore-access all`.
+    Audit CloudTrail for any `RestoreFromClusterSnapshot` calls from
+    accounts outside your organization since the snapshot was
+    created.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.snapshot_sharing.shared_with_all
+    op: eq
+    value: true

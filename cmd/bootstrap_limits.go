@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"log/slog"
+
 	"github.com/sufield/stave/internal/adapters/pruner"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -9,13 +11,24 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// resolveConfigurableLimits applies user-configurable runtime limits from
-// stave.yaml. Invalid values are silently ignored (keeps conservative defaults).
+// resolveConfigurableLimits applies user-configurable runtime limits
+// from stave.yaml. Invalid values are warned about (so the operator
+// knows their config did not take effect) and then ignored — the
+// conservative defaults stay in place rather than failing the entire
+// startup over a typo'd byte-size.
 func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
+	logger := a.Logger
+	if logger == nil {
+		logger = slog.Default()
+	}
+
 	// Max input file size (default 256 MB)
 	if raw := eval.MaxInputFileSize(); raw != "" {
 		if n, err := kernel.ParseByteSize(raw); err == nil {
 			fsutil.SetMaxInputFileBytes(n)
+		} else {
+			logger.Warn("config: ignoring invalid max_input_file_size",
+				"value", raw, "error", err)
 		}
 	}
 

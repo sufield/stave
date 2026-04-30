@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 )
 
 // DefaultMaxInputFileBytes is the conservative default safety limit for input
@@ -22,15 +23,21 @@ import (
 // process larger snapshots (e.g., enterprise CI with thousands of assets).
 const DefaultMaxInputFileBytes int64 = 256 << 20
 
-// maxInputFileBytes is the active safety limit. Starts at the default and can
-// be overridden once at startup via SetMaxInputFileBytes.
-var maxInputFileBytes = DefaultMaxInputFileBytes
+// maxInputFileBytes is the active safety limit. Stored atomically so
+// the bootstrap-time SetMaxInputFileBytes write does not race with
+// concurrent reads from worker goroutines that may have already
+// reached ReadFileLimited / LimitedReadAll.
+var maxInputFileBytes atomic.Int64
+
+func init() {
+	maxInputFileBytes.Store(DefaultMaxInputFileBytes)
+}
 
 // SetMaxInputFileBytes overrides the input file safety limit. Call this once
 // during CLI bootstrap, before any file reads. Values <= 0 are ignored.
 func SetMaxInputFileBytes(n int64) {
 	if n > 0 {
-		maxInputFileBytes = n
+		maxInputFileBytes.Store(n)
 	}
 }
 
@@ -55,13 +62,13 @@ func ReadFileLimited(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if fi.Size() > maxInputFileBytes {
+	if fi.Size() > maxInputFileBytes.Load() {
 		return nil, fmt.Errorf(
 			"%w: file %q exceeds the internal safety limit of %dMB; "+
 				"to prevent resource exhaustion, Stave does not process files larger than this — "+
 				"please check if this file was generated correctly",
 			ErrFileTooLarge,
-			filepath.Base(path), maxInputFileBytes>>20)
+			filepath.Base(path), maxInputFileBytes.Load()>>20)
 	}
 	// #nosec G304 -- this helper intentionally reads caller-supplied paths after size checks.
 	return os.ReadFile(path)
@@ -88,7 +95,7 @@ func ReadFileOrStdin(file string, stdin io.Reader) ([]byte, error) {
 func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {
 	// Phase 1: read up to the limit. The LimitReader ensures io.ReadAll
 	// never grows its buffer past maxInputFileBytes.
-	data, err := io.ReadAll(io.LimitReader(r, maxInputFileBytes))
+	data, err := io.ReadAll(io.LimitReader(r, maxInputFileBytes.Load()))
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +110,7 @@ func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {
 				"to prevent resource exhaustion, Stave does not process input larger than this — "+
 				"please check if this input was generated correctly",
 			ErrFileTooLarge,
-			sourceName, maxInputFileBytes>>20)
+			sourceName, maxInputFileBytes.Load()>>20)
 	}
 
 	return data, nil

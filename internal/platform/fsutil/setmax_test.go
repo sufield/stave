@@ -3,31 +3,31 @@ package fsutil
 import "testing"
 
 func TestSetMaxInputFileBytes_PositiveValue(t *testing.T) {
-	orig := maxInputFileBytes
-	t.Cleanup(func() { maxInputFileBytes = orig })
+	orig := maxInputFileBytes.Load()
+	t.Cleanup(func() { maxInputFileBytes.Store(orig) })
 
 	SetMaxInputFileBytes(512 << 20) // 512 MB
-	if maxInputFileBytes != 512<<20 {
-		t.Errorf("maxInputFileBytes = %d, want %d", maxInputFileBytes, 512<<20)
+	if maxInputFileBytes.Load() != 512<<20 {
+		t.Errorf("maxInputFileBytes = %d, want %d", maxInputFileBytes.Load(), 512<<20)
 	}
 }
 
 func TestSetMaxInputFileBytes_ZeroIgnored(t *testing.T) {
-	orig := maxInputFileBytes
-	t.Cleanup(func() { maxInputFileBytes = orig })
+	orig := maxInputFileBytes.Load()
+	t.Cleanup(func() { maxInputFileBytes.Store(orig) })
 
 	SetMaxInputFileBytes(0)
-	if maxInputFileBytes != orig {
+	if maxInputFileBytes.Load() != orig {
 		t.Error("zero value should be ignored by SetMaxInputFileBytes")
 	}
 }
 
 func TestSetMaxInputFileBytes_NegativeIgnored(t *testing.T) {
-	orig := maxInputFileBytes
-	t.Cleanup(func() { maxInputFileBytes = orig })
+	orig := maxInputFileBytes.Load()
+	t.Cleanup(func() { maxInputFileBytes.Store(orig) })
 
 	SetMaxInputFileBytes(-1024)
-	if maxInputFileBytes != orig {
+	if maxInputFileBytes.Load() != orig {
 		t.Error("negative value should be ignored by SetMaxInputFileBytes")
 	}
 }

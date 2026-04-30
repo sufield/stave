@@ -293,7 +293,7 @@ func verifyRunChecksums(archivePath, runID string) (bool, string) {
 	// or arbitrary readable files on disk, which would let a forged
 	// bundle pass verification by hashing unrelated content.
 	expected := make(map[string]string)
-	for line := range strings.SplitSeq(strings.TrimSpace(string(data)), "\n") {
+	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
 		parts := strings.SplitN(line, "  ", 2)
 		if len(parts) != 2 {
 			continue

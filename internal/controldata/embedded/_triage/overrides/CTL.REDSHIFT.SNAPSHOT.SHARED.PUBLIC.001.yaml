@@ -1,0 +1,14 @@
+control: CTL.REDSHIFT.SNAPSHOT.SHARED.PUBLIC.001
+defect: >
+  A manual Redshift snapshot is shared with `all` — every AWS
+  account in the world has restore access.
+infection: >
+  Any AWS account can restore the snapshot into a cluster they
+  control and read the contents at their leisure. Restoration
+  happens in the recipient's VPC, so the producer's CloudTrail
+  records only the snapshot share — not the read. The exfiltration
+  is invisible to in-VPC monitoring.
+failure: >
+  Full historical warehouse egress with no in-VPC log trail.
+  Equivalent to a public S3 bucket of the entire data warehouse
+  state at snapshot time.

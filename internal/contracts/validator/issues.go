@@ -163,6 +163,26 @@ func classify(d Diagnostic) DiagnosticCategory {
 	}
 }
 
+// IsUnknownFieldDiagnostic reports whether a diagnostic represents an
+// "unknown / extra field" failure from JSON-Schema validation.
+//
+// Two cases qualify, and both must be covered:
+//
+//   - The structured `Kind` is `*kind.AdditionalProperties` (preferred,
+//     when the validator preserved the typed kind).
+//   - The text message contains "additionalProperties" (fallback, when
+//     the validator only carried the human-readable description).
+//
+// Callers — primarily the `--allow-unknown-input` filter and lint
+// strict-mode toggles — branch on this to decide whether an extra
+// field is allowed to slip through or must fail the validation.
+func IsUnknownFieldDiagnostic(d Diagnostic) bool {
+	if classify(d) == CatAdditionalProperties {
+		return true
+	}
+	return strings.Contains(d.Message, "additionalProperties")
+}
+
 type schemaError struct {
 	path string
 	desc string

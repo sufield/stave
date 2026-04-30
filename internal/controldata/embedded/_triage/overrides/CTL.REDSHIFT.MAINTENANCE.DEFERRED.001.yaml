@@ -1,0 +1,16 @@
+control: CTL.REDSHIFT.MAINTENANCE.DEFERRED.001
+defect: >
+  Cluster has an active deferred-maintenance window that has been
+  in effect long enough that engine patches are accumulating.
+infection: >
+  `DeferredMaintenanceWindows` exists so an in-flight business
+  window doesn't get patched mid-quarter-close. Used continuously
+  it becomes a "skip patches" toggle: engine CVEs queue up
+  unpatched and the cluster eventually runs an unsupported
+  version. AWS will force-upgrade in a less convenient window
+  than the one the operator was protecting, often during peak
+  business hours.
+failure: >
+  Unpatched warehouse plus an inevitable forced upgrade. The
+  operator gets the worst of both — known CVEs in production and
+  a maintenance disruption they did not choose.

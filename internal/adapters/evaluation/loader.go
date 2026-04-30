@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/sufield/stave/internal/contracts/schema"
 	"github.com/sufield/stave/internal/contracts/validator"
@@ -30,14 +31,20 @@ var ErrNoFindings = errors.New("input JSON does not contain evaluation findings"
 // historical baselines) can keep the default lax behavior to stay
 // compatible with stub fixtures.
 type Loader struct {
-	validator    *validator.Validator
-	strictSchema bool
+	validator     *validator.Validator
+	validatorOnce sync.Once
+	strictSchema  bool
 }
 
 // NewLoader returns a Loader with a default schema validator.
 // The Loader is safe for concurrent use.
 func NewLoader() *Loader {
-	return &Loader{validator: validator.New()}
+	l := &Loader{}
+	// Eagerly initialize through the once gate so subsequent
+	// schemaValidator() calls take the fast path without entering
+	// the once.Do machinery.
+	l.validatorOnce.Do(func() { l.validator = validator.New() })
+	return l
 }
 
 // WithStrictSchema enables JSON-schema validation on
@@ -45,19 +52,18 @@ func NewLoader() *Loader {
 // for trust-boundary inputs (gating, enforcement-config generation).
 func (l *Loader) WithStrictSchema() *Loader {
 	l.strictSchema = true
-	if l.validator == nil {
-		l.validator = validator.New()
-	}
+	l.validatorOnce.Do(func() { l.validator = validator.New() })
 	return l
 }
 
 // schemaValidator returns the loader's validator, lazily initializing
-// when the zero value Loader{} is used. Callers passing &Loader{} keep
-// working without changes — the validator is created on first use.
+// when the zero value Loader{} is used. Init goes through sync.Once so
+// concurrent first-use callers cannot race to construct two validators
+// (the cost is small, but the previous unsynchronized double-check
+// pattern was a textbook race that a future heavier validator init
+// — schema compilation, embedded read — would amplify into corruption).
 func (l *Loader) schemaValidator() *validator.Validator {
-	if l.validator == nil {
-		l.validator = validator.New()
-	}
+	l.validatorOnce.Do(func() { l.validator = validator.New() })
 	return l.validator
 }
 
@@ -215,20 +221,35 @@ func parseFindings(raw []byte, depth int) ([]remediation.Finding, error) {
 	}
 
 	// Format 2: Safety envelope ({"kind": ..., "findings": [...]})
+	// Format 3: Direct result ({"findings": [...]})
+	// We try each shape in turn and capture the first real unmarshal
+	// error so that a malformed-but-recognizable input surfaces a
+	// specific JSON error instead of the generic ErrNoFindings.
+	// ErrNoFindings is reserved for "no recognizable shape at all" —
+	// the previous behavior conflated parse failures with structural
+	// misses, hiding malformed envelopes from operators.
+	var lastUnmarshalErr error
+
 	if _, hasKind := probe["kind"]; hasKind {
 		var env report.Assessment
 		if err := json.Unmarshal(raw, &env); err == nil {
 			return env.Findings, nil
+		} else {
+			lastUnmarshalErr = err
 		}
 	}
 
-	// Format 3: Direct result ({"findings": [...]})
 	if rawFindings, hasFindings := probe["findings"]; hasFindings {
 		var list []remediation.Finding
 		if err := json.Unmarshal(rawFindings, &list); err == nil {
 			return list, nil
+		} else {
+			lastUnmarshalErr = err
 		}
 	}
 
+	if lastUnmarshalErr != nil {
+		return nil, fmt.Errorf("failed to parse findings: %w", lastUnmarshalErr)
+	}
 	return nil, ErrNoFindings
 }

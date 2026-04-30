@@ -476,7 +476,7 @@ func parseCompliance(s string) map[string]string {
 		return nil
 	}
 	result := make(map[string]string)
-	for pair := range strings.SplitSeq(s, ",") {
+	for _, pair := range strings.Split(s, ",") {
 		kv := strings.SplitN(pair, "=", 2)
 		if len(kv) == 2 {
 			result[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])

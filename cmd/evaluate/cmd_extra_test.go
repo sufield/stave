@@ -116,7 +116,8 @@ func TestResolveOutput_Stdout(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	closer()
+	var nilErr error
+	closer(&nilErr)
 	if w != &buf {
 		t.Fatal("expected stdout writer")
 	}
@@ -129,7 +130,8 @@ func TestResolveOutput_File(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	defer closer()
+	var nilErr error
+	defer closer(&nilErr)
 	if w == nil {
 		t.Fatal("expected non-nil writer")
 	}

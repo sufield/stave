@@ -50,8 +50,8 @@ func TestGenerateSigningKeyPair(t *testing.T) {
 
 func TestShortToken(t *testing.T) {
 	tok := ShortToken("my-bucket")
-	if len(tok) != 8 {
-		t.Errorf("ShortToken length = %d, want 8", len(tok))
+	if len(tok) != 16 {
+		t.Errorf("ShortToken length = %d, want 16", len(tok))
 	}
 
 	// Deterministic
@@ -66,9 +66,9 @@ func TestShortToken(t *testing.T) {
 		t.Error("different inputs produced same token")
 	}
 
-	// Verify correctness: first 4 bytes of SHA-256
+	// Verify correctness: first 8 bytes of SHA-256
 	sum := sha256.Sum256([]byte("my-bucket"))
-	want := hex.EncodeToString(sum[:4])
+	want := hex.EncodeToString(sum[:8])
 	if tok != want {
 		t.Errorf("ShortToken = %q, want %q", tok, want)
 	}

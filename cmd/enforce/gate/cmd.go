@@ -108,8 +108,15 @@ Exit Codes:
 				return err
 			}
 
-			// Per-team gate: filter findings to one team and evaluate thresholds.
-			if opts.Team != "" {
+			// Per-team gate: filter findings to one team and evaluate
+			// thresholds. The team-gate path reads cfg.InPath (the
+			// evaluation file). Policies like fail_on_overdue_upcoming
+			// derive their verdict from controls + observations
+			// directly and never produce an evaluation file — skip the
+			// per-team filter for those cases instead of failing the
+			// command on a missing path the operator was never asked
+			// to provide.
+			if opts.Team != "" && cfg.Policy != "fail_on_overdue_upcoming" {
 				if opts.TeamManifest == "" {
 					return &ui.UserError{Err: errors.New("--team-manifest is required when using --team")}
 				}

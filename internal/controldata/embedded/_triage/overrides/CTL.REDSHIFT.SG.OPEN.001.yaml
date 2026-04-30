@@ -1,0 +1,14 @@
+control: CTL.REDSHIFT.SG.OPEN.001
+defect: >
+  A VPC security group attached to the Redshift cluster permits
+  ingress from 0.0.0.0/0 on the cluster port (5439).
+infection: >
+  Even with PubliclyAccessible=false, the cluster can be reached
+  from any source the VPC's network path admits — a public subnet,
+  a misconfigured NAT, a transit gateway peer. Internet scanners
+  enumerate Redshift endpoints continuously; an open SG turns the
+  warehouse into a credential-stuffing target.
+failure: >
+  Direct cluster reachability for credential attacks. Brute force
+  or credential reuse is the only step between a scanner and the
+  warehouse contents.

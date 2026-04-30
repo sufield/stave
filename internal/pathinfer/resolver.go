@@ -78,6 +78,13 @@ func dirCandidates(base, name string, maxDepth int) ([]string, error) {
 	if err := filepath.WalkDir(base, walker.walk); err != nil {
 		return walker.candidates, fmt.Errorf("walk %s: %w", base, err)
 	}
+	// Surface non-fatal walk errors at Warn so a permission-denied
+	// subtree doesn't silently turn a missing-control-dir into an
+	// empty-candidate-list misdiagnosis.
+	for _, we := range walker.Errors() {
+		slog.Warn("pathinfer: skipping unreadable entry during walk",
+			"path", we.Path, "error", we.Err)
+	}
 	return walker.candidates, nil
 }
 
@@ -86,11 +93,34 @@ type walkState struct {
 	name       string
 	maxDepth   int
 	candidates []string
+	walkErrs   []walkErr // accumulated non-fatal traversal errors
 }
 
-func (s *walkState) walk(path string, entry fs.DirEntry, walkErr error) error {
-	if walkErr != nil || !entry.IsDir() {
-		return nil //nolint:nilerr // walk errors are non-fatal in best-effort directory search
+// walkErr records a non-fatal error encountered during the directory
+// walk. The walker keeps going (best-effort search) but these are
+// surfaced to the caller via Errors() so an operator can tell when
+// the search saw a permission-denied subtree they didn't intend to
+// hide.
+type walkErr struct {
+	Path string
+	Err  error
+}
+
+// Errors returns the non-fatal walk errors collected during walk.
+// Empty slice when the walk completed without skipping any subtree.
+func (s *walkState) Errors() []walkErr { return s.walkErrs }
+
+func (s *walkState) walk(path string, entry fs.DirEntry, walkErrIn error) error {
+	if walkErrIn != nil {
+		// Permission denied / bad symlink / vanished entry — keep
+		// walking but record so the operator can see what was
+		// skipped. Returning nil signals filepath.WalkDir to continue
+		// past this entry.
+		s.walkErrs = append(s.walkErrs, walkErr{Path: path, Err: walkErrIn})
+		return nil //nolint:nilerr // intentional: best-effort walk continues, error captured on walkState
+	}
+	if !entry.IsDir() {
+		return nil
 	}
 
 	// Skip hidden directories (.git, .stave, etc.) to save I/O.

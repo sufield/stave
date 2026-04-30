@@ -1,0 +1,15 @@
+control: CTL.REDSHIFT.ENCRYPT.KMS.AWSMANAGED.001
+defect: >
+  Cluster is encrypted at rest with the AWS-managed `aws/redshift`
+  default KMS key, not a customer-managed key.
+infection: >
+  The default key has a key policy customers cannot edit and is
+  shared across every Redshift cluster in the account. There is no
+  way to scope decrypt to a specific principal, no way to revoke
+  access in a containment scenario, and no per-tenant blast-radius
+  control. The encryption-at-rest checkbox is satisfied without any
+  of the operational properties that customer-managed keys provide.
+failure: >
+  Cryptographic neglect. Containment options are limited to
+  re-encrypting the entire cluster — too slow to be a real incident
+  response.

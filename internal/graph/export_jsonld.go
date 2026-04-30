@@ -31,8 +31,17 @@ func Ontology() []byte { return embeddedOntology }
 // streams via a *bufio.Writer to keep allocations bounded for
 // large graphs.
 func MarshalJSONLD(w io.Writer, g *GraphData) error {
+	_, err := MarshalJSONLDWithDiagnostics(w, g)
+	return err
+}
+
+// MarshalJSONLDWithDiagnostics is the same as MarshalJSONLD but
+// also returns the list of edges that were dropped because their
+// Type was not in the wireToPredicate vocabulary. Callers wanting
+// strict-mode export check the returned slice for non-empty.
+func MarshalJSONLDWithDiagnostics(w io.Writer, g *GraphData) ([]UnmappedEdge, error) {
 	if g == nil {
-		return errors.New("MarshalJSONLD: nil GraphData")
+		return nil, errors.New("MarshalJSONLD: nil GraphData")
 	}
 	rdf := mapToRDFGraph(g)
 
@@ -53,7 +62,7 @@ func MarshalJSONLD(w io.Writer, g *GraphData) error {
 	// rather than constructing the full document in memory. This
 	// matters because @graph itself is the big array.
 	if _, err := bw.WriteString(jsonldHeader); err != nil {
-		return err
+		return rdf.UnmappedEdges, err
 	}
 
 	first := true
@@ -63,18 +72,18 @@ func MarshalJSONLD(w io.Writer, g *GraphData) error {
 		out := enc.encodeNode(n, edgesBySubject[n.ID])
 		if !first {
 			if _, err := bw.WriteString(",\n"); err != nil {
-				return err
+				return rdf.UnmappedEdges, err
 			}
 		}
 		if _, err := bw.Write(out); err != nil {
-			return err
+			return rdf.UnmappedEdges, err
 		}
 		first = false
 	}
 	if _, err := bw.WriteString(jsonldFooter); err != nil {
-		return err
+		return rdf.UnmappedEdges, err
 	}
-	return bw.Flush()
+	return rdf.UnmappedEdges, bw.Flush()
 }
 
 // jsonldHeader is the literal start of the JSON-LD output. The

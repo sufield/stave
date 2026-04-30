@@ -1,0 +1,15 @@
+control: CTL.REDSHIFT.IAM.ROLE.WILDCARD.001
+defect: >
+  An IAM role attached to the Redshift cluster grants `s3:*` or
+  `Resource: "*"` on at least one S3 statement.
+infection: >
+  Redshift COPY and UNLOAD execute against this role. Any
+  database-level execute on those commands becomes
+  `s3:GetObject` / `s3:PutObject` against any bucket the role can
+  reach — including buckets the warehouse has no business
+  touching. SQL execute on the warehouse becomes a one-step
+  exfiltration pivot to S3.
+failure: >
+  Lateral movement from warehouse SQL to arbitrary S3 buckets. A
+  compromised dbuser with COPY/UNLOAD rights can read or write
+  any bucket policy the wildcard covers.

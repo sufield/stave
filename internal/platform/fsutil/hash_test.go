@@ -46,7 +46,7 @@ func TestHashFile_ExceedsLimit(t *testing.T) {
 	}
 	defer f.Close()
 
-	if truncErr := f.Truncate(maxInputFileBytes + 1); truncErr != nil {
+	if truncErr := f.Truncate(maxInputFileBytes.Load() + 1); truncErr != nil {
 		t.Fatalf("truncate sparse file: %v", truncErr)
 	}
 
@@ -147,7 +147,7 @@ func TestHashDirByExt_PropagatesFileSizeLimit(t *testing.T) {
 	}
 	defer f.Close()
 
-	if truncErr := f.Truncate(maxInputFileBytes + 1); truncErr != nil {
+	if truncErr := f.Truncate(maxInputFileBytes.Load() + 1); truncErr != nil {
 		t.Fatalf("truncate sparse file: %v", truncErr)
 	}
 

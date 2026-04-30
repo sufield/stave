@@ -20,27 +20,23 @@ type Validator struct {
 //
 // For unsigned manifests (those that did not flow through
 // UnmarshalSigned, where signature verification establishes the
-// manifest's internal consistency), call ValidateOverall first so
-// we don't accept a manifest whose `overall` digest disagrees with
-// its own per-file hashes — otherwise an attacker could rewrite
-// `overall` in the on-disk file and have Verify pass purely on the
-// per-file string comparison while the aggregate check at the bottom
-// of this function compares attacker-supplied data against
-// attacker-supplied data.
+// manifest's internal consistency), an empty Overall is rejected
+// outright: without an aggregate digest there is no check that the
+// per-file map itself has not been swapped wholesale. The previous
+// "per-file only" mode let an attacker substitute a manifest whose
+// per-file hashes match attacker-supplied content while Overall
+// carries no constraint at all — so we now require every manifest
+// reaching Verify to carry an Overall, and validate it for internal
+// consistency before trusting the per-file string compare.
 func (v *Validator) Verify(m Manifest) error {
 	if v.ActualHashes == nil {
 		return fmt.Errorf("%w: no hashes provided for verification", ErrIntegrityViolation)
 	}
-	// Only validate when an overall digest is provided. A manifest
-	// without `overall` set is treated as "per-file checks only" —
-	// this preserves callers that synthesize a Manifest from external
-	// data and don't bother computing the aggregate. When `overall`
-	// IS present, it must be internally consistent before we trust
-	// the bottom-of-function string compare.
-	if m.Overall != "" {
-		if err := m.ValidateOverall(); err != nil {
-			return fmt.Errorf("%w: %w", ErrIntegrityViolation, err)
-		}
+	if m.Overall == "" {
+		return fmt.Errorf("%w: manifest is missing the overall aggregate digest; refusing to verify per-file hashes against an unbounded manifest", ErrIntegrityViolation)
+	}
+	if err := m.ValidateOverall(); err != nil {
+		return fmt.Errorf("%w: %w", ErrIntegrityViolation, err)
 	}
 
 	for name, expected := range m.Files {

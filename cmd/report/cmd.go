@@ -177,13 +177,18 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	// Findings.
 	fs := countFindings(latest)
 
-	// SLA.
+	// SLA. The flag is opt-in: when not provided, the report omits
+	// the SLA section. When provided but the file fails to load, the
+	// operator gave us an explicit input and we must not silently
+	// drop it — surface as a UserError so they see what went wrong
+	// rather than receive a report that quietly omits SLA content.
 	var slaSection *er.SLASection
 	if opts.SLAFile != "" {
 		pol, slaErr := infraSLA.LoadFromFile(opts.SLAFile)
-		if slaErr == nil {
-			slaSection = buildSLASection(latest, pol)
+		if slaErr != nil {
+			return &ui.UserError{Err: fmt.Errorf("load --sla-profile-file %q: %w", opts.SLAFile, slaErr)}
 		}
+		slaSection = buildSLASection(latest, pol)
 	}
 
 	// Top findings.
@@ -209,13 +214,17 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 		}
 	}
 
-	// Teams.
+	// Teams. Same opt-in / explicit-failure split as --sla-profile-file:
+	// flag absent → omit section; flag present but load fails → surface
+	// to the operator instead of producing a report without team
+	// attribution.
 	var teamSections []er.TeamSection
 	if opts.TeamManifest != "" {
 		manifest, manifestErr := teams.LoadManifest(opts.TeamManifest)
-		if manifestErr == nil {
-			teamSections = buildTeamSections(latest, manifest)
+		if manifestErr != nil {
+			return &ui.UserError{Err: fmt.Errorf("load --team-manifest %q: %w", opts.TeamManifest, manifestErr)}
 		}
+		teamSections = buildTeamSections(latest, manifest)
 	}
 
 	report := &er.Report{
@@ -246,24 +255,38 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	report.ExecutiveSummary = er.GenerateSummary(report)
 
 	w := stdout
+	var f *os.File
 	if opts.OutFile != "" {
-		f, fErr := os.Create(opts.OutFile)
+		var fErr error
+		f, fErr = os.Create(opts.OutFile)
 		if fErr != nil {
 			return fmt.Errorf("create output file: %w", fErr)
 		}
-		defer f.Close()
 		w = f
 	}
 
+	var writeErr error
 	switch opts.Format {
 	case "markdown":
-		er.WriteMarkdown(w, report)
-		return nil
+		writeErr = er.WriteMarkdown(w, report)
 	default:
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
-		return enc.Encode(report)
+		writeErr = enc.Encode(report)
 	}
+
+	// Close-error handling: surface the close error only when the write
+	// itself succeeded. A failed write already fully describes the
+	// problem; chaining a "file already closed" / "broken pipe" close
+	// error on top obscures the real cause. See `defer f.Close()`
+	// audit — silent-close hid truncated outputs on disk.
+	if f != nil {
+		closeErr := f.Close()
+		if writeErr == nil {
+			writeErr = closeErr
+		}
+	}
+	return writeErr
 }
 
 func computeScore(a *corereport.Assessment, chainDefs int, maxChainWeight float64) appscore.Result {

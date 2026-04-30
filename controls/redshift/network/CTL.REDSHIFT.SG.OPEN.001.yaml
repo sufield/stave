@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.SG.OPEN.001
+name: Redshift Cluster Security Group Must Not Allow 0.0.0.0/0 Ingress on 5439
+description: >
+  Redshift clusters must not have a VPC security group attached that
+  allows 0.0.0.0/0 ingress on the cluster port (5439). Even with
+  PubliclyAccessible=false, an open security group on a cluster placed
+  in a public subnet — or behind a misconfigured NAT / transit gateway
+  — exposes the warehouse to internet scanners. Distinct from
+  CTL.REDSHIFT.PUBLIC.001 which catches the cluster-level flag; this
+  control catches the network-policy gap that leaves the cluster
+  reachable when the flag is off.
+domain: network
+severity: critical
+compliance:
+  nist_800_53_r5: SC-7
+  soc2: CC6.6
+  pci_dss_v4.0: 1.3.4
+  ccm_v4:
+  - IVS-03
+  - IVS-04
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    A VPC security group attached to the cluster permits ingress from
+    0.0.0.0/0 on the Redshift port. The cluster is reachable from any
+    source the VPC's network path admits.
+  action: >
+    Replace the 0.0.0.0/0 rule with the CIDR block(s) of the application
+    tier or VPN range that legitimately needs cluster access. If the
+    cluster must be accessible from on-premises, scope the rule to the
+    enterprise NAT gateway IPs, not to the public internet.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.network.security_group_open_to_world
+    op: eq
+    value: true

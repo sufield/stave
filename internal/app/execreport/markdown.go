@@ -8,8 +8,43 @@ import (
 	"github.com/sufield/stave/internal/util/strutil"
 )
 
-// WriteMarkdown writes the report as a markdown document.
-func WriteMarkdown(w io.Writer, r *Report) {
+// WriteMarkdown writes the report as a markdown document. Returns the
+// first write error encountered. Callers must check the result —
+// silently dropping a write error against an os.File leaves the user
+// with a truncated, unsignalled report on disk.
+func WriteMarkdown(w io.Writer, r *Report) error {
+	ew := &writeErrTracker{w: w}
+	writeMarkdownTo(ew, r)
+	return ew.err
+}
+
+// writeErrTracker wraps an io.Writer and records the first error.
+// Subsequent Write calls become no-ops so the surrounding format
+// helpers don't need to check after every line.
+type writeErrTracker struct {
+	w   io.Writer
+	err error
+}
+
+func (e *writeErrTracker) Write(p []byte) (int, error) {
+	if e.err != nil {
+		// Subsequent writes are silently swallowed: the error has
+		// already been captured on the tracker and will be returned
+		// from WriteMarkdown. Returning the error from every Write
+		// would break fmt.Fprintf which short-circuits on non-nil
+		// err and would prevent the rest of the document from
+		// laying out cleanly into a buffer the caller may discard
+		// anyway.
+		return len(p), nil //nolint:nilerr // intentional: error already captured on tracker
+	}
+	n, err := e.w.Write(p)
+	if err != nil {
+		e.err = err
+	}
+	return n, err
+}
+
+func writeMarkdownTo(w io.Writer, r *Report) {
 	fmt.Fprintf(w, "# %s — %s\n\n", r.Title, r.Period)
 	fmt.Fprintf(w, "**Generated:** %s\n\n", r.GeneratedAt)
 

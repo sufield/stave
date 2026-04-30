@@ -57,12 +57,12 @@ Exit Codes:
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) (runErr error) {
 			w, closer, err := resolveOutput(opts.OutputPath, cmd.OutOrStdout())
 			if err != nil {
 				return fmt.Errorf("open output: %w", err)
 			}
-			defer closer()
+			defer closer(&runErr)
 			return run(w, opts)
 		},
 	}
@@ -277,13 +277,25 @@ func extractAccountID(snap asset.Snapshot) string {
 	return ""
 }
 
-func resolveOutput(path string, stdout io.Writer) (io.Writer, func(), error) {
+// resolveOutput returns the destination writer and a closer that
+// surfaces close errors instead of silently swallowing them. The
+// closer accepts the run's outer error pointer; when the run
+// succeeded but Close failed (typically a flush-on-close write
+// failure against a slow disk or broken pipe), the close error
+// becomes the run's error so the caller does not exit 0 with a
+// truncated file on disk.
+func resolveOutput(path string, stdout io.Writer) (io.Writer, func(*error), error) {
 	if path == "" {
-		return stdout, func() {}, nil
+		return stdout, func(*error) {}, nil
 	}
 	f, err := os.Create(path) //nolint:gosec // path from CLI flag
 	if err != nil {
 		return nil, nil, err
 	}
-	return f, func() { _ = f.Close() }, nil
+	return f, func(outErr *error) {
+		closeErr := f.Close()
+		if outErr != nil && *outErr == nil {
+			*outErr = closeErr
+		}
+	}, nil
 }

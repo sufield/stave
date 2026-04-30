@@ -1,0 +1,19 @@
+id: redshift_snapshot_exfil_undetected
+description: >
+  A Redshift snapshot is shared with accounts the producer does
+  not control and audit logging is off. Snapshot restoration
+  happens in the recipient's VPC, so producer-side CloudTrail
+  records only the share — not the read. With audit logging off,
+  even the in-cluster connection trail is missing. The full
+  pattern for warehouse data egress that leaves no producer-side
+  evidence: shared (cross-account or world), and no audit log to
+  record any in-cluster reads that preceded the share.
+controls:
+  - CTL.REDSHIFT.SNAPSHOT.SHARED.PUBLIC.001
+  - CTL.REDSHIFT.SNAPSHOT.SHARED.CROSSACCOUNT.001
+  - CTL.REDSHIFT.LOG.AUDIT.001
+escalation_threshold: 2
+compound_severity: critical
+postconditions:
+  - data_warehouse_compromise
+  - invisible_data_exfiltration

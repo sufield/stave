@@ -181,7 +181,7 @@ func resolveFrameworks(raw []string) ([]Framework, error) {
 	var out []Framework
 
 	for _, r := range raw {
-		for token := range strings.SplitSeq(r, ",") {
+		for _, token := range strings.Split(r, ",") {
 			f, err := ParseFramework(token)
 			if err != nil {
 				return nil, err

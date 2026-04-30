@@ -1,0 +1,15 @@
+control: CTL.REDSHIFT.SNAPSHOT.SHARED.CROSSACCOUNT.001
+defect: >
+  A manual Redshift snapshot is shared with one or more AWS
+  account IDs that are outside the organization's snapshot-sharing
+  allow-list.
+infection: >
+  Snapshot sharing is the legitimate cross-account data-handoff
+  mechanism. The failure mode is sharing with an account that
+  used to be a partner, has been compromised, or was never
+  authorized. Once shared, the recipient can restore at any time
+  — typically months after the share was set up and forgotten.
+failure: >
+  Exfiltration via a stale partnership. The producer has no
+  ongoing visibility into when the recipient restores, so the
+  data leaves the organization on the recipient's schedule.

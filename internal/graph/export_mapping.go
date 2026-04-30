@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"fmt"
 	"log/slog"
 	"maps"
 	"strings"
@@ -32,6 +33,43 @@ import (
 //     community detection over the shortcut subgraph without first
 //     traversing through intermediate Finding nodes, while auditors
 //     get the full chain.
+//
+// UnmappedEdge records an edge that was dropped during RDF mapping
+// because its Type was not in the wireToPredicate vocabulary. The
+// exporter previously logged these via slog.Warn only — callers had
+// no programmatic way to know the export was lossy. The mapping
+// surface now collects these so a caller in strict mode can fail.
+type UnmappedEdge struct {
+	Type string
+	From string
+	To   string
+}
+
+// UnmappedEdgesError is the typed error wrapping the collected
+// unmapped edge list. Callers that want strict semantics check via
+// errors.As; callers that don't care can ignore the error entirely
+// since the bytes were still produced.
+type UnmappedEdgesError struct {
+	Edges []UnmappedEdge
+}
+
+// Error implements error.
+func (e *UnmappedEdgesError) Error() string {
+	if len(e.Edges) == 0 {
+		return "no unmapped edges"
+	}
+	types := make(map[string]struct{}, len(e.Edges))
+	for _, ue := range e.Edges {
+		types[ue.Type] = struct{}{}
+	}
+	out := make([]string, 0, len(types))
+	for t := range types {
+		out = append(out, t)
+	}
+	return fmt.Sprintf("graph export dropped %d edges with unmapped type(s): %s",
+		len(e.Edges), strings.Join(out, ", "))
+}
+
 func mapToRDFGraph(g *GraphData) *RDFGraph {
 	if g == nil {
 		return &RDFGraph{OntologyIRI: strings.TrimSuffix(ontologyBaseIRI, "#")}
@@ -103,6 +141,9 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 		if !ok {
 			slog.Warn("graph export: dropping edge with unmapped type",
 				"type", e.Type, "from", e.From, "to", e.To)
+			out.UnmappedEdges = append(out.UnmappedEdges, UnmappedEdge{
+				Type: e.Type, From: e.From, To: e.To,
+			})
 			continue
 		}
 		fromIRI, ok := idMap[e.From]

@@ -116,12 +116,11 @@ func TestValidator_Verify_NilHashes(t *testing.T) {
 }
 
 func TestValidator_Verify_MissingFile(t *testing.T) {
-	m := Manifest{
-		Files: map[evaluation.FilePath]kernel.Digest{
-			"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-			"b.json": "sha256:bbb",
-		},
+	files := map[evaluation.FilePath]kernel.Digest{
+		"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		"b.json": "sha256:bbb",
 	}
+	m := Manifest{Files: files, Overall: ComputeOverall(files)}
 	v := &Validator{ActualHashes: &evaluation.InputHashes{
 		Files: map[evaluation.FilePath]kernel.Digest{
 			"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -137,11 +136,10 @@ func TestValidator_Verify_MissingFile(t *testing.T) {
 }
 
 func TestValidator_Verify_HashMismatch(t *testing.T) {
-	m := Manifest{
-		Files: map[evaluation.FilePath]kernel.Digest{
-			"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-		},
+	files := map[evaluation.FilePath]kernel.Digest{
+		"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	}
+	m := Manifest{Files: files, Overall: ComputeOverall(files)}
 	v := &Validator{ActualHashes: &evaluation.InputHashes{
 		Files: map[evaluation.FilePath]kernel.Digest{
 			"a.json": "sha256:different",
@@ -153,6 +151,23 @@ func TestValidator_Verify_HashMismatch(t *testing.T) {
 	}
 	if !errors.Is(err, ErrHashMismatch) {
 		t.Fatalf("expected ErrHashMismatch, got %v", err)
+	}
+}
+
+func TestValidator_Verify_MissingOverall(t *testing.T) {
+	m := Manifest{
+		Files: map[evaluation.FilePath]kernel.Digest{
+			"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		},
+	}
+	v := &Validator{ActualHashes: &evaluation.InputHashes{
+		Files: map[evaluation.FilePath]kernel.Digest{
+			"a.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		},
+	}}
+	err := v.Verify(m)
+	if err == nil || !errors.Is(err, ErrIntegrityViolation) {
+		t.Fatalf("expected ErrIntegrityViolation for missing Overall, got %v", err)
 	}
 }
 

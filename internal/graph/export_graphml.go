@@ -31,8 +31,16 @@ import (
 // per-element XML escaping. Allocations scale with the largest single
 // element, not with the whole graph.
 func MarshalGraphML(w io.Writer, g *GraphData) error {
+	_, err := MarshalGraphMLWithDiagnostics(w, g)
+	return err
+}
+
+// MarshalGraphMLWithDiagnostics is the same as MarshalGraphML but
+// also returns the list of unmapped-type edges. See
+// MarshalJSONLDWithDiagnostics for the contract.
+func MarshalGraphMLWithDiagnostics(w io.Writer, g *GraphData) ([]UnmappedEdge, error) {
 	if g == nil {
-		return errors.New("MarshalGraphML: nil GraphData")
+		return nil, errors.New("MarshalGraphML: nil GraphData")
 	}
 	rdf := mapToRDFGraph(g)
 
@@ -64,9 +72,9 @@ func MarshalGraphML(w io.Writer, g *GraphData) error {
 
 	xw.writeString(graphmlClose)
 	if xw.err != nil {
-		return xw.err
+		return rdf.UnmappedEdges, xw.err
 	}
-	return xw.w.Flush()
+	return rdf.UnmappedEdges, xw.w.Flush()
 }
 
 // graphmlWriter wraps a *bufio.Writer with a sticky first error so each

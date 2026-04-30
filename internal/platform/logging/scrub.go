@@ -42,13 +42,21 @@ func (c Config) sanitizeSource(a slog.Attr) slog.Attr {
 
 // infraKeys are log attribute keys that carry infrastructure identifiers.
 // These are scrubbed only when SanitizeInfraKeys is enabled (--sanitize).
+//
+// `"error"` is intentionally absent: an error attribute often carries
+// the only diagnostic information an operator has after a failed run.
+// Scrubbing it under --sanitize made post-incident triage impossible
+// because every log line wrapped in `"error": err` came back as
+// "[SANITIZED]". If a specific error message embeds a sensitive
+// identifier, the right answer is to redact at the formatting site
+// (or rely on isSensitiveKey for the fields the error wraps), not to
+// blanket-redact every error attribute.
 var infraKeys = map[string]struct{}{
 	"asset":   {},
 	"control": {},
 	"bucket":  {},
 	"arn":     {},
 	"account": {},
-	"error":   {},
 }
 
 func (c Config) isSensitiveLogKey(groups []string, key string) bool {

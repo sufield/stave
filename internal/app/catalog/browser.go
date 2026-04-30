@@ -94,7 +94,7 @@ func SelectFields(raw string) ([]string, error) {
 	var selected []string
 	seen := make(map[string]bool)
 
-	for p := range strings.SplitSeq(raw, ",") {
+	for _, p := range strings.Split(raw, ",") {
 		f := strings.ToLower(strings.TrimSpace(p))
 		if f == "" {
 			continue

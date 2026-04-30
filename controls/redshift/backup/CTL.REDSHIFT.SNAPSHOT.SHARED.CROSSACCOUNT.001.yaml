@@ -1,0 +1,44 @@
+dsl_version: ctrl.v1
+id: CTL.REDSHIFT.SNAPSHOT.SHARED.CROSSACCOUNT.001
+name: Redshift Manual Snapshot Must Not Be Shared With Out-of-Org Accounts
+description: >
+  A Redshift manual snapshot must not be shared with AWS account IDs
+  that are outside the organization's allow-list of trusted accounts.
+  Snapshot sharing is a legitimate cross-account data-handoff
+  mechanism — but the failure mode is sharing with an attacker-
+  controlled or partner account that no longer needs access. Once
+  shared, the recipient account can restore the snapshot and exfil
+  data without ever touching the source VPC.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: AC-3
+  soc2: CC6.6
+  pci_dss_v4.0: 7.2.5
+  ccm_v4:
+  - DSP-17
+scope_tags:
+- aws
+- redshift
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Manual snapshot is shared with one or more account IDs outside
+    the organization's snapshot-sharing allow-list.
+  action: >
+    Revoke each unauthorized account's restore access:
+    `aws redshift revoke-snapshot-access --snapshot-identifier <id> --account-with-restore-access <acct>`.
+    If cross-account sharing is genuinely required, register the
+    target account in the allow-list and re-share so future audits
+    treat the share as expected.
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: redshift_cluster
+  - field: properties.database.snapshot_sharing.shared_with_external_accounts
+    op: eq
+    value: true

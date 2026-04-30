@@ -1,0 +1,18 @@
+control: CTL.REDSHIFT.DATASHARE.PUBLIC.001
+defect: >
+  Datashare has `AllowPubliclyAccessibleConsumers=true`, permitting
+  consumption by clusters whose own `PubliclyAccessible` flag is
+  set.
+infection: >
+  Datashares do not copy data — they grant a consumer cluster
+  in-place query access to the producer's tables. When the
+  consumer cluster is itself publicly accessible, the producer's
+  data effectively becomes queryable from the internet, despite
+  the producer's network controls. This is the cross-account
+  share's evil-twin: the producer trusts the partner account, but
+  the partner account routes the query through a public endpoint
+  the producer has no visibility into.
+failure: >
+  Network-control bypass. PUBLIC.001 is enforced on the producer
+  cluster but the data leaves through a consumer cluster the
+  producer does not own.

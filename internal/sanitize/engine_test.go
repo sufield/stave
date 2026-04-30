@@ -14,8 +14,8 @@ func TestToken_Deterministic(t *testing.T) {
 	if a != b {
 		t.Errorf("token not deterministic: %q != %q", a, b)
 	}
-	if len(a) != 8 {
-		t.Errorf("token length = %d, want 8", len(a))
+	if len(a) != 16 {
+		t.Errorf("token length = %d, want 16", len(a))
 	}
 }
 

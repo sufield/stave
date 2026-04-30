@@ -137,7 +137,14 @@ func predicateToExpr(pred policy.UnsafePredicate, scopeVar string) (string, erro
 	}
 
 	if len(parts) == 0 {
-		return "false", nil
+		// An empty predicate (no any[], no all[], or every nested rule
+		// reduced to "") would compile to the literal "false" — every
+		// asset evaluates as "safe" silently. That's the worst possible
+		// failure mode for a security control: the YAML loaded, the
+		// CEL compiled, and nothing ever violates regardless of state.
+		// Surface the malformed predicate so the loader can reject the
+		// control instead of evaluating against a no-op gate.
+		return "", errors.New("empty predicate: at least one any/all rule must produce a non-empty expression")
 	}
 	return strings.Join(parts, " && "), nil
 }
@@ -397,6 +404,16 @@ func parseRuleList(v any) ([]policy.PredicateRule, error) {
 		}
 		if val, hasVal := m["value"]; hasVal {
 			rule.Value = policy.NewOperand(val)
+		}
+		// `value_from_param` is the documented way to point a rule at
+		// a control parameter (e.g. min_retention_days). The YAML round
+		// trip into nested any_match blocks lost it because parseRuleList
+		// only forwarded `field`/`op`/`value` — nested rules using
+		// value_from_param compiled with no parameter binding and matched
+		// against the literal string "params.X". Forward it here so
+		// resolveValueExpr in ruleToExpr can emit the correct CEL.
+		if vfp, ok := m["value_from_param"].(string); ok {
+			rule.ValueFromParam = predicate.ParamRef(vfp)
 		}
 
 		// Handle nested any/all blocks within the rule

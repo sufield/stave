@@ -384,13 +384,13 @@ func wireCISubtree(
 			Clock:          ports.RealClock{},
 		},
 	}))
-	celEval, celErr := newCELEvaluator()
-	if celErr != nil {
-		return fmt.Errorf("initialize CEL evaluator for fix command: %w", celErr)
-	}
 	ciCmd.AddCommand(enforce.NewFixCmd(fix.Deps{
-		UseCaseDeps: usecase.FixDeps{
-			Loader: &infrafix.FindingLoader{CELEvaluator: celEval, ReadFile: fsutil.ReadFileLimited},
+		NewLoader: func() (usecase.FindingLoaderPort, error) {
+			celEval, err := newCELEvaluator()
+			if err != nil {
+				return nil, fmt.Errorf("initialize CEL evaluator for fix command: %w", err)
+			}
+			return &infrafix.FindingLoader{CELEvaluator: celEval, ReadFile: fsutil.ReadFileLimited}, nil
 		},
 	}))
 	return nil

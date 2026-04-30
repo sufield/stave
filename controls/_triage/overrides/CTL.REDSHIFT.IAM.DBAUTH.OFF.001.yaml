@@ -1,0 +1,16 @@
+control: CTL.REDSHIFT.IAM.DBAUTH.OFF.001
+defect: >
+  Cluster has no IAM principals authorized to call
+  `redshift:GetClusterCredentials`. Database-local passwords are
+  the only authentication path.
+infection: >
+  Long-lived database-local passwords are typically shared, hard
+  to rotate, and produce no IAM-level audit trail. A single leaked
+  password persists in CI logs, secret scanners, and stale local
+  shell history indefinitely. Without IAM DB auth there is also
+  no per-human attribution in CloudTrail — every connection
+  appears as the shared dbuser.
+failure: >
+  Credential stuffing window plus broken attribution. Once a
+  password leaks, every connection that reuses it is logged
+  identically to a legitimate one.

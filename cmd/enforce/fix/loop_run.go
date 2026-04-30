@@ -45,12 +45,22 @@ func (r *Runner) buildLoopInfra(req LoopRequest) (loopInfra, error) {
 		return loopInfra{}, fmt.Errorf("init control repo: %w", err)
 	}
 
+	// A zero DirPerms passes 0o000 to MkdirAll, producing directories
+	// the writer cannot itself read back. Default to 0o755 so the
+	// fix-loop can lay down its evaluation.before / evaluation.after /
+	// remediation-report tree without having to be told the right
+	// mode every time.
+	dirPerms := r.FileOptions.DirPerms
+	if dirPerms == 0 {
+		dirPerms = 0o755
+	}
+
 	writer, err := appfix.NewArtifactWriter(
 		req.OutDir,
 		appfix.WriteOptions{
 			Overwrite:     r.FileOptions.Overwrite,
 			AllowSymlinks: r.FileOptions.AllowSymlinks,
-			DirPerms:      r.FileOptions.DirPerms,
+			DirPerms:      dirPerms,
 		},
 		req.Stdout,
 		fsutil.SafeFileSystem{
