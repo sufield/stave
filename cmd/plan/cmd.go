@@ -4,6 +4,7 @@ package plan
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -219,9 +220,16 @@ func writePerTeam(dir string, p *plan.Plan, format string) error {
 
 	for i := range p.Teams {
 		tp := &p.Teams[i]
+		// TeamID flows from the input plan's manifest. A malicious
+		// or buggy upstream could supply "../../etc/passwd" here;
+		// filepath.Join would clean the .. and write outside dir.
+		// Reject any TeamID containing path-separator-like sequences.
+		if err := validateTeamIDForFilename(tp.TeamID); err != nil {
+			return fmt.Errorf("team %q: %w", tp.TeamID, err)
+		}
 		filename := strings.ReplaceAll(tp.TeamID, " ", "-") + "-remediation-plan" + ext
 		path := filepath.Join(dir, filename)
-		f, err := os.Create(path) //nolint:gosec // user-specified output directory
+		f, err := os.Create(path) //nolint:gosec // user-specified output directory; filename validated above
 		if err != nil {
 			return fmt.Errorf("create %s: %w", path, err)
 		}
@@ -239,6 +247,28 @@ func writePerTeam(dir string, p *plan.Plan, format string) error {
 		if closeErr != nil {
 			return closeErr
 		}
+	}
+	return nil
+}
+
+// validateTeamIDForFilename rejects TeamID values that would let an
+// attacker control the output path. A TeamID like "../../etc/passwd"
+// would survive filepath.Join (which cleans ..) and write outside the
+// caller-chosen output directory. We reject any forward slash,
+// backslash, "..", or NUL byte; legitimate team IDs are alphanumerics,
+// hyphens, underscores, and spaces.
+func validateTeamIDForFilename(id string) error {
+	if id == "" {
+		return errors.New("team_id is empty")
+	}
+	if strings.ContainsAny(id, `/\`) {
+		return errors.New("team_id contains path separators")
+	}
+	if strings.Contains(id, "..") {
+		return errors.New("team_id contains parent-directory traversal")
+	}
+	if strings.ContainsRune(id, 0) {
+		return errors.New("team_id contains NUL byte")
 	}
 	return nil
 }

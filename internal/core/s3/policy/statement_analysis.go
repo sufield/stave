@@ -58,11 +58,23 @@ func (s Statement) HasWriteActions() bool {
 
 // decodeRaw unmarshals a json.RawMessage into any, used for Principal
 // and Condition fields that have varying JSON shapes.
+//
+// Returns nil on unmarshal failure rather than an error: AGENTS.md
+// requires core/ to be side-effect-free (no logging) and threading an
+// error through every caller (PrincipalScope, ConditionAnalysis,
+// PrincipalARNs, and their callers up the chain) is heavier than the
+// contract warrants. The bytes here come from a `json.RawMessage`
+// field already validated by the outer Statement unmarshal in
+// adapters/, so a parse failure here would indicate corrupted
+// post-validation input — extremely unlikely. Callers all handle
+// `nil` cleanly: PrincipalScope returns Public-or-Restricted based
+// on the type assertion, ConditionAnalysis returns the zero analysis,
+// PrincipalARNs returns an empty slice.
 func (s Statement) decodeRaw(raw json.RawMessage) any {
 	if len(raw) == 0 {
 		return nil
 	}
 	var v any
-	_ = json.Unmarshal(raw, &v)
+	_ = json.Unmarshal(raw, &v) //nolint:errcheck // see doc comment: nil-on-failure is the documented contract
 	return v
 }

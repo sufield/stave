@@ -131,7 +131,11 @@ const maxContextNameLen = 100
 
 // ValidateName checks that a normalized context name is well-formed.
 // It rejects empty strings, overlong inputs, and characters that are
-// unsafe in filesystem paths or YAML keys.
+// unsafe in filesystem paths or YAML keys. The forbidden set includes
+// path separators, control bytes, and YAML structural/indicator
+// characters — a name persisted as a YAML map key must not require
+// quoting or escaping, and a name interpolated into a filesystem path
+// must not let an attacker traverse, glob, or alias.
 func ValidateName(name string) error {
 	if name == "" {
 		return errors.New("context name cannot be empty")
@@ -139,8 +143,8 @@ func ValidateName(name string) error {
 	if len(name) > maxContextNameLen {
 		return fmt.Errorf("context name exceeds %d characters", maxContextNameLen)
 	}
-	if strings.ContainsAny(name, "/\\\x00\n\r\t") {
-		return errors.New("context name contains forbidden characters (/, \\, NUL, or whitespace control)")
+	if strings.ContainsAny(name, "/\\\x00\n\r\t:{}[]#*&!|>'\"%") {
+		return errors.New(`context name contains forbidden characters (/, \, NUL, whitespace control, or YAML indicators :{}[]#*&!|>'"%)`)
 	}
 	return nil
 }

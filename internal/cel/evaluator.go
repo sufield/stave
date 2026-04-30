@@ -61,7 +61,12 @@ func stringifyValue(v any) any {
 	switch val := v.(type) {
 	case string:
 		return val
-	case bool, float64, int, int64, float32:
+	// Cover the integer / float widths that observation extractors
+	// realistically produce. The narrower extractors (json.Number
+	// numeric, manual int casts in adapters) need the int32 / uint /
+	// uint64 / uint32 cases to pass through without falling into the
+	// reflect path, which loses signedness on uint64.
+	case bool, float64, float32, int, int32, int64, uint, uint32, uint64:
 		return val
 	case map[string]any:
 		return stringifyNamedTypes(val) // returns new map, no mutation

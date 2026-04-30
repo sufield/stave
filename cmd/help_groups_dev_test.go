@@ -3,7 +3,12 @@ package cmd
 import "testing"
 
 func TestPromotedCommandsRegistered(t *testing.T) {
-	root := NewApp().Root
+	t.Parallel()
+	app, err := NewApp()
+	if err != nil {
+		t.Fatalf("NewApp: %v", err)
+	}
+	root := app.Root
 
 	promoted := []string{
 		"doctor",

@@ -16,6 +16,7 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func newLintCmd() *cobra.Command {
@@ -110,7 +111,7 @@ func runForgeLint(w io.Writer, controlPath, _ string, semantic, strict bool) err
 func lintControl(path string, celEval policy.PredicateEval, semantic bool) lintResult {
 	result := lintResult{ControlID: filepath.Base(path)}
 
-	data, err := os.ReadFile(path) //nolint:gosec // user path
+	data, err := os.ReadFile(fsutil.CleanUserPath(path)) //nolint:gosec // user path
 	if err != nil {
 		result.Errors = append(result.Errors, "cannot read file: "+err.Error())
 		return result
@@ -200,6 +201,7 @@ func dummyAsset() asset.Asset {
 }
 
 func collectControlPaths(pathOrDir string) ([]string, error) {
+	pathOrDir = fsutil.CleanUserPath(pathOrDir)
 	info, err := os.Stat(pathOrDir)
 	if err != nil {
 		return nil, fmt.Errorf("stat %s: %w", pathOrDir, err)

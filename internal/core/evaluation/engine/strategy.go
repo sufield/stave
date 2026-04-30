@@ -122,7 +122,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 
 	if exceeds {
 		observation.TemporalRisk = t.FormatExposureSummary(maxUnsafe, now)
-		finding := CreateDurationFinding(DurationFindingInput{
+		finding, durErr := CreateDurationFinding(DurationFindingInput{
 			ExposureLifecycle: t,
 			Control:           s.ctl,
 			Threshold:         maxUnsafe,
@@ -130,6 +130,10 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 			Identities:        ids.At(t.LastObservedAt()),
 			PredicateParser:   s.deps.predicateParser(),
 		})
+		if durErr != nil {
+			s.deps.logger().Warn("duration calculation failed; finding emitted with sentinel duration",
+				"control", s.ctl.ID, "asset", t.ID, "error", durErr)
+		}
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
 		return finalizeRow(observation, evaluation.VerdictViolation, confidence), []*evaluation.Finding{finding}
 	}
@@ -180,7 +184,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 
 	if exceeds {
 		observation.TemporalRisk = t.FormatExposureSummary(maxUnsafe, now)
-		finding := CreateDurationFinding(DurationFindingInput{
+		finding, durErr := CreateDurationFinding(DurationFindingInput{
 			ExposureLifecycle: t,
 			Control:           s.ctl,
 			Threshold:         maxUnsafe,
@@ -188,6 +192,10 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 			Identities:        ids.At(t.LastObservedAt()),
 			PredicateParser:   s.deps.predicateParser(),
 		})
+		if durErr != nil {
+			s.deps.logger().Warn("duration calculation failed; finding emitted with sentinel duration",
+				"control", s.ctl.ID, "asset", t.ID, "error", durErr)
+		}
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
 		return finalizeRow(observation, evaluation.VerdictViolation, confidence), []*evaluation.Finding{finding}
 	}

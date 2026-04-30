@@ -3,8 +3,10 @@ package consolidate
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -317,8 +319,13 @@ func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 			if policyJSON == "" {
 				continue
 			}
-			// Non-fatal: malformed policy JSON skips annotation.
-			_ = idx.AddResourcePolicy(string(a.ID), policyJSON, accountID)
+			// Non-fatal: malformed policy JSON skips annotation. Log so
+			// silent skips do not mask broken extractor output during
+			// multi-account consolidation runs.
+			if addErr := idx.AddResourcePolicy(string(a.ID), policyJSON, accountID); addErr != nil {
+				slog.Debug("consolidate: skip resource policy annotation",
+					"asset", a.ID, "path", strings.Join(path, "."), "err", addErr)
+			}
 		}
 	}
 	return idx

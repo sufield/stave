@@ -66,11 +66,19 @@ type StatementContext struct {
 }
 
 // ResolveActions maps raw action strings to aggregate Permission bits
-// using a PermissionResolver for vendor-specific lookups.
+// using a PermissionResolver for vendor-specific lookups. Actions the
+// resolver does not recognize contribute no bits — the previous shape
+// returned the same Permission(0) for both "explicit no permission"
+// and "unknown action," which prevented callers from logging the
+// unknown-action case.
 func ResolveActions(actions []string, resolver PermissionResolver) Permission {
 	var total Permission
 	for _, action := range actions {
-		total |= resolver.Resolve(action)
+		perm, ok := resolver.Resolve(action)
+		if !ok {
+			continue
+		}
+		total |= perm
 		if total == PermFullControl {
 			break
 		}
@@ -131,9 +139,13 @@ func (r *Report) UpdateReport(res StatementAssessment) {
 }
 
 // PermissionResolver maps a single action string to its Permission bits.
-// Implementations handle vendor-specific lookup (exact match, prefix, trie).
+// Implementations handle vendor-specific lookup (exact match, prefix,
+// trie). The bool return distinguishes "action found but contributes
+// no permission bits" from "action not recognized" — the latter is a
+// signal that the input is using a vocabulary the resolver does not
+// know about, and silent zero-return masks that.
 type PermissionResolver interface {
-	Resolve(action string) Permission
+	Resolve(action string) (Permission, bool)
 }
 
 // NormalizeActions lowercases and trims all action strings.

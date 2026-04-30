@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -91,12 +92,15 @@ const (
 	groupDevTools       = "dev-tools"
 )
 
-// WireCommands attaches the full command tree to the root command.
+// WireCommands attaches the full command tree to the root command and
+// returns any wiring error encountered. Callers (NewApp) propagate to
+// the executor, which exits with ExitInternal so the operator sees the
+// failure on stderr instead of a panic stack trace.
 // This is intentionally the single command registration point for the entire CLI.
 // Every command and subcommand is registered here so the full tree is visible
 // in one place. Do not split registration across packages — that makes the
 // command hierarchy harder to reason about and the registration order non-obvious.
-func WireCommands(app *App) {
+func WireCommands(app *App) error {
 	root := app.Root
 	f := compose.DefaultFactories()
 
@@ -147,7 +151,9 @@ func WireCommands(app *App) {
 		Args:  cobra.NoArgs,
 	}
 	root.AddCommand(ciCmd)
-	wireCISubtree(ciCmd, f.NewCELEvaluator, f.NewCtlRepo, f.NewObsRepo, loadAssets)
+	if err := wireCISubtree(ciCmd, f.NewCELEvaluator, f.NewCtlRepo, f.NewObsRepo, loadAssets); err != nil {
+		return err
+	}
 
 	// Export & Interop
 	root.AddCommand(staveexport.NewCmd(f.NewCtlRepo, f.NewCELEvaluator))
@@ -288,6 +294,7 @@ func WireCommands(app *App) {
 
 	// Settings
 	root.AddCommand(initconfig.NewConfigCmd(ui.DefaultRuntime()))
+	return nil
 }
 
 func wireSnapshotSubtree(
@@ -312,7 +319,7 @@ func wireCISubtree(
 	newCtlRepo compose.CtlRepoFactory,
 	newObsRepo compose.ObsRepoFactory,
 	loadAssets compose.AssetLoaderFunc,
-) {
+) error {
 	loader := artifact.NewLoader()
 
 	baselineFileOpts := fileout.FileOptions{}
@@ -379,13 +386,14 @@ func wireCISubtree(
 	}))
 	celEval, celErr := newCELEvaluator()
 	if celErr != nil {
-		panic("initialize CEL evaluator for fix command: " + celErr.Error())
+		return fmt.Errorf("initialize CEL evaluator for fix command: %w", celErr)
 	}
 	ciCmd.AddCommand(enforce.NewFixCmd(fix.Deps{
 		UseCaseDeps: usecase.FixDeps{
 			Loader: &infrafix.FindingLoader{CELEvaluator: celEval, ReadFile: fsutil.ReadFileLimited},
 		},
 	}))
+	return nil
 }
 
 func assignCommandGroup(root *cobra.Command, use, groupID string) {

@@ -1,6 +1,7 @@
 package rank
 
 import (
+	"log/slog"
 	"slices"
 	"sort"
 	"strings"
@@ -379,8 +380,14 @@ func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 			if policyJSON == "" {
 				continue
 			}
-			// Non-fatal: malformed policy JSON skips annotation.
-			_ = idx.AddResourcePolicy(string(a.ID), policyJSON, accountID)
+			// Non-fatal: malformed policy JSON skips annotation, but a
+			// silent skip masks the operator's bad input. Surface the
+			// reason at Debug — the rank index is already lossy when a
+			// policy fails to parse, and the operator needs a trail.
+			if addErr := idx.AddResourcePolicy(string(a.ID), policyJSON, accountID); addErr != nil {
+				slog.Debug("rank: skip resource policy annotation",
+					"asset", a.ID, "path", strings.Join(path, "."), "err", addErr)
+			}
 		}
 	}
 	return idx

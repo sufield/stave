@@ -3,6 +3,7 @@
 package reachability
 
 import (
+	"log/slog"
 	"math"
 	"strings"
 
@@ -133,7 +134,12 @@ func BuildIndexFromSnapshot(snap *asset.Snapshot) *iam.ResourceAccessIndex {
 			found = true
 			// AddResourcePolicy errors are non-fatal: malformed policy JSON
 			// skips the annotation but the asset observation remains valid.
-			_ = idx.AddResourcePolicy(string(a.ID), policyJSON, accountID)
+			// Log so operators can trace why an asset has no reachability
+			// data — silent skips have masked extractor bugs in the past.
+			if addErr := idx.AddResourcePolicy(string(a.ID), policyJSON, accountID); addErr != nil {
+				slog.Debug("reachability: skip resource policy annotation",
+					"asset", a.ID, "path", strings.Join(path, "."), "err", addErr)
+			}
 		}
 	}
 

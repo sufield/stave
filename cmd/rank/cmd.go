@@ -21,6 +21,7 @@ import (
 	"github.com/sufield/stave/internal/app/sprintplanner"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/report"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 type options struct {
@@ -94,9 +95,10 @@ func run(stdout, _ io.Writer, opts *options) error {
 	var data []byte
 	var err error
 	if opts.InputPath != "" {
-		data, err = os.ReadFile(opts.InputPath) //nolint:gosec // user-specified path
+		inputPath := fsutil.CleanUserPath(opts.InputPath)
+		data, err = os.ReadFile(inputPath) //nolint:gosec // user-specified path, cleaned via fsutil.CleanUserPath
 		if err != nil {
-			return fmt.Errorf("read %s: %w", opts.InputPath, err)
+			return fmt.Errorf("read %s: %w", inputPath, err)
 		}
 	} else {
 		data, err = io.ReadAll(os.Stdin)
@@ -486,7 +488,8 @@ func runSprint(stdout io.Writer, opts *options, assessment *report.Assessment) e
 
 	var controlHours map[string]float64
 	if opts.EffortModel != "" {
-		data, readErr := os.ReadFile(opts.EffortModel) //nolint:gosec // user-specified path
+		effortPath := fsutil.CleanUserPath(opts.EffortModel)
+		data, readErr := os.ReadFile(effortPath) //nolint:gosec // user-specified path, cleaned via fsutil.CleanUserPath
 		if readErr != nil {
 			return fmt.Errorf("read effort model: %w", readErr)
 		}

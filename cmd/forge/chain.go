@@ -101,7 +101,7 @@ func loadControlIDs(dir string) map[kernel.ControlID]bool {
 
 	ids := make(map[kernel.ControlID]bool, len(paths))
 	for _, p := range paths {
-		data, readErr := os.ReadFile(p) //nolint:gosec
+		data, readErr := os.ReadFile(fsutil.CleanUserPath(p)) //nolint:gosec
 		if readErr != nil {
 			continue
 		}

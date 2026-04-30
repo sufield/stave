@@ -44,10 +44,14 @@ func NewResolver() *Resolver {
 // Resolve returns the Permission for an action using longest-prefix-match.
 // O(L) where L is the length of the action string.
 // AWS action names are case-insensitive — input is normalized to lowercase.
-func (r *Resolver) Resolve(action string) risk.Permission {
+// The second return is true when the trie matched at least one terminal
+// node (an action this resolver knows about) and false when the action
+// is unrecognized.
+func (r *Resolver) Resolve(action string) (risk.Permission, bool) {
 	action = strings.ToLower(action)
 	node := r.root
 	var lastMatch risk.Permission
+	matched := false
 	for i := 0; i < len(action); i++ {
 		child, ok := node.children[action[i]]
 		if !ok {
@@ -56,9 +60,10 @@ func (r *Resolver) Resolve(action string) risk.Permission {
 		node = child
 		if node.terminal {
 			lastMatch = node.perm
+			matched = true
 		}
 	}
-	return lastMatch
+	return lastMatch, matched
 }
 
 func (r *Resolver) insert(key string, perm risk.Permission) {

@@ -27,7 +27,10 @@ func TestResolverExactMatches(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.action, func(t *testing.T) {
-			got := r.Resolve(tc.action)
+			got, ok := r.Resolve(tc.action)
+			if !ok {
+				t.Errorf("Resolve(%q) ok = false, want true", tc.action)
+			}
 			if got != tc.want {
 				t.Errorf("Resolve(%q) = %d, want %d", tc.action, got, tc.want)
 			}
@@ -47,7 +50,10 @@ func TestResolverPrefixFallback(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.action, func(t *testing.T) {
-			got := r.Resolve(tc.action)
+			got, ok := r.Resolve(tc.action)
+			if !ok {
+				t.Errorf("Resolve(%q) ok = false, want true", tc.action)
+			}
 			if got != tc.want {
 				t.Errorf("Resolve(%q) = %d, want %d", tc.action, got, tc.want)
 			}
@@ -58,20 +64,23 @@ func TestResolverPrefixFallback(t *testing.T) {
 func TestResolverLongestPrefixMatch(t *testing.T) {
 	r := NewResolver()
 	// s3:putbucketacl should match AdminWrite (exact), NOT Write (prefix)
-	got := r.Resolve("s3:putbucketacl")
-	if got != risk.PermAdminWrite {
-		t.Errorf("Resolve(s3:putbucketacl) = %d, want AdminWrite (%d)", got, risk.PermAdminWrite)
+	got, ok := r.Resolve("s3:putbucketacl")
+	if !ok || got != risk.PermAdminWrite {
+		t.Errorf("Resolve(s3:putbucketacl) = (%d, %v), want (AdminWrite=%d, true)", got, ok, risk.PermAdminWrite)
 	}
 	// s3:putobjectacl should also match AdminWrite
-	got = r.Resolve("s3:putobjectacl")
-	if got != risk.PermAdminWrite {
-		t.Errorf("Resolve(s3:putobjectacl) = %d, want AdminWrite (%d)", got, risk.PermAdminWrite)
+	got, ok = r.Resolve("s3:putobjectacl")
+	if !ok || got != risk.PermAdminWrite {
+		t.Errorf("Resolve(s3:putobjectacl) = (%d, %v), want (AdminWrite=%d, true)", got, ok, risk.PermAdminWrite)
 	}
 }
 
 func TestResolverUnknownAction(t *testing.T) {
 	r := NewResolver()
-	got := r.Resolve("ec2:runinstances")
+	got, ok := r.Resolve("ec2:runinstances")
+	if ok {
+		t.Errorf("Resolve(ec2:runinstances) ok = true, want false")
+	}
 	if got != 0 {
 		t.Errorf("Resolve(ec2:runinstances) = %d, want 0", got)
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func newScaffoldCmd() *cobra.Command {
@@ -50,7 +51,7 @@ Exit Codes:
 
 func runScaffold(w io.Writer, controlPath, snapshotPath, outDir string) error {
 	// Load control.
-	data, err := os.ReadFile(controlPath) //nolint:gosec // user path
+	data, err := os.ReadFile(fsutil.CleanUserPath(controlPath)) //nolint:gosec // user path
 	if err != nil {
 		return fmt.Errorf("read control: %w", err)
 	}

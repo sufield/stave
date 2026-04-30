@@ -125,6 +125,14 @@ type AssessmentOptions struct {
 }
 
 // assessmentSession maintains the state of a single execution of the engine.
+//
+// Concurrency: applyControl is invoked sequentially from Assess, and the
+// activeSpan field is mutated without synchronization. If a future
+// change parallelizes per-control evaluation, activeSpan must be moved
+// into per-call state (or guarded by a mutex) before doing so —
+// otherwise concurrent writers will race and the strategy will see the
+// wrong span. The collector's own RecordCheck path is mutex-protected
+// independently, so it is safe to call from a future concurrent caller.
 type assessmentSession struct {
 	assessor   *Assessor
 	snapshots  []asset.Snapshot
@@ -132,7 +140,7 @@ type assessmentSession struct {
 	collector  *AssessmentCollector
 	idIndex    IdentityIndex
 	opts       AssessmentOptions
-	activeSpan ports.AssessmentSpan // current control×asset span for strategy access
+	activeSpan ports.AssessmentSpan // current control×asset span for strategy access; sequential-only, see type doc
 }
 
 // beginTrace starts a trace span for a control×asset evaluation.
@@ -256,9 +264,10 @@ func (s *assessmentSession) applyControl(
 		}
 		span.RecordStep("exemption_check", nil, map[string]any{"exempted": false})
 
-		// 2. Track evaluated snapshots — go through the collector's
-		//    mutex-protected entry points so applyControl is safe to
-		//    call from concurrent goroutines.
+		// 2. Track evaluated snapshots through the collector's
+		//    mutex-protected entry points. The collector itself is
+		//    concurrent-safe; applyControl is currently called
+		//    sequentially from Assess (see assessmentSession type doc).
 		s.collector.RecordSeenAsset(id)
 		if lifecycle != nil && lifecycle.IsExposed() {
 			s.collector.RecordNonCompliantAsset(id)
@@ -268,6 +277,22 @@ func (s *assessmentSession) applyControl(
 		//    Set the active span so strategies can record their decision steps,
 		//    then create the strategy (which captures the span via sessionDeps).
 		s.activeSpan = span
+		// Defensive nil-check: strategy.Evaluate dereferences lifecycle.
+		// A nil here would panic the assessor; record an inconclusive
+		// check + log instead.
+		if lifecycle == nil {
+			s.assessor.logger().Warn("strategy evaluation: nil lifecycle",
+				"control", ctl.ID, "asset", id)
+			s.collector.RecordCheck(evaluation.ResourceCheck{
+				ControlID:  ctl.ID,
+				AssetID:    id,
+				Verdict:    evaluation.VerdictInconclusive,
+				Confidence: evaluation.ConfidenceInconclusive,
+				Reason:     "lifecycle missing for asset",
+			})
+			span.End()
+			continue
+		}
 		strat := s.strategyFor(ctl)
 		check, findings := strat.Evaluate(lifecycle, s.auditTime, s.idIndex)
 

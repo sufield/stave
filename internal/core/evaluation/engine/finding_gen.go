@@ -20,8 +20,13 @@ type DurationFindingInput struct {
 	PredicateParser   policy.PredicateParser
 }
 
-// CreateDurationFinding generates a violation finding specifically for duration-based controls.
-func CreateDurationFinding(in DurationFindingInput) *evaluation.Finding {
+// CreateDurationFinding generates a violation finding specifically for
+// duration-based controls. A non-nil second return signals that the
+// underlying duration calculation failed; the caller still receives a
+// finding (with UnsafeDurationHours set to the -1 sentinel) so a
+// violation is still emitted, but the caller is expected to surface
+// the error via its own logger — core/ stays free of side effects.
+func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error) {
 	a := in.ExposureLifecycle.Asset()
 	duration, durationErr := in.ExposureLifecycle.ExposureDuration(in.Now)
 	if durationErr != nil {
@@ -44,7 +49,7 @@ func CreateDurationFinding(in DurationFindingInput) *evaluation.Finding {
 	}
 	f.ReasoningTrace = evaluation.ReasoningTraceFromMisconfigurations(misconfigs)
 	f.Delta = policy.DeriveDeltas(misconfigs)
-	return f
+	return f, durationErr
 }
 
 // DeriveRootCauses maps misconfiguration categories to high-level mechanism labels.

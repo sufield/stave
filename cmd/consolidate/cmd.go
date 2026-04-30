@@ -25,6 +25,7 @@ import (
 	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 type options struct {
@@ -218,7 +219,7 @@ func loadAccounts(opts *options) ([]appconsolidate.AccountInput, string, error) 
 }
 
 func loadFromManifest(path string) ([]appconsolidate.AccountInput, string, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // user-specified path
+	data, err := os.ReadFile(fsutil.CleanUserPath(path)) //nolint:gosec // user-specified path
 	if err != nil {
 		return nil, "", fmt.Errorf("read manifest: %w", err)
 	}
@@ -250,6 +251,7 @@ func loadFromManifest(path string) ([]appconsolidate.AccountInput, string, error
 }
 
 func loadFromDirectory(dir string) ([]appconsolidate.AccountInput, string, error) {
+	dir = fsutil.CleanUserPath(dir)
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, "", fmt.Errorf("read directory: %w", err)

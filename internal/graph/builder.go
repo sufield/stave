@@ -303,14 +303,32 @@ type edgeKey struct {
 }
 
 func deduplicateEdges(edges []Edge) []Edge {
-	seen := make(map[edgeKey]struct{}, len(edges))
+	// Merge Properties on duplicate edges instead of dropping them.
+	// Two builders may emit the same (From, To, Type) edge with
+	// disjoint metadata (one carries verdict info, the other carries
+	// an exposure window) — discarding the second loses analysis
+	// downstream consumers depend on. Earlier-arriving keys win
+	// conflicts so output is deterministic.
+	seen := make(map[edgeKey]int, len(edges))
 	out := make([]Edge, 0, len(edges))
 	for _, e := range edges {
 		k := edgeKey{From: e.From, To: e.To, Type: e.Type}
-		if _, dup := seen[k]; dup {
+		if idx, dup := seen[k]; dup {
+			if len(e.Properties) == 0 {
+				continue
+			}
+			if out[idx].Properties == nil {
+				out[idx].Properties = make(map[string]any, len(e.Properties))
+			}
+			for pk, pv := range e.Properties {
+				if _, exists := out[idx].Properties[pk]; exists {
+					continue
+				}
+				out[idx].Properties[pk] = pv
+			}
 			continue
 		}
-		seen[k] = struct{}{}
+		seen[k] = len(out)
 		out = append(out, e)
 	}
 	return out

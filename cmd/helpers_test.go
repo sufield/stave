@@ -18,13 +18,22 @@ import (
 )
 
 // getRootCmd returns a fully-wired root cobra command for tests.
+// Tests assume wiring succeeds — a wiring failure aborts the test.
 func getRootCmd() *cobra.Command {
-	return NewApp().Root
+	app, err := NewApp()
+	if err != nil {
+		panic("getRootCmd: " + err.Error())
+	}
+	return app.Root
 }
 
 // getDevRootCmd returns a fully-wired root cobra command with all dev commands.
 func getDevRootCmd() *cobra.Command {
-	return NewApp(WithDevEdition()).Root
+	app, err := NewApp(WithDevEdition())
+	if err != nil {
+		panic("getDevRootCmd: " + err.Error())
+	}
+	return app.Root
 }
 
 // testAttachRunIDFromPlan attaches a run ID from the evaluation plan to the app logger.

@@ -17,14 +17,24 @@ import (
 // It sets up SIGINT handling, executes the root command, and exits with
 // the appropriate exit code based on the result.
 // Panics are recovered and converted to error messages to prevent stack traces.
+// Wiring errors from NewApp surface as a single-line stderr message + exit 4
+// rather than a panic stack trace.
 func Execute() {
-	app := NewApp()
+	app, err := NewApp()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "stave: wire commands: %v\n", err)
+		os.Exit(ui.ExitInternal)
+	}
 	app.execute()
 }
 
 // ExecuteDev runs the root command with the "dev" edition label.
 func ExecuteDev() {
-	app := NewApp(WithDevEdition())
+	app, err := NewApp(WithDevEdition())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "stave: wire commands: %v\n", err)
+		os.Exit(ui.ExitInternal)
+	}
 	app.execute()
 }
 
@@ -137,7 +147,16 @@ func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMark
 	markFirstRunHintSeenIfNeeded(showFirstRunHint, firstRunMarkerPath)
 	a.printNoProjectHintIfNeeded(args)
 
-	resolver, _ := projctx.NewResolver()
+	// Resolver failures are non-fatal during finalization — the rest of
+	// the command already ran successfully; we just lose
+	// session-state persistence and the workflow-handoff hint. Log the
+	// reason at Warn so operators can correlate missing hints with the
+	// underlying cause.
+	resolver, resolverErr := projctx.NewResolver()
+	if resolverErr != nil && a.Logger != nil {
+		a.Logger.Warn("project resolver init failed during finalize",
+			"error", resolverErr)
+	}
 	projectRoot := persistSessionStateIfApplicable(resolver, args)
 	a.printWorkflowHandoff(args, projectRoot)
 }

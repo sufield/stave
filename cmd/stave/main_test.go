@@ -18,9 +18,11 @@ func TestMain(m *testing.M) {
 // staveMain runs the stave CLI without calling os.Exit directly.
 // testscript intercepts os.Exit to capture the exit code.
 func staveMain() {
-	app := cmd.NewApp()
-	err := app.Root.Execute()
+	app, err := cmd.NewApp()
 	if err != nil {
+		os.Exit(cmd.ExitCode(err))
+	}
+	if err := app.Root.Execute(); err != nil {
 		os.Exit(cmd.ExitCode(err))
 	}
 }

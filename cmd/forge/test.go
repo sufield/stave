@@ -14,6 +14,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/observations"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func newTestCmd() *cobra.Command {
@@ -60,7 +61,7 @@ func runForgeTest(w io.Writer, controlPath, passFixture, failFixture, snapshotPa
 	start := time.Now()
 
 	// Load control.
-	data, err := os.ReadFile(controlPath) //nolint:gosec // user path
+	data, err := os.ReadFile(fsutil.CleanUserPath(controlPath)) //nolint:gosec // user path
 	if err != nil {
 		return fmt.Errorf("read control: %w", err)
 	}
@@ -177,7 +178,7 @@ type fixtureResource struct {
 }
 
 func loadFixture(path string) ([]asset.Asset, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // user path
+	data, err := os.ReadFile(fsutil.CleanUserPath(path)) //nolint:gosec // user path
 	if err != nil {
 		return nil, err
 	}

@@ -301,7 +301,7 @@ func verifyRunChecksums(archivePath, runID string) (bool, string) {
 		expectedHash := parts[0]
 		filename := parts[1]
 		if !isSafeRunRelative(filename) {
-			return false, fmt.Sprintf("%s: unsafe filename in manifest", filename)
+			return false, filename + ": unsafe filename in manifest"
 		}
 		filePath := filepath.Join(runDir, filename)
 		absFilePath, absErr := filepath.Abs(filePath)
@@ -313,10 +313,10 @@ func verifyRunChecksums(archivePath, runID string) (bool, string) {
 		// that starts with ".." or is absolute on the target side.
 		rel, relErr := filepath.Rel(absRunDir, absFilePath)
 		if relErr != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || filepath.IsAbs(rel) {
-			return false, fmt.Sprintf("%s: path escapes run directory", filename)
+			return false, filename + ": path escapes run directory"
 		}
 		if _, dup := expected[filename]; dup {
-			return false, fmt.Sprintf("%s: duplicate manifest entry", filename)
+			return false, filename + ": duplicate manifest entry"
 		}
 		expected[filename] = expectedHash
 	}

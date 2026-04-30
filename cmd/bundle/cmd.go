@@ -21,6 +21,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/output/asff"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/report"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 type options struct {
@@ -124,7 +125,7 @@ func run(ctx context.Context, _, stderr io.Writer, opts *options) error {
 	// Load signing key if provided.
 	var privateKeyPEM []byte
 	if opts.SignKeyPath != "" {
-		keyData, readErr := os.ReadFile(opts.SignKeyPath) //nolint:gosec // user-specified key path
+		keyData, readErr := os.ReadFile(fsutil.CleanUserPath(opts.SignKeyPath)) //nolint:gosec // user-specified key path
 		if readErr != nil {
 			return fmt.Errorf("read signing key: %w", readErr)
 		}

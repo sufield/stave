@@ -2,6 +2,7 @@ package compliance
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -110,14 +111,22 @@ func parseOneStatement(raw json.RawMessage) (PolicyStatement, error) {
 		return PolicyStatement{}, err
 	}
 
+	// Surface inner-field unmarshal errors via the existing error
+	// return rather than silently dropping. core/ doesn't log, so the
+	// caller (in app/ or adapters/) is responsible for routing the
+	// error to operator-visible diagnostics.
 	var principal any
 	if s.Principal != nil {
-		_ = json.Unmarshal(s.Principal, &principal)
+		if err := json.Unmarshal(s.Principal, &principal); err != nil {
+			return PolicyStatement{}, fmt.Errorf("principal field: %w", err)
+		}
 	}
 
 	var condition any
 	if s.Condition != nil {
-		_ = json.Unmarshal(s.Condition, &condition)
+		if err := json.Unmarshal(s.Condition, &condition); err != nil {
+			return PolicyStatement{}, fmt.Errorf("condition field: %w", err)
+		}
 	}
 
 	return PolicyStatement{

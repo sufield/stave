@@ -34,8 +34,9 @@ type testResolver struct {
 	perms map[string]Permission
 }
 
-func (r testResolver) Resolve(action string) Permission {
-	return r.perms[action]
+func (r testResolver) Resolve(action string) (Permission, bool) {
+	p, ok := r.perms[action]
+	return p, ok
 }
 
 func TestResolveActions(t *testing.T) {

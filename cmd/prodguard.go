@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/sufield/stave/internal/cli/ui"
 	contexts "github.com/sufield/stave/internal/config"
@@ -68,36 +69,57 @@ func (d *EnvironmentDetector) Detect() Environment {
 // ---------------------------------------------------------------------------
 
 // SafetyPolicy defines which commands are restricted in production.
+// The blocked list is mutated by governance config loading at bootstrap
+// (SetBlockedCommands) and read by ProductionGuard.Check; the mutex
+// serializes those accesses so a future caller that wires the guard
+// outside the bootstrap PreRun lifecycle (e.g. tests, parallel command
+// invocations sharing the package-level default) does not race on the
+// underlying map header.
 type SafetyPolicy struct {
-	BlockedCommands map[string]bool
+	mu              sync.RWMutex
+	blockedCommands map[string]bool
 }
 
-// DefaultSafetyPolicy blocks commands that permanently destroy evidence.
-// Override with SetBlockedCommands to customize for your environment.
-var DefaultSafetyPolicy = SafetyPolicy{
-	BlockedCommands: map[string]bool{
-		"prune": true,
-	},
+// IsBlocked reports whether cmdName is on the blocked list.
+func (p *SafetyPolicy) IsBlocked(cmdName string) bool {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return p.blockedCommands[cmdName]
 }
 
-// SetBlockedCommands replaces the production guard blocked command list.
-// Pass nil or empty to keep the default.
-func SetBlockedCommands(cmds []string) {
-	if len(cmds) == 0 {
-		return
-	}
+// Set replaces the blocked-command list. Pass nil or empty to clear.
+func (p *SafetyPolicy) Set(cmds []string) {
 	m := make(map[string]bool, len(cmds))
 	for _, c := range cmds {
 		m[c] = true
 	}
-	DefaultSafetyPolicy.BlockedCommands = m
+	p.mu.Lock()
+	p.blockedCommands = m
+	p.mu.Unlock()
+}
+
+// DefaultSafetyPolicy blocks commands that permanently destroy evidence.
+// Override with SetBlockedCommands to customize for your environment.
+var DefaultSafetyPolicy = &SafetyPolicy{
+	blockedCommands: map[string]bool{
+		"prune": true,
+	},
+}
+
+// SetBlockedCommands replaces the production guard blocked command list
+// on the package-level default. Pass nil or empty to keep the default.
+func SetBlockedCommands(cmds []string) {
+	if len(cmds) == 0 {
+		return
+	}
+	DefaultSafetyPolicy.Set(cmds)
 }
 
 // ProductionGuard prevents the developer binary from performing
 // dangerous operations against production environments.
 type ProductionGuard struct {
 	Edition Edition
-	Policy  SafetyPolicy
+	Policy  *SafetyPolicy
 	Stderr  io.Writer
 }
 
@@ -109,7 +131,7 @@ func (g *ProductionGuard) Check(cmdName string, env Environment) error {
 		return nil
 	}
 
-	if g.Policy.BlockedCommands[cmdName] {
+	if g.Policy != nil && g.Policy.IsBlocked(cmdName) {
 		return &ui.UserError{
 			Err: fmt.Errorf(
 				"command %q is blocked in production (%s): "+

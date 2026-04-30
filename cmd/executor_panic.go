@@ -29,6 +29,12 @@ func (a *App) recoverExecutePanic() {
 
 		errInfo := a.buildPanicErrorInfo(sanitized)
 		a.writeErrorInfo(errInfo)
+		// Flush buffered log entries before exit so the panic event
+		// makes it to disk even on panic-recovery — postRun, which
+		// normally closes the LogCloser, is skipped.
+		if a.LogCloser != nil {
+			_ = a.LogCloser.Close()
+		}
 		a.ExitFunc(ui.ExitInternal)
 	}
 }

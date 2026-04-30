@@ -22,6 +22,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 type options struct {
@@ -200,6 +201,7 @@ func scanSnapshots(dir string, services []string) *snapshotStatus {
 	if dir == "" {
 		return nil
 	}
+	dir = fsutil.CleanUserPath(dir)
 	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
 	if err != nil || len(files) == 0 {
 		return &snapshotStatus{Missing: append([]string{}, services...)}
@@ -207,7 +209,7 @@ func scanSnapshots(dir string, services []string) *snapshotStatus {
 
 	have := make(map[string]bool)
 	for _, f := range files {
-		data, err := os.ReadFile(f) //nolint:gosec // CLI tool reads user-provided observation paths.
+		data, err := os.ReadFile(fsutil.CleanUserPath(f)) //nolint:gosec // CLI tool reads user-provided observation paths.
 		if err != nil {
 			continue
 		}

@@ -87,7 +87,10 @@ type App struct {
 
 // NewApp creates a fully-wired CLI application.
 // Pass WithDevEdition() to build the stave-dev binary with all commands.
-func NewApp(opts ...AppOption) *App {
+// Returns an error if WireCommands fails — callers must propagate this
+// (Execute / ExecuteDev exit with ExitInternal) so wiring failures show
+// as a clean stderr message instead of a panic stack trace.
+func NewApp(opts ...AppOption) (*App, error) {
 	logging.InitDefaultLogger()
 	app := &App{
 		Edition:  EditionProd,
@@ -105,7 +108,9 @@ func NewApp(opts ...AppOption) *App {
 		CompletionOptions:  cobra.CompletionOptions{DisableDefaultCmd: true},
 	}
 	AddGlobalFlags(app.Root, &app.Flags)
-	WireCommands(app)
+	if err := WireCommands(app); err != nil {
+		return nil, err
+	}
 
 	for _, opt := range opts {
 		opt(app)
@@ -113,7 +118,7 @@ func NewApp(opts ...AppOption) *App {
 
 	app.Root.Version = fmt.Sprintf("%s (%s)", Version(), string(app.Edition))
 	wireHelpGroups(app.Root)
-	return app
+	return app, nil
 }
 
 // CLI metadata is re-exported from internal/metadata to keep command code concise
