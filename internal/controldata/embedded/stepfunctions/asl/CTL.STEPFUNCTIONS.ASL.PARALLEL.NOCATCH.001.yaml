@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.PARALLEL.NOCATCH.001
+name: Step Functions Parallel State Lacks Catch Clause
+description: >
+  ASL `Parallel` state has no `Catch` clause.
+  Failure in any child branch terminates the
+  whole Parallel; surviving branches have
+  no defined cleanup path. Compensating
+  transactions, partial results, or branch-
+  specific error reporting are impossible
+  without a Catch.
+domain: lifecycle
+severity: high
+compliance:
+  soc2: "CC7.4, A1.2"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Parallel state has no Catch clause.
+  action: >
+    Add Catch clause routing to a compensation
+    state. Track which branch failed via
+    ResultPath: $.errorContext.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "parallel_without_catch_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.parallel_without_catch_count
+      op: gt
+      value: 0
+defect: >
+  Parallel state without Catch.
+infection: >
+  Branch failure terminates Parallel without
+  defined cleanup; partial state remains.
+failure: >
+  Compensation path absent.
+tests:
+  - name: missing catch fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            parallel_without_catch_count: 1
+  - name: catch present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            parallel_without_catch_count: 0

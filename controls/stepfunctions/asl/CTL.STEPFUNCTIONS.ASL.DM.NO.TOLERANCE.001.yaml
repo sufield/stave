@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.DM.NO.TOLERANCE.001
+name: Step Functions Distributed Map Has No Failure Tolerance Configured
+description: >
+  Distributed Map state has no
+  `ToleratedFailureCount` or
+  `ToleratedFailurePercentage`. A single child-
+  iteration failure aborts the entire fan-out;
+  partial results may be lost. Conversely a
+  too-high tolerance hides failure rates that
+  should page on-call. Both directions need
+  explicit thresholds.
+domain: lifecycle
+severity: medium
+compliance:
+  soc2: "CC7.4, A1.2"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Distributed Map without failure tolerance.
+  action: >
+    Set ToleratedFailurePercentage: 1
+    (typical) or ToleratedFailureCount aligned
+    with workload's acceptable error rate.
+    Combine with ResultWriter to capture
+    failed-iteration metadata.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "dm_no_tolerance_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.dm_no_tolerance_count
+      op: gt
+      value: 0
+defect: >
+  Distributed Map without
+  ToleratedFailureCount/Percentage.
+infection: >
+  Single iteration failure aborts entire fan-
+  out; partial results lost.
+failure: >
+  No tolerance gate.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            dm_no_tolerance_count: 1
+  - name: configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            dm_no_tolerance_count: 0

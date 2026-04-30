@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.QUERY.LANG.MISMATCH.001
+name: Step Functions ASL Uses JSONata Syntax With QueryLanguage JSONPath
+description: >
+  ASL definition contains expressions that look
+  like JSONata syntax (e.g., `{% $variable %}`,
+  `$contains()`) but the state machine's
+  `QueryLanguage` field is `JSONPath` (or
+  unset, defaulting to JSONPath). The
+  expressions silently evaluate as literal
+  strings rather than being interpreted —
+  workflow runs but produces wrong output.
+  The reverse mismatch (JSONPath syntax with
+  QueryLanguage: JSONata) similarly degrades
+  silently.
+domain: lifecycle
+severity: medium
+compliance:
+  soc2: "CC7.4, CC8.1"
+  nist_800_53_r5: "SI-11, CM-3"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    QueryLanguage / expression syntax
+    mismatch.
+  action: >
+    Choose one query language at the state-
+    machine level and ensure all expressions
+    match. Migrating between the two requires
+    re-writing every expression.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "query_lang_mismatch": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.query_lang_mismatch
+      op: eq
+      value: true
+defect: >
+  Expression syntax mismatched against declared
+  QueryLanguage.
+infection: >
+  Expressions evaluate as literal strings;
+  workflow output silently wrong.
+failure: >
+  Silent semantic break.
+tests:
+  - name: mismatch fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            query_lang_mismatch: true
+  - name: matched passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            query_lang_mismatch: false

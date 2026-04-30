@@ -1,0 +1,23 @@
+id: stepfunctions_asl_failure_invisible
+description: >
+  Step Functions ASL definition has multiple
+  failure-observability defects: Fail state
+  doesn't capture error context to a
+  persistent store, Catch matches States.ALL
+  (error class lost), or Task ResultPath:
+  null discards Task output (silent data flow
+  break). Each defect alone reduces
+  post-mortem signal; co-occurrence indicates
+  the workflow's failure mode is opaque.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.ASL.FAIL.NOCAPTURE.001
+  - CTL.STEPFUNCTIONS.ASL.CATCH.STATES.ALL.001
+  - CTL.STEPFUNCTIONS.ASL.RESULTPATH.NULL.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

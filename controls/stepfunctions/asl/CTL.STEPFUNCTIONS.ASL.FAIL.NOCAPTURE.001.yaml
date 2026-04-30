@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.FAIL.NOCAPTURE.001
+name: Step Functions Fail State Doesn't Capture Error Context To Persistent Store
+description: >
+  ASL terminal `Fail` state (or terminal Catch
+  handler routing to Fail) doesn't capture
+  the error context to a persistent store —
+  S3, CloudWatch, SNS, DDB. The execution
+  history retains the error for ~90 days, then
+  it's gone. Post-mortem of older failures has
+  no source data; on-call response to repeat
+  failures has no aggregate signal.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2, CC7.4"
+  nist_800_53_r5: "AU-3, AU-12, IR-4"
+  fedramp_moderate: "AU-3"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Fail state doesn't persist error context.
+  action: >
+    Add a Task state before Fail that writes
+    {execution_id, error_type, error_message,
+    input, last_state_output} to S3 / DDB.
+    Retain for incident-review window
+    (typically 1y).
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "fail_captures_error": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.fail_captures_error
+      op: eq
+      value: false
+defect: >
+  Fail state doesn't capture error context.
+infection: >
+  Post-mortem data unavailable beyond execution
+  history retention; aggregate signal lost.
+failure: >
+  Failure observability gap.
+tests:
+  - name: no capture fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            fail_captures_error: false
+  - name: capture present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            fail_captures_error: true

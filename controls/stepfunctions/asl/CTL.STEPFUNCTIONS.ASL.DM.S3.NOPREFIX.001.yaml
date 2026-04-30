@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.DM.S3.NOPREFIX.001
+name: Step Functions Distributed Map S3 Source Has No Prefix Filter
+description: >
+  Distributed Map's S3 `ItemReader` source has
+  no `Prefix` filter set. Map iterates every
+  object in the entire bucket. Cost-runaway
+  surface (per-object state-transition charge)
+  + possible cross-tenant data processing
+  if the bucket holds multi-tenant data.
+domain: lifecycle
+severity: high
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-3, SI-11"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.20, A.8.16"
+  ccm_v4: ["DSP-17", "BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    DM S3 source lacks Prefix filter.
+  action: >
+    Add Prefix to ItemReader pointing at the
+    intended object subset. For multi-tenant
+    buckets, Prefix should encode the tenant
+    boundary (e.g., `tenants/<id>/`).
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "dm_s3_no_prefix_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.dm_s3_no_prefix_count
+      op: gt
+      value: 0
+defect: >
+  DM S3 ItemReader without Prefix filter.
+infection: >
+  Iterates entire bucket; cost runaway, cross-
+  tenant processing.
+failure: >
+  Scope ungated.
+tests:
+  - name: no prefix fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            dm_s3_no_prefix_count: 1
+  - name: prefix present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            dm_s3_no_prefix_count: 0

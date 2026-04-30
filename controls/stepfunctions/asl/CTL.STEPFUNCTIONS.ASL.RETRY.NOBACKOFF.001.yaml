@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.RETRY.NOBACKOFF.001
+name: Step Functions Retry With BackoffRate 1.0 Hammers Downstream
+description: >
+  ASL `Retry` clause has `BackoffRate: 1.0` —
+  flat retry interval, no exponential backoff.
+  When the downstream is throttled or recovering,
+  retries hit it at full rate, deepening the
+  outage. Standard practice is BackoffRate >=
+  2.0 (each retry doubles the wait).
+domain: lifecycle
+severity: medium
+compliance:
+  soc2: "CC7.4, A1.1"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Retry BackoffRate: 1.0 (no backoff).
+  action: >
+    Set BackoffRate >= 2.0; pair with
+    IntervalSeconds >= 1 and MaxAttempts <= 5.
+    Add MaxDelaySeconds (engine 2.x) to cap
+    long backoffs.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "retry_no_backoff_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.retry_no_backoff_count
+      op: gt
+      value: 0
+defect: >
+  Retry BackoffRate: 1.0.
+infection: >
+  Retries hammer downstream during throttle /
+  outage; recovery delayed.
+failure: >
+  Backoff discipline absent.
+tests:
+  - name: no backoff fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            retry_no_backoff_count: 1
+  - name: backoff present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            retry_no_backoff_count: 0

@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.CHOICE.NODEFAULT.001
+name: Step Functions Choice State Lacks Default Clause
+description: >
+  ASL `Choice` state has no `Default` clause.
+  When input doesn't match any `Choices` rule,
+  Step Functions terminates the execution
+  with `States.NoChoiceMatched`. Production
+  workflows should always have an explicit
+  Default for unexpected input — even if it
+  routes to a Fail state with a captured
+  error.
+domain: lifecycle
+severity: medium
+compliance:
+  soc2: "CC7.4"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Choice state has no Default clause.
+  action: >
+    Add Default clause routing to a Fail
+    state with explicit error / cause, or to
+    a known-safe handling path.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "choice_without_default_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.choice_without_default_count
+      op: gt
+      value: 0
+defect: >
+  Choice state without Default.
+infection: >
+  Unmatched input → States.NoChoiceMatched
+  termination; silent unexpected-data fail-out.
+failure: >
+  Edge-case handling absent.
+tests:
+  - name: no default fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            choice_without_default_count: 1
+  - name: default present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            choice_without_default_count: 0

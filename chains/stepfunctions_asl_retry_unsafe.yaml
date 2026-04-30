@@ -1,0 +1,22 @@
+id: stepfunctions_asl_retry_unsafe
+description: >
+  Step Functions ASL definition has multiple
+  Retry-clause defects: MaxAttempts: 0
+  (effectively disabled), BackoffRate: 1.0
+  (hammers downstream during throttle), or
+  Retry matches States.ALL (retries
+  non-retryable errors). Each defect alone
+  produces brittle resilience; co-occurrence
+  indicates Retry was set up but never tuned.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.ASL.RETRY.NOATTEMPTS.001
+  - CTL.STEPFUNCTIONS.ASL.RETRY.NOBACKOFF.001
+  - CTL.STEPFUNCTIONS.ASL.RETRY.STATES.ALL.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

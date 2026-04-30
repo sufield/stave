@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2485
-**Pack hash:** `a3a778b26bdaed188c0d01fc31a90717b05885f9ab83e71efe9514d1f6f5f3ae`
+**Total controls:** 2505
+**Pack hash:** `fff2cc51eaab4797a553a45749cc67ee1e96313fd3bc2af3dcfb81a66922cf6d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 260 |
-| high | 1082 |
+| high | 1090 |
 | info | 16 |
-| low | 184 |
-| medium | 943 |
+| low | 187 |
+| medium | 952 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,14 +23,15 @@
 | availability | 2 |
 | capacity | 3 |
 | cryptography | 3 |
-| detect | 21 |
+| detect | 22 |
 | detection | 98 |
 | encrypt | 10 |
 | encryption | 92 |
-| exposure | 1167 |
+| exposure | 1168 |
 | governance | 520 |
 | hygiene | 16 |
 | identity | 393 |
+| lifecycle | 18 |
 | network | 28 |
 | resilience | 29 |
 | secrets | 4 |
@@ -35400,6 +35401,311 @@ SSM Run Command allows executing arbitrary commands on managed EC2 instances. Wi
 AWS Systems Manager Parameter Store parameters that store values in String or StringList type when their path indicates sensitive content are readable by any IAM principal with ssm:GetParameter. SecureString parameters are KMS-encrypted at rest and require kms:Decrypt to read. This control checks the parameter type field — not the parameter value.
 
 **Remediation:** Create a new SecureString parameter with the same value and update all references. SSM does not support changing parameter type in place — you must create a new parameter. Use aws ssm put-parameter --name <path> --type SecureString --value <value> --overwrite.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.CATCH.MISSING.001
+
+**Step Functions Task State Lacks Catch Clause On Failure-Prone Downstream**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4, A1.2;
+
+Step Functions ASL definition has a `Task` state with no `Catch` clause invoking a downstream service that can fail (Lambda, DDB, API call). Without `Catch`, any error propagates as workflow termination — no cleanup, no compensation, no operator notification. Production workflows need explicit error paths.
+
+**Remediation:** Add Catch with explicit error name and Next state for the failure path:
+  "Catch": [{
+    "ErrorEquals": ["States.TaskFailed"],
+    "Next": "HandleError",
+    "ResultPath": "$.error"
+  }]
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.CATCH.STATES.ALL.001
+
+**Step Functions Catch Matches States.ALL Routing All Errors To Same Path**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4;
+
+ASL `Catch` clause matches `States.ALL` and routes every error type to the same handler. States.ALL conflates retryable transient errors with permanent ones (validation, permissions, malformed input) — the handler cannot distinguish "retry this" from "page on-call." Different error classes need different paths.
+
+**Remediation:** Replace with multiple Catch clauses keyed on specific ErrorEquals values (States.TaskFailed, States.Timeout, Lambda.Unknown, custom error names from the workflow).
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.CHOICE.NODEFAULT.001
+
+**Step Functions Choice State Lacks Default Clause**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4;
+
+ASL `Choice` state has no `Default` clause. When input doesn't match any `Choices` rule, Step Functions terminates the execution with `States.NoChoiceMatched`. Production workflows should always have an explicit Default for unexpected input — even if it routes to a Fail state with a captured error.
+
+**Remediation:** Add Default clause routing to a Fail state with explicit error / cause, or to a known-safe handling path.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.DM.CHILD.IAM.INHERIT.001
+
+**Step Functions Distributed Map Child Executions Inherit Parent's Broad IAM**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; soc2: CC6.1, CC6.3;
+
+Distributed Map's child executions inherit the parent state machine's IAM execution role. If the parent role is broadly scoped (already a defect from SF-2), every child execution multiplies the blast radius — thousands of concurrent processes operating with the same broad permissions, any of which can be compromised by a malicious input record.
+
+**Remediation:** Define a separate child execution role for Distributed Map iterations. Scope the child role to only the actions a single iteration needs.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.DM.NO.ITEMBATCHER.001
+
+**Step Functions Distributed Map Lacks ItemBatcher Configuration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SC-5; iso_27001_2022: A.8.16; nist_800_53_r5: SC-5, CM-7; soc2: CC8.1;
+
+Distributed Map state has no `ItemBatcher` config when the input is large. Without batching, each item runs as a separate child execution — Standard pricing per state transition is paid per item, inflating cost. Downstream services that accept batches (DDB BatchWriteItem, Kinesis PutRecords) are also called per-item instead of per-batch.
+
+**Remediation:** Add ItemBatcher with MaxItemsPerBatch matching downstream batch limit (DDB: 25, Kinesis: 500, Lambda: workload-dependent). Cost reduces by N× (batch-size factor).
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.DM.NO.RESULTWRITER.001
+
+**Step Functions Distributed Map Lacks ResultWriter For Large Outputs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4;
+
+Distributed Map state has no `ResultWriter` configured. Map output is collected in-memory and capped at the 256 KB execution-payload limit. Aggregate output truncates silently when the limit is hit; downstream sees partial results without explicit signal. ResultWriter writes per-iteration outputs to S3, sidestepping the limit.
+
+**Remediation:** Add ResultWriter pointing at an S3 bucket. Configure bucket policy to deny non-VPC writes and use SSE-KMS.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.DM.NO.TOLERANCE.001
+
+**Step Functions Distributed Map Has No Failure Tolerance Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4, A1.2;
+
+Distributed Map state has no `ToleratedFailureCount` or `ToleratedFailurePercentage`. A single child- iteration failure aborts the entire fan-out; partial results may be lost. Conversely a too-high tolerance hides failure rates that should page on-call. Both directions need explicit thresholds.
+
+**Remediation:** Set ToleratedFailurePercentage: 1 (typical) or ToleratedFailureCount aligned with workload's acceptable error rate. Combine with ResultWriter to capture failed-iteration metadata.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.DM.S3.NOPREFIX.001
+
+**Step Functions Distributed Map S3 Source Has No Prefix Filter**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.20, A.8.16; nist_800_53_r5: AC-3, SI-11; soc2: CC6.1, CC8.1;
+
+Distributed Map's S3 `ItemReader` source has no `Prefix` filter set. Map iterates every object in the entire bucket. Cost-runaway surface (per-object state-transition charge) + possible cross-tenant data processing if the bucket holds multi-tenant data.
+
+**Remediation:** Add Prefix to ItemReader pointing at the intended object subset. For multi-tenant buckets, Prefix should encode the tenant boundary (e.g., `tenants/<id>/`).
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.FAIL.NOCAPTURE.001
+
+**Step Functions Fail State Doesn't Capture Error Context To Persistent Store**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-3; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-3, AU-12, IR-4; soc2: CC7.2, CC7.4;
+
+ASL terminal `Fail` state (or terminal Catch handler routing to Fail) doesn't capture the error context to a persistent store — S3, CloudWatch, SNS, DDB. The execution history retains the error for ~90 days, then it's gone. Post-mortem of older failures has no source data; on-call response to repeat failures has no aggregate signal.
+
+**Remediation:** Add a Task state before Fail that writes {execution_id, error_type, error_message, input, last_state_output} to S3 / DDB. Retain for incident-review window (typically 1y).
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.MAP.LARGE.NOTDISTRIBUTED.001
+
+**Step Functions Inline Map With Large Input Should Be Distributed Map**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11, SC-5; soc2: CC7.4, A1.1;
+
+Inline (legacy) Map state runs with input arrays large enough to hit the inline limit (Standard: ~25,000 history events; Express: hard limit ~30 items in some builds). Beyond the inline limit, executions fail mid-run with no partial-result recovery. Distributed Map (ProcessorConfig.Mode: DISTRIBUTED) was introduced specifically to handle large inputs.
+
+**Remediation:** Migrate to Distributed Map: add `ItemProcessor.ProcessorConfig.Mode: DISTRIBUTED`. Workflow definition shape changes; test thoroughly.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.MAP.MAXCONCURRENCY.ZERO.001
+
+**Step Functions Map State Sets MaxConcurrency To Zero (Unlimited)**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11, SC-5; soc2: CC7.4, A1.1;
+
+ASL `Map` state sets `MaxConcurrency: 0` — ASL semantics treat 0 as "no limit," same as the field being absent. Common confusion: operator intends "process zero items" or "default" but actually configures unbounded fan-out.
+
+**Remediation:** Set explicit positive value (typical: 50). If "no concurrency" was intended, omit Map entirely.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.MAP.NOCATCH.001
+
+**Step Functions Map State Lacks Catch Clause**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4, A1.2;
+
+ASL `Map` state (inline or distributed) has no `Catch` clause. Single iteration failure aborts the whole Map; downstream cleanup is not defined. For distributed Map, failures can also bypass `ToleratedFailureCount` if the Map itself errors before iteration begins.
+
+**Remediation:** Add Catch clause routing to compensation / failure state. For distributed Map, also configure `ToleratedFailureCount` / `ToleratedFailurePercentage`.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.MAP.NOMAXCONCURRENCY.001
+
+**Step Functions Map State Has No MaxConcurrency Limit**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11, SC-5; soc2: CC7.4, A1.1;
+
+ASL `Map` state has no `MaxConcurrency` field set. Map fans out per-iteration with no bounded parallelism — for a 10K-item input, 10K Lambda invocations land simultaneously, exhausting Lambda concurrent-execution reserves and throttling everything else in the account.
+
+**Remediation:** Set MaxConcurrency to a value that won't saturate downstream (e.g., 50 for Lambda workloads where reserved concurrency is 1000). Tune based on Container Insights metrics on first run.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.PARALLEL.NOCATCH.001
+
+**Step Functions Parallel State Lacks Catch Clause**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4, A1.2;
+
+ASL `Parallel` state has no `Catch` clause. Failure in any child branch terminates the whole Parallel; surviving branches have no defined cleanup path. Compensating transactions, partial results, or branch- specific error reporting are impossible without a Catch.
+
+**Remediation:** Add Catch clause routing to a compensation state. Track which branch failed via ResultPath: $.errorContext.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.QUERY.LANG.MISMATCH.001
+
+**Step Functions ASL Uses JSONata Syntax With QueryLanguage JSONPath**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11, CM-3; soc2: CC7.4, CC8.1;
+
+ASL definition contains expressions that look like JSONata syntax (e.g., `{% $variable %}`, `$contains()`) but the state machine's `QueryLanguage` field is `JSONPath` (or unset, defaulting to JSONPath). The expressions silently evaluate as literal strings rather than being interpreted — workflow runs but produces wrong output. The reverse mismatch (JSONPath syntax with QueryLanguage: JSONata) similarly degrades silently.
+
+**Remediation:** Choose one query language at the state- machine level and ensure all expressions match. Migrating between the two requires re-writing every expression.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.RESULTPATH.NULL.001
+
+**Step Functions Task Discards Output With ResultPath Null**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4;
+
+ASL Task state has `ResultPath: null` — discards the Task's output entirely; next state sees the Task's input unchanged. Sometimes intentional (when the Task is a side-effect like SNS publish), but commonly a copy-paste mistake that breaks the downstream's expected data flow. Worse, it hides errors: a failed Task whose output contained the error code now appears identical to a successful one.
+
+**Remediation:** Specify ResultPath that places output where downstream expects it. Use null only for side-effect Tasks where output is intentionally ignored, and document that intent.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.RETRY.NOATTEMPTS.001
+
+**Step Functions Retry Clause With MaxAttempts Zero**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4, A1.2;
+
+ASL `Retry` clause has `MaxAttempts: 0` — effectively disables retry. Transient failures (DDB throttling, Lambda cold-start timeout, SDK 5xx) propagate as task failure on first attempt. Standard mitigation for these is automatic retry; explicitly disabling it indicates retry was set up but never tuned, or a misunderstanding.
+
+**Remediation:** Set MaxAttempts to a sensible value (3-5 for typical transient errors, with BackoffRate >= 2.0). Or remove the Retry block entirely if no retry is intended.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.RETRY.NOBACKOFF.001
+
+**Step Functions Retry With BackoffRate 1.0 Hammers Downstream**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4, A1.1;
+
+ASL `Retry` clause has `BackoffRate: 1.0` — flat retry interval, no exponential backoff. When the downstream is throttled or recovering, retries hit it at full rate, deepening the outage. Standard practice is BackoffRate >= 2.0 (each retry doubles the wait).
+
+**Remediation:** Set BackoffRate >= 2.0; pair with IntervalSeconds >= 1 and MaxAttempts <= 5. Add MaxDelaySeconds (engine 2.x) to cap long backoffs.
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.RETRY.STATES.ALL.001
+
+**Step Functions Retry Matches States.ALL Including Non-Retryable Errors**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4;
+
+ASL `Retry` matches `States.ALL` including permanent / non-retryable errors (States.Permissions, States.Runtime, validation failures). Retrying these is pointless — they will fail every attempt at the configured rate, just delaying the visible failure and wasting compute / downstream calls.
+
+**Remediation:** Restrict to retryable transient errors (Lambda.ServiceException, Lambda.AWSLambdaException, States.Timeout, DynamoDB.ProvisionedThroughputExceeded).
+
+---
+
+### CTL.STEPFUNCTIONS.ASL.WAIT.HARDCODED.001
+
+**Step Functions Wait State Uses Hardcoded Seconds Instead Of SecondsPath**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: CM-7; iso_27001_2022: A.8.32; nist_800_53_r5: CM-7; soc2: CC8.1;
+
+ASL `Wait` state uses hardcoded `Seconds` instead of `SecondsPath` (or `TimestampPath`). Wait duration is fixed at definition time; per-execution tuning, dynamic backoff, or timeout adjustment requires UpdateStateMachine + new version. Operators commonly want to tune Wait without redeploy.
+
+**Remediation:** Replace with SecondsPath that reads from workflow input or a Pass state's output. For polling patterns, use exponential increase based on retry count.
 
 ---
 

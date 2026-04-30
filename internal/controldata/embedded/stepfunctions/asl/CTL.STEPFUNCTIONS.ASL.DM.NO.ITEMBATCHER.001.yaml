@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.DM.NO.ITEMBATCHER.001
+name: Step Functions Distributed Map Lacks ItemBatcher Configuration
+description: >
+  Distributed Map state has no `ItemBatcher`
+  config when the input is large. Without
+  batching, each item runs as a separate
+  child execution — Standard pricing
+  per state transition is paid per item,
+  inflating cost. Downstream services that
+  accept batches (DDB BatchWriteItem, Kinesis
+  PutRecords) are also called per-item
+  instead of per-batch.
+domain: lifecycle
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "SC-5, CM-7"
+  fedramp_moderate: "SC-5"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Distributed Map without ItemBatcher.
+  action: >
+    Add ItemBatcher with MaxItemsPerBatch
+    matching downstream batch limit (DDB: 25,
+    Kinesis: 500, Lambda: workload-dependent).
+    Cost reduces by N× (batch-size factor).
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "dm_no_itembatcher_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.dm_no_itembatcher_count
+      op: gt
+      value: 0
+defect: >
+  Distributed Map without ItemBatcher.
+infection: >
+  Per-item state-transition cost; downstream
+  per-item calls instead of batched.
+failure: >
+  Cost / efficiency degraded.
+tests:
+  - name: no batcher fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            dm_no_itembatcher_count: 1
+  - name: batcher present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            dm_no_itembatcher_count: 0

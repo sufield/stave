@@ -1,0 +1,23 @@
+id: stepfunctions_asl_state_design_unsafe
+description: >
+  Step Functions ASL definition has multiple
+  state-design defects: Wait state hardcoded
+  Seconds (operator must redeploy to tune),
+  query-language / expression syntax mismatch
+  (silent semantic break), or Distributed Map
+  child executions inherit parent's broad IAM
+  role. Each defect alone is a state-design
+  oversight; co-occurrence indicates the
+  workflow was authored without static review.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.ASL.WAIT.HARDCODED.001
+  - CTL.STEPFUNCTIONS.ASL.QUERY.LANG.MISMATCH.001
+  - CTL.STEPFUNCTIONS.ASL.DM.CHILD.IAM.INHERIT.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

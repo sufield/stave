@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.WAIT.HARDCODED.001
+name: Step Functions Wait State Uses Hardcoded Seconds Instead Of SecondsPath
+description: >
+  ASL `Wait` state uses hardcoded `Seconds`
+  instead of `SecondsPath` (or `TimestampPath`).
+  Wait duration is fixed at definition time;
+  per-execution tuning, dynamic backoff, or
+  timeout adjustment requires UpdateStateMachine
+  + new version. Operators commonly want to
+  tune Wait without redeploy.
+domain: lifecycle
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-7"
+  fedramp_moderate: "CM-7"
+  iso_27001_2022: "A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Wait Seconds hardcoded.
+  action: >
+    Replace with SecondsPath that reads from
+    workflow input or a Pass state's output.
+    For polling patterns, use exponential
+    increase based on retry count.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "wait_hardcoded_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.wait_hardcoded_count
+      op: gt
+      value: 0
+defect: >
+  Wait state uses hardcoded Seconds.
+infection: >
+  Tuning requires redeploy.
+failure: >
+  Operational rigidity.
+tests:
+  - name: hardcoded fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            wait_hardcoded_count: 1
+  - name: secondspath passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            wait_hardcoded_count: 0

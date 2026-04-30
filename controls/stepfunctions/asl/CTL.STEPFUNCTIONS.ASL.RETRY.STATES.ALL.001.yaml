@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.RETRY.STATES.ALL.001
+name: Step Functions Retry Matches States.ALL Including Non-Retryable Errors
+description: >
+  ASL `Retry` matches `States.ALL` including
+  permanent / non-retryable errors
+  (States.Permissions, States.Runtime,
+  validation failures). Retrying these is
+  pointless — they will fail every attempt at
+  the configured rate, just delaying the
+  visible failure and wasting compute /
+  downstream calls.
+domain: lifecycle
+severity: low
+compliance:
+  soc2: "CC7.4"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Retry ErrorEquals: ["States.ALL"].
+  action: >
+    Restrict to retryable transient errors
+    (Lambda.ServiceException,
+    Lambda.AWSLambdaException, States.Timeout,
+    DynamoDB.ProvisionedThroughputExceeded).
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "retry_states_all_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.retry_states_all_count
+      op: gt
+      value: 0
+defect: >
+  Retry matches States.ALL.
+infection: >
+  Permanent errors retried; failure delay,
+  resource waste.
+failure: >
+  Retry semantics broken.
+tests:
+  - name: states-all fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            retry_states_all_count: 1
+  - name: scoped retry passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            retry_states_all_count: 0

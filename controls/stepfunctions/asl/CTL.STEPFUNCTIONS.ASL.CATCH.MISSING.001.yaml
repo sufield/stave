@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.CATCH.MISSING.001
+name: Step Functions Task State Lacks Catch Clause On Failure-Prone Downstream
+description: >
+  Step Functions ASL definition has a `Task`
+  state with no `Catch` clause invoking a
+  downstream service that can fail (Lambda,
+  DDB, API call). Without `Catch`, any error
+  propagates as workflow termination — no
+  cleanup, no compensation, no operator
+  notification. Production workflows need
+  explicit error paths.
+domain: lifecycle
+severity: high
+compliance:
+  soc2: "CC7.4, A1.2"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Task state has no Catch clause.
+  action: >
+    Add Catch with explicit error name and
+    Next state for the failure path:
+      "Catch": [{
+        "ErrorEquals": ["States.TaskFailed"],
+        "Next": "HandleError",
+        "ResultPath": "$.error"
+      }]
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "tasks_without_catch": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.tasks_without_catch
+      op: gt
+      value: 0
+defect: >
+  At least one Task state has no Catch clause.
+infection: >
+  Failures terminate the workflow with no
+  cleanup or compensation; downstream
+  partial-state corruption.
+failure: >
+  Error-handling absent.
+tests:
+  - name: missing catch fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            tasks_without_catch: 3
+  - name: all caught passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            tasks_without_catch: 0

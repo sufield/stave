@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ASL.RESULTPATH.NULL.001
+name: Step Functions Task Discards Output With ResultPath Null
+description: >
+  ASL Task state has `ResultPath: null` —
+  discards the Task's output entirely; next
+  state sees the Task's input unchanged.
+  Sometimes intentional (when the Task is a
+  side-effect like SNS publish), but commonly
+  a copy-paste mistake that breaks the
+  downstream's expected data flow. Worse, it
+  hides errors: a failed Task whose output
+  contained the error code now appears
+  identical to a successful one.
+domain: lifecycle
+severity: low
+compliance:
+  soc2: "CC7.4"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Task ResultPath: null discards output.
+  action: >
+    Specify ResultPath that places output
+    where downstream expects it. Use null
+    only for side-effect Tasks where output
+    is intentionally ignored, and document
+    that intent.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "resultpath_null_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.resultpath_null_count
+      op: gt
+      value: 0
+defect: >
+  Task ResultPath: null discards Task output.
+infection: >
+  Downstream state sees stale input; data flow
+  break invisible.
+failure: >
+  Output flow severed.
+tests:
+  - name: null fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            resultpath_null_count: 1
+  - name: explicit path passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            resultpath_null_count: 0
