@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.IDEMPOTENCY.NAME.001
+name: Step Functions StartExecution Names Not Unique Per Logical Operation
+description: >
+  Step Functions caller doesn't pass a unique
+  `name` to StartExecution per logical
+  operation. Step Functions deduplicates by
+  name within a 90-second window —
+  identical names within that window silently
+  return the same execution ARN. Without
+  deliberate name-as-idempotency-key, two
+  retry attempts at the EXACT same moment
+  collide; later retries (>90s) succeed
+  causing duplicates.
+domain: lifecycle
+severity: medium
+compliance:
+  soc2: "CC7.4"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    StartExecution name not unique per
+    logical operation.
+  action: >
+    Pass an explicit name derived from the
+    logical operation ID (order-id,
+    request-id). Document the dedup window
+    explicitly. For long-window dedup, track
+    submitted IDs in DynamoDB before
+    StartExecution.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "startexec_name_idempotent": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.startexec_name_idempotent
+      op: eq
+      value: false
+defect: >
+  StartExecution name not unique per
+  logical operation.
+infection: >
+  Duplicate executions on retry across the
+  90s window; same logical request processed
+  twice.
+failure: >
+  Idempotency-as-name pattern broken.
+tests:
+  - name: not unique fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            startexec_name_idempotent: false
+  - name: unique passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            startexec_name_idempotent: true

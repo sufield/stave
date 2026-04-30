@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LOG.COST.RUNAWAY.001
+name: Step Functions Log Cost Runaway From Express + ALL Logging Or Standard ALL
+description: >
+  Step Functions logging configuration
+  produces high CloudWatch Logs volume:
+  Express workflow with `Level: ALL` (high
+  per-event ingest cost; ingest >> Express
+  per-request cost), or Standard workflow
+  with `Level: ALL` and high event-rate.
+  CloudWatch Logs ingestion bills per GB —
+  log cost can dwarf compute cost.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-7"
+  fedramp_moderate: "CM-7"
+  iso_27001_2022: "A.8.6"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Log volume / cost runaway.
+  action: >
+    Lower Level (FATAL or ERROR for high-vol
+    Express; INFO for Standard). Add
+    log-volume CloudWatch alarm. Use Kinesis
+    Firehose subscription with S3 export
+    + lifecycle for cost-effective retention.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "cost": {
+          "log_cost_balanced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.cost.log_cost_balanced
+      op: eq
+      value: false
+defect: >
+  Log cost / volume runaway.
+infection: >
+  CWL ingest dominates workflow cost.
+failure: >
+  Log economics not tuned.
+tests:
+  - name: imbalance fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          cost:
+            log_cost_balanced: false
+  - name: balanced passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          cost:
+            log_cost_balanced: true

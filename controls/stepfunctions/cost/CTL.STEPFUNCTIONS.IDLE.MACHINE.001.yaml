@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.IDLE.MACHINE.001
+name: Step Functions State Machine Idle With No Executions In 30+ Days
+description: >
+  Step Functions state machine has had no
+  executions in 30+ days. Dead inventory:
+  contributes to IAM permission surface,
+  retains historical event log entries that
+  consume storage, and complicates inventory
+  audits.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  iso_27001_2022: "A.5.9, A.8.10"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Idle 30+ days.
+  action: >
+    Decide: decommission and delete state
+    machine + role, or document active
+    intent (e.g., DR / seasonal). If
+    keeping, tag accordingly so periodic
+    review skips it.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "cost": {
+          "idle_days": 30
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.cost.idle_days
+      op: gt
+      value: 30
+defect: >
+  No executions in 30+ days.
+infection: >
+  Dead inventory; permission surface
+  unjustified.
+failure: >
+  Cleanup gap.
+tests:
+  - name: 90d fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:old"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          cost:
+            idle_days: 90
+  - name: active passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          cost:
+            idle_days: 5

@@ -1,0 +1,20 @@
+id: stepfunctions_kms_hygiene_decay
+description: >
+  Step Functions state machine has multiple
+  KMS hygiene defects: secret leak via
+  unredacted log capture, KMS key rotation
+  off, or single-region KMS key on production.
+  Each defect alone is a hygiene gap;
+  co-occurrence indicates KMS custody was set
+  up but never reviewed. Threshold of 2 fires
+  when at least two defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.ENCRYPT.LOG.SECRET.LEAK.001
+  - CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOROTATION.001
+  - CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOMULTIREGION.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - encryption_bypass

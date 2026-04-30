@@ -1,0 +1,24 @@
+id: stepfunctions_lambda_governance_decay
+description: >
+  Step Functions Lambda integration has
+  multiple governance defects: Lambda in
+  different region than state machine, Lambda
+  execution role drifts from workflow role,
+  Lambda logs not correlated with workflow
+  execution ID, or async-invoked Lambda
+  without DLQ. Each defect alone is a
+  governance / observability gap;
+  co-occurrence indicates the Lambda contract
+  is unowned. Threshold of 2 fires when at
+  least two defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.LAMBDA.CROSSREGION.001
+  - CTL.STEPFUNCTIONS.LAMBDA.ROLE.DRIFT.001
+  - CTL.STEPFUNCTIONS.LAMBDA.LOG.UNCORRELATED.001
+  - CTL.STEPFUNCTIONS.LAMBDA.DLQ.MISSING.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

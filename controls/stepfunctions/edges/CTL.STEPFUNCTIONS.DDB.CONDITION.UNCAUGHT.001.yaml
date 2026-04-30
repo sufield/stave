@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.DDB.CONDITION.UNCAUGHT.001
+name: Step Functions DynamoDB UpdateItem Condition Failures Not Caught
+description: >
+  Step Functions Task using DynamoDB
+  UpdateItem with a `ConditionExpression`
+  has no Catch on
+  `DynamoDB.ConditionalCheckFailedException`.
+  Conditional-write failures (item state
+  drifted, version conflict) abort the
+  workflow rather than retry / handle.
+  Optimistic-locking patterns require
+  explicit conflict handling.
+domain: lifecycle
+severity: medium
+compliance:
+  soc2: "CC7.4"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    DDB ConditionalCheckFailed not caught.
+  action: >
+    Add Catch on
+    DynamoDB.ConditionalCheckFailedException
+    routing to a re-read + retry path or to
+    a documented conflict-resolution state.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "edges": {
+          "ddb_condition_caught": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.edges.uses_ddb_condition
+      op: eq
+      value: true
+    - field: properties.compute.edges.ddb_condition_caught
+      op: eq
+      value: false
+defect: >
+  DDB ConditionalCheckFailed not caught.
+infection: >
+  Optimistic-locking conflicts abort
+  workflow.
+failure: >
+  Conflict path not handled.
+tests:
+  - name: uncaught fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          edges:
+            uses_ddb_condition: true
+            ddb_condition_caught: false
+  - name: caught passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          edges:
+            uses_ddb_condition: true
+            ddb_condition_caught: true

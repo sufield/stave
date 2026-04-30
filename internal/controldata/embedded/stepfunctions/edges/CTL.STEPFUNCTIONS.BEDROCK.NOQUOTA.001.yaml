@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.BEDROCK.NOQUOTA.001
+name: Step Functions Bedrock Model Invocation Without Quota / Throttle Guard
+description: >
+  Step Functions Task invokes Bedrock model
+  (InvokeModel / Converse) without bounded
+  invocation rate or quota guard. Bedrock
+  bills per-token; runaway loops or large
+  Map fan-out can incur substantial cost in
+  minutes. Workflow should bound
+  per-execution model calls (Map
+  MaxConcurrency, Wait between calls,
+  upstream input validation).
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-7"
+  fedramp_moderate: "CM-7"
+  iso_27001_2022: "A.8.6"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Bedrock invocation without rate guard.
+  action: >
+    Bound per-execution Bedrock calls via
+    Map MaxConcurrency (e.g., 5) and
+    upstream input validation (max items,
+    max prompt length). Add Catch on
+    Bedrock throttle errors with backoff.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "edges": {
+          "bedrock_quota_guarded": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.edges.uses_bedrock
+      op: eq
+      value: true
+    - field: properties.compute.edges.bedrock_quota_guarded
+      op: eq
+      value: false
+defect: >
+  Bedrock invocation without rate guard.
+infection: >
+  Runaway inference cost; per-token bill
+  unbounded.
+failure: >
+  Cost-runaway risk on AI surface.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          edges:
+            uses_bedrock: true
+            bedrock_quota_guarded: false
+  - name: guarded passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          edges:
+            uses_bedrock: true
+            bedrock_quota_guarded: true

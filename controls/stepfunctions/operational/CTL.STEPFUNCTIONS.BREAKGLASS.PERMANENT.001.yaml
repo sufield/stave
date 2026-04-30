@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.BREAKGLASS.PERMANENT.001
+name: Step Functions Operator Break-Glass states:* Role Permanently Active
+description: >
+  Organization has a break-glass IAM role
+  with `states:*` permissions that is
+  permanently assumable rather than gated
+  behind a just-in-time elevation flow.
+  Permanent break-glass = always-on
+  workflow-admin capability for any caller
+  in the trust policy.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  pci_dss_v4.0: "7.2.4"
+  nist_800_53_r5: "AC-2, AC-6"
+  fedramp_moderate: "AC-2"
+  iso_27001_2022: "A.5.15, A.5.18"
+  ccm_v4: ["IAM-02", "IAM-09"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Break-glass role permanently active.
+  action: >
+    Move break-glass behind JIT elevation
+    (AWS IAM Identity Center / Permission
+    Sets with approval workflow).
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "operational": {
+          "breakglass_jit_only": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.operational.breakglass_jit_only
+      op: eq
+      value: false
+defect: >
+  Break-glass role permanently active.
+infection: >
+  Always-on admin path; any compromise of
+  trusted callers yields admin.
+failure: >
+  Permanent admin tier.
+tests:
+  - name: permanent fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          operational:
+            breakglass_jit_only: false
+  - name: jit passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          operational:
+            breakglass_jit_only: true

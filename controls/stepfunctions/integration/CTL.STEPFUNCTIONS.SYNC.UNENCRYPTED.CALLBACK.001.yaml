@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.SYNC.UNENCRYPTED.CALLBACK.001
+name: Step Functions .sync Callback Channel SNS / SQS Without SSE-KMS
+description: >
+  Step Functions Task using `.sync` integration
+  receives the downstream's terminal-state
+  notification via SNS or SQS that doesn't
+  have SSE-KMS enabled. Callback payloads
+  carry the Task token plus the downstream
+  result; cleartext SNS / SQS exposes them
+  to anyone with read access on the channel.
+domain: encrypt
+severity: high
+compliance:
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.5.1, 4.2.1"
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-04"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    Callback channel without SSE-KMS.
+  action: >
+    Enable SSE-KMS on the SNS topic / SQS
+    queue used for callback. Use a
+    customer-managed CMK aligned with the
+    workflow's definition key.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "encrypt": {
+          "callback_channel_encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.encrypt.has_sync_callback
+      op: eq
+      value: true
+    - field: properties.compute.encrypt.callback_channel_encrypted
+      op: eq
+      value: false
+defect: >
+  Sync callback channel without SSE-KMS.
+infection: >
+  Token + result exposed to channel readers.
+failure: >
+  Cleartext callback path.
+tests:
+  - name: unencrypted fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          encrypt:
+            has_sync_callback: true
+            callback_channel_encrypted: false
+  - name: encrypted passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          encrypt:
+            has_sync_callback: true
+            callback_channel_encrypted: true

@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.EMR.SERVERLESS.NOTIMEOUT.001
+name: Step Functions EMR Serverless .sync Job Without Configured Timeout
+description: >
+  Step Functions Task using EMR Serverless
+  `.sync` integration runs a job without an
+  explicit job-runtime timeout. EMR Serverless
+  bills per second of compute; runaway jobs
+  incur cost until the workflow's overall
+  timeout (or no timeout — billing
+  indefinitely).
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-7"
+  fedramp_moderate: "CM-7"
+  iso_27001_2022: "A.8.6"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EMR Serverless .sync without job timeout.
+  action: >
+    Pass `executionTimeoutMinutes` in the
+    Parameters. Document expected runtime
+    based on input shape.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "edges": {
+          "emr_job_timeout_set": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.edges.uses_emr_sync
+      op: eq
+      value: true
+    - field: properties.compute.edges.emr_job_timeout_set
+      op: eq
+      value: false
+defect: >
+  EMR Serverless job without timeout.
+infection: >
+  Runaway job bills until workflow timeout
+  fires.
+failure: >
+  Cost-runaway risk.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          edges:
+            uses_emr_sync: true
+            emr_job_timeout_set: false
+  - name: present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          edges:
+            uses_emr_sync: true
+            emr_job_timeout_set: true

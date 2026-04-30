@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.SYNC.NOCATCH.001
+name: Step Functions .sync Integration Lacks Catch Clause
+description: >
+  Step Functions Task using `.sync` integration
+  has no `Catch`. When the downstream
+  resource fails post-submission (job times
+  out, container OOMs, model training
+  diverges), the workflow has no defined
+  cleanup path. Resources may remain in a
+  partial / running state — Glue jobs that
+  still hold concurrency, EMR clusters that
+  still bill, SageMaker endpoints that still
+  serve.
+domain: lifecycle
+severity: high
+compliance:
+  soc2: "CC7.4, A1.2"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    .sync Task without Catch.
+  action: >
+    Add Catch routing to a cleanup state that
+    explicitly stops / cancels / terminates
+    the downstream resource. Standard pattern
+    for Glue: glue:StopJobRun via Lambda task.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "sync_no_catch_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.sync_no_catch_count
+      op: gt
+      value: 0
+defect: >
+  .sync Task without Catch.
+infection: >
+  Resources held in partial state; cost
+  accrues; concurrency consumed.
+failure: >
+  Cleanup path absent.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            sync_no_catch_count: 1
+  - name: present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            sync_no_catch_count: 0

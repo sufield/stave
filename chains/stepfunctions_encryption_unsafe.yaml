@@ -1,0 +1,24 @@
+id: stepfunctions_encryption_unsafe
+description: >
+  Step Functions state machine has multiple
+  at-rest encryption defects: definition
+  encrypted with AWS-owned key (no customer
+  custody), per-execution KMS encryption
+  disabled (regulated workloads non-compliant),
+  or definition / execution KMS keys differ
+  (rotation breaks one or the other historical
+  record). Each defect alone weakens the
+  encryption boundary; co-occurrence indicates
+  encryption was set up without coherent key
+  custody. Threshold of 2 fires when at least
+  two defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.ENCRYPT.DEFINITION.AWSOWNED.001
+  - CTL.STEPFUNCTIONS.ENCRYPT.EXEC.OFF.001
+  - CTL.STEPFUNCTIONS.ENCRYPT.KEY.DRIFT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - encryption_bypass

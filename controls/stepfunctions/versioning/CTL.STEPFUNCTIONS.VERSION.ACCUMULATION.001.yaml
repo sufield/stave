@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.VERSION.ACCUMULATION.001
+name: Step Functions Old Versions Accumulate Without Cleanup
+description: >
+  Step Functions state machine has many
+  retained versions (>20) without cleanup.
+  Storage cost is minor but inventory cost is
+  real: list-versions API calls slow,
+  CloudFormation drift detection paginates
+  through them, audit reviews can't quickly
+  identify "what was running last quarter."
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  iso_27001_2022: "A.5.9"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Old versions accumulate.
+  action: >
+    Set up a cleanup pipeline: keep last 5
+    versions + named-tagged version per
+    quarter for audit. Automate via Lambda
+    triggered weekly.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "version_count": 5
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.version_count
+      op: gt
+      value: 20
+defect: >
+  > 20 retained versions.
+infection: >
+  Inventory bloat; slow list operations;
+  audit harder.
+failure: >
+  Cleanup hygiene gap.
+tests:
+  - name: 50 versions fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            version_count: 50
+  - name: 5 versions passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            version_count: 5

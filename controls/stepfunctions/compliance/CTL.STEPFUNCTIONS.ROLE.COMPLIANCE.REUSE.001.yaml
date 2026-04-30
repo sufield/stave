@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ROLE.COMPLIANCE.REUSE.001
+name: Step Functions IAM Role Re-Used Across Compliance Boundaries
+description: >
+  Step Functions execution role is shared
+  between workflows in different compliance
+  scopes (e.g., HIPAA-scoped workflow shares
+  role with non-HIPAA workflow). Audit scope
+  for the role must include both worlds;
+  any compliance reduction in one workflow
+  affects the other; per-scope IAM
+  conditions break.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC1.5, CC6.1"
+  pci_dss_v4.0: "7.2.4"
+  hipaa: "164.308(a)(4)"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.10, A.5.15"
+  ccm_v4: ["IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Role shared across compliance scopes.
+  action: >
+    Split role per compliance scope. Document
+    scope tags on each role. Pair with ABAC:
+    aws:ResourceTag/compliance-scope must
+    match aws:PrincipalTag/compliance-scope.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "compliance": {
+          "role_compliance_isolated": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.compliance.role_compliance_isolated
+      op: eq
+      value: false
+defect: >
+  Role shared across compliance scopes.
+infection: >
+  Audit-scope inflation; per-scope IAM
+  conditions ineffective.
+failure: >
+  Compliance-boundary IAM gap.
+tests:
+  - name: shared fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          compliance:
+            role_compliance_isolated: false
+  - name: isolated passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          compliance:
+            role_compliance_isolated: true

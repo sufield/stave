@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.IAC.COMPLIANCE.DRIFT.001
+name: Step Functions IaC Configuration Drifts Between Regulated And Non-Regulated Envs
+description: >
+  Step Functions IaC modules used for
+  regulated workflows differ from those
+  used for non-regulated workflows in
+  ways that break the "regulated workflows
+  inherit at-least-as-strict" property:
+  e.g., regulated has Level: ALL logging
+  but a non-regulated env's module sets
+  Level: ERROR, and code-shared between
+  envs fingerprints both at the looser
+  setting.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC1.5, CC8.1"
+  nist_800_53_r5: "CM-3, CA-7"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.5.10, A.8.32"
+  ccm_v4: ["GRC-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    IaC compliance drift between envs.
+  action: >
+    Audit IaC module fingerprints across
+    envs. Reconcile via shared "regulated"
+    module that non-regulated envs can opt
+    into but cannot weaken.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "compliance": {
+          "iac_compliance_consistent": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.compliance.iac_compliance_consistent
+      op: eq
+      value: false
+defect: >
+  IaC drifts between regulated /
+  non-regulated envs.
+infection: >
+  Compliance posture inconsistent;
+  regulated config can be silently relaxed.
+failure: >
+  Drift across compliance boundaries.
+tests:
+  - name: drift fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          compliance:
+            iac_compliance_consistent: false
+  - name: consistent passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          compliance:
+            iac_compliance_consistent: true

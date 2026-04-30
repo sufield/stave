@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LAMBDA.ROLE.DRIFT.001
+name: Step Functions Lambda Execution Role Diverges From Workflow Role
+description: >
+  Lambda function called from a Step Functions
+  Task has an execution role with permission
+  scope significantly different from the
+  state machine's execution role. The
+  workflow's IAM is what operators audit;
+  the Lambda's IAM hides the actual reach of
+  the workflow. Common pattern: workflow
+  role is tightly scoped, Lambda role has
+  `*:*` "for development."
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.20"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Lambda role drifts from workflow role.
+  action: >
+    Audit Lambda execution role permissions
+    against workflow role. Where Lambda
+    needs broader scope, document why; where
+    not, narrow the Lambda role to match.
+    Use IAM Access Analyzer's unused-
+    access findings.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "lambda_role_drift": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.lambda_role_drift
+      op: eq
+      value: true
+defect: >
+  Lambda role broader than workflow role.
+infection: >
+  Effective workflow reach is the union of
+  both roles; audit only sees the workflow
+  role.
+failure: >
+  IAM scope opacity.
+tests:
+  - name: drift fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_role_drift: true
+  - name: aligned passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_role_drift: false

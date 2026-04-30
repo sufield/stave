@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.TAGS.VERSION.DRIFT.001
+name: Step Functions Tags Drift Between State Machine Versions
+description: >
+  Step Functions state machine and its
+  versions don't share a consistent set of
+  tags (`team`, `cost-center`, `compliance`).
+  Cost allocation reports differ across
+  versions; ABAC / governance scoping breaks
+  on the version that drifted.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  iso_27001_2022: "A.5.9"
+  ccm_v4: ["GRC-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Tags drift across versions.
+  action: >
+    Apply tags at create-version time via
+    IaC. Reconcile via tag-policy with
+    organizations:CreateTags. Backfill via
+    bulk tag-update script.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "tags_consistent_across_versions": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.tags_consistent_across_versions
+      op: eq
+      value: false
+defect: >
+  Tags drift across versions.
+infection: >
+  Cost / governance reports inconsistent.
+failure: >
+  Tag hygiene gap.
+tests:
+  - name: drift fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            tags_consistent_across_versions: false
+  - name: consistent passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            tags_consistent_across_versions: true

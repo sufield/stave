@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ENCRYPT.EXEC.OFF.001
+name: Step Functions Execution Input/Output Not Encrypted With Customer Key
+description: >
+  Step Functions execution input and output
+  payloads are not encrypted with a customer-
+  managed KMS key. Execution data persists in
+  the execution history and (when
+  IncludeExecutionData is on) in CloudWatch
+  Logs. Without per-execution KMS encryption,
+  these payloads are protected only by AWS
+  service-level encryption — adequate for
+  general data, insufficient for regulated
+  PII / PHI / PCI-scope workloads.
+domain: encrypt
+severity: high
+compliance:
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.5.1"
+  hipaa: "164.312(a)(2)(iv), 164.312(e)(2)(ii)"
+  nist_800_53_r5: "SC-12, SC-28"
+  fedramp_moderate: "SC-28"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-04"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Per-execution KMS encryption disabled.
+  action: >
+    Configure EncryptionConfiguration with
+    KmsDataKeyReusePeriodSeconds and KmsKeyId
+    pointing at a customer-managed CMK.
+    Documentation: docs.aws.amazon.com/step-
+    functions/latest/dg/encryption-at-rest.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "encrypt": {
+          "exec_kms_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.encrypt.exec_kms_enabled
+      op: eq
+      value: false
+defect: >
+  Execution input/output not encrypted with
+  customer key.
+infection: >
+  Payloads protected only by service-level
+  encryption; regulated workloads non-compliant.
+failure: >
+  Per-execution at-rest gap.
+tests:
+  - name: off fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          encrypt:
+            exec_kms_enabled: false
+  - name: on passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          encrypt:
+            exec_kms_enabled: true

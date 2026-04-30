@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.WAITFORCALLBACK.NOTIMEOUT.001
+name: Step Functions waitForCallback Without Callback Timeout
+description: >
+  Step Functions Task uses Lambda
+  `.waitForCallback` (or any waitFor pattern)
+  without a callback timeout. If the
+  callback worker fails to call
+  `SendTaskSuccess` / `SendTaskFailure` (worker
+  crashed, queue lost the message,
+  permission revoked), the workflow waits
+  forever. Combined with no overall
+  TimeoutSeconds, this is a permanent stall.
+domain: lifecycle
+severity: high
+compliance:
+  soc2: "CC7.4, A1.2"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    waitForCallback without timeout.
+  action: >
+    Add TimeoutSeconds matching expected
+    worker turnaround + margin. Add Catch
+    on States.Timeout to clean up.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "waitforcallback_no_timeout_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.waitforcallback_no_timeout_count
+      op: gt
+      value: 0
+defect: >
+  waitForCallback without timeout.
+infection: >
+  Worker failure → permanent workflow stall.
+failure: >
+  Failure-mode unrecoverable.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            waitforcallback_no_timeout_count: 1
+  - name: present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            waitforcallback_no_timeout_count: 0

@@ -1,0 +1,23 @@
+id: stepfunctions_versioning_unsafe
+description: >
+  Step Functions deployment has multiple
+  versioning defects: state machine versioning
+  disabled, default alias targets $LATEST,
+  aliases without weighted routing (no
+  canary), or IAM Resource pinned to
+  unversioned ARN. Each defect alone breaks
+  safe-deploy guarantees; co-occurrence
+  indicates the deploy contract was authored
+  without canary discipline. Threshold of 2
+  fires when at least two defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.VERSION.OFF.001
+  - CTL.STEPFUNCTIONS.ALIAS.LATEST.001
+  - CTL.STEPFUNCTIONS.ALIAS.NOWEIGHTED.001
+  - CTL.STEPFUNCTIONS.ALIAS.ROLE.UNVERSIONED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LAMBDA.RESOURCE.LATEST.001
+name: Step Functions Lambda Task References $LATEST Function Version
+description: >
+  Step Functions Task `Resource` references a
+  Lambda function ARN ending in `:$LATEST` or
+  with no version qualifier (defaulting to
+  $LATEST). Each new Lambda deploy mutates
+  the version $LATEST points at; in-flight
+  workflow executions hit the new code mid-run.
+  Production workflows should pin to a versioned
+  alias (`:prod`) or specific version (`:42`).
+domain: governance
+severity: high
+compliance:
+  soc2: "CC8.1, A1.2"
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Lambda Resource references $LATEST.
+  action: >
+    Pin to a versioned alias the deploy
+    pipeline updates atomically (e.g.,
+    `:prod`). Use weighted alias routing for
+    canary.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "lambda_resource_latest_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.lambda_resource_latest_count
+      op: gt
+      value: 0
+defect: >
+  Lambda Resource uses $LATEST.
+infection: >
+  Mid-run code change; deploy-during-run
+  unpredictability.
+failure: >
+  Version pinning absent.
+tests:
+  - name: latest fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_resource_latest_count: 1
+  - name: pinned passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_resource_latest_count: 0

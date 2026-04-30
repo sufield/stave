@@ -1,0 +1,23 @@
+id: stepfunctions_sync_unsafe
+description: >
+  Step Functions .sync integration has
+  multiple defects: no Retry on control-plane
+  errors, no Catch on downstream failure, or
+  Catch path doesn't stop the running
+  resource (Glue / EMR / Batch / SageMaker
+  keeps billing post-workflow). Each defect
+  alone leaves a failure-mode unhandled;
+  co-occurrence indicates the integration was
+  authored without operational rehearsal.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.SYNC.NORETRY.001
+  - CTL.STEPFUNCTIONS.SYNC.NOCATCH.001
+  - CTL.STEPFUNCTIONS.SYNC.NOCLEANUP.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

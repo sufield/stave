@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ENCRYPT.DEFINITION.AWSOWNED.001
+name: Step Functions State Machine Definition Encrypted With AWS-Owned Key
+description: >
+  Step Functions state machine definition is
+  encrypted with an AWS-owned key (default)
+  rather than a customer-managed KMS key.
+  AWS-owned keys are not auditable, can't be
+  selectively revoked, and can't be rotated
+  on a customer schedule. For regulated
+  workloads (HIPAA, PCI, SOC2), customer-
+  managed keys are required.
+domain: encrypt
+severity: high
+compliance:
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.5.1"
+  hipaa: "164.312(a)(2)(iv)"
+  nist_800_53_r5: "SC-12, SC-28"
+  fedramp_moderate: "SC-28"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-04", "CEK-09"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Definition encrypted with AWS-owned key.
+  action: >
+    Re-create state machine with
+    EncryptionConfiguration referencing a
+    customer-managed CMK. Migration is
+    blue-green; existing executions complete
+    on the old key.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "encrypt": {
+          "definition_uses_customer_key": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.encrypt.definition_uses_customer_key
+      op: eq
+      value: false
+defect: >
+  Definition uses AWS-owned key.
+infection: >
+  Key custody opaque; selective revoke /
+  rotation impossible.
+failure: >
+  Customer key control absent.
+tests:
+  - name: aws-owned fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          encrypt:
+            definition_uses_customer_key: false
+  - name: customer-managed passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          encrypt:
+            definition_uses_customer_key: true

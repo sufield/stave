@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.EB.UNVERSIONED.ARN.001
+name: Step Functions EventBridge Rule Targets Unversioned State Machine ARN
+description: >
+  EventBridge rule targets a Step Functions
+  state machine using its unversioned ARN.
+  Each new alias / version is automatically
+  exposed via the rule. If a deploy publishes
+  a buggy version, the rule starts firing
+  the bug immediately — alias-based canary
+  has no effect.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.2"
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EventBridge target is unversioned ARN.
+  action: >
+    Update rule's Target to use the alias
+    ARN. If multiple environments need
+    different aliases, add per-env rules.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "eb_targets_alias_arn": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.has_eventbridge_target
+      op: eq
+      value: true
+    - field: properties.compute.deployment.eb_targets_alias_arn
+      op: eq
+      value: false
+defect: >
+  EB rule targets unversioned ARN.
+infection: >
+  Bypasses alias-canary; any new version
+  hits production traffic.
+failure: >
+  Deploy boundary leaked.
+tests:
+  - name: unversioned fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            has_eventbridge_target: true
+            eb_targets_alias_arn: false
+  - name: alias passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            has_eventbridge_target: true
+            eb_targets_alias_arn: true

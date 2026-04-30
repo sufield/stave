@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2517
-**Pack hash:** `dcbcc34f7059534f57f05c0644b87fca7966c9d601d34d95fd83772f9aeee68d`
+**Total controls:** 2575
+**Pack hash:** `880482355c19699838b58a4cf5881e0040378e204f2e6c25fab3f4c63f1cae18`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 260 |
-| high | 1093 |
+| critical | 261 |
+| high | 1114 |
 | info | 16 |
-| low | 187 |
-| medium | 961 |
+| low | 196 |
+| medium | 988 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,15 +23,15 @@
 | availability | 2 |
 | capacity | 3 |
 | cryptography | 3 |
-| detect | 33 |
+| detect | 35 |
 | detection | 98 |
-| encrypt | 10 |
+| encrypt | 18 |
 | encryption | 92 |
-| exposure | 1168 |
-| governance | 521 |
+| exposure | 1169 |
+| governance | 555 |
 | hygiene | 16 |
 | identity | 393 |
-| lifecycle | 18 |
+| lifecycle | 31 |
 | network | 28 |
 | resilience | 29 |
 | secrets | 4 |
@@ -35404,6 +35404,21 @@ AWS Systems Manager Parameter Store parameters that store values in String or St
 
 ---
 
+### CTL.STEPFUNCTIONS.ACTIVITY.ZOMBIE.001
+
+**Step Functions Activity Worker Replaced By Integration But Not Decommissioned**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-8; iso_27001_2022: A.5.9; nist_800_53_r5: CM-8; soc2: CC8.1;
+
+Step Functions Activity (legacy worker pattern, polled via GetActivityTask) was replaced by a managed integration but the Activity itself was never deleted from the state machine's environment. Workers may still be polling; activity ARN occupies the namespace; CloudTrail still logs ListActivities.
+
+**Remediation:** DeleteActivity on the orphan ARN. Audit via ListActivities periodically and cross-check against in-use Activity ARNs in current state-machine definitions.
+
+---
+
 ### CTL.STEPFUNCTIONS.ALARM.EXEC.FAILED.001
 
 **Step Functions ExecutionsFailed Has No CloudWatch Alarm**
@@ -35461,6 +35476,66 @@ No CloudWatch alarm on `ExecutionTime` bounded by an SLO (e.g., p99 < 60s). Long
 No CloudWatch alarms on `ActivityScheduleTime` or `LambdaFunctionScheduleTime`. These metrics capture time-to-schedule (queue wait) on worker queues — high values mean workers are saturated. Without alarms, ingest queues back up invisibly until customer impact.
 
 **Remediation:** Alarm: ActivityScheduleTime p99 > 30s and LambdaFunctionScheduleTime p99 > 5s (workload-tunable). High values indicate worker / Lambda concurrency saturation.
+
+---
+
+### CTL.STEPFUNCTIONS.ALIAS.LATEST.001
+
+**Step Functions Default Alias Points To $LATEST Instead Of Versioned Target**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.8.32; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+Step Functions default alias points to `$LATEST` rather than a versioned alias. Each deploy moves $LATEST forward immediately; callers using the unqualified ARN hit the new code without canary or rollback path.
+
+**Remediation:** Re-point default alias to a versioned target updated atomically by the deploy pipeline (e.g., `prod` alias pointing at a specific version number).
+
+---
+
+### CTL.STEPFUNCTIONS.ALIAS.NOWEIGHTED.001
+
+**Step Functions Aliases Don't Use Weighted Routing For Canary Deploys**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.8.32; nist_800_53_r5: CM-3; soc2: CC8.1, A1.1;
+
+Step Functions aliases route 100% of StartExecution calls to a single version. Deploys are all-or-nothing; canary deploys (route 1% to new version, watch alarms, then ramp) impossible. Production deploys carry full risk on every change.
+
+**Remediation:** Configure weighted RoutingConfiguration when deploying new versions; e.g., new version 5%, prior version 95%, ramp over hours while watching ExecutionsFailed alarm.
+
+---
+
+### CTL.STEPFUNCTIONS.ALIAS.ROLE.UNVERSIONED.001
+
+**Step Functions Alias-Based StartExec But IAM Role References Unversioned ARN**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15; nist_800_53_r5: AC-6; soc2: CC6.1, CC8.1;
+
+Step Functions caller role grants `states:StartExecution` on the unversioned state-machine ARN, but the workflow uses versioned aliases. Alias-based callers work, but the IAM grant is broader than necessary — any new alias / version is automatically reachable. Defeats the purpose of canary deploys for IAM-tier scoping.
+
+**Remediation:** Pin the role's Resource to the alias ARN (or specific version ARN). Update pipeline to pass through alias on deploy.
+
+---
+
+### CTL.STEPFUNCTIONS.APIGW.UNVERSIONED.ARN.001
+
+**Step Functions API Gateway Integration Targets Unversioned State Machine ARN**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.8.32; nist_800_53_r5: CM-3; soc2: CC8.1, A1.2;
+
+API Gateway integration with Step Functions uses the unversioned state machine ARN. Same failure mode as EventBridge unversioned: any new alias / version is exposed; canary deploys have no effect on the API GW caller path.
+
+**Remediation:** Update integration request URI to use alias ARN. Pair API Gateway stage with state-machine alias for environment- aligned routing.
 
 ---
 
@@ -35769,6 +35844,81 @@ ASL `Wait` state uses hardcoded `Seconds` instead of `SecondsPath` (or `Timestam
 
 ---
 
+### CTL.STEPFUNCTIONS.BEDROCK.NOQUOTA.001
+
+**Step Functions Bedrock Model Invocation Without Quota / Throttle Guard**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-7; iso_27001_2022: A.8.6; nist_800_53_r5: CM-7; soc2: CC8.1, A1.1;
+
+Step Functions Task invokes Bedrock model (InvokeModel / Converse) without bounded invocation rate or quota guard. Bedrock bills per-token; runaway loops or large Map fan-out can incur substantial cost in minutes. Workflow should bound per-execution model calls (Map MaxConcurrency, Wait between calls, upstream input validation).
+
+**Remediation:** Bound per-execution Bedrock calls via Map MaxConcurrency (e.g., 5) and upstream input validation (max items, max prompt length). Add Catch on Bedrock throttle errors with backoff.
+
+---
+
+### CTL.STEPFUNCTIONS.BREAKGLASS.PERMANENT.001
+
+**Step Functions Operator Break-Glass states:* Role Permanently Active**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-2; iso_27001_2022: A.5.15, A.5.18; nist_800_53_r5: AC-2, AC-6; pci_dss_v4.0: 7.2.4; soc2: CC6.1, CC6.3;
+
+Organization has a break-glass IAM role with `states:*` permissions that is permanently assumable rather than gated behind a just-in-time elevation flow. Permanent break-glass = always-on workflow-admin capability for any caller in the trust policy.
+
+**Remediation:** Move break-glass behind JIT elevation (AWS IAM Identity Center / Permission Sets with approval workflow).
+
+---
+
+### CTL.STEPFUNCTIONS.DDB.CONDITION.UNCAUGHT.001
+
+**Step Functions DynamoDB UpdateItem Condition Failures Not Caught**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4;
+
+Step Functions Task using DynamoDB UpdateItem with a `ConditionExpression` has no Catch on `DynamoDB.ConditionalCheckFailedException`. Conditional-write failures (item state drifted, version conflict) abort the workflow rather than retry / handle. Optimistic-locking patterns require explicit conflict handling.
+
+**Remediation:** Add Catch on DynamoDB.ConditionalCheckFailedException routing to a re-read + retry path or to a documented conflict-resolution state.
+
+---
+
+### CTL.STEPFUNCTIONS.DELETION.PROTECTION.OFF.001
+
+**Step Functions Production State Machine Has No Deletion Protection**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-3, CP-9; soc2: CC8.1, A1.2;
+
+Step Functions production-tier state machine has no termination protection. A single DeleteStateMachine call (accidental, malicious, buggy automation) destroys the workflow irreversibly. Production state machines require an explicit deletion- protection flag or SCP guard.
+
+**Remediation:** Apply tag-based SCP that denies DeleteStateMachine on production-tagged machines. Pair with versioning so rollback is possible if something does delete.
+
+---
+
+### CTL.STEPFUNCTIONS.DEV.PROD.DATA.001
+
+**Step Functions Dev Region Workflow Processing Production Data**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.310(d); iso_27001_2022: A.5.10, A.8.20; nist_800_53_r5: AC-3, AC-21; soc2: CC1.5, CC6.1, CC8.1;
+
+Step Functions state machine in a dev / staging region or dev / staging account is processing production data (e.g., reading from a prod-tagged S3 bucket, querying a prod DDB table). Compliance audits often require strict environment-data separation; debug-tier observability and IAM in dev makes prod data more reachable than intended.
+
+**Remediation:** Cut prod-data access; replace with synthetic data fixtures. If a dev environment must validate against prod data, use a sanitized / pseudonymized snapshot.
+
+---
+
 ### CTL.STEPFUNCTIONS.DM.NOTRACING.001
 
 **Step Functions Distributed Map Has No Per-Iteration Tracing Configured**
@@ -35784,6 +35934,159 @@ Distributed Map child executions don't have X-Ray tracing or per-iteration loggi
 
 ---
 
+### CTL.STEPFUNCTIONS.DR.NOSECONDREGION.001
+
+**Step Functions Production Standard Workflow Not Deployed To DR Region**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-7; iso_27001_2022: A.8.13, A.8.14; nist_800_53_r5: CP-7, CP-9; soc2: CC7.4, A1.2;
+
+Step Functions production-tier Standard workflow has no equivalent deployed to a DR region. Region-failure event takes the workflow offline; restore is from-scratch rather than failover. IaC for the workflow doesn't include a region-equivalent configuration.
+
+**Remediation:** Replicate IaC to DR region. Pair with multi-region KMS, multi-region tables, multi-region Lambda. Test failover quarterly.
+
+---
+
+### CTL.STEPFUNCTIONS.EB.SHARED.MACHINE.001
+
+**Step Functions State Machine ARN Targeted By Many EventBridge Rules**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CP-7; iso_27001_2022: A.8.14; nist_800_53_r5: CP-7; soc2: A1.1, A1.2;
+
+One Step Functions state machine is the target of more than 10 EventBridge rules. Single point of failure for many event flows; one workflow defect impacts every feeding rule. Maintenance changes (deploy, pause, IAM update) cascade across all consumers without their owners knowing.
+
+**Remediation:** Split workflow by rule consumer-class. Or document dependency explicitly so each rule's owner knows their downstream is shared.
+
+---
+
+### CTL.STEPFUNCTIONS.EB.UNVERSIONED.ARN.001
+
+**Step Functions EventBridge Rule Targets Unversioned State Machine ARN**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.8.32; nist_800_53_r5: CM-3; soc2: CC8.1, A1.2;
+
+EventBridge rule targets a Step Functions state machine using its unversioned ARN. Each new alias / version is automatically exposed via the rule. If a deploy publishes a buggy version, the rule starts firing the bug immediately — alias-based canary has no effect.
+
+**Remediation:** Update rule's Target to use the alias ARN. If multiple environments need different aliases, add per-env rules.
+
+---
+
+### CTL.STEPFUNCTIONS.EMR.SERVERLESS.NOTIMEOUT.001
+
+**Step Functions EMR Serverless .sync Job Without Configured Timeout**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-7; iso_27001_2022: A.8.6; nist_800_53_r5: CM-7; soc2: CC8.1, A1.1;
+
+Step Functions Task using EMR Serverless `.sync` integration runs a job without an explicit job-runtime timeout. EMR Serverless bills per second of compute; runaway jobs incur cost until the workflow's overall timeout (or no timeout — billing indefinitely).
+
+**Remediation:** Pass `executionTimeoutMinutes` in the Parameters. Document expected runtime based on input shape.
+
+---
+
+### CTL.STEPFUNCTIONS.ENCRYPT.DEFINITION.AWSOWNED.001
+
+**Step Functions State Machine Definition Encrypted With AWS-Owned Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encrypt
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.7;
+
+Step Functions state machine definition is encrypted with an AWS-owned key (default) rather than a customer-managed KMS key. AWS-owned keys are not auditable, can't be selectively revoked, and can't be rotated on a customer schedule. For regulated workloads (HIPAA, PCI, SOC2), customer- managed keys are required.
+
+**Remediation:** Re-create state machine with EncryptionConfiguration referencing a customer-managed CMK. Migration is blue-green; existing executions complete on the old key.
+
+---
+
+### CTL.STEPFUNCTIONS.ENCRYPT.EXEC.OFF.001
+
+**Step Functions Execution Input/Output Not Encrypted With Customer Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encrypt
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv), 164.312(e)(2)(ii); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.7;
+
+Step Functions execution input and output payloads are not encrypted with a customer- managed KMS key. Execution data persists in the execution history and (when IncludeExecutionData is on) in CloudWatch Logs. Without per-execution KMS encryption, these payloads are protected only by AWS service-level encryption — adequate for general data, insufficient for regulated PII / PHI / PCI-scope workloads.
+
+**Remediation:** Configure EncryptionConfiguration with KmsDataKeyReusePeriodSeconds and KmsKeyId pointing at a customer-managed CMK. Documentation: docs.aws.amazon.com/step- functions/latest/dg/encryption-at-rest.
+
+---
+
+### CTL.STEPFUNCTIONS.ENCRYPT.KEY.DRIFT.001
+
+**Step Functions Definition And Execution KMS Keys Differ**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encrypt
+- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, CM-3; soc2: CC6.7, CC8.1;
+
+Step Functions state machine's definition encryption key differs from the per- execution data encryption key. Operators rotating one key out without rotating the other lose the ability to read either old definitions or old execution histories. Compliance / forensic recovery requires both keys; key custody must be coherent.
+
+**Remediation:** Align both EncryptionConfiguration KmsKeyId references to the same customer-managed CMK. Document the key custody decision. For multi-region DR, use a multi-region KMS key.
+
+---
+
+### CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOMULTIREGION.001
+
+**Step Functions KMS Key Single-Region Without Multi-Region Configuration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encrypt
+- **Compliance:** fedramp_moderate: CP-7; iso_27001_2022: A.8.24, A.8.14; nist_800_53_r5: CP-7, SC-12; soc2: CC7.4, A1.2;
+
+Step Functions state machine's KMS key is a single-region key. Cross-region disaster recovery requires a multi-region key (or manually replicated key material) — without it, restored state machines and execution histories in the alternate region cannot be decrypted. Region-failure DR plans that assume cross-region recovery fail at the KMS layer.
+
+**Remediation:** Create a multi-region key and replicate to the DR region. Migrate the state machine to use the multi-region key (blue-green). Document the recovery procedure.
+
+---
+
+### CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOROTATION.001
+
+**Step Functions KMS Key Has Automatic Rotation Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encrypt
+- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.4; soc2: CC6.7, CC8.1;
+
+Step Functions state machine's KMS key has automatic rotation disabled. AWS rotates the key material annually when enabled; without it, the same material protects data indefinitely. NIST / PCI-DSS guidance recommends automatic rotation for keys with long-lived data.
+
+**Remediation:** Enable automatic rotation:
+  aws kms enable-key-rotation
+    --key-id <key-id>
+Effective annually; safe for symmetric keys (no client coordination needed).
+
+---
+
+### CTL.STEPFUNCTIONS.ENCRYPT.LOG.SECRET.LEAK.001
+
+**Step Functions IncludeExecutionData Captures Secrets To CloudWatch Logs**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** encrypt
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.5.34, A.8.24; nist_800_53_r5: SC-28, SI-12; pci_dss_v4.0: 3.4.1, 3.5.1; soc2: CC6.1, CC6.7;
+
+Step Functions has `IncludeExecutionData: true` on a workflow whose payloads contain secrets / PII / PHI without input/output redaction. Logs end up holding the sensitive data; anyone with CloudWatch Logs read access reads it. The right pattern is IncludeExecutionData: true PLUS explicit redaction (Pass state mapping that strips secret fields) before the log-captured states.
+
+**Remediation:** Add a redaction Pass state that maps sensitive fields away from the payload before any state-with-Catch (and thus before logging captures the payload). Reference SecretsManager via `arn:aws:states:::aws-sdk:secretsmanager: getSecretValue` rather than embedding.
+
+---
+
 ### CTL.STEPFUNCTIONS.EVENTBRIDGE.STATUS.001
 
 **Step Functions Status Change Events Not Subscribed In EventBridge**
@@ -35796,6 +36099,81 @@ Distributed Map child executions don't have X-Ray tracing or per-iteration loggi
 No EventBridge rule subscribed to Step Functions `Execution Status Change` or `State Machine Status Change` events. Without these rules, terminal-state events (SUCCEEDED, FAILED, ABORTED, TIMED_OUT) and state-machine config changes (CREATE, UPDATE, DELETE) flow only to the audit log — no real-time hooks for downstream processing or notification.
 
 **Remediation:** Create rules: source aws.states, detail-type "Step Functions Execution Status Change" and "Step Functions State Machine Status Change". Route to SNS / Slack / SIEM.
+
+---
+
+### CTL.STEPFUNCTIONS.EXECUTION.HISTORY.RETENTION.001
+
+**Step Functions Old Execution History Not Configured For Retention Or Archival**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-11; hipaa: 164.530(j); iso_27001_2022: A.5.33; nist_800_53_r5: AU-11; pci_dss_v4.0: 10.5.1; soc2: CC7.2;
+
+Step Functions Standard execution history retains for ~90 days then is purged. Without explicit archival (CloudWatch Logs → S3 export, EventBridge → archive), forensic / compliance access to past executions ends at 90 days. Not directly a cost issue, but governance discipline that should accompany cost-tuning.
+
+**Remediation:** Subscribe `Execution Status Change` events (SF-5 control covers this); archive to S3 with lifecycle. Or wire CloudWatch Logs to Kinesis Firehose → long-retention S3.
+
+---
+
+### CTL.STEPFUNCTIONS.HISTORY.NOAUTOARCHIVE.001
+
+**Step Functions Old Executions Not Auto-Archived To Cold Storage**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-11; iso_27001_2022: A.5.33; nist_800_53_r5: AU-11; pci_dss_v4.0: 10.5.1; soc2: CC7.2;
+
+Step Functions Standard execution history ages out at ~90 days; without auto-archive, old execution data is gone for good. Even with EventBridge Status-Change events exported (SF-5), the per-step detail history doesn't survive. For long-tail audit, configure scheduled GetExecutionHistory + S3 export.
+
+**Remediation:** Schedule a daily / weekly Lambda that pages GetExecutionHistory for all completed-and-aged executions and writes to S3 with lifecycle.
+
+---
+
+### CTL.STEPFUNCTIONS.IAC.COMPLIANCE.DRIFT.001
+
+**Step Functions IaC Configuration Drifts Between Regulated And Non-Regulated Envs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.5.10, A.8.32; nist_800_53_r5: CM-3, CA-7; soc2: CC1.5, CC8.1;
+
+Step Functions IaC modules used for regulated workflows differ from those used for non-regulated workflows in ways that break the "regulated workflows inherit at-least-as-strict" property: e.g., regulated has Level: ALL logging but a non-regulated env's module sets Level: ERROR, and code-shared between envs fingerprints both at the looser setting.
+
+**Remediation:** Audit IaC module fingerprints across envs. Reconcile via shared "regulated" module that non-regulated envs can opt into but cannot weaken.
+
+---
+
+### CTL.STEPFUNCTIONS.IAC.CONSOLE.DRIFT.001
+
+**Step Functions State Machine Modified Outside IaC (Console Drift)**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, CM-3; soc2: CC8.1, CC7.1;
+
+Step Functions state machine's most recent configuration change (UpdateStateMachine) was performed by an IAM principal that is not the IaC automation role. Direct console / CLI changes bypass IaC review and create state divergence. Either next IaC apply reverts the change, or operators back-port it manually without review.
+
+**Remediation:** Identify via CloudTrail (eventName= UpdateStateMachine, source IP / userIdentity). Reproduce in IaC; revert if unauthorized. Add CloudWatch alarm: UpdateStateMachine events from non-IaC principals.
+
+---
+
+### CTL.STEPFUNCTIONS.IAC.OWNERSHIP.001
+
+**Step Functions IaC Module Lacks Ownership / On-Call Tags**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-8; iso_27001_2022: A.5.9, A.5.30; nist_800_53_r5: CM-8, IR-6; soc2: CC8.1, A1.1;
+
+Step Functions state machine's IaC module lacks `owner` and `oncall-rotation` tags pointing at a maintainer team. During incidents, on-call has no quick path to the owner; for production-tier workflows this delays response.
+
+**Remediation:** Add `owner` (team email or PagerDuty rotation), `oncall-rotation` (rotation name), `runbook` (URL). Enforce via tag-policy SCP.
 
 ---
 
@@ -35949,6 +36327,178 @@ Non-admin role granted Step Functions control- plane actions: `states:CreateStat
 
 ---
 
+### CTL.STEPFUNCTIONS.IDEMPOTENCY.NAME.001
+
+**Step Functions StartExecution Names Not Unique Per Logical Operation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4;
+
+Step Functions caller doesn't pass a unique `name` to StartExecution per logical operation. Step Functions deduplicates by name within a 90-second window — identical names within that window silently return the same execution ARN. Without deliberate name-as-idempotency-key, two retry attempts at the EXACT same moment collide; later retries (>90s) succeed causing duplicates.
+
+**Remediation:** Pass an explicit name derived from the logical operation ID (order-id, request-id). Document the dedup window explicitly. For long-window dedup, track submitted IDs in DynamoDB before StartExecution.
+
+---
+
+### CTL.STEPFUNCTIONS.IDLE.MACHINE.001
+
+**Step Functions State Machine Idle With No Executions In 30+ Days**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-8; iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-8; soc2: CC8.1;
+
+Step Functions state machine has had no executions in 30+ days. Dead inventory: contributes to IAM permission surface, retains historical event log entries that consume storage, and complicates inventory audits.
+
+**Remediation:** Decide: decommission and delete state machine + role, or document active intent (e.g., DR / seasonal). If keeping, tag accordingly so periodic review skips it.
+
+---
+
+### CTL.STEPFUNCTIONS.LAMBDA.CALLBACK.NOHEARTBEAT.001
+
+**Step Functions Lambda Callback Function Doesn't Honor Heartbeat**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4;
+
+Step Functions Task uses Lambda with `.waitForTaskToken` callback pattern but the Lambda function code doesn't call `SendTaskHeartbeat` periodically before completion. If Task has HeartbeatSeconds set, Lambda exceeding it triggers `States.Heartbeat` even when Lambda is still doing valid work.
+
+**Remediation:** Add periodic `SendTaskHeartbeat` calls in Lambda code (e.g., once per 30s in a long-running iteration). Or remove HeartbeatSeconds from the Task if no progress signal is needed.
+
+---
+
+### CTL.STEPFUNCTIONS.LAMBDA.CROSSREGION.001
+
+**Step Functions Lambda Function In Different Region Than State Machine**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-7; iso_27001_2022: A.5.10, A.8.20; nist_800_53_r5: SC-7, CM-7; soc2: CC8.1, A1.1;
+
+Step Functions Task references a Lambda function in a different AWS region than the state machine. Cross-region invocation has additional latency, doubled cost (data transfer), and complicates compliance scope (data may cross residency boundaries). Production workflows should keep Lambda in the same region.
+
+**Remediation:** Move Lambda to the workflow's region. For multi-region workflows, deploy per-region state machines + per-region Lambdas; avoid cross-region Lambda calls.
+
+---
+
+### CTL.STEPFUNCTIONS.LAMBDA.DLQ.MISSING.001
+
+**Step Functions Lambda Function Async Invocation DLQ Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11, AU-12; soc2: CC7.4, A1.2;
+
+Lambda function called via async invocation pattern (e.g., from Step Functions Map with high concurrency, or from EventBridge → Step Functions → Lambda chain) has no Dead Letter Queue configured. Lambda's internal retries can run out; without DLQ, the failure record is lost. For workflows that need at-least-once semantics on Lambda invocation, DLQ is required.
+
+**Remediation:** Configure DeadLetterConfig on the Lambda function pointing at SQS / SNS. Alarm on DLQ object count > 0 for prompt investigation.
+
+---
+
+### CTL.STEPFUNCTIONS.LAMBDA.LOG.UNCORRELATED.001
+
+**Step Functions Lambda Logs Not Correlatable With Workflow Execution Logs**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-3; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-3, AU-12; soc2: CC7.2;
+
+Lambda function called from Step Functions doesn't log the workflow's execution ID (passed via `$$.Execution.Id` context object). When debugging a failed execution, operators must correlate Lambda logs by timestamp — fragile and slow. Standard practice: include execution ID in every Lambda log line.
+
+**Remediation:** Pass `$$.Execution.Id` as a Parameters field; Lambda code logs it on every output line. Index Lambda logs in CloudWatch Logs Insights with the execution ID as a queryable field.
+
+---
+
+### CTL.STEPFUNCTIONS.LAMBDA.RES.POLICY.MISMATCH.001
+
+**Step Functions Lambda Reference Doesn't Match Function's Resource Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.20; nist_800_53_r5: AC-3, SI-11; soc2: CC6.1, A1.2;
+
+Step Functions Task references a Lambda function whose resource-based policy does not include `states.amazonaws.com` (with the right `aws:SourceArn` matching this state machine). Invocation fails at runtime with `AccessDenied`. Common after re- parenting a Lambda or when the Lambda was created by a different team.
+
+**Remediation:** Add a statement to the Lambda's resource policy:
+  Principal: states.amazonaws.com,
+  Action: lambda:InvokeFunction,
+  Condition: {
+    StringEquals: {
+      aws:SourceArn: <state-machine-arn>
+    }
+  }
+
+---
+
+### CTL.STEPFUNCTIONS.LAMBDA.RESOURCE.LATEST.001
+
+**Step Functions Lambda Task References $LATEST Function Version**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.8.32; nist_800_53_r5: CM-3; soc2: CC8.1, A1.2;
+
+Step Functions Task `Resource` references a Lambda function ARN ending in `:$LATEST` or with no version qualifier (defaulting to $LATEST). Each new Lambda deploy mutates the version $LATEST points at; in-flight workflow executions hit the new code mid-run. Production workflows should pin to a versioned alias (`:prod`) or specific version (`:42`).
+
+**Remediation:** Pin to a versioned alias the deploy pipeline updates atomically (e.g., `:prod`). Use weighted alias routing for canary.
+
+---
+
+### CTL.STEPFUNCTIONS.LAMBDA.ROLE.DRIFT.001
+
+**Step Functions Lambda Execution Role Diverges From Workflow Role**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.20; nist_800_53_r5: AC-6; soc2: CC6.1, CC6.3;
+
+Lambda function called from a Step Functions Task has an execution role with permission scope significantly different from the state machine's execution role. The workflow's IAM is what operators audit; the Lambda's IAM hides the actual reach of the workflow. Common pattern: workflow role is tightly scoped, Lambda role has `*:*` "for development."
+
+**Remediation:** Audit Lambda execution role permissions against workflow role. Where Lambda needs broader scope, document why; where not, narrow the Lambda role to match. Use IAM Access Analyzer's unused- access findings.
+
+---
+
+### CTL.STEPFUNCTIONS.LAMBDA.TIMEOUT.GT.TASK.001
+
+**Step Functions Lambda Function Timeout Exceeds Task TimeoutSeconds**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.8.32; nist_800_53_r5: CM-3, SI-11; soc2: CC8.1, A1.1;
+
+Lambda function's runtime `Timeout` setting is greater than the Step Functions Task's `TimeoutSeconds`. Task times out before Lambda completes; the Lambda continues running (and billing) but its output is discarded — Step Functions has already taken the timeout-error path. Result: cost for work the workflow couldn't use.
+
+**Remediation:** Set Task TimeoutSeconds >= Lambda Timeout + small margin (e.g., +10s). Or shorten Lambda Timeout if the workflow truly cannot wait.
+
+---
+
+### CTL.STEPFUNCTIONS.LAMBDA.UNPINNED.001
+
+**Step Functions Lambda Task Has No Alias / Version Pin**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.8.32; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+Step Functions Task `Resource` references a Lambda function without any alias or version qualifier (e.g., `arn:aws:lambda:::function:my-fn` rather than `:my-fn:prod`). Same effect as $LATEST but harder to spot in inventory because the ARN looks "explicit." Pin to alias for versioned routing.
+
+**Remediation:** Add `:prod` (or environment-appropriate alias) to every Lambda Resource ARN. CI enforces pin via terraform / CDK lint.
+
+---
+
 ### CTL.STEPFUNCTIONS.LOG.001
 
 **Step Functions State Machines Must Have Logging Enabled**
@@ -35961,6 +36511,21 @@ Non-admin role granted Step Functions control- plane actions: `states:CreateStat
 Step Functions state machines must emit execution logs to CloudWatch Logs. Without logging, workflow execution details and errors are invisible.
 
 **Remediation:** Enable execution logging to CloudWatch Logs.
+
+---
+
+### CTL.STEPFUNCTIONS.LOG.COST.RUNAWAY.001
+
+**Step Functions Log Cost Runaway From Express + ALL Logging Or Standard ALL**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-7; iso_27001_2022: A.8.6; nist_800_53_r5: CM-7; soc2: CC8.1;
+
+Step Functions logging configuration produces high CloudWatch Logs volume: Express workflow with `Level: ALL` (high per-event ingest cost; ingest >> Express per-request cost), or Standard workflow with `Level: ALL` and high event-rate. CloudWatch Logs ingestion bills per GB — log cost can dwarf compute cost.
+
+**Remediation:** Lower Level (FATAL or ERROR for high-vol Express; INFO for Standard). Add log-volume CloudWatch alarm. Use Kinesis Firehose subscription with S3 export + lifecycle for cost-effective retention.
 
 ---
 
@@ -36036,6 +36601,81 @@ Step Functions Standard workflow has `IncludeExecutionData: false`. Logs capture
 Step Functions log destination CloudWatch group has retention < 365 days (the most permissive common regulatory minimum). HIPAA requires 6 years, PCI-DSS 1 year, SOX 7 years. Logs that age out before the retention window create an audit / forensic gap regardless of how thoroughly they were collected.
 
 **Remediation:** Update CWL retention to match compliance scope; pair with S3 Glacier export for long retention (HIPAA: 2557, PCI: 365, SOX: 2557).
+
+---
+
+### CTL.STEPFUNCTIONS.NAME.COLLISION.001
+
+**Step Functions Multiple State Machines Share The Same Name Across Environments**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-8; iso_27001_2022: A.5.9; nist_800_53_r5: CM-8; soc2: CC8.1;
+
+Multiple Step Functions state machines share the same name across accounts / environments (e.g., `process-orders` in dev, staging, and prod). Operators referring to "the process-orders state machine" must always disambiguate by account. Cross-environment IaC promotion scripts can target the wrong one.
+
+**Remediation:** Suffix names with environment (`process-orders-prod`, `process-orders-dev`). Or use account- isolation only and avoid cross-account name confusion via runbook discipline.
+
+---
+
+### CTL.STEPFUNCTIONS.NOTAGS.001
+
+**Step Functions State Machine Missing Cost / Environment / Compliance Tags**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-8; iso_27001_2022: A.5.9, A.5.30; nist_800_53_r5: CM-8, PM-3; soc2: CC8.1;
+
+Step Functions state machine has no `cost-center`, `team`, `owner`, `environment`, or `compliance-scope` tags. Cost allocation can't roll up by team / project; environment-class can't be determined from inventory; compliance scoping (HIPAA / PCI / SOC2 / GDPR) requires manual lookup per machine.
+
+**Remediation:** Apply tags: cost-center, team, owner, environment, compliance-scope. Activate AWS Cost Allocation Tags via Billing Console. Enforce via tag policy + SCP.
+
+---
+
+### CTL.STEPFUNCTIONS.RATE.LIMIT.NONOTIFY.001
+
+**Step Functions No Notification On StartExecution Rate Throttling**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
+
+Step Functions IAM role used to invoke StartExecution has no rate-limit on the caller side, and no CloudWatch alarm / EventBridge rule configured to notify on approach to the StartExecution burst / account-level concurrent quota. Sudden bursts (event-storm scenarios) silently exhaust quota; downstream consumers see failed invocations without traceable source.
+
+**Remediation:** Create CloudWatch alarm: ExecutionsStarted rate > 80% of region quota. Subscribe on-call to detect surges before quota is hit.
+
+---
+
+### CTL.STEPFUNCTIONS.REGION.UNAUTHORIZED.001
+
+**Step Functions State Machine In Unauthorized Region**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.310(d); iso_27001_2022: A.5.10, A.5.34; nist_800_53_r5: AC-3, CA-7; pci_dss_v4.0: 12.10.1; soc2: CC1.5, CC6.1;
+
+Step Functions state machine deployed in an AWS region not on the org's authorized list. Data residency requirements (GDPR EU-only, country-specific data laws) and internal policy violated. Common cause: dev experiment promoted to production without region review.
+
+**Remediation:** Re-deploy in authorized region; migrate in-flight execution state via state-machine restart in target region. DeleteStateMachine in unauthorized region. Verify via organizations:DescribeOrganization + aws:RequestedRegion SCP guard.
+
+---
+
+### CTL.STEPFUNCTIONS.ROLE.COMPLIANCE.REUSE.001
+
+**Step Functions IAM Role Re-Used Across Compliance Boundaries**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.308(a)(4); iso_27001_2022: A.5.10, A.5.15; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.2.4; soc2: CC1.5, CC6.1;
+
+Step Functions execution role is shared between workflows in different compliance scopes (e.g., HIPAA-scoped workflow shares role with non-HIPAA workflow). Audit scope for the role must include both worlds; any compliance reduction in one workflow affects the other; per-scope IAM conditions break.
+
+**Remediation:** Split role per compliance scope. Document scope tags on each role. Pair with ABAC: aws:ResourceTag/compliance-scope must match aws:PrincipalTag/compliance-scope.
 
 ---
 
@@ -36208,6 +36848,21 @@ Step Functions execution role's trust policy trusts `states.amazonaws.com` but l
 
 ---
 
+### CTL.STEPFUNCTIONS.SAGEMAKER.NORUNTIME.001
+
+**Step Functions SageMaker Job Without MaxRuntimeInSeconds**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-7; iso_27001_2022: A.8.6; nist_800_53_r5: CM-7; soc2: CC8.1, A1.1;
+
+Step Functions Task using SageMaker Training / Processing job has no `MaxRuntimeInSeconds` configured. Diverging models, runaway data shuffling, or stuck workers consume training capacity until SageMaker's hard limits (1 day default) — full instance-hour bill for zero output.
+
+**Remediation:** Pass MaxRuntimeInSeconds in the Parameters. Tune based on observed training duration + 50% margin.
+
+---
+
 ### CTL.STEPFUNCTIONS.SECRETS.001
 
 **Step Functions State Machines Must Not Contain Secrets in Definitions**
@@ -36220,6 +36875,238 @@ Step Functions execution role's trust policy trusts `states.amazonaws.com` but l
 Step Functions state machine definitions must not contain hardcoded secrets. Definition JSON is visible in the console, API responses, and CloudTrail logs.
 
 **Remediation:** Replace hardcoded secrets with Secrets Manager or Parameter Store references.
+
+---
+
+### CTL.STEPFUNCTIONS.SYNC.NOCATCH.001
+
+**Step Functions .sync Integration Lacks Catch Clause**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4, A1.2;
+
+Step Functions Task using `.sync` integration has no `Catch`. When the downstream resource fails post-submission (job times out, container OOMs, model training diverges), the workflow has no defined cleanup path. Resources may remain in a partial / running state — Glue jobs that still hold concurrency, EMR clusters that still bill, SageMaker endpoints that still serve.
+
+**Remediation:** Add Catch routing to a cleanup state that explicitly stops / cancels / terminates the downstream resource. Standard pattern for Glue: glue:StopJobRun via Lambda task.
+
+---
+
+### CTL.STEPFUNCTIONS.SYNC.NOCLEANUP.001
+
+**Step Functions .sync Catch Path Doesn't Stop Underlying Resource**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-7; iso_27001_2022: A.8.16; nist_800_53_r5: CM-7, SI-11; soc2: CC7.4, A1.1;
+
+Step Functions `.sync` Task has Catch but the Catch routes only to a logging / Fail state — doesn't actually stop the running Glue job, EMR cluster, Batch job, or SageMaker job. Resources continue running / billing after workflow termination. Cost runaway for high-cost integrations (SageMaker training, EMR clusters).
+
+**Remediation:** Add a state in the Catch path that calls the resource's stop API. Glue: glue:StopJobRun. EMR: emr:TerminateJobFlows. Batch: batch:CancelJob. SageMaker: sagemaker:StopTrainingJob.
+
+---
+
+### CTL.STEPFUNCTIONS.SYNC.NORETRY.001
+
+**Step Functions .sync Integration Lacks Retry Clause**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4, A1.2;
+
+Step Functions Task using `.sync` integration (Glue, EMR, Batch, SageMaker, ECS) has no `Retry` clause. `.sync` waits for the downstream resource to terminate; transient failures (control-plane API errors, pre-warmed instance unavailability, capacity errors during job submit) abort the workflow immediately. Standard practice is Retry on the control-plane error class; the resource itself doesn't need to be retried, only the submission.
+
+**Remediation:** Add Retry on control-plane error class:
+  "Retry": [{
+    "ErrorEquals": ["States.TaskFailed",
+      "Glue.AWSGlueException"],
+    "IntervalSeconds": 2,
+    "MaxAttempts": 3,
+    "BackoffRate": 2.0
+  }]
+
+---
+
+### CTL.STEPFUNCTIONS.SYNC.SILENT.FALLBACK.001
+
+**Step Functions .sync Resource Doesn't Support Sync Semantics**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.8.32; nist_800_53_r5: CM-3; soc2: CC8.1;
+
+Step Functions Task uses `.sync` integration pattern on a resource type that doesn't natively support synchronous semantics. Step Functions silently falls back to the request-response pattern; the workflow proceeds before the downstream completes. Operators expect "wait for done" behavior and get fire-and-forget instead.
+
+**Remediation:** Replace .sync with `.waitForTaskToken` and a worker that posts SendTaskSuccess on completion. Or use a polling pattern with Wait + Choice.
+
+---
+
+### CTL.STEPFUNCTIONS.SYNC.UNENCRYPTED.CALLBACK.001
+
+**Step Functions .sync Callback Channel SNS / SQS Without SSE-KMS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encrypt
+- **Compliance:** fedramp_moderate: SC-28; iso_27001_2022: A.8.24; nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1, 4.2.1; soc2: CC6.7;
+
+Step Functions Task using `.sync` integration receives the downstream's terminal-state notification via SNS or SQS that doesn't have SSE-KMS enabled. Callback payloads carry the Task token plus the downstream result; cleartext SNS / SQS exposes them to anyone with read access on the channel.
+
+**Remediation:** Enable SSE-KMS on the SNS topic / SQS queue used for callback. Use a customer-managed CMK aligned with the workflow's definition key.
+
+---
+
+### CTL.STEPFUNCTIONS.SYNCEXP.APIGW.TIMEOUT.001
+
+**Step Functions Synchronous Express Behind API Gateway With Timeout Race**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4, A1.1;
+
+Synchronous Express workflow invoked from API Gateway has the workflow's max-duration >= API Gateway's integration timeout (default 29s, max 30s). When the workflow approaches the timeout, API Gateway returns 504 to the caller while the workflow keeps running — the caller retries thinking it failed; duplicate workflow invocations result.
+
+**Remediation:** Set workflow TimeoutSeconds <= 25 (5s margin under API GW's 30s ceiling). For workflows that need > 30s, use async Express + DynamoDB-backed status polling.
+
+---
+
+### CTL.STEPFUNCTIONS.TAGS.VERSION.DRIFT.001
+
+**Step Functions Tags Drift Between State Machine Versions**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-8; iso_27001_2022: A.5.9; nist_800_53_r5: CM-8; soc2: CC8.1;
+
+Step Functions state machine and its versions don't share a consistent set of tags (`team`, `cost-center`, `compliance`). Cost allocation reports differ across versions; ABAC / governance scoping breaks on the version that drifted.
+
+**Remediation:** Apply tags at create-version time via IaC. Reconcile via tag-policy with organizations:CreateTags. Backfill via bulk tag-update script.
+
+---
+
+### CTL.STEPFUNCTIONS.TOKEN.PLAINTEXT.001
+
+**Step Functions Task Token Logged Or Persisted In Plaintext**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encrypt
+- **Compliance:** fedramp_moderate: SC-28; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: IA-5, SC-28; pci_dss_v4.0: 3.5.1, 8.3.2; soc2: CC6.1, CC6.7;
+
+Step Functions Task token (used by `.waitForTaskToken` integrations) is captured in workflow logs (CloudWatch), persisted in SQS / SNS / S3 without encryption, or otherwise reachable in plaintext. Anyone reading the captured token can call `SendTaskSuccess` / `SendTaskFailure` for the workflow, spoofing worker responses and progressing the workflow with attacker-supplied data.
+
+**Remediation:** Mask token in log output (workflow logging.IncludeExecutionData filter or Pass-state redaction). Worker queue (SQS / SNS) carrying the token must use SSE-KMS. Treat the token as a credential.
+
+---
+
+### CTL.STEPFUNCTIONS.VERSION.ACCUMULATION.001
+
+**Step Functions Old Versions Accumulate Without Cleanup**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-8; iso_27001_2022: A.5.9; nist_800_53_r5: CM-8; soc2: CC8.1;
+
+Step Functions state machine has many retained versions (>20) without cleanup. Storage cost is minor but inventory cost is real: list-versions API calls slow, CloudFormation drift detection paginates through them, audit reviews can't quickly identify "what was running last quarter."
+
+**Remediation:** Set up a cleanup pipeline: keep last 5 versions + named-tagged version per quarter for audit. Automate via Lambda triggered weekly.
+
+---
+
+### CTL.STEPFUNCTIONS.VERSION.OFF.001
+
+**Step Functions State Machine Versioning Disabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.8.32; nist_800_53_r5: CM-3, CM-2; soc2: CC8.1, A1.2;
+
+Step Functions state machine has versioning disabled (PublishToVersion: false). Each deploy mutates the state machine in place; in-flight executions continue on the new definition mid-run. No rollback target exists; no canary; no immutable record of what was actually deployed at a given time.
+
+**Remediation:** Enable PublishToVersion. Use aliases to route executions; rollback by repointing the alias.
+
+---
+
+### CTL.STEPFUNCTIONS.WAITFORCALLBACK.NOTIMEOUT.001
+
+**Step Functions waitForCallback Without Callback Timeout**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4, A1.2;
+
+Step Functions Task uses Lambda `.waitForCallback` (or any waitFor pattern) without a callback timeout. If the callback worker fails to call `SendTaskSuccess` / `SendTaskFailure` (worker crashed, queue lost the message, permission revoked), the workflow waits forever. Combined with no overall TimeoutSeconds, this is a permanent stall.
+
+**Remediation:** Add TimeoutSeconds matching expected worker turnaround + margin. Add Catch on States.Timeout to clean up.
+
+---
+
+### CTL.STEPFUNCTIONS.WAITFORTOKEN.HEARTBEAT.GT.TIMEOUT.001
+
+**Step Functions HeartbeatSeconds Greater Than TimeoutSeconds (Heartbeat Never Enforced)**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4;
+
+Step Functions Task has `HeartbeatSeconds` >= `TimeoutSeconds`. The Task hits its overall timeout before any heartbeat would have been expected — heartbeat is effectively disabled. Worker hangs are caught only by the longer overall timeout, defeating the point of fast-fail liveness checking.
+
+**Remediation:** Set HeartbeatSeconds < TimeoutSeconds (typical: HeartbeatSeconds 60-120 for multi-hour TimeoutSeconds tasks).
+
+---
+
+### CTL.STEPFUNCTIONS.WAITFORTOKEN.NOHEARTBEAT.001
+
+**Step Functions .waitForTaskToken Without HeartbeatSeconds**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** fedramp_moderate: SI-11; iso_27001_2022: A.8.16; nist_800_53_r5: SI-11; soc2: CC7.4, A1.2;
+
+Step Functions Task using `.waitForTaskToken` integration has no `HeartbeatSeconds` configured. Worker can hang indefinitely; Step Functions waits forever (or until the workflow's overall TimeoutSeconds, if set). Heartbeat-based liveness check is the standard pattern; workers send `SendTaskHeartbeat` every N seconds.
+
+**Remediation:** Add HeartbeatSeconds matching the worker's expected heartbeat interval + margin (e.g., worker heartbeats every 30s, HeartbeatSeconds: 60). Worker must call SendTaskHeartbeat within the interval.
+
+---
+
+### CTL.STEPFUNCTIONS.WAITFORTOKEN.NOVALIDATE.001
+
+**Step Functions waitForTaskToken Worker Doesn't Validate Token Identity**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.16, A.8.20; nist_800_53_r5: AC-3, IA-2; pci_dss_v4.0: 8.3.1; soc2: CC6.1, CC6.6;
+
+Step Functions worker receiving a Task token via `.waitForTaskToken` doesn't validate the token's expected characteristics (state machine ARN, expected execution context). Any caller with a stolen / forwarded token can call `SendTaskSuccess` / `SendTaskFailure` for the workflow with attacker-controlled output. Validation is workload-specific but at minimum the worker should match the token's source against a known state-machine ARN.
+
+**Remediation:** Worker SHOULD validate the token's source via DescribeExecution → check that the state-machine ARN matches the expected one. Workers SHOULD also bound the SendTaskSuccess result they accept against a schema appropriate for the calling workflow.
+
+---
+
+### CTL.STEPFUNCTIONS.WORKFLOW.TYPE.MISMATCH.001
+
+**Step Functions Workflow Type Mismatched For Workload Pattern**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: CM-7; iso_27001_2022: A.8.6; nist_800_53_r5: CM-7; soc2: CC8.1, A1.1;
+
+Step Functions Standard workflow used for short, high-volume executions (cost prohibitive: $0.025 per state transition); or Express workflow used for executions that exceed 5 minutes (silent failure at the cap). Workflow type should match workload's runtime profile.
+
+**Remediation:** Standard for: long-running, low-volume, state-transition-bounded. Express for: short, high-volume, IAM-rate-bounded. Convert via blue-green; pricing change is significant.
 
 ---
 

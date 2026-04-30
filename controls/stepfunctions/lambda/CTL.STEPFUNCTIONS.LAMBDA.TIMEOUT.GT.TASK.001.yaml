@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LAMBDA.TIMEOUT.GT.TASK.001
+name: Step Functions Lambda Function Timeout Exceeds Task TimeoutSeconds
+description: >
+  Lambda function's runtime `Timeout` setting
+  is greater than the Step Functions Task's
+  `TimeoutSeconds`. Task times out before
+  Lambda completes; the Lambda continues
+  running (and billing) but its output is
+  discarded — Step Functions has already
+  taken the timeout-error path. Result: cost
+  for work the workflow couldn't use.
+domain: lifecycle
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-3, SI-11"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Lambda timeout > Task TimeoutSeconds.
+  action: >
+    Set Task TimeoutSeconds >= Lambda
+    Timeout + small margin (e.g., +10s).
+    Or shorten Lambda Timeout if the workflow
+    truly cannot wait.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "lambda_timeout_gt_task_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.lambda_timeout_gt_task_count
+      op: gt
+      value: 0
+defect: >
+  Lambda Timeout > Task TimeoutSeconds.
+infection: >
+  Workflow takes timeout path; Lambda still
+  bills until its own timeout.
+failure: >
+  Timeout coordination broken.
+tests:
+  - name: bad ordering fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_timeout_gt_task_count: 1
+  - name: ordered passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_timeout_gt_task_count: 0

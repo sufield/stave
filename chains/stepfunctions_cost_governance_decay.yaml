@@ -1,0 +1,25 @@
+id: stepfunctions_cost_governance_decay
+description: >
+  Step Functions has multiple cost / inventory
+  defects: workflow type mismatched for
+  workload (Standard for high-vol short, or
+  Express for > 5min), idle 30+ days, log
+  cost runaway, no execution-history
+  archive, or missing org-standard tags.
+  Each defect alone is operational sloppiness;
+  co-occurrence indicates the workflow
+  exists outside cost / inventory discipline.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.WORKFLOW.TYPE.MISMATCH.001
+  - CTL.STEPFUNCTIONS.IDLE.MACHINE.001
+  - CTL.STEPFUNCTIONS.LOG.COST.RUNAWAY.001
+  - CTL.STEPFUNCTIONS.EXECUTION.HISTORY.RETENTION.001
+  - CTL.STEPFUNCTIONS.NOTAGS.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

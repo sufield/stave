@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ACTIVITY.ZOMBIE.001
+name: Step Functions Activity Worker Replaced By Integration But Not Decommissioned
+description: >
+  Step Functions Activity (legacy worker
+  pattern, polled via GetActivityTask) was
+  replaced by a managed integration but the
+  Activity itself was never deleted from the
+  state machine's environment. Workers may
+  still be polling; activity ARN occupies
+  the namespace; CloudTrail still logs
+  ListActivities.
+domain: governance
+severity: low
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  iso_27001_2022: "A.5.9"
+  ccm_v4: ["GRC-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Zombie Activity not decommissioned.
+  action: >
+    DeleteActivity on the orphan ARN. Audit
+    via ListActivities periodically and
+    cross-check against in-use Activity ARNs
+    in current state-machine definitions.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "operational": {
+          "zombie_activity_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.operational.zombie_activity_count
+      op: gt
+      value: 0
+defect: >
+  Zombie Activities present.
+infection: >
+  Workers polling dead ARNs; namespace
+  clutter.
+failure: >
+  Cleanup gap.
+tests:
+  - name: zombies fire
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          operational:
+            zombie_activity_count: 3
+  - name: clean passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          operational:
+            zombie_activity_count: 0

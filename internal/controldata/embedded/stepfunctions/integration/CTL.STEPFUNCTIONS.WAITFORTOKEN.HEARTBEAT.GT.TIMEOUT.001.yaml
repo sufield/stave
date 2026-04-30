@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.WAITFORTOKEN.HEARTBEAT.GT.TIMEOUT.001
+name: Step Functions HeartbeatSeconds Greater Than TimeoutSeconds (Heartbeat Never Enforced)
+description: >
+  Step Functions Task has `HeartbeatSeconds` >=
+  `TimeoutSeconds`. The Task hits its overall
+  timeout before any heartbeat would have been
+  expected — heartbeat is effectively
+  disabled. Worker hangs are caught only by
+  the longer overall timeout, defeating the
+  point of fast-fail liveness checking.
+domain: lifecycle
+severity: medium
+compliance:
+  soc2: "CC7.4"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    HeartbeatSeconds >= TimeoutSeconds.
+  action: >
+    Set HeartbeatSeconds < TimeoutSeconds
+    (typical: HeartbeatSeconds 60-120 for
+    multi-hour TimeoutSeconds tasks).
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "heartbeat_gt_timeout_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.heartbeat_gt_timeout_count
+      op: gt
+      value: 0
+defect: >
+  HeartbeatSeconds >= TimeoutSeconds.
+infection: >
+  Heartbeat never enforced; hang detection
+  defaults to overall timeout.
+failure: >
+  Liveness check ineffective.
+tests:
+  - name: bad ordering fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            heartbeat_gt_timeout_count: 1
+  - name: ordered passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            heartbeat_gt_timeout_count: 0

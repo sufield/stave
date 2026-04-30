@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.REGION.UNAUTHORIZED.001
+name: Step Functions State Machine In Unauthorized Region
+description: >
+  Step Functions state machine deployed in an
+  AWS region not on the org's authorized
+  list. Data residency requirements (GDPR
+  EU-only, country-specific data laws) and
+  internal policy violated. Common cause:
+  dev experiment promoted to production
+  without region review.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC1.5, CC6.1"
+  pci_dss_v4.0: "12.10.1"
+  hipaa: "164.310(d)"
+  nist_800_53_r5: "AC-3, CA-7"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.10, A.5.34"
+  ccm_v4: ["DSP-04", "DSP-19"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    State machine in unauthorized region.
+  action: >
+    Re-deploy in authorized region; migrate
+    in-flight execution state via state-machine
+    restart in target region. DeleteStateMachine
+    in unauthorized region. Verify via
+    organizations:DescribeOrganization +
+    aws:RequestedRegion SCP guard.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "compliance": {
+          "region_authorized": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.compliance.region_authorized
+      op: eq
+      value: false
+defect: >
+  State machine in unauthorized region.
+infection: >
+  Data residency violated; compliance audit
+  failure.
+failure: >
+  Regulatory boundary breach.
+tests:
+  - name: unauthorized fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:eu-central-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          compliance:
+            region_authorized: false
+  - name: authorized passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          compliance:
+            region_authorized: true

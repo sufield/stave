@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.EB.SHARED.MACHINE.001
+name: Step Functions State Machine ARN Targeted By Many EventBridge Rules
+description: >
+  One Step Functions state machine is the
+  target of more than 10 EventBridge rules.
+  Single point of failure for many event
+  flows; one workflow defect impacts every
+  feeding rule. Maintenance changes (deploy,
+  pause, IAM update) cascade across all
+  consumers without their owners knowing.
+domain: governance
+severity: medium
+compliance:
+  soc2: "A1.1, A1.2"
+  nist_800_53_r5: "CP-7"
+  fedramp_moderate: "CP-7"
+  iso_27001_2022: "A.8.14"
+  ccm_v4: ["BCR-04"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    > 10 EventBridge rules target this state
+    machine.
+  action: >
+    Split workflow by rule consumer-class.
+    Or document dependency explicitly so
+    each rule's owner knows their downstream
+    is shared.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "eventbridge_rule_consumer_count": 3
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.eventbridge_rule_consumer_count
+      op: gt
+      value: 10
+defect: >
+  > 10 EB rules target one state machine.
+infection: >
+  Single point of failure for many event
+  flows.
+failure: >
+  Coupling concentrated.
+tests:
+  - name: 25 rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            eventbridge_rule_consumer_count: 25
+  - name: 3 rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            eventbridge_rule_consumer_count: 3

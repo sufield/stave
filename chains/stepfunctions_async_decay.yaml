@@ -1,0 +1,27 @@
+id: stepfunctions_async_decay
+description: >
+  Step Functions integration has multiple
+  async / sync coordination defects: callback
+  channel without SSE-KMS, .sync used on a
+  resource that doesn't support sync semantics
+  (silent fallback), Sync Express + API
+  Gateway timeout race (504 + duplicate
+  invocations), or no notification on
+  StartExecution rate-limit approach. Each
+  defect alone is a coordination subtlety
+  that surprises operators in production;
+  co-occurrence indicates the integration
+  surface was not statically reviewed.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.SYNC.UNENCRYPTED.CALLBACK.001
+  - CTL.STEPFUNCTIONS.SYNC.SILENT.FALLBACK.001
+  - CTL.STEPFUNCTIONS.SYNCEXP.APIGW.TIMEOUT.001
+  - CTL.STEPFUNCTIONS.RATE.LIMIT.NONOTIFY.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption

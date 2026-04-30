@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ALIAS.ROLE.UNVERSIONED.001
+name: Step Functions Alias-Based StartExec But IAM Role References Unversioned ARN
+description: >
+  Step Functions caller role grants
+  `states:StartExecution` on the unversioned
+  state-machine ARN, but the workflow uses
+  versioned aliases. Alias-based callers work,
+  but the IAM grant is broader than necessary
+  — any new alias / version is automatically
+  reachable. Defeats the purpose of canary
+  deploys for IAM-tier scoping.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15"
+  ccm_v4: ["IAM-02"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    IAM role grants StartExecution on
+    unversioned ARN.
+  action: >
+    Pin the role's Resource to the alias ARN
+    (or specific version ARN). Update
+    pipeline to pass through alias on deploy.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "iam_resource_pinned_to_alias": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.iam_resource_pinned_to_alias
+      op: eq
+      value: false
+defect: >
+  IAM Resource on unversioned state-machine
+  ARN.
+infection: >
+  Future versions automatically reachable;
+  IAM scope wider than alias contract.
+failure: >
+  IAM coordination drift.
+tests:
+  - name: unversioned fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            iam_resource_pinned_to_alias: false
+  - name: pinned passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            iam_resource_pinned_to_alias: true

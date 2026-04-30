@@ -1,0 +1,24 @@
+id: stepfunctions_compliance_unsafe
+description: >
+  Step Functions has multiple compliance /
+  governance defects: state machine in
+  unauthorized region, dev region accessing
+  prod data, IAM role re-used across
+  compliance scopes, or IaC drift between
+  regulated and non-regulated environments.
+  Each defect alone violates a compliance
+  isolation principle; co-occurrence
+  indicates compliance posture is unowned.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.REGION.UNAUTHORIZED.001
+  - CTL.STEPFUNCTIONS.DEV.PROD.DATA.001
+  - CTL.STEPFUNCTIONS.ROLE.COMPLIANCE.REUSE.001
+  - CTL.STEPFUNCTIONS.IAC.COMPLIANCE.DRIFT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

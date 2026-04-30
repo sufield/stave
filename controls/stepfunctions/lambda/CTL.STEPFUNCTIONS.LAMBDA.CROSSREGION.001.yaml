@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LAMBDA.CROSSREGION.001
+name: Step Functions Lambda Function In Different Region Than State Machine
+description: >
+  Step Functions Task references a Lambda
+  function in a different AWS region than
+  the state machine. Cross-region invocation
+  has additional latency, doubled cost (data
+  transfer), and complicates compliance scope
+  (data may cross residency boundaries).
+  Production workflows should keep Lambda in
+  the same region.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "SC-7, CM-7"
+  fedramp_moderate: "SC-7"
+  iso_27001_2022: "A.5.10, A.8.20"
+  ccm_v4: ["DSP-04", "BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Lambda in different region.
+  action: >
+    Move Lambda to the workflow's region. For
+    multi-region workflows, deploy per-region
+    state machines + per-region Lambdas;
+    avoid cross-region Lambda calls.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "lambda_crossregion_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.lambda_crossregion_count
+      op: gt
+      value: 0
+defect: >
+  Lambda Resource ARN in different region.
+infection: >
+  Latency + cost + residency complication.
+failure: >
+  Region-locality discipline absent.
+tests:
+  - name: crossregion fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_crossregion_count: 1
+  - name: same-region passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_crossregion_count: 0

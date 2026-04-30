@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOMULTIREGION.001
+name: Step Functions KMS Key Single-Region Without Multi-Region Configuration
+description: >
+  Step Functions state machine's KMS key is a
+  single-region key. Cross-region disaster
+  recovery requires a multi-region key (or
+  manually replicated key material) — without
+  it, restored state machines and execution
+  histories in the alternate region cannot
+  be decrypted. Region-failure DR plans that
+  assume cross-region recovery fail at the
+  KMS layer.
+domain: encrypt
+severity: medium
+compliance:
+  soc2: "CC7.4, A1.2"
+  nist_800_53_r5: "CP-7, SC-12"
+  fedramp_moderate: "CP-7"
+  iso_27001_2022: "A.8.24, A.8.14"
+  ccm_v4: ["CEK-09", "BCR-04"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    Single-region KMS key on production.
+  action: >
+    Create a multi-region key and replicate
+    to the DR region. Migrate the state
+    machine to use the multi-region key
+    (blue-green). Document the recovery
+    procedure.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "encrypt": {
+          "kms_multi_region": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.encrypt.is_production
+      op: eq
+      value: true
+    - field: properties.compute.encrypt.kms_multi_region
+      op: eq
+      value: false
+defect: >
+  Single-region KMS on production state
+  machine.
+infection: >
+  Cross-region restore can't decrypt state
+  machine or execution data.
+failure: >
+  DR-key gap.
+tests:
+  - name: single-region fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          encrypt:
+            is_production: true
+            kms_multi_region: false
+  - name: multi-region passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          encrypt:
+            is_production: true
+            kms_multi_region: true

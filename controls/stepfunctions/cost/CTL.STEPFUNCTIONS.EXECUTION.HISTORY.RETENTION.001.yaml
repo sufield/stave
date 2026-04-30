@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.EXECUTION.HISTORY.RETENTION.001
+name: Step Functions Old Execution History Not Configured For Retention Or Archival
+description: >
+  Step Functions Standard execution history
+  retains for ~90 days then is purged.
+  Without explicit archival (CloudWatch Logs
+  → S3 export, EventBridge → archive),
+  forensic / compliance access to past
+  executions ends at 90 days. Not directly a
+  cost issue, but governance discipline that
+  should accompany cost-tuning.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.5.1"
+  hipaa: "164.530(j)"
+  nist_800_53_r5: "AU-11"
+  fedramp_moderate: "AU-11"
+  iso_27001_2022: "A.5.33"
+  ccm_v4: ["LOG-04"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Execution history retention not configured
+    beyond 90 days.
+  action: >
+    Subscribe `Execution Status Change`
+    events (SF-5 control covers this);
+    archive to S3 with lifecycle. Or wire
+    CloudWatch Logs to Kinesis Firehose →
+    long-retention S3.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "cost": {
+          "execution_history_archived": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.cost.execution_history_archived
+      op: eq
+      value: false
+defect: >
+  Execution history not archived.
+infection: >
+  Beyond 90 days, no record exists; audit /
+  forensic gap.
+failure: >
+  History retention shortfall.
+tests:
+  - name: not archived fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          cost:
+            execution_history_archived: false
+  - name: archived passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          cost:
+            execution_history_archived: true

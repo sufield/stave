@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.IAC.CONSOLE.DRIFT.001
+name: Step Functions State Machine Modified Outside IaC (Console Drift)
+description: >
+  Step Functions state machine's most recent
+  configuration change (UpdateStateMachine) was
+  performed by an IAM principal that is not
+  the IaC automation role. Direct console /
+  CLI changes bypass IaC review and create
+  state divergence. Either next IaC apply
+  reverts the change, or operators back-port
+  it manually without review.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1, CC7.1"
+  nist_800_53_r5: "CM-2, CM-3"
+  fedramp_moderate: "CM-2"
+  iso_27001_2022: "A.5.16, A.8.32"
+  ccm_v4: ["GRC-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Last change by non-IaC principal.
+  action: >
+    Identify via CloudTrail (eventName=
+    UpdateStateMachine, source IP /
+    userIdentity). Reproduce in IaC; revert if
+    unauthorized. Add CloudWatch alarm:
+    UpdateStateMachine events from non-IaC
+    principals.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "last_modified_by_iac": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.last_modified_by_iac
+      op: eq
+      value: false
+defect: >
+  Last update by non-IaC principal.
+infection: >
+  IaC source diverges from deployed state.
+failure: >
+  Configuration drift.
+tests:
+  - name: console fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            last_modified_by_iac: false
+  - name: iac passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            last_modified_by_iac: true

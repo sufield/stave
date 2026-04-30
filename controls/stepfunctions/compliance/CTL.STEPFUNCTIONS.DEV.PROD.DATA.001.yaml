@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.DEV.PROD.DATA.001
+name: Step Functions Dev Region Workflow Processing Production Data
+description: >
+  Step Functions state machine in a dev /
+  staging region or dev / staging account is
+  processing production data (e.g., reading
+  from a prod-tagged S3 bucket, querying a
+  prod DDB table). Compliance audits often
+  require strict environment-data
+  separation; debug-tier observability and
+  IAM in dev makes prod data more reachable
+  than intended.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC1.5, CC6.1, CC8.1"
+  hipaa: "164.310(d)"
+  nist_800_53_r5: "AC-3, AC-21"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.10, A.8.20"
+  ccm_v4: ["DSP-04", "DSP-19"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Dev workflow accessing prod data.
+  action: >
+    Cut prod-data access; replace with
+    synthetic data fixtures. If a dev
+    environment must validate against prod
+    data, use a sanitized / pseudonymized
+    snapshot.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "compliance": {
+          "env_data_isolated": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.compliance.env_data_isolated
+      op: eq
+      value: false
+defect: >
+  Dev workflow accesses prod data.
+infection: >
+  Prod data exposed via dev-tier
+  observability / IAM.
+failure: >
+  Environment-data isolation broken.
+tests:
+  - name: dev-prod fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:dev"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          compliance:
+            env_data_isolated: false
+  - name: isolated passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:dev"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          compliance:
+            env_data_isolated: true

@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.SYNC.SILENT.FALLBACK.001
+name: Step Functions .sync Resource Doesn't Support Sync Semantics
+description: >
+  Step Functions Task uses `.sync` integration
+  pattern on a resource type that doesn't
+  natively support synchronous semantics.
+  Step Functions silently falls back to the
+  request-response pattern; the workflow
+  proceeds before the downstream completes.
+  Operators expect "wait for done" behavior
+  and get fire-and-forget instead.
+domain: lifecycle
+severity: high
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    .sync used where unsupported.
+  action: >
+    Replace .sync with `.waitForTaskToken` and
+    a worker that posts SendTaskSuccess on
+    completion. Or use a polling pattern with
+    Wait + Choice.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "sync_unsupported_resource_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.sync_unsupported_resource_count
+      op: gt
+      value: 0
+defect: >
+  .sync on a resource that doesn't support
+  sync semantics.
+infection: >
+  Workflow proceeds before downstream
+  completes; race conditions; downstream
+  results unhandled.
+failure: >
+  Sync semantics silently bypassed.
+tests:
+  - name: unsupported fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            sync_unsupported_resource_count: 1
+  - name: supported passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            sync_unsupported_resource_count: 0

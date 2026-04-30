@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.SYNC.NOCLEANUP.001
+name: Step Functions .sync Catch Path Doesn't Stop Underlying Resource
+description: >
+  Step Functions `.sync` Task has Catch but
+  the Catch routes only to a logging / Fail
+  state — doesn't actually stop the running
+  Glue job, EMR cluster, Batch job, or
+  SageMaker job. Resources continue running
+  / billing after workflow termination. Cost
+  runaway for high-cost integrations
+  (SageMaker training, EMR clusters).
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.4, A1.1"
+  nist_800_53_r5: "CM-7, SI-11"
+  fedramp_moderate: "CM-7"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    .sync Catch doesn't stop downstream
+    resource.
+  action: >
+    Add a state in the Catch path that calls
+    the resource's stop API. Glue:
+    glue:StopJobRun. EMR:
+    emr:TerminateJobFlows. Batch:
+    batch:CancelJob. SageMaker:
+    sagemaker:StopTrainingJob.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "sync_catch_stops_resource": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.sync_catch_stops_resource
+      op: eq
+      value: false
+defect: >
+  Catch path doesn't stop downstream
+  resource.
+infection: >
+  Resource keeps running after workflow ends;
+  cost / capacity consumed indefinitely.
+failure: >
+  Compensation incomplete.
+tests:
+  - name: no cleanup fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            sync_catch_stops_resource: false
+  - name: cleanup passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            sync_catch_stops_resource: true

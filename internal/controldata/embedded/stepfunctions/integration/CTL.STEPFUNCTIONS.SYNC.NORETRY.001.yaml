@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.SYNC.NORETRY.001
+name: Step Functions .sync Integration Lacks Retry Clause
+description: >
+  Step Functions Task using `.sync` integration
+  (Glue, EMR, Batch, SageMaker, ECS) has no
+  `Retry` clause. `.sync` waits for the
+  downstream resource to terminate; transient
+  failures (control-plane API errors,
+  pre-warmed instance unavailability, capacity
+  errors during job submit) abort the workflow
+  immediately. Standard practice is Retry on
+  the control-plane error class; the resource
+  itself doesn't need to be retried, only the
+  submission.
+domain: lifecycle
+severity: medium
+compliance:
+  soc2: "CC7.4, A1.2"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    .sync Task without Retry.
+  action: >
+    Add Retry on control-plane error class:
+      "Retry": [{
+        "ErrorEquals": ["States.TaskFailed",
+          "Glue.AWSGlueException"],
+        "IntervalSeconds": 2,
+        "MaxAttempts": 3,
+        "BackoffRate": 2.0
+      }]
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "sync_no_retry_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.sync_no_retry_count
+      op: gt
+      value: 0
+defect: >
+  .sync Task without Retry.
+infection: >
+  Transient control-plane error aborts workflow.
+failure: >
+  Resilience surface absent.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            sync_no_retry_count: 1
+  - name: present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            sync_no_retry_count: 0

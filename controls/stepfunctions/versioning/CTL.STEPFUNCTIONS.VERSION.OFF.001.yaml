@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.VERSION.OFF.001
+name: Step Functions State Machine Versioning Disabled
+description: >
+  Step Functions state machine has versioning
+  disabled (PublishToVersion: false). Each
+  deploy mutates the state machine in place;
+  in-flight executions continue on the new
+  definition mid-run. No rollback target
+  exists; no canary; no immutable record of
+  what was actually deployed at a given time.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC8.1, A1.2"
+  nist_800_53_r5: "CM-3, CM-2"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Versioning disabled.
+  action: >
+    Enable PublishToVersion. Use aliases to
+    route executions; rollback by repointing
+    the alias.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "versioning_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.versioning_enabled
+      op: eq
+      value: false
+defect: >
+  State machine versioning disabled.
+infection: >
+  In-place mutation; no rollback; canary
+  impossible.
+failure: >
+  Deploy hygiene absent.
+tests:
+  - name: off fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            versioning_enabled: false
+  - name: on passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            versioning_enabled: true

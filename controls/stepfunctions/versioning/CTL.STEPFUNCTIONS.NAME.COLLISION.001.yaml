@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.NAME.COLLISION.001
+name: Step Functions Multiple State Machines Share The Same Name Across Environments
+description: >
+  Multiple Step Functions state machines
+  share the same name across accounts /
+  environments (e.g., `process-orders` in
+  dev, staging, and prod). Operators
+  referring to "the process-orders state
+  machine" must always disambiguate by
+  account. Cross-environment IaC promotion
+  scripts can target the wrong one.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-8"
+  fedramp_moderate: "CM-8"
+  iso_27001_2022: "A.5.9"
+  ccm_v4: ["GRC-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Same name across environments.
+  action: >
+    Suffix names with environment
+    (`process-orders-prod`,
+    `process-orders-dev`). Or use account-
+    isolation only and avoid cross-account
+    name confusion via runbook discipline.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "name_unique_across_envs": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.name_unique_across_envs
+      op: eq
+      value: false
+defect: >
+  Same name across environments.
+infection: >
+  Cross-env script targeting wrong machine;
+  ambiguity in incident reports.
+failure: >
+  Operational ambiguity.
+tests:
+  - name: collision fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            name_unique_across_envs: false
+  - name: unique passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            name_unique_across_envs: true

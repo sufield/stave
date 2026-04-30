@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.WAITFORTOKEN.NOVALIDATE.001
+name: Step Functions waitForTaskToken Worker Doesn't Validate Token Identity
+description: >
+  Step Functions worker receiving a Task
+  token via `.waitForTaskToken` doesn't
+  validate the token's expected
+  characteristics (state machine ARN,
+  expected execution context). Any caller
+  with a stolen / forwarded token can call
+  `SendTaskSuccess` / `SendTaskFailure` for
+  the workflow with attacker-controlled
+  output. Validation is workload-specific
+  but at minimum the worker should match the
+  token's source against a known
+  state-machine ARN.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  pci_dss_v4.0: "8.3.1"
+  nist_800_53_r5: "AC-3, IA-2"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.16, A.8.20"
+  ccm_v4: ["IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Worker doesn't validate task token
+    identity.
+  action: >
+    Worker SHOULD validate the token's source
+    via DescribeExecution → check that the
+    state-machine ARN matches the expected
+    one. Workers SHOULD also bound the
+    SendTaskSuccess result they accept against
+    a schema appropriate for the calling
+    workflow.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "worker_validates_token": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.uses_waitfortoken
+      op: eq
+      value: true
+    - field: properties.compute.deployment.worker_validates_token
+      op: eq
+      value: false
+defect: >
+  Worker doesn't validate token identity.
+infection: >
+  Stolen / replayed token can drive workflow
+  with attacker-supplied output.
+failure: >
+  Token-as-credential trust model broken.
+tests:
+  - name: no validation fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            uses_waitfortoken: true
+            worker_validates_token: false
+  - name: validation passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            uses_waitfortoken: true
+            worker_validates_token: true

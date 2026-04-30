@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ALIAS.LATEST.001
+name: Step Functions Default Alias Points To $LATEST Instead Of Versioned Target
+description: >
+  Step Functions default alias points to
+  `$LATEST` rather than a versioned alias.
+  Each deploy moves $LATEST forward
+  immediately; callers using the unqualified
+  ARN hit the new code without canary or
+  rollback path.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Default alias targets $LATEST.
+  action: >
+    Re-point default alias to a versioned
+    target updated atomically by the deploy
+    pipeline (e.g., `prod` alias pointing at
+    a specific version number).
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "alias_targets_versioned": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.alias_targets_versioned
+      op: eq
+      value: false
+defect: >
+  Alias resolves to $LATEST.
+infection: >
+  Deploys hit callers immediately; no canary
+  or rollback.
+failure: >
+  Alias semantics defeat their own purpose.
+tests:
+  - name: latest fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            alias_targets_versioned: false
+  - name: versioned passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            alias_targets_versioned: true

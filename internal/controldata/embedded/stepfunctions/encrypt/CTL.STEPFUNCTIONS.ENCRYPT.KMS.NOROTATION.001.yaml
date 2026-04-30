@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOROTATION.001
+name: Step Functions KMS Key Has Automatic Rotation Disabled
+description: >
+  Step Functions state machine's KMS key has
+  automatic rotation disabled. AWS rotates
+  the key material annually when enabled;
+  without it, the same material protects
+  data indefinitely. NIST / PCI-DSS guidance
+  recommends automatic rotation for keys with
+  long-lived data.
+domain: encrypt
+severity: medium
+compliance:
+  soc2: "CC6.7, CC8.1"
+  pci_dss_v4.0: "3.6.4"
+  nist_800_53_r5: "SC-12"
+  fedramp_moderate: "SC-12"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-09"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    KMS key rotation disabled.
+  action: >
+    Enable automatic rotation:
+      aws kms enable-key-rotation
+        --key-id <key-id>
+    Effective annually; safe for symmetric
+    keys (no client coordination needed).
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "encrypt": {
+          "kms_rotation_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.encrypt.kms_rotation_enabled
+      op: eq
+      value: false
+defect: >
+  KMS key rotation disabled.
+infection: >
+  Same key material protects long-lived data;
+  compliance recommendation violated.
+failure: >
+  Rotation hygiene gap.
+tests:
+  - name: rotation off fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          encrypt:
+            kms_rotation_enabled: false
+  - name: rotation on passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          encrypt:
+            kms_rotation_enabled: true

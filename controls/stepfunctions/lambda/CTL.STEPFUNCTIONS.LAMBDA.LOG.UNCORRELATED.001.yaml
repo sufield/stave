@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LAMBDA.LOG.UNCORRELATED.001
+name: Step Functions Lambda Logs Not Correlatable With Workflow Execution Logs
+description: >
+  Lambda function called from Step Functions
+  doesn't log the workflow's execution ID
+  (passed via `$$.Execution.Id` context
+  object). When debugging a failed execution,
+  operators must correlate Lambda logs by
+  timestamp — fragile and slow. Standard
+  practice: include execution ID in every
+  Lambda log line.
+domain: detect
+severity: low
+compliance:
+  soc2: "CC7.2"
+  nist_800_53_r5: "AU-3, AU-12"
+  fedramp_moderate: "AU-3"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Lambda logs not correlated with workflow
+    execution ID.
+  action: >
+    Pass `$$.Execution.Id` as a Parameters
+    field; Lambda code logs it on every
+    output line. Index Lambda logs in
+    CloudWatch Logs Insights with the
+    execution ID as a queryable field.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "lambda_logs_correlated": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.lambda_logs_correlated
+      op: eq
+      value: false
+defect: >
+  Lambda logs lack execution-ID correlation.
+infection: >
+  Cross-service debug requires manual
+  timestamp matching; slow.
+failure: >
+  Correlation gap.
+tests:
+  - name: uncorrelated fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_logs_correlated: false
+  - name: correlated passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_logs_correlated: true

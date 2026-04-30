@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LAMBDA.RES.POLICY.MISMATCH.001
+name: Step Functions Lambda Reference Doesn't Match Function's Resource Policy
+description: >
+  Step Functions Task references a Lambda
+  function whose resource-based policy does
+  not include `states.amazonaws.com` (with
+  the right `aws:SourceArn` matching this
+  state machine). Invocation fails at runtime
+  with `AccessDenied`. Common after re-
+  parenting a Lambda or when the Lambda was
+  created by a different team.
+domain: lifecycle
+severity: high
+compliance:
+  soc2: "CC6.1, A1.2"
+  nist_800_53_r5: "AC-3, SI-11"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.20"
+  ccm_v4: ["IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Lambda resource policy doesn't trust this
+    state machine.
+  action: >
+    Add a statement to the Lambda's resource
+    policy:
+      Principal: states.amazonaws.com,
+      Action: lambda:InvokeFunction,
+      Condition: {
+        StringEquals: {
+          aws:SourceArn: <state-machine-arn>
+        }
+      }
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "lambda_policy_matches": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.lambda_policy_matches
+      op: eq
+      value: false
+defect: >
+  Lambda resource policy doesn't include
+  this state machine.
+infection: >
+  Lambda invocation fails at runtime with
+  AccessDenied; workflow halts.
+failure: >
+  Trust path broken.
+tests:
+  - name: mismatch fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_policy_matches: false
+  - name: matches passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_policy_matches: true

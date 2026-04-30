@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.DR.NOSECONDREGION.001
+name: Step Functions Production Standard Workflow Not Deployed To DR Region
+description: >
+  Step Functions production-tier Standard
+  workflow has no equivalent deployed to a
+  DR region. Region-failure event takes the
+  workflow offline; restore is from-scratch
+  rather than failover. IaC for the workflow
+  doesn't include a region-equivalent
+  configuration.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.4, A1.2"
+  nist_800_53_r5: "CP-7, CP-9"
+  fedramp_moderate: "CP-7"
+  iso_27001_2022: "A.8.13, A.8.14"
+  ccm_v4: ["BCR-04", "BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: resilience
+remediation:
+  description: >
+    No DR-region deployment.
+  action: >
+    Replicate IaC to DR region. Pair with
+    multi-region KMS, multi-region tables,
+    multi-region Lambda. Test failover
+    quarterly.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "deployment": {
+          "dr_region_deployed": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.deployment.is_production
+      op: eq
+      value: true
+    - field: properties.compute.deployment.dr_region_deployed
+      op: eq
+      value: false
+defect: >
+  No DR-region deployment of production
+  workflow.
+infection: >
+  Region-failure event = workflow offline
+  until manual recovery.
+failure: >
+  DR position absent.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            is_production: true
+            dr_region_deployed: false
+  - name: dr deployed passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          deployment:
+            is_production: true
+            dr_region_deployed: true

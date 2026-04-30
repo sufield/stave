@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.SAGEMAKER.NORUNTIME.001
+name: Step Functions SageMaker Job Without MaxRuntimeInSeconds
+description: >
+  Step Functions Task using SageMaker
+  Training / Processing job has no
+  `MaxRuntimeInSeconds` configured.
+  Diverging models, runaway data shuffling,
+  or stuck workers consume training capacity
+  until SageMaker's hard limits (1 day
+  default) — full instance-hour bill for
+  zero output.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC8.1, A1.1"
+  nist_800_53_r5: "CM-7"
+  fedramp_moderate: "CM-7"
+  iso_27001_2022: "A.8.6"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    SageMaker without MaxRuntimeInSeconds.
+  action: >
+    Pass MaxRuntimeInSeconds in the Parameters.
+    Tune based on observed training duration
+    + 50% margin.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "edges": {
+          "sagemaker_runtime_set": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.edges.uses_sagemaker
+      op: eq
+      value: true
+    - field: properties.compute.edges.sagemaker_runtime_set
+      op: eq
+      value: false
+defect: >
+  SageMaker job without MaxRuntimeInSeconds.
+infection: >
+  Runaway training run bills until 1-day
+  default cap.
+failure: >
+  Cost-runaway risk.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          edges:
+            uses_sagemaker: true
+            sagemaker_runtime_set: false
+  - name: present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          edges:
+            uses_sagemaker: true
+            sagemaker_runtime_set: true

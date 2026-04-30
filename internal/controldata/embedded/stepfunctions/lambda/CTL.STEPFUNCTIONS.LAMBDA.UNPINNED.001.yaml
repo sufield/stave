@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LAMBDA.UNPINNED.001
+name: Step Functions Lambda Task Has No Alias / Version Pin
+description: >
+  Step Functions Task `Resource` references a
+  Lambda function without any alias or version
+  qualifier (e.g.,
+  `arn:aws:lambda:::function:my-fn` rather
+  than `:my-fn:prod`). Same effect as $LATEST
+  but harder to spot in inventory because the
+  ARN looks "explicit." Pin to alias for
+  versioned routing.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-3"
+  fedramp_moderate: "CM-3"
+  iso_27001_2022: "A.8.32"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Lambda Resource ARN has no alias / version.
+  action: >
+    Add `:prod` (or environment-appropriate
+    alias) to every Lambda Resource ARN. CI
+    enforces pin via terraform / CDK lint.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "lambda_unpinned_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.lambda_unpinned_count
+      op: gt
+      value: 0
+defect: >
+  Lambda Resource ARN without alias / version.
+infection: >
+  Defaults to $LATEST behavior; mid-run code
+  change.
+failure: >
+  Version-pin discipline absent.
+tests:
+  - name: unpinned fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_unpinned_count: 1
+  - name: pinned passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            lambda_unpinned_count: 0

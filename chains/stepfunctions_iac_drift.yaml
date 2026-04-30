@@ -1,0 +1,24 @@
+id: stepfunctions_iac_drift
+description: >
+  Step Functions has multiple IaC / inventory
+  defects: last update by non-IaC principal
+  (console drift), name shared across
+  environments (cross-env script confusion),
+  tag drift across versions (cost / governance
+  reports inconsistent), or old versions
+  accumulate without cleanup. Each defect
+  alone is operational sloppiness;
+  co-occurrence indicates the workflow's
+  inventory is unmanaged. Threshold of 2
+  fires when at least two defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.IAC.CONSOLE.DRIFT.001
+  - CTL.STEPFUNCTIONS.NAME.COLLISION.001
+  - CTL.STEPFUNCTIONS.TAGS.VERSION.DRIFT.001
+  - CTL.STEPFUNCTIONS.VERSION.ACCUMULATION.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

@@ -1,0 +1,23 @@
+id: stepfunctions_token_unsafe
+description: >
+  Step Functions .waitForTaskToken integration
+  has multiple defects: no HeartbeatSeconds
+  (worker hang detection broken),
+  HeartbeatSeconds >= TimeoutSeconds (heartbeat
+  never enforced), or Task token reachable in
+  plaintext (spoof surface). Each defect alone
+  weakens the asynchronous-callback boundary;
+  co-occurrence indicates the worker contract
+  was not designed for production use.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.WAITFORTOKEN.NOHEARTBEAT.001
+  - CTL.STEPFUNCTIONS.WAITFORTOKEN.HEARTBEAT.GT.TIMEOUT.001
+  - CTL.STEPFUNCTIONS.TOKEN.PLAINTEXT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access

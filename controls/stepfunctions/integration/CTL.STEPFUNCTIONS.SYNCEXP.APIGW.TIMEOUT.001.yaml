@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.SYNCEXP.APIGW.TIMEOUT.001
+name: Step Functions Synchronous Express Behind API Gateway With Timeout Race
+description: >
+  Synchronous Express workflow invoked from
+  API Gateway has the workflow's max-duration
+  >= API Gateway's integration timeout
+  (default 29s, max 30s). When the workflow
+  approaches the timeout, API Gateway returns
+  504 to the caller while the workflow keeps
+  running — the caller retries thinking it
+  failed; duplicate workflow invocations
+  result.
+domain: lifecycle
+severity: medium
+compliance:
+  soc2: "CC7.4, A1.1"
+  nist_800_53_r5: "SI-11"
+  fedramp_moderate: "SI-11"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Workflow timeout >= API GW integration
+    timeout.
+  action: >
+    Set workflow TimeoutSeconds <= 25 (5s
+    margin under API GW's 30s ceiling). For
+    workflows that need > 30s, use async
+    Express + DynamoDB-backed status polling.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "asl": {
+          "syncexp_apigw_timeout_race": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.asl.is_sync_express_apigw
+      op: eq
+      value: true
+    - field: properties.compute.asl.syncexp_apigw_timeout_race
+      op: eq
+      value: true
+defect: >
+  Workflow timeout overlaps API GW timeout.
+infection: >
+  504 to caller, workflow continues, caller
+  retries → duplicate invocations.
+failure: >
+  Timeout-coordination gap.
+tests:
+  - name: timeout race fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            is_sync_express_apigw: true
+            syncexp_apigw_timeout_race: true
+  - name: margin passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          asl:
+            is_sync_express_apigw: true
+            syncexp_apigw_timeout_race: false
