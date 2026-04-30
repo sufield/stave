@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
+	"github.com/sufield/stave/internal/contracts/schema"
+	"github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -18,7 +21,45 @@ import (
 var ErrNoFindings = errors.New("input JSON does not contain evaluation findings")
 
 // Loader reads evaluation result artifacts from JSON.
-type Loader struct{}
+//
+// Schema validation is opt-in via WithStrictSchema. Trust-boundary
+// callers (gating, enforcement generation) should opt in so a forged
+// `{"kind":"ASSESSMENT","findings":[]}` cannot drive a "clean"
+// verdict — schema rejection catches missing required fields before
+// any consumer reads .Findings. Looser callers (diff display,
+// historical baselines) can keep the default lax behavior to stay
+// compatible with stub fixtures.
+type Loader struct {
+	validator    *validator.Validator
+	strictSchema bool
+}
+
+// NewLoader returns a Loader with a default schema validator.
+// The Loader is safe for concurrent use.
+func NewLoader() *Loader {
+	return &Loader{validator: validator.New()}
+}
+
+// WithStrictSchema enables JSON-schema validation on
+// LoadEnvelopeFromFile against the embedded out.v0.1 schema. Required
+// for trust-boundary inputs (gating, enforcement-config generation).
+func (l *Loader) WithStrictSchema() *Loader {
+	l.strictSchema = true
+	if l.validator == nil {
+		l.validator = validator.New()
+	}
+	return l
+}
+
+// schemaValidator returns the loader's validator, lazily initializing
+// when the zero value Loader{} is used. Callers passing &Loader{} keep
+// working without changes — the validator is created on first use.
+func (l *Loader) schemaValidator() *validator.Validator {
+	if l.validator == nil {
+		l.validator = validator.New()
+	}
+	return l.validator
+}
 
 // LoadFromFile loads an evaluation result from a JSON file.
 func (l *Loader) LoadFromFile(path string) (*evaluation.ComplianceReport, error) {
@@ -48,13 +89,48 @@ func (l *Loader) parseResult(data []byte, source string) (*evaluation.Compliance
 	return &result, nil
 }
 
-// LoadEnvelopeFromFile loads and validates a JSON safety envelope containing evaluation results.
+// LoadEnvelopeFromFile loads and validates a JSON safety envelope
+// containing evaluation results. The artifact is validated against
+// the embedded out.v0.1 JSON schema (kind=output) BEFORE any
+// downstream code reads .Findings, so a hand-crafted JSON like
+// `{"kind":"ASSESSMENT","findings":[]}` cannot drive remediation /
+// gating into a "clean" verdict — it fails schema validation on
+// missing required fields (schema_version, run, summary, status).
 func (l *Loader) LoadEnvelopeFromFile(_ context.Context, path string) (*report.Assessment, error) {
 	path = fsutil.CleanUserPath(path)
 
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading evaluation file %q: %w", path, err)
+	}
+
+	// Schema-validate before unmarshaling into the typed struct so
+	// required-field omissions produce a precise validator diagnostic
+	// rather than a silent zero-valued Assessment. Opt-in (strict
+	// callers must use WithStrictSchema) — this preserves backward
+	// compatibility for callers feeding stub envelopes.
+	if l.strictSchema {
+		diags, valErr := l.schemaValidator().Validate(validator.Request{
+			Kind: schema.KindOutput,
+			Data: data,
+		})
+		if valErr != nil {
+			return nil, fmt.Errorf("validating evaluation %q: %w", path, valErr)
+		}
+		if len(diags) > 0 {
+			var b strings.Builder
+			b.WriteString("evaluation schema violations in ")
+			b.WriteString(path)
+			b.WriteString(":")
+			for i, d := range diags {
+				if i >= 5 {
+					fmt.Fprintf(&b, "\n  ... (+%d more)", len(diags)-5)
+					break
+				}
+				fmt.Fprintf(&b, "\n  %s: %s", d.Path, d.Message)
+			}
+			return nil, fmt.Errorf("%s: %w", b.String(), validator.ErrSchemaValidationFailed)
+		}
 	}
 
 	var eval report.Assessment

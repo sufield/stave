@@ -105,7 +105,12 @@ func TestLoader_LoadEnvelopeFromFile_MissingFile(t *testing.T) {
 }
 
 func TestLoader_LoadEnvelopeFromFile_WrongKind(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
+	// Minimal stub: schema validation rejects this before the kind
+	// check runs, which is the security-correct order — the schema is
+	// the trust boundary for evaluation artifacts. The error must not
+	// be silent.
 	env := map[string]any{
 		"kind":           "not-evaluation",
 		"schema_version": "out.v0.1",
@@ -118,8 +123,16 @@ func TestLoader_LoadEnvelopeFromFile_WrongKind(t *testing.T) {
 
 	loader := &Loader{}
 	_, err := loader.LoadEnvelopeFromFile(context.Background(), path)
-	if err == nil || !strings.Contains(err.Error(), "invalid artifact kind") {
-		t.Fatalf("expected kind mismatch error, got: %v", err)
+	if err == nil {
+		t.Fatal("expected an error rejecting the malformed envelope, got nil")
+	}
+	// Either the schema rejects it (preferred) or the kind check
+	// rejects it. Both prove a malformed envelope cannot reach the
+	// downstream consumer. Accept either to keep this test robust to
+	// schema evolution.
+	msg := err.Error()
+	if !strings.Contains(msg, "schema") && !strings.Contains(msg, "invalid artifact kind") {
+		t.Fatalf("expected schema/kind rejection, got: %v", err)
 	}
 }
 

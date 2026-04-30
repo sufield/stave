@@ -12,7 +12,6 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fileout"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
@@ -134,17 +133,21 @@ func validateInputPath(inputPath string) error {
 }
 
 func loadFindingRefs(inputPath string) ([]outenforce.FindingRef, error) {
-	data, err := fsutil.ReadFileLimited(inputPath)
+	// Load via the schema-validating envelope path. Enforcement
+	// generation drives gating decisions — the input must be a
+	// schema-valid out.v0.1 Assessment, not just any JSON file with
+	// `kind: "ASSESSMENT"` at the top. This blocks the trust-boundary
+	// attack where a forged `{"kind":"ASSESSMENT","findings":[]}`
+	// could otherwise drive the gate into an empty-rules "clean"
+	// state.
+	loader := evaljson.NewLoader().WithStrictSchema()
+	assessment, err := loader.LoadEnvelopeFromFile(context.Background(), inputPath)
 	if err != nil {
-		return nil, fmt.Errorf("read input: %w", err)
+		return nil, fmt.Errorf("load evaluation: %w", err)
 	}
-	findings, err := evaljson.ParseFindings(data)
-	if err != nil {
-		return nil, fmt.Errorf("parse input JSON: %w", err)
-	}
-	refs := make([]outenforce.FindingRef, len(findings))
-	for i := range findings {
-		f := &findings[i]
+	refs := make([]outenforce.FindingRef, len(assessment.Findings))
+	for i := range assessment.Findings {
+		f := &assessment.Findings[i]
 		refs[i] = outenforce.FindingRef{
 			ControlID: f.ControlID,
 			AssetID:   f.AssetID,

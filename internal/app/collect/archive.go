@@ -73,6 +73,8 @@ func NewArchive(path string) (*Archive, error) {
 }
 
 // WriteRun creates a run directory with the given files and metadata.
+// File names are validated as run-relative paths — names containing
+// "..", absolute paths, or NUL bytes are rejected before any write.
 func (a *Archive) WriteRun(runID string, files map[string][]byte, meta RunMetadata) error {
 	runDir := filepath.Join(a.Path, "runs", runID)
 	if err := os.MkdirAll(runDir, 0o750); err != nil { //nolint:gosec // run dir
@@ -84,6 +86,9 @@ func (a *Archive) WriteRun(runID string, files map[string][]byte, meta RunMetada
 	// Write each file and compute SHA-256.
 	var sumLines []string
 	for name, data := range files {
+		if !isSafeRunRelative(name) {
+			return fmt.Errorf("write %s: unsafe filename (must be run-relative, no .. segments, no leading separator)", name)
+		}
 		path := filepath.Join(runDir, name)
 		if err := os.WriteFile(path, data, 0o644); err != nil { //nolint:gosec // evidence file
 			return fmt.Errorf("write %s: %w", name, err)
@@ -230,4 +235,27 @@ func (a *Archive) Verify() ([]string, []string) {
 func sha256Hex(data []byte) string {
 	h := sha256.Sum256(data)
 	return hex.EncodeToString(h[:])
+}
+
+// isSafeRunRelative checks that a name passed to WriteRun is a relative
+// path that stays inside the run directory: no leading separator, no
+// parent segments, no NUL bytes, no Windows-style absolute paths.
+// Mirrors the verifier-side check in archiveverify so writer and reader
+// reject the same set of unsafe names.
+func isSafeRunRelative(name string) bool {
+	if name == "" {
+		return false
+	}
+	if strings.ContainsRune(name, 0) {
+		return false
+	}
+	if filepath.IsAbs(name) {
+		return false
+	}
+	for _, seg := range strings.Split(filepath.ToSlash(name), "/") {
+		if seg == ".." {
+			return false
+		}
+	}
+	return true
 }

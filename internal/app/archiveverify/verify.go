@@ -280,6 +280,19 @@ func verifyRunChecksums(archivePath, runID string) (bool, string) {
 		return false, "sha256sums.txt missing"
 	}
 
+	// Resolve runDir to its canonical absolute path so containment
+	// checks survive symlinks and relative inputs.
+	absRunDir, err := filepath.Abs(runDir)
+	if err != nil {
+		return false, fmt.Sprintf("resolve run dir: %v", err)
+	}
+
+	// Phase 1: parse the manifest into (filename → expectedHash). Reject
+	// any filename that escapes runDir — a tampered sha256sums.txt could
+	// otherwise point at sibling runs, the parent archive's manifest.json,
+	// or arbitrary readable files on disk, which would let a forged
+	// bundle pass verification by hashing unrelated content.
+	expected := make(map[string]string)
 	for line := range strings.SplitSeq(strings.TrimSpace(string(data)), "\n") {
 		parts := strings.SplitN(line, "  ", 2)
 		if len(parts) != 2 {
@@ -287,17 +300,101 @@ func verifyRunChecksums(archivePath, runID string) (bool, string) {
 		}
 		expectedHash := parts[0]
 		filename := parts[1]
+		if !isSafeRunRelative(filename) {
+			return false, fmt.Sprintf("%s: unsafe filename in manifest", filename)
+		}
 		filePath := filepath.Join(runDir, filename)
-		fileData, readErr := os.ReadFile(filePath) //nolint:gosec
+		absFilePath, absErr := filepath.Abs(filePath)
+		if absErr != nil {
+			return false, fmt.Sprintf("%s: resolve path: %v", filename, absErr)
+		}
+		// Containment check: absFilePath must be under absRunDir.
+		// filepath.Rel returns "../..." when escaping; reject any rel
+		// that starts with ".." or is absolute on the target side.
+		rel, relErr := filepath.Rel(absRunDir, absFilePath)
+		if relErr != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || filepath.IsAbs(rel) {
+			return false, fmt.Sprintf("%s: path escapes run directory", filename)
+		}
+		if _, dup := expected[filename]; dup {
+			return false, fmt.Sprintf("%s: duplicate manifest entry", filename)
+		}
+		expected[filename] = expectedHash
+	}
+
+	// Phase 2: walk runDir and verify every actual file is in the
+	// manifest with a matching hash. Catches "manifest omits real
+	// files" attacks where the attacker only lists files they've
+	// rehashed and skips the real run output.
+	seen := make(map[string]bool, len(expected))
+	walkErr := filepath.WalkDir(runDir, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() {
+			return nil
+		}
+		rel, relErr := filepath.Rel(runDir, path)
+		if relErr != nil {
+			return relErr
+		}
+		// sha256sums.txt is the manifest itself — never lists itself.
+		if rel == "sha256sums.txt" {
+			return nil
+		}
+		expectedHash, ok := expected[rel]
+		if !ok {
+			return fmt.Errorf("%s: file present but not in manifest", rel)
+		}
+		fileData, readErr := os.ReadFile(path) //nolint:gosec
 		if readErr != nil {
-			return false, filename + ": file missing"
+			return fmt.Errorf("%s: %w", rel, readErr)
 		}
 		actualHash := "sha256:" + sha256Hex(fileData)
 		if actualHash != expectedHash {
-			return false, fmt.Sprintf("%s: expected %s, got %s", filename, expectedHash, actualHash)
+			return fmt.Errorf("%s: expected %s, got %s", rel, expectedHash, actualHash)
+		}
+		seen[rel] = true
+		return nil
+	})
+	if walkErr != nil {
+		return false, walkErr.Error()
+	}
+
+	// Phase 3: every manifest entry must have been visited. Any entry
+	// not seen in the walk points at a file that doesn't exist in
+	// runDir — the path-containment check in phase 1 already rejected
+	// out-of-tree paths, so this catches missing files only.
+	for filename := range expected {
+		if !seen[filename] {
+			return false, filename + ": file missing"
 		}
 	}
+
 	return true, ""
+}
+
+// isSafeRunRelative checks that a manifest filename is a relative path
+// that stays inside the run directory: no leading separator, no parent
+// segments, no NUL bytes, no Windows-style absolute paths.
+func isSafeRunRelative(filename string) bool {
+	if filename == "" {
+		return false
+	}
+	if strings.ContainsRune(filename, 0) {
+		return false
+	}
+	if filepath.IsAbs(filename) {
+		return false
+	}
+	// Check raw segments (before filepath.Clean collapses .. into the
+	// base path) so attackers can't slip "../foo" through by relying on
+	// filepath.Join's cleaning.
+	for _, seg := range strings.Split(filepath.ToSlash(filename), "/") {
+		if seg == ".." {
+			return false
+		}
+	}
+	return true
 }
 
 func sha256Hex(data []byte) string {
