@@ -18,6 +18,7 @@ import (
 	ui "github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/compliance"
+	"github.com/sufield/stave/internal/core/compliance/compound"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/profile"
@@ -135,8 +136,11 @@ func run(w io.Writer, opts *options) error {
 		// Re-evaluate compound findings: a compound risk whose
 		// TriggerIDs are all covered by valid acknowledged exceptions
 		// is no longer an active risk. Filter those out; everything
-		// else stays.
-		filteredCompound := report.CompoundFindings[:0]
+		// else stays. Allocate a fresh backing array so the read of
+		// report.CompoundFindings[i] cannot alias filteredCompound's
+		// writes — the previous `[:0]` reuse was correct only by
+		// accident of dereferencing cf before append.
+		filteredCompound := make([]compound.Finding, 0, len(report.CompoundFindings))
 		for i := range report.CompoundFindings {
 			cf := &report.CompoundFindings[i]
 			allAcked := len(cf.TriggerIDs) > 0
@@ -152,7 +156,11 @@ func run(w io.Writer, opts *options) error {
 		}
 		report.CompoundFindings = filteredCompound
 
-		// Recount after exceptions.
+		// Recount after exceptions. Compound findings carry their own
+		// severity (often higher than any single contributing control's
+		// severity, which is the entire point of "compound risk") — fold
+		// those into FailCounts so the exit-code check below reflects
+		// chain criticality, not just per-control criticality.
 		report.FailCounts = make(map[policy.Severity]int)
 		report.Pass = true
 		for _, r := range report.Results {
@@ -160,6 +168,9 @@ func run(w io.Writer, opts *options) error {
 				report.FailCounts[r.Severity]++
 				report.Pass = false
 			}
+		}
+		for i := range report.CompoundFindings {
+			report.FailCounts[report.CompoundFindings[i].Severity]++
 		}
 		if len(report.CompoundFindings) > 0 {
 			report.Pass = false

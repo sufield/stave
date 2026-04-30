@@ -126,6 +126,21 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 		}
 		for i := range report.Findings {
 			ctl := ctlLookup[report.Findings[i].ControlID]
+			if ctl == nil {
+				// Orphan finding: the control ID emitted by the engine
+				// is not in the loaded control catalog. Skip SLA
+				// annotation rather than dereferencing nil — the
+				// finding still surfaces, but without a deadline. Log
+				// so operators can investigate the catalog drift
+				// (typically a finding emitted by a chain definition
+				// referencing a removed control).
+				if w.Logger != nil {
+					w.Logger.Warn("sla annotation skipped: control not in catalog",
+						"control_id", report.Findings[i].ControlID,
+						"asset_id", report.Findings[i].AssetID)
+				}
+				continue
+			}
 			evaluation.AnnotateFindingSLA(&report.Findings[i], ctl, cfg.SLAConfig)
 		}
 	}

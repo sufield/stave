@@ -18,6 +18,14 @@ type CompiledPredicate struct {
 	Expression string
 }
 
+// IsValid reports whether the predicate has a non-nil compiled program.
+// Use to guard call sites that consume CompiledPredicate values built
+// from heterogeneous sources (caches, decoders) where a zero-value
+// struct could otherwise reach Eval and panic.
+func (cp CompiledPredicate) IsValid() bool {
+	return cp.Program != nil
+}
+
 // Compiler translates UnsafePredicate structures into compiled CEL programs.
 // Compiled programs are cached by expression string for thread-safe reuse.
 type Compiler struct {

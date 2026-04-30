@@ -184,6 +184,17 @@ func flattenErrors(err error) []Diagnostic {
 		})
 	}
 
+	// Defensive: a ValidationError with no ErrorKind anywhere in its
+	// cause tree would otherwise yield an empty diagnostic slice and
+	// silently drop the validation failure. Synthesize a diagnostic
+	// from the root error so a non-nil vErr is *always* visible.
+	if len(out) == 0 {
+		out = append(out, Diagnostic{
+			Path:    "/" + strings.Join(vErr.InstanceLocation, "/"),
+			Message: vErr.Error(),
+		})
+	}
+
 	slices.SortFunc(out, func(a, b Diagnostic) int {
 		return cmp.Or(
 			cmp.Compare(a.Path, b.Path),

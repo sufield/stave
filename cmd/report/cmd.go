@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
@@ -194,6 +195,20 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	// ATT&CK coverage (static from catalog).
 	attck := buildATTCKSection(opts.ControlsDir, ctx)
 
+	// Honest ControlsTotal: count what's actually loaded from
+	// opts.ControlsDir. Falling back to the previous TacticsTotal*10
+	// approximation produced fabricated metrics that the executive
+	// report consumer treated as ground truth — a 14-tactic catalog
+	// reported as "140 controls total" regardless of reality.
+	controlsTotal := 0
+	if opts.ControlsDir != "" {
+		if ctlLoader, ctlErr := ctlyaml.NewControlLoader(); ctlErr == nil {
+			if loaded, loadErr := ctlLoader.LoadControls(ctx, opts.ControlsDir); loadErr == nil {
+				controlsTotal = len(loaded)
+			}
+		}
+	}
+
 	// Teams.
 	var teamSections []er.TeamSection
 	if opts.TeamManifest != "" {
@@ -223,7 +238,7 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 		AttackCoverage:  attck,
 		Teams:           teamSections,
 		Catalog: er.CatalogSection{
-			ControlsTotal: attck.TacticsTotal * 10, // approximate
+			ControlsTotal: controlsTotal,
 			ChainsTotal:   len(chains),
 		},
 	}
@@ -426,22 +441,63 @@ func buildChainsSection(a *corereport.Assessment) er.ChainsSection {
 	}
 }
 
-func buildATTCKSection(_ string, _ context.Context) er.AttackCoverageSection {
-	// Use the coverage module to count controls per tactic.
-	covered := 0
-	var tactics []er.TacticItem
-	for _, td := range appcoverage.AllTactics {
-		item := er.TacticItem{
-			ID:   td.ID,
-			Name: td.Name,
-		}
-		// Without loading all controls, we can't count per-tactic.
-		// Set status based on whether the tactic exists in AllTactics.
-		item.Status = "covered"
-		covered++
-		tactics = append(tactics, item)
-	}
+func buildATTCKSection(controlsDir string, ctx context.Context) er.AttackCoverageSection {
 	total := len(appcoverage.AllTactics)
+
+	// Without controls, we cannot honestly say what's covered. Fall
+	// back to a fully-uncovered report rather than the previous
+	// "every tactic is covered" lie that depended on nothing but
+	// the tactic catalog being non-empty.
+	emptyReport := func(status string) er.AttackCoverageSection {
+		tactics := make([]er.TacticItem, 0, total)
+		for _, td := range appcoverage.AllTactics {
+			tactics = append(tactics, er.TacticItem{
+				ID:     td.ID,
+				Name:   td.Name,
+				Status: status,
+			})
+		}
+		return er.AttackCoverageSection{
+			TacticsCovered: 0,
+			TacticsTotal:   total,
+			CoveragePct:    0,
+			ByTactic:       tactics,
+		}
+	}
+
+	if controlsDir == "" {
+		return emptyReport("not_covered")
+	}
+	loader, err := ctlyaml.NewControlLoader()
+	if err != nil {
+		return emptyReport("not_covered")
+	}
+	controls, err := loader.LoadControls(ctx, controlsDir)
+	if err != nil {
+		return emptyReport("not_covered")
+	}
+
+	report := appcoverage.Build(appcoverage.BuildInput{Controls: controls})
+	tacticItems := make([]er.TacticItem, 0, len(report.Tactics))
+	covered := 0
+	for i := range report.Tactics {
+		tc := &report.Tactics[i]
+		// "covered" / "thin" both count as covered for the rolled-up
+		// pct; "no_coverage" maps to "not_covered" in the section's
+		// vocabulary.
+		status := tc.Status
+		if status == "no_coverage" {
+			status = "not_covered"
+		}
+		if tc.Status == "covered" || tc.Status == "thin" {
+			covered++
+		}
+		tacticItems = append(tacticItems, er.TacticItem{
+			ID:     tc.TacticID,
+			Name:   tc.TacticName,
+			Status: status,
+		})
+	}
 	pct := 0.0
 	if total > 0 {
 		pct = float64(covered) / float64(total) * 100
@@ -450,7 +506,7 @@ func buildATTCKSection(_ string, _ context.Context) er.AttackCoverageSection {
 		TacticsCovered: covered,
 		TacticsTotal:   total,
 		CoveragePct:    pct,
-		ByTactic:       tactics,
+		ByTactic:       tacticItems,
 	}
 }
 
@@ -491,8 +547,16 @@ func loadHistory(ctx context.Context, dir string) ([]*corereport.Assessment, err
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
 			continue
 		}
-		a, loadErr := loader.Evaluation(ctx, filepath.Join(dir, e.Name()))
+		path := filepath.Join(dir, e.Name())
+		a, loadErr := loader.Evaluation(ctx, path)
 		if loadErr != nil {
+			// History files that fail to parse are non-fatal — skip them
+			// so a single corrupt artifact does not blank the whole
+			// historical view — but log so operators can find and fix
+			// the bad file. Silent skip masked corrupt rotations for
+			// long enough that the report would just trim its time
+			// series and look like nothing was wrong.
+			slog.Warn("report: skipping corrupt history file", "path", path, "err", loadErr)
 			continue
 		}
 		out = append(out, a)

@@ -189,6 +189,19 @@ func PrepareBaseline(base *evaluation.Baseline, expectedKind kernel.OutputKind, 
 //   - Safety envelope:      {"kind": "evaluation", "findings": [...]}
 //   - Direct result:        {"findings": [...]}
 func ParseFindings(raw []byte) ([]remediation.Finding, error) {
+	return parseFindings(raw, 0)
+}
+
+// maxFindingsEnvelopeDepth bounds the recursion through nested
+// `{"ok":..., "data":{...}}` API envelopes. Real producers wrap at
+// most once; deeper nesting is either a malformed file or an
+// adversarial input designed to consume stack via unbounded recursion.
+const maxFindingsEnvelopeDepth = 3
+
+func parseFindings(raw []byte, depth int) ([]remediation.Finding, error) {
+	if depth > maxFindingsEnvelopeDepth {
+		return nil, fmt.Errorf("findings envelope nested deeper than %d levels", maxFindingsEnvelopeDepth)
+	}
 	var probe map[string]json.RawMessage
 	if err := json.Unmarshal(raw, &probe); err != nil {
 		return nil, fmt.Errorf("invalid JSON: %w", err)
@@ -197,7 +210,7 @@ func ParseFindings(raw []byte) ([]remediation.Finding, error) {
 	// Format 1: API wrapped envelope ({"ok": ..., "data": {...}})
 	if _, hasOK := probe["ok"]; hasOK {
 		if data, hasData := probe["data"]; hasData {
-			return ParseFindings(data)
+			return parseFindings(data, depth+1)
 		}
 	}
 

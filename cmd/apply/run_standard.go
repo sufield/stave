@@ -2,6 +2,7 @@ package apply
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -43,10 +44,17 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 	if err != nil {
 		return decorateError(fmt.Errorf("resolve evaluation plan: %w", err))
 	}
-
-	if plan != nil {
-		logger = runid.SetupLoggingWithRunID(logger, plan.ObservationsHash.String(), plan.ControlsHash.String())
+	if plan == nil {
+		// NewPlan's contract is "(plan, nil) on success, (nil, err)
+		// on failure". A (nil, nil) result here indicates a contract
+		// violation by NewPlan, not normal operation — fail loud
+		// rather than carry a nil plan into the run-id wiring (which
+		// would nil-deref ObservationsHash) or executeEvaluation
+		// (which dereferences plan throughout).
+		return decorateError(errors.New("resolve evaluation plan: NewPlan returned nil without error"))
 	}
+
+	logger = runid.SetupLoggingWithRunID(logger, plan.ObservationsHash.String(), plan.ControlsHash.String())
 
 	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)
 	rt.Quiet = sio.Quiet

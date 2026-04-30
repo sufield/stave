@@ -53,6 +53,14 @@ type Assessor struct {
 // roots in app/eval and cmd/* (which are allowed to depend on platform
 // packages) wire crypto.NewHasher() onto the returned Assessor before
 // calling Assess().
+//
+// Nil-receiver contract: Exemptions, Exceptions, and Acknowledgments
+// may be left nil. Their *ShouldExempt / *ShouldExcept / *FindRule
+// methods are nil-safe and treat a nil receiver as "no rules
+// configured" — so the assessor never panics on a partially-wired
+// configuration. Tests and integration callers that want fully empty
+// configs can pass freshly constructed instances; the result is the
+// same.
 func NewAssessor() *Assessor {
 	return &Assessor{
 		Logger:          slog.Default(),

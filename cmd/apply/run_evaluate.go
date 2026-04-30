@@ -93,15 +93,23 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 		Now:                  deps.Config.Clock.Now(),
 	})
 
-	// Scan findings for SLA breaches.
+	// Scan findings for SLA breaches. The loop short-circuits only
+	// when both HasSLABreach and HasCriticalSLABreach are set, since
+	// once that pair is true no later finding can elevate either
+	// flag. A bare `break` on the first breach (or first critical
+	// breach) would leave HasCriticalSLABreach=false on the case
+	// where the first SLA-breached finding is non-critical and a
+	// later one IS critical.
 	for i := range result.Findings {
 		f := &result.Findings[i]
 		if f.SLABreached {
 			evalResult.HasSLABreach = true
 			if f.ControlSeverity.String() == "critical" || f.SLAEscalatedSeverity == "critical" {
 				evalResult.HasCriticalSLABreach = true
-				break // both flags set, no need to scan further
 			}
+		}
+		if evalResult.HasSLABreach && evalResult.HasCriticalSLABreach {
+			break
 		}
 	}
 

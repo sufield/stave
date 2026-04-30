@@ -219,6 +219,18 @@ func Build(input BuildInput) *GraphData {
 		}
 	}
 
+	// Build a single index of findings keyed by control ID before
+	// the chain loop. The previous nested-scan approach was O(N×M)
+	// where N = ChainFindings × ControlsFailing and M = total
+	// findings; on a 200-finding bundle with 20 chains that's ~4k
+	// inner iterations per outer pass, all of which fed
+	// deduplicateEdges with redundant copies anyway.
+	findingsByControl := make(map[kernel.ControlID][]int, len(input.Findings))
+	for j := range input.Findings {
+		ff := &input.Findings[j]
+		findingsByControl[ff.ControlID] = append(findingsByControl[ff.ControlID], j)
+	}
+
 	// ChainFindings → ThreatChain + AttackerCapability nodes and edges.
 	for i := range input.ChainFindings {
 		cf := &input.ChainFindings[i]
@@ -268,19 +280,18 @@ func Build(input BuildInput) *GraphData {
 			From: chainID, To: capID, Type: "PRODUCES",
 		})
 
-		// MEMBER_OF edges from findings to chain.
+		// MEMBER_OF edges from findings to chain. O(1) lookup via the
+		// pre-built control→[]findingIdx index.
 		for _, ctlID := range cf.ControlsFailing {
-			for j := range input.Findings {
+			for _, j := range findingsByControl[ctlID] {
 				ff := &input.Findings[j]
-				if ff.ControlID == ctlID {
-					g.Edges = append(g.Edges, Edge{
-						From: ff.FindingID, To: chainID, Type: "MEMBER_OF",
-						Properties: map[string]any{
-							"chain_severity":   cf.Severity.String(),
-							"stage_span_attck": TranslateStages(cf.AttackStages),
-						},
-					})
-				}
+				g.Edges = append(g.Edges, Edge{
+					From: ff.FindingID, To: chainID, Type: "MEMBER_OF",
+					Properties: map[string]any{
+						"chain_severity":   cf.Severity.String(),
+						"stage_span_attck": TranslateStages(cf.AttackStages),
+					},
+				})
 			}
 		}
 	}

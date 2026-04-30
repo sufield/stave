@@ -52,19 +52,25 @@ func ToKillChainPhases(stages []string) []map[string]string {
 	return out
 }
 
+// staveToKillChainPhases maps a Stave attack stage to its STIX 2.1
+// kill_chain_phase phase_name. Hoisted to package level so each call
+// to staveToKillChainPhase does not re-allocate the table — on a
+// large export with hundreds of chain findings this map was being
+// rebuilt thousands of times per call to ToKillChainPhases.
+var staveToKillChainPhases = map[string]string{ //nolint:gosec // G101: not credentials — ATT&CK tactic names
+	"initial_access":       "initial-access",
+	"execution":            "execution",
+	"persistence":          "persistence",
+	"privilege_escalation": "privilege-escalation",
+	"detection_evasion":    "defense-evasion",
+	"credential_access":    "credential-access",
+	"discovery":            "discovery",
+	"lateral_movement":     "lateral-movement",
+	"collection":           "collection",
+	"exfiltration":         "exfiltration",
+	"impact":               "impact",
+}
+
 func staveToKillChainPhase(stage string) string {
-	phases := map[string]string{ //nolint:gosec // G101: not credentials — ATT&CK tactic names
-		"initial_access":       "initial-access",
-		"execution":            "execution",
-		"persistence":          "persistence",
-		"privilege_escalation": "privilege-escalation",
-		"detection_evasion":    "defense-evasion",
-		"credential_access":    "credential-access",
-		"discovery":            "discovery",
-		"lateral_movement":     "lateral-movement",
-		"collection":           "collection",
-		"exfiltration":         "exfiltration",
-		"impact":               "impact",
-	}
-	return phases[stage]
+	return staveToKillChainPhases[stage]
 }
