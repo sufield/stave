@@ -12,6 +12,7 @@ func testRegistry() *ControlStore {
 }
 
 func TestLoadAll(t *testing.T) {
+	t.Parallel()
 	controls, err := testRegistry().All()
 	if err != nil {
 		t.Fatalf("All failed: %v", err)
@@ -47,6 +48,7 @@ func TestLoadAll(t *testing.T) {
 }
 
 func TestLoadFiltered_ByScopeTags(t *testing.T) {
+	t.Parallel()
 	selectors := []Selector{
 		{Tags: []string{"aws", "s3"}},
 	}
@@ -71,6 +73,7 @@ func TestLoadFiltered_ByScopeTags(t *testing.T) {
 }
 
 func TestLoadFiltered_EmptySelectors(t *testing.T) {
+	t.Parallel()
 	reg := testRegistry()
 	all, err := reg.All()
 	if err != nil {
@@ -86,6 +89,7 @@ func TestLoadFiltered_EmptySelectors(t *testing.T) {
 }
 
 func TestLoadAll_NoDuplicateIDs(t *testing.T) {
+	t.Parallel()
 	controls, err := testRegistry().All()
 	if err != nil {
 		t.Fatalf("All failed: %v", err)
@@ -100,6 +104,7 @@ func TestLoadAll_NoDuplicateIDs(t *testing.T) {
 }
 
 func TestLoadAll_AliasesAreExpanded(t *testing.T) {
+	t.Parallel()
 	controls, err := testRegistry().All()
 	if err != nil {
 		t.Fatalf("All failed: %v", err)

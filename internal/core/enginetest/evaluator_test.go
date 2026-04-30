@@ -27,6 +27,7 @@ func mustParseTime(s string) time.Time {
 // TestEvaluator_UnsafeDurationViolation tests that violations are detected
 // when assets remain unsafe longer than the configured threshold.
 func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
+	t.Parallel()
 	ctl := policy.ControlDefinition{
 		ID:          "CTL.EXP.DURATION.001",
 		Name:        "Unsafe Duration Bound",
@@ -106,6 +107,7 @@ func TestEvaluator_UnsafeDurationViolation(t *testing.T) {
 // TestEvaluator_NoViolationWhenUnderThreshold tests that no violations are reported
 // when unsafe duration stays below the configured threshold.
 func TestEvaluator_NoViolationWhenUnderThreshold(t *testing.T) {
+	t.Parallel()
 	ctl := policy.ControlDefinition{
 		ID:   "CTL.EXP.DURATION.001",
 		Type: policy.TypeUnsafeDuration,
@@ -145,6 +147,7 @@ func TestEvaluator_NoViolationWhenUnderThreshold(t *testing.T) {
 // TestEvaluator_SafeInLatestSnapshot tests that no violations are reported
 // when an asset that was previously unsafe becomes safe in the latest snapshot.
 func TestEvaluator_SafeInLatestSnapshot(t *testing.T) {
+	t.Parallel()
 	ctl := policy.ControlDefinition{
 		ID:   "CTL.EXP.DURATION.001",
 		Type: policy.TypeUnsafeDuration,
@@ -197,6 +200,7 @@ func TestEvaluator_SafeInLatestSnapshot(t *testing.T) {
 // TestEvaluator_UnsafeStreakReset tests that unsafe duration tracking resets
 // when an asset transitions from unsafe to safe and back to unsafe again.
 func TestEvaluator_UnsafeStreakReset(t *testing.T) {
+	t.Parallel()
 	ctl := policy.ControlDefinition{
 		ID:   "CTL.EXP.DURATION.001",
 		Type: policy.TypeUnsafeDuration,
@@ -250,6 +254,7 @@ func TestEvaluator_UnsafeStreakReset(t *testing.T) {
 // TestEvaluator_PerControlThreshold tests that per-control max_unsafe_duration
 // parameters override the global CLI default threshold.
 func TestEvaluator_PerControlThreshold(t *testing.T) {
+	t.Parallel()
 	// Test that per-control max_unsafe_duration overrides CLI default
 	strict := policy.ControlDefinition{
 		ID:          "CTL.EXP.DURATION.101",
@@ -339,6 +344,7 @@ func TestEvaluator_PerControlThreshold(t *testing.T) {
 // TestEvaluator_PerControlThreshold_DaySyntax tests that day syntax ("7d")
 // works correctly in per-control max_unsafe_duration parameters.
 func TestEvaluator_PerControlThreshold_DaySyntax(t *testing.T) {
+	t.Parallel()
 	// Test that "7d" day syntax works in per-control params
 	ctl := policy.ControlDefinition{
 		ID:   "CTL.EXP.DURATION.103",
@@ -394,6 +400,7 @@ func TestEvaluator_PerControlThreshold_DaySyntax(t *testing.T) {
 // - When --now is set (FixedClock), the explicit time is used as reference
 // - When --now is not set (RealClock), the last snapshot's CapturedAt is used
 func TestEvaluator_DeterministicNow(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.EXP.DURATION.001",
@@ -446,6 +453,7 @@ func TestEvaluator_DeterministicNow(t *testing.T) {
 // TestEvaluator_UnsupportedTypeSkipped tests that controls with unsupported
 // types are skipped and not evaluated via duration fallback.
 func TestEvaluator_UnsupportedTypeSkipped(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.EXP.DURATION.001",
@@ -519,6 +527,7 @@ func TestEvaluator_UnsupportedTypeSkipped(t *testing.T) {
 // TestEvaluator_AbsenceDoesNotCloseExposureWindow tests that an asset missing from a
 // snapshot does NOT close an open exposure window. Absence means "no new evidence", not "safe".
 func TestEvaluator_AbsenceDoesNotCloseExposureWindow(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.EXP.DURATION.001",
@@ -581,6 +590,7 @@ func TestEvaluator_AbsenceDoesNotCloseExposureWindow(t *testing.T) {
 // at end-of-input is NOT added to the Exposure windows list. Exposure windows list contains
 // only completed exposure windows (true -> false transitions).
 func TestEvaluator_OpenWindowNotInWindowsList(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.EXP.RECURRENCE.001",
@@ -652,6 +662,7 @@ func TestEvaluator_OpenWindowNotInWindowsList(t *testing.T) {
 
 // TestEvaluator_TypeGating tests that each supported type is evaluated correctly.
 func TestEvaluator_TypeGating(t *testing.T) {
+	t.Parallel()
 	// Test that all three MVP 1.0 types are processed correctly
 	// and unsupported types are skipped
 
@@ -810,6 +821,7 @@ func TestEvaluator_TypeGating(t *testing.T) {
 // the current window start, not from the first-ever unsafe observation.
 // Scenario: unsafe -> safe -> unsafe - duration should measure only the current exposure window.
 func TestEvaluator_DurationFromCurrentExposureWindow(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.DURATION.001",
@@ -881,6 +893,7 @@ func TestEvaluator_DurationFromCurrentExposureWindow(t *testing.T) {
 // TestEvaluator_DurationFromCurrentExposureWindow_Violation tests that duration violation
 // is correctly detected based on current exposure window duration, not first-ever unsafe.
 func TestEvaluator_DurationFromCurrentExposureWindow_Violation(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.DURATION.001",
@@ -952,6 +965,7 @@ func TestEvaluator_DurationFromCurrentExposureWindow_Violation(t *testing.T) {
 
 // TestExposureLifecycle_CoverageMetrics tests that coverage metrics are correctly computed.
 func TestExposureLifecycle_CoverageMetrics(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.COVERAGE.001",
@@ -1042,6 +1056,7 @@ func TestExposureLifecycle_CoverageMetrics(t *testing.T) {
 // TestExposureLifecycle_CoverageWithAbsence tests that coverage metrics are not updated
 // when an asset is absent from a snapshot.
 func TestExposureLifecycle_CoverageWithAbsence(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.COVERAGE.002",
@@ -1106,6 +1121,7 @@ func TestExposureLifecycle_CoverageWithAbsence(t *testing.T) {
 // TestEvaluator_SparseDurationInconclusive tests that sparse duration lifecycles
 // result in INCONCLUSIVE, not VIOLATION.
 func TestEvaluator_SparseDurationInconclusive(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.DURATION.SPARSE",
@@ -1164,6 +1180,7 @@ func TestEvaluator_SparseDurationInconclusive(t *testing.T) {
 // TestEvaluator_MissingResourceInconclusive tests that an asset that disappears
 // mid-window results in INCONCLUSIVE (not PASS).
 func TestEvaluator_MissingResourceInconclusive(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.DURATION.MISSING",
@@ -1220,6 +1237,7 @@ func TestEvaluator_MissingResourceInconclusive(t *testing.T) {
 // TestEvaluator_RecurrenceWindowInconclusive tests that incomplete recurrence window
 // results in INCONCLUSIVE.
 func TestEvaluator_RecurrenceWindowInconclusive(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.RECURRENCE.INCOMPLETE",
@@ -1277,6 +1295,7 @@ func TestEvaluator_RecurrenceWindowInconclusive(t *testing.T) {
 // TestEvaluator_AdequateCoveragePass tests that stable adequate coverage with safe
 // asset results in PASS.
 func TestEvaluator_AdequateCoveragePass(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.DURATION.ADEQUATE",
@@ -1353,6 +1372,7 @@ func TestEvaluator_AdequateCoveragePass(t *testing.T) {
 
 // TestEvaluator_ConfidenceDowngrade tests that confidence is computed based on MaxGap.
 func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
+	t.Parallel()
 	// Test high confidence (MaxGap <= 25% of threshold)
 	t.Run("high_confidence", func(t *testing.T) {
 		controls := []policy.ControlDefinition{
@@ -1583,6 +1603,7 @@ func TestEvaluator_ConfidenceDowngrade(t *testing.T) {
 // exposure windows ARE counted toward the recurrence limit. This prevents
 // false negatives when the asset is currently exposed.
 func TestEvaluator_RecurrenceOpenExposureWindow(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.RECURRENCE.OPEN",
@@ -1683,6 +1704,7 @@ func TestEvaluator_RecurrenceOpenExposureWindow(t *testing.T) {
 // TestEvaluator_RecurrenceOpenExposureWindowNotCounted tests that open exposure windows
 // that don't overlap the recurrence window are not counted.
 func TestEvaluator_RecurrenceOpenExposureWindowNotCounted(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.RECURRENCE.OPEN.NOCOUNT",

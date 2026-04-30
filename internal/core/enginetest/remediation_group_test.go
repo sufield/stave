@@ -18,6 +18,7 @@ func buildGroupsWithPrep(findings []remediation.Finding) []remediation.Group {
 }
 
 func TestBuildRemediationGroups(t *testing.T) {
+	t.Parallel()
 	makeActions := func(paths ...string) []evaluation.RemediationAction {
 		actions := make([]evaluation.RemediationAction, len(paths))
 		for i, p := range paths {
@@ -167,6 +168,7 @@ func TestBuildRemediationGroups(t *testing.T) {
 }
 
 func TestBuildRemediationGroups_DeterministicOrdering(t *testing.T) {
+	t.Parallel()
 	actions := []evaluation.RemediationAction{
 		{ActionType: "set", Path: predicate.NewFieldPath("security_posture.block_identity_public_access"), Value: true},
 	}
@@ -202,6 +204,7 @@ func TestBuildRemediationGroups_DeterministicOrdering(t *testing.T) {
 }
 
 func TestBuildRemediationGroups_ContributingControlsSorted(t *testing.T) {
+	t.Parallel()
 	actions := []evaluation.RemediationAction{
 		{ActionType: "set", Path: predicate.NewFieldPath("security_posture.block_identity_public_access"), Value: true},
 	}
@@ -241,6 +244,7 @@ func TestBuildRemediationGroups_ContributingControlsSorted(t *testing.T) {
 }
 
 func TestBuildRemediationGroups_StableGroupID(t *testing.T) {
+	t.Parallel()
 	actions := []evaluation.RemediationAction{
 		{ActionType: "set", Path: predicate.NewFieldPath("security_posture.block_identity_public_access"), Value: true},
 	}

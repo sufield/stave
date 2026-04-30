@@ -96,6 +96,7 @@ func assertNoLogFinding(t *testing.T, result *evaluation.ComplianceReport, contr
 // --- LOG.001: Access Logging Required ---
 
 func TestLog001_TruePositive_LoggingDisabled(t *testing.T) {
+	t.Parallel()
 	ev := logEvaluator(t)
 	bucket := logBucket("no-log-bucket", map[string]any{
 		"enabled": false,
@@ -107,6 +108,7 @@ func TestLog001_TruePositive_LoggingDisabled(t *testing.T) {
 }
 
 func TestLog001_TrueNegative_LoggingEnabled(t *testing.T) {
+	t.Parallel()
 	ev := logEvaluator(t)
 	bucket := logBucket("logged-bucket", map[string]any{
 		"enabled": true,
@@ -120,6 +122,7 @@ func TestLog001_TrueNegative_LoggingEnabled(t *testing.T) {
 // --- AUDIT.OBJECTLEVEL.001: CloudTrail Object-Level Logging ---
 
 func TestAuditObjectLevel001_TruePositive_ObjectLoggingDisabled(t *testing.T) {
+	t.Parallel()
 	ev := logEvaluator(t)
 	bucket := logBucket("no-ct-bucket", map[string]any{
 		"object_level_logging": map[string]any{
@@ -133,6 +136,7 @@ func TestAuditObjectLevel001_TruePositive_ObjectLoggingDisabled(t *testing.T) {
 }
 
 func TestAuditObjectLevel001_TrueNegative_ObjectLoggingEnabled(t *testing.T) {
+	t.Parallel()
 	ev := logEvaluator(t)
 	bucket := logBucket("ct-bucket", map[string]any{
 		"object_level_logging": map[string]any{

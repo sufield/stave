@@ -100,6 +100,7 @@ func assertNoLifecycleFinding(t *testing.T, result *evaluation.ComplianceReport,
 // Gated by: tags.data-retention present
 
 func TestLifecycle001_TruePositive_RetentionTaggedNoRules(t *testing.T) {
+	t.Parallel()
 	ev := lifecycleEvaluator(t)
 	bucket := lifecycleBucket("no-rules-bucket", map[string]any{
 		"rules_configured": false,
@@ -113,6 +114,7 @@ func TestLifecycle001_TruePositive_RetentionTaggedNoRules(t *testing.T) {
 }
 
 func TestLifecycle001_TrueNegative_RetentionTaggedWithRules(t *testing.T) {
+	t.Parallel()
 	ev := lifecycleEvaluator(t)
 	bucket := lifecycleBucket("rules-bucket", map[string]any{
 		"rules_configured": true,
@@ -126,6 +128,7 @@ func TestLifecycle001_TrueNegative_RetentionTaggedWithRules(t *testing.T) {
 }
 
 func TestLifecycle001_TrueNegative_NoRetentionTag(t *testing.T) {
+	t.Parallel()
 	ev := lifecycleEvaluator(t)
 	// No data-retention tag — control should not fire
 	bucket := lifecycleBucket("untagged-bucket", map[string]any{
@@ -142,6 +145,7 @@ func TestLifecycle001_TrueNegative_NoRetentionTag(t *testing.T) {
 // Unsafe when: min_expiration_days < params.min_retention_days (2190)
 
 func TestLifecycle002_TruePositive_PHIShortExpiration(t *testing.T) {
+	t.Parallel()
 	ev := lifecycleEvaluator(t)
 	bucket := lifecycleBucket("short-exp-bucket", map[string]any{
 		"has_expiration":      true,
@@ -156,6 +160,7 @@ func TestLifecycle002_TruePositive_PHIShortExpiration(t *testing.T) {
 }
 
 func TestLifecycle002_TrueNegative_PHISufficientExpiration(t *testing.T) {
+	t.Parallel()
 	ev := lifecycleEvaluator(t)
 	bucket := lifecycleBucket("long-exp-bucket", map[string]any{
 		"has_expiration":      true,
@@ -170,6 +175,7 @@ func TestLifecycle002_TrueNegative_PHISufficientExpiration(t *testing.T) {
 }
 
 func TestLifecycle002_TrueNegative_PHINoExpiration(t *testing.T) {
+	t.Parallel()
 	ev := lifecycleEvaluator(t)
 	// has_expiration=false — control should not fire
 	bucket := lifecycleBucket("no-exp-bucket", map[string]any{
@@ -185,6 +191,7 @@ func TestLifecycle002_TrueNegative_PHINoExpiration(t *testing.T) {
 }
 
 func TestLifecycle002_TrueNegative_NonPHIBucket(t *testing.T) {
+	t.Parallel()
 	ev := lifecycleEvaluator(t)
 	// Not PHI — control should not fire
 	bucket := lifecycleBucket("internal-bucket", map[string]any{

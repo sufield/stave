@@ -123,6 +123,7 @@ func accessEvaluator(t *testing.T) *testEvaluator {
 // --- E2E Tests: CTL.S3.ACCESS.001 (Cross-Account Access) ---
 
 func TestAccess001_TruePositive_ExternalAccountAccess(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("xaccount-bucket", map[string]any{
 		"external_account_ids": []any{"999888777666"},
@@ -134,6 +135,7 @@ func TestAccess001_TruePositive_ExternalAccountAccess(t *testing.T) {
 }
 
 func TestAccess001_TrueNegative_NoExternalAccounts(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("private-bucket", map[string]any{
 		"external_account_ids": []any{},
@@ -147,6 +149,7 @@ func TestAccess001_TrueNegative_NoExternalAccounts(t *testing.T) {
 // --- E2E Tests: CTL.S3.ACCESS.002 (Wildcard Actions) ---
 
 func TestAccess002_TruePositive_WildcardPolicy(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("wildcard-bucket", map[string]any{
 		"has_wildcard_principal": true,
@@ -158,6 +161,7 @@ func TestAccess002_TruePositive_WildcardPolicy(t *testing.T) {
 }
 
 func TestAccess002_TrueNegative_SpecificActions(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("scoped-bucket", map[string]any{
 		"has_wildcard_principal": false,
@@ -171,6 +175,7 @@ func TestAccess002_TrueNegative_SpecificActions(t *testing.T) {
 // --- E2E Tests: CTL.S3.ACCESS.003 (External Write) ---
 
 func TestAccess003_TruePositive_ExternalWriteAccess(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("writable-bucket", map[string]any{
 		"has_external_write": true,
@@ -182,6 +187,7 @@ func TestAccess003_TruePositive_ExternalWriteAccess(t *testing.T) {
 }
 
 func TestAccess003_TrueNegative_ReadOnlyExternal(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("readonly-bucket", map[string]any{
 		"has_external_write": false,
@@ -195,6 +201,7 @@ func TestAccess003_TrueNegative_ReadOnlyExternal(t *testing.T) {
 // --- E2E Tests: CTL.S3.AUTH.READ.001 (Authenticated Read) ---
 
 func TestAuthRead001_TruePositive(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("auth-read-bucket", map[string]any{
 		"authenticated_read": true,
@@ -206,6 +213,7 @@ func TestAuthRead001_TruePositive(t *testing.T) {
 }
 
 func TestAuthRead001_TrueNegative(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("safe-bucket", map[string]any{
 		"authenticated_read": false,
@@ -219,6 +227,7 @@ func TestAuthRead001_TrueNegative(t *testing.T) {
 // --- E2E Tests: CTL.S3.AUTH.WRITE.001 (Authenticated Write) ---
 
 func TestAuthWrite001_TruePositive(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("auth-write-bucket", map[string]any{
 		"authenticated_write": true,
@@ -230,6 +239,7 @@ func TestAuthWrite001_TruePositive(t *testing.T) {
 }
 
 func TestAuthWrite001_TrueNegative(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("safe-bucket", map[string]any{
 		"authenticated_write": false,
@@ -243,6 +253,7 @@ func TestAuthWrite001_TrueNegative(t *testing.T) {
 // --- E2E Tests: CTL.S3.ACCESS.004 (Bucket policy evaluates as effectively public) ---
 
 func TestAccess004_TruePositive_EffectivelyPublic(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("effectively-public-bucket", map[string]any{
 		"policy_is_effectively_public": true,
@@ -254,6 +265,7 @@ func TestAccess004_TruePositive_EffectivelyPublic(t *testing.T) {
 }
 
 func TestAccess004_TruePositive_FiresRegardlessOfPAB(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	// PAB fully enforcing does not silence the finding — ACCESS.004 is a
 	// policy-in-isolation signal. The RiskEngine is responsible for
@@ -281,6 +293,7 @@ func TestAccess004_TruePositive_FiresRegardlessOfPAB(t *testing.T) {
 }
 
 func TestAccess004_TrueNegative_PolicyNotPublic(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("scoped-bucket", map[string]any{
 		"policy_is_effectively_public": false,
@@ -294,6 +307,7 @@ func TestAccess004_TrueNegative_PolicyNotPublic(t *testing.T) {
 // --- E2E Tests: CTL.S3.POLICY.SCOPING.001 (Non-narrow principal grants must carry a scoping Condition) ---
 
 func TestPolicyScoping001_TruePositive_NoScopingCondition(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("unscoped-bucket", map[string]any{
 		"policy_has_scoping_condition": false,
@@ -305,6 +319,7 @@ func TestPolicyScoping001_TruePositive_NoScopingCondition(t *testing.T) {
 }
 
 func TestPolicyScoping001_TrueNegative_ScopingConditionPresent(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	// Non-narrow principal Allow exists but every such statement carries a
 	// scoping Condition (e.g., Principal:* plus aws:PrincipalOrgID=o-xxxx).
@@ -318,6 +333,7 @@ func TestPolicyScoping001_TrueNegative_ScopingConditionPresent(t *testing.T) {
 }
 
 func TestPolicyScoping001_TrueNegative_NoPolicy(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	// Field omitted entirely — bucket has no policy. Nothing to scope.
 	bucket := accessBucket("no-policy-bucket", map[string]any{})
@@ -328,6 +344,7 @@ func TestPolicyScoping001_TrueNegative_NoPolicy(t *testing.T) {
 }
 
 func TestPolicyScoping001_TrueNegative_NarrowPrincipalsOnly(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	// Field is null — bucket has a policy but every Allow names a specific
 	// principal, so there is nothing for the scoping guard to cover.
@@ -345,6 +362,7 @@ func TestPolicyScoping001_TrueNegative_NarrowPrincipalsOnly(t *testing.T) {
 // Unsafe when: has_broad_write_grant=true
 
 func TestAccessGrants001_TruePositive_BroadWriteGrant(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessGrantsBucket("broad-grant-bucket", map[string]any{
 		"instance_exists":       true,
@@ -357,6 +375,7 @@ func TestAccessGrants001_TruePositive_BroadWriteGrant(t *testing.T) {
 }
 
 func TestAccessGrants001_TrueNegative_NoBroadWriteGrant(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessGrantsBucket("scoped-grant-bucket", map[string]any{
 		"instance_exists":       true,
@@ -369,6 +388,7 @@ func TestAccessGrants001_TrueNegative_NoBroadWriteGrant(t *testing.T) {
 }
 
 func TestAccessGrants001_TrueNegative_NoGrantsInstance(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessGrantsBucket("no-grants-bucket", map[string]any{
 		"instance_exists":       false,
@@ -385,6 +405,7 @@ func TestAccessGrants001_TrueNegative_NoGrantsInstance(t *testing.T) {
 // Unsafe when: identity_center_attached=false
 
 func TestAccessGrants002_TruePositive_NoIdentityCenter(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessGrantsBucket("no-ic-bucket", map[string]any{
 		"instance_exists":          true,
@@ -397,6 +418,7 @@ func TestAccessGrants002_TruePositive_NoIdentityCenter(t *testing.T) {
 }
 
 func TestAccessGrants002_TrueNegative_IdentityCenterAttached(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessGrantsBucket("ic-bucket", map[string]any{
 		"instance_exists":          true,
@@ -409,6 +431,7 @@ func TestAccessGrants002_TrueNegative_IdentityCenterAttached(t *testing.T) {
 }
 
 func TestAccessGrants002_TrueNegative_NoGrantsInstance(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessGrantsBucket("no-grants-bucket-2", map[string]any{
 		"instance_exists":          false,
@@ -425,6 +448,7 @@ func TestAccessGrants002_TrueNegative_NoGrantsInstance(t *testing.T) {
 // Unsafe when: presigned_url_restricted=false
 
 func TestPresigned001_TruePositive_Unrestricted(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucketWithKind("unrestricted-presign-bucket", map[string]any{
 		"presigned_url_restricted": false,
@@ -436,6 +460,7 @@ func TestPresigned001_TruePositive_Unrestricted(t *testing.T) {
 }
 
 func TestPresigned001_TrueNegative_Restricted(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucketWithKind("restricted-presign-bucket", map[string]any{
 		"presigned_url_restricted": true,
@@ -449,6 +474,7 @@ func TestPresigned001_TrueNegative_Restricted(t *testing.T) {
 // --- Cross-control: combined violations ---
 
 func TestAccess_MultipleViolations_SameBucket(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("nightmare-bucket", map[string]any{
 		"external_account_ids":   []any{"999888777666"},
@@ -468,6 +494,7 @@ func TestAccess_MultipleViolations_SameBucket(t *testing.T) {
 }
 
 func TestAccess_AllSafe(t *testing.T) {
+	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("safe-bucket", map[string]any{
 		"external_account_ids":   []any{},

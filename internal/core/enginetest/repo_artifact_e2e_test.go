@@ -80,6 +80,7 @@ func artifactEvaluator(t *testing.T) *testEvaluator {
 // --- True Positive: public + artifacts exposed ---
 
 func TestRepoArtifact_TruePositive_PublicReadWithArtifacts(t *testing.T) {
+	t.Parallel()
 	ev := artifactEvaluator(t)
 	bucket := artifactBucket("website-bucket",
 		map[string]any{"public_read": true},
@@ -92,6 +93,7 @@ func TestRepoArtifact_TruePositive_PublicReadWithArtifacts(t *testing.T) {
 }
 
 func TestRepoArtifact_TruePositive_PublicListWithArtifacts(t *testing.T) {
+	t.Parallel()
 	ev := artifactEvaluator(t)
 	bucket := artifactBucket("listing-bucket",
 		map[string]any{"public_list": true},
@@ -106,6 +108,7 @@ func TestRepoArtifact_TruePositive_PublicListWithArtifacts(t *testing.T) {
 // --- True Negative: only one condition met ---
 
 func TestRepoArtifact_TrueNegative_PublicButNoArtifacts(t *testing.T) {
+	t.Parallel()
 	ev := artifactEvaluator(t)
 	bucket := artifactBucket("clean-public-bucket",
 		map[string]any{"public_read": true},
@@ -118,6 +121,7 @@ func TestRepoArtifact_TrueNegative_PublicButNoArtifacts(t *testing.T) {
 }
 
 func TestRepoArtifact_TrueNegative_ArtifactsPresentButPrivate(t *testing.T) {
+	t.Parallel()
 	ev := artifactEvaluator(t)
 	bucket := artifactBucket("private-with-git",
 		map[string]any{"public_read": false, "public_list": false},
@@ -130,6 +134,7 @@ func TestRepoArtifact_TrueNegative_ArtifactsPresentButPrivate(t *testing.T) {
 }
 
 func TestRepoArtifact_TrueNegative_FullyPrivate(t *testing.T) {
+	t.Parallel()
 	ev := artifactEvaluator(t)
 	bucket := artifactBucket("safe-bucket",
 		map[string]any{"public_read": false, "public_list": false},

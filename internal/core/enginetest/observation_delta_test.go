@@ -9,6 +9,7 @@ import (
 )
 
 func TestComputeObservationDelta_DetectsChanges(t *testing.T) {
+	t.Parallel()
 	t1 := time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC)
 	t2 := time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 
@@ -46,6 +47,7 @@ func TestComputeObservationDelta_DetectsChanges(t *testing.T) {
 }
 
 func TestDiffResources_DetectsPropertyChanges(t *testing.T) {
+	t.Parallel()
 	prev := asset.Asset{
 		ID:   "res-a",
 		Type: "bucket",
@@ -70,6 +72,7 @@ func TestDiffResources_DetectsPropertyChanges(t *testing.T) {
 }
 
 func TestLatestTwoSnapshots(t *testing.T) {
+	t.Parallel()
 	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	t2 := time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
 	t3 := time.Date(2026, 1, 3, 0, 0, 0, 0, time.UTC)
@@ -92,6 +95,7 @@ func TestLatestTwoSnapshots(t *testing.T) {
 }
 
 func TestLatestTwoSnapshots_InsufficientSnapshots(t *testing.T) {
+	t.Parallel()
 	in := []asset.Snapshot{{}}
 	_, _, err := asset.GetStateTransition(in)
 	if err == nil {
@@ -100,6 +104,7 @@ func TestLatestTwoSnapshots_InsufficientSnapshots(t *testing.T) {
 }
 
 func TestSummarizeDeltaChanges(t *testing.T) {
+	t.Parallel()
 	changes := []asset.AssetChange{
 		{Action: asset.DriftProvisioned},
 		{Action: asset.DriftProvisioned},

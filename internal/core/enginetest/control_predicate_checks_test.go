@@ -10,6 +10,7 @@ import (
 )
 
 func TestFindMissingParamReferences_DedupesAndSorts(t *testing.T) {
+	t.Parallel()
 	pred := policy.UnsafePredicate{
 		Any: []policy.PredicateRule{
 			{ValueFromParam: predicate.ParamRef("z")},
@@ -39,6 +40,7 @@ func TestFindMissingParamReferences_DedupesAndSorts(t *testing.T) {
 }
 
 func TestCheckControlEffectiveness(t *testing.T) {
+	t.Parallel()
 	controls := []policy.ControlDefinition{
 		{
 			ID:   "CTL.MATCH",

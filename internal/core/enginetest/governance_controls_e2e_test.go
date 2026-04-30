@@ -88,6 +88,7 @@ func assertNoGovFinding(t *testing.T, result *evaluation.ComplianceReport, asset
 }
 
 func TestGovernance001_TruePositive_NoClassificationTag(t *testing.T) {
+	t.Parallel()
 	ev := govEvaluator(t)
 	bucket := govBucket("untagged-bucket", nil)
 
@@ -97,6 +98,7 @@ func TestGovernance001_TruePositive_NoClassificationTag(t *testing.T) {
 }
 
 func TestGovernance001_TrueNegative_HasClassificationTag(t *testing.T) {
+	t.Parallel()
 	ev := govEvaluator(t)
 	bucket := govBucket("tagged-bucket", map[string]any{
 		"data-classification": "internal",

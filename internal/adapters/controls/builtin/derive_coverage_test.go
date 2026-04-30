@@ -7,6 +7,7 @@ import (
 )
 
 func TestDeriveDefectCoverage(t *testing.T) {
+	t.Parallel()
 	store := testRegistry()
 	controls, err := store.All()
 	if err != nil {

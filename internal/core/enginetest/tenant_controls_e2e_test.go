@@ -99,6 +99,7 @@ func assertNoTenantFinding(t *testing.T, result *evaluation.ComplianceReport, as
 }
 
 func TestTenantIsolation001_TruePositive_TraversalEnabled(t *testing.T) {
+	t.Parallel()
 	ev := tenantEvaluator(t)
 	bucket := tenantBucket("shared-bucket", map[string]any{
 		"tenant_mode":   "shared",
@@ -121,6 +122,7 @@ func TestTenantIsolation001_TruePositive_TraversalEnabled(t *testing.T) {
 }
 
 func TestTenantIsolation001_TruePositive_PrefixEnforcementDisabled(t *testing.T) {
+	t.Parallel()
 	ev := tenantEvaluator(t)
 	bucket := tenantBucket("shared-bucket-2", map[string]any{
 		"tenant_mode":   "shared",
@@ -143,6 +145,7 @@ func TestTenantIsolation001_TruePositive_PrefixEnforcementDisabled(t *testing.T)
 }
 
 func TestTenantIsolation001_TrueNegative_PrefixEnforcedNoTraversal(t *testing.T) {
+	t.Parallel()
 	ev := tenantEvaluator(t)
 	bucket := tenantBucket("safe-shared-bucket", map[string]any{
 		"tenant_mode":   "shared",
@@ -165,6 +168,7 @@ func TestTenantIsolation001_TrueNegative_PrefixEnforcedNoTraversal(t *testing.T)
 }
 
 func TestTenantIsolation001_TrueNegative_NotSharedBucket(t *testing.T) {
+	t.Parallel()
 	ev := tenantEvaluator(t)
 	// Not a shared bucket — control should not fire
 	bucket := tenantBucket("single-tenant-bucket", map[string]any{
@@ -188,6 +192,7 @@ func TestTenantIsolation001_TrueNegative_NotSharedBucket(t *testing.T) {
 }
 
 func TestTenantIsolation001_TrueNegative_NoIdentities(t *testing.T) {
+	t.Parallel()
 	ev := tenantEvaluator(t)
 	bucket := tenantBucket("no-id-bucket", map[string]any{
 		"tenant_mode":   "shared",

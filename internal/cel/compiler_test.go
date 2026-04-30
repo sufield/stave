@@ -8,6 +8,7 @@ import (
 )
 
 func TestCompile_SimpleAllPredicate(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -31,6 +32,7 @@ func TestCompile_SimpleAllPredicate(t *testing.T) {
 }
 
 func TestCompile_EvaluateMatching(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -68,6 +70,7 @@ func TestCompile_EvaluateMatching(t *testing.T) {
 }
 
 func TestCompile_EvaluateNonMatching(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -105,6 +108,7 @@ func TestCompile_EvaluateNonMatching(t *testing.T) {
 }
 
 func TestCompile_MissingField(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -140,6 +144,7 @@ func TestCompile_MissingField(t *testing.T) {
 }
 
 func TestCompile_MissingOperator(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -169,6 +174,7 @@ func TestCompile_MissingOperator(t *testing.T) {
 }
 
 func TestCompile_NestedAnyAll(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -219,6 +225,7 @@ func TestCompile_NestedAnyAll(t *testing.T) {
 }
 
 func TestCompile_ContainsOperator(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -255,6 +262,7 @@ func TestCompile_ContainsOperator(t *testing.T) {
 }
 
 func TestCompile_CacheHit(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -281,6 +289,7 @@ func TestCompile_CacheHit(t *testing.T) {
 }
 
 func TestCompile_AnyMatch(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -394,6 +403,7 @@ func TestCompile_AnyMatch(t *testing.T) {
 }
 
 func TestCompile_ParamReferenceInLtOperator(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -445,6 +455,7 @@ func TestCompile_ParamReferenceInLtOperator(t *testing.T) {
 }
 
 func TestCompile_AnyMatchTypedPredicate(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -496,6 +507,7 @@ func TestCompile_AnyMatchTypedPredicate(t *testing.T) {
 }
 
 func TestCompile_OpPresent_StringTrue(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -520,6 +532,7 @@ func TestCompile_OpPresent_StringTrue(t *testing.T) {
 }
 
 func TestCompile_OpMissing_StringFalse(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -547,6 +560,7 @@ func TestCompile_OpMissing_StringFalse(t *testing.T) {
 }
 
 func TestCompile_OpPresent_NonBoolValue_Errors(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)

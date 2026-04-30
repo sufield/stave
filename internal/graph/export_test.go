@@ -50,6 +50,7 @@ func buildFixtureGraph(t *testing.T) *GraphData {
 }
 
 func TestMarshalJSONLD_DocumentShape(t *testing.T) {
+	t.Parallel()
 	g := buildFixtureGraph(t)
 	var buf bytes.Buffer
 	if err := MarshalJSONLD(&buf, g); err != nil {
@@ -79,6 +80,7 @@ func TestMarshalJSONLD_DocumentShape(t *testing.T) {
 }
 
 func TestMarshalJSONLD_DeterministicOrdering(t *testing.T) {
+	t.Parallel()
 	g := buildFixtureGraph(t)
 	var buf1, buf2 bytes.Buffer
 	if err := MarshalJSONLD(&buf1, g); err != nil {
@@ -93,6 +95,7 @@ func TestMarshalJSONLD_DeterministicOrdering(t *testing.T) {
 }
 
 func TestMarshalGraphML_ValidXML(t *testing.T) {
+	t.Parallel()
 	g := buildFixtureGraph(t)
 	var buf bytes.Buffer
 	if err := MarshalGraphML(&buf, g); err != nil {
@@ -128,6 +131,7 @@ func TestMarshalGraphML_ValidXML(t *testing.T) {
 }
 
 func TestExporters_InterfaceSatisfied(t *testing.T) {
+	t.Parallel()
 	g := buildFixtureGraph(t)
 
 	var ex GraphExporter = NewJSONLDExporter()
@@ -144,6 +148,7 @@ func TestExporters_InterfaceSatisfied(t *testing.T) {
 }
 
 func TestSeverityWeight_Mapping(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		in   string
 		want float64
@@ -164,6 +169,7 @@ func TestSeverityWeight_Mapping(t *testing.T) {
 }
 
 func TestBucketIRI_URIShape(t *testing.T) {
+	t.Parallel()
 	got := BucketIRI("123456789012", "my-bucket")
 	want := "urn:stave:bucket/123456789012/my-bucket"
 	if got != want {
@@ -172,6 +178,7 @@ func TestBucketIRI_URIShape(t *testing.T) {
 }
 
 func TestInvariantIRI_SplitsControlID(t *testing.T) {
+	t.Parallel()
 	cat, num := splitControlID("CTL.S3.PUBLIC.001")
 	if cat != "CTL.S3.PUBLIC" || num != "001" {
 		t.Errorf("splitControlID = (%q, %q), want (CTL.S3.PUBLIC, 001)", cat, num)
@@ -184,6 +191,7 @@ func TestInvariantIRI_SplitsControlID(t *testing.T) {
 }
 
 func TestOntology_Embedded(t *testing.T) {
+	t.Parallel()
 	ttl := Ontology()
 	if len(ttl) == 0 {
 		t.Fatal("Ontology() returned empty bytes")
@@ -201,6 +209,7 @@ func TestOntology_Embedded(t *testing.T) {
 }
 
 func TestMapToRDFGraph_MaterializesShortcutEdge(t *testing.T) {
+	t.Parallel()
 	g := buildFixtureGraph(t)
 	rdf := mapToRDFGraph(g)
 

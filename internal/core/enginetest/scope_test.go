@@ -8,6 +8,7 @@ import (
 )
 
 func TestScopeFilter_AllowlistMatchesIDAndExternalID(t *testing.T) {
+	t.Parallel()
 	f := asset.NewAuditScope([]string{"bucket-allowed", "arn:aws:s3:::arn-allowed"}, nil)
 
 	if !f.IsInScope(asset.Asset{ID: "bucket-allowed"}) {
@@ -29,6 +30,7 @@ func TestScopeFilter_AllowlistMatchesIDAndExternalID(t *testing.T) {
 }
 
 func TestScopeFilter_TagMatchingIsNormalized(t *testing.T) {
+	t.Parallel()
 	f := asset.NewAuditScope(nil, map[string][]string{
 		" DataDomain ": {" HEALTH "},
 		"owner":        {}, // any non-empty value
@@ -75,6 +77,7 @@ func TestScopeFilter_TagMatchingIsNormalized(t *testing.T) {
 }
 
 func TestScopeFilter_FilterSnapshots(t *testing.T) {
+	t.Parallel()
 	f := asset.NewAuditScope(nil, map[string][]string{
 		"containsPHI": {"true"},
 	})
@@ -108,6 +111,7 @@ func TestScopeFilter_FilterSnapshots(t *testing.T) {
 }
 
 func TestScopeFilter_ConstraintFreeAfterNormalizationIsUniversal(t *testing.T) {
+	t.Parallel()
 	f := asset.NewAuditScope(
 		[]string{"   "},
 		map[string][]string{
@@ -121,6 +125,7 @@ func TestScopeFilter_ConstraintFreeAfterNormalizationIsUniversal(t *testing.T) {
 }
 
 func TestNewScopeFilter_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		allowlist     []string

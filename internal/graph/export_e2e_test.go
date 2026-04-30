@@ -14,6 +14,7 @@ import (
 // `stave graph export --output <assessment>` against an existing
 // H1 fixture, then validates the graph-json output structure.
 func TestGraphExportE2E(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping: builds CLI binary")
 	}
@@ -128,6 +129,7 @@ func TestGraphExportE2E(t *testing.T) {
 
 // TestGraphExportChainsRemoved verifies stave graph chains is gone.
 func TestGraphExportChainsRemoved(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping: builds CLI binary")
 	}

@@ -8,6 +8,7 @@ import (
 )
 
 func TestNewVendor_NormalizesCaseAndWhitespace(t *testing.T) {
+	t.Parallel()
 	got, err := kernel.NewVendor("  AWS  ")
 	if err != nil {
 		t.Fatalf("NewVendor returned error: %v", err)
@@ -18,6 +19,7 @@ func TestNewVendor_NormalizesCaseAndWhitespace(t *testing.T) {
 }
 
 func TestNewVendor_AcceptsAnyNonEmptyVendor(t *testing.T) {
+	t.Parallel()
 	for _, input := range []string{"Kubernetes", "google", "internal", "azure"} {
 		got, err := kernel.NewVendor(input)
 		if err != nil {
@@ -30,12 +32,14 @@ func TestNewVendor_AcceptsAnyNonEmptyVendor(t *testing.T) {
 }
 
 func TestNewVendor_RejectsEmpty(t *testing.T) {
+	t.Parallel()
 	if _, err := kernel.NewVendor("   "); err == nil {
 		t.Fatal("expected error for empty vendor")
 	}
 }
 
 func TestVendor_String_ZeroValue(t *testing.T) {
+	t.Parallel()
 	var v kernel.Vendor
 	if got := v.String(); got != "unknown" {
 		t.Fatalf("zero-value Vendor.String() = %q, want %q", got, "unknown")

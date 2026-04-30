@@ -102,6 +102,7 @@ func assertNoLockFinding(t *testing.T, result *evaluation.ComplianceReport, cont
 // Gated by: kind=bucket AND tags.compliance present
 
 func TestLock001_TruePositive_ComplianceTaggedNoLock(t *testing.T) {
+	t.Parallel()
 	ev := lockEvaluator(t)
 	bucket := lockBucket("no-lock-bucket", map[string]any{
 		"enabled": false,
@@ -115,6 +116,7 @@ func TestLock001_TruePositive_ComplianceTaggedNoLock(t *testing.T) {
 }
 
 func TestLock001_TrueNegative_ComplianceTaggedWithLock(t *testing.T) {
+	t.Parallel()
 	ev := lockEvaluator(t)
 	bucket := lockBucket("locked-bucket", map[string]any{
 		"enabled": true,
@@ -128,6 +130,7 @@ func TestLock001_TrueNegative_ComplianceTaggedWithLock(t *testing.T) {
 }
 
 func TestLock001_TrueNegative_NoComplianceTag(t *testing.T) {
+	t.Parallel()
 	ev := lockEvaluator(t)
 	// No compliance tag — control should not fire
 	bucket := lockBucket("untagged-bucket", map[string]any{
@@ -143,6 +146,7 @@ func TestLock001_TrueNegative_NoComplianceTag(t *testing.T) {
 // Gated by: tags.data-classification=phi AND object_lock.enabled=true
 
 func TestLock002_TruePositive_PHIWithGovernanceMode(t *testing.T) {
+	t.Parallel()
 	ev := lockEvaluator(t)
 	bucket := lockBucket("phi-gov-bucket", map[string]any{
 		"enabled": true,
@@ -157,6 +161,7 @@ func TestLock002_TruePositive_PHIWithGovernanceMode(t *testing.T) {
 }
 
 func TestLock002_TrueNegative_PHIWithComplianceMode(t *testing.T) {
+	t.Parallel()
 	ev := lockEvaluator(t)
 	bucket := lockBucket("phi-comp-bucket", map[string]any{
 		"enabled": true,
@@ -171,6 +176,7 @@ func TestLock002_TrueNegative_PHIWithComplianceMode(t *testing.T) {
 }
 
 func TestLock002_TrueNegative_NonPHIBucket(t *testing.T) {
+	t.Parallel()
 	ev := lockEvaluator(t)
 	// Not PHI — control should not fire even with GOVERNANCE mode
 	bucket := lockBucket("internal-bucket", map[string]any{
@@ -190,6 +196,7 @@ func TestLock002_TrueNegative_NonPHIBucket(t *testing.T) {
 // Unsafe when: retention_days < 2190
 
 func TestLock003_TruePositive_ShortRetention(t *testing.T) {
+	t.Parallel()
 	ev := lockEvaluator(t)
 	bucket := lockBucket("short-retention-bucket", map[string]any{
 		"enabled":        true,
@@ -204,6 +211,7 @@ func TestLock003_TruePositive_ShortRetention(t *testing.T) {
 }
 
 func TestLock003_TrueNegative_SufficientRetention(t *testing.T) {
+	t.Parallel()
 	ev := lockEvaluator(t)
 	bucket := lockBucket("long-retention-bucket", map[string]any{
 		"enabled":        true,
@@ -218,6 +226,7 @@ func TestLock003_TrueNegative_SufficientRetention(t *testing.T) {
 }
 
 func TestLock003_TrueNegative_ExactMinimumRetention(t *testing.T) {
+	t.Parallel()
 	ev := lockEvaluator(t)
 	// Exactly 2190 — should NOT fire (lt means strictly less than)
 	bucket := lockBucket("exact-retention-bucket", map[string]any{
@@ -233,6 +242,7 @@ func TestLock003_TrueNegative_ExactMinimumRetention(t *testing.T) {
 }
 
 func TestLock003_TrueNegative_NonPHIBucket(t *testing.T) {
+	t.Parallel()
 	ev := lockEvaluator(t)
 	// Not PHI — control should not fire
 	bucket := lockBucket("internal-bucket", map[string]any{

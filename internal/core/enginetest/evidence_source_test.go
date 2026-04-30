@@ -11,6 +11,7 @@ import (
 )
 
 func TestExtractSourceEvidenceUsesCanonicalPath(t *testing.T) {
+	t.Parallel()
 	resource := asset.Asset{
 		Properties: map[string]any{
 			"source_evidence": map[string]any{
@@ -40,6 +41,7 @@ func TestExtractSourceEvidenceUsesCanonicalPath(t *testing.T) {
 }
 
 func TestExtractSourceEvidenceReturnsNilForTopLevelOnlyFields(t *testing.T) {
+	t.Parallel()
 	resource := asset.Asset{
 		Properties: map[string]any{
 			"policy_public_statements": []string{"top-level-a"},
@@ -54,6 +56,7 @@ func TestExtractSourceEvidenceReturnsNilForTopLevelOnlyFields(t *testing.T) {
 }
 
 func TestExtractSourceEvidenceRespectsRootCauseFilter(t *testing.T) {
+	t.Parallel()
 	resource := asset.Asset{
 		Properties: map[string]any{
 			"source_evidence": map[string]any{

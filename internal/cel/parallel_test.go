@@ -17,6 +17,7 @@ import (
 // and reports compile/eval failures. This validates that the CEL compiler
 // produces results for all built-in controls.
 func TestCELParallelEvaluation(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping: walks all e2e fixtures for parallel CEL evaluation")
 	}

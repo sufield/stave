@@ -99,6 +99,7 @@ func assertNoVersionFinding(t *testing.T, result *evaluation.ComplianceReport, c
 // --- VERSION.001: Versioning Required (kind=bucket AND enabled=false) ---
 
 func TestVersion001_TruePositive_VersioningDisabled(t *testing.T) {
+	t.Parallel()
 	ev := versionEvaluator(t)
 	bucket := versionBucket("no-ver-bucket", map[string]any{
 		"enabled": false,
@@ -110,6 +111,7 @@ func TestVersion001_TruePositive_VersioningDisabled(t *testing.T) {
 }
 
 func TestVersion001_TrueNegative_VersioningEnabled(t *testing.T) {
+	t.Parallel()
 	ev := versionEvaluator(t)
 	bucket := versionBucket("ver-bucket", map[string]any{
 		"enabled": true,
@@ -124,6 +126,7 @@ func TestVersion001_TrueNegative_VersioningEnabled(t *testing.T) {
 // Gated by: tags.backup="true"
 
 func TestVersion002_TruePositive_BackupWithoutMFADelete(t *testing.T) {
+	t.Parallel()
 	ev := versionEvaluator(t)
 	// YAML parses value: "true" as boolean true, so the tag must also be bool true.
 	bucket := versionBucket("backup-bucket", map[string]any{
@@ -138,6 +141,7 @@ func TestVersion002_TruePositive_BackupWithoutMFADelete(t *testing.T) {
 }
 
 func TestVersion002_TrueNegative_BackupWithMFADelete(t *testing.T) {
+	t.Parallel()
 	ev := versionEvaluator(t)
 	bucket := versionBucket("backup-mfa-bucket", map[string]any{
 		"mfa_delete_enabled": true,
@@ -151,6 +155,7 @@ func TestVersion002_TrueNegative_BackupWithMFADelete(t *testing.T) {
 }
 
 func TestVersion002_TrueNegative_NonBackupBucket(t *testing.T) {
+	t.Parallel()
 	ev := versionEvaluator(t)
 	// Not tagged as backup — control should not fire
 	bucket := versionBucket("regular-bucket", map[string]any{

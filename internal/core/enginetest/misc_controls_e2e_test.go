@@ -108,6 +108,7 @@ func assertNoMiscFinding(t *testing.T, result *evaluation.ComplianceReport, cont
 // kind=bucket AND controls.public_access_fully_blocked=false
 
 func TestControls001_TruePositive_PABNotFullyBlocked(t *testing.T) {
+	t.Parallel()
 	ev := miscEvaluator(t)
 	bucket := miscBucketWithControls("no-pab-bucket", map[string]any{
 		"public_access_fully_blocked": false,
@@ -119,6 +120,7 @@ func TestControls001_TruePositive_PABNotFullyBlocked(t *testing.T) {
 }
 
 func TestControls001_TrueNegative_PABFullyBlocked(t *testing.T) {
+	t.Parallel()
 	ev := miscEvaluator(t)
 	bucket := miscBucketWithControls("pab-bucket", map[string]any{
 		"public_access_fully_blocked": true,
@@ -134,6 +136,7 @@ func TestControls001_TrueNegative_PABFullyBlocked(t *testing.T) {
 // safety_provable=false → violation
 
 func TestIncomplete001_TruePositive_SafetyNotProvable(t *testing.T) {
+	t.Parallel()
 	ev := miscEvaluator(t)
 	a := miscIncompleteAsset("incomplete-bucket", false)
 
@@ -143,6 +146,7 @@ func TestIncomplete001_TruePositive_SafetyNotProvable(t *testing.T) {
 }
 
 func TestIncomplete001_TrueNegative_SafetyProvable(t *testing.T) {
+	t.Parallel()
 	ev := miscEvaluator(t)
 	a := miscIncompleteAsset("complete-bucket", true)
 

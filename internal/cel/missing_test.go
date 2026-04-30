@@ -7,6 +7,7 @@ import (
 )
 
 func TestIsMissing_KeyNotFound(t *testing.T) {
+	t.Parallel()
 	val := types.NewErr("no such key: public_access_block")
 	if !isMissing(val) {
 		t.Error("isMissing should return true for key-not-found (structural missing)")
@@ -14,6 +15,7 @@ func TestIsMissing_KeyNotFound(t *testing.T) {
 }
 
 func TestIsMissing_UndefinedField(t *testing.T) {
+	t.Parallel()
 	val := types.NewErr("undefined field 'nonexistent'")
 	if !isMissing(val) {
 		t.Error("isMissing should return true for undefined field (structural missing)")
@@ -21,18 +23,21 @@ func TestIsMissing_UndefinedField(t *testing.T) {
 }
 
 func TestIsMissing_NullValue(t *testing.T) {
+	t.Parallel()
 	if !isMissing(types.NullValue) {
 		t.Error("isMissing should return true for null values")
 	}
 }
 
 func TestIsMissing_Nil(t *testing.T) {
+	t.Parallel()
 	if !isMissing(nil) {
 		t.Error("isMissing should return true for nil")
 	}
 }
 
 func TestIsMissing_DivisionByZero_NotMissing(t *testing.T) {
+	t.Parallel()
 	val := types.NewErr("division by zero")
 	if isMissing(val) {
 		t.Error("BUG: isMissing returns true for division-by-zero. " +
@@ -41,6 +46,7 @@ func TestIsMissing_DivisionByZero_NotMissing(t *testing.T) {
 }
 
 func TestIsMissing_TypeMismatch_NotMissing(t *testing.T) {
+	t.Parallel()
 	val := types.NewErr("type mismatch: expected string, got int")
 	if isMissing(val) {
 		t.Error("BUG: isMissing returns true for type-mismatch. " +
@@ -49,6 +55,7 @@ func TestIsMissing_TypeMismatch_NotMissing(t *testing.T) {
 }
 
 func TestIsMissing_OverloadFailure_NotMissing(t *testing.T) {
+	t.Parallel()
 	val := types.NewErr("no such overload: size(int)")
 	if isMissing(val) {
 		t.Error("BUG: isMissing returns true for 'no such overload' — " +
@@ -62,6 +69,7 @@ func TestIsMissing_OverloadFailure_NotMissing(t *testing.T) {
 }
 
 func TestIsTypeError_NoMatchingOverload(t *testing.T) {
+	t.Parallel()
 	val := types.NewErr("no matching overload for '_==_'")
 	if !IsTypeError(val) {
 		t.Error("IsTypeError should return true for 'no matching overload'")
@@ -72,6 +80,7 @@ func TestIsTypeError_NoMatchingOverload(t *testing.T) {
 }
 
 func TestIsTypeError_StructuralMissing_False(t *testing.T) {
+	t.Parallel()
 	val := types.NewErr("no such key: foo")
 	if IsTypeError(val) {
 		t.Error("IsTypeError must not flag structural-absence errors as type errors")
@@ -79,6 +88,7 @@ func TestIsTypeError_StructuralMissing_False(t *testing.T) {
 }
 
 func TestIsTypeError_NonError_False(t *testing.T) {
+	t.Parallel()
 	if IsTypeError(types.String("ok")) {
 		t.Error("IsTypeError must return false for non-error values")
 	}
@@ -88,12 +98,14 @@ func TestIsTypeError_NonError_False(t *testing.T) {
 }
 
 func TestIsMissing_EmptyString_IsMissing(t *testing.T) {
+	t.Parallel()
 	if !isMissing(types.String("")) {
 		t.Error("isMissing should return true for empty string")
 	}
 }
 
 func TestIsMissing_NonEmptyString_NotMissing(t *testing.T) {
+	t.Parallel()
 	if isMissing(types.String("value")) {
 		t.Error("isMissing should return false for non-empty string")
 	}

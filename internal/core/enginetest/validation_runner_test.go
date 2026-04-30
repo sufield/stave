@@ -9,6 +9,7 @@ import (
 )
 
 func TestValidateControlBadDurationParam(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		params    policy.ControlParams
@@ -78,6 +79,7 @@ func TestValidateControlBadDurationParam(t *testing.T) {
 }
 
 func TestValidationCodesUnique(t *testing.T) {
+	t.Parallel()
 	codes := []diag.RuleID{
 		diag.RuleControlLoadFailed,
 		diag.RuleObservationLoadFailed,

@@ -9,6 +9,7 @@ import (
 
 // TestParseDuration tests ParseDuration with various duration formats.
 func TestParseDuration(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input    string
 		expected time.Duration

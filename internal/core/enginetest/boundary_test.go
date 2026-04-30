@@ -14,6 +14,7 @@ import (
 // guardrail that keeps the core evaluation engine decoupled from I/O
 // and framework concerns.
 func TestDomainLayerBoundary(t *testing.T) {
+	t.Parallel()
 	forbidden := []string{
 		"/internal/adapters/",
 		"/internal/platform/",

@@ -108,6 +108,7 @@ func assertNoTakeoverFinding(t *testing.T, result *evaluation.ComplianceReport, 
 // any: bucket_exists=false OR bucket_owned=false
 
 func TestBucketTakeover001_TruePositive_BucketNotExist(t *testing.T) {
+	t.Parallel()
 	ev := takeoverEvaluator(t)
 	a := s3RefAsset("dangling-ref", map[string]any{
 		"bucket_exists": false,
@@ -120,6 +121,7 @@ func TestBucketTakeover001_TruePositive_BucketNotExist(t *testing.T) {
 }
 
 func TestBucketTakeover001_TruePositive_BucketNotOwned(t *testing.T) {
+	t.Parallel()
 	ev := takeoverEvaluator(t)
 	a := s3RefAsset("unowned-ref", map[string]any{
 		"bucket_exists": true,
@@ -132,6 +134,7 @@ func TestBucketTakeover001_TruePositive_BucketNotOwned(t *testing.T) {
 }
 
 func TestBucketTakeover001_TrueNegative_BucketExistsAndOwned(t *testing.T) {
+	t.Parallel()
 	ev := takeoverEvaluator(t)
 	a := s3RefAsset("owned-ref", map[string]any{
 		"bucket_exists": true,
@@ -147,6 +150,7 @@ func TestBucketTakeover001_TrueNegative_BucketExistsAndOwned(t *testing.T) {
 // Gated by: cdn.kind=distribution
 
 func TestDanglingOrigin001_TruePositive_DanglingS3Origin(t *testing.T) {
+	t.Parallel()
 	ev := takeoverEvaluator(t)
 	a := cdnAsset("cf-dist-dangling", map[string]any{
 		"kind":                    "distribution",
@@ -159,6 +163,7 @@ func TestDanglingOrigin001_TruePositive_DanglingS3Origin(t *testing.T) {
 }
 
 func TestDanglingOrigin001_TrueNegative_NoDanglingOrigin(t *testing.T) {
+	t.Parallel()
 	ev := takeoverEvaluator(t)
 	a := cdnAsset("cf-dist-safe", map[string]any{
 		"kind":                    "distribution",
@@ -171,6 +176,7 @@ func TestDanglingOrigin001_TrueNegative_NoDanglingOrigin(t *testing.T) {
 }
 
 func TestDanglingOrigin001_TrueNegative_NotADistribution(t *testing.T) {
+	t.Parallel()
 	ev := takeoverEvaluator(t)
 	// Not a distribution — control should not fire
 	a := cdnAsset("not-dist", map[string]any{

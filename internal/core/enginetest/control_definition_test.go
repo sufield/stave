@@ -12,6 +12,7 @@ import (
 )
 
 func TestControlDefinitionValidate_ValidControlHasNoIssues(t *testing.T) {
+	t.Parallel()
 	ctl := validControlForValidationTests()
 
 	issues := ctl.Validate()
@@ -21,6 +22,7 @@ func TestControlDefinitionValidate_ValidControlHasNoIssues(t *testing.T) {
 }
 
 func TestControlDefinitionValidate_RequiredFields(t *testing.T) {
+	t.Parallel()
 	ctl := validControlForValidationTests()
 	ctl.ID = ""
 	ctl.Name = ""
@@ -37,6 +39,7 @@ func TestControlDefinitionValidate_RequiredFields(t *testing.T) {
 }
 
 func TestControlDefinitionValidate_BadIDFormatWarningIncludesSensitiveError(t *testing.T) {
+	t.Parallel()
 	ctl := validControlForValidationTests()
 	ctl.ID = "not-an-control-id"
 
@@ -64,6 +67,7 @@ func TestControlDefinitionValidate_BadIDFormatWarningIncludesSensitiveError(t *t
 }
 
 func TestControlDefinitionValidate_BadTypeWarning(t *testing.T) {
+	t.Parallel()
 	ctl := validControlForValidationTests()
 	ctl.Type = policy.ControlType(999)
 
@@ -84,6 +88,7 @@ func TestControlDefinitionValidate_BadTypeWarning(t *testing.T) {
 }
 
 func TestControlDefinitionValidate_EmptyPredicateWarning(t *testing.T) {
+	t.Parallel()
 	ctl := validControlForValidationTests()
 	ctl.UnsafePredicate = policy.UnsafePredicate{}
 
@@ -96,6 +101,7 @@ func TestControlDefinitionValidate_EmptyPredicateWarning(t *testing.T) {
 }
 
 func TestControlDefinitionValidate_UndefinedParamReferencesAreUniqueAndSorted(t *testing.T) {
+	t.Parallel()
 	ctl := validControlForValidationTests()
 	ctl.UnsafePredicate = policy.UnsafePredicate{
 		Any: []policy.PredicateRule{
@@ -134,6 +140,7 @@ func TestControlDefinitionValidate_UndefinedParamReferencesAreUniqueAndSorted(t 
 }
 
 func TestControlDefinitionValidate_MaxUnsafeDurationParam(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name                string
 		params              policy.ControlParams

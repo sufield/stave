@@ -8,6 +8,7 @@ import (
 )
 
 func TestParseSelector(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -52,6 +53,7 @@ func TestParseSelector(t *testing.T) {
 }
 
 func TestSelector_Matches(t *testing.T) {
+	t.Parallel()
 	ctl := policy.ControlDefinition{
 		ID:        "CTL.S3.PUBLIC.001",
 		Name:      "No Public S3 Bucket Read",
@@ -95,6 +97,7 @@ func TestSelector_Matches(t *testing.T) {
 }
 
 func TestMatchesAny(t *testing.T) {
+	t.Parallel()
 	ctl := policy.ControlDefinition{
 		ID:        "CTL.S3.PUBLIC.001",
 		Severity:  policy.SeverityHigh,

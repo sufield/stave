@@ -117,6 +117,7 @@ func aclEvaluator(t *testing.T) *testEvaluator {
 // --- E2E Tests: CTL.S3.ACL.ESCALATION.001 (WRITE_ACP) ---
 
 func TestACL_Escalation_TruePositive_PublicWriteACP(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	bucket := aclBucket("vuln-bucket", map[string]any{
 		"public_admin":        true,
@@ -129,6 +130,7 @@ func TestACL_Escalation_TruePositive_PublicWriteACP(t *testing.T) {
 }
 
 func TestACL_Escalation_TruePositive_AuthenticatedWriteACP(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	bucket := aclBucket("vuln-bucket", map[string]any{
 		"public_admin":        false,
@@ -141,6 +143,7 @@ func TestACL_Escalation_TruePositive_AuthenticatedWriteACP(t *testing.T) {
 }
 
 func TestACL_Escalation_PABOverride(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	// Terrible ACL but PAB is enabled — should NOT fire.
 	bucket := aclBucket("pab-bucket", map[string]any{
@@ -154,6 +157,7 @@ func TestACL_Escalation_PABOverride(t *testing.T) {
 }
 
 func TestACL_Escalation_TrueNegative_PrivateBucket(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	result := ev.Evaluate(aclSnapshot(privateBucket("safe-bucket")))
 
@@ -163,6 +167,7 @@ func TestACL_Escalation_TrueNegative_PrivateBucket(t *testing.T) {
 // --- E2E Tests: CTL.S3.ACL.FULLCONTROL.001 ---
 
 func TestACL_FullControl_TruePositive_PublicFullControl(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	bucket := aclBucket("full-ctl-bucket", map[string]any{
 		"has_full_control_public":        true,
@@ -175,6 +180,7 @@ func TestACL_FullControl_TruePositive_PublicFullControl(t *testing.T) {
 }
 
 func TestACL_FullControl_TruePositive_AuthenticatedFullControl(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	bucket := aclBucket("auth-ctl-bucket", map[string]any{
 		"has_full_control_public":        false,
@@ -187,6 +193,7 @@ func TestACL_FullControl_TruePositive_AuthenticatedFullControl(t *testing.T) {
 }
 
 func TestACL_FullControl_PABOverride(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	bucket := aclBucket("pab-bucket", map[string]any{
 		"has_full_control_public":        false,
@@ -199,6 +206,7 @@ func TestACL_FullControl_PABOverride(t *testing.T) {
 }
 
 func TestACL_FullControl_TrueNegative(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	result := ev.Evaluate(aclSnapshot(privateBucket("safe-bucket")))
 
@@ -208,6 +216,7 @@ func TestACL_FullControl_TrueNegative(t *testing.T) {
 // --- E2E Tests: CTL.S3.ACL.RECON.001 (READ_ACP) ---
 
 func TestACL_Recon_TruePositive_PublicReadACP(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	bucket := aclBucket("recon-bucket", map[string]any{
 		"public_admin": true,
@@ -219,6 +228,7 @@ func TestACL_Recon_TruePositive_PublicReadACP(t *testing.T) {
 }
 
 func TestACL_Recon_PABOverride(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	bucket := aclBucket("pab-bucket", map[string]any{
 		"public_admin": false,
@@ -230,6 +240,7 @@ func TestACL_Recon_PABOverride(t *testing.T) {
 }
 
 func TestACL_Recon_TrueNegative(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	result := ev.Evaluate(aclSnapshot(privateBucket("safe-bucket")))
 
@@ -239,6 +250,7 @@ func TestACL_Recon_TrueNegative(t *testing.T) {
 // --- Cross-control: multiple violations on the same bucket ---
 
 func TestACL_MultipleViolations_SameBucket(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	bucket := aclBucket("nightmare-bucket", map[string]any{
 		"public_admin":                   true,
@@ -255,6 +267,7 @@ func TestACL_MultipleViolations_SameBucket(t *testing.T) {
 }
 
 func TestACL_MultipleViolations_PABOverridesAll(t *testing.T) {
+	t.Parallel()
 	ev := aclEvaluator(t)
 	bucket := aclBucket("pab-bucket", map[string]any{
 		"public_admin":                   false,

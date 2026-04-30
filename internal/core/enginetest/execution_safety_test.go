@@ -17,6 +17,7 @@ import (
 // Restrictions are sourced from internal/domain/kernel/airgap.go.
 // Vendored dependencies are excluded.
 func TestNoBannedImportsInRuntime(t *testing.T) {
+	t.Parallel()
 	// Excluded directories: vendored dependencies, dev tooling, and CLI
 	// entrypoints not shipped as part of the runtime domain.
 	excludedDirs := map[string]bool{
@@ -93,6 +94,7 @@ func TestNoBannedImportsInRuntime(t *testing.T) {
 // matches the documented set. If this test fails, update both
 // predicate_ops.go and docs/evaluation-semantics.md.
 func TestOperatorList_MatchesDocumentation(t *testing.T) {
+	t.Parallel()
 	// Expected operators — must match predicate.ListSupported()
 	// and the Predicate Operator Reference in docs/evaluation-semantics.md.
 	expected := []predicate.Operator{
@@ -137,6 +139,7 @@ func TestOperatorList_MatchesDocumentation(t *testing.T) {
 // do not use http:// or https:// as schema $id values, which would trigger
 // false positives in security analyzers.
 func TestNoHTTPSchemaIdentifiers(t *testing.T) {
+	t.Parallel()
 	root := findRepoRoot(t)
 
 	// Check schema.go for http(s) schema base URIs
@@ -180,6 +183,7 @@ func TestNoHTTPSchemaIdentifiers(t *testing.T) {
 // Restrictions are sourced from internal/domain/kernel/airgap.go.
 // The only allowed env var read is NO_COLOR.
 func TestNoCredentialEnvReads(t *testing.T) {
+	t.Parallel()
 	excludedDirs := map[string]bool{
 		"vendor":         true,
 		"internal/tools": true,

@@ -132,6 +132,7 @@ func assertNoPublicFinding(t *testing.T, result *evaluation.ComplianceReport, co
 // any: public_read=true
 
 func TestPublic001_TruePositive_PublicRead(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("public-read-bucket", map[string]any{
 		"access": map[string]any{"public_read": true},
@@ -143,6 +144,7 @@ func TestPublic001_TruePositive_PublicRead(t *testing.T) {
 }
 
 func TestPublic001_TrueNegative_PrivateRead(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("private-bucket", map[string]any{
 		"access": map[string]any{"public_read": false},
@@ -157,6 +159,7 @@ func TestPublic001_TrueNegative_PrivateRead(t *testing.T) {
 // all: (public_read OR public_list) AND data-classification in [phi, pii, confidential]
 
 func TestPublic002_TruePositive_PublicReadPHI(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("phi-public-bucket", map[string]any{
 		"access": map[string]any{"public_read": true, "public_list": false},
@@ -169,6 +172,7 @@ func TestPublic002_TruePositive_PublicReadPHI(t *testing.T) {
 }
 
 func TestPublic002_TruePositive_PublicListPII(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("pii-list-bucket", map[string]any{
 		"access": map[string]any{"public_read": false, "public_list": true},
@@ -181,6 +185,7 @@ func TestPublic002_TruePositive_PublicListPII(t *testing.T) {
 }
 
 func TestPublic002_TrueNegative_PublicReadButPublicClassification(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("public-class-bucket", map[string]any{
 		"access": map[string]any{"public_read": true},
@@ -193,6 +198,7 @@ func TestPublic002_TrueNegative_PublicReadButPublicClassification(t *testing.T) 
 }
 
 func TestPublic002_TrueNegative_PrivatePHI(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("private-phi-bucket", map[string]any{
 		"access": map[string]any{"public_read": false, "public_list": false},
@@ -208,6 +214,7 @@ func TestPublic002_TrueNegative_PrivatePHI(t *testing.T) {
 // any: public_write=true
 
 func TestPublic003_TruePositive_PublicWrite(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("public-write-bucket", map[string]any{
 		"access": map[string]any{"public_write": true},
@@ -219,6 +226,7 @@ func TestPublic003_TruePositive_PublicWrite(t *testing.T) {
 }
 
 func TestPublic003_TrueNegative_NoPublicWrite(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("no-write-bucket", map[string]any{
 		"access": map[string]any{"public_write": false},
@@ -234,6 +242,7 @@ func TestPublic003_TrueNegative_NoPublicWrite(t *testing.T) {
 // any: read_via_resource=true
 
 func TestPublic004_TruePositive_ReadViaResource(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("acl-read-bucket", map[string]any{
 		"access": map[string]any{"read_via_resource": true},
@@ -245,6 +254,7 @@ func TestPublic004_TruePositive_ReadViaResource(t *testing.T) {
 }
 
 func TestPublic004_TrueNegative_NoReadViaResource(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("no-acl-read-bucket", map[string]any{
 		"access": map[string]any{"read_via_resource": false},
@@ -259,6 +269,7 @@ func TestPublic004_TrueNegative_NoReadViaResource(t *testing.T) {
 // Uses alias: s3.latent_public_read → latent_public_read=true
 
 func TestPublic005_TruePositive_LatentPublicRead(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("latent-read-bucket", map[string]any{
 		"access": map[string]any{"latent_public_read": true},
@@ -270,6 +281,7 @@ func TestPublic005_TruePositive_LatentPublicRead(t *testing.T) {
 }
 
 func TestPublic005_TrueNegative_NoLatentPublicRead(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("no-latent-bucket", map[string]any{
 		"access": map[string]any{"latent_public_read": false},
@@ -284,6 +296,7 @@ func TestPublic005_TrueNegative_NoLatentPublicRead(t *testing.T) {
 // kind=bucket AND latent_public_list=true
 
 func TestPublic006_TruePositive_LatentPublicList(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("latent-list-bucket", map[string]any{
 		"kind":   "bucket",
@@ -296,6 +309,7 @@ func TestPublic006_TruePositive_LatentPublicList(t *testing.T) {
 }
 
 func TestPublic006_TrueNegative_NoLatentPublicList(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("no-latent-list-bucket", map[string]any{
 		"kind":   "bucket",
@@ -311,6 +325,7 @@ func TestPublic006_TrueNegative_NoLatentPublicList(t *testing.T) {
 // any: read_via_identity=true
 
 func TestPublic007_TruePositive_ReadViaIdentity(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("policy-read-bucket", map[string]any{
 		"access": map[string]any{"read_via_identity": true},
@@ -322,6 +337,7 @@ func TestPublic007_TruePositive_ReadViaIdentity(t *testing.T) {
 }
 
 func TestPublic007_TrueNegative_NoReadViaIdentity(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("no-policy-read-bucket", map[string]any{
 		"access": map[string]any{"read_via_identity": false},
@@ -336,6 +352,7 @@ func TestPublic007_TrueNegative_NoReadViaIdentity(t *testing.T) {
 // any: list_via_identity=true
 
 func TestPublic008_TruePositive_ListViaIdentity(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("policy-list-bucket", map[string]any{
 		"access": map[string]any{"list_via_identity": true},
@@ -347,6 +364,7 @@ func TestPublic008_TruePositive_ListViaIdentity(t *testing.T) {
 }
 
 func TestPublic008_TrueNegative_NoListViaIdentity(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("no-policy-list-bucket", map[string]any{
 		"access": map[string]any{"list_via_identity": false},
@@ -361,6 +379,7 @@ func TestPublic008_TrueNegative_NoListViaIdentity(t *testing.T) {
 // any: public_list=true
 
 func TestPublicList001_TruePositive_PublicList(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("public-list-bucket", map[string]any{
 		"access": map[string]any{"public_list": true},
@@ -372,6 +391,7 @@ func TestPublicList001_TruePositive_PublicList(t *testing.T) {
 }
 
 func TestPublicList001_TrueNegative_NoPublicList(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("private-list-bucket", map[string]any{
 		"access": map[string]any{"public_list": false},
@@ -386,6 +406,7 @@ func TestPublicList001_TrueNegative_NoPublicList(t *testing.T) {
 // kind=bucket AND public_list=true AND (public_list_intended missing OR != "true")
 
 func TestPublicList002_TruePositive_PublicListNoIntentTag(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("unintended-list-bucket", map[string]any{
 		"kind":   "bucket",
@@ -398,6 +419,7 @@ func TestPublicList002_TruePositive_PublicListNoIntentTag(t *testing.T) {
 }
 
 func TestPublicList002_TrueNegative_PublicListWithIntentTag(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	// YAML parses value: "true" as boolean true, so the tag must also be bool true.
 	bucket := publicBucket("intended-list-bucket", map[string]any{
@@ -412,6 +434,7 @@ func TestPublicList002_TrueNegative_PublicListWithIntentTag(t *testing.T) {
 }
 
 func TestPublicList002_TrueNegative_NotPublicList(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("private-bucket-2", map[string]any{
 		"kind":   "bucket",
@@ -427,6 +450,7 @@ func TestPublicList002_TrueNegative_NotPublicList(t *testing.T) {
 // website.enabled=true AND access.public_read=true
 
 func TestWebsitePublic001_TruePositive_WebsiteWithPublicRead(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("website-bucket", map[string]any{
 		"website": map[string]any{"enabled": true},
@@ -439,6 +463,7 @@ func TestWebsitePublic001_TruePositive_WebsiteWithPublicRead(t *testing.T) {
 }
 
 func TestWebsitePublic001_TrueNegative_WebsiteWithoutPublicRead(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("website-private-bucket", map[string]any{
 		"website": map[string]any{"enabled": true},
@@ -451,6 +476,7 @@ func TestWebsitePublic001_TrueNegative_WebsiteWithoutPublicRead(t *testing.T) {
 }
 
 func TestWebsitePublic001_TrueNegative_NoWebsiteHosting(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("no-website-bucket", map[string]any{
 		"website": map[string]any{"enabled": false},
@@ -466,6 +492,7 @@ func TestWebsitePublic001_TrueNegative_NoWebsiteHosting(t *testing.T) {
 // kind=bucket AND cdn_access.cloudfront_oai.enabled=true
 
 func TestCDNOAC001_TruePositive_LegacyOAI(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("oai-bucket", map[string]any{
 		"kind": "bucket",
@@ -480,6 +507,7 @@ func TestCDNOAC001_TruePositive_LegacyOAI(t *testing.T) {
 }
 
 func TestCDNOAC001_TrueNegative_UsingOAC(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("oac-bucket", map[string]any{
 		"kind": "bucket",
@@ -498,6 +526,7 @@ func TestCDNOAC001_TrueNegative_UsingOAC(t *testing.T) {
 // kind=bucket AND controls.public_access_fully_blocked=true AND cdn_access.bucket_policy_grants_cloudfront=true
 
 func TestCDNExposure001_TruePositive_PABEnabledWithCFGrant(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("cdn-exposed-bucket", map[string]any{
 		"kind": "bucket",
@@ -515,6 +544,7 @@ func TestCDNExposure001_TruePositive_PABEnabledWithCFGrant(t *testing.T) {
 }
 
 func TestCDNExposure001_TrueNegative_PABEnabledNoCFGrant(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("no-cdn-bucket", map[string]any{
 		"kind": "bucket",
@@ -532,6 +562,7 @@ func TestCDNExposure001_TrueNegative_PABEnabledNoCFGrant(t *testing.T) {
 }
 
 func TestCDNExposure001_TrueNegative_PABDisabledWithCFGrant(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	// PAB is disabled — this control specifically targets the false sense of security
 	// when PAB is enabled but CF creates a public path anyway
@@ -554,6 +585,7 @@ func TestCDNExposure001_TrueNegative_PABDisabledWithCFGrant(t *testing.T) {
 // kind=bucket AND access.public_read=true AND cdn_access.is_cloudfront_origin=true
 
 func TestCDNBypass001_TruePositive_PublicReadWithCloudFrontOrigin(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("cdn-bypass-bucket", map[string]any{
 		"kind":   "bucket",
@@ -569,6 +601,7 @@ func TestCDNBypass001_TruePositive_PublicReadWithCloudFrontOrigin(t *testing.T) 
 }
 
 func TestCDNBypass001_TrueNegative_PublicReadNoCloudFrontOrigin(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	// Bucket is publicly readable but not fronted by CloudFront — standard public
 	// exposure, no bypass layer to worry about. PUBLIC.001 handles this.
@@ -586,6 +619,7 @@ func TestCDNBypass001_TrueNegative_PublicReadNoCloudFrontOrigin(t *testing.T) {
 }
 
 func TestCDNBypass001_TrueNegative_CloudFrontOriginNoPublicRead(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	// Bucket is correctly fronted by CloudFront and not directly public — intended
 	// OAC/OAI setup, no bypass possible.
@@ -613,6 +647,7 @@ func TestCDNBypass001_TrueNegative_CloudFrontOriginNoPublicRead(t *testing.T) {
 // covered in internal/core/evaluation/derive/ap_bucket_exposure_test.go.
 
 func TestAPBypass001_TruePositive_CleanBucketPublicAP(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("clean-bucket-leaky-ap", map[string]any{
 		"kind": "bucket",
@@ -634,6 +669,7 @@ func TestAPBypass001_TruePositive_CleanBucketPublicAP(t *testing.T) {
 }
 
 func TestAPBypass001_TrueNegative_BucketAlreadyPublic(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	// Bucket is already publicly accessible via its own policy — AP.BYPASS.001
 	// must stay silent, because firing here would duplicate the bucket-level
@@ -658,6 +694,7 @@ func TestAPBypass001_TrueNegative_BucketAlreadyPublic(t *testing.T) {
 }
 
 func TestAPBypass001_TrueNegative_CleanBucketCleanAPs(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("fully-clean-bucket", map[string]any{
 		"kind": "bucket",
@@ -679,6 +716,7 @@ func TestAPBypass001_TrueNegative_CleanBucketCleanAPs(t *testing.T) {
 // any: write_via_resource=true
 
 func TestPolicyWrite001_TruePositive_WriteViaResource(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("policy-write-bucket", map[string]any{
 		"access": map[string]any{"write_via_resource": true},
@@ -690,6 +728,7 @@ func TestPolicyWrite001_TruePositive_WriteViaResource(t *testing.T) {
 }
 
 func TestPolicyWrite001_TrueNegative_NoWriteViaResource(t *testing.T) {
+	t.Parallel()
 	ev := publicEvaluator(t)
 	bucket := publicBucket("no-policy-write-bucket", map[string]any{
 		"access": map[string]any{"write_via_resource": false},

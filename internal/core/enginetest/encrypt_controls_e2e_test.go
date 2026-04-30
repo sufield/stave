@@ -115,6 +115,7 @@ func assertNoEncryptFinding(t *testing.T, result *evaluation.ComplianceReport, c
 // --- E2E Tests: CTL.S3.ENCRYPT.001 (Encryption at Rest) ---
 
 func TestEncrypt001_TruePositive_NoEncryption(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("unencrypted-bucket", map[string]any{
 		"at_rest_enabled": false,
@@ -126,6 +127,7 @@ func TestEncrypt001_TruePositive_NoEncryption(t *testing.T) {
 }
 
 func TestEncrypt001_TrueNegative_Encrypted(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("encrypted-bucket", map[string]any{
 		"at_rest_enabled": true,
@@ -139,6 +141,7 @@ func TestEncrypt001_TrueNegative_Encrypted(t *testing.T) {
 // --- E2E Tests: CTL.S3.ENCRYPT.002 (Transport Encryption) ---
 
 func TestEncrypt002_TruePositive_NoTransitEncryption(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("no-tls-bucket", map[string]any{
 		"in_transit_enforced": false,
@@ -150,6 +153,7 @@ func TestEncrypt002_TruePositive_NoTransitEncryption(t *testing.T) {
 }
 
 func TestEncrypt002_TrueNegative_TransitEnforced(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("tls-bucket", map[string]any{
 		"in_transit_enforced": true,
@@ -165,6 +169,7 @@ func TestEncrypt002_TrueNegative_TransitEnforced(t *testing.T) {
 // Unsafe when: algorithm != string(kernel.AlgorithmAWSKMS) OR kms_key_id == ""
 
 func TestEncrypt003_TruePositive_PHIWithAES256(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("phi-aes-bucket", map[string]any{
 		"algorithm":  string(kernel.AlgorithmAES256),
@@ -179,6 +184,7 @@ func TestEncrypt003_TruePositive_PHIWithAES256(t *testing.T) {
 }
 
 func TestEncrypt003_TruePositive_PHIWithKMSButNoKey(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("phi-no-key-bucket", map[string]any{
 		"algorithm":  string(kernel.AlgorithmAWSKMS),
@@ -193,6 +199,7 @@ func TestEncrypt003_TruePositive_PHIWithKMSButNoKey(t *testing.T) {
 }
 
 func TestEncrypt003_TrueNegative_PHIWithKMSAndCMK(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("phi-kms-bucket", map[string]any{
 		"algorithm":  string(kernel.AlgorithmAWSKMS),
@@ -207,6 +214,7 @@ func TestEncrypt003_TrueNegative_PHIWithKMSAndCMK(t *testing.T) {
 }
 
 func TestEncrypt003_TrueNegative_NonPHIBucket(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	// Not tagged as PHI — control should not fire even with AES256
 	bucket := encryptBucket("public-bucket", map[string]any{
@@ -226,6 +234,7 @@ func TestEncrypt003_TrueNegative_NonPHIBucket(t *testing.T) {
 // Unsafe when: algorithm != string(kernel.AlgorithmAWSKMS)
 
 func TestEncrypt004_TruePositive_ConfidentialWithAES256(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("conf-aes-bucket", map[string]any{
 		"algorithm": string(kernel.AlgorithmAES256),
@@ -239,6 +248,7 @@ func TestEncrypt004_TruePositive_ConfidentialWithAES256(t *testing.T) {
 }
 
 func TestEncrypt004_TrueNegative_ConfidentialWithKMS(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("conf-kms-bucket", map[string]any{
 		"algorithm": string(kernel.AlgorithmAWSKMS),
@@ -252,6 +262,7 @@ func TestEncrypt004_TrueNegative_ConfidentialWithKMS(t *testing.T) {
 }
 
 func TestEncrypt004_TrueNegative_PublicClassification(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	// "public" classification is excluded from this control
 	bucket := encryptBucket("public-bucket", map[string]any{
@@ -266,6 +277,7 @@ func TestEncrypt004_TrueNegative_PublicClassification(t *testing.T) {
 }
 
 func TestEncrypt004_TrueNegative_NonSensitiveClassification(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	// "non-sensitive" classification is excluded from this control
 	bucket := encryptBucket("nonsens-bucket", map[string]any{
@@ -280,6 +292,7 @@ func TestEncrypt004_TrueNegative_NonSensitiveClassification(t *testing.T) {
 }
 
 func TestEncrypt004_TrueNegative_NoClassificationTag(t *testing.T) {
+	t.Parallel()
 	ev := encryptEvaluator(t)
 	// No data-classification tag — control should not fire
 	bucket := encryptBucket("untagged-bucket", map[string]any{

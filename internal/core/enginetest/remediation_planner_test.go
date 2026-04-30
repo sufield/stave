@@ -11,6 +11,7 @@ import (
 )
 
 func TestBuildRemediationPlan_S3Public(t *testing.T) {
+	t.Parallel()
 	planner := remediation.NewPlanner()
 	finding := remediation.Finding{
 		Finding: evaluation.Finding{
@@ -49,6 +50,7 @@ func TestBuildRemediationPlan_S3Public(t *testing.T) {
 }
 
 func TestBuildRemediationPlan_UnknownClass(t *testing.T) {
+	t.Parallel()
 	planner := remediation.NewPlanner()
 	finding := remediation.Finding{
 		Finding: evaluation.Finding{

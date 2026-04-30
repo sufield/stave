@@ -17,6 +17,7 @@ func testRegistry(t *testing.T) *Index {
 }
 
 func TestListPacksStableOrder(t *testing.T) {
+	t.Parallel()
 	packs := testRegistry(t).ListPacks()
 	if len(packs) < 2 {
 		t.Fatalf("pack count = %d, want >= 2", len(packs))
@@ -27,6 +28,7 @@ func TestListPacksStableOrder(t *testing.T) {
 }
 
 func TestNewEmbeddedRegistry(t *testing.T) {
+	t.Parallel()
 	reg := testRegistry(t)
 	if strings.TrimSpace(reg.Version()) == "" {
 		t.Fatal("expected non-empty registry version")
@@ -34,6 +36,7 @@ func TestNewEmbeddedRegistry(t *testing.T) {
 }
 
 func TestResolveEnabledPacks(t *testing.T) {
+	t.Parallel()
 	ids, err := testRegistry(t).ResolveEnabledPacks([]string{"s3/public-exposure"})
 	if err != nil {
 		t.Fatalf("ResolveEnabledPacks error: %v", err)
@@ -47,6 +50,7 @@ func TestResolveEnabledPacks(t *testing.T) {
 }
 
 func TestResolveEnabledPacksUnknown(t *testing.T) {
+	t.Parallel()
 	_, err := testRegistry(t).ResolveEnabledPacks([]string{"does-not-exist"})
 	if err == nil {
 		t.Fatal("expected error for unknown pack")
@@ -54,6 +58,7 @@ func TestResolveEnabledPacksUnknown(t *testing.T) {
 }
 
 func TestResolveEnabledPacksDedupSorted(t *testing.T) {
+	t.Parallel()
 	ids, err := testRegistry(t).ResolveEnabledPacks([]string{"s3/public-exposure", "s3"})
 	if err != nil {
 		t.Fatalf("ResolveEnabledPacks error: %v", err)
@@ -69,6 +74,7 @@ func TestResolveEnabledPacksDedupSorted(t *testing.T) {
 }
 
 func TestNewRegistry_AcceptsEmptyPacks(t *testing.T) {
+	t.Parallel()
 	idx, err := NewIndex([]byte("version: v1\npacks: {}\n"))
 	if err != nil {
 		t.Fatalf("empty packs should succeed, got: %v", err)
@@ -79,6 +85,7 @@ func TestNewRegistry_AcceptsEmptyPacks(t *testing.T) {
 }
 
 func TestNewRegistry_RejectsUndefinedControlReference(t *testing.T) {
+	t.Parallel()
 	_, err := NewIndex([]byte(`
 version: v1
 packs:
@@ -101,6 +108,7 @@ controls:
 }
 
 func TestRegistryValidateStrict(t *testing.T) {
+	t.Parallel()
 	reg := testRegistry(t)
 	if err := reg.ValidateStrict(ctl.EmbeddedFS()); err != nil {
 		t.Fatalf("ValidateStrict error: %v", err)
@@ -108,6 +116,7 @@ func TestRegistryValidateStrict(t *testing.T) {
 }
 
 func TestRegistryValidateStrict_MissingFile(t *testing.T) {
+	t.Parallel()
 	reg, err := NewIndex([]byte(`
 version: v1
 packs:
@@ -133,6 +142,7 @@ controls:
 }
 
 func TestRegistry_ListPacksReturnsClones(t *testing.T) {
+	t.Parallel()
 	reg := testRegistry(t)
 	packs := reg.ListPacks()
 	if len(packs) == 0 || len(packs[0].Controls) == 0 {
@@ -148,6 +158,7 @@ func TestRegistry_ListPacksReturnsClones(t *testing.T) {
 }
 
 func TestRegistry_LookupPackReturnsClone(t *testing.T) {
+	t.Parallel()
 	reg := testRegistry(t)
 	names := reg.PackNames()
 	if len(names) == 0 {
@@ -171,6 +182,7 @@ func TestRegistry_LookupPackReturnsClone(t *testing.T) {
 }
 
 func TestRegistry_ControlRefsReturnsClone(t *testing.T) {
+	t.Parallel()
 	reg := testRegistry(t)
 	refs := reg.ControlRefs()
 	if len(refs) == 0 {

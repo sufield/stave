@@ -9,6 +9,7 @@ import (
 )
 
 func TestComputePostureDrift(t *testing.T) {
+	t.Parallel()
 	t0 := time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC)
 	t1 := time.Date(2026, 1, 10, 6, 0, 0, 0, time.UTC)
 	t2 := time.Date(2026, 1, 10, 12, 0, 0, 0, time.UTC)

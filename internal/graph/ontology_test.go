@@ -16,6 +16,7 @@ import (
 // --- Experiment 1: Minimal single finding ---
 
 func TestExperiment01_MinimalFinding(t *testing.T) {
+	t.Parallel()
 	findings := []remediation.Finding{
 		{
 			Finding: evaluation.Finding{
@@ -115,6 +116,7 @@ func TestExperiment01_MinimalFinding(t *testing.T) {
 // --- Experiment 2: Active threat chain ---
 
 func TestExperiment02_ActiveChain(t *testing.T) {
+	t.Parallel()
 	findings := []remediation.Finding{
 		{
 			Finding: evaluation.Finding{
@@ -250,6 +252,7 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 // --- Experiment 3: Compliance requirement nodes ---
 
 func TestExperiment03_ComplianceMapping(t *testing.T) {
+	t.Parallel()
 	findings := []remediation.Finding{
 		{
 			Finding: evaluation.Finding{
@@ -300,6 +303,7 @@ func TestExperiment03_ComplianceMapping(t *testing.T) {
 // --- Experiment 4: No chain ---
 
 func TestExperiment04_NoChain(t *testing.T) {
+	t.Parallel()
 	types := []struct {
 		assetType string
 		assetID   string
@@ -362,6 +366,7 @@ func TestExperiment04_NoChain(t *testing.T) {
 // --- Experiment 9: JSON roundtrip ---
 
 func TestExperiment09_JSONRoundTrip(t *testing.T) {
+	t.Parallel()
 	findings := []remediation.Finding{
 		{
 			Finding: evaluation.Finding{

@@ -24,6 +24,7 @@ func exp(t *testing.T, s string) policy.ExpiryDate {
 }
 
 func TestExceptionConfig_NilConfig(t *testing.T) {
+	t.Parallel()
 	var cfg *policy.ExceptionConfig
 	rule := cfg.ShouldExcept(ctl("CTL.S3.PUBLIC.001"), res("arn:aws:s3:::mybucket"), time.Now())
 	if rule != nil {
@@ -32,6 +33,7 @@ func TestExceptionConfig_NilConfig(t *testing.T) {
 }
 
 func TestExceptionConfig_ExactMatch(t *testing.T) {
+	t.Parallel()
 	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
@@ -53,6 +55,7 @@ func TestExceptionConfig_ExactMatch(t *testing.T) {
 }
 
 func TestExceptionConfig_GlobMatch(t *testing.T) {
+	t.Parallel()
 	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
@@ -75,6 +78,7 @@ func TestExceptionConfig_GlobMatch(t *testing.T) {
 }
 
 func TestExceptionConfig_ExpiredRule(t *testing.T) {
+	t.Parallel()
 	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
@@ -100,6 +104,7 @@ func TestExceptionConfig_ExpiredRule(t *testing.T) {
 }
 
 func TestExceptionConfig_NoMatch(t *testing.T) {
+	t.Parallel()
 	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
@@ -124,6 +129,7 @@ func TestExceptionConfig_NoMatch(t *testing.T) {
 }
 
 func TestExceptionConfig_NoExpiry(t *testing.T) {
+	t.Parallel()
 	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
@@ -140,6 +146,7 @@ func TestExceptionConfig_NoExpiry(t *testing.T) {
 }
 
 func TestExceptionConfig_ExpiryOnExactDate(t *testing.T) {
+	t.Parallel()
 	cfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
 			ControlID: ctl("CTL.S3.PUBLIC.001"),
@@ -165,6 +172,7 @@ func TestExceptionConfig_ExpiryOnExactDate(t *testing.T) {
 }
 
 func TestParseExpiryDate_Invalid(t *testing.T) {
+	t.Parallel()
 	if _, err := policy.ParseExpiryDate("2026-13-01"); err == nil {
 		t.Fatal("expected invalid exception expiry to fail parsing")
 	}

@@ -9,6 +9,7 @@ import (
 )
 
 func TestIssue_MarshalJSON_SensitiveEvidence(t *testing.T) {
+	t.Parallel()
 	evidence := kernel.NewSanitizableMap(map[string]string{
 		"control_id": "CTL.EXP.STATE.001",
 	})
@@ -45,6 +46,7 @@ func TestIssue_MarshalJSON_SensitiveEvidence(t *testing.T) {
 }
 
 func TestIssue_MarshalJSON_NonSensitiveEvidence(t *testing.T) {
+	t.Parallel()
 	issue := diag.Finding{
 		RuleID:   diag.RuleSingleSnapshot,
 		Severity: diag.SeverityWarn,

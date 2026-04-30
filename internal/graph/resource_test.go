@@ -3,6 +3,7 @@ package graph
 import "testing"
 
 func TestToResourceClass_AllTaxonomy(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		providerType string
 		want         string
@@ -43,6 +44,7 @@ func TestToResourceClass_AllTaxonomy(t *testing.T) {
 }
 
 func TestToResourceClass_Unknown(t *testing.T) {
+	t.Parallel()
 	got := ToResourceClass("completely_unknown_type")
 	if got != "unknown" {
 		t.Errorf("unknown type should return 'unknown', got %q", got)

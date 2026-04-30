@@ -9,6 +9,7 @@ import (
 )
 
 func TestExtract_DirectFieldAccess(t *testing.T) {
+	t.Parallel()
 	pred := &policy.UnsafePredicate{
 		All: []policy.PredicateRule{
 			{Field: predicate.NewFieldPath("properties.storage.access.public_read"), Op: predicate.OpEq},
@@ -25,6 +26,7 @@ func TestExtract_DirectFieldAccess(t *testing.T) {
 }
 
 func TestExtract_NestedAnyAll(t *testing.T) {
+	t.Parallel()
 	pred := &policy.UnsafePredicate{
 		All: []policy.PredicateRule{
 			{Field: predicate.NewFieldPath("properties.encryption.enabled"), Op: predicate.OpEq},
@@ -51,6 +53,7 @@ func TestExtract_NestedAnyAll(t *testing.T) {
 }
 
 func TestExtract_Deduplication(t *testing.T) {
+	t.Parallel()
 	pred := &policy.UnsafePredicate{
 		Any: []policy.PredicateRule{
 			{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq},
@@ -68,6 +71,7 @@ func TestExtract_Deduplication(t *testing.T) {
 }
 
 func TestExtractFromControl_AliasedPredicateErrors(t *testing.T) {
+	t.Parallel()
 	ctl := &policy.ControlDefinition{
 		UnsafePredicateAlias: "some_external_predicate",
 	}
@@ -79,6 +83,7 @@ func TestExtractFromControl_AliasedPredicateErrors(t *testing.T) {
 }
 
 func TestExtract_EmptyPredicate(t *testing.T) {
+	t.Parallel()
 	pred := &policy.UnsafePredicate{}
 	paths, err := Extract(pred)
 	if err != nil {
@@ -90,6 +95,7 @@ func TestExtract_EmptyPredicate(t *testing.T) {
 }
 
 func TestExtract_RealCatalogPredicate_S3Public(t *testing.T) {
+	t.Parallel()
 	// Simulates CTL.S3.PUBLIC.001: any of public_read or public_list
 	pred := &policy.UnsafePredicate{
 		Any: []policy.PredicateRule{
@@ -108,6 +114,7 @@ func TestExtract_RealCatalogPredicate_S3Public(t *testing.T) {
 }
 
 func TestExtract_RealCatalogPredicate_AllWithNested(t *testing.T) {
+	t.Parallel()
 	// Simulates a control with all: [field1, any: [field2, field3]]
 	pred := &policy.UnsafePredicate{
 		All: []policy.PredicateRule{

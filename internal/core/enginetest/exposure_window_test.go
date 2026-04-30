@@ -10,6 +10,7 @@ import (
 )
 
 func TestExposureWindowClose_FloorsEndBeforeStart(t *testing.T) {
+	t.Parallel()
 	start := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 	beforeStart := start.Add(-4 * time.Hour)
 
@@ -27,6 +28,7 @@ func TestExposureWindowClose_FloorsEndBeforeStart(t *testing.T) {
 }
 
 func TestExposureWindowClose_IsIdempotentForClosedExposureWindow(t *testing.T) {
+	t.Parallel()
 	start := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2026, 2, 1, 2, 0, 0, 0, time.UTC)
 	alreadyClosed := asset.NewResolvedWindow(start, end)
@@ -44,6 +46,7 @@ func TestExposureWindowClose_IsIdempotentForClosedExposureWindow(t *testing.T) {
 }
 
 func TestExposureWindowJSON_RoundTrip(t *testing.T) {
+	t.Parallel()
 	start := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2026, 2, 1, 2, 0, 0, 0, time.UTC)
 	want := asset.NewResolvedWindow(start, end)
@@ -70,6 +73,7 @@ func TestExposureWindowJSON_RoundTrip(t *testing.T) {
 }
 
 func TestExposureLifecycle_RecordObservation_FloorsArchivedExposureWindowEnd(t *testing.T) {
+	t.Parallel()
 	start := time.Date(2026, 2, 1, 10, 0, 0, 0, time.UTC)
 	outOfOrderSafe := start.Add(-1 * time.Hour)
 

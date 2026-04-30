@@ -10,6 +10,7 @@ import (
 )
 
 func TestRemediationPlanner_EnrichFindings_SpecMapping(t *testing.T) {
+	t.Parallel()
 	planner := remediation.NewPlanner()
 
 	tests := []struct {
@@ -72,6 +73,7 @@ func TestRemediationPlanner_EnrichFindings_SpecMapping(t *testing.T) {
 }
 
 func TestRemediationPlanner_YAMLRemediationPrecedence(t *testing.T) {
+	t.Parallel()
 	planner := remediation.NewPlanner()
 
 	yamlRemediation := &policy.RemediationSpec{
@@ -104,6 +106,7 @@ func TestRemediationPlanner_YAMLRemediationPrecedence(t *testing.T) {
 }
 
 func TestRemediationPlanner_YAMLExampleFieldFlowsThrough(t *testing.T) {
+	t.Parallel()
 	planner := remediation.NewPlanner()
 
 	yamlRemediation := &policy.RemediationSpec{
@@ -134,6 +137,7 @@ func TestRemediationPlanner_YAMLExampleFieldFlowsThrough(t *testing.T) {
 }
 
 func TestRemediationPlanner_FallbackWhenNoYAMLRemediation(t *testing.T) {
+	t.Parallel()
 	planner := remediation.NewPlanner()
 
 	// Finding without ControlRemediation should fall back to prefix mapping
@@ -158,6 +162,7 @@ func TestRemediationPlanner_FallbackWhenNoYAMLRemediation(t *testing.T) {
 }
 
 func TestRemediationPlanner_EnrichFindings(t *testing.T) {
+	t.Parallel()
 	planner := remediation.NewPlanner()
 
 	result := evaluation.ComplianceReport{

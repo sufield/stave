@@ -12,6 +12,7 @@ import (
 )
 
 func TestBuild_FindingsProduceCorrectNodes(t *testing.T) {
+	t.Parallel()
 	findings := []remediation.Finding{
 		{
 			Finding: evaluation.Finding{
@@ -73,6 +74,7 @@ func TestBuild_FindingsProduceCorrectNodes(t *testing.T) {
 }
 
 func TestBuild_ChainsProduceCorrectNodes(t *testing.T) {
+	t.Parallel()
 	findings := []remediation.Finding{
 		{
 			Finding: evaluation.Finding{
@@ -144,6 +146,7 @@ func TestBuild_ChainsProduceCorrectNodes(t *testing.T) {
 }
 
 func TestBuild_EdgeDeduplication(t *testing.T) {
+	t.Parallel()
 	// Two findings on the same resource should produce only one BELONGS_TO_SCOPE edge.
 	findings := []remediation.Finding{
 		{
@@ -174,6 +177,7 @@ func TestBuild_EdgeDeduplication(t *testing.T) {
 }
 
 func TestBuild_Empty(t *testing.T) {
+	t.Parallel()
 	g := Build(BuildInput{Now: time.Now()})
 	if g.Metadata.NodeCount != 0 {
 		t.Errorf("NodeCount = %d, want 0", g.Metadata.NodeCount)
@@ -181,6 +185,7 @@ func TestBuild_Empty(t *testing.T) {
 }
 
 func TestBuild_SchemaVersion(t *testing.T) {
+	t.Parallel()
 	g := Build(BuildInput{Now: time.Now()})
 	if g.SchemaVersion != "1" {
 		t.Errorf("SchemaVersion = %q, want 1", g.SchemaVersion)

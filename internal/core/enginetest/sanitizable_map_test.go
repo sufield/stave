@@ -9,6 +9,7 @@ import (
 )
 
 func TestNewSanitizableMap(t *testing.T) {
+	t.Parallel()
 	m := kernel.NewSanitizableMap(map[string]string{"a": "1", "b": "2"})
 	if m.Len() != 2 {
 		t.Errorf("Len() = %d, want 2", m.Len())
@@ -19,6 +20,7 @@ func TestNewSanitizableMap(t *testing.T) {
 }
 
 func TestSanitizableMap_SetAndGet(t *testing.T) {
+	t.Parallel()
 	var m kernel.SanitizableMap
 	m.Set("key", "value")
 
@@ -29,6 +31,7 @@ func TestSanitizableMap_SetAndGet(t *testing.T) {
 }
 
 func TestSanitizableMap_SetSensitive(t *testing.T) {
+	t.Parallel()
 	m := kernel.NewSanitizableMap(map[string]string{"public": "data"})
 	m.SetSensitive("secret", "hunter2")
 
@@ -49,6 +52,7 @@ func TestSanitizableMap_SetSensitive(t *testing.T) {
 }
 
 func TestSanitizableMap_Keys_Sorted(t *testing.T) {
+	t.Parallel()
 	m := kernel.NewSanitizableMap(map[string]string{"c": "3", "a": "1", "b": "2"})
 	keys := m.Keys()
 	want := []string{"a", "b", "c"}
@@ -58,6 +62,7 @@ func TestSanitizableMap_Keys_Sorted(t *testing.T) {
 }
 
 func TestSanitizableMap_MarshalJSON(t *testing.T) {
+	t.Parallel()
 	m := kernel.NewSanitizableMap(map[string]string{"public": "data"})
 	m.SetSensitive("secret", "hunter2")
 
@@ -80,6 +85,7 @@ func TestSanitizableMap_MarshalJSON(t *testing.T) {
 }
 
 func TestSanitizableMap_MarshalJSON_Empty(t *testing.T) {
+	t.Parallel()
 	var m kernel.SanitizableMap
 	data, err := json.Marshal(m)
 	if err != nil {
@@ -91,6 +97,7 @@ func TestSanitizableMap_MarshalJSON_Empty(t *testing.T) {
 }
 
 func TestSanitizableMap_UnmarshalJSON(t *testing.T) {
+	t.Parallel()
 	input := `{"key":"value","other":"data"}`
 	var m kernel.SanitizableMap
 	if err := json.Unmarshal([]byte(input), &m); err != nil {
@@ -108,6 +115,7 @@ func TestSanitizableMap_UnmarshalJSON(t *testing.T) {
 }
 
 func TestSanitizableMap_JSONRoundTrip(t *testing.T) {
+	t.Parallel()
 	original := kernel.NewSanitizableMap(map[string]string{
 		"control_id": "CTL.EXP.STATE.001",
 		"asset_id":   "arn:aws:s3:::bucket",
@@ -142,6 +150,7 @@ func TestSanitizableMap_JSONRoundTrip(t *testing.T) {
 }
 
 func TestSanitizableMap_ZeroValue(t *testing.T) {
+	t.Parallel()
 	var m kernel.SanitizableMap
 
 	// Zero value should work without panics
@@ -160,6 +169,7 @@ func TestSanitizableMap_ZeroValue(t *testing.T) {
 }
 
 func TestSanitizableMap_MarshalJSON_Deterministic(t *testing.T) {
+	t.Parallel()
 	// Build a map with multiple keys; marshal 100 times and verify byte-identical output.
 	m := kernel.NewSanitizableMap(map[string]string{
 		"z_last":  "val-z",
@@ -189,6 +199,7 @@ func TestSanitizableMap_MarshalJSON_Deterministic(t *testing.T) {
 }
 
 func TestSanitizableMap_Clone_IsolatedCopy(t *testing.T) {
+	t.Parallel()
 	original := kernel.NewSanitizableMap(map[string]string{
 		"public": "value",
 	})

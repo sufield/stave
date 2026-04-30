@@ -97,6 +97,7 @@ func assertNoWriteScopeFinding(t *testing.T, result *evaluation.ComplianceReport
 // type=s3_upload_policy AND operation=write AND allowed_key_mode=prefix
 
 func TestWriteScope001_TruePositive_PrefixKeyMode(t *testing.T) {
+	t.Parallel()
 	ev := writeScopeEvaluator(t)
 	a := uploadPolicyAsset("prefix-policy", map[string]any{
 		"operation":        "write",
@@ -109,6 +110,7 @@ func TestWriteScope001_TruePositive_PrefixKeyMode(t *testing.T) {
 }
 
 func TestWriteScope001_TrueNegative_ExactKeyMode(t *testing.T) {
+	t.Parallel()
 	ev := writeScopeEvaluator(t)
 	a := uploadPolicyAsset("exact-policy", map[string]any{
 		"operation":        "write",
@@ -121,6 +123,7 @@ func TestWriteScope001_TrueNegative_ExactKeyMode(t *testing.T) {
 }
 
 func TestWriteScope001_TrueNegative_ReadOperation(t *testing.T) {
+	t.Parallel()
 	ev := writeScopeEvaluator(t)
 	// Not a write operation — control should not fire
 	a := uploadPolicyAsset("read-policy", map[string]any{
@@ -137,6 +140,7 @@ func TestWriteScope001_TrueNegative_ReadOperation(t *testing.T) {
 // type=s3_upload_policy AND operation=write AND content_type_restricted=false
 
 func TestWriteContent001_TruePositive_UnrestrictedContentType(t *testing.T) {
+	t.Parallel()
 	ev := writeScopeEvaluator(t)
 	a := uploadPolicyAsset("unrestricted-policy", map[string]any{
 		"operation":               "write",
@@ -149,6 +153,7 @@ func TestWriteContent001_TruePositive_UnrestrictedContentType(t *testing.T) {
 }
 
 func TestWriteContent001_TrueNegative_RestrictedContentType(t *testing.T) {
+	t.Parallel()
 	ev := writeScopeEvaluator(t)
 	a := uploadPolicyAsset("restricted-policy", map[string]any{
 		"operation":               "write",
@@ -162,6 +167,7 @@ func TestWriteContent001_TrueNegative_RestrictedContentType(t *testing.T) {
 }
 
 func TestWriteContent001_TrueNegative_ReadOperation(t *testing.T) {
+	t.Parallel()
 	ev := writeScopeEvaluator(t)
 	// Not a write operation — control should not fire
 	a := uploadPolicyAsset("read-policy-2", map[string]any{
@@ -177,6 +183,7 @@ func TestWriteContent001_TrueNegative_ReadOperation(t *testing.T) {
 // --- Cross-control: same asset, both violations ---
 
 func TestWriteScope_BothViolations(t *testing.T) {
+	t.Parallel()
 	ev := writeScopeEvaluator(t)
 	a := uploadPolicyAsset("bad-policy", map[string]any{
 		"operation":               "write",

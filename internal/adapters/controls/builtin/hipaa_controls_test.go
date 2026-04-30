@@ -14,6 +14,7 @@ import (
 // TestHIPAAControlsExistInPack verifies that all 4 new HIPAA controls
 // are registered in the HIPAA pack and loadable from the embedded registry.
 func TestHIPAAControlsExistInPack(t *testing.T) {
+	t.Parallel()
 	reg, err := pack.NewEmbeddedRegistry()
 	if err != nil {
 		t.Fatalf("NewEmbeddedRegistry: %v", err)
@@ -46,6 +47,7 @@ func TestHIPAAControlsExistInPack(t *testing.T) {
 // TestHIPAAControlsLoadAndParse verifies that each new control can be
 // loaded from the embedded filesystem and parsed into a ControlDefinition.
 func TestHIPAAControlsLoadAndParse(t *testing.T) {
+	t.Parallel()
 	byID := loadAllControls(t)
 
 	tests := []struct {
@@ -78,6 +80,7 @@ func TestHIPAAControlsLoadAndParse(t *testing.T) {
 // TestHIPAAControl_NetworkVPC evaluates CTL.S3.NETWORK.VPC.001 against
 // pass and fail observations using the CEL engine.
 func TestHIPAAControl_NetworkVPC(t *testing.T) {
+	t.Parallel()
 	ctl := mustLoadControl(t, "CTL.S3.NETWORK.VPC.001")
 	eval := mustCELEval(t)
 
@@ -110,6 +113,7 @@ func TestHIPAAControl_NetworkVPC(t *testing.T) {
 
 // TestHIPAAControl_NetworkPolicy evaluates CTL.S3.NETWORK.POLICY.001.
 func TestHIPAAControl_NetworkPolicy(t *testing.T) {
+	t.Parallel()
 	ctl := mustLoadControl(t, "CTL.S3.NETWORK.POLICY.001")
 	eval := mustCELEval(t)
 
@@ -141,6 +145,7 @@ func TestHIPAAControl_NetworkPolicy(t *testing.T) {
 
 // TestHIPAAControl_PresignedURL evaluates CTL.S3.PRESIGNED.001.
 func TestHIPAAControl_PresignedURL(t *testing.T) {
+	t.Parallel()
 	ctl := mustLoadControl(t, "CTL.S3.PRESIGNED.001")
 	eval := mustCELEval(t)
 
@@ -171,6 +176,7 @@ func TestHIPAAControl_PresignedURL(t *testing.T) {
 
 // TestHIPAAControl_AuditObjectLevel evaluates CTL.S3.AUDIT.OBJECTLEVEL.001.
 func TestHIPAAControl_AuditObjectLevel(t *testing.T) {
+	t.Parallel()
 	ctl := mustLoadControl(t, "CTL.S3.AUDIT.OBJECTLEVEL.001")
 	eval := mustCELEval(t)
 

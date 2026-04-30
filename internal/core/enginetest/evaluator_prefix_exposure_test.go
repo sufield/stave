@@ -19,6 +19,7 @@ func newPrefixSet(raw []string) policy.PrefixSet {
 }
 
 func TestNewPrefixSet(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		input  []string
@@ -51,6 +52,7 @@ func TestNewPrefixSet(t *testing.T) {
 }
 
 func TestDetectOverlap(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		allowed   []string
@@ -89,6 +91,7 @@ func TestDetectOverlap(t *testing.T) {
 }
 
 func TestCheckExposure(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		prefix   kernel.ObjectPrefix
@@ -158,6 +161,7 @@ func TestCheckExposure(t *testing.T) {
 }
 
 func TestGrantEvidence(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		g    exposure.Grant
@@ -190,6 +194,7 @@ func TestGrantEvidence(t *testing.T) {
 }
 
 func TestEvaluatePrefixExposureForRow(t *testing.T) {
+	t.Parallel()
 	now := time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 
 	makeInv := func(allowed, protected []string) *policy.ControlDefinition {

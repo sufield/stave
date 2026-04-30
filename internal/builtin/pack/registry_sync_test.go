@@ -13,6 +13,7 @@ import (
 )
 
 func TestRegistryPacksAreValid(t *testing.T) {
+	t.Parallel()
 	reg := testRegistry(t)
 
 	packs := reg.ListPacks()
@@ -34,6 +35,7 @@ func TestRegistryPacksAreValid(t *testing.T) {
 }
 
 func TestRegistryEmbeddedFilesExist(t *testing.T) {
+	t.Parallel()
 	reg := testRegistry(t)
 
 	root, err := moduleRootFromThisFile()
@@ -74,6 +76,7 @@ func TestRegistryEmbeddedFilesExist(t *testing.T) {
 }
 
 func TestIndexCoversAllEmbeddedBuiltins(t *testing.T) {
+	t.Parallel()
 	reg := testRegistry(t)
 
 	root, err := moduleRootFromThisFile()
@@ -102,6 +105,7 @@ func TestIndexCoversAllEmbeddedBuiltins(t *testing.T) {
 }
 
 func TestRegistryNoOrphanedFiles(t *testing.T) {
+	t.Parallel()
 	reg := testRegistry(t)
 
 	orphans, err := reg.VerifyNoOrphans(ctl.EmbeddedFS(), "embedded")

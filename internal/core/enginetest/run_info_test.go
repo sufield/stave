@@ -11,6 +11,7 @@ import (
 
 // TestRunInfo_OfflineField verifies the offline field is always present and true in JSON.
 func TestRunInfo_OfflineField(t *testing.T) {
+	t.Parallel()
 	info := evaluation.RunInfo{
 		StaveVersion:      "test",
 		Offline:           true,

@@ -7,6 +7,7 @@ import (
 )
 
 func TestDeriveControlRefsMatchesIndex(t *testing.T) {
+	t.Parallel()
 	reg := testRegistry(t)
 	indexRefs := reg.ControlRefs()
 

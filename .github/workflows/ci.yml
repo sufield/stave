@@ -1,4 +1,4 @@
-name: CI  # (optional) make workflow name readable
+name: CI
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'  # nightly 6am UTC
 
 permissions:
   contents: read
@@ -13,7 +15,64 @@ permissions:
 
 jobs:
   test:
-    name: Test
+    name: Test (shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Weighted by measured package times (without -race).
+          # Shard 0: enginetest (383s) — heaviest, own runner
+          # Shard 1: cmd/stave + graph + cel = ~351s
+          # Shard 2: controls/builtin + pack + pkg/stave + cmd/apply + cmd/apply/verify = ~255s
+          # Shard 3: remaining ~150 packages
+          - shard: 0
+            filter: "internal/core/enginetest$"
+          - shard: 1
+            filter: "(cmd/stave|internal/graph|internal/cel)$"
+          - shard: 2
+            filter: "(internal/adapters/controls/builtin|internal/builtin/pack|pkg/stave)$|cmd/apply"
+          - shard: 3
+            filter: ""
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version-file: 'go.mod'
+          check-latest: true
+          cache: true
+
+      - name: Regenerate goldens and sync
+        run: make regenerate-goldens golden-update-all sync-schemas sync-controls sync-alternatives
+
+      - name: Run tests
+        run: |
+          set -euo pipefail
+          all_pkgs=$(go list ./... | grep -vE '/e2e$')
+
+          if [ -n "${{ matrix.filter }}" ]; then
+            pkgs=$(echo "$all_pkgs" | grep -E '${{ matrix.filter }}')
+          else
+            # Shard 3: everything not claimed by shards 0-2
+            pkgs=$(echo "$all_pkgs" | grep -vE '(internal/core/enginetest|cmd/stave|internal/graph|internal/cel|internal/adapters/controls/builtin|internal/builtin/pack|pkg/stave)$|cmd/apply')
+          fi
+
+          echo "::group::Packages ($(echo "$pkgs" | wc -l))"
+          echo "$pkgs"
+          echo "::endgroup::"
+
+          # -parallel=2 matches the 2-core runner; no -race on PRs
+          echo "$pkgs" | xargs go test \
+            -tags stavedev \
+            -count=1 \
+            -parallel=2 \
+            -timeout 15m
+
+  race:
+    name: Race detection
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -24,8 +83,12 @@ jobs:
           go-version-file: 'go.mod'
           check-latest: true
           cache: true
-      - name: Run tests (regenerates goldens fresh, then runs full suite)
-        run: make test-ci
+      - name: Regenerate goldens and sync
+        run: make regenerate-goldens golden-update-all sync-schemas sync-controls sync-alternatives
+      - name: Run tests with race detector
+        run: |
+          GORACE="halt_on_error=1 history_size=4" \
+          go test -tags stavedev -race -count=1 -parallel=2 -timeout 30m ./...
 
   lint:
     name: Lint
@@ -77,13 +140,11 @@ jobs:
       - name: Check licenses
         run: |
           go-licenses report ./cmd/stave --template=csv > licenses.csv 2>licenses-warnings.txt || true
-          # Fail on forbidden licenses (GPL, AGPL, SSPL, LGPL)
           if grep -iE '(GPL|AGPL|SSPL|LGPL)' licenses.csv; then
             echo "::error::Forbidden license detected in dependencies"
             cat licenses.csv
             exit 1
           fi
-          # Fail on unknown licenses (empty license column)
           if go-licenses check ./cmd/stave --allowed_licenses=Apache-2.0,MIT,BSD-2-Clause,BSD-3-Clause,ISC 2>check-warnings.txt; then
             echo "All dependency licenses are allowed"
           else

@@ -9,6 +9,7 @@ import (
 )
 
 func TestBaselineEntryKey(t *testing.T) {
+	t.Parallel()
 	e := evaluation.BaselineEntry{ControlID: "CTL.A", AssetID: "res-1"}
 	want := evaluation.BaselineEntryKey{ControlID: "CTL.A", AssetID: "res-1"}
 	if got := e.Key(); got != want {
@@ -17,6 +18,7 @@ func TestBaselineEntryKey(t *testing.T) {
 }
 
 func TestCompareBaseline(t *testing.T) {
+	t.Parallel()
 	base := []evaluation.BaselineEntry{
 		{ControlID: "CTL.A", AssetID: "res-1"},
 		{ControlID: "CTL.B", AssetID: "res-2"},
@@ -36,6 +38,7 @@ func TestCompareBaseline(t *testing.T) {
 }
 
 func TestSortBaselineEntries(t *testing.T) {
+	t.Parallel()
 	entries := []evaluation.BaselineEntry{
 		{ControlID: "CTL.B", AssetID: "res-2"},
 		{ControlID: "CTL.A", AssetID: "res-2"},
@@ -54,6 +57,7 @@ func TestSortBaselineEntries(t *testing.T) {
 }
 
 func TestBaselineEntryFromFinding(t *testing.T) {
+	t.Parallel()
 	f := evaluation.Finding{
 		ControlID:   "CTL.A",
 		ControlName: "Test",

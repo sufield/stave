@@ -15,6 +15,7 @@ import (
 // ---------------------------------------------------------------------------
 
 func TestLiteral(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		in   any
@@ -48,6 +49,7 @@ func TestLiteral(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestFieldAccess(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		path string
 		want string
@@ -65,6 +67,7 @@ func TestFieldAccess(t *testing.T) {
 }
 
 func TestHasField(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		path string
 		want string
@@ -86,6 +89,7 @@ func TestHasField(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestScopedFieldAccess(t *testing.T) {
+	t.Parallel()
 	got := scopedFieldAccess("type", "__id")
 	if got != `__id["type"]` {
 		t.Fatalf("got %q", got)
@@ -104,6 +108,7 @@ func TestScopedFieldAccess(t *testing.T) {
 }
 
 func TestScopedHasField(t *testing.T) {
+	t.Parallel()
 	got := scopedHasField("type", "__id")
 	if got != `"type" in __id` {
 		t.Fatalf("got %q", got)
@@ -126,6 +131,7 @@ func TestScopedHasField(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestNormalizePath(t *testing.T) {
+	t.Parallel()
 	if got := normalizePath("properties.x"); got != "properties.x" {
 		t.Fatalf("got %q", got)
 	}
@@ -142,6 +148,7 @@ func TestNormalizePath(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestPredicateToExpr_Empty(t *testing.T) {
+	t.Parallel()
 	expr, err := PredicateToExpr(policy.UnsafePredicate{})
 	if err != nil {
 		t.Fatal(err)
@@ -152,6 +159,7 @@ func TestPredicateToExpr_Empty(t *testing.T) {
 }
 
 func TestPredicateToExpr_SimpleAny(t *testing.T) {
+	t.Parallel()
 	pred := policy.UnsafePredicate{
 		Any: []policy.PredicateRule{
 			{Field: predicate.NewFieldPath("properties.x"), Op: predicate.OpEq, Value: policy.Bool(true)},
@@ -172,6 +180,7 @@ func TestPredicateToExpr_SimpleAny(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestCompile_EmptyPredicate(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -184,6 +193,7 @@ func TestCompile_EmptyPredicate(t *testing.T) {
 }
 
 func TestCompile_UnsupportedOperator(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -204,6 +214,7 @@ func TestCompile_UnsupportedOperator(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestCompile_ComparisonOperators(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -241,6 +252,7 @@ func TestCompile_ComparisonOperators(t *testing.T) {
 }
 
 func TestCompile_NeqFieldOperator(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -260,6 +272,7 @@ func TestCompile_NeqFieldOperator(t *testing.T) {
 }
 
 func TestCompile_NotInFieldOperator(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -279,6 +292,7 @@ func TestCompile_NotInFieldOperator(t *testing.T) {
 }
 
 func TestCompile_NotSubsetOfFieldOperator(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -302,6 +316,7 @@ func TestCompile_NotSubsetOfFieldOperator(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestNewPredicateEval(t *testing.T) {
+	t.Parallel()
 	eval, err := NewPredicateEval()
 	if err != nil {
 		t.Fatal(err)
@@ -328,6 +343,7 @@ func TestNewPredicateEval(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestTraceResultRenderText(t *testing.T) {
+	t.Parallel()
 	tr := &TraceResult{
 		ControlID:  kernel.ControlID("CTL.TEST.001"),
 		AssetID:    asset.ID("bucket-a"),
@@ -344,6 +360,7 @@ func TestTraceResultRenderText(t *testing.T) {
 }
 
 func TestTraceResultRenderJSON(t *testing.T) {
+	t.Parallel()
 	tr := &TraceResult{
 		ControlID:  kernel.ControlID("CTL.TEST.001"),
 		AssetID:    asset.ID("bucket-a"),
@@ -360,6 +377,7 @@ func TestTraceResultRenderJSON(t *testing.T) {
 }
 
 func TestTraceResultRenderTextWithError(t *testing.T) {
+	t.Parallel()
 	tr := &TraceResult{
 		ControlID: kernel.ControlID("CTL.TEST.001"),
 		AssetID:   asset.ID("bucket-a"),
@@ -376,6 +394,7 @@ func TestTraceResultRenderTextWithError(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestBuildTrace_NilArgs(t *testing.T) {
+	t.Parallel()
 	tr, err := BuildTrace(nil, nil, nil)
 	if tr != nil {
 		t.Error("nil args should return nil TraceResult")
@@ -386,6 +405,7 @@ func TestBuildTrace_NilArgs(t *testing.T) {
 }
 
 func TestBuildTrace_Simple(t *testing.T) {
+	t.Parallel()
 	ctl := &policy.ControlDefinition{
 		ID: kernel.ControlID("CTL.TEST.001"),
 		UnsafePredicate: policy.UnsafePredicate{
@@ -415,6 +435,7 @@ func TestBuildTrace_Simple(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestStringifyNamedTypes(t *testing.T) {
+	t.Parallel()
 	type namedStr string
 	m := map[string]any{
 		"plain":  "hello",
@@ -439,6 +460,7 @@ func TestStringifyNamedTypes(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestParseNestedPredicate_Nil(t *testing.T) {
+	t.Parallel()
 	p, err := parseNestedPredicate(nil)
 	if err != nil {
 		t.Fatal(err)
@@ -449,6 +471,7 @@ func TestParseNestedPredicate_Nil(t *testing.T) {
 }
 
 func TestParseNestedPredicate_BadType(t *testing.T) {
+	t.Parallel()
 	_, err := parseNestedPredicate("not a map")
 	if err == nil {
 		t.Fatal("expected error for non-map input")
@@ -456,6 +479,7 @@ func TestParseNestedPredicate_BadType(t *testing.T) {
 }
 
 func TestParseNestedPredicate_Valid(t *testing.T) {
+	t.Parallel()
 	input := map[string]any{
 		"any": []any{
 			map[string]any{"field": "type", "op": "eq", "value": "test"},
@@ -471,6 +495,7 @@ func TestParseNestedPredicate_Valid(t *testing.T) {
 }
 
 func TestParseRuleList_BadType(t *testing.T) {
+	t.Parallel()
 	_, err := parseRuleList("not a list")
 	if err == nil {
 		t.Fatal("expected error")
@@ -478,6 +503,7 @@ func TestParseRuleList_BadType(t *testing.T) {
 }
 
 func TestParseRuleList_BadItem(t *testing.T) {
+	t.Parallel()
 	_, err := parseRuleList([]any{"not a map"})
 	if err == nil {
 		t.Fatal("expected error")
@@ -491,6 +517,7 @@ func TestParseRuleList_BadItem(t *testing.T) {
 // Adversarial matrix covering every null/empty/type-mismatch combination
 // the operator must survive. One compiled predicate, many inputs.
 func TestCompile_AnyInField(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -616,6 +643,7 @@ func TestCompile_AnyInField(t *testing.T) {
 // test pins that behavior so a future evaluator change that accidentally
 // converts type errors to silent false is caught.
 func TestCompile_AnyInField_TypeMismatchReturnsError(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)
@@ -656,6 +684,7 @@ func TestCompile_AnyInField_TypeMismatchReturnsError(t *testing.T) {
 // produces a non-empty expression even before evaluation. Guards against
 // regressions where the case is accidentally dropped from the compiler.
 func TestCompile_AnyInFieldOperator(t *testing.T) {
+	t.Parallel()
 	compiler, err := NewCompiler()
 	if err != nil {
 		t.Fatal(err)

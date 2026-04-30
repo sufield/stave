@@ -122,6 +122,7 @@ func metaInt(m map[string]any, key string) int {
 // ---------------------------------------------------------------------------
 
 func TestExperiment01_MinimalFinding(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping: builds CLI binary")
 	}
@@ -219,6 +220,7 @@ func TestExperiment01_MinimalFinding(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExperiment02_ActiveChain(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping: builds CLI binary")
 	}
@@ -333,6 +335,7 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExperiment04_NoChain(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping: builds CLI binary")
 	}
@@ -419,6 +422,7 @@ func TestExperiment04_NoChain(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExperiment09_ChainsRemoval(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping: builds CLI binary")
 	}
@@ -457,6 +461,7 @@ func TestExperiment09_ChainsRemoval(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExperiment03_STIXExport(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("skipping: builds CLI binary")
 	}

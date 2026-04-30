@@ -103,6 +103,7 @@ func assertNoNetworkFinding(t *testing.T, result *evaluation.ComplianceReport, c
 // access.effective_network_scope=public (no kind gate)
 
 func TestNetwork001_TruePositive_PublicNetworkScope(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("public-net-bucket", map[string]any{
 		"access": map[string]any{
@@ -116,6 +117,7 @@ func TestNetwork001_TruePositive_PublicNetworkScope(t *testing.T) {
 }
 
 func TestNetwork001_TrueNegative_VPCScope(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("vpc-bucket", map[string]any{
 		"access": map[string]any{
@@ -132,6 +134,7 @@ func TestNetwork001_TrueNegative_VPCScope(t *testing.T) {
 // kind=bucket AND has_vpc_condition=false AND has_ip_condition=false
 
 func TestNetworkVPC001_TruePositive_NoNetworkConditions(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("no-net-cond-bucket", map[string]any{
 		"kind": "bucket",
@@ -147,6 +150,7 @@ func TestNetworkVPC001_TruePositive_NoNetworkConditions(t *testing.T) {
 }
 
 func TestNetworkVPC001_TrueNegative_HasVPCCondition(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("vpc-cond-bucket", map[string]any{
 		"kind": "bucket",
@@ -162,6 +166,7 @@ func TestNetworkVPC001_TrueNegative_HasVPCCondition(t *testing.T) {
 }
 
 func TestNetworkVPC001_TrueNegative_HasIPCondition(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("ip-cond-bucket", map[string]any{
 		"kind": "bucket",
@@ -180,6 +185,7 @@ func TestNetworkVPC001_TrueNegative_HasIPCondition(t *testing.T) {
 // any: attached=false OR is_default_full_access=true
 
 func TestNetworkPolicy001_TruePositive_PolicyNotAttached(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("no-policy-bucket", map[string]any{
 		"network": map[string]any{
@@ -196,6 +202,7 @@ func TestNetworkPolicy001_TruePositive_PolicyNotAttached(t *testing.T) {
 }
 
 func TestNetworkPolicy001_TruePositive_DefaultFullAccess(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("default-policy-bucket", map[string]any{
 		"network": map[string]any{
@@ -212,6 +219,7 @@ func TestNetworkPolicy001_TruePositive_DefaultFullAccess(t *testing.T) {
 }
 
 func TestNetworkPolicy001_TrueNegative_RestrictivePolicy(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("restricted-policy-bucket", map[string]any{
 		"network": map[string]any{
@@ -231,6 +239,7 @@ func TestNetworkPolicy001_TrueNegative_RestrictivePolicy(t *testing.T) {
 // kind=bucket AND mrap_public_access_blocked=false
 
 func TestMRAPPAB001_TruePositive_PABDisabled(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("mrap-no-pab-bucket", map[string]any{
 		"kind":                       "bucket",
@@ -243,6 +252,7 @@ func TestMRAPPAB001_TruePositive_PABDisabled(t *testing.T) {
 }
 
 func TestMRAPPAB001_TrueNegative_PABEnabled(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("mrap-pab-bucket", map[string]any{
 		"kind":                       "bucket",
@@ -258,6 +268,7 @@ func TestMRAPPAB001_TrueNegative_PABEnabled(t *testing.T) {
 // kind=bucket AND mrap_policy_is_public=true
 
 func TestMRAPPolicy001_TruePositive_PublicPolicy(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("mrap-public-bucket", map[string]any{
 		"kind":                  "bucket",
@@ -270,6 +281,7 @@ func TestMRAPPolicy001_TruePositive_PublicPolicy(t *testing.T) {
 }
 
 func TestMRAPPolicy001_TrueNegative_PrivatePolicy(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	bucket := networkBucket("mrap-private-bucket", map[string]any{
 		"kind":                  "bucket",
@@ -298,6 +310,7 @@ func accessPoint(id string, props map[string]any) asset.Asset {
 }
 
 func TestAPPAB001_TruePositive_PABDisabled(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	ap := accessPoint("ap-no-pab", map[string]any{
 		"kind":                        "access_point",
@@ -310,6 +323,7 @@ func TestAPPAB001_TruePositive_PABDisabled(t *testing.T) {
 }
 
 func TestAPPAB001_TrueNegative_PABEnabled(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	ap := accessPoint("ap-with-pab", map[string]any{
 		"kind":                        "access_point",
@@ -322,6 +336,7 @@ func TestAPPAB001_TrueNegative_PABEnabled(t *testing.T) {
 }
 
 func TestAPPAB001_TrueNegative_BucketKindIgnored(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	// A bucket observation with the same public_access_fully_blocked=false must
 	// not trip AP.PAB.001 — it's gated on kind=access_point.
@@ -339,6 +354,7 @@ func TestAPPAB001_TrueNegative_BucketKindIgnored(t *testing.T) {
 // kind=access_point AND policy_is_public=true
 
 func TestAPPolicy001_TruePositive_PublicPolicy(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	ap := accessPoint("ap-public-policy", map[string]any{
 		"kind":             "access_point",
@@ -351,6 +367,7 @@ func TestAPPolicy001_TruePositive_PublicPolicy(t *testing.T) {
 }
 
 func TestAPPolicy001_TrueNegative_ScopedPolicy(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	ap := accessPoint("ap-scoped-policy", map[string]any{
 		"kind":             "access_point",
@@ -363,6 +380,7 @@ func TestAPPolicy001_TrueNegative_ScopedPolicy(t *testing.T) {
 }
 
 func TestAPPolicy001_TrueNegative_VPCOriginNarrowPolicy(t *testing.T) {
+	t.Parallel()
 	ev := networkEvaluator(t)
 	// Full AP shape: VPC-bound network origin, PAB fully enforcing, non-public
 	// policy. Silent on both AP.POLICY.001 and AP.PAB.001.

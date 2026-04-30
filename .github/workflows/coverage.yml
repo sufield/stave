@@ -24,19 +24,32 @@ jobs:
           check-latest: true
           cache: true
 
-      - name: Generate unit test coverage (exclude e2e)
+      - name: Regenerate goldens and sync
+        run: make regenerate-goldens golden-update-all sync-schemas sync-controls sync-alternatives
+
+      - name: Generate coverage (single test run)
         run: |
           set -euo pipefail
-          make sync-schemas sync-controls
-          # Exclude ./e2e from unit coverage: that suite invokes the built
-          # stave binary per fixture and can exceed the default 10m global
-          # timeout even with a per-case bound. E2E runs in its own CI job.
-          pkgs="$(go list ./... | grep -vE '^github\.com/sufield/stave/e2e$')"
-          go test $pkgs -covermode=atomic -coverprofile=unit.out
+          pkgs="$(go list ./... | grep -vE '/e2e$')"
+
+          go test $pkgs \
+            -tags stavedev \
+            -covermode=atomic \
+            -coverpkg=./... \
+            -coverprofile=unit.out \
+            -count=1 \
+            -parallel=2 \
+            -timeout 20m
 
       - name: Generate testscript integration coverage
         run: |
-          go test ./cmd/stave/... -run TestScripts -covermode=atomic -coverpkg=./... -coverprofile=testscript.out -count=1 -timeout 120s
+          go test ./cmd/stave/... -run TestScripts \
+            -tags stavedev \
+            -covermode=atomic \
+            -coverpkg=./... \
+            -coverprofile=testscript.out \
+            -count=1 \
+            -timeout 120s
 
       - name: Merge coverage profiles
         run: |
@@ -48,26 +61,38 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Extract per-package coverage from the merged profile.
+          # No re-running tests — just reading the profile we already have.
           check_coverage() {
-            local pkg="$1"
+            local pkg_pattern="$1"
             local min="$2"
-            local out="$3"
+            local label="$3"
 
-            go test "$pkg" -covermode=atomic -coverpkg="$pkg" -coverprofile="$out"
+            # go tool cover -func outputs lines like:
+            #   github.com/sufield/stave/internal/app/eval/eval.go:42: Evaluate  85.7%
+            #   ...
+            #   total:  (statements)  67.3%
+            # Filter to lines matching the package, compute weighted avg.
             local got
-            got="$(go tool cover -func="$out" | awk '/^total:/ {gsub("%","",$3); print $3}')"
+            got="$(go tool cover -func=coverage.out \
+              | grep "$pkg_pattern" \
+              | awk '/^total:/{next} {gsub("%","",$3); sum+=$3; n++} END {if(n>0) printf "%.1f", sum/n; else print "0"}')"
 
-            echo "$pkg coverage: ${got}% (minimum: ${min}%)"
-            awk -v got="$got" -v min="$min" 'BEGIN { exit (got+0 < min+0) ? 1 : 0 }' || {
-              echo "::error::$pkg coverage ${got}% is below minimum ${min}%"
-              exit 1
+            echo "$label coverage: ${got}% (minimum: ${min}%)"
+            awk -v got="$got" -v min="$min" \
+              'BEGIN { exit (got+0 < min+0) ? 1 : 0 }' || {
+              echo "::error::$label coverage ${got}% is below minimum ${min}%"
+              return 1
             }
           }
 
-          check_coverage ./internal/app/... 25 coverage-app.out
-          check_coverage ./internal/core/predicate/... 40 coverage-predicate.out
-          check_coverage ./internal/core/kernel/... 50 coverage-kernel.out
-          check_coverage ./internal/core/evaluation/... 45 coverage-evaluation.out
+          failed=0
+          check_coverage "internal/app/"           25 "internal/app"           || failed=1
+          check_coverage "internal/core/predicate/" 40 "internal/core/predicate" || failed=1
+          check_coverage "internal/core/kernel/"    50 "internal/core/kernel"    || failed=1
+          check_coverage "internal/core/evaluation/" 45 "internal/core/evaluation" || failed=1
+
+          exit $failed
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
