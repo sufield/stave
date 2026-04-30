@@ -1,0 +1,23 @@
+id: stepfunctions_observability_decay
+description: >
+  Step Functions state machine has multiple
+  observability defects: X-Ray tracing off,
+  Distributed Map without per-iteration
+  tracing, no EventBridge subscription on
+  status events, or IncludeExecutionData
+  disabled. Each defect alone reduces
+  observability granularity; co-occurrence
+  indicates the workflow's runtime is opaque.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.XRAY.OFF.001
+  - CTL.STEPFUNCTIONS.DM.NOTRACING.001
+  - CTL.STEPFUNCTIONS.EVENTBRIDGE.STATUS.001
+  - CTL.STEPFUNCTIONS.LOG.NOEXEC.DATA.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

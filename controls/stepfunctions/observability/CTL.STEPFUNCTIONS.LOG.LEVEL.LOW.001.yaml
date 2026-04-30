@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LOG.LEVEL.LOW.001
+name: Step Functions Log Level Set To OFF Or ERROR Only
+description: >
+  Step Functions logging is enabled but `Level`
+  is `OFF` (effectively no logs) or `ERROR`
+  (only failures captured). Successful
+  executions, state transitions, retry events,
+  and Catch-handled errors all go unrecorded.
+  Without this signal, post-mortem of a
+  silent failure or behavior drift is
+  impossible.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2.1, 10.2.2"
+  nist_800_53_r5: "AU-2, AU-3, AU-12"
+  fedramp_moderate: "AU-2"
+  iso_27001_2022: "A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Logging Level is OFF or ERROR.
+  action: >
+    Set Level to ALL on production-tier
+    workflows; FATAL or ERROR is acceptable
+    only for very-high-cardinality or known-
+    benign workflows. Pair with
+    IncludeExecutionData: true for full
+    diagnostic context.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "log": {
+          "level_too_low": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.log.level_too_low
+      op: eq
+      value: true
+defect: >
+  Log Level OFF or ERROR.
+infection: >
+  Most execution events go unrecorded;
+  silent-failure investigation impossible.
+failure: >
+  Detection coverage gap.
+tests:
+  - name: low level fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          log:
+            level_too_low: true
+  - name: ALL passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          log:
+            level_too_low: false

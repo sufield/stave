@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.EVENTBRIDGE.STATUS.001
+name: Step Functions Status Change Events Not Subscribed In EventBridge
+description: >
+  No EventBridge rule subscribed to Step
+  Functions `Execution Status Change` or
+  `State Machine Status Change` events.
+  Without these rules, terminal-state events
+  (SUCCEEDED, FAILED, ABORTED, TIMED_OUT) and
+  state-machine config changes (CREATE,
+  UPDATE, DELETE) flow only to the audit log
+  — no real-time hooks for downstream
+  processing or notification.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2, CC8.1"
+  nist_800_53_r5: "AU-12, IR-6"
+  fedramp_moderate: "AU-12"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No EventBridge rules on Step Functions
+    status changes.
+  action: >
+    Create rules: source aws.states,
+    detail-type "Step Functions Execution
+    Status Change" and "Step Functions State
+    Machine Status Change". Route to SNS /
+    Slack / SIEM.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "alarms": {
+          "eventbridge_status_rules": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.alarms.eventbridge_status_rules
+      op: eq
+      value: false
+defect: >
+  No EventBridge subscription on status
+  events.
+infection: >
+  No real-time hook on terminal states or
+  config changes.
+failure: >
+  Event-driven observability gap.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          alarms:
+            eventbridge_status_rules: false
+  - name: present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          alarms:
+            eventbridge_status_rules: true

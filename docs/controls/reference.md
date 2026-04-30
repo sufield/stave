@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2505
-**Pack hash:** `fff2cc51eaab4797a553a45749cc67ee1e96313fd3bc2af3dcfb81a66922cf6d`
+**Total controls:** 2517
+**Pack hash:** `dcbcc34f7059534f57f05c0644b87fca7966c9d601d34d95fd83772f9aeee68d`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 260 |
-| high | 1090 |
+| high | 1093 |
 | info | 16 |
 | low | 187 |
-| medium | 952 |
+| medium | 961 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,12 +23,12 @@
 | availability | 2 |
 | capacity | 3 |
 | cryptography | 3 |
-| detect | 22 |
+| detect | 33 |
 | detection | 98 |
 | encrypt | 10 |
 | encryption | 92 |
 | exposure | 1168 |
-| governance | 520 |
+| governance | 521 |
 | hygiene | 16 |
 | identity | 393 |
 | lifecycle | 18 |
@@ -35404,6 +35404,66 @@ AWS Systems Manager Parameter Store parameters that store values in String or St
 
 ---
 
+### CTL.STEPFUNCTIONS.ALARM.EXEC.FAILED.001
+
+**Step Functions ExecutionsFailed Has No CloudWatch Alarm**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
+
+No CloudWatch alarm on the `ExecutionsFailed` metric. Failed executions accumulate without paging on-call; only customer impact (or daily review) surfaces them. The metric is the most direct workflow-health signal.
+
+**Remediation:** Create alarm: ExecutionsFailed > 0 for 1 datapoint, page on-call. For high-volume workflows, alarm on rate (>5%) instead of raw count.
+
+---
+
+### CTL.STEPFUNCTIONS.ALARM.EXEC.THROTTLED.001
+
+**Step Functions ExecutionThrottled Has No CloudWatch Alarm**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
+
+No CloudWatch alarm on `ExecutionThrottled`. When the workflow hits Step Functions rate limits (10K/sec StartExecution per region, account-level concurrent execution quota), events are dropped silently. Without an alarm, the workflow appears to "process less data than expected" without traceable cause.
+
+**Remediation:** Alarm: ExecutionThrottled > 0 sustained 5 minutes (warn). Investigate via Service Quotas; request limit increase if needed.
+
+---
+
+### CTL.STEPFUNCTIONS.ALARM.EXEC.TIME.SLO.001
+
+**Step Functions ExecutionTime Has No SLO Alarm**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12; soc2: CC7.2, A1.1;
+
+No CloudWatch alarm on `ExecutionTime` bounded by an SLO (e.g., p99 < 60s). Long-running stuck executions accumulate invisibly; downstream consumers wait on results that arrive far past expected. Particularly important for synchronous Express patterns where the caller has its own timeout.
+
+**Remediation:** Alarm: ExecutionTime p99 > <SLO> sustained 15min. Set SLO based on workflow's documented SLA.
+
+---
+
+### CTL.STEPFUNCTIONS.ALARM.SCHEDULE.TIME.001
+
+**Step Functions Activity / Lambda Schedule Time Alarms Missing**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12; soc2: CC7.2, A1.1;
+
+No CloudWatch alarms on `ActivityScheduleTime` or `LambdaFunctionScheduleTime`. These metrics capture time-to-schedule (queue wait) on worker queues — high values mean workers are saturated. Without alarms, ingest queues back up invisibly until customer impact.
+
+**Remediation:** Alarm: ActivityScheduleTime p99 > 30s and LambdaFunctionScheduleTime p99 > 5s (workload-tunable). High values indicate worker / Lambda concurrency saturation.
+
+---
+
 ### CTL.STEPFUNCTIONS.ASL.CATCH.MISSING.001
 
 **Step Functions Task State Lacks Catch Clause On Failure-Prone Downstream**
@@ -35709,6 +35769,36 @@ ASL `Wait` state uses hardcoded `Seconds` instead of `SecondsPath` (or `Timestam
 
 ---
 
+### CTL.STEPFUNCTIONS.DM.NOTRACING.001
+
+**Step Functions Distributed Map Has No Per-Iteration Tracing Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12; soc2: CC7.2;
+
+Distributed Map child executions don't have X-Ray tracing or per-iteration logging enabled — debugging per-item failures requires reconstructing input from the parent's input source. For workflows fan-out to thousands of items, this is operationally intractable.
+
+**Remediation:** Enable child-execution X-Ray; pair with ResultWriter so per-iteration metadata captures input + outcome. Tag traces with item index for queryability.
+
+---
+
+### CTL.STEPFUNCTIONS.EVENTBRIDGE.STATUS.001
+
+**Step Functions Status Change Events Not Subscribed In EventBridge**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, IR-6; soc2: CC7.2, CC8.1;
+
+No EventBridge rule subscribed to Step Functions `Execution Status Change` or `State Machine Status Change` events. Without these rules, terminal-state events (SUCCEEDED, FAILED, ABORTED, TIMED_OUT) and state-machine config changes (CREATE, UPDATE, DELETE) flow only to the audit log — no real-time hooks for downstream processing or notification.
+
+**Remediation:** Create rules: source aws.states, detail-type "Step Functions Execution Status Change" and "Step Functions State Machine Status Change". Route to SNS / Slack / SIEM.
+
+---
+
 ### CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.NOEXTERNAL.001
 
 **Step Functions Cross-Account StartExecution Without ExternalId**
@@ -35871,6 +35961,81 @@ Non-admin role granted Step Functions control- plane actions: `states:CreateStat
 Step Functions state machines must emit execution logs to CloudWatch Logs. Without logging, workflow execution details and errors are invisible.
 
 **Remediation:** Enable execution logging to CloudWatch Logs.
+
+---
+
+### CTL.STEPFUNCTIONS.LOG.EXPRESS.UNARCHIVED.001
+
+**Step Functions Express Workflow Logs Not Exported To Long-Retention Store**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-11; iso_27001_2022: A.5.33, A.8.15; nist_800_53_r5: AU-11; pci_dss_v4.0: 10.5.1; soc2: CC7.2;
+
+Express workflow logs go only to CloudWatch with default retention. Unlike Standard (which retains execution history for ~90 days via the API), Express has no API history at all — logs are the only record. Without long-retention archival (S3 export, SIEM ingestion), evidence beyond the CWL retention window is gone.
+
+**Remediation:** Add log subscription filter exporting to Kinesis Firehose → S3 (or SIEM ingest). Apply S3 lifecycle for cost control.
+
+---
+
+### CTL.STEPFUNCTIONS.LOG.GROUP.MISSING.001
+
+**Step Functions Log Destination CloudWatch Group Does Not Exist**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-3; iso_27001_2022: A.8.15; nist_800_53_r5: AU-3, AU-12; pci_dss_v4.0: 10.4.1; soc2: CC7.2, A1.2;
+
+Step Functions log configuration references a CloudWatch Log group that does not exist. Log delivery silently drops events — the state machine reports logging-enabled, the pipeline appears healthy from inventory, but no events arrive at any consumer. Common pattern: log group renamed or deleted by another team without checking which services delivered to it.
+
+**Remediation:** Re-create the log group or repoint via UpdateStateMachine --logging-configuration. Verify with describe-state-machine.
+
+---
+
+### CTL.STEPFUNCTIONS.LOG.LEVEL.LOW.001
+
+**Step Functions Log Level Set To OFF Or ERROR Only**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-2; iso_27001_2022: A.8.15; nist_800_53_r5: AU-2, AU-3, AU-12; pci_dss_v4.0: 10.2.1, 10.2.2; soc2: CC7.2;
+
+Step Functions logging is enabled but `Level` is `OFF` (effectively no logs) or `ERROR` (only failures captured). Successful executions, state transitions, retry events, and Catch-handled errors all go unrecorded. Without this signal, post-mortem of a silent failure or behavior drift is impossible.
+
+**Remediation:** Set Level to ALL on production-tier workflows; FATAL or ERROR is acceptable only for very-high-cardinality or known- benign workflows. Pair with IncludeExecutionData: true for full diagnostic context.
+
+---
+
+### CTL.STEPFUNCTIONS.LOG.NOEXEC.DATA.001
+
+**Step Functions Standard Workflow IncludeExecutionData Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-3; hipaa: 164.312(b); iso_27001_2022: A.8.15; nist_800_53_r5: AU-3, AU-12; pci_dss_v4.0: 10.2.5; soc2: CC7.2;
+
+Step Functions Standard workflow has `IncludeExecutionData: false`. Logs capture state-transition events but not the input / output payloads. During incident review, the operator sees "state X completed at timestamp T" but cannot reconstruct what data flowed through the workflow. For workflows handling regulated data, this is also a compliance gap (state changes without event content fail HIPAA AU-3).
+
+**Remediation:** Set logging.IncludeExecutionData: true. Increase log retention budget; payloads are larger than transition events alone. For workflows handling secrets, redact sensitive fields via input/output transformations BEFORE entering log-captured states.
+
+---
+
+### CTL.STEPFUNCTIONS.LOG.RETENTION.SHORT.001
+
+**Step Functions Log Group Retention Below Compliance Window**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: AU-11; hipaa: 164.530(j); iso_27001_2022: A.5.33; nist_800_53_r5: AU-11; pci_dss_v4.0: 10.5.1; soc2: CC7.2;
+
+Step Functions log destination CloudWatch group has retention < 365 days (the most permissive common regulatory minimum). HIPAA requires 6 years, PCI-DSS 1 year, SOX 7 years. Logs that age out before the retention window create an audit / forensic gap regardless of how thoroughly they were collected.
+
+**Remediation:** Update CWL retention to match compliance scope; pair with S3 Glacier export for long retention (HIPAA: 2557, PCI: 365, SOX: 2557).
 
 ---
 
@@ -36055,6 +36220,21 @@ Step Functions execution role's trust policy trusts `states.amazonaws.com` but l
 Step Functions state machine definitions must not contain hardcoded secrets. Definition JSON is visible in the console, API responses, and CloudTrail logs.
 
 **Remediation:** Replace hardcoded secrets with Secrets Manager or Parameter Store references.
+
+---
+
+### CTL.STEPFUNCTIONS.XRAY.OFF.001
+
+**Step Functions X-Ray Tracing Disabled On Production Workflow**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detect
+- **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2;
+
+Step Functions production workflow has X-Ray tracing disabled. Cross-service correlation (Lambda + DDB + SQS / SNS spans linked to the workflow execution) is impossible without it; latency / error breakdown per-service and per-state is also lost. Performance investigations rely on per- service log correlation by execution ID, which is fragile.
+
+**Remediation:** Set tracingConfiguration.enabled: true. Configure 100% sampling for low-volume workflows, 10% for high-volume. Add annotations (execution ID, tenant) for queryable traces.
 
 ---
 

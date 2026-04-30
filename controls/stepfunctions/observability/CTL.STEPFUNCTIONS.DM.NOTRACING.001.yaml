@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.DM.NOTRACING.001
+name: Step Functions Distributed Map Has No Per-Iteration Tracing Configured
+description: >
+  Distributed Map child executions don't have
+  X-Ray tracing or per-iteration logging
+  enabled — debugging per-item failures
+  requires reconstructing input from the
+  parent's input source. For workflows fan-out
+  to thousands of items, this is operationally
+  intractable.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2"
+  nist_800_53_r5: "AU-12"
+  fedramp_moderate: "AU-12"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    DM has no per-iteration tracing.
+  action: >
+    Enable child-execution X-Ray; pair with
+    ResultWriter so per-iteration metadata
+    captures input + outcome. Tag traces with
+    item index for queryability.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "log": {
+          "dm_iteration_tracing": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.log.has_distributed_map
+      op: eq
+      value: true
+    - field: properties.compute.log.dm_iteration_tracing
+      op: eq
+      value: false
+defect: >
+  Distributed Map without per-iteration
+  tracing.
+infection: >
+  Per-item failure investigation requires
+  manual reconstruction; intractable at scale.
+failure: >
+  Fan-out observability gap.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          log:
+            has_distributed_map: true
+            dm_iteration_tracing: false
+  - name: present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          log:
+            has_distributed_map: true
+            dm_iteration_tracing: true

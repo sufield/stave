@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LOG.NOEXEC.DATA.001
+name: Step Functions Standard Workflow IncludeExecutionData Disabled
+description: >
+  Step Functions Standard workflow has
+  `IncludeExecutionData: false`. Logs capture
+  state-transition events but not the input /
+  output payloads. During incident review,
+  the operator sees "state X completed at
+  timestamp T" but cannot reconstruct what
+  data flowed through the workflow. For
+  workflows handling regulated data, this is
+  also a compliance gap (state changes
+  without event content fail HIPAA AU-3).
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2.5"
+  hipaa: "164.312(b)"
+  nist_800_53_r5: "AU-3, AU-12"
+  fedramp_moderate: "AU-3"
+  iso_27001_2022: "A.8.15"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    IncludeExecutionData disabled.
+  action: >
+    Set logging.IncludeExecutionData: true.
+    Increase log retention budget; payloads
+    are larger than transition events alone.
+    For workflows handling secrets, redact
+    sensitive fields via input/output
+    transformations BEFORE entering
+    log-captured states.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "log": {
+          "include_execution_data": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.log.include_execution_data
+      op: eq
+      value: false
+defect: >
+  IncludeExecutionData disabled.
+infection: >
+  Audit shows transitions but not payloads;
+  exfil / data-corruption investigation
+  blocked.
+failure: >
+  Per-event content gap.
+tests:
+  - name: disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          log:
+            include_execution_data: false
+  - name: enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          log:
+            include_execution_data: true

@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ALARM.EXEC.THROTTLED.001
+name: Step Functions ExecutionThrottled Has No CloudWatch Alarm
+description: >
+  No CloudWatch alarm on `ExecutionThrottled`.
+  When the workflow hits Step Functions rate
+  limits (10K/sec StartExecution per region,
+  account-level concurrent execution quota),
+  events are dropped silently. Without an
+  alarm, the workflow appears to "process less
+  data than expected" without traceable
+  cause.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "AU-12, SI-4"
+  fedramp_moderate: "AU-12"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    No alarm on ExecutionThrottled.
+  action: >
+    Alarm: ExecutionThrottled > 0 sustained 5
+    minutes (warn). Investigate via Service
+    Quotas; request limit increase if needed.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "alarms": {
+          "executions_throttled_alarm": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.alarms.executions_throttled_alarm
+      op: eq
+      value: false
+defect: >
+  No alarm on ExecutionThrottled.
+infection: >
+  Silent drop at rate limit; downstream
+  data loss without traceable cause.
+failure: >
+  Throttle signal absent.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          alarms:
+            executions_throttled_alarm: false
+  - name: present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          alarms:
+            executions_throttled_alarm: true

@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.ALARM.SCHEDULE.TIME.001
+name: Step Functions Activity / Lambda Schedule Time Alarms Missing
+description: >
+  No CloudWatch alarms on
+  `ActivityScheduleTime` or
+  `LambdaFunctionScheduleTime`. These metrics
+  capture time-to-schedule (queue wait) on
+  worker queues — high values mean workers are
+  saturated. Without alarms, ingest queues
+  back up invisibly until customer impact.
+domain: detect
+severity: medium
+compliance:
+  soc2: "CC7.2, A1.1"
+  nist_800_53_r5: "AU-12"
+  fedramp_moderate: "AU-12"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Schedule-time alarms missing.
+  action: >
+    Alarm: ActivityScheduleTime p99 > 30s and
+    LambdaFunctionScheduleTime p99 > 5s
+    (workload-tunable). High values indicate
+    worker / Lambda concurrency saturation.
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "alarms": {
+          "schedule_time_alarms": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.alarms.schedule_time_alarms
+      op: eq
+      value: false
+defect: >
+  Schedule-time alarms incomplete.
+infection: >
+  Queue saturation invisible; downstream
+  back-pressure cascades.
+failure: >
+  Capacity-saturation signal absent.
+tests:
+  - name: missing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          alarms:
+            schedule_time_alarms: false
+  - name: present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          alarms:
+            schedule_time_alarms: true

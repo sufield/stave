@@ -1,0 +1,23 @@
+id: stepfunctions_log_unhealthy
+description: >
+  Step Functions logging configuration has
+  multiple defects: Log Level OFF / ERROR
+  (most events unrecorded), retention < 365
+  days (compliance shortfall), log group
+  missing (silent drop), or Express logs not
+  archived to long-retention store. Each
+  defect alone limits forensic / compliance
+  signal; co-occurrence indicates the logging
+  pipeline is unmaintained. Threshold of 2
+  fires when at least two defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.LOG.LEVEL.LOW.001
+  - CTL.STEPFUNCTIONS.LOG.RETENTION.SHORT.001
+  - CTL.STEPFUNCTIONS.LOG.GROUP.MISSING.001
+  - CTL.STEPFUNCTIONS.LOG.EXPRESS.UNARCHIVED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed

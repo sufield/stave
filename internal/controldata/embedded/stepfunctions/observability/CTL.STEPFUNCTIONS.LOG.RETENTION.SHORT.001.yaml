@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.STEPFUNCTIONS.LOG.RETENTION.SHORT.001
+name: Step Functions Log Group Retention Below Compliance Window
+description: >
+  Step Functions log destination CloudWatch
+  group has retention < 365 days (the most
+  permissive common regulatory minimum).
+  HIPAA requires 6 years, PCI-DSS 1 year,
+  SOX 7 years. Logs that age out before the
+  retention window create an audit / forensic
+  gap regardless of how thoroughly they were
+  collected.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.5.1"
+  hipaa: "164.530(j)"
+  nist_800_53_r5: "AU-11"
+  fedramp_moderate: "AU-11"
+  iso_27001_2022: "A.5.33"
+  ccm_v4: ["LOG-04", "LOG-08"]
+scope_tags:
+  - aws
+  - stepfunctions
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_stepfunctions_state_machine
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Log retention < 365 days.
+  action: >
+    Update CWL retention to match compliance
+    scope; pair with S3 Glacier export for
+    long retention (HIPAA: 2557, PCI: 365,
+    SOX: 2557).
+  example: |
+    {
+      "compute": {
+        "kind": "state_machine",
+        "log": {
+          "retention_days": 2557
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: state_machine
+    - field: properties.compute.log.retention_days
+      op: lt
+      value: 365
+defect: >
+  Log retention < 365 days.
+infection: >
+  Logs age out before regulatory window;
+  evidence unavailable for compliance audits.
+failure: >
+  Retention shortfall.
+tests:
+  - name: 30d fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          log:
+            retention_days: 30
+  - name: 7y passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:states:us-east-1:111122223333:stateMachine:prod"
+      asset_type: aws_stepfunctions_state_machine
+      vendor: aws
+      properties:
+        compute:
+          kind: state_machine
+          log:
+            retention_days: 2557
