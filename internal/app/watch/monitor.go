@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -37,15 +38,25 @@ type Config struct {
 	OwnerResolver   OwnerResolver
 }
 
-// Monitor runs the continuous assessment loop.
+// Monitor runs the continuous assessment loop. The mutex protects
+// runCycle's state read/write because file-write debounce timers
+// fire runCycle on their own goroutine while the ticker / event
+// loop also calls runCycle from the main goroutine.
 type Monitor struct {
 	cfg           Config
+	mu            sync.Mutex
 	previousState string
 	previousIDs   map[string]bool
 }
 
-// New creates a new Monitor.
+// New creates a new Monitor. A nil cfg.Clock is replaced with
+// ports.RealClock so the monitor never nil-derefs in runCycle —
+// tests that want to control time still need to set Clock
+// explicitly.
 func New(cfg Config) *Monitor {
+	if cfg.Clock == nil {
+		cfg.Clock = ports.RealClock{}
+	}
 	return &Monitor{
 		cfg:         cfg,
 		previousIDs: make(map[string]bool),
@@ -111,6 +122,13 @@ func (m *Monitor) runCycle(ctx context.Context) {
 	if ctx.Err() != nil {
 		return
 	}
+
+	// Serialize state mutation across the ticker, fsnotify-debounce
+	// timer, and initial-run paths. Held for the full cycle so two
+	// concurrent cycles produce sequential state transitions instead
+	// of interleaved ones.
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	state, violations, slaBreaches, maxDwell, violationIDs, err := m.cfg.Assess(ctx)
 	now := m.cfg.Clock.Now().UTC()

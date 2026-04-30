@@ -111,12 +111,18 @@ func runAudit(ctx context.Context, stdout io.Writer, opts *auditOptions) error {
 	reportMD := fmt.Appendf(nil, "# %s Audit Report — %s\n\nAssessments in period: %d\n",
 		strings.ToUpper(opts.Framework), periodLabel, len(assessments))
 
-	// Load exemptions if provided.
+	// Load exemptions if provided. Errors are fatal: an audit bundle
+	// that silently omits the operator's --exempt input would falsely
+	// represent compliance scope.
 	var exemptJSON []byte
 	if opts.Exempt != "" {
 		af, loadErr := appexempt.Load(opts.Exempt)
-		if loadErr == nil {
-			exemptJSON, _ = json.MarshalIndent(af, "", "  ")
+		if loadErr != nil {
+			return fmt.Errorf("load exemptions %q: %w", opts.Exempt, loadErr)
+		}
+		exemptJSON, err = json.MarshalIndent(af, "", "  ")
+		if err != nil {
+			return fmt.Errorf("marshal exemptions: %w", err)
 		}
 	}
 

@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/adapters/evidence"
+	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/adapters/output/asff"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/report"
@@ -129,11 +131,20 @@ func run(ctx context.Context, _, stderr io.Writer, opts *options) error {
 		privateKeyPEM = keyData
 	}
 
+	// Load observation snapshots so the bundle can include the asset
+	// state that produced each finding. The bundler prunes to assets
+	// referenced by Findings (see evidence.marshalPrunedSnapshots).
+	loader := observations.NewObservationLoader()
+	loadResult, loadErr := loader.LoadSnapshots(ctx, opts.ObservationsDir)
+	if loadErr != nil {
+		return fmt.Errorf("load snapshots for bundle: %w", loadErr)
+	}
+
 	// Build the bundle.
 	fmt.Fprintf(stderr, "Packaging evidence bundle...\n")
 	input := evidence.BundleInput{
 		Assessment:    &assessment,
-		Snapshots:     nil, // Snapshots loaded from assessment findings (pruned)
+		Snapshots:     loadResult.Snapshots,
 		TraceJSON:     nil, // Logic trace would be captured if --trace was active
 		PrivateKeyPEM: privateKeyPEM,
 		StaveVersion:  "edge",
@@ -194,7 +205,23 @@ func runAssessment(ctx context.Context, binary string, opts *options) ([]byte, e
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	_ = cmd.Run() // Exit code 3 is expected for violations
+	// Exit codes from `stave apply`:
+	//   0 = success, no violations
+	//   3 = success, violations found (still a valid assessment)
+	// Any other code (2 = input error, 4 = internal error, 130 = SIGINT)
+	// means the assessment failed; partial stdout is not safe to bundle.
+	runErr := cmd.Run()
+	exitCode := 0
+	if runErr != nil {
+		if exitErr, ok := errors.AsType[*exec.ExitError](runErr); ok {
+			exitCode = exitErr.ExitCode()
+		} else {
+			return nil, fmt.Errorf("exec assessment: %w", runErr)
+		}
+	}
+	if exitCode != 0 && exitCode != 3 {
+		return nil, fmt.Errorf("assessment failed (exit %d): %s", exitCode, stderr.String())
+	}
 
 	if stdout.Len() == 0 {
 		return nil, fmt.Errorf("no assessment output: %s", stderr.String())

@@ -43,13 +43,13 @@ type bundleManifest struct {
 }
 
 type bundleMetadata struct {
-	SchemaVersion string `json:"schema_version"`
-	StaveVersion  string `json:"stave_version"`
-	GeneratedAt   string `json:"generated_at"`
-	ControlCount  int    `json:"controls_evaluated"`
-	FindingCount  int    `json:"findings"`
-	ChainCount    int    `json:"chain_findings"`
-	Signed        bool   `json:"signed"`
+	SchemaVersion   string `json:"schema_version"`
+	StaveVersion    string `json:"stave_version"`
+	GeneratedAt     string `json:"generated_at"`
+	AssetsEvaluated int    `json:"assets_evaluated"`
+	FindingCount    int    `json:"findings"`
+	ChainCount      int    `json:"chain_findings"`
+	Signed          bool   `json:"signed"`
 }
 
 type bundleSignature struct {
@@ -78,15 +78,19 @@ func Build(input BundleInput) ([]byte, error) {
 	// Build summary.
 	summary := buildSummary(input)
 
-	// Build metadata.
+	// Build metadata. AssetsEvaluated comes from the assessment's
+	// TotalAssets — the number of distinct assets the engine evaluated,
+	// not the number of controls. (The assessment doesn't carry a flat
+	// "controls evaluated" count; per-framework counts live in
+	// Summary.FrameworkReadiness if a framework was scoped.)
 	metadata := bundleMetadata{
-		SchemaVersion: "evidence.v0.1",
-		StaveVersion:  input.StaveVersion,
-		GeneratedAt:   now,
-		ControlCount:  input.Assessment.Summary.TotalAssets,
-		FindingCount:  input.Assessment.Summary.Violations,
-		ChainCount:    len(input.Assessment.ChainFindings),
-		Signed:        len(input.PrivateKeyPEM) > 0,
+		SchemaVersion:   "evidence.v0.1",
+		StaveVersion:    input.StaveVersion,
+		GeneratedAt:     now,
+		AssetsEvaluated: input.Assessment.Summary.TotalAssets,
+		FindingCount:    input.Assessment.Summary.Violations,
+		ChainCount:      len(input.Assessment.ChainFindings),
+		Signed:          len(input.PrivateKeyPEM) > 0,
 	}
 	metadataJSON, err := json.MarshalIndent(metadata, "", "  ")
 	if err != nil {
