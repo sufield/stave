@@ -49,16 +49,26 @@ const (
 // baseImpact is 0-100 from the control definition.
 // sensitivity is the asset classification multiplier (phi=3.0, production=2.0, etc).
 // exposure is the network reachability multiplier (public=2.0, vpc=1.0, etc).
+//
+// Capped at ScoreCatastrophic so a high-impact PHI bucket on the
+// public internet (100 × 3 × 2 = 600 raw) does not dominate the
+// scoring frame and crowd out every other finding when the report
+// renders side-by-side bars.
 func Environmental(baseImpact int, sensitivity, exposure float64) float64 {
-	return float64(baseImpact) * sensitivity * exposure
+	return min(float64(baseImpact)*sensitivity*exposure, float64(ScoreCatastrophic))
 }
 
 // Compound computes the chain-escalated risk score.
 // envScore is the environmental score from the highest-impact finding in the chain.
 // chainEscalation is the co-failure multiplier (2 controls=1.8x, 3+=2.5x).
 // blastMultiplier is the blast radius effect (detection controls=2.5+).
+//
+// Capped at ScoreCatastrophic for the same display-frame reason as
+// Environmental — uncapped scores from a 100-impact finding × 2.5
+// chain × 2.5 blast = 625 are formally meaningless once a single
+// finding already exceeds the catastrophic threshold.
 func Compound(envScore, chainEscalation, blastMultiplier float64) float64 {
-	return envScore * chainEscalation * blastMultiplier
+	return min(envScore*chainEscalation*blastMultiplier, float64(ScoreCatastrophic))
 }
 
 // ChainEscalation returns the multiplier for N co-failing controls.

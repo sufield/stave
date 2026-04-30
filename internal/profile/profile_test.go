@@ -227,3 +227,44 @@ func TestAllProfiles(t *testing.T) {
 		t.Error("hipaa not in AllProfiles()")
 	}
 }
+
+// TestAllProfiles_StableOrdering pins that two consecutive calls
+// return identical slices. The earlier shape iterated the registry
+// map directly, which gave randomized order; CLI help text,
+// generated docs, and golden tests that compared the list silently
+// flapped between runs.
+func TestAllProfiles_StableOrdering(t *testing.T) {
+	a := AllProfiles()
+	b := AllProfiles()
+	if len(a) != len(b) {
+		t.Fatalf("len mismatch: %d vs %d", len(a), len(b))
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			t.Errorf("ordering drift at index %d: %q vs %q", i, a[i], b[i])
+		}
+	}
+	for i := 1; i < len(a); i++ {
+		if a[i-1] > a[i] {
+			t.Errorf("not sorted: %q before %q", a[i-1], a[i])
+		}
+	}
+}
+
+// TestRegisterProfile_DuplicatePanics pins the duplicate-ID guard.
+// Two profile init() functions claiming the same ID used to silently
+// overwrite each other in unspecified order, surfacing as a flaky
+// "wrong profile loaded" symptom much later. Now the second
+// registration panics deterministically at startup.
+func TestRegisterProfile_DuplicatePanics(t *testing.T) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatal("expected duplicate-registration panic, got none")
+		}
+	}()
+	// hipaa was registered by an init() somewhere in the binary
+	// already. Re-registering it under the same ID must panic.
+	dup := &Profile{ID: "hipaa", Description: "duplicate registration probe"}
+	RegisterProfile(dup)
+}

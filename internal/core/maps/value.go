@@ -110,8 +110,24 @@ func (v Node) StringMap() map[string]string {
 func stringMapFromAny(entries map[string]any) map[string]string {
 	out := make(map[string]string, len(entries))
 	for key, value := range entries {
-		strValue, ok := value.(string)
-		if !ok {
+		// Tag values may have been coerced from string to bool by
+		// upstream property normalization (`"true"` → `true`). Tags
+		// are conceptually string→string, so accept the common
+		// scalar types that survived coercion and render them back
+		// as their string form. Anything else (maps, lists, nil)
+		// can't be a tag value and is skipped — matches the original
+		// "string-only" contract for non-string composite shapes.
+		var strValue string
+		switch v := value.(type) {
+		case string:
+			strValue = v
+		case bool:
+			if v {
+				strValue = "true"
+			} else {
+				strValue = "false"
+			}
+		default:
 			continue
 		}
 		normalizedKey, normalizedValue, ok := normalizeStringMapEntry(key, strValue)

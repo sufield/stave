@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -192,5 +193,50 @@ func TestBuild_SchemaVersion(t *testing.T) {
 	}
 	if g.OntologyVersion != "1.0" {
 		t.Errorf("OntologyVersion = %q, want 1.0", g.OntologyVersion)
+	}
+}
+
+// TestDeduplicateEdges_AccumulatesChainSeverities verifies that two
+// edges differing only in chain_severity get merged into one edge that
+// records both severities under chain_severities. Earlier shape used
+// "earliest wins" and silently dropped the second value, so a finding
+// belonging to chains of different severities looked like it belonged
+// to only the first chain.
+func TestDeduplicateEdges_AccumulatesChainSeverities(t *testing.T) {
+	t.Parallel()
+	edges := []Edge{
+		{From: "f1", To: "c1", Type: "VIOLATES", Properties: map[string]any{"chain_severity": "critical"}},
+		{From: "f1", To: "c1", Type: "VIOLATES", Properties: map[string]any{"chain_severity": "high"}},
+	}
+	out := deduplicateEdges(edges)
+	if len(out) != 1 {
+		t.Fatalf("expected 1 deduplicated edge, got %d", len(out))
+	}
+	props := out[0].Properties
+	if got := props["chain_severity"]; got != "critical" {
+		t.Errorf("chain_severity (singular, first-wins) = %v, want critical", got)
+	}
+	got, ok := props["chain_severities"].([]string)
+	if !ok {
+		t.Fatalf("chain_severities = %T %v, want []string", props["chain_severities"], props["chain_severities"])
+	}
+	want := []string{"critical", "high"}
+	if !slices.Equal(got, want) {
+		t.Errorf("chain_severities = %v, want %v", got, want)
+	}
+}
+
+func TestDeduplicateEdges_SingleChainSeverityOmitsPlural(t *testing.T) {
+	t.Parallel()
+	edges := []Edge{
+		{From: "f1", To: "c1", Type: "VIOLATES", Properties: map[string]any{"chain_severity": "critical"}},
+		{From: "f1", To: "c1", Type: "VIOLATES", Properties: map[string]any{"chain_severity": "critical"}},
+	}
+	out := deduplicateEdges(edges)
+	if len(out) != 1 {
+		t.Fatalf("expected 1 deduplicated edge, got %d", len(out))
+	}
+	if _, present := out[0].Properties["chain_severities"]; present {
+		t.Error("chain_severities must be absent when only one distinct value seen")
 	}
 }

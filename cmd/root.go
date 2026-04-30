@@ -82,7 +82,13 @@ type App struct {
 	// Stored on the App so the panic-recovery path can invoke it before
 	// ExitFunc — otherwise a mocked ExitFunc (test) leaves the handler
 	// goroutine blocked in its select forever.
-	cleanupInterrupt func()
+	//
+	// Held inside an atomic.Pointer because two goroutines can read or
+	// reset the closure: Execute's deferred normal-path cleanup, and
+	// recoverExecutePanic running on the panic stack. The earlier
+	// plain-pointer field racy-read pattern was caught by `go test
+	// -race` in tests that injected a panic mid-Execute.
+	cleanupInterrupt atomic.Pointer[func()]
 
 	// Confidence holds the configurable confidence thresholds, set during
 	// bootstrap from stave.yaml. Passed to the engine Runner.

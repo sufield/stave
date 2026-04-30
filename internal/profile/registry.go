@@ -2,6 +2,7 @@ package profile
 
 import (
 	"fmt"
+	"slices"
 	"sync"
 )
 
@@ -15,10 +16,19 @@ var (
 	profiles   = map[string]*Profile{}
 )
 
-// RegisterProfile adds a profile to the global registry.
+// RegisterProfile adds a profile to the global registry. Panics on
+// duplicate IDs: a duplicate registration is almost always two
+// init() functions claiming the same id, which silently let the
+// later loser overwrite the earlier registration in unspecified
+// order. Naming the conflict at registration time turns a flaky
+// "wrong profile loaded" symptom into a deterministic startup
+// failure.
 func RegisterProfile(p *Profile) {
 	profilesMu.Lock()
 	defer profilesMu.Unlock()
+	if _, exists := profiles[p.ID]; exists {
+		panic(fmt.Sprintf("profile %q registered twice; check init() order across profile packages", p.ID))
+	}
 	profiles[p.ID] = p
 }
 
@@ -33,7 +43,11 @@ func LoadProfile(id string) (*Profile, error) {
 	return p, nil
 }
 
-// AllProfiles returns all registered profile IDs.
+// AllProfiles returns all registered profile IDs in stable sorted
+// order. Map iteration is randomized, so the earlier shape produced
+// a different ordering across runs — fine for set-membership
+// callers, broken for any consumer that diffed the list (CLI help
+// text, test goldens, generated docs). Sorting locks the order in.
 func AllProfiles() []string {
 	profilesMu.RLock()
 	defer profilesMu.RUnlock()
@@ -41,5 +55,6 @@ func AllProfiles() []string {
 	for id := range profiles {
 		ids = append(ids, id)
 	}
+	slices.Sort(ids)
 	return ids
 }

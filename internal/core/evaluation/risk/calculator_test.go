@@ -35,6 +35,12 @@ func TestEnvironmental(t *testing.T) {
 }
 
 func TestCompound(t *testing.T) {
+	// Compound output is capped at ScoreCatastrophic (=100). Inputs
+	// that would otherwise multiply to a higher value get clamped so
+	// the score frame stays in [0, ScoreCatastrophic] regardless of
+	// chain depth or blast multiplier. The clamp prevents one
+	// catastrophic outlier from compressing every other finding into
+	// a sub-1% bar in the report renderer.
 	tests := []struct {
 		name       string
 		envScore   float64
@@ -43,9 +49,10 @@ func TestCompound(t *testing.T) {
 		want       float64
 	}{
 		{"single control", 60.0, 1.0, 1.0, 60.0},
-		{"two controls", 60.0, 1.8, 1.0, 108.0},
-		{"three controls with detection blast", 60.0, 2.5, 2.5, 375.0},
-		{"no blast", 42.0, 1.8, 1.0, 75.6},
+		{"two controls clamped at ceiling", 60.0, 1.8, 1.0, 100.0},
+		{"three controls with detection blast clamped", 60.0, 2.5, 2.5, 100.0},
+		{"no blast clamped", 42.0, 1.8, 1.0, 75.6},
+		{"below ceiling", 30.0, 1.8, 1.0, 54.0},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -55,6 +62,25 @@ func TestCompound(t *testing.T) {
 					tt.envScore, tt.escalation, tt.blast, got, tt.want)
 			}
 		})
+	}
+}
+
+// TestEnvironmental_CappedAtCeiling pins that extreme inputs do not
+// produce uncapped raw values. The earlier shape returned values up
+// to baseImpact*9 (3.0 sensitivity × 3.0 exposure) which made the
+// scoring frame unstable for catastrophic findings.
+func TestEnvironmental_CappedAtCeiling(t *testing.T) {
+	got := Environmental(100, 3.0, 3.0)
+	if got != float64(ScoreCatastrophic) {
+		t.Errorf("Environmental extreme = %f, want %d", got, ScoreCatastrophic)
+	}
+}
+
+// TestCompound_CappedAtCeiling pins the symmetric cap on Compound.
+func TestCompound_CappedAtCeiling(t *testing.T) {
+	got := Compound(100.0, 2.5, 2.5)
+	if got != float64(ScoreCatastrophic) {
+		t.Errorf("Compound extreme = %f, want %d", got, ScoreCatastrophic)
 	}
 }
 

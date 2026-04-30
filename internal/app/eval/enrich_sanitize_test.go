@@ -49,3 +49,19 @@ func TestSanitizeSlice_EmptyReturnsEmptyNotNil(t *testing.T) {
 		t.Errorf("JSON marshal of empty sanitized slice = %s, want []", b)
 	}
 }
+
+// TestSanitizeSlice_NilStaysNil pins the new contract: a nil input
+// must return nil. JSON encoders emit `null` for nil and `[]` for
+// empty; the earlier shape collapsed nil to `[]`, hiding the
+// "field was deliberately unset" signal from downstream consumers.
+func TestSanitizeSlice_NilStaysNil(t *testing.T) {
+	s := noopSanitizer{}
+	got := sanitizeSlice[string](nil, s)
+	if got != nil {
+		t.Errorf("sanitizeSlice(nil) = %v, want nil", got)
+	}
+	b, _ := json.Marshal(got)
+	if string(b) != "null" {
+		t.Errorf("JSON marshal of nil sanitized slice = %s, want null", b)
+	}
+}

@@ -15,9 +15,32 @@ checks:
       control_id: CC7.1
       rationale: build metadata supports evidence
 `)
-	_, err := ResolveControlCrosswalk(raw, []string{"iso_27001"}, []string{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
+	// Use a name that is not a real framework and not aliased.
+	_, err := ResolveControlCrosswalk(raw, []string{"made_up_framework"}, []string{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
 	if err == nil || !strings.Contains(err.Error(), "unsupported compliance framework") {
 		t.Fatalf("expected unsupported framework error, got %v", err)
+	}
+}
+
+// TestResolveControlCrosswalk_RejectsUnknownFrameworkInYAML pins the
+// new contract from filterAndNormalizeRefs: a typo in the crosswalk
+// YAML's framework field surfaces as an error rather than the entry
+// being silently dropped (which used to look like missing controls).
+func TestResolveControlCrosswalk_RejectsUnknownFrameworkInYAML(t *testing.T) {
+	raw := []byte(`
+version: control_crosswalk.v1
+checks:
+  SC.BUILDINFO.PRESENT:
+    - framework: not_a_real_framework
+      control_id: BOGUS.1
+      rationale: typo in the crosswalk yaml
+`)
+	_, err := ResolveControlCrosswalk(raw, []string{"soc2"}, []string{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
+	if err == nil {
+		t.Fatal("expected error for unknown framework in yaml, got nil")
+	}
+	if !strings.Contains(err.Error(), "unknown framework") {
+		t.Errorf("error %q should mention 'unknown framework'", err.Error())
 	}
 }
 
@@ -47,7 +70,9 @@ func TestParseFramework(t *testing.T) {
 		{"NIST-800-53", FrameworkNIST, false},
 		{"PCI_DSS_v3.2.1", FrameworkPCIDSS, false},
 		{"CIS-AWS-v1.4.0", FrameworkCISAWS, false},
-		{"iso_27001", "", true},
+		// iso_27001 is now an alias for the canonical iso_27001_2022 id.
+		{"iso_27001", FrameworkISO27001, false},
+		{"ISO 27001", FrameworkISO27001, false},
 		{"", "", true},
 	}
 	for _, tt := range tests {

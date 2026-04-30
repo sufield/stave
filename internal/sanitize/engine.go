@@ -251,27 +251,20 @@ func (s *Sanitizer) scrubSource(src *asset.SourceRef) *asset.SourceRef {
 	}
 }
 
-// scrubValue redacts a sanitized property's value while preserving its
-// underlying type so downstream JSON consumers see the same shape they
-// would for an unredacted property. String values are deterministically
-// hashed; numeric and boolean primitives are zeroed; containers recurse.
+// scrubValueWithProfile redacts a property's value while preserving
+// its underlying type so downstream JSON consumers see the same
+// shape they would for an unredacted property. String values are
+// deterministically hashed; numeric and boolean primitives are
+// zeroed. Containers recurse with the same Profile so nested Remove
+// rules apply through every layer — including beneath a
+// Sanitize-flagged parent, which the earlier "swap to scrubValue
+// for the empty-profile path" version silently bypassed.
 //
-// Profile-driven scrubbing is independent of the sanitizeIDs flag: by
-// the time scrubValue runs, ScrubMap has already determined that this
-// key is in the profile's Sanitize set, so the value is always
-// redacted — a zero-value Sanitizer (sanitizeIDs=false) still strips
-// values whose property names are profile-classified as sensitive.
-func (s *Sanitizer) scrubValue(v any) any {
-	return s.scrubValueWithProfile(v, Profile{})
-}
-
-// scrubValueWithProfile performs the same redaction as scrubValue but
-// continues to apply the Profile's ShouldRemove / ShouldSanitize rules
-// at every nested map level. The non-Profile shape (scrubValue) is the
-// "blanket scrub everything" path used when the parent key is itself
-// in the sanitize set; this variant is the recursive path that lets a
-// nested safe field stay readable while sibling sensitive fields get
-// redacted, mirroring ScrubMap's behavior all the way down.
+// Profile-driven scrubbing is independent of the sanitizeIDs flag:
+// by the time this runs, ScrubMap has already determined the key is
+// in the profile's Sanitize set, so the value is always redacted —
+// a zero-value Sanitizer (sanitizeIDs=false) still strips values
+// whose property names are profile-classified as sensitive.
 func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 	switch val := v.(type) {
 	case nil:
@@ -326,7 +319,13 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 				continue
 			}
 			if profile.ShouldSanitize(k) {
-				out[k] = s.scrubValue(sub)
+				// Recurse with profile context so nested Remove
+				// keys still apply through a Sanitize-flagged
+				// parent. The earlier shape called s.scrubValue
+				// here, which lost the profile and let
+				// "tags-removable" entries leak through if a
+				// Sanitize key sat above them in the tree.
+				out[k] = s.scrubValueWithProfile(sub, profile)
 				continue
 			}
 			out[k] = s.scrubValueWithProfile(sub, profile)

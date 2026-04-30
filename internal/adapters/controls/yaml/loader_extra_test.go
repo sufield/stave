@@ -2,6 +2,8 @@ package yaml
 
 import (
 	"testing"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func TestIsControlFile(t *testing.T) {
@@ -101,6 +103,37 @@ func TestUnmarshalControlDefinition_InvalidYAML(t *testing.T) {
 	_, err := UnmarshalControlDefinition(data)
 	if err == nil {
 		t.Fatal("expected error for invalid YAML")
+	}
+}
+
+// TestValidateArchetype_RejectsUnknown confirms enrichAndPrepare
+// rejects controls whose archetype field references an ID the catalog
+// doesn't know about. Typo'd archetype IDs used to load successfully
+// and silently disappear into the "no archetype" downstream branch.
+func TestValidateArchetype_RejectsUnknown(t *testing.T) {
+	ctl := policy.ControlDefinition{
+		ID:        "CTL.TEST.999",
+		Archetype: "silent_failure", // typo — catalog has silent-failure
+	}
+	if err := validateArchetype(&ctl); err == nil {
+		t.Fatal("expected error for unknown archetype id, got nil")
+	}
+}
+
+func TestValidateArchetype_AcceptsKnown(t *testing.T) {
+	ctl := policy.ControlDefinition{
+		ID:        "CTL.TEST.998",
+		Archetype: "silent-failure",
+	}
+	if err := validateArchetype(&ctl); err != nil {
+		t.Fatalf("expected known archetype to validate, got: %v", err)
+	}
+}
+
+func TestValidateArchetype_AcceptsEmpty(t *testing.T) {
+	ctl := policy.ControlDefinition{ID: "CTL.TEST.997"}
+	if err := validateArchetype(&ctl); err != nil {
+		t.Fatalf("empty archetype must validate, got: %v", err)
 	}
 }
 

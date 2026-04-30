@@ -102,8 +102,13 @@ func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {
 
 	// Phase 2: probe for overflow. If even one more byte is available,
 	// the stream exceeds the limit — reject without further allocation.
+	// Capture the probe error: a reader that returns (0, someError)
+	// rather than (0, io.EOF) used to be silently treated as
+	// "no overflow" because the error was discarded. That hid genuine
+	// I/O failures (a torn network stream, a closed file) behind what
+	// looked like a successful bounded read.
 	var probe [1]byte
-	n, _ := r.Read(probe[:])
+	n, probeErr := r.Read(probe[:])
 	if n > 0 {
 		return nil, fmt.Errorf(
 			"%w: input from %s exceeds the internal safety limit of %dMB; "+
@@ -111,6 +116,9 @@ func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {
 				"please check if this input was generated correctly",
 			ErrFileTooLarge,
 			sourceName, maxInputFileBytes.Load()>>20)
+	}
+	if probeErr != nil && !errors.Is(probeErr, io.EOF) {
+		return nil, fmt.Errorf("read %s: %w", sourceName, probeErr)
 	}
 
 	return data, nil
@@ -454,8 +462,17 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 		_ = tmp.Close()
 		return err
 	}
-	// Close before rename; error is non-fatal since data was already synced.
-	_ = tmp.Close()
+	// Capture the close error explicitly: even after a successful
+	// Sync, Close can still return errors for buffered metadata
+	// flushes or filesystem-level reservations. The earlier shape
+	// dropped the close error and proceeded to rename; if the close
+	// failed (a stale NFS handle, a quota bump after Sync, etc.) we
+	// could rename a partially flushed temp into the destination
+	// while reporting success. Surface it instead — defer cleans up
+	// the abandoned temp.
+	if closeErr := tmp.Close(); closeErr != nil {
+		return fmt.Errorf("close temp before rename: %w", closeErr)
+	}
 
 	if err = os.Rename(tmpName, dst); err != nil {
 		return err

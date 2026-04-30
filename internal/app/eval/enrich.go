@@ -231,10 +231,20 @@ func sanitizeActualValue(v any, s kernel.Sanitizer) any {
 	}
 }
 
-// sanitizeSlice clones and replaces every element using the provided sanitizer.
+// sanitizeSlice clones and replaces every element using the provided
+// sanitizer. Preserves the nil vs empty-slice distinction: nil
+// input returns nil, an empty (but non-nil) input returns the same
+// empty slice. JSON encoders emit `null` for nil and `[]` for
+// empty; the earlier shape always returned `[]T{}`, so a Finding
+// whose source slice was deliberately nil silently rendered as `[]`
+// instead of `null` and downstream consumers couldn't tell whether
+// the field was unset versus empty.
 func sanitizeSlice[T ~string](items []T, s kernel.Sanitizer) []T {
+	if items == nil {
+		return nil
+	}
 	if len(items) == 0 {
-		return []T{}
+		return items
 	}
 	out := make([]T, len(items))
 	for i := range items {

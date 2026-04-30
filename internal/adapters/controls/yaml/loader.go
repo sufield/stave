@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/archetype"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/diag"
@@ -139,6 +140,9 @@ func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
 	if err := l.resolveAlias(ctl); err != nil {
 		return fmt.Errorf("semantic error: %w", err)
 	}
+	if err := validateArchetype(ctl); err != nil {
+		return err
+	}
 	if err := ctl.Prepare(); err != nil {
 		return fmt.Errorf("semantic error: %w", err)
 	}
@@ -148,6 +152,24 @@ func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
 				return fmt.Errorf("control %s: %s", ctl.ID, issue.Message)
 			}
 		}
+	}
+	return nil
+}
+
+// validateArchetype rejects any control whose archetype field references
+// an ID that the catalog does not know about. Control authors typo
+// archetype IDs frequently (silent_failure vs silent-failure, etc.);
+// without load-time validation those typos either disappear into a
+// generic "no archetype" branch downstream or surface as broken expand
+// outputs, depending on the consumer. Surface the error here so the
+// failing control file is named in the diagnostic.
+func validateArchetype(ctl *policy.ControlDefinition) error {
+	id := strings.TrimSpace(ctl.Archetype)
+	if id == "" {
+		return nil
+	}
+	if _, ok := archetype.Lookup(id); !ok {
+		return fmt.Errorf("control %s: unknown archetype %q (run `stave expand --list` to see valid IDs)", ctl.ID, id)
 	}
 	return nil
 }

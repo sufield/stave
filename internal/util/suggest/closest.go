@@ -53,29 +53,36 @@ func threshold(inputLen int) int {
 	}
 }
 
-// Distance returns the Levenshtein edit distance between two strings.
+// Distance returns the Levenshtein edit distance between two strings,
+// measured in runes rather than bytes. Indexing strings as []byte
+// counted multi-byte UTF-8 characters as multiple edits — a single
+// emoji or accented character could compare as 2–4 edits against an
+// otherwise identical string. Convert to rune slices before the DP
+// pass so user-visible characters map 1:1 to edit operations.
 func Distance(a, b string) int {
 	if a == b {
 		return 0
 	}
-	if a == "" {
-		return len(b)
+	ar := []rune(a)
+	br := []rune(b)
+	if len(ar) == 0 {
+		return len(br)
 	}
-	if b == "" {
-		return len(a)
+	if len(br) == 0 {
+		return len(ar)
 	}
 
-	prev := make([]int, len(b)+1)
-	curr := make([]int, len(b)+1)
+	prev := make([]int, len(br)+1)
+	curr := make([]int, len(br)+1)
 	for j := range prev {
 		prev[j] = j
 	}
 
-	for i := 1; i <= len(a); i++ {
+	for i := 1; i <= len(ar); i++ {
 		curr[0] = i
-		for j := 1; j <= len(b); j++ {
+		for j := 1; j <= len(br); j++ {
 			cost := 0
-			if a[i-1] != b[j-1] {
+			if ar[i-1] != br[j-1] {
 				cost = 1
 			}
 			curr[j] = min(
@@ -87,5 +94,5 @@ func Distance(a, b string) int {
 		prev, curr = curr, prev
 	}
 
-	return prev[len(b)]
+	return prev[len(br)]
 }

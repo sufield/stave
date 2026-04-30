@@ -37,9 +37,11 @@ func (a *App) recoverExecutePanic() {
 		// is mocked, and without this explicit cleanup the handler
 		// goroutine stays blocked on its select for the rest of the
 		// test run, leaking against future tests.
-		if a.cleanupInterrupt != nil {
-			a.cleanupInterrupt()
-			a.cleanupInterrupt = nil
+		//
+		// Atomic Swap so the deferred normal-path cleanup in Execute
+		// observes nil here and skips calling the closure twice.
+		if fn := a.cleanupInterrupt.Swap(nil); fn != nil {
+			(*fn)()
 		}
 		a.ExitFunc(ui.ExitInternal)
 	}

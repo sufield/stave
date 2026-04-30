@@ -63,6 +63,27 @@ func TestLoadExceptions_MissingFile(t *testing.T) {
 	}
 }
 
+func TestLoadExceptions_RejectsTraversal(t *testing.T) {
+	// Leading "..", interior "..", and obfuscated "/./../.." attempts
+	// must all be refused. The check runs before filepath.Clean so
+	// canonical and non-canonical forms are rejected uniformly.
+	cases := []string{
+		"../etc/passwd",
+		"a/b/../c.yaml",
+		"./../../shadow",
+	}
+	for _, p := range cases {
+		_, err := LoadExceptions(p)
+		if err == nil {
+			t.Errorf("LoadExceptions(%q) accepted traversal; want error", p)
+			continue
+		}
+		if !strings.Contains(err.Error(), "parent-directory traversal") {
+			t.Errorf("error for %q = %v; want \"parent-directory traversal\"", p, err)
+		}
+	}
+}
+
 func TestLoadExceptions_NoRequiresPassing(t *testing.T) {
 	dir := t.TempDir()
 	path := writeYAML(t, dir, `

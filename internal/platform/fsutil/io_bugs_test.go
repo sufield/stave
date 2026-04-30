@@ -68,6 +68,53 @@ func TestLimitedReadAll_OneByteOverLimit(t *testing.T) {
 	}
 }
 
+// errReader returns (0, customErr) on Read. Used to verify that the
+// probe-stage error is propagated rather than swallowed.
+type errReader struct{ err error }
+
+func (r *errReader) Read(p []byte) (int, error) { return 0, r.err }
+
+// chainReader yields the contents of `head` first, then delegates
+// further Read calls to `tail`. Used to push LimitedReadAll past
+// Phase 1 with real bytes and observe Phase 2's probe behavior.
+type chainReader struct {
+	head []byte
+	tail func(p []byte) (int, error)
+}
+
+func (c *chainReader) Read(p []byte) (int, error) {
+	if len(c.head) > 0 {
+		n := copy(p, c.head)
+		c.head = c.head[n:]
+		return n, nil
+	}
+	return c.tail(p)
+}
+
+func TestLimitedReadAll_ProbeErrorPropagated(t *testing.T) {
+	origLimit := maxInputFileBytes.Load()
+	maxInputFileBytes.Store(1024)
+	t.Cleanup(func() { maxInputFileBytes.Store(origLimit) })
+
+	probeErr := errors.New("simulated network failure on probe")
+	// First feed exactly 'limit' bytes so Phase 1 succeeds, then have
+	// Phase 2's probe see (0, probeErr) instead of (0, io.EOF). The
+	// earlier shape silently treated this as "no overflow" and
+	// returned the partial data with no error; the fix surfaces the
+	// underlying I/O failure.
+	r := &chainReader{
+		head: []byte(strings.Repeat("x", 1024)),
+		tail: func(p []byte) (int, error) { return 0, probeErr },
+	}
+	_, err := LimitedReadAll(r, "probe-error-stream")
+	if err == nil {
+		t.Fatal("expected error from probe stage, got nil")
+	}
+	if !errors.Is(err, probeErr) {
+		t.Fatalf("expected probeErr, got %v", err)
+	}
+}
+
 func TestReadFileOrStdin_UsesLimit(t *testing.T) {
 	// Verify that ReadFileOrStdin applies the safety limit to stdin,
 	// not raw io.ReadAll (which had no limit at all).

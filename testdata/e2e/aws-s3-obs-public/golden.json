@@ -7,7 +7,7 @@
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "28f2656fa849e2239ca29371915f5e8bf5d30cc018c7edb516431eecb53fa820",
+    "policy_fingerprint": "9ad9e43495c10bc9e37d1291a8b3b8fa65339445436de88b3d48e575ef16ec40",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -199,7 +199,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 202.73972602739727,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -347,7 +347,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -498,7 +498,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -649,7 +649,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -800,7 +800,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "1. Review the protected_prefixes and allowed_public_prefixes lists\n   in this control and adjust them to match your bucket layout.\n2. Enable S3 Public Access Block to restrict policy and ACL exposure. 3. Remove bucket policy statements granting s3:GetObject to Principal \"*\"\n   for protected prefixes.\n4. Remove ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exposure_score": 150,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -2168,23 +2168,6 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:93934249f4b5e78a",
-      "asset_id": "public-test-bucket",
-      "shared_keys": [
-        "storage.access",
-        "storage.access.has_ip_condition",
-        "storage.access.has_vpc_condition",
-        "storage.access.public_read"
-      ],
-      "headline_finding_id": "sha256:a43a2ae5ed908e4d",
-      "member_finding_ids": [
-        "sha256:4deaa2ba101afbc5",
-        "sha256:a43a2ae5ed908e4d"
-      ],
-      "consolidated_score": 202.73972602739727,
-      "consolidated_blast_radius": 1
-    },
-    {
       "issue_id": "sha256:02538f1e1085aac2",
       "asset_id": "public-test-bucket",
       "shared_keys": [
@@ -2198,7 +2181,24 @@
         "sha256:3ce8171b2640244e",
         "sha256:3ce8171b2640244e"
       ],
-      "consolidated_score": 150,
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:93934249f4b5e78a",
+      "asset_id": "public-test-bucket",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.has_ip_condition",
+        "storage.access.has_vpc_condition",
+        "storage.access.public_read"
+      ],
+      "headline_finding_id": "sha256:a43a2ae5ed908e4d",
+      "member_finding_ids": [
+        "sha256:4deaa2ba101afbc5",
+        "sha256:a43a2ae5ed908e4d"
+      ],
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
@@ -2339,7 +2339,7 @@
       "finding_index": 8,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 202.73972602739727,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -2355,7 +2355,7 @@
       "finding_index": 12,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 150,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -2371,7 +2371,7 @@
       "finding_index": 11,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 150,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -2387,7 +2387,7 @@
       "finding_index": 10,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 150,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,
@@ -2403,7 +2403,7 @@
       "finding_index": 9,
       "control_id": "CTL.S3.PUBLIC.PREFIX.001",
       "asset_id": "public-test-bucket",
-      "exposure_score": 150,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 75,
         "duration_factor": 1,

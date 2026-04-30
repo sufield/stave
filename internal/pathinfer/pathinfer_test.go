@@ -190,3 +190,31 @@ func TestUnique(t *testing.T) {
 		})
 	}
 }
+
+// TestUnique_FollowsSymlinkToDirectory pins the symlink fix:
+// `controls -> ../shared/controls` is a common operator layout and
+// the walker must resolve through it. Earlier shape stopped at any
+// symlink because fs.DirEntry.IsDir reports false for a link that
+// targets a directory.
+func TestUnique_FollowsSymlinkToDirectory(t *testing.T) {
+	base := t.TempDir()
+	// Real target lives under shared/.
+	target := filepath.Join(base, "shared", "controls")
+	if err := os.MkdirAll(target, 0o755); err != nil {
+		t.Fatalf("mkdir target: %v", err)
+	}
+	// Project layout exposes it via a symlink at the top level.
+	link := filepath.Join(base, "controls")
+	if err := os.Symlink(filepath.Join("shared", "controls"), link); err != nil {
+		t.Fatalf("symlink: %v", err)
+	}
+
+	got, _, err := Unique(base, "controls", 3)
+	if err != nil {
+		t.Fatalf("Unique: %v", err)
+	}
+	wantAbs := filepath.Join(base, "controls")
+	if got != wantAbs {
+		t.Errorf("got %q, want %q", got, wantAbs)
+	}
+}

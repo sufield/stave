@@ -1,6 +1,8 @@
 package graph
 
 import (
+	"fmt"
+	"slices"
 	"time"
 
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -313,13 +315,32 @@ type edgeKey struct {
 	From, To, Type string
 }
 
+// multiValueEdgeProps lists property keys whose multi-edge values
+// must be preserved when deduplicating. The earlier dedup shape kept
+// only the first-arriving value via "earliest wins"; for these keys
+// that meant a finding belonging to chains of differing severity
+// looked like it belonged to only the first chain. Promote
+// conflicting values to a list under a sibling key so analysis
+// consumers see every chain the edge participated in.
+//
+// The mapping is singular → plural (e.g. chain_severity →
+// chain_severities) so callers can introspect either: the first
+// value remains under the singular key for backward compatibility,
+// and the full sorted set lives under the plural alias.
+var multiValueEdgeProps = map[string]string{
+	"chain_severity":   "chain_severities",
+	"stage_span_attck": "stage_span_attck_all",
+}
+
 func deduplicateEdges(edges []Edge) []Edge {
 	// Merge Properties on duplicate edges instead of dropping them.
 	// Two builders may emit the same (From, To, Type) edge with
 	// disjoint metadata (one carries verdict info, the other carries
 	// an exposure window) — discarding the second loses analysis
 	// downstream consumers depend on. Earlier-arriving keys win
-	// conflicts so output is deterministic.
+	// scalar conflicts so output is deterministic, but a fixed set
+	// of multi-valued keys (see multiValueEdgeProps) accumulate the
+	// full set of distinct values across duplicates.
 	seen := make(map[edgeKey]int, len(edges))
 	out := make([]Edge, 0, len(edges))
 	for _, e := range edges {
@@ -331,18 +352,80 @@ func deduplicateEdges(edges []Edge) []Edge {
 			if out[idx].Properties == nil {
 				out[idx].Properties = make(map[string]any, len(e.Properties))
 			}
-			for pk, pv := range e.Properties {
-				if _, exists := out[idx].Properties[pk]; exists {
-					continue
-				}
-				out[idx].Properties[pk] = pv
-			}
+			mergeEdgeProperties(out[idx].Properties, e.Properties)
 			continue
 		}
 		seen[k] = len(out)
 		out = append(out, e)
 	}
+	finalizeMultiValueProps(out)
 	return out
+}
+
+// mergeEdgeProperties layers `src` properties onto `dst`, keeping
+// existing scalar values but accumulating distinct values under the
+// multiValueEdgeProps singular keys. Accumulation goes into a sibling
+// "<plural>" key so consumers can decide whether to read the
+// first-seen scalar (singular) or the union (plural).
+func mergeEdgeProperties(dst, src map[string]any) {
+	for pk, pv := range src {
+		pluralKey, isMulti := multiValueEdgeProps[pk]
+		if !isMulti {
+			if _, exists := dst[pk]; !exists {
+				dst[pk] = pv
+			}
+			continue
+		}
+		// Always record under the singular key (first-write wins so the
+		// existing scalar contract is preserved) and accumulate into
+		// the plural-key set.
+		if _, exists := dst[pk]; !exists {
+			dst[pk] = pv
+		}
+		set := asAnySet(dst[pluralKey])
+		set[fmt.Sprint(pv)] = struct{}{}
+		set[fmt.Sprint(dst[pk])] = struct{}{}
+		dst[pluralKey] = set
+	}
+}
+
+// finalizeMultiValueProps converts the accumulated `map[string]struct{}`
+// holding sets into stable sorted []string slices on every edge. The
+// transient set form is an implementation detail of deduplicateEdges;
+// downstream consumers see only the slice.
+func finalizeMultiValueProps(edges []Edge) {
+	for i := range edges {
+		props := edges[i].Properties
+		if props == nil {
+			continue
+		}
+		for _, pluralKey := range multiValueEdgeProps {
+			set, ok := props[pluralKey].(map[string]struct{})
+			if !ok {
+				continue
+			}
+			values := make([]string, 0, len(set))
+			for v := range set {
+				values = append(values, v)
+			}
+			slices.Sort(values)
+			if len(values) <= 1 {
+				// A single value adds no information beyond the
+				// singular key — drop the plural alias to keep
+				// outputs minimal for the common case.
+				delete(props, pluralKey)
+				continue
+			}
+			props[pluralKey] = values
+		}
+	}
+}
+
+func asAnySet(v any) map[string]struct{} {
+	if s, ok := v.(map[string]struct{}); ok {
+		return s
+	}
+	return make(map[string]struct{}, 2)
 }
 
 func computeMetadata(nodes []Node, edges []Edge) GraphMetadata {

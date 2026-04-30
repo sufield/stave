@@ -13,8 +13,18 @@ func New[T comparable](items ...T) Set[T] {
 	return s
 }
 
-// Add inserts an item.
-func (s Set[T]) Add(item T) { s[item] = struct{}{} }
+// Add inserts an item. Panics with a clear message when invoked on
+// a nil Set: the zero-value Set has no underlying map, so a write
+// would otherwise panic with the runtime's generic "assignment to
+// entry in nil map" — naming the cause makes the call site
+// findable. Always construct sets via New() (or a literal
+// `Set[T]{}`).
+func (s Set[T]) Add(item T) {
+	if s == nil {
+		panic("Add called on nil Set; use sets.New() to construct one")
+	}
+	s[item] = struct{}{}
+}
 
 // Contains reports whether item is in the set.
 func (s Set[T]) Contains(item T) bool {

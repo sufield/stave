@@ -130,8 +130,14 @@ func (sc StatementContext) Evaluate() StatementAssessment {
 	}
 
 	// 2. Evaluate Authenticated Risk
-	// High risk if any authenticated user in the cloud provider has full control
-	if sc.IsAuthenticated && !sc.IsPublic && sc.Permissions == PermFullControl {
+	// High risk if any authenticated user in the cloud provider has any
+	// of the dangerous full-control bits. The strict equality check
+	// (sc.Permissions == PermFullControl) only matched grants holding
+	// every single FullControl bit, which silently passed the very
+	// common case of "all authenticated users get read+write+delete" —
+	// missing list, but still catastrophic. Use Overlap so any bit
+	// inside the FullControl set is enough to trigger the finding.
+	if sc.IsAuthenticated && !sc.IsPublic && sc.Permissions.Overlap(PermFullControl) {
 		if ScoreWarning > assessment.Score {
 			assessment.Score = ScoreWarning
 		}

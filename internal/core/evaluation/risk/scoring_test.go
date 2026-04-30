@@ -146,14 +146,39 @@ func TestEvaluate_AuthenticatedFullControl(t *testing.T) {
 	}
 }
 
-func TestEvaluate_AuthenticatedPartialSkipped(t *testing.T) {
+// TestEvaluate_AuthenticatedPartialFires pins the new contract: a
+// partial permission grant that overlaps any FullControl bit must
+// trigger the warning. The earlier shape compared sc.Permissions ==
+// PermFullControl, which silently passed any partial grant — even
+// "read+write+delete-but-not-list" was missed despite being plainly
+// dangerous. The fix uses Overlap so any dangerous bit fires.
+func TestEvaluate_AuthenticatedPartialFires(t *testing.T) {
+	res := StatementContext{
+		Permissions:     PermRead | PermWrite | PermDelete,
+		IsAuthenticated: true,
+		IsAllow:         true,
+	}.Evaluate()
+	if res.Score != ScoreWarning {
+		t.Errorf("expected warning for partial dangerous grant, got %d", res.Score)
+	}
+	if len(res.Findings) == 0 {
+		t.Error("expected at least one finding for partial dangerous grant")
+	}
+}
+
+// TestEvaluate_AuthenticatedSingleReadFires also fires under the
+// Overlap contract — a single Read grant to all authenticated
+// principals is information disclosure, which is the warning the
+// finding records. The test pins the boundary so a future change
+// that re-narrows Overlap back toward strict equality is caught.
+func TestEvaluate_AuthenticatedSingleReadFires(t *testing.T) {
 	res := StatementContext{
 		Permissions:     PermRead,
 		IsAuthenticated: true,
 		IsAllow:         true,
 	}.Evaluate()
-	if res.Score != ScoreSafe {
-		t.Errorf("expected safe, got %d", res.Score)
+	if res.Score != ScoreWarning {
+		t.Errorf("expected warning for read-only authenticated grant, got %d", res.Score)
 	}
 }
 

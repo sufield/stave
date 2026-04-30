@@ -52,9 +52,23 @@ func AnnotateFindingSLA(f *Finding, ctl *policy.ControlDefinition, cfg *SLAConfi
 	overdue := dwell - deadlineHours
 	f.SLAOverdueHours = &overdue
 
-	// Escalation: bump severity by one tier per breach period.
-	// 1× overdue = +1 tier, 2× = +2, 3×+ = cap at critical.
-	periodsOverdue := max(int(overdue/deadlineHours), 1)
+	// Escalation: bump severity by one tier per multiple of the
+	// deadline elapsed. The mapping is intentionally measured in
+	// dwell, not overdue:
+	//
+	//   dwell ∈ (1×, 2×) → +1 tier
+	//   dwell ∈ [2×, 3×) → +2 tiers
+	//   dwell ∈ [3×, ∞)  → +3 tiers (then capped at critical)
+	//
+	// The earlier formula divided `overdue` by `deadline` and
+	// floored, so dwell of exactly 2× gave overdue/deadline = 1.0,
+	// floor = 1, producing only +1 tier — off by one. Using
+	// `int(dwell/deadline)` directly fixes the boundary so a finding
+	// that has sat at twice the SLA deadline visibly escalates two
+	// tiers, and three times escalates three. The explicit max(,1)
+	// preserves the "anything past deadline gets at least +1"
+	// behavior for the just-breached case (dwell ≈ 1.001×).
+	periodsOverdue := max(int(dwell/deadlineHours), 1)
 	escalated := escalateSeverity(f.ControlSeverity.String(), periodsOverdue)
 	if escalated != f.ControlSeverity.String() {
 		f.SLAEscalatedSeverity = escalated

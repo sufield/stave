@@ -46,10 +46,11 @@ func (a *App) execute() {
 
 	showFirstRunHint, firstRunMarkerPath := prepareFirstRunHint(args)
 
-	a.cleanupInterrupt = a.installInterruptHandler()
+	cleanup := a.installInterruptHandler()
+	a.cleanupInterrupt.Store(&cleanup)
 	defer func() {
-		if a.cleanupInterrupt != nil {
-			a.cleanupInterrupt()
+		if fn := a.cleanupInterrupt.Swap(nil); fn != nil {
+			(*fn)()
 		}
 	}()
 	defer a.recoverExecutePanic()

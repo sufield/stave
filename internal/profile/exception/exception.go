@@ -86,10 +86,16 @@ type StaveConfig struct {
 // rejects the canonical traversal sequences before we touch the
 // filesystem.
 func LoadExceptions(path string) ([]Config, error) {
-	clean := fsutil.CleanUserPath(path)
-	if strings.Contains(clean, "..") {
+	// Reject parent-directory traversal on the raw input. filepath.Clean
+	// rewrites interior `..` segments (a/b/../c → a/c) but keeps leading
+	// ones (../etc → ../etc), so checking after Clean catches only some
+	// of the cases authors actually try. Reject any "..", canonicalized
+	// or not, on the user-provided string so the rejection is total
+	// rather than dependent on the operating system's normalization.
+	if strings.Contains(path, "..") {
 		return nil, fmt.Errorf("exceptions path %q contains parent-directory traversal", path)
 	}
+	clean := fsutil.CleanUserPath(path)
 	data, err := os.ReadFile(clean) //nolint:gosec // path normalized via CleanUserPath above
 	if err != nil {
 		if os.IsNotExist(err) {

@@ -177,6 +177,24 @@ var Catalog = []Archetype{
 			"windows (30 days, not 7) to allow discovery.",
 		Services: []string{"kms", "secretsmanager"},
 	},
+	{
+		ID:   "silent-failure",
+		Name: "Silent Failure",
+		Description: "A monitoring or alerting hook exists but does not trigger " +
+			"on the conditions it was meant to surface. Alarms are configured " +
+			"but their threshold or filter pattern excludes the failure mode. " +
+			"Delivery channels are wired but unmonitored. Logs are written but " +
+			"never alerted on. Operators see green dashboards while real " +
+			"incidents accumulate unobserved.",
+		Guidance: "For each alarm, verify the metric/filter actually fires on " +
+			"the failure it claims to detect. Test alarms in staging by " +
+			"injecting the failure condition. Audit delivery: a notification " +
+			"that lands in an unmanned inbox is a silent failure too.",
+		Services: []string{
+			"cognito", "config", "cloudtrail", "cloudwatch", "kms",
+			"sns", "sqs", "lambda",
+		},
+	},
 }
 
 // Lookup returns the archetype with the given ID, or false if no archetype

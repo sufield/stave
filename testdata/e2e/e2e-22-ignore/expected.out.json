@@ -82,7 +82,7 @@
         },
         "action": "Review the misconfigured properties and revert to compliant values."
       },
-      "exposure_score": 102.73972602739727,
+      "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -147,7 +147,7 @@
       "member_finding_ids": [
         "sha256:696705523d5ed7ce"
       ],
-      "consolidated_score": 102.73972602739727,
+      "consolidated_score": 100,
       "consolidated_blast_radius": 1
     }
   ],
@@ -181,7 +181,7 @@
       "finding_index": 0,
       "control_id": "CTL.ID.KUBE.003",
       "asset_id": "k8s:ClusterRoleBinding/anonymous-binding",
-      "exposure_score": 102.73972602739727,
+      "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
         "duration_factor": 1,
@@ -287,7 +287,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "158f429f5c7a3ca0224008ca44cc83c188762967",
+      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
       "dirty": false
     }
   }

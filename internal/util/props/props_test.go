@@ -45,3 +45,18 @@ func TestGetString_Empty(t *testing.T) {
 		t.Error("missing key should return empty string")
 	}
 }
+
+// TestGetIn_EmptyPath pins that an empty path returns (zero, false)
+// rather than the root map cast to T. The earlier shape returned the
+// root, which made GetIn[map[string]any](m, nil) masquerade as a
+// "deep clone" and made type assertions for non-map T succeed
+// inadvertently.
+func TestGetIn_EmptyPath(t *testing.T) {
+	m := map[string]any{"a": "b"}
+	if v, ok := GetIn[string](m, nil); ok || v != "" {
+		t.Errorf("nil path: got (%q, %v), want (\"\", false)", v, ok)
+	}
+	if v, ok := GetIn[string](m, []string{}); ok || v != "" {
+		t.Errorf("empty path: got (%q, %v), want (\"\", false)", v, ok)
+	}
+}

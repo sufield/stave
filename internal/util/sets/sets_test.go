@@ -1,6 +1,9 @@
 package sets
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestSet_AddContains(t *testing.T) {
 	s := New[string]()
@@ -37,4 +40,26 @@ func TestSet_NewPrePopulated(t *testing.T) {
 	if !s.Contains("a") || !s.Contains("b") {
 		t.Error("pre-populated items should be present")
 	}
+}
+
+// TestSet_AddOnNilPanicsClearly pins that Add(item) on a nil Set
+// surfaces a named panic. Without the guard, the runtime fired its
+// generic "assignment to entry in nil map" and the call site was
+// hard to find from the trace. The guard names the constructor.
+func TestSet_AddOnNilPanicsClearly(t *testing.T) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatal("expected panic from Add on nil Set, got none")
+		}
+		msg, ok := r.(string)
+		if !ok {
+			t.Fatalf("expected panic value to be a string, got %T", r)
+		}
+		if !strings.Contains(msg, "nil Set") || !strings.Contains(msg, "sets.New") {
+			t.Errorf("panic message %q should mention nil Set and sets.New", msg)
+		}
+	}()
+	var s Set[string] // zero-value: nil map under the hood
+	s.Add("x")
 }

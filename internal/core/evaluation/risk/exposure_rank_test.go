@@ -76,21 +76,27 @@ func TestRankExposures_SortOrder(t *testing.T) {
 		t.Fatalf("got %d ranks, want 3", len(ranks))
 	}
 
-	// Critical + 400 days = 100 * 3.0 (DurationFactor) * 1.0 * 1.0 *
-	// 1.0 * (1 + 400/365) = 628.7671... — highest.
+	// Critical + 400 days raw computes to 100 * 3.0 (DurationFactor)
+	// * BlindMultiplier(400) ≈ 628 but the score is capped at
+	// ScoreCatastrophic (=100). The cap keeps the score frame stable
+	// for catastrophic findings: an uncapped 628 alongside a 127
+	// makes every other finding render as a sub-1% bar in the
+	// renderer, which obscures rather than highlights risk.
 	if ranks[0].ControlID != "CTL.CRIT.001" {
 		t.Errorf("rank 0 = %s, want CTL.CRIT.001", ranks[0].ControlID)
 	}
-	assertScoreClose(t, ranks[0].ExposureScore, 100.0*3.0*BlindMultiplier(400))
+	assertScoreClose(t, ranks[0].ExposureScore, float64(ScoreCatastrophic))
 	if !ranks[0].SilentKiller {
 		t.Error("rank 0 should be silent killer (400 days > 300)")
 	}
 
-	// Medium + 100 days = 50 * 2.0 * (1 + 100/365) = 127.397...
+	// Medium + 100 days raw = 50 * 2.0 * BlindMultiplier(100) ≈
+	// 127.397 — but capped at ScoreCatastrophic (=100). Below the
+	// ceiling the raw score passes through unchanged.
 	if ranks[1].ControlID != "CTL.MED.001" {
 		t.Errorf("rank 1 = %s, want CTL.MED.001", ranks[1].ControlID)
 	}
-	assertScoreClose(t, ranks[1].ExposureScore, 50.0*2.0*BlindMultiplier(100))
+	assertScoreClose(t, ranks[1].ExposureScore, float64(ScoreCatastrophic))
 
 	// Low + 10 days = 25 * 1.0 * (1 + 10/365) = 25.685...
 	if ranks[2].ControlID != "CTL.LOW.001" {
@@ -150,8 +156,10 @@ func TestRankExposures_BlastMultiplier(t *testing.T) {
 	}
 
 	ranks := RankExposures(inputs, lookup, 0)
-	// 100 * 1.0 * 2.5 * 1.0 * 1.0 * (1 + 1/365) = 250.685...
-	assertScoreClose(t, ranks[0].ExposureScore, 100.0*2.5*BlindMultiplier(1))
+	// Raw 100 * 2.5 * BlindMultiplier(1) ≈ 250 — capped at
+	// ScoreCatastrophic. Pre-cap behavior leaked a 250 score that
+	// dwarfed every other finding in the same report.
+	assertScoreClose(t, ranks[0].ExposureScore, float64(ScoreCatastrophic))
 }
 
 func TestRankExposures_PublicExposure(t *testing.T) {
@@ -161,8 +169,21 @@ func TestRankExposures_PublicExposure(t *testing.T) {
 	}
 
 	ranks := RankExposures(inputs, nil, 0)
-	// 75 * 1.0 * 1.0 * 2.0 * 1.0 * (1 + 1/365) = 150.41...
-	assertScoreClose(t, ranks[0].ExposureScore, 75.0*2.0*BlindMultiplier(1))
+	// Raw 75 * 2.0 * BlindMultiplier(1) ≈ 150 — capped at
+	// ScoreCatastrophic.
+	assertScoreClose(t, ranks[0].ExposureScore, float64(ScoreCatastrophic))
+}
+
+// TestRankExposures_CappedAtCeiling pins the cap explicitly: any
+// combination that would otherwise exceed ScoreCatastrophic must clamp.
+func TestRankExposures_CappedAtCeiling(t *testing.T) {
+	inputs := []RankInput{
+		{ControlID: "CTL.EXTREME", AssetID: "asset-1", ControlSeverity: policy.SeverityCritical, UnsafeDurationHours: 2000 * 24},
+	}
+	ranks := RankExposures(inputs, nil, 0)
+	if got := ranks[0].ExposureScore; got != float64(ScoreCatastrophic) {
+		t.Errorf("extreme score = %f, want %d", got, ScoreCatastrophic)
+	}
 }
 
 func TestRankExposures_Empty(t *testing.T) {

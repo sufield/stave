@@ -76,3 +76,30 @@ func TestPath(t *testing.T) {
 
 // Compile-time check that Sanitizer implements kernel.Sanitizer.
 var _ kernel.Sanitizer = (*Sanitizer)(nil)
+
+// TestScrubMap_NestedRemoveBeneathSanitize pins that nested Remove
+// rules apply even when reached through a Sanitize-flagged parent.
+// Earlier shape called s.scrubValue (empty profile) for Sanitize
+// keys, dropping the profile context, so a Remove key inside the
+// flagged subtree leaked through.
+func TestScrubMap_NestedRemoveBeneathSanitize(t *testing.T) {
+	prof := NewProfile(
+		map[string]struct{}{"tags": {}},      // remove "tags" anywhere
+		map[string]struct{}{"bucket_meta": {}}, // sanitize the parent
+	)
+	s := New(WithIDSanitization(true))
+	in := map[string]any{
+		"bucket_meta": map[string]any{
+			"name": "shared-bucket",
+			"tags": map[string]any{"owner": "alice"},
+		},
+	}
+	out := s.ScrubMap(in, prof)
+	meta, ok := out["bucket_meta"].(map[string]any)
+	if !ok {
+		t.Fatalf("bucket_meta missing or wrong shape: %#v", out["bucket_meta"])
+	}
+	if _, present := meta["tags"]; present {
+		t.Errorf("tags key must be removed under a sanitize-flagged parent; got %#v", meta)
+	}
+}

@@ -119,7 +119,27 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErrIn error) error 
 		s.walkErrs = append(s.walkErrs, walkErr{Path: path, Err: walkErrIn})
 		return nil //nolint:nilerr // intentional: best-effort walk continues, error captured on walkState
 	}
-	if !entry.IsDir() {
+	// fs.DirEntry.IsDir() returns false for a symlink that *points
+	// at* a directory, because IsDir reads the entry's own type bits
+	// rather than following the link. The earlier shape stopped
+	// walking through any symlinked directory — including the
+	// common operator pattern of `controls -> ../shared/controls`,
+	// which made stave-find fail to locate controls in symlinked
+	// project layouts. Detect symlinks and resolve via os.Stat so
+	// the walk follows the link if its target is a directory.
+	if entry.Type()&fs.ModeSymlink != 0 {
+		info, err := os.Stat(path)
+		if err != nil {
+			s.walkErrs = append(s.walkErrs, walkErr{Path: path, Err: err})
+			return nil
+		}
+		if !info.IsDir() {
+			return nil
+		}
+		// Follow the symlink: walk the target as if it were the
+		// entry itself. fs.DirEntry-from-FileInfo covers IsDir()
+		// for the rest of this function.
+	} else if !entry.IsDir() {
 		return nil
 	}
 

@@ -57,9 +57,21 @@ var supportedFrameworks = map[Framework]struct{}{
 	FrameworkNISTCSF:  {},
 }
 
+// frameworkAliases maps human-friendly variant identifiers to the
+// canonical framework key. Aliases let "iso_27001" stand in for the
+// versioned "iso_27001_2022" canonical id without forcing every
+// crosswalk author to spell the version. Add new entries when a
+// canonical id changes (versioning) so existing data keeps loading.
+var frameworkAliases = map[Framework]Framework{
+	"iso_27001": FrameworkISO27001,
+}
+
 // ParseFramework validates and normalizes a raw string into a Framework type.
 func ParseFramework(s string) (Framework, error) {
 	f := Framework(normalize(s))
+	if alias, ok := frameworkAliases[f]; ok {
+		f = alias
+	}
 	if _, ok := supportedFrameworks[f]; !ok {
 		supported := strings.Join(FrameworkStrings(SupportedFrameworks()), ", ")
 		return "", fmt.Errorf("unsupported compliance framework %q (use: %s)", s, supported)
@@ -200,6 +212,20 @@ func filterAndNormalizeRefs(checkID string, refs []ControlRef, allowed map[Frame
 	out := make([]ControlRef, 0, len(refs))
 	for _, r := range refs {
 		f := Framework(normalize(r.Framework))
+		if alias, ok := frameworkAliases[f]; ok {
+			f = alias
+		}
+		// A framework name that isn't in the global supported set is a
+		// typo in the crosswalk file — surface it instead of silently
+		// dropping the row, which used to make missing frameworks look
+		// like missing controls. The user-filter step (`allowed`) is a
+		// separate concern: a known framework that the operator filtered
+		// out is correctly skipped.
+		if _, supported := supportedFrameworks[f]; !supported {
+			supportedList := strings.Join(FrameworkStrings(SupportedFrameworks()), ", ")
+			return nil, fmt.Errorf("crosswalk entry for %q references unknown framework %q (valid: %s)",
+				checkID, r.Framework, supportedList)
+		}
 		if _, ok := allowed[f]; !ok {
 			continue
 		}

@@ -29,7 +29,8 @@ func TestRecoverExecutePanic_NoGoroutineLeak(t *testing.T) {
 	// recoverExecutePanic actually invokes it. installInterruptHandler
 	// returns a closer that closes the `done` channel, ending the
 	// goroutine.
-	a.cleanupInterrupt = a.installInterruptHandler()
+	cleanup := a.installInterruptHandler()
+	a.cleanupInterrupt.Store(&cleanup)
 
 	// Track baseline goroutine count *after* the handler is
 	// installed so we count a delta against the installed-but-
@@ -44,7 +45,7 @@ func TestRecoverExecutePanic_NoGoroutineLeak(t *testing.T) {
 		panic("synthetic panic for goroutine-leak test")
 	}()
 
-	if a.cleanupInterrupt != nil {
+	if a.cleanupInterrupt.Load() != nil {
 		t.Fatal("cleanupInterrupt was not nil-ed by recoverExecutePanic; production fix regressed")
 	}
 

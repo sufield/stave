@@ -56,6 +56,32 @@ type Profile struct {
 	Sanitize map[string]struct{}
 }
 
+// NewProfile constructs a Profile whose Remove and Sanitize maps are
+// guaranteed to be lowercase-keyed. The lookup helpers
+// (ShouldRemove / ShouldSanitize) lowercase the input on every call;
+// keeping the storage map in the same canonical form removes a class
+// of authoring bugs where a profile literal contained "Tags" or
+// "BUCKET_NAME" and silently never matched anything. Callers are
+// expected to use this constructor; AssetProfile / IdentityProfile
+// already do.
+func NewProfile(remove, sanitize map[string]struct{}) Profile {
+	return Profile{
+		Remove:   lowercaseKeySet(remove),
+		Sanitize: lowercaseKeySet(sanitize),
+	}
+}
+
+func lowercaseKeySet(in map[string]struct{}) map[string]struct{} {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]struct{}, len(in))
+	for k := range in {
+		out[strings.ToLower(k)] = struct{}{}
+	}
+	return out
+}
+
 // ShouldRemove reports whether the key is marked for removal.
 // Match is case-insensitive — extractors that emit `Tags` instead
 // of `tags` (a real production drift between cloud SDKs) used to
@@ -66,7 +92,8 @@ func (p Profile) ShouldRemove(key string) bool {
 	if p.Remove == nil {
 		return false
 	}
-	_, ok := p.Remove[strings.ToLower(key)]
+	lower := strings.ToLower(key)
+	_, ok := p.Remove[lower]
 	return ok
 }
 
@@ -76,15 +103,16 @@ func (p Profile) ShouldSanitize(key string) bool {
 	if p.Sanitize == nil {
 		return false
 	}
-	_, ok := p.Sanitize[strings.ToLower(key)]
+	lower := strings.ToLower(key)
+	_, ok := p.Sanitize[lower]
 	return ok
 }
 
 // AssetProfile returns the default scrub profile for asset properties.
 // Returns a fresh copy to prevent callers from mutating shared state.
 func AssetProfile() Profile {
-	return Profile{
-		Remove: map[string]struct{}{
+	return NewProfile(
+		map[string]struct{}{
 			"tags":                     {},
 			"policy":                   {},
 			"policy_json":              {},
@@ -92,20 +120,20 @@ func AssetProfile() Profile {
 			"acl_grants":               {},
 			"acl_public_grantees":      {},
 		},
-		Sanitize: map[string]struct{}{
+		map[string]struct{}{
 			"bucket_name": {},
 			"external_id": {},
 		},
-	}
+	)
 }
 
 // IdentityProfile returns the default scrub profile for identity properties.
 func IdentityProfile() Profile {
-	return Profile{
-		Remove: map[string]struct{}{
+	return NewProfile(
+		map[string]struct{}{
 			"owner":   {},
 			"purpose": {},
 		},
-		Sanitize: make(map[string]struct{}),
-	}
+		nil,
+	)
 }

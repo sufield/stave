@@ -53,6 +53,32 @@ func TestProfile_ShouldSanitize_NilMap(t *testing.T) {
 	}
 }
 
+// TestNewProfile_NormalizesKeys pins the constructor's contract: the
+// stored map keys are lowercase regardless of input case. A profile
+// literal containing "Tags" or "BUCKET_NAME" used to compile cleanly
+// and silently never match anything because lookups always
+// lowercase the input. NewProfile closes that gap.
+func TestNewProfile_NormalizesKeys(t *testing.T) {
+	p := NewProfile(
+		map[string]struct{}{"Tags": {}, "POLICY_JSON": {}},
+		map[string]struct{}{"Bucket_Name": {}},
+	)
+	if !p.ShouldRemove("tags") || !p.ShouldRemove("Tags") || !p.ShouldRemove("TAGS") {
+		t.Error("ShouldRemove must match regardless of input case")
+	}
+	if !p.ShouldRemove("policy_json") || !p.ShouldRemove("Policy_JSON") {
+		t.Error("ShouldRemove must match POLICY_JSON-style stored keys via lowercased lookup")
+	}
+	if !p.ShouldSanitize("bucket_name") || !p.ShouldSanitize("BUCKET_NAME") {
+		t.Error("ShouldSanitize must match regardless of input case")
+	}
+	for k := range p.Remove {
+		if k != strings.ToLower(k) {
+			t.Errorf("Remove key %q is not lowercased", k)
+		}
+	}
+}
+
 func TestAssetProfile_Keys(t *testing.T) {
 	p := AssetProfile()
 	removeKeys := []string{"tags", "policy", "policy_json", "policy_public_statements", "acl_grants", "acl_public_grantees"}

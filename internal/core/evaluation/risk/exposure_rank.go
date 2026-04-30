@@ -172,7 +172,16 @@ func RankExposures(
 		chainBonus := ChainBonus(f.ChainMembershipCount)
 		blindMult := BlindMultiplier(daysBlind)
 
-		score := float64(base) * durFactor * blast * expMult * chainBonus * blindMult
+		// Cap the raw exposure score so a worst-case finding (high
+		// base × long duration × public × silent-killer chain) does
+		// not produce a 4-digit number that destabilizes the rank
+		// distribution — every other finding is functionally zero
+		// once one entry exceeds the catastrophic threshold by 10x.
+		// Capping preserves the ordering for entries below the cap
+		// and groups everything at-or-above into a tied "ceiling"
+		// bucket that the caller resolves via the deterministic
+		// tiebreakers.
+		score := min(float64(base)*durFactor*blast*expMult*chainBonus*blindMult, float64(ScoreCatastrophic))
 
 		ranks = append(ranks, ExposureRank{
 			FindingIndex:  i,

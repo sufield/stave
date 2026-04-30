@@ -2,9 +2,12 @@ package archetype
 
 import "testing"
 
-func TestCatalog_HasTwelveArchetypes(t *testing.T) {
-	if got := len(Catalog); got != 12 {
-		t.Fatalf("Catalog length = %d, want 12", got)
+func TestCatalog_HasThirteenArchetypes(t *testing.T) {
+	// Catalog grows alongside control authoring. When a new structural
+	// defect class shows up in the controls/ tree, add it here too —
+	// the loader rejects unknown archetype IDs at load time.
+	if got := len(Catalog); got != 13 {
+		t.Fatalf("Catalog length = %d, want 13", got)
 	}
 }
 

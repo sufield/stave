@@ -3,6 +3,8 @@ package yamlutil
 import (
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestQuote_EscapesDoubleQuote(t *testing.T) {
@@ -58,5 +60,67 @@ func TestBlock_PreventsStructureInjection(t *testing.T) {
 	}
 	if !strings.Contains(got, "  evil: true") {
 		t.Error("evil line should be safely indented")
+	}
+}
+
+// TestQuote_EscapesC0Controls pins that every C0 control character
+// (NUL, BEL, ESC, DEL) is escaped via \xNN. Earlier shape passed
+// these through verbatim and produced YAML that yaml.v3 refused to
+// re-parse.
+func TestQuote_EscapesC0Controls(t *testing.T) {
+	cases := map[string]string{
+		"NUL": "\x00",
+		"BEL": "\x07",
+		"ESC": "\x1b",
+		"DEL": "\x7f",
+	}
+	for name, ch := range cases {
+		got := Quote("a" + ch + "b")
+		if strings.ContainsRune(got, rune(ch[0])) {
+			t.Errorf("%s: literal control char survived in %q", name, got)
+		}
+	}
+}
+
+// TestQuote_RoundTripsThroughYAMLParser pins that what we emit, the
+// downstream YAML parser can read back. A serializer that produces
+// output its own re-parser rejects is broken.
+func TestQuote_RoundTripsThroughYAMLParser(t *testing.T) {
+	inputs := []string{
+		"plain",
+		"with \"quotes\"",
+		"newline\nhere",
+		"tab\there",
+		"escaped\x07bell",
+		"esc\x1bsequence",
+		"null\x00middle",
+	}
+	for _, in := range inputs {
+		quoted := Quote(in)
+		var got string
+		if err := yaml.Unmarshal([]byte(quoted), &got); err != nil {
+			t.Errorf("yaml.Unmarshal(%q): %v", quoted, err)
+			continue
+		}
+		if got != in {
+			t.Errorf("round-trip mismatch: input=%q quoted=%q got=%q", in, quoted, got)
+		}
+	}
+}
+
+func TestBlock_EmptyString(t *testing.T) {
+	if got := Block("", 2); got != `""` {
+		t.Errorf("Block(\"\") = %q, want \"\\\"\\\"\"", got)
+	}
+}
+
+func TestBlock_NormalizesCRLF(t *testing.T) {
+	got := Block("line1\r\nline2\r\nline3", 0)
+	if strings.Contains(got, "\r") {
+		t.Errorf("CRLF should be normalized; got %q", got)
+	}
+	want := "|\nline1\nline2\nline3\n"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }

@@ -158,6 +158,52 @@ func TestEscalateSeverity(t *testing.T) {
 	}
 }
 
+// TestAnnotateFindingSLA_2xDwellEscalates_2Tiers pins the off-by-one
+// fix: a finding sitting at exactly 2× the deadline must escalate by
+// 2 tiers, and 3× by 3 tiers. The earlier formula divided overdue
+// (= dwell - deadline) by deadline and floored, so 2× dwell gave +1
+// (off by one) and 3× gave +2.
+func TestAnnotateFindingSLA_2xDwellEscalates_2Tiers(t *testing.T) {
+	cfg := defaultSLAConfig()
+	deadline := cfg.DeadlineBySeverity["medium"]
+	if deadline == 0 {
+		t.Fatal("test fixture relies on medium having a non-zero deadline")
+	}
+	f := Finding{
+		ControlSeverity: policy.SeverityMedium,
+		Evidence:        Evidence{UnsafeDurationHours: 2 * deadline},
+	}
+	AnnotateFindingSLA(&f, nil, cfg)
+	if !f.SLABreached {
+		t.Fatal("2× dwell must be breached")
+	}
+	// medium + 2 tiers should escalate to critical (low→medium→high→critical;
+	// medium + 2 = critical at index 3).
+	if f.SLAEscalatedSeverity != "critical" {
+		t.Errorf("2× dwell from medium: escalated = %q, want critical", f.SLAEscalatedSeverity)
+	}
+}
+
+func TestAnnotateFindingSLA_3xDwellEscalates_3Tiers(t *testing.T) {
+	cfg := defaultSLAConfig()
+	deadline := cfg.DeadlineBySeverity["low"]
+	if deadline == 0 {
+		t.Fatal("test fixture relies on low having a non-zero deadline")
+	}
+	f := Finding{
+		ControlSeverity: policy.SeverityLow,
+		Evidence:        Evidence{UnsafeDurationHours: 3 * deadline},
+	}
+	AnnotateFindingSLA(&f, nil, cfg)
+	if !f.SLABreached {
+		t.Fatal("3× dwell must be breached")
+	}
+	// low + 3 tiers = critical (index 0 + 3 = 3, which is critical).
+	if f.SLAEscalatedSeverity != "critical" {
+		t.Errorf("3× dwell from low: escalated = %q, want critical", f.SLAEscalatedSeverity)
+	}
+}
+
 // Ensure kernel.ParseDuration handles the "4h" and "30d" formats used in SLA.
 func TestSLADurationParsing(t *testing.T) {
 	tests := []struct {
