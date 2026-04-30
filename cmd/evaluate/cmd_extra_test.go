@@ -3,6 +3,8 @@ package evaluate
 import (
 	"bytes"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -141,5 +143,40 @@ func TestAllRegistries(t *testing.T) {
 	regs := allRegistries()
 	if len(regs) == 0 {
 		t.Fatal("expected at least one registry")
+	}
+}
+
+// TestEvaluate_NoStaveYAML confirms a missing stave.yaml is not a fatal
+// error: evaluate must succeed with an empty exceptions list. The
+// regression this guards is straightforward — if the loader or the
+// caller ever turn ErrNotExist back into a hard error, every project
+// without an exceptions file would lose the ability to run evaluate.
+func TestEvaluate_NoStaveYAML(t *testing.T) {
+	origCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	snap := filepath.Join(origCwd, "testdata", "snapshots", "hipaa_fixture.json")
+
+	// Switch to a tempdir with no stave.yaml so the cmd's
+	// hardcoded "stave.yaml" lookup resolves to an absent file.
+	t.Chdir(t.TempDir())
+
+	cmd := NewCmd()
+	var stdout bytes.Buffer
+	cmd.SetOut(&stdout)
+	cmd.SetErr(&stdout)
+	cmd.SetArgs([]string{
+		"--snapshot", snap,
+		"--profile", "hipaa",
+		"--format", "json",
+	})
+
+	execErr := cmd.Execute()
+	// HIPAA fixture intentionally fails its checks, so the command
+	// returns an exit-1 error. Guard only against the load-exceptions
+	// failure mode; everything else is acceptable.
+	if execErr != nil && strings.Contains(execErr.Error(), "load exceptions") {
+		t.Fatalf("evaluate must not fail on missing stave.yaml: %v", execErr)
 	}
 }

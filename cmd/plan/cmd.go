@@ -134,17 +134,30 @@ func runPlan(stdout io.Writer, opts *options) error {
 			return &ui.UserError{Err: fmt.Errorf("compute compliance path: %w", computeErr)}
 		}
 
-		w := stdout
 		if opts.OutPath != "" {
 			f, fErr := os.Create(opts.OutPath)
 			if fErr != nil {
 				return fmt.Errorf("create output: %w", fErr)
 			}
-			defer f.Close()
-			w = f
+			enc := json.NewEncoder(f)
+			enc.SetIndent("", "  ")
+			encErr := enc.Encode(result)
+			closeErr := f.Close()
+			if encErr != nil {
+				return encErr
+			}
+			// A successful Encode followed by a failing Close is the
+			// silent-corruption window: the buffered write may not
+			// have reached disk, and the previous `defer f.Close()`
+			// dropped that error so callers saw success. Mirror the
+			// writePerTeam pattern below — propagate the close error.
+			if closeErr != nil {
+				return fmt.Errorf("close %s: %w", opts.OutPath, closeErr)
+			}
+			return nil
 		}
 
-		enc := json.NewEncoder(w)
+		enc := json.NewEncoder(stdout)
 		enc.SetIndent("", "  ")
 		return enc.Encode(result)
 	}
@@ -183,8 +196,15 @@ func runPlan(stdout io.Writer, opts *options) error {
 		if createErr != nil {
 			return fmt.Errorf("create output: %w", createErr)
 		}
-		defer f.Close()
-		return writeFormat(f, p, opts.Format)
+		writeErr := writeFormat(f, p, opts.Format)
+		closeErr := f.Close()
+		if writeErr != nil {
+			return writeErr
+		}
+		if closeErr != nil {
+			return fmt.Errorf("close %s: %w", opts.OutPath, closeErr)
+		}
+		return nil
 	}
 
 	return writeFormat(stdout, p, opts.Format)

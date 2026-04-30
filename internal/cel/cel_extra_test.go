@@ -2,6 +2,7 @@ package cel
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -32,15 +33,31 @@ func TestLiteral(t *testing.T) {
 		{"int64", int64(100), "100"},
 		{"string slice", []string{"a", "b"}, `["a", "b"]`},
 		{"any slice", []any{"x", true}, `["x", true]`},
+		{"map", map[string]any{"b": 2, "a": 1}, `{"a": 1, "b": 2}`},
 		{"nil", nil, "null"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := literal(tt.in)
+			got, err := literal(tt.in)
+			if err != nil {
+				t.Fatalf("literal(%v) error: %v", tt.in, err)
+			}
 			if got != tt.want {
 				t.Errorf("literal(%v) = %q, want %q", tt.in, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestLiteral_UnsupportedType(t *testing.T) {
+	t.Parallel()
+	type unsupported struct{ X int }
+	_, err := literal(unsupported{X: 1})
+	if err == nil {
+		t.Fatal("expected error for unsupported type, got nil")
+	}
+	if !strings.Contains(err.Error(), "unsupported literal type") {
+		t.Errorf("error %q missing 'unsupported literal type' marker", err.Error())
 	}
 }
 

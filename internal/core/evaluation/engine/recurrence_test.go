@@ -204,3 +204,21 @@ func TestRecurrence_ExactlyAtLimitFires(t *testing.T) {
 		t.Errorf("limit=3 with count=3 should fire (count >= limit), got %d findings", len(findings))
 	}
 }
+
+func TestRecurrence_OneBelowLimitDoesNotFire(t *testing.T) {
+	// Pins the boundary on the compliant side: count == limit-1 must
+	// not fire. Together with TestRecurrence_ExactlyAtLimitFires this
+	// fully specifies the inclusive-trigger semantics.
+	ctl := recurrenceControl("CTL.RECUR.BOUNDARY.002", 3, 90)
+	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
+
+	lc := recurrenceLifecycle(t, []struct{ start, end time.Time }{
+		{now.AddDate(0, 0, -60), now.AddDate(0, 0, -55)},
+		{now.AddDate(0, 0, -30), now.AddDate(0, 0, -25)},
+	})
+
+	findings := EvaluateRecurrenceForControl(lc, ctl, now)
+	if len(findings) != 0 {
+		t.Errorf("limit=3 with count=2 must not fire (count < limit), got %d findings", len(findings))
+	}
+}

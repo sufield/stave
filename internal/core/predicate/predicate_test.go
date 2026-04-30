@@ -91,8 +91,8 @@ func TestIsSupported(t *testing.T) {
 
 func TestListSupported_ContainsAllOperators(t *testing.T) {
 	ops := ListSupported()
-	if len(ops) != 16 {
-		t.Errorf("expected 16 operators, got %d", len(ops))
+	if len(ops) != 17 {
+		t.Errorf("expected 17 operators, got %d", len(ops))
 	}
 	// Verify sorted
 	for i := 1; i < len(ops); i++ {

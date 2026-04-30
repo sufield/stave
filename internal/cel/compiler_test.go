@@ -410,9 +410,16 @@ func TestCompile_ParamReferenceInLtOperator(t *testing.T) {
 	}
 
 	// Predicate: min_expiration_days < params.min_retention_days
+	// Per Phase 14: the legacy `value: "params.foo"` string fallback
+	// has been removed; param references must use the documented
+	// `value_from_param` field.
 	pred := policy.UnsafePredicate{
 		All: []policy.PredicateRule{
-			{Field: predicate.NewFieldPath("properties.storage.lifecycle.min_expiration_days"), Op: predicate.OpLt, Value: policy.Str("params.min_retention_days")},
+			{
+				Field:          predicate.NewFieldPath("properties.storage.lifecycle.min_expiration_days"),
+				Op:             predicate.OpLt,
+				ValueFromParam: predicate.ParamRef("min_retention_days"),
+			},
 		},
 	}
 

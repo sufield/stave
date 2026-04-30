@@ -374,6 +374,81 @@ func TestExposureLifecycleExceedsUnsafeThreshold(t *testing.T) {
 	}
 }
 
+func TestExposureLifecycleSecureObservationAdvancesLastObservedAt(t *testing.T) {
+	a := Asset{ID: ID("bucket-1")}
+	tl := NewExposureLifecycle(a)
+	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	t2 := t1.Add(24 * time.Hour)
+	t3 := t2.Add(24 * time.Hour)
+
+	if err := tl.RecordCheck(t1, true); err != nil {
+		t.Fatal(err)
+	}
+	if got := tl.LastObservedAt(); !got.Equal(t1) {
+		t.Fatalf("after exposed scan: LastObservedAt = %s, want %s", got, t1)
+	}
+
+	// Secure scan must advance lastObservedAt — earlier behavior
+	// preserved the old timestamp, making the asset look stale.
+	if err := tl.RecordCheck(t2, false); err != nil {
+		t.Fatal(err)
+	}
+	if got := tl.LastObservedAt(); !got.Equal(t2) {
+		t.Fatalf("after first secure scan: LastObservedAt = %s, want %s", got, t2)
+	}
+
+	// Subsequent secure scans keep advancing it.
+	if err := tl.RecordCheck(t3, false); err != nil {
+		t.Fatal(err)
+	}
+	if got := tl.LastObservedAt(); !got.Equal(t3) {
+		t.Fatalf("after second secure scan: LastObservedAt = %s, want %s", got, t3)
+	}
+}
+
+func TestExposureLifecycleZeroThresholdImmediateBreach(t *testing.T) {
+	a := Asset{ID: ID("bucket-1")}
+	tl := NewExposureLifecycle(a)
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	// Before any observation: no active window → must not breach
+	// even at threshold == 0.
+	exceeds, err := tl.ExceedsSLA(base, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if exceeds {
+		t.Fatal("never-exposed asset must not breach zero threshold")
+	}
+
+	// First observation flips to exposed at base; lookup also at base
+	// so duration is exactly zero. At threshold 0, this is the case
+	// the old strict-greater rule got wrong — it returned false here.
+	if err := tl.RecordCheck(base, true); err != nil {
+		t.Fatal(err)
+	}
+	exceeds, err = tl.ExceedsSLA(base, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !exceeds {
+		t.Fatal("zero threshold must breach immediately on first unsafe observation")
+	}
+
+	// Asset becomes secure → no active window → does not breach
+	// even at zero threshold.
+	if err := tl.RecordCheck(base.Add(time.Hour), false); err != nil {
+		t.Fatal(err)
+	}
+	exceeds, err = tl.ExceedsSLA(base.Add(time.Hour), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if exceeds {
+		t.Fatal("secure asset must not breach zero threshold")
+	}
+}
+
 func TestExposureLifecycleFormatUnsafeSummary(t *testing.T) {
 	a := Asset{ID: ID("bucket-1")}
 	tl := NewExposureLifecycle(a)

@@ -56,4 +56,4 @@ unsafe_predicate:
       value: true
     - field: properties.storage.lifecycle.min_expiration_days
       op: lt
-      value: params.min_retention_days
+      value_from_param: min_retention_days

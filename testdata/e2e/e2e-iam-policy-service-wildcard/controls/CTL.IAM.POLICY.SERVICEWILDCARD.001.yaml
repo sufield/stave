@@ -83,4 +83,4 @@ unsafe_predicate:
       value: true
     - field: properties.identity.policies.service_wildcards_granted
       op: any_in_field
-      value: params.denied_service_wildcards
+      value_from_param: denied_service_wildcards

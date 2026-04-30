@@ -17,15 +17,6 @@ type PredicateRule struct {
 	Value          Operand
 	ValueFromParam predicate.ParamRef
 
-	// FailOnMissing changes the negative-comparison default
-	// (currently OpNe). With the default `false` an absent field is
-	// treated as "no violation" — preserves the legacy assume-safe
-	// shape for non-security-critical controls. Set to `true` for
-	// security-critical controls where a missing field should
-	// fail closed (e.g. require_tls=true that's missing means TLS
-	// might not be enforced).
-	FailOnMissing bool
-
 	// Nested logic blocks
 	Any []PredicateRule
 	All []PredicateRule

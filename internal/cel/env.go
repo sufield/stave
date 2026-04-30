@@ -2,12 +2,14 @@ package cel
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/ref"
+	"github.com/google/cel-go/common/types/traits"
 )
 
 // NewEnv creates a CEL environment configured for Stave predicate evaluation.
@@ -123,6 +125,19 @@ func isMissing(val ref.Val) bool {
 		return false
 	}
 
+	// CEL-internal collection types implement traits.Lister and
+	// traits.Mapper. A CEL expression like `properties.tags` returns a
+	// CEL map wrapper, not a Go map[string]any — the explicit trait
+	// check classifies those wrappers correctly. Native Go branches
+	// below cover values injected directly into the activation
+	// (Properties / Params / etc.) before they pass through CEL.
+	if lister, ok := val.(traits.Lister); ok {
+		return lister.Size().Equal(types.IntZero) == types.True
+	}
+	if mapper, ok := val.(traits.Mapper); ok {
+		return mapper.Size().Equal(types.IntZero) == types.True
+	}
+
 	switch v := val.Value().(type) {
 	case nil:
 		return true
@@ -133,12 +148,6 @@ func isMissing(val ref.Val) bool {
 	case map[string]any:
 		return len(v) == 0
 	default:
-		// Check for CEL list/map types
-		if sizer, ok := val.(interface{ Size() ref.Val }); ok {
-			if sz, ok := sizer.Size().Value().(int64); ok {
-				return sz == 0
-			}
-		}
 		return false
 	}
 }
@@ -264,46 +273,73 @@ func scopedHasField(dotPath, scopeVar string) string {
 // literal converts a Go value to a CEL literal string.
 // String values "true"/"false" are emitted as boolean literals to match
 // the observation property normalizer's coercion behavior.
-func literal(v any) string {
+//
+// Unsupported types fail with a descriptive error rather than the
+// previous fmt.Sprintf("%v") fallback, which silently produced
+// uncompilable CEL fragments (e.g. a struct printed as `{x:1}` is not
+// valid CEL syntax). The compile error then surfaces far from the
+// rule that triggered it. Surface the type mismatch at the literal
+// step so the failing rule is named in the error path.
+func literal(v any) (string, error) {
 	switch val := v.(type) {
 	case bool:
 		if val {
-			return "true"
+			return "true", nil
 		}
-		return "false"
+		return "false", nil
 	case string:
 		// Normalize boolean strings to match property normalizer
 		switch strings.ToLower(strings.TrimSpace(val)) {
 		case "true":
-			return "true"
+			return "true", nil
 		case "false":
-			return "false"
+			return "false", nil
 		}
-		return fmt.Sprintf("%q", val)
+		return fmt.Sprintf("%q", val), nil
 	case float64:
 		if val == float64(int64(val)) {
-			return strconv.FormatInt(int64(val), 10)
+			return strconv.FormatInt(int64(val), 10), nil
 		}
-		return fmt.Sprintf("%g", val)
+		return fmt.Sprintf("%g", val), nil
 	case int:
-		return strconv.Itoa(val)
+		return strconv.Itoa(val), nil
 	case int64:
-		return strconv.FormatInt(val, 10)
+		return strconv.FormatInt(val, 10), nil
 	case []string:
 		quoted := make([]string, len(val))
 		for i, s := range val {
 			quoted[i] = fmt.Sprintf("%q", s)
 		}
-		return "[" + strings.Join(quoted, ", ") + "]"
+		return "[" + strings.Join(quoted, ", ") + "]", nil
 	case []any:
 		items := make([]string, len(val))
 		for i, item := range val {
-			items[i] = literal(item)
+			lit, err := literal(item)
+			if err != nil {
+				return "", fmt.Errorf("list[%d]: %w", i, err)
+			}
+			items[i] = lit
 		}
-		return "[" + strings.Join(items, ", ") + "]"
+		return "[" + strings.Join(items, ", ") + "]", nil
+	case map[string]any:
+		// Emit as a CEL map literal with sorted keys for deterministic output.
+		keys := make([]string, 0, len(val))
+		for k := range val {
+			keys = append(keys, k)
+		}
+		slices.Sort(keys)
+		entries := make([]string, len(keys))
+		for i, k := range keys {
+			lit, err := literal(val[k])
+			if err != nil {
+				return "", fmt.Errorf("map[%q]: %w", k, err)
+			}
+			entries[i] = fmt.Sprintf("%q: %s", k, lit)
+		}
+		return "{" + strings.Join(entries, ", ") + "}", nil
 	case nil:
-		return "null"
+		return "null", nil
 	default:
-		return fmt.Sprintf("%v", val)
+		return "", fmt.Errorf("unsupported literal type %T for CEL expression", v)
 	}
 }

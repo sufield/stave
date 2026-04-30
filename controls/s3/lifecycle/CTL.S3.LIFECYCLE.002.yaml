@@ -56,7 +56,7 @@ unsafe_predicate:
       value: true
     - field: properties.storage.lifecycle.min_expiration_days
       op: lt
-      value: params.min_retention_days
+      value_from_param: min_retention_days
 alternatives:
   - tool: prowler
     check_id: s3_bucket_lifecycle_enabled

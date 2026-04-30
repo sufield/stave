@@ -142,10 +142,18 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	maxChainWeight := appscore.ChainMaxWeight(chains)
 	scoreResult := computeScore(latest, len(chains), maxChainWeight)
 
+	// 30-day trajectory: compare the latest score to the assessment
+	// closest to (now - 30 days). Earlier shape compared against
+	// assessments[0] (the *oldest-ever* assessment), which made delta
+	// drift unboundedly with history depth — a healthy fortnight
+	// looked indistinguishable from a quarter of slow regression.
+	// Fallback when no assessment lies within the 30-day window: use
+	// the oldest available, but only when the history has more than
+	// one entry so a single-data-point report still computes delta=0.
 	var delta float64
-	if len(assessments) > 1 {
-		earlier := computeScore(assessments[0], len(chains), maxChainWeight)
-		delta = scoreResult.Score - earlier.Score
+	if earlier, ok := assessmentClosestTo(assessments, now.AddDate(0, 0, -30)); ok {
+		earlierScore := computeScore(earlier, len(chains), maxChainWeight)
+		delta = scoreResult.Score - earlierScore.Score
 	}
 
 	trajectory := "STABLE"
@@ -287,6 +295,42 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 		}
 	}
 	return writeErr
+}
+
+// assessmentClosestTo returns the assessment whose Run.Now is closest
+// (in absolute time) to target. Assumes the input slice is sorted
+// ascending by Run.Now (loadHistory + sort above guarantees this).
+// Returns (_, false) when:
+//   - the slice is empty, or
+//   - the slice has only the latest assessment, since a single-point
+//     history has no "earlier" to compare against and falling back to
+//     comparing the latest with itself would always report delta=0
+//     in a way that could mask the absence of trend data.
+func assessmentClosestTo(assessments []*corereport.Assessment, target time.Time) (*corereport.Assessment, bool) {
+	if len(assessments) < 2 {
+		return nil, false
+	}
+	// Exclude the latest entry; "earlier than now" is the meaningful
+	// reference for a delta calculation, and including the latest
+	// would make a same-day report compare against itself.
+	candidates := assessments[:len(assessments)-1]
+	best := candidates[0]
+	bestDiff := absDuration(best.Run.Now.Sub(target))
+	for _, a := range candidates[1:] {
+		diff := absDuration(a.Run.Now.Sub(target))
+		if diff < bestDiff {
+			best = a
+			bestDiff = diff
+		}
+	}
+	return best, true
+}
+
+func absDuration(d time.Duration) time.Duration {
+	if d < 0 {
+		return -d
+	}
+	return d
 }
 
 func computeScore(a *corereport.Assessment, chainDefs int, maxChainWeight float64) appscore.Result {

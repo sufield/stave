@@ -3,6 +3,7 @@ package graph
 import (
 	"bytes"
 	"encoding/xml"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -225,5 +226,52 @@ func TestMapToRDFGraph_MaterializesShortcutEdge(t *testing.T) {
 	}
 	if !found {
 		t.Error("expected at least one materialized stave:violates shortcut edge")
+	}
+}
+
+func TestMapToRDFGraph_FindingViolatesEdgeIsNotShortcut(t *testing.T) {
+	t.Parallel()
+	g := buildFixtureGraph(t)
+	rdf := mapToRDFGraph(g)
+
+	var sawFindingViolates bool
+	for _, e := range rdf.Edges {
+		if e.Predicate != predViolatesRequirement {
+			continue
+		}
+		sawFindingViolates = true
+		if e.Shortcut {
+			t.Errorf("finding-to-requirement VIOLATES edge marked as shortcut: %+v", e)
+		}
+	}
+	if !sawFindingViolates {
+		t.Skip("no VIOLATES edges produced by fixture; nothing to assert")
+	}
+}
+
+// largeFixtureGraph builds a graph with `findingCount` findings and an
+// equal number of resources, sized so the previous O(N×F) severity
+// lookup degrades visibly. Used by BenchmarkMapToRDFGraph_LargeInput
+// to confirm the hot path stays linear in input size.
+func largeFixtureGraph(findingCount int) *GraphData {
+	now := time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
+	findings := make([]remediation.Finding, 0, findingCount)
+	for i := range findingCount {
+		assetID := "arn:aws:s3:::123456789012-bucket-" + strconv.Itoa(i)
+		controlID := "CTL.S3.PUBLIC." + strconv.Itoa(i%10+1)
+		findings = append(findings, fixtureFinding(
+			policy.SeverityHigh, controlID, assetID, "aws_s3_bucket", "aws"))
+	}
+	return Build(BuildInput{
+		Findings:   findings,
+		Now:        now,
+		SourcePath: "bench/large.json",
+	})
+}
+
+func BenchmarkMapToRDFGraph_LargeInput(b *testing.B) {
+	g := largeFixtureGraph(2000)
+	for b.Loop() {
+		_ = mapToRDFGraph(g)
 	}
 }

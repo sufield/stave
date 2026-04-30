@@ -175,7 +175,7 @@ func writeRemediationExample(d *drawer, example string) {
 		return
 	}
 	d.f("\n  Example configuration:\n")
-	for _, line := range strings.Split(strings.TrimSpace(example), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(example), "\n") {
 		d.f("    %s\n", line)
 	}
 }

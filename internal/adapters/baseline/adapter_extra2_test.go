@@ -1,7 +1,12 @@
 package baseline
 
 import (
+	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -99,5 +104,40 @@ func TestRoundTrip(t *testing.T) {
 	}
 	if roundTrip[0].AssetID != original[0].AssetID {
 		t.Fatalf("AssetID mismatch")
+	}
+}
+
+// TestWriteBaseline_CloseErrorPropagated drives WriteBaseline through
+// a custom FileOpener whose returned *os.File has already been closed
+// — the second Close from the writer's defer becomes an error. We
+// assert the error reaches the caller, since a silent close-error
+// swallow could leave the on-disk file flushed but unsynced or
+// partially written, with WriteBaseline reporting success.
+func TestWriteBaseline_CloseErrorPropagated(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "baseline.json")
+
+	// Open the file, then close it before handing it to the writer.
+	// jsonutil.WriteIndented will fail on the closed FD, and the
+	// fix path returns that error rather than dropping it.
+	w := &Writer{
+		OpenFile: func(p string) (*os.File, error) {
+			f, err := os.Create(p)
+			if err != nil {
+				return nil, err
+			}
+			_ = f.Close()
+			return f, nil
+		},
+	}
+
+	err := w.WriteBaseline(context.Background(), path,
+		[]reporting.BaselineFinding{{ControlID: "CTL.AWS.S3.001", AssetID: "x"}},
+		time.Now(), "src.json")
+	if err == nil {
+		t.Fatal("expected an error from a closed underlying file, got nil")
+	}
+	if !strings.Contains(err.Error(), "write") && !strings.Contains(err.Error(), "close") {
+		t.Errorf("error %q should mention write or close", err.Error())
 	}
 }

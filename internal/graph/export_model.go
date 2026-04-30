@@ -218,12 +218,17 @@ var wireToPredicate = map[string]string{
 }
 
 // shortcutPredicates are predicates Stave annotates with
-// stave:isAlgorithmShortcut "true" in the JSON-LD output. Centrality,
-// community detection, and shortest-path workflows can run over the
-// subgraph induced by these edges without first joining through
-// intermediate Finding nodes.
+// stave:isAlgorithmShortcut "true" in the JSON-LD output. The flag
+// means "this edge was synthesized by the export layer to skip past
+// intermediate nodes that the underlying graph contains" — only
+// materialized resource→control edges qualify. The previous shape
+// also marked predViolatesRequirement (the finding→requirement edge)
+// as a shortcut, but that edge is a real first-class relationship in
+// the source graph, not a synthesized skip-link, so consumers that
+// filter on isAlgorithmShortcut were incorrectly seeing it as a
+// shortcut. Keep this set tight: only include predicates that are
+// produced by the shortcut-materialization pass.
 var shortcutPredicates = map[string]bool{
-	predViolates:            true,
-	predViolatesRequirement: true,
-	predHasEffectiveAccess:  true,
+	predViolates:           true,
+	predHasEffectiveAccess: true,
 }

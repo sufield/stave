@@ -50,7 +50,7 @@ unsafe_predicate:
       value: bucket
     - field: properties.storage.access.external_account_ids
       op: not_subset_of_field
-      value: params.allowed_accounts
+      value_from_param: allowed_accounts
 alternatives:
   - tool: prowler
     check_id: s3_bucket_cross_account_access

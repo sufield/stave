@@ -2,6 +2,7 @@ package pack
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"maps"
@@ -111,18 +112,21 @@ func (r *Index) PopulateControlRefs(fsys embed.FS, root string) error {
 	return nil
 }
 
+// loadPacks resolves the parsed pack specs into the registry's packs
+// map. Every control ID listed in a pack must have a metadata entry
+// in r.controls — PopulateControlRefs is the only path that fills
+// that map and must run before loadPacks.
 func (r *Index) loadPacks(specs map[string]packSpec) error {
+	if r.controls == nil {
+		return errors.New("loadPacks: controls metadata not populated; call PopulateControlRefs first")
+	}
 	for name, spec := range specs {
 		ids := slices.Clone(spec.Controls)
 		slices.Sort(ids)
 
-		// When controls: map is populated (backward compat), validate
-		// that every pack control ID has a metadata entry.
-		if len(r.controls) > 0 {
-			for _, id := range ids {
-				if _, ok := r.controls[string(id)]; !ok {
-					return fmt.Errorf("pack %q: undefined control %q", name, id)
-				}
+		for _, id := range ids {
+			if _, ok := r.controls[string(id)]; !ok {
+				return fmt.Errorf("pack %q: undefined control %q", name, id)
 			}
 		}
 

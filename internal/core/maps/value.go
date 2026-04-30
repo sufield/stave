@@ -37,7 +37,7 @@ func (v Node) GetPath(path string) Node {
 	}
 
 	current := v
-	for _, part := range strings.Split(path, ".") {
+	for part := range strings.SplitSeq(path, ".") {
 		part = strings.TrimSpace(part)
 		if part == "" {
 			return Node{}

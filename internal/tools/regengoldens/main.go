@@ -184,7 +184,7 @@ func affectedDomains(baseRef string) (map[string]struct{}, error) {
 	untrackedOut, _ := exec.Command("git", "ls-files", "--others", "--exclude-standard").Output()
 	if prefix != "" && len(untrackedOut) > 0 {
 		var b strings.Builder
-		for _, line := range strings.Split(string(untrackedOut), "\n") {
+		for line := range strings.SplitSeq(string(untrackedOut), "\n") {
 			if line == "" {
 				continue
 			}
@@ -197,7 +197,7 @@ func affectedDomains(baseRef string) (map[string]struct{}, error) {
 	out := append(append([]byte{}, diffOut...), untrackedOut...)
 	domains := map[string]struct{}{}
 	var outOfScope []string
-	for _, raw := range strings.Split(string(out), "\n") {
+	for raw := range strings.SplitSeq(string(out), "\n") {
 		line := strings.TrimSpace(raw)
 		if line == "" {
 			continue

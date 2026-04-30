@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -104,10 +105,21 @@ func run(w io.Writer, opts *options) error {
 	}
 
 	// Load and apply exceptions from project root stave.yaml.
+	// stave.yaml is optional — its absence is the common case for
+	// projects that haven't yet acknowledged any findings, and must
+	// not turn `stave evaluate` into a hard failure. LoadExceptions
+	// already returns (nil, nil) on ErrNotExist, but guard at the
+	// call site too so a future change to the loader cannot turn the
+	// missing-file case back into a fatal error silently.
 	staveYAML := "stave.yaml"
 	excs, excErr := exception.LoadExceptions(staveYAML)
 	if excErr != nil {
-		return fmt.Errorf("load exceptions: %w", excErr)
+		if errors.Is(excErr, os.ErrNotExist) {
+			slog.Debug("no exceptions file found; continuing with empty exception list", "path", staveYAML)
+			excs = nil
+		} else {
+			return fmt.Errorf("load exceptions: %w", excErr)
+		}
 	}
 	if len(excs) > 0 {
 		acks := exception.ApplyExceptions(excs, report.Results, extractBucketName(snap), time.Now())

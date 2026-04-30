@@ -104,12 +104,19 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 	// findingResource maps each Finding's internal ID to the Resource's
 	// internal ID it targets, populated as TARGETS edges are seen.
 	findingResource := make(map[string]string, len(g.Nodes))
+	// nodesByID indexes nodes by their internal ID so per-edge severity
+	// lookups stay O(1). The previous shape did a linear scan of g.Nodes
+	// for every shortcut edge AND for every edge with a Finding endpoint,
+	// turning a graph with N nodes and F findings into an O(N×F)
+	// pipeline. Build the index once during the node pass.
+	nodesByID := make(map[string]*Node, len(g.Nodes))
 
 	for i := range g.Nodes {
 		n := &g.Nodes[i]
 		iri, classIRI := nodeIRI(n)
 		idMap[n.ID] = iri
 		nodeKind[n.ID] = n.Type
+		nodesByID[n.ID] = n
 
 		props := flattenNodeProperties(n)
 		if n.Type == "Finding" {
@@ -159,7 +166,7 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 			continue
 		}
 
-		props := edgeProperties(e, nodeKind[e.From], nodeKind[e.To], g)
+		props := edgeProperties(e, nodeKind[e.From], nodeKind[e.To], nodesByID)
 		out.Edges = append(out.Edges, RDFEdge{
 			From:       fromIRI,
 			To:         toIRI,
@@ -216,23 +223,19 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 			continue
 		}
 
-		// Weight comes from the Finding's severity. If multiple
-		// findings link the same (resource, control) pair, the
-		// strongest severity wins — this matches the principle "a
-		// resource is as exposed as its most dangerous finding".
-		// Don't break on the first match: multiple Finding nodes can
-		// share the same ID slot (different snapshot times, retries,
-		// or partial duplicates from different builders), and only by
-		// scanning all of them can we pick the maximum-severity weight.
+		// Weight comes from the Finding's severity. The earlier
+		// shape rescanned g.Nodes per shortcut edge to handle the
+		// case where multiple Finding nodes share an ID, but a graph
+		// with deduplicated IDs (the contract elsewhere in this
+		// package, and what builder produces) makes the loop a pure
+		// O(N) tax on the O(F) shortcut pass. Use the nodesByID
+		// index built during the node pass — by-ID dedup means at
+		// most one Finding per ID, so a single lookup gives the
+		// weight without any scan.
 		var weight float64
-		for j := range g.Nodes {
-			if g.Nodes[j].ID != findingID {
-				continue
-			}
-			if sev, ok := stringProp(g.Nodes[j].Properties, "severity"); ok {
-				if w := SeverityWeight(sev); w > weight {
-					weight = w
-				}
+		if n, ok := nodesByID[findingID]; ok {
+			if sev, ok := stringProp(n.Properties, "severity"); ok {
+				weight = SeverityWeight(sev)
 			}
 		}
 
@@ -350,16 +353,16 @@ func flattenNodeProperties(n *Node) map[string]any {
 // endpoints make weight meaningful (Finding-bearing edges, shortcut
 // edges) so a single algorithm can index by edge weight without
 // guarding on type.
-func edgeProperties(e *Edge, fromKind, toKind string, g *GraphData) map[string]any {
+func edgeProperties(e *Edge, fromKind, toKind string, nodesByID map[string]*Node) map[string]any {
 	props := map[string]any{}
 	if e.Properties != nil {
 		maps.Copy(props, e.Properties)
 	}
 	// If either endpoint is a Finding, propagate its severity weight
 	// so edges incident on findings carry a numeric weight.
-	if w := findingSeverityWeight(e.From, g); w > 0 && fromKind == "Finding" {
+	if w := findingSeverityWeight(e.From, nodesByID); w > 0 && fromKind == "Finding" {
 		props["weight"] = w
-	} else if w := findingSeverityWeight(e.To, g); w > 0 && toKind == "Finding" {
+	} else if w := findingSeverityWeight(e.To, nodesByID); w > 0 && toKind == "Finding" {
 		props["weight"] = w
 	}
 	if len(props) == 0 {
@@ -368,18 +371,18 @@ func edgeProperties(e *Edge, fromKind, toKind string, g *GraphData) map[string]a
 	return props
 }
 
-func findingSeverityWeight(nodeID string, g *GraphData) float64 {
-	for i := range g.Nodes {
-		if g.Nodes[i].ID != nodeID {
-			continue
-		}
-		if g.Nodes[i].Type != "Finding" {
-			return 0
-		}
-		if sev, ok := stringProp(g.Nodes[i].Properties, "severity"); ok {
-			return SeverityWeight(sev)
-		}
+// findingSeverityWeight returns the SeverityWeight of the Finding
+// node with the given ID, or 0 if the node isn't a Finding or has no
+// severity property. The previous signature accepted *GraphData and
+// scanned its Nodes slice on every call, making per-edge work O(N).
+// Switching to the prebuilt index keeps the hot path O(1).
+func findingSeverityWeight(nodeID string, nodesByID map[string]*Node) float64 {
+	n, ok := nodesByID[nodeID]
+	if !ok || n.Type != "Finding" {
 		return 0
+	}
+	if sev, ok := stringProp(n.Properties, "severity"); ok {
+		return SeverityWeight(sev)
 	}
 	return 0
 }

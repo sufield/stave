@@ -40,7 +40,7 @@ func annotateOwners(result *evaluation.ComplianceReport, opts *Options) {
 	}
 
 	allowed := make(map[string]bool)
-	for _, id := range strings.Split(opts.OwnerFilter, ",") {
+	for id := range strings.SplitSeq(opts.OwnerFilter, ",") {
 		allowed[strings.TrimSpace(id)] = true
 	}
 

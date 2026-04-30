@@ -170,51 +170,73 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 	fa := scopedFieldAccess(field, scopeVar)
 	hf := scopedHasField(field, scopeVar)
 
-	// resolveValueExpr resolves values that reference params (e.g., "params.min_retention_days")
-	// as CEL field accesses instead of string literals. The documented
-	// `value_from_param` field takes precedence: if set, the rule
-	// references a param by name and we emit `params.<name>` directly.
-	// Otherwise we fall back to the legacy string-literal workaround
-	// (`value: "params.foo"`) for backward compatibility.
-	resolveValueExpr := func(v any) string {
+	// resolveValueExpr resolves values that reference params via the
+	// documented `value_from_param` field — emits `params.<name>`
+	// so CEL resolves the param at evaluation time. Plain `value`
+	// is treated as a literal; an unsupported value type fails fast
+	// at compile time.
+	resolveValueExpr := func(v any) (string, error) {
 		if r.ValueFromParam != "" {
-			return "params." + string(r.ValueFromParam)
-		}
-		if s, ok := v.(string); ok && strings.HasPrefix(s, "params.") {
-			return s // emit as-is — CEL resolves params.X from the activation map
+			return "params." + string(r.ValueFromParam), nil
 		}
 		return literal(v)
 	}
 
 	switch op {
 	case predicate.OpEq:
-		return fmt.Sprintf("(%s && %s == %s)", hf, fa, resolveValueExpr(val)), nil
-	case predicate.OpNe:
-		// Default: field must exist for inequality to be meaningful;
-		// a missing field is not a violation. Backwards-compatible
-		// "fail-open on missing" semantics.
-		//
-		// fail_on_missing=true flips the logic to fail-closed: the
-		// missing field is itself the violation. Use for
-		// security-critical controls where the absence of a
-		// required field is more dangerous than its wrong value
-		// (e.g. require_tls=true: missing → TLS might be off).
-		if r.FailOnMissing {
-			return fmt.Sprintf("(!(%s) || %s != %s)", hf, fa, resolveValueExpr(val)), nil
+		ve, err := resolveValueExpr(val)
+		if err != nil {
+			return "", fmt.Errorf("op eq: %w", err)
 		}
-		return fmt.Sprintf("(%s && %s != %s)", hf, fa, resolveValueExpr(val)), nil
+		return fmt.Sprintf("(%s && %s == %s)", hf, fa, ve), nil
+	case predicate.OpNe:
+		// Fail-closed semantics: a missing field is itself the
+		// violation. Security-critical inequalities (require_tls=true,
+		// encryption_enabled=true) interpret an absent field as
+		// "the safety property might not hold," which is the
+		// reading the control author wanted. The previous fail-
+		// open default produced silent-pass on extractor drift.
+		ve, err := resolveValueExpr(val)
+		if err != nil {
+			return "", fmt.Errorf("op ne: %w", err)
+		}
+		return fmt.Sprintf("(!(%s) || %s != %s)", hf, fa, ve), nil
 	case predicate.OpGt:
-		return fmt.Sprintf("(%s && %s > %s)", hf, fa, resolveValueExpr(val)), nil
+		ve, err := resolveValueExpr(val)
+		if err != nil {
+			return "", fmt.Errorf("op gt: %w", err)
+		}
+		return fmt.Sprintf("(%s && %s > %s)", hf, fa, ve), nil
 	case predicate.OpLt:
-		return fmt.Sprintf("(%s && %s < %s)", hf, fa, resolveValueExpr(val)), nil
+		ve, err := resolveValueExpr(val)
+		if err != nil {
+			return "", fmt.Errorf("op lt: %w", err)
+		}
+		return fmt.Sprintf("(%s && %s < %s)", hf, fa, ve), nil
 	case predicate.OpGte:
-		return fmt.Sprintf("(%s && %s >= %s)", hf, fa, resolveValueExpr(val)), nil
+		ve, err := resolveValueExpr(val)
+		if err != nil {
+			return "", fmt.Errorf("op gte: %w", err)
+		}
+		return fmt.Sprintf("(%s && %s >= %s)", hf, fa, ve), nil
 	case predicate.OpLte:
-		return fmt.Sprintf("(%s && %s <= %s)", hf, fa, resolveValueExpr(val)), nil
+		ve, err := resolveValueExpr(val)
+		if err != nil {
+			return "", fmt.Errorf("op lte: %w", err)
+		}
+		return fmt.Sprintf("(%s && %s <= %s)", hf, fa, ve), nil
 	case predicate.OpIn:
-		return fmt.Sprintf("(%s && %s in %s)", hf, fa, resolveValueExpr(val)), nil
+		ve, err := resolveValueExpr(val)
+		if err != nil {
+			return "", fmt.Errorf("op in: %w", err)
+		}
+		return fmt.Sprintf("(%s && %s in %s)", hf, fa, ve), nil
 	case predicate.OpContains:
-		return fmt.Sprintf("(%s && string(%s).contains(%s))", hf, fa, resolveValueExpr(val)), nil
+		ve, err := resolveValueExpr(val)
+		if err != nil {
+			return "", fmt.Errorf("op contains: %w", err)
+		}
+		return fmt.Sprintf("(%s && string(%s).contains(%s))", hf, fa, ve), nil
 	case predicate.OpMissing:
 		wantMissing, err := coerceBool(val, true)
 		if err != nil {
@@ -244,48 +266,45 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 		//                                  it's logically empty for the
 		//                                  purpose of this operator)
 		//
-		// The previous shape returned false for non-collection types,
-		// causing controls that asked "is this list empty?" to fail
-		// closed against legitimately-non-list extractor output.
-		// size() in CEL errors on non-collection types, so the type()
-		// guard must run *before* size() — short-circuiting with `!hf`
-		// first, then collection-type membership, then size.
+		// size() errors on non-collection types, so the type guard
+		// must short-circuit before size() runs. CEL does not allow
+		// `string(type(x))` for a dyn-typed value, so the test is
+		// expressed as direct type-token equality. Each `type(literal)`
+		// resolves to a singleton type value at compile time, so the
+		// per-evaluation cost is just three pointer comparisons. The
+		// short-circuit chain is:
+		//   1. field absent              → true
+		//   2. type not list/map/string  → true
+		//   3. size() == 0               → true
+		// Non-empty collections fall through to false (= violation).
 		return fmt.Sprintf(
-			"(!(%s) || !(type(%s) in [type([]), type({}), type(\"\")]) || size(%s) == 0)",
-			hf, fa, fa,
+			"(!(%s) || !(type(%s) == type([]) || type(%s) == type({}) || type(%s) == type(\"\")) || size(%s) == 0)",
+			hf, fa, fa, fa, fa,
 		), nil
 	case predicate.OpNeqField:
-		// Cross-field inequality. Both fields must exist for the
+		// Cross-field inequality. Both sides must exist for the
 		// comparison to be meaningful — a missing target is treated as
 		// "safe" (no violation by absence) so the negative operators
 		// share a single, predictable convention.
-		other := fmt.Sprint(val)
-		ofa := scopedFieldAccess(other, scopeVar)
-		ohf := scopedHasField(other, scopeVar)
+		ofa, ohf := resolveCrossFieldRef(r, val, scopeVar)
 		return fmt.Sprintf("(%s && %s && %s != %s)", hf, ohf, fa, ofa), nil
 	case predicate.OpNotInField:
-		// "source not in target list". Both fields must exist; missing
+		// "source not in target list". Both sides must exist; missing
 		// data does not produce a violation. Mirrors OpNeqField.
-		other := fmt.Sprint(val)
-		ofa := scopedFieldAccess(other, scopeVar)
-		ohf := scopedHasField(other, scopeVar)
+		ofa, ohf := resolveCrossFieldRef(r, val, scopeVar)
 		return fmt.Sprintf("(%s && %s && !(%s in %s))", hf, ohf, fa, ofa), nil
 	case predicate.OpNotSubsetOfField:
-		// "source list not subset of target list". Both must exist;
+		// "source list not subset of target list". Both sides must exist;
 		// missing data does not produce a violation. Mirrors the other
 		// negative cross-field operators.
-		other := fmt.Sprint(val)
-		ofa := scopedFieldAccess(other, scopeVar)
-		ohf := scopedHasField(other, scopeVar)
+		ofa, ohf := resolveCrossFieldRef(r, val, scopeVar)
 		return fmt.Sprintf("(%s && %s && %s.exists(x, !(x in %s)))", hf, ohf, fa, ofa), nil
 	case predicate.OpAnyInField:
-		// field.exists(x, x in other_field) — true when the field (a list)
-		// has at least one element that also appears in another field's
-		// list. Both sides must be present; either missing → false.
+		// field.exists(x, x in other) — true when the field (a list)
+		// has at least one element that also appears in another list.
+		// Both sides must be present; either missing → false.
 		// Complement of OpNotSubsetOfField.
-		other := fmt.Sprint(val)
-		ofa := scopedFieldAccess(other, scopeVar)
-		ohf := scopedHasField(other, scopeVar)
+		ofa, ohf := resolveCrossFieldRef(r, val, scopeVar)
 		return fmt.Sprintf("(%s && %s && %s.exists(x, x in %s))", hf, ohf, fa, ofa), nil
 	case predicate.OpAnyMatch:
 		return ruleToExprAnyMatch(r, val, scopeVar, false)
@@ -299,6 +318,24 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported operator: %s", op)
 	}
+}
+
+// resolveCrossFieldRef returns (accessExpr, existsExpr) for the right-hand
+// side of a cross-field operator. A rule may target either:
+//   - a sibling field on the same asset (`value: properties.foo` or any
+//     other dotted path resolved via the active scope), or
+//   - a control parameter (`value_from_param: bar`).
+//
+// `params` is always present in the activation, so the existence guard for
+// a param ref is the literal `true` — the param itself is required to be
+// declared in the control's `params:` block, so absence at evaluation time
+// would be a control-load defect, not a data-shape question.
+func resolveCrossFieldRef(r *policy.PredicateRule, val any, scopeVar string) (access string, exists string) {
+	if r.ValueFromParam != "" {
+		return "params." + string(r.ValueFromParam), "true"
+	}
+	other := fmt.Sprint(val)
+	return scopedFieldAccess(other, scopeVar), scopedHasField(other, scopeVar)
 }
 
 // coerceBool returns val as a Go bool. It accepts native bool and the
@@ -455,10 +492,6 @@ func parseRuleList(v any) ([]policy.PredicateRule, error) {
 		if vfp, ok := m["value_from_param"].(string); ok {
 			rule.ValueFromParam = predicate.ParamRef(vfp)
 		}
-		if fom, ok := m["fail_on_missing"].(bool); ok {
-			rule.FailOnMissing = fom
-		}
-
 		// Handle nested any/all blocks within the rule
 		if anyBlock, hasAny := m["any"]; hasAny {
 			nested, err := parseRuleList(anyBlock)

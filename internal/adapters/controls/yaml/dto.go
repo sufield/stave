@@ -65,10 +65,6 @@ type yamlPredicateRule struct {
 	Op             predicate.Operator `yaml:"op,omitempty"`
 	Value          any                `yaml:"value,omitempty"`
 	ValueFromParam string             `yaml:"value_from_param,omitempty"`
-	// FailOnMissing flips the negative-comparison default
-	// (currently OpNe) to fail-closed when the field is missing.
-	// Default false preserves the legacy assume-safe behavior.
-	FailOnMissing bool `yaml:"fail_on_missing,omitempty"`
 
 	Any []yamlPredicateRule `yaml:"any,omitempty"`
 	All []yamlPredicateRule `yaml:"all,omitempty"`

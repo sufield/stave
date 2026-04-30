@@ -808,3 +808,23 @@ func TestCheckSLAPolicy_CriticalOnlyPassesOnNonCritical(t *testing.T) {
 		t.Fatalf("critical-only should pass on non-critical breach, got: %v", err)
 	}
 }
+
+// TestRunNewOnly_BadNowIsFatal pins the contract that --now parse
+// failures in new-only mode produce a UserError. The earlier shape
+// silently fell back to time.Now() on parse failure, hiding typos
+// behind output that looked correct but was anchored to wall time.
+func TestRunNewOnly_BadNowIsFatal(t *testing.T) {
+	var stdout bytes.Buffer
+	opts := &Options{
+		SharedOptions: SharedOptions{NowTime: "not-a-date"},
+		HistoryDir:    t.TempDir(),
+	}
+	err := runNewOnlyOutput(t.Context(), &stdout, &stdout, opts, EvaluateResult{})
+	if err == nil {
+		t.Fatal("expected error for malformed --now, got nil")
+	}
+	var ue *ui.UserError
+	if !errors.As(err, &ue) {
+		t.Fatalf("expected ui.UserError, got %T: %v", err, err)
+	}
+}

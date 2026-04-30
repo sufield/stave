@@ -80,3 +80,62 @@ func TestOpListEmpty_AllShapes(t *testing.T) {
 		})
 	}
 }
+
+// TestOpListEmpty_DynamicNestedList exercises the operator against a
+// list value that lives several levels deep inside a dynamically-typed
+// properties tree. Each layer is a map[string]any so CEL must resolve
+// the path through repeated bracket lookups before it can reach the
+// list and check its size. Regression for the older shape that
+// constructed type literals (`type([])`) and tripped on the dyn type
+// inferred along the path.
+func TestOpListEmpty_DynamicNestedList(t *testing.T) {
+	t.Parallel()
+
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatalf("NewCompiler: %v", err)
+	}
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{{
+			Field: predicate.NewFieldPath("properties.storage.access.external_account_ids"),
+			Op:    predicate.OpListEmpty,
+		}},
+	}
+	cp, err := compiler.Compile(pred)
+	if err != nil {
+		t.Fatalf("Compile: %v", err)
+	}
+
+	cases := []struct {
+		name  string
+		ids   any
+		want  bool
+	}{
+		{"empty []any", []any{}, true},
+		{"non-empty []any", []any{"123"}, false},
+		{"empty []string", []string{}, true},
+		{"non-empty []string", []string{"123"}, false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			a := asset.Asset{
+				ID: "asset-test",
+				Properties: map[string]any{
+					"storage": map[string]any{
+						"access": map[string]any{
+							"external_account_ids": tc.ids,
+						},
+					},
+				},
+			}
+			got, err := Evaluate(cp, a, nil, nil)
+			if err != nil {
+				t.Fatalf("Evaluate: %v", err)
+			}
+			if got != tc.want {
+				t.Errorf("Evaluate(%s) = %v, want %v", tc.name, got, tc.want)
+			}
+		})
+	}
+}

@@ -10,8 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	"github.com/sufield/stave/internal/app/findingfilter"
+	ui "github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -39,11 +41,15 @@ func runNewOnlyOutput(ctx context.Context, stdout, _ io.Writer, opts *Options, r
 		}
 	}
 
-	now := time.Now().UTC()
-	if opts.NowTime != "" {
-		if t, err := time.Parse(time.RFC3339, opts.NowTime); err == nil {
-			now = t
-		}
+	// Treat a malformed --now as a hard error. The previous shape
+	// silently fell back to time.Now() when parsing failed, which
+	// hid typos and made test goldens diverge from production runs
+	// without any signal. run_standard.go already errors on a bad
+	// --now via compose.ResolveNow; align here so behavior is
+	// uniform across apply modes.
+	now, err := compose.ResolveNow(opts.NowTime)
+	if err != nil {
+		return &ui.UserError{Err: err}
 	}
 
 	filterResult := findingfilter.Classify(findingfilter.Input{

@@ -6,6 +6,17 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
+// keyUsageFromSnapshots is the test-only entrypoint into the
+// per-snapshot index builder. Production callers use
+// EnrichKeyIsolation, which iterates snapshots itself; tests assert
+// the index shape against a single chosen snapshot.
+func keyUsageFromSnapshots(snapshots []asset.Snapshot) KeyUsageIndex {
+	if len(snapshots) == 0 {
+		return nil
+	}
+	return buildKeyUsageIndexForSnapshot(snapshots[len(snapshots)-1])
+}
+
 func TestParseSensitivity(t *testing.T) {
 	tests := []struct {
 		input string
@@ -35,7 +46,7 @@ func TestBuildKeyUsageIndex_ExclusiveKey(t *testing.T) {
 			makeKMSAsset("bucket-2", "arn:aws:kms:key-A", "phi"),
 		},
 	}}
-	idx := BuildKeyUsageIndex(snapshots)
+	idx := keyUsageFromSnapshots(snapshots)
 	entry := idx["arn:aws:kms:key-A"]
 	if entry == nil {
 		t.Fatal("expected entry for key-A")
@@ -52,7 +63,7 @@ func TestBuildKeyUsageIndex_SharedKey(t *testing.T) {
 			makeKMSAsset("dev-bucket", "arn:aws:kms:key-B", "dev"),
 		},
 	}}
-	idx := BuildKeyUsageIndex(snapshots)
+	idx := keyUsageFromSnapshots(snapshots)
 	entry := idx["arn:aws:kms:key-B"]
 	if entry == nil {
 		t.Fatal("expected entry for key-B")
@@ -73,14 +84,14 @@ func TestBuildKeyUsageIndex_NoKeyID(t *testing.T) {
 			}},
 		},
 	}}
-	idx := BuildKeyUsageIndex(snapshots)
+	idx := keyUsageFromSnapshots(snapshots)
 	if len(idx) != 0 {
 		t.Fatalf("expected empty index for assets without kms_key_id, got %d entries", len(idx))
 	}
 }
 
 func TestBuildKeyUsageIndex_EmptySnapshots(t *testing.T) {
-	idx := BuildKeyUsageIndex(nil)
+	idx := keyUsageFromSnapshots(nil)
 	if idx != nil {
 		t.Fatal("expected nil index for empty snapshots")
 	}
@@ -94,7 +105,7 @@ func TestBuildKeyUsageIndex_MissingClassification(t *testing.T) {
 			}},
 		},
 	}}
-	idx := BuildKeyUsageIndex(snapshots)
+	idx := keyUsageFromSnapshots(snapshots)
 	entry := idx["arn:aws:kms:key-C"]
 	if entry == nil {
 		t.Fatal("expected entry for key-C")

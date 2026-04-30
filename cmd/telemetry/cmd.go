@@ -122,7 +122,7 @@ func buildFilter(opts *options) apptelemetry.Filter {
 	}
 	if opts.Severity != "" {
 		filter.Severities = make(map[string]bool)
-		for _, s := range strings.Split(opts.Severity, ",") {
+		for s := range strings.SplitSeq(opts.Severity, ",") {
 			trimmed := strings.TrimSpace(strings.ToLower(s))
 			if trimmed != "" {
 				filter.Severities[trimmed] = true

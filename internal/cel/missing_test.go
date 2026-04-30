@@ -110,3 +110,39 @@ func TestIsMissing_NonEmptyString_NotMissing(t *testing.T) {
 		t.Error("isMissing should return false for non-empty string")
 	}
 }
+
+// CEL-evaluated lists/maps come back as types.Lister / types.Mapper
+// wrappers, not Go native []any / map[string]any. The trait-based
+// branch in isMissing must classify those wrappers correctly so that
+// missing() called on a CEL list expression returns the right answer.
+func TestIsMissing_CELEmptyList(t *testing.T) {
+	t.Parallel()
+	val := types.DefaultTypeAdapter.NativeToValue([]any{})
+	if !isMissing(val) {
+		t.Error("isMissing should return true for an empty CEL list")
+	}
+}
+
+func TestIsMissing_CELNonEmptyList(t *testing.T) {
+	t.Parallel()
+	val := types.DefaultTypeAdapter.NativeToValue([]any{"x"})
+	if isMissing(val) {
+		t.Error("isMissing should return false for a non-empty CEL list")
+	}
+}
+
+func TestIsMissing_CELEmptyMap(t *testing.T) {
+	t.Parallel()
+	val := types.DefaultTypeAdapter.NativeToValue(map[string]any{})
+	if !isMissing(val) {
+		t.Error("isMissing should return true for an empty CEL map")
+	}
+}
+
+func TestIsMissing_CELNonEmptyMap(t *testing.T) {
+	t.Parallel()
+	val := types.DefaultTypeAdapter.NativeToValue(map[string]any{"k": "v"})
+	if isMissing(val) {
+		t.Error("isMissing should return false for a non-empty CEL map")
+	}
+}

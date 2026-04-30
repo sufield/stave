@@ -228,7 +228,15 @@ func (a *App) writeMemProfile(cmd *cobra.Command) {
 		}
 		return
 	}
-	defer f.Close()
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil {
+			if a.Logger != nil {
+				a.Logger.Warn("failed to close memory profile", "error", closeErr)
+			} else {
+				fmt.Fprintf(cmd.ErrOrStderr(), "Warning: close memory profile: %v\n", closeErr)
+			}
+		}
+	}()
 	runtime.GC()
 	if err := pprof.WriteHeapProfile(f); err != nil {
 		if a.Logger != nil {

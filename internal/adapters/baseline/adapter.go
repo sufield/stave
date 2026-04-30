@@ -54,8 +54,16 @@ type Writer struct {
 	OpenFile FileOpener
 }
 
-// WriteBaseline writes a baseline snapshot to disk.
-func (w *Writer) WriteBaseline(_ context.Context, path string, findings []reporting.BaselineFinding, createdAt time.Time, sourcePath string) error {
+// WriteBaseline writes a baseline snapshot to disk atomically: the
+// payload is staged to a temp file in the destination directory and
+// renamed into place only after a successful Close. A bare
+// `defer f.Close()` previously swallowed flush errors, so a torn
+// write (e.g. ENOSPC at flush time) could leave the on-disk baseline
+// partially written and silently desynchronized from what the
+// caller believed it persisted. Atomic rename + close-error capture
+// makes either the new or the previous baseline visible, never a
+// half-written hybrid.
+func (w *Writer) WriteBaseline(_ context.Context, path string, findings []reporting.BaselineFinding, createdAt time.Time, sourcePath string) (retErr error) {
 	entries, err := domainToEntries(findings)
 	if err != nil {
 		return fmt.Errorf("convert baseline findings: %w", err)
@@ -69,12 +77,41 @@ func (w *Writer) WriteBaseline(_ context.Context, path string, findings []report
 		Findings:         entries,
 	}
 
-	f, err := w.OpenFile(fsutil.CleanUserPath(path))
+	cleanPath := fsutil.CleanUserPath(path)
+	f, err := w.OpenFile(cleanPath)
 	if err != nil {
 		return fmt.Errorf("create %s: %w", path, err)
 	}
-	defer f.Close()
-	return jsonutil.WriteIndented(f, baseline)
+	tmpPath := f.Name()
+	// Track whether we still want the on-disk file when this function
+	// exits — on any error we remove it to avoid leaving a partial.
+	committed := false
+	defer func() {
+		if !committed {
+			_ = os.Remove(tmpPath)
+		}
+	}()
+
+	if writeErr := jsonutil.WriteIndented(f, baseline); writeErr != nil {
+		_ = f.Close()
+		return fmt.Errorf("write %s: %w", path, writeErr)
+	}
+	if closeErr := f.Close(); closeErr != nil {
+		return fmt.Errorf("close %s: %w", path, closeErr)
+	}
+
+	// Rename only when the temp path differs from the destination.
+	// Callers that pass a FileOpener which already opens the final
+	// path (legacy behavior, used by some tests) skip the rename
+	// step — the close-error capture above is the meaningful fix
+	// for that path.
+	if tmpPath != cleanPath {
+		if renameErr := os.Rename(tmpPath, cleanPath); renameErr != nil {
+			return fmt.Errorf("rename %s -> %s: %w", tmpPath, cleanPath, renameErr)
+		}
+	}
+	committed = true
+	return nil
 }
 
 func entriesToDomain(entries []evaluation.BaselineEntry) []reporting.BaselineFinding {

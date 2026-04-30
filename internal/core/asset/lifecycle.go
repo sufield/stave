@@ -160,6 +160,16 @@ func (l *ExposureLifecycle) handleExposed(t time.Time) {
 }
 
 func (l *ExposureLifecycle) handleSecure(at time.Time) {
+	// lastObservedAt records when the asset was last seen, regardless
+	// of compliance state. The previous shape only advanced it on
+	// exposed observations, so a long secure run made LastObservedAt
+	// look stale (frozen at the last unsafe scan), and downstream
+	// freshness/staleness checks misread the asset as not-recently-
+	// scanned. Update unconditionally before any early return.
+	if !at.IsZero() && (at.After(l.lastObservedAt) || l.lastObservedAt.IsZero()) {
+		l.lastObservedAt = at
+	}
+
 	if l.activeWindow == nil {
 		return
 	}
@@ -183,8 +193,6 @@ func (l *ExposureLifecycle) handleSecure(at time.Time) {
 	}
 	l.history.Record(resolved)
 	l.activeWindow = nil
-	// Do not clear lastObservedAt — it records when asset was last seen
-	// and is needed by RecordCheck() if the asset is re-exposed later.
 }
 
 func (l *ExposureLifecycle) resolveTimestamp(at time.Time) time.Time {
@@ -216,21 +224,27 @@ func (l *ExposureLifecycle) ExposureDuration(now time.Time) (time.Duration, erro
 	return now.Sub(l.activeWindow.OpenedAt()), nil
 }
 
-// ExceedsSLA reports whether the asset has been exposed strictly longer
-// than the allowed threshold. Two reasons for strict-greater:
+// ExceedsSLA reports whether the asset has been exposed long enough to
+// breach the configured threshold. Comparison rules:
 //
-//  1. Without an active exposure window, ExposureDuration returns 0; an
-//     inclusive comparison ('d >= threshold') would treat every safe
-//     asset as a violation when threshold is zero (the strictest
-//     configuration). Strict comparison preserves the property that an
-//     asset which has never been exposed cannot exceed any SLA.
-//  2. Tests in internal/core/enginetest assert exposure of exactly the
-//     threshold is within bounds (e.g. 48h with a 48h SLA must not
-//     violate). Strict-greater is the documented behavior.
+//  1. threshold == 0 ("zero tolerance"): any active exposure window
+//     breaches immediately. The previous strict-greater rule made the
+//     first observation that opened a window read d == 0, which never
+//     exceeded a zero threshold, so the strictest possible SLA was
+//     paradoxically the most lenient at the first detection.
+//     A no-active-window asset still does not breach: never-exposed
+//     assets cannot violate any SLA.
+//  2. threshold > 0: strict-greater. Tests in internal/core/enginetest
+//     assert exposure of exactly the threshold is within bounds (e.g.
+//     48h with a 48h SLA must not violate); only durations that exceed
+//     the threshold are violations.
 func (l *ExposureLifecycle) ExceedsSLA(now time.Time, threshold time.Duration) (bool, error) {
 	d, err := l.ExposureDuration(now)
 	if err != nil {
 		return false, err
+	}
+	if threshold == 0 {
+		return l.HasActiveWindow(), nil
 	}
 	return d > threshold, nil
 }
