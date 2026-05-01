@@ -1,16 +1,14 @@
 package cel
 
 import (
-	"context"
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 
-	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/testutil"
 )
 
 // TestCELParallelEvaluation runs the CEL evaluator against all e2e fixtures
@@ -94,39 +92,16 @@ func TestCELParallelEvaluation(t *testing.T) {
 	}
 }
 
+// Thin wrappers around the package-level fixture cache. Multiple
+// fixtures share controls/snapshots in the testdata tree, so caching
+// at the directory level cuts disk I/O and YAML parsing time
+// proportional to fixture-set size.
 func loadControlsFromDir(t *testing.T, dir string) []policy.ControlDefinition {
 	t.Helper()
-	loader := ctlyaml.NewControlLoader()
-	controls, err := loader.LoadControls(context.Background(), dir)
-	if err != nil {
-		t.Skipf("load controls from %s: %v", dir, err)
-	}
-	return controls
+	return testutil.LoadControlsFromDir(t, dir)
 }
 
 func loadSnapshotsFromDir(t *testing.T, dir string) []asset.Snapshot {
 	t.Helper()
-	var snapshots []asset.Snapshot
-
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		t.Fatalf("read observations: %v", err)
-	}
-
-	for _, entry := range entries {
-		if entry.IsDir() || filepath.Ext(entry.Name()) != ".json" {
-			continue
-		}
-		data, readErr := os.ReadFile(filepath.Join(dir, entry.Name()))
-		if readErr != nil {
-			t.Fatalf("read observation: %v", readErr)
-		}
-		var snap asset.Snapshot
-		if jsonErr := json.Unmarshal(data, &snap); jsonErr != nil {
-			t.Errorf("cannot unmarshal snapshot %s: %v", entry.Name(), jsonErr)
-			continue
-		}
-		snapshots = append(snapshots, snap)
-	}
-	return snapshots
+	return testutil.LoadSnapshotsFromDir(t, dir)
 }

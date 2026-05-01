@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -19,6 +20,12 @@ import (
 
 // getRootCmd returns a fully-wired root cobra command for tests.
 // Tests assume wiring succeeds — a wiring failure aborts the test.
+//
+// The returned command is built fresh on each call. Callers that
+// only inspect the command tree (help text, flag registrations,
+// CLIG compliance walks) and do not mutate the command should
+// prefer GetTestRootCmd() to avoid paying the wiring cost on every
+// test in the package.
 func getRootCmd() *cobra.Command {
 	app, err := NewApp()
 	if err != nil {
@@ -26,6 +33,31 @@ func getRootCmd() *cobra.Command {
 	}
 	return app.Root
 }
+
+// GetTestRootCmd returns a cached, fully-wired root cobra command
+// for read-only tests. The instance is constructed once per
+// process via sync.Once, then handed out to every caller.
+//
+// Reading-only contract: callers MUST treat the returned tree as
+// immutable. Mutating it (adding subcommands, changing flags,
+// running Execute) leaks state across tests and breaks any other
+// test that touches the cached instance. Tests that need an
+// isolated tree must use getRootCmd() instead.
+//
+// TestMain in this package can call resetTestRootCmdForBenchmark()
+// when a benchmark needs to measure wiring cost; nothing in normal
+// test runs needs to invalidate the cache.
+func GetTestRootCmd() *cobra.Command {
+	cachedTestRootCmdOnce.Do(func() {
+		cachedTestRootCmd = getRootCmd()
+	})
+	return cachedTestRootCmd
+}
+
+var (
+	cachedTestRootCmd     *cobra.Command
+	cachedTestRootCmdOnce sync.Once
+)
 
 // getDevRootCmd returns a fully-wired root cobra command with all dev commands.
 func getDevRootCmd() *cobra.Command {

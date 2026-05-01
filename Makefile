@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-unit test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture
+.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture
 # Binary name
 BINARY=stave
 
@@ -62,10 +62,24 @@ build: sync-schemas sync-controls sync-alternatives
 build-dev: sync-schemas sync-controls sync-alternatives
 	$(GOBUILD) $(LDFLAGS) -tags stavedev -o stave-dev ./cmd/stave-dev
 
+## Testing pyramid:
+##
+##   test-fast        sub-minute dev iteration (`-short`, no binary spawn).
+##   test-unit        same as test-fast plus race detector / coverage off.
+##   test-integration internal/ tests that load fixtures but do not spawn
+##                    the stave binary; targets the middle tier.
+##   test-e2e         binary-driven E2E (./e2e and testscript). Slowest.
+##   test             everything, including E2E and golden suites.
+##   test-ci          regenerate goldens then run the full `test` target.
+##
+## Reach for `make test-fast` while iterating on a single change. Promote
+## to `make test-integration` before opening a PR. CI runs the full
+## `test-ci` target as a final gate.
+##
 ## test: Run all tests with race detector (includes dev-only packages via build tag)
 ##
 ## Assumes goldens are current. Use `make test-ci` for CI runs that
-## regenerate goldens fresh, or `make test-unit` for the fast dev loop.
+## regenerate goldens fresh, or `make test-fast` for the fast dev loop.
 ##
 ## -timeout 30m mirrors what the prior CI workflow used. The default 10m
 ## is not enough once -race plus the binary-driven ./e2e suite are in scope.
@@ -87,6 +101,33 @@ test: sync-schemas sync-controls sync-alternatives
 ## golden-regeneration tax on the dev machine.
 test-unit: sync-schemas sync-controls sync-alternatives
 	$(GOTEST) -short ./internal/... ./cmd/...
+
+## test-fast: Sub-minute dev feedback loop.
+##
+## Identical to test-unit at present (same -short scope, same
+## packages) but kept as a separate target so the documented
+## intent ("targeted at sub-minute") is stable even if test-unit
+## later grows extra concerns (race detector, vet, etc.). Use this
+## while iterating on a single change.
+test-fast: sync-schemas sync-controls sync-alternatives
+	$(GOTEST) -short -timeout 5m ./...
+
+## test-integration: Fixture-loading tests that don't spawn the binary.
+##
+## ./internal/... covers fixture-loaders, evaluation engine,
+## adapters, and graph builders. Does NOT pass -short, so heavier
+## table-driven tests run, but does not include ./e2e or
+## ./cmd/stave (testscript fixtures spawn the binary).
+test-integration: sync-schemas sync-controls sync-alternatives
+	$(GOTEST) -timeout 15m ./internal/... ./cmd/apply/... ./cmd/evaluate/...
+
+## test-e2e: Binary-driven E2E tests only.
+##
+## Builds the stave binary and runs it against fixture inputs.
+## ./e2e holds the cross-cutting golden suite; cmd/stave hosts
+## testscript fixtures. Slowest tier; expect minutes, not seconds.
+test-e2e: build sync-schemas sync-controls sync-alternatives
+	$(GOTEST) -timeout 30m ./e2e/... ./cmd/stave/... ./cmd/apply/...
 
 ## test-ci: CI entry point — regenerate goldens fresh, then run the full suite
 ##

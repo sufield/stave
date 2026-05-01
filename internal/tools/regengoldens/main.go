@@ -32,7 +32,9 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -42,6 +44,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
+	"time"
 )
 
 const stavePath = "./stave"
@@ -67,12 +71,41 @@ type fixtureReport struct {
 	Err      error
 }
 
+// fixtureTimeout caps a single stave invocation. Long enough that
+// healthy fixtures finish comfortably, short enough that a stuck
+// or runaway invocation doesn't wedge the whole regen.
+const fixtureTimeout = 30 * time.Second
+
+// maxWorkers caps -workers regardless of what the operator asked
+// for. The cost models exec.Command + JSON parse + golden diff,
+// which is mostly I/O; 8 saturates a typical dev machine without
+// thrashing the disk.
+const maxWorkers = 8
+
 func main() {
 	dryRun := flag.Bool("dry-run", false, "preview diffs without writing goldens")
 	filter := flag.String("filter", "", "regex filter on fixture directory name")
 	rootFlag := flag.String("root", "testdata/e2e", "fixture root directory")
 	since := flag.String("since", "", "regen only fixtures affected by control/pack changes vs this git ref (e.g. HEAD~1); empty = full regen")
+	changedOnly := flag.Bool("changed-only", false, "convenience for -since=HEAD; regenerate only fixtures affected by working-tree changes")
+	workers := flag.Int("workers", 4, "number of fixtures to process in parallel (default 4, max 8)")
+	sequential := flag.Bool("sequential", false, "force sequential processing (overrides -workers); useful for debugging")
 	flag.Parse()
+
+	if *changedOnly && *since == "" {
+		*since = "HEAD"
+	}
+
+	if *workers < 1 {
+		*workers = 1
+	}
+	if *workers > maxWorkers {
+		fmt.Fprintf(os.Stderr, "-workers capped at %d\n", maxWorkers)
+		*workers = maxWorkers
+	}
+	if *sequential {
+		*workers = 1
+	}
 
 	var filterRE *regexp.Regexp
 	if *filter != "" {
@@ -114,7 +147,12 @@ func main() {
 		os.Exit(2)
 	}
 
-	var reports []fixtureReport
+	// First pass: decide which fixtures are in scope. Print the
+	// up-front total so the operator knows how much work the run
+	// will do — large regen passes are slow and the early signal
+	// helps with abort-or-wait decisions.
+	type job struct{ name, fixDir string }
+	var jobs []job
 	skipped := 0
 	for _, e := range entries {
 		if !e.IsDir() {
@@ -125,22 +163,69 @@ func main() {
 			continue
 		}
 		fixDir := filepath.Join(*rootFlag, name)
-		// Affected-only short-circuit: if the fixture's controls dir
-		// references no affected domain, skip it. Fixtures with no
-		// scannable controls dir (command.txt or profile-mode) fall
-		// through to full evaluation conservatively.
 		if affected != nil && !fixtureIntersectsAffected(fixDir, affected) {
-			reports = append(reports, fixtureReport{Fixture: name, Category: catClean})
 			skipped++
 			continue
 		}
-		reports = append(reports, processFixture(name, fixDir, *dryRun))
+		jobs = append(jobs, job{name: name, fixDir: fixDir})
+	}
+	if skipped > 0 && affected != nil {
+		fmt.Fprintf(os.Stderr, "skipped %d fixtures unaffected by changes vs %s\n", skipped, *since)
+	}
+	scopeNote := "all fixtures"
+	if affected != nil {
+		scopeNote = fmt.Sprintf("affected by changes vs %s", *since)
+	} else if filterRE != nil {
+		scopeNote = fmt.Sprintf("matching -filter %q", *filter)
+	}
+	fmt.Fprintf(os.Stderr, "regenerating %d fixtures (%s) with %d worker(s); per-fixture timeout %s\n",
+		len(jobs), scopeNote, *workers, fixtureTimeout)
+
+	// Second pass: run with a bounded worker pool. A buffered
+	// channel of size *workers acts as a semaphore — a worker
+	// must acquire a slot before invoking stave, releasing on
+	// completion. sync.WaitGroup tracks completion; results are
+	// collected via a results channel, drained after Wait().
+	reports := make([]fixtureReport, len(jobs))
+	if *workers == 1 {
+		for i, j := range jobs {
+			reports[i] = processFixture(j.name, j.fixDir, *dryRun)
+		}
+	} else {
+		sem := make(chan struct{}, *workers)
+		var wg sync.WaitGroup
+		for i, j := range jobs {
+			wg.Add(1)
+			sem <- struct{}{}
+			go func() {
+				defer wg.Done()
+				defer func() { <-sem }()
+				reports[i] = processFixture(j.name, j.fixDir, *dryRun)
+			}()
+		}
+		wg.Wait()
+	}
+
+	// Inject per-job skipped placeholder rows so the report
+	// preserves the "every fixture in the tree is accounted for"
+	// invariant the printer relies on.
+	if skipped > 0 && affected != nil {
+		for _, e := range entries {
+			if !e.IsDir() {
+				continue
+			}
+			name := e.Name()
+			if filterRE != nil && !filterRE.MatchString(name) {
+				continue
+			}
+			fixDir := filepath.Join(*rootFlag, name)
+			if !fixtureIntersectsAffected(fixDir, affected) {
+				reports = append(reports, fixtureReport{Fixture: name, Category: catClean})
+			}
+		}
 	}
 
 	sort.Slice(reports, func(i, j int) bool { return reports[i].Fixture < reports[j].Fixture })
-	if affected != nil && skipped > 0 {
-		fmt.Fprintf(os.Stderr, "skipped %d fixtures unaffected by changes vs %s\n", skipped, *since)
-	}
 	printReport(reports, *dryRun)
 }
 
@@ -465,11 +550,20 @@ func inferProfile(dirName string) string {
 }
 
 func runCmd(args []string) ([]byte, int, error) {
-	cmd := exec.Command(stavePath, args...)
+	// Bound every invocation: a hung stave (deadlock, infinite
+	// loop) would otherwise wedge the worker pool indefinitely.
+	// Timeout errors return a recognizable error message so the
+	// report can flag the fixture rather than silently continuing.
+	ctx, cancel := context.WithTimeout(context.Background(), fixtureTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, stavePath, args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return nil, 0, fmt.Errorf("timeout after %s\nstderr: %s", fixtureTimeout, stderr.String())
+	}
 	exitCode := 0
 	if exitErr, ok := err.(*exec.ExitError); ok {
 		exitCode = exitErr.ExitCode()

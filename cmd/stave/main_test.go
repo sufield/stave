@@ -29,6 +29,13 @@ func staveMain() {
 
 func TestScripts(t *testing.T) {
 	t.Parallel()
+	if testing.Short() {
+		// Each testscript fixture spawns the stave binary in
+		// process; the suite collectively dominates the cmd/stave
+		// package runtime. Skip under -short for the fast feedback
+		// loop. Run via `make test` (or drop -short) before merge.
+		t.Skip("skipping: testscript fixtures spawn the stave binary; run without -short for full coverage")
+	}
 	testscript.Run(t, testscript.Params{
 		Dir:                 "testdata/scripts",
 		RequireExplicitExec: true,

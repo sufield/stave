@@ -3,7 +3,7 @@ package cmd
 import "testing"
 
 func TestGroupedCommandAliasesExist(t *testing.T) {
-	root := getRootCmd()
+	root := GetTestRootCmd()
 
 	paths := [][]string{
 		{"snapshot"},
@@ -30,7 +30,7 @@ func TestGroupedCommandAliasesExist(t *testing.T) {
 }
 
 func TestFlatLifecycleAndCICommandsAreNotTopLevel(t *testing.T) {
-	root := getRootCmd()
+	root := GetTestRootCmd()
 
 	flatTopLevel := [][]string{
 		{"upcoming"},

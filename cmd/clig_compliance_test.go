@@ -10,8 +10,19 @@ import (
 // TestCligCompliance verifies that all Stave commands follow CLIG.dev
 // guidelines: help quality, flag conventions, exit code documentation,
 // and output format support.
+//
+// Walks 50+ commands and runs many structural checks per command, so
+// it dominates the cmd package test time. Skip under -short so
+// `make test-fast` stays in the sub-minute range. Run via `make test`
+// (or drop -short) before merging.
 func TestCligCompliance(t *testing.T) {
-	root := getRootCmd()
+	if testing.Short() {
+		t.Skip("skipping: walks 50+ commands; run without -short for full coverage")
+	}
+	// Read-only walk: use the cached root so multiple compliance-style
+	// tests in this package share one wiring pass instead of each
+	// calling NewApp().
+	root := GetTestRootCmd()
 
 	// Walk the full command tree (including nested subcommands).
 	var commands []*cobra.Command
@@ -117,7 +128,8 @@ func TestCligCompliance(t *testing.T) {
 
 // TestCligGlobalFlags verifies root-level flags required by CLIG.dev.
 func TestCligGlobalFlags(t *testing.T) {
-	root := getRootCmd()
+	// Read-only inspection of root flags; cached instance is fine.
+	root := GetTestRootCmd()
 
 	// help and version are managed by Cobra itself (not in PersistentFlags).
 	if !root.Flags().HasFlags() && root.PersistentFlags().Lookup("help") == nil {

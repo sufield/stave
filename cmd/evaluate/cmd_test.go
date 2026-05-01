@@ -8,6 +8,9 @@ import (
 )
 
 func TestEvaluate_HIPAA_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping HIPAA integration: loads full profile and runs end-to-end evaluation; run without -short")
+	}
 	cmd := NewCmd()
 	var stdout bytes.Buffer
 	cmd.SetOut(&stdout)
@@ -78,6 +81,9 @@ func TestEvaluate_HIPAA_Integration(t *testing.T) {
 }
 
 func TestEvaluate_HIPAA_JSON(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping HIPAA JSON integration: full evaluation; run without -short")
+	}
 	cmd := NewCmd()
 	var stdout bytes.Buffer
 	cmd.SetOut(&stdout)

@@ -1,6 +1,7 @@
 package enginetest
 
 import (
+	"sync"
 	"time"
 
 	stavecel "github.com/sufield/stave/internal/cel"
@@ -19,9 +20,30 @@ func testDigester() ports.Digester { return crypto.NewHasher() }
 // testIDGen returns the default ports.IdentityGenerator for domain tests.
 func testIDGen() ports.IdentityGenerator { return crypto.NewHasher() }
 
+// sharedCompiler is constructed once for the test package and reused
+// across every NewEvaluator call. The earlier shape built a fresh
+// compiler per evaluator, so identical predicates were re-compiled
+// for every test in the package — the package-level Compile cache
+// only helps when the SAME compiler instance sees the same
+// expression twice. Compiler is read-only-after-init and
+// goroutine-safe (its internal cache uses RWMutex), so a shared
+// instance is safe even for parallel test runs.
+var (
+	sharedCompiler     *stavecel.Compiler
+	sharedCompilerOnce sync.Once
+	sharedCompilerErr  error
+)
+
+func getSharedCompiler() (*stavecel.Compiler, error) {
+	sharedCompilerOnce.Do(func() {
+		sharedCompiler, sharedCompilerErr = stavecel.NewCompiler()
+	})
+	return sharedCompiler, sharedCompilerErr
+}
+
 // testCELEvaluator returns a CEL-based PredicateEval for domain tests.
 func testCELEvaluator() policy.PredicateEval {
-	compiler, err := stavecel.NewCompiler()
+	compiler, err := getSharedCompiler()
 	if err != nil {
 		panic("testCELEvaluator: " + err.Error())
 	}

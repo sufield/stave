@@ -3,6 +3,11 @@ package cmd
 import "testing"
 
 func TestRootHelpGroupsAssigned(t *testing.T) {
+	// Use a fresh tree per call: tests in this package share
+	// GetTestRootCmd, but Cobra's Find() result for duplicate-named
+	// commands (e.g. top-level `report` vs `diagnose report`) can
+	// drift when multiple tests interleave their walks against the
+	// same instance. A fresh wiring is cheap enough not to matter.
 	root := getRootCmd()
 	if len(root.Groups()) == 0 {
 		t.Fatal("expected root command groups to be configured")
