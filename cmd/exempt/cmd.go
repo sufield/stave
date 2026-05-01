@@ -12,16 +12,32 @@ import (
 
 	"github.com/spf13/cobra"
 
-	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appexempt "github.com/sufield/stave/internal/app/exempt"
-	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/ports"
 )
 
+// Deps holds the adapter factories the exempt command group needs.
+// Currently only the validate subcommand depends on a factory; the
+// others read or write the acceptance file via the appexempt
+// app-layer service. Empty Deps is valid — NewCmd uses
+// compose.DefaultFactories().
+type Deps struct {
+	NewBuiltinControlStore compose.BuiltinControlStoreFactory
+}
+
 const defaultFile = "./stave-acknowledgments.yaml"
 
-// NewCmd constructs the exempt command group.
+// NewCmd constructs the exempt command group with default factories.
 func NewCmd() *cobra.Command {
+	f := compose.DefaultFactories()
+	return NewCmdWithDeps(Deps{NewBuiltinControlStore: f.NewBuiltinControlStore})
+}
+
+// NewCmdWithDeps constructs the exempt command group with explicit
+// dependencies. Used by cmd/commands.go to share the compose factory
+// instance across all the wired subcommands.
+func NewCmdWithDeps(deps Deps) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exempt",
 		Short: "Manage risk acceptances (acknowledgments, exceptions, exemptions)",
@@ -45,7 +61,7 @@ Subcommands:
 	cmd.AddCommand(newListCmd())
 	cmd.AddCommand(newRemoveCmd())
 	cmd.AddCommand(newUpcomingCmd())
-	cmd.AddCommand(newValidateCmd())
+	cmd.AddCommand(newValidateCmd(deps))
 	cmd.AddCommand(newHistoryCmd())
 	cmd.AddCommand(newExportCmd())
 	cmd.AddCommand(newSuggestCmd())
@@ -315,7 +331,7 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			return writeList(cmd.OutOrStdout(), f, opts.Format, opts.ListType, opts.ShowExpired)
+			return appexempt.WriteList(cmd.OutOrStdout(), f, opts.Format, opts.ListType, opts.ShowExpired)
 		},
 	}
 
@@ -512,7 +528,7 @@ func renderHistory(w io.Writer, entries []appexempt.AcknowledgmentEntry, format 
 		enc.SetIndent("", "  ")
 		return enc.Encode(entries)
 	}
-	writeHistory(w, entries)
+	appexempt.WriteHistory(w, entries)
 	return nil
 }
 
@@ -550,31 +566,6 @@ Exit Codes:
 	return cmd
 }
 
-func writeHistory(w io.Writer, entries []appexempt.AcknowledgmentEntry) {
-	fmt.Fprintln(w, "ACKNOWLEDGMENT AUDIT TRAIL")
-	fmt.Fprintln(w, strings.Repeat("-", 70))
-	for i := range entries {
-		a := &entries[i]
-		fmt.Fprintf(w, "\n  %s  [%s]\n", a.ID, strings.ToUpper(a.Status))
-		fmt.Fprintf(w, "    Control:   %s\n", a.ControlID)
-		fmt.Fprintf(w, "    Asset:     %s\n", a.AssetID)
-		fmt.Fprintf(w, "    Approver:  %s\n", a.Approver)
-		fmt.Fprintf(w, "    Expires:   %s\n", a.ExpiryDate)
-		fmt.Fprintf(w, "    Rationale: %s\n", a.Reason)
-		if len(a.AuditTrail) > 0 {
-			fmt.Fprintln(w, "    Events:")
-			for j := range a.AuditTrail {
-				e := &a.AuditTrail[j]
-				fmt.Fprintf(w, "      %s  %s  %s", e.Timestamp, e.Event, e.Actor)
-				if e.Note != "" {
-					fmt.Fprintf(w, "  (%s)", e.Note)
-				}
-				fmt.Fprintln(w)
-			}
-		}
-	}
-}
-
 // --- validate ---
 
 type validateOptions struct {
@@ -587,18 +578,21 @@ type validateResult struct {
 	Errors []string
 }
 
-func runValidate(opts validateOptions) (validateResult, error) {
+func runValidate(opts validateOptions, newStore compose.BuiltinControlStoreFactory) (validateResult, error) {
 	f, err := appexempt.Load(opts.File)
 	if err != nil {
 		return validateResult{}, err
 	}
 
-	// Load built-in catalog for compensating-control validation. cmd/ is
-	// the composition root; routing through compose was considered but
-	// adds churn for a single-purpose helper that has no other consumers.
+	// Load built-in catalog for compensating-control validation. The
+	// factory is the compose-layer indirection so cmd/exempt no longer
+	// imports the adapter or controldata packages directly.
+	//
+	// Catalog load errors are tolerated: validate's other checks
+	// (required fields, expiry dates) are still useful without
+	// catalog cross-reference.
 	knownIDs := make(map[string]bool)
-	store := builtinctl.NewControlStore(controldata.FS, ".")
-	if controls, loadErr := store.All(); loadErr == nil {
+	if controls, loadErr := newStore(); loadErr == nil {
 		for i := range controls {
 			knownIDs[string(controls[i].ID)] = true
 		}
@@ -620,7 +614,7 @@ func renderValidate(w io.Writer, r validateResult) error {
 	return errors.New("validation failed")
 }
 
-func newValidateCmd() *cobra.Command {
+func newValidateCmd(deps Deps) *cobra.Command {
 	opts := validateOptions{File: defaultFile}
 
 	cmd := &cobra.Command{
@@ -639,7 +633,7 @@ Exit Codes:
 			return opts.Normalize()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			result, err := runValidate(opts)
+			result, err := runValidate(opts, deps.NewBuiltinControlStore)
 			if err != nil {
 				return err
 			}
@@ -650,44 +644,4 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
 
 	return cmd
-}
-
-// --- list renderer (shared with newListCmd) ---
-
-func writeList(w io.Writer, f *appexempt.AcceptanceFile, format, listType string, showExpired bool) error {
-	if format == "json" {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(f)
-	}
-
-	acks, exceptions, exemptions := f.ActiveCount()
-	fmt.Fprintf(w, "Risk Acceptances: %d acknowledgments, %d exceptions, %d exemptions\n\n",
-		acks, exceptions, exemptions)
-
-	if listType == "all" || listType == "acknowledgment" {
-		for i := range f.Acknowledgments {
-			a := &f.Acknowledgments[i]
-			if !showExpired && (a.Status == "revoked" || a.Status == "expired") {
-				continue
-			}
-			fmt.Fprintf(w, "  [ACK]  %-40s  expires %s  %s  %s\n",
-				a.ID, a.ExpiryDate, a.Approver, strings.ToUpper(a.Status))
-		}
-	}
-	if listType == "all" || listType == "exception" {
-		for _, e := range f.Exceptions {
-			exp := "never"
-			if e.ExpiryDate != "" {
-				exp = e.ExpiryDate
-			}
-			fmt.Fprintf(w, "  [EXC]  %s@%s  expires %s\n", e.ControlID, e.AssetID, exp)
-		}
-	}
-	if listType == "all" || listType == "exemption" {
-		for _, e := range f.Exemptions {
-			fmt.Fprintf(w, "  [EXM]  %s  %s\n", e.AssetPattern, e.Reason)
-		}
-	}
-	return nil
 }

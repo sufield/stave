@@ -8,12 +8,14 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/sufield/stave/internal/adapters/artifacts"
+	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/adapters/sla"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/builtin/predicate"
 	stavecel "github.com/sufield/stave/internal/cel"
+	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
@@ -46,6 +48,15 @@ type ArtifactLoaderFactory = func() (appcontracts.ArtifactLoader, error)
 // loading multi-snapshot observation bundles from a single file.
 type SnapshotBundleLoaderFactory = func() (appcontracts.SnapshotBundleLoader, error)
 
+// BuiltinControlStoreFactory loads the embedded built-in control
+// catalog. Returns the full set of control definitions in the
+// embedded FS, suitable for catalog-level operations like
+// validating compensating-control references. cmd/exempt's
+// `validate` subcommand uses this to check that every
+// compensating control mentioned in a user's acceptance file
+// exists in the catalog.
+type BuiltinControlStoreFactory = func() ([]policy.ControlDefinition, error)
+
 // SnapshotLoader loads observation snapshots from a directory.
 type SnapshotLoader = func(ctx context.Context, dir string) ([]asset.Snapshot, error)
 
@@ -71,6 +82,7 @@ type Factories struct {
 	NewSLALoader            SLALoaderFactory
 	NewArtifactLoader       ArtifactLoaderFactory
 	NewSnapshotBundleLoader SnapshotBundleLoaderFactory
+	NewBuiltinControlStore  BuiltinControlStoreFactory
 }
 
 // DefaultFactories returns factory functions configured with standard adapters.
@@ -101,6 +113,14 @@ func DefaultFactories() Factories {
 		},
 		NewSnapshotBundleLoader: func() (appcontracts.SnapshotBundleLoader, error) {
 			return observations.NewBundleLoader(), nil
+		},
+		NewBuiltinControlStore: func() ([]policy.ControlDefinition, error) {
+			store := ctlbuiltin.NewControlStore(
+				controldata.FS,
+				".",
+				ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()),
+			)
+			return store.All()
 		},
 	}
 }

@@ -206,7 +206,7 @@ func run(stdout, stderr io.Writer, opts *options) error {
 		enc.SetIndent("", "  ")
 		return enc.Encode(report)
 	default:
-		writeTextReport(out, report, opts.FocusAccount)
+		appconsolidate.WriteTextReport(out, report, opts.FocusAccount)
 		return nil
 	}
 }
@@ -299,63 +299,4 @@ func deriveAccountID(snaps []asset.Snapshot) string {
 		}
 	}
 	return ""
-}
-
-func writeTextReport(w io.Writer, r *appconsolidate.ConsolidatedReport, focusAccount string) {
-	fmt.Fprintf(w, "ORGANIZATION SECURITY POSTURE\n")
-	if r.OrgName != "" {
-		fmt.Fprintf(w, "Organization: %s\n", r.OrgName)
-	}
-	fmt.Fprintf(w, "Accounts: %d  |  Assessed: %s\n\n",
-		r.AccountCount, r.GeneratedAt.Format("2006-01-02 15:04 UTC"))
-
-	fmt.Fprintf(w, "ACCOUNT RISK RANKING\n")
-	fmt.Fprintf(w, "%s\n", strings.Repeat("\u2500", 85))
-	fmt.Fprintf(w, "%-4s  %-24s %-12s %4s %4s %5s %4s %8s\n",
-		"Rank", "Account", "Environment", "Crit", "High", "Chain", "SLA", "Score")
-	fmt.Fprintf(w, "%s\n", strings.Repeat("\u2500", 85))
-
-	for i := range r.Accounts {
-		a := &r.Accounts[i]
-		if focusAccount != "" && a.AccountID != focusAccount {
-			continue
-		}
-		name := a.AccountName
-		if len(name) > 24 {
-			name = name[:21] + "..."
-		}
-		env := a.Environment
-		if len(env) > 12 {
-			env = env[:9] + "..."
-		}
-		fmt.Fprintf(w, "%4d  %-24s %-12s %4d %4d %5d %4d %8.0f\n",
-			a.OrgRiskRank, name, env,
-			a.CriticalCount, a.HighCount, a.ActiveChains, a.SLABreached, a.RiskScore)
-	}
-
-	fmt.Fprintf(w, "\nORG POSTURE SUMMARY\n")
-	fmt.Fprintf(w, "%s\n", strings.Repeat("\u2500", 85))
-	p := &r.OrgPosture
-	fmt.Fprintf(w, "Total findings: %d  Critical: %d  Chains: %d  SLA breached: %d\n",
-		p.TotalFindings, p.CriticalFindings, p.ChainFindings, p.SLABreached)
-	if p.HighestRiskAccount != "" {
-		fmt.Fprintf(w, "Highest risk account: %s\n", p.HighestRiskAccount)
-	}
-	if p.CrossAccountIdentities > 0 {
-		fmt.Fprintf(w, "Cross-account identities: %d\n", p.CrossAccountIdentities)
-	}
-
-	if len(r.CrossAccount) > 0 {
-		fmt.Fprintf(w, "\nCROSS-ACCOUNT FINDINGS (%d)\n", len(r.CrossAccount))
-		fmt.Fprintf(w, "%s\n", strings.Repeat("\u2500", 85))
-		for i := range r.CrossAccount {
-			cf := &r.CrossAccount[i]
-			sev := strings.ToUpper(cf.Severity)
-			fmt.Fprintf(w, "[%s] %s\n", sev, cf.Type)
-			fmt.Fprintf(w, "  %s/%s\n    \u2192 %s/%s\n",
-				cf.SourceAccountID, cf.SourcePrincipal,
-				cf.TargetAccountID, cf.TargetResource)
-			fmt.Fprintf(w, "  %s\n\n", cf.Description)
-		}
-	}
 }

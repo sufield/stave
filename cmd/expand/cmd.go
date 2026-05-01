@@ -9,8 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -18,11 +16,11 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/app/expand"
 	"github.com/sufield/stave/internal/archetype"
 	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 type options struct {
@@ -142,8 +140,8 @@ func runExpand(ctx context.Context, w io.Writer, opts *options, newCtlRepo compo
 		return inputErrorf("unknown archetype %q (use --list to see catalog)", archID)
 	}
 
-	matched := filterByArchetype(controls, archID)
-	snap := scanSnapshots(opts.Snapshots, arch.Services)
+	matched := expand.FilterByArchetype(controls, archID)
+	snap := expand.ScanSnapshots(opts.Snapshots, arch.Services)
 
 	switch opts.Format {
 	case "json":
@@ -153,91 +151,8 @@ func runExpand(ctx context.Context, w io.Writer, opts *options, newCtlRepo compo
 	}
 }
 
-// filterByArchetype returns controls whose Archetype matches id, keeping
-// catalog order so output is deterministic.
-func filterByArchetype(controls []policy.ControlDefinition, id string) []policy.ControlDefinition {
-	out := make([]policy.ControlDefinition, 0)
-	for i := range controls {
-		if controls[i].Archetype == id {
-			out = append(out, controls[i])
-		}
-	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].ID == out[j].ID {
-			return false
-		}
-		return out[i].ID < out[j].ID
-	})
-	return out
-}
-
-// serviceFromControlID derives a lowercase service tag from the control
-// ID's second segment. CTL.SECRETS.* and CTL.SECRETSMANAGER.* both
-// collapse to "secretsmanager" so the expand grouping matches the
-// archetype catalog's service vocabulary.
-func serviceFromControlID(id kernel.ControlID) string {
-	parts := strings.Split(string(id), ".")
-	if len(parts) < 2 {
-		return "unknown"
-	}
-	svc := strings.ToLower(parts[1])
-	if svc == "secrets" {
-		return "secretsmanager"
-	}
-	return svc
-}
-
-// snapshotStatus reports which of the archetype's services have at least
-// one matching observation file in the snapshots directory.
-type snapshotStatus struct {
-	Found   []string `json:"found"`
-	Missing []string `json:"missing"`
-}
-
-// scanSnapshots walks the observations directory looking for asset_type
-// strings that match each service. Returns nil when dir is empty (the
-// snapshot section is then omitted from output).
-func scanSnapshots(dir string, services []string) *snapshotStatus {
-	if dir == "" {
-		return nil
-	}
-	dir = fsutil.CleanUserPath(dir)
-	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
-	if err != nil || len(files) == 0 {
-		return &snapshotStatus{Missing: append([]string{}, services...)}
-	}
-
-	have := make(map[string]bool)
-	for _, f := range files {
-		data, err := os.ReadFile(fsutil.CleanUserPath(f)) //nolint:gosec // CLI tool reads user-provided observation paths.
-		if err != nil {
-			continue
-		}
-		text := string(data)
-		for _, svc := range services {
-			if have[svc] {
-				continue
-			}
-			needle := "aws_" + svc
-			if strings.Contains(text, needle) {
-				have[svc] = true
-			}
-		}
-	}
-
-	out := &snapshotStatus{}
-	for _, svc := range services {
-		if have[svc] {
-			out.Found = append(out.Found, svc)
-		} else {
-			out.Missing = append(out.Missing, svc)
-		}
-	}
-	return out
-}
-
 // renderText writes the human-readable form of a single-archetype expand.
-func renderText(w io.Writer, arch archetype.Archetype, matched []policy.ControlDefinition, snap *snapshotStatus, finding *policy.ControlDefinition) error {
+func renderText(w io.Writer, arch archetype.Archetype, matched []policy.ControlDefinition, snap *expand.SnapshotStatus, finding *policy.ControlDefinition) error {
 	if finding != nil {
 		fmt.Fprintf(w, "Finding: %s\n", finding.ID)
 		if finding.Name != "" {
@@ -304,7 +219,7 @@ func renderText(w io.Writer, arch archetype.Archetype, matched []policy.ControlD
 }
 
 // renderJSON emits the structured form of a single-archetype expand.
-func renderJSON(w io.Writer, arch archetype.Archetype, matched []policy.ControlDefinition, snap *snapshotStatus, finding *policy.ControlDefinition) error {
+func renderJSON(w io.Writer, arch archetype.Archetype, matched []policy.ControlDefinition, snap *expand.SnapshotStatus, finding *policy.ControlDefinition) error {
 	type controlEntry struct {
 		ID       string `json:"id"`
 		Service  string `json:"service"`
@@ -312,12 +227,12 @@ func renderJSON(w io.Writer, arch archetype.Archetype, matched []policy.ControlD
 		Summary  string `json:"summary"`
 	}
 	type payload struct {
-		Finding          *findingEntry   `json:"finding,omitempty"`
-		Archetype        archetypeEntry  `json:"archetype"`
-		Controls         []controlEntry  `json:"controls"`
-		ServicesAffected []string        `json:"services_affected"`
-		SnapshotStatus   *snapshotStatus `json:"snapshot_status,omitempty"`
-		SnapshotCommands []string        `json:"snapshot_commands,omitempty"`
+		Finding          *findingEntry          `json:"finding,omitempty"`
+		Archetype        archetypeEntry         `json:"archetype"`
+		Controls         []controlEntry         `json:"controls"`
+		ServicesAffected []string               `json:"services_affected"`
+		SnapshotStatus   *expand.SnapshotStatus `json:"snapshot_status,omitempty"`
+		SnapshotCommands []string               `json:"snapshot_commands,omitempty"`
 	}
 
 	out := payload{
@@ -419,7 +334,7 @@ func renderList(w io.Writer, format string, controls []policy.ControlDefinition)
 func groupByService(ctls []policy.ControlDefinition) map[string][]policy.ControlDefinition {
 	out := make(map[string][]policy.ControlDefinition)
 	for i := range ctls {
-		svc := serviceFromControlID(ctls[i].ID)
+		svc := expand.ServiceFromControlID(ctls[i].ID)
 		out[svc] = append(out[svc], ctls[i])
 	}
 	return out

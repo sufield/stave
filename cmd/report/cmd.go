@@ -7,24 +7,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
-	"path/filepath"
-	"sort"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/app/contracts"
-	appcoverage "github.com/sufield/stave/internal/app/coverage"
 	er "github.com/sufield/stave/internal/app/execreport"
-	appscore "github.com/sufield/stave/internal/app/score"
-	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/evaluation"
-	corereport "github.com/sufield/stave/internal/core/report"
 )
 
 // Deps holds the adapter factories the report command depends on.
@@ -126,177 +117,68 @@ Exit Codes:
 }
 
 func runReport(ctx context.Context, stdout io.Writer, opts *options, deps Deps) error {
-	now := time.Now().UTC()
-
-	// Load history assessments.
-	assessments, err := loadHistory(ctx, opts.HistoryDir, deps.NewArtifactLoader)
+	builder, err := buildReportBuilder(deps)
+	if err != nil {
+		return err
+	}
+	report, err := builder.Build(ctx, er.BuilderInput{
+		HistoryDir:       opts.HistoryDir,
+		SnapshotPath:     opts.SnapshotPath,
+		ControlsDir:      opts.ControlsDir,
+		ChainsDir:        opts.ChainsDir,
+		SLAFile:          opts.SLAFile,
+		TeamManifestPath: opts.TeamManifest,
+		Title:            opts.Title,
+		Period:           opts.Period,
+		Now:              time.Now().UTC(),
+	})
 	if err != nil {
 		return &ui.UserError{Err: err}
 	}
-	if len(assessments) == 0 {
-		return &ui.UserError{Err: fmt.Errorf("no assessments in %s", opts.HistoryDir)}
+
+	return writeReport(stdout, opts, report)
+}
+
+// buildReportBuilder instantiates the app-layer Builder by resolving
+// every port from the cmd-supplied factory closures. Each factory
+// call produces an independent loader; errors here surface as
+// configuration / wiring failures.
+func buildReportBuilder(deps Deps) (*er.Builder, error) {
+	artifactLoader, err := deps.NewArtifactLoader()
+	if err != nil {
+		return nil, fmt.Errorf("create artifact loader: %w", err)
 	}
-	sort.Slice(assessments, func(i, j int) bool {
-		return assessments[i].Run.Now.Before(assessments[j].Run.Now)
-	})
-	latest := assessments[len(assessments)-1]
-
-	// Load chains and controls for ATT&CK.
-	chains, chainsErr := compose.LoadChainDefinitions(ctx, deps.NewChainLoader, opts.ChainsDir)
-	if chainsErr != nil {
-		return fmt.Errorf("loading chains: %w", chainsErr)
+	chainLoader, err := deps.NewChainLoader()
+	if err != nil {
+		return nil, fmt.Errorf("create chain loader: %w", err)
 	}
-
-	// Load snapshot for coverage count.
-	bundleLoader, blErr := deps.NewSnapshotBundleLoader()
-	if blErr != nil {
-		return fmt.Errorf("create snapshot bundle loader: %w", blErr)
+	slaProvider, err := deps.NewSLALoader()
+	if err != nil {
+		return nil, fmt.Errorf("create sla provider: %w", err)
 	}
-	snapshots, snapshotErr := bundleLoader.LoadBundle(ctx, opts.SnapshotPath)
-	if snapshotErr != nil {
-		return fmt.Errorf("loading snapshots for report: %w", snapshotErr)
+	bundleLoader, err := deps.NewSnapshotBundleLoader()
+	if err != nil {
+		return nil, fmt.Errorf("create snapshot bundle loader: %w", err)
 	}
-	assetCount := 0
-	for _, s := range snapshots {
-		assetCount += len(s.Assets)
+	ctlRepo, err := deps.NewCtlRepo()
+	if err != nil {
+		return nil, fmt.Errorf("create control loader: %w", err)
 	}
-
-	// Posture score.
-	maxChainWeight := appscore.ChainMaxWeight(chains)
-	scoreResult := computeScore(latest, len(chains), maxChainWeight)
-
-	// 30-day trajectory: compare the latest score to the assessment
-	// closest to (now - 30 days). Earlier shape compared against
-	// assessments[0] (the *oldest-ever* assessment), which made delta
-	// drift unboundedly with history depth — a healthy fortnight
-	// looked indistinguishable from a quarter of slow regression.
-	// Fallback when no assessment lies within the 30-day window: use
-	// the oldest available, but only when the history has more than
-	// one entry so a single-data-point report still computes delta=0.
-	var delta float64
-	if earlier, ok := assessmentClosestTo(assessments, now.AddDate(0, 0, -30)); ok {
-		earlierScore := computeScore(earlier, len(chains), maxChainWeight)
-		delta = scoreResult.Score - earlierScore.Score
-	}
-
-	trajectory := er.TrajectoryStable
-	if delta >= 5 {
-		trajectory = er.TrajectoryImproving
-	} else if delta <= -5 {
-		trajectory = er.TrajectoryRegressing
-	}
-
-	// Sparkline from history.
-	var sparkline []float64
-	step := max(1, len(assessments)/7)
-	for i := 0; i < len(assessments); i += step {
-		s := computeScore(assessments[i], len(chains), maxChainWeight)
-		sparkline = append(sparkline, s.Score)
-	}
-	if len(sparkline) > 0 && sparkline[len(sparkline)-1] != scoreResult.Score {
-		sparkline = append(sparkline, scoreResult.Score)
-	}
-
-	band, bandDesc := er.Band(scoreResult.Score)
-
-	// Period.
-	period := opts.Period
-	if period == "" {
-		period = now.Format("2006-01")
-	}
-
-	// Findings.
-	fs := countFindings(latest)
-
-	// SLA. The flag is opt-in: when not provided, the report omits
-	// the SLA section. When provided but the file fails to load, the
-	// operator gave us an explicit input and we must not silently
-	// drop it — surface as a UserError so they see what went wrong
-	// rather than receive a report that quietly omits SLA content.
-	var slaSection *er.SLASection
-	if opts.SLAFile != "" {
-		cfg, slaErr := compose.LoadSLAPolicy(ctx, deps.NewSLALoader, "", opts.SLAFile)
-		if slaErr != nil {
-			return &ui.UserError{Err: fmt.Errorf("load --sla-profile-file %q: %w", opts.SLAFile, slaErr)}
-		}
-		slaSection = buildSLASection(latest, cfg)
-	}
-
-	// Top findings.
-	topFindings := buildTopFindings(latest, 10)
-
-	// Chains.
-	chainsSection := buildChainsSection(latest)
-
-	// ATT&CK coverage (static from catalog).
-	attck := buildATTCKSection(ctx, opts.ControlsDir, deps.NewCtlRepo)
-
-	// Honest ControlsTotal: count what's actually loaded from
-	// opts.ControlsDir. Falling back to the previous TacticsTotal*10
-	// approximation produced fabricated metrics that the executive
-	// report consumer treated as ground truth — a 14-tactic catalog
-	// reported as "140 controls total" regardless of reality.
-	controlsTotal := 0
-	if opts.ControlsDir != "" {
-		ctlLoader, lErr := deps.NewCtlRepo()
-		if lErr != nil {
-			return fmt.Errorf("create control loader: %w", lErr)
-		}
-		loaded, loadErr := ctlLoader.LoadControls(ctx, opts.ControlsDir)
-		if loadErr != nil {
-			// The earlier shape silently dropped the error and left
-			// controlsTotal at 0, which produced a "0 controls" line
-			// in the report whenever the controls directory was
-			// unreadable. Operators couldn't tell whether the
-			// catalog was empty or the path was wrong. The user
-			// passed an explicit --controls path here, so the
-			// failure is a configuration/bug we surface as a hard
-			// error — silent zeros are worse than a clear stop.
-			return &ui.UserError{Err: fmt.Errorf("load controls from %q: %w", opts.ControlsDir, loadErr)}
-		}
-		controlsTotal = len(loaded)
-	}
-
-	// Teams. Same opt-in / explicit-failure split as --sla-profile-file:
-	// flag absent → omit section; flag present but load fails → surface
-	// to the operator instead of producing a report without team
-	// attribution.
-	var teamSections []er.TeamSection
-	if opts.TeamManifest != "" {
-		manifest, manifestErr := teams.LoadManifest(opts.TeamManifest)
-		if manifestErr != nil {
-			return &ui.UserError{Err: fmt.Errorf("load --team-manifest %q: %w", opts.TeamManifest, manifestErr)}
-		}
-		teamSections = buildTeamSections(latest, manifest)
-	}
-
-	report := &er.Report{
-		SchemaVersion: "1",
-		GeneratedAt:   now.Format(time.RFC3339),
-		Title:         opts.Title,
-		Period:        period,
-		Posture: er.PostureSection{
-			Score:           scoreResult.Score,
-			Band:            band,
-			BandDescription: bandDesc,
-			Delta30d:        delta,
-			Trajectory:      trajectory,
-			Sparkline:       sparkline,
+	return &er.Builder{
+		Deps: er.BuilderDeps{
+			ArtifactLoader:       artifactLoader,
+			ChainLoader:          chainLoader,
+			SLAProvider:          slaProvider,
+			SnapshotBundleLoader: bundleLoader,
+			ControlRepo:          ctlRepo,
 		},
-		FindingsSummary: fs,
-		SLA:             slaSection,
-		TopFindings:     topFindings,
-		Chains:          chainsSection,
-		AttackCoverage:  attck,
-		Teams:           teamSections,
-		Catalog: er.CatalogSection{
-			ControlsTotal: controlsTotal,
-			ChainsTotal:   len(chains),
-		},
-	}
+	}, nil
+}
 
-	report.ExecutiveSummary = er.GenerateSummary(report)
-
+// writeReport handles the format dispatch + file/stdout sink and
+// preserves the close-error-after-write rule (write errors win
+// over close errors so partial-output failures aren't masked).
+func writeReport(stdout io.Writer, opts *options, report *er.Report) error {
 	w := stdout
 	var f *os.File
 	if opts.OutFile != "" {
@@ -318,11 +200,6 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options, deps Deps) 
 		writeErr = enc.Encode(report)
 	}
 
-	// Close-error handling: surface the close error only when the write
-	// itself succeeded. A failed write already fully describes the
-	// problem; chaining a "file already closed" / "broken pipe" close
-	// error on top obscures the real cause. See `defer f.Close()`
-	// audit — silent-close hid truncated outputs on disk.
 	if f != nil {
 		closeErr := f.Close()
 		if writeErr == nil {
@@ -330,354 +207,4 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options, deps Deps) 
 		}
 	}
 	return writeErr
-}
-
-// assessmentClosestTo returns the assessment whose Run.Now is closest
-// (in absolute time) to target. Assumes the input slice is sorted
-// ascending by Run.Now (loadHistory + sort above guarantees this).
-// Returns (_, false) when:
-//   - the slice is empty, or
-//   - the slice has only the latest assessment, since a single-point
-//     history has no "earlier" to compare against and falling back to
-//     comparing the latest with itself would always report delta=0
-//     in a way that could mask the absence of trend data.
-func assessmentClosestTo(assessments []*corereport.Assessment, target time.Time) (*corereport.Assessment, bool) {
-	if len(assessments) < 2 {
-		return nil, false
-	}
-	// Exclude the latest entry; "earlier than now" is the meaningful
-	// reference for a delta calculation, and including the latest
-	// would make a same-day report compare against itself.
-	candidates := assessments[:len(assessments)-1]
-	best := candidates[0]
-	bestDiff := absDuration(best.Run.Now.Sub(target))
-	for _, a := range candidates[1:] {
-		diff := absDuration(a.Run.Now.Sub(target))
-		if diff < bestDiff {
-			best = a
-			bestDiff = diff
-		}
-	}
-	return best, true
-}
-
-func absDuration(d time.Duration) time.Duration {
-	if d < 0 {
-		return -d
-	}
-	return d
-}
-
-func computeScore(a *corereport.Assessment, chainDefs int, maxChainWeight float64) appscore.Result {
-	slaTotal, slaBreached := 0, 0
-	for i := range a.Findings {
-		if a.Findings[i].SLADeadlineHours != nil {
-			slaTotal++
-			if a.Findings[i].SLABreached {
-				slaBreached++
-			}
-		}
-	}
-
-	// Coverage scoring: average framework readiness across whatever
-	// frameworks the assessment reports. Without this, the score's
-	// 10% coverage weight always credited as 1.0 (perfect coverage)
-	// because HasCoverage / CoveragePct were never set — an
-	// assessment with zero compliance evaluation appeared to have
-	// perfect compliance coverage. When no FrameworkReadiness data
-	// is available, signal that explicitly so the score-weight
-	// system can decline the credit instead of defaulting to perfect.
-	var coveragePct float64
-	hasCoverage := false
-	if len(a.Summary.FrameworkReadiness) > 0 {
-		var total float64
-		for _, fr := range a.Summary.FrameworkReadiness {
-			total += float64(fr.ReadinessPercent)
-		}
-		coveragePct = total / float64(len(a.Summary.FrameworkReadiness))
-		hasCoverage = true
-	}
-
-	return appscore.Compute(appscore.Input{
-		Findings:       a.Findings,
-		ChainFindings:  a.ChainFindings,
-		ChainDefs:      chainDefs,
-		MaxChainWeight: maxChainWeight,
-		SLABreached:    slaBreached,
-		SLATotal:       slaTotal,
-		CoveragePct:    coveragePct,
-		HasSLA:         slaTotal > 0,
-		HasCoverage:    hasCoverage,
-		Weights:        appscore.DefaultWeights(),
-		GeneratedAt:    a.Run.Now,
-	})
-}
-
-func countFindings(a *corereport.Assessment) er.FindingsSummary {
-	var fs er.FindingsSummary
-	fs.Total = len(a.Findings)
-	for i := range a.Findings {
-		switch strings.ToLower(a.Findings[i].ControlSeverity.String()) {
-		case "critical":
-			fs.Critical++
-		case "high":
-			fs.High++
-		case "medium":
-			fs.Medium++
-		case "low":
-			fs.Low++
-		}
-	}
-	return fs
-}
-
-func buildSLASection(a *corereport.Assessment, cfg *evaluation.SLAConfig) *er.SLASection {
-	if cfg == nil {
-		return nil
-	}
-	bySev := make(map[string]er.SLASev)
-	burnRates := make(map[string]float64)
-	burnCounts := make(map[string]int)
-	totalWithin, totalAll := 0, 0
-
-	for i := range a.Findings {
-		f := &a.Findings[i]
-		sev := strings.ToLower(f.ControlSeverity.String())
-		deadline := cfg.DeadlineBySeverity[sev]
-		if deadline <= 0 {
-			continue
-		}
-		s := bySev[sev]
-		s.Total++
-		totalAll++
-		if !f.SLABreached {
-			s.Within++
-			totalWithin++
-		} else {
-			s.Breached++
-		}
-		bySev[sev] = s
-		burnRates[sev] += f.Evidence.UnsafeDurationHours / deadline
-		burnCounts[sev]++
-	}
-
-	for sev, s := range bySev {
-		if s.Total > 0 {
-			s.Pct = float64(s.Within) / float64(s.Total) * 100
-		}
-		bySev[sev] = s
-	}
-	for sev := range burnRates {
-		if burnCounts[sev] > 0 {
-			burnRates[sev] /= float64(burnCounts[sev])
-		}
-	}
-
-	overallPct := 100.0
-	if totalAll > 0 {
-		overallPct = float64(totalWithin) / float64(totalAll) * 100
-	}
-
-	return &er.SLASection{
-		ProfileName:   cfg.ProfileID,
-		CompliancePct: overallPct,
-		BySeverity:    bySev,
-		BurnRates:     burnRates,
-	}
-}
-
-func buildTopFindings(a *corereport.Assessment, n int) []er.TopFinding {
-	type ranked struct {
-		idx   int
-		score float64
-	}
-	sevWeight := map[string]float64{"critical": 4, "high": 3, "medium": 2, "low": 1}
-	var items []ranked
-	for i := range a.Findings {
-		f := &a.Findings[i]
-		w := sevWeight[strings.ToLower(f.ControlSeverity.String())]
-		burn := 0.0
-		if f.SLADeadlineHours != nil && *f.SLADeadlineHours > 0 {
-			burn = f.Evidence.UnsafeDurationHours / *f.SLADeadlineHours
-		}
-		items = append(items, ranked{idx: i, score: w*100 + burn*50})
-	}
-	sort.Slice(items, func(i, j int) bool { return items[i].score > items[j].score })
-	if len(items) > n {
-		items = items[:n]
-	}
-	var result []er.TopFinding
-	for rank, item := range items {
-		f := &a.Findings[item.idx]
-		tf := er.TopFinding{
-			Rank:        rank + 1,
-			ControlID:   string(f.ControlID),
-			Severity:    f.ControlSeverity.String(),
-			AssetID:     string(f.AssetID),
-			DwellHours:  f.Evidence.UnsafeDurationHours,
-			SLABreached: f.SLABreached,
-		}
-		if f.SLADeadlineHours != nil && *f.SLADeadlineHours > 0 {
-			tf.SLABurnRate = f.Evidence.UnsafeDurationHours / *f.SLADeadlineHours
-		}
-		result = append(result, tf)
-	}
-	return result
-}
-
-func buildChainsSection(a *corereport.Assessment) er.ChainsSection {
-	var active []er.ActiveChain
-	for i := range a.ChainFindings {
-		cf := &a.ChainFindings[i]
-		var members []string
-		for _, cid := range cf.ControlsFailing {
-			members = append(members, string(cid))
-		}
-		active = append(active, er.ActiveChain{
-			ChainID:   string(cf.ChainID),
-			Severity:  cf.Severity.String(),
-			Members:   members,
-			Narrative: cf.Narrative,
-		})
-	}
-	return er.ChainsSection{
-		ActiveCount: len(active),
-		Active:      active,
-	}
-}
-
-func buildATTCKSection(ctx context.Context, controlsDir string, newCtlRepo compose.CtlRepoFactory) er.AttackCoverageSection {
-	total := len(appcoverage.AllTactics)
-
-	// Without controls, we cannot honestly say what's covered. Fall
-	// back to a fully-uncovered report rather than the previous
-	// "every tactic is covered" lie that depended on nothing but
-	// the tactic catalog being non-empty.
-	emptyReport := func(status string) er.AttackCoverageSection {
-		tactics := make([]er.TacticItem, 0, total)
-		for _, td := range appcoverage.AllTactics {
-			tactics = append(tactics, er.TacticItem{
-				ID:     td.ID,
-				Name:   td.Name,
-				Status: status,
-			})
-		}
-		return er.AttackCoverageSection{
-			TacticsCovered: 0,
-			TacticsTotal:   total,
-			CoveragePct:    0,
-			ByTactic:       tactics,
-		}
-	}
-
-	if controlsDir == "" {
-		return emptyReport("not_covered")
-	}
-	loader, lErr := newCtlRepo()
-	if lErr != nil {
-		return emptyReport("error")
-	}
-	controls, err := loader.LoadControls(ctx, controlsDir)
-	if err != nil {
-		return emptyReport("not_covered")
-	}
-
-	report := appcoverage.Build(appcoverage.BuildInput{Controls: controls})
-	tacticItems := make([]er.TacticItem, 0, len(report.Tactics))
-	covered := 0
-	for i := range report.Tactics {
-		tc := &report.Tactics[i]
-		// "covered" / "thin" both count as covered for the rolled-up
-		// pct; "no_coverage" maps to "not_covered" in the section's
-		// vocabulary.
-		status := tc.Status
-		if status == "no_coverage" {
-			status = "not_covered"
-		}
-		if tc.Status == "covered" || tc.Status == "thin" {
-			covered++
-		}
-		tacticItems = append(tacticItems, er.TacticItem{
-			ID:     tc.TacticID,
-			Name:   tc.TacticName,
-			Status: status,
-		})
-	}
-	pct := 0.0
-	if total > 0 {
-		pct = float64(covered) / float64(total) * 100
-	}
-	return er.AttackCoverageSection{
-		TacticsCovered: covered,
-		TacticsTotal:   total,
-		CoveragePct:    pct,
-		ByTactic:       tacticItems,
-	}
-}
-
-func buildTeamSections(a *corereport.Assessment, manifest *teams.Manifest) []er.TeamSection {
-	teamFindings := make(map[string]int)
-	teamCritical := make(map[string]int)
-	for i := range a.Findings {
-		f := &a.Findings[i]
-		owner := manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
-		teamFindings[owner.TeamID]++
-		if strings.EqualFold(f.ControlSeverity.String(), "critical") {
-			teamCritical[owner.TeamID]++
-		}
-	}
-
-	var sections []er.TeamSection
-	for i := range manifest.Teams {
-		t := &manifest.Teams[i]
-		sections = append(sections, er.TeamSection{
-			ID:           t.ID,
-			Name:         t.DisplayName,
-			OpenFindings: teamFindings[t.ID],
-			CriticalOpen: teamCritical[t.ID],
-			Contact:      t.Contact,
-		})
-	}
-	return sections
-}
-
-func loadHistory(ctx context.Context, dir string, newLoader compose.ArtifactLoaderFactory) ([]*corereport.Assessment, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, fmt.Errorf("read history: %w", err)
-	}
-	loader, lErr := newLoader()
-	if lErr != nil {
-		return nil, fmt.Errorf("create artifact loader: %w", lErr)
-	}
-	var out []*corereport.Assessment
-	skipped := 0
-	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
-			continue
-		}
-		path := filepath.Join(dir, e.Name())
-		a, loadErr := loader.Evaluation(ctx, path)
-		if loadErr != nil {
-			// History files that fail to parse are non-fatal — skip them
-			// so a single corrupt artifact does not blank the whole
-			// historical view — but log so operators can find and fix
-			// the bad file. Silent skip masked corrupt rotations for
-			// long enough that the report would just trim its time
-			// series and look like nothing was wrong.
-			slog.Warn("report: skipping corrupt history file", "path", path, "err", loadErr)
-			skipped++
-			continue
-		}
-		out = append(out, a)
-	}
-	// All-skipped is different from "directory was empty": empty
-	// dir is a fresh setup ("nothing to report yet"), all-skipped
-	// is corrupt rotations that need an operator's eyes. Surface
-	// the gap as an error so the report doesn't silently render
-	// an empty trend chart on top of broken inputs.
-	if len(out) == 0 && skipped > 0 {
-		return nil, fmt.Errorf("no valid assessments in %s (%d files skipped due to errors)", dir, skipped)
-	}
-	return out, nil
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sufield/stave/internal/app/expand"
 	"github.com/sufield/stave/internal/archetype"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -53,7 +54,7 @@ func sampleControls() []policy.ControlDefinition {
 
 func TestFilterByArchetype_OnlyMatches(t *testing.T) {
 	ctls := sampleControls()
-	got := filterByArchetype(ctls, "ghost-reference")
+	got := expand.FilterByArchetype(ctls, "ghost-reference")
 	if len(got) != 2 {
 		t.Fatalf("ghost-reference matches = %d, want 2 (got: %v)", len(got), idsOf(got))
 	}
@@ -67,7 +68,7 @@ func TestFilterByArchetype_OnlyMatches(t *testing.T) {
 func TestFilterByArchetype_ExcludesUntagged(t *testing.T) {
 	ctls := sampleControls()
 	for _, archID := range archetype.IDs() {
-		got := filterByArchetype(ctls, archID)
+		got := expand.FilterByArchetype(ctls, archID)
 		for _, c := range got {
 			if c.ID == "CTL.UNTAGGED.ENCRYPT.001" {
 				t.Errorf("untagged control surfaced in archetype %q", archID)
@@ -88,16 +89,16 @@ func TestServiceFromControlID(t *testing.T) {
 		{"INVALID", "unknown"},
 	}
 	for _, tc := range cases {
-		got := serviceFromControlID(kernel.ControlID(tc.id))
+		got := expand.ServiceFromControlID(kernel.ControlID(tc.id))
 		if got != tc.want {
-			t.Errorf("serviceFromControlID(%q) = %q, want %q", tc.id, got, tc.want)
+			t.Errorf("expand.ServiceFromControlID(%q) = %q, want %q", tc.id, got, tc.want)
 		}
 	}
 }
 
 func TestRenderJSON_IncludesArchetypeAndControls(t *testing.T) {
 	arch, _ := archetype.Lookup("ghost-reference")
-	matched := filterByArchetype(sampleControls(), "ghost-reference")
+	matched := expand.FilterByArchetype(sampleControls(), "ghost-reference")
 
 	var buf bytes.Buffer
 	if err := renderJSON(&buf, arch, matched, nil, nil); err != nil {
@@ -224,7 +225,7 @@ func runWithFakeControls(_ context.Context, opts *options, controls []policy.Con
 	if _, ok := archetype.Lookup(archID); !ok {
 		return inputErrorf("unknown archetype %q (use --list to see catalog)", archID)
 	}
-	matched := filterByArchetype(controls, archID)
+	matched := expand.FilterByArchetype(controls, archID)
 	_ = matched
 	return nil
 }

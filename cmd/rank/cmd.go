@@ -4,13 +4,11 @@ package rank
 
 import (
 	"context"
-	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -18,6 +16,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	apprank "github.com/sufield/stave/internal/app/rank"
+	"github.com/sufield/stave/internal/app/rank/formatter"
 	"github.com/sufield/stave/internal/app/sprintplanner"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/report"
@@ -152,19 +151,8 @@ func run(ctx context.Context, stdout, _ io.Writer, opts *options, deps Deps) err
 	}
 
 	// Output.
-	switch opts.Format {
-	case "json":
-		output, marshalErr := json.MarshalIndent(roadmap, "", "  ")
-		if marshalErr != nil {
-			return fmt.Errorf("marshal roadmap: %w", marshalErr)
-		}
-		fmt.Fprintln(stdout, string(output))
-	case "csv":
-		if err := writeCSVRoadmap(stdout, roadmap, &assessment); err != nil {
-			return fmt.Errorf("write CSV roadmap: %w", err)
-		}
-	default:
-		writeTextRoadmap(stdout, roadmap, opts.SortBy == "blast-radius", &assessment)
+	if err := dispatchRoadmap(stdout, opts, roadmap, &assessment); err != nil {
+		return err
 	}
 
 	// Show acknowledged findings if requested.
@@ -193,78 +181,21 @@ func run(ctx context.Context, stdout, _ io.Writer, opts *options, deps Deps) err
 	return nil
 }
 
-func writeTextRoadmap(w io.Writer, rm apprank.Roadmap, showReach bool, assessment *report.Assessment) {
-	if len(rm.Entries) == 0 {
-		fmt.Fprintln(w, "No findings to rank.")
-		return
+// dispatchRoadmap selects the appropriate formatter based on the
+// --format flag and renders the roadmap. Output formatting lives in
+// internal/app/rank/formatter; this dispatch is the only CLI-side
+// formatting concern remaining (which format the user picked).
+func dispatchRoadmap(w io.Writer, opts *options, rm apprank.Roadmap, assessment *report.Assessment) error {
+	var f formatter.RoadmapFormatter
+	switch opts.Format {
+	case "json":
+		f = formatter.JSON{}
+	case "csv":
+		f = formatter.CSV{}
+	default:
+		f = &formatter.TextRoadmap{ShowReach: opts.SortBy == "blast-radius"}
 	}
-
-	fmt.Fprintf(w, "REMEDIATION STRATEGY (Top %d Actions)\n", len(rm.Entries))
-	fmt.Fprintln(w, strings.Repeat("=", 50))
-
-	for idx := range rm.Entries {
-		e := &rm.Entries[idx]
-		severity := "HIGH"
-		if e.PriorityScore >= 500 {
-			severity = "CRITICAL"
-		} else if e.PriorityScore < 100 {
-			severity = "MEDIUM"
-		}
-
-		fmt.Fprintf(w, "\n[#%d]  PRIORITY: %.1f (%s)\n", e.Rank, e.PriorityScore, severity)
-		if e.IsChainMember {
-			fmt.Fprintf(w, "      [ATTACK PATH: %s]  %s on %s\n", e.ChainID, e.ControlID, e.AssetID)
-		} else {
-			fmt.Fprintf(w, "      %s on %s\n", e.ControlID, e.AssetID)
-		}
-		if showReach && assessment != nil {
-			key := string(e.ControlID) + "@" + string(e.AssetID)
-			blastIdx := apprank.BuildBlastIndex(assessment)
-			if score, ok := blastIdx[key]; ok {
-				fmt.Fprintf(w, "      Reach: blast_radius=%.0f\n", score)
-			} else {
-				fmt.Fprintf(w, "      Reach: \u2014\n")
-			}
-		}
-		if e.SLABreached {
-			fmt.Fprintf(w, "      SLA: BREACHED  %s overdue\n", e.SLAOverdue)
-		}
-		if e.Narrative != "" {
-			fmt.Fprintf(w, "      %s\n", e.Narrative)
-		}
-		fmt.Fprintf(w, "      Risk Impact: %.0f%% of total environment risk  |  Changes: %d  |  Confidence: %.0f%%\n",
-			e.RiskImpact, len(e.Changes), e.Confidence*100)
-
-		b := &e.Breakdown
-		fmt.Fprintf(w, "      Score: base=%d \u00d7 duration=%.1f \u00d7 blast=%.1f \u00d7 exposure=%.1f",
-			b.BaseScore, b.DurationFactor, b.BlastMultiplier, b.ExposureMultiplier)
-		if e.SLAUrgency > 1.0 {
-			fmt.Fprintf(w, " \u00d7 sla=%.1f", e.SLAUrgency)
-		}
-		fmt.Fprintln(w)
-
-		if e.FixAction != "" {
-			action := e.FixAction
-			if len(action) > 80 {
-				action = action[:77] + "..."
-			}
-			fmt.Fprintf(w, "      Fix: %s\n", action)
-		}
-	}
-
-	if len(rm.Bundles) > 0 {
-		fmt.Fprintf(w, "\nREMEDIATION BUNDLES (Highest ROI)\n")
-		fmt.Fprintln(w, strings.Repeat("-", 40))
-		for i, b := range rm.Bundles {
-			action := b.Action
-			if len(action) > 60 {
-				action = action[:57] + "..."
-			}
-			fmt.Fprintf(w, "  %d. Resolve %d findings (risk reduced: %.0f, efficiency: %.1f)\n",
-				i+1, b.FindingCount, b.TotalRiskReduced, b.Efficiency)
-			fmt.Fprintf(w, "     %s\n", action)
-		}
-	}
+	return f.Render(w, rm, assessment)
 }
 
 func runGroupByOwner(stdout io.Writer, opts *options, assessment *report.Assessment, roadmap apprank.Roadmap) error {
@@ -326,103 +257,15 @@ func runIdentity(ctx context.Context, stdout io.Writer, opts *options, assessmen
 		TopN:         opts.TopN,
 	})
 
-	switch opts.Format {
-	case "json":
+	if opts.Format == "json" {
 		output, marshalErr := json.MarshalIndent(ranking, "", "  ")
 		if marshalErr != nil {
 			return fmt.Errorf("marshal identity ranking: %w", marshalErr)
 		}
 		fmt.Fprintln(stdout, string(output))
-	default:
-		writeTextIdentityRanking(stdout, ranking)
+		return nil
 	}
-	return nil
-}
-
-func writeCSVRoadmap(w io.Writer, rm apprank.Roadmap, assessment *report.Assessment) error {
-	// Build a finding index for enrichment.
-	type findingMeta struct {
-		severity  string
-		assetType string
-		chainIDs  []string
-		slaHours  string
-		slaStatus string
-		owner     string
-	}
-	findingIdx := make(map[string]*findingMeta)
-	for i := range assessment.Findings {
-		f := &assessment.Findings[i]
-		key := string(f.ControlID) + "@" + string(f.AssetID)
-		m := &findingMeta{
-			severity:  f.ControlSeverity.String(),
-			assetType: string(f.AssetType),
-			owner:     f.OwnerTeamID,
-		}
-		if f.SLADeadlineHours != nil {
-			m.slaHours = fmt.Sprintf("%.0f", *f.SLADeadlineHours)
-		}
-		if f.SLABreached {
-			m.slaStatus = "BREACHED"
-		} else if f.SLADeadlineHours != nil {
-			m.slaStatus = "OK"
-		}
-		for j := range f.ChainMembership {
-			m.chainIDs = append(m.chainIDs, string(f.ChainMembership[j].ChainID))
-		}
-		findingIdx[key] = m
-	}
-
-	cw := csv.NewWriter(w)
-
-	// Header.
-	if err := cw.Write([]string{
-		"rank", "control_id", "control_name", "severity", "asset_id",
-		"asset_type", "team", "risk_score", "sla_deadline_hours",
-		"sla_status", "chain_membership", "remediation_action",
-	}); err != nil {
-		return fmt.Errorf("write csv header: %w", err)
-	}
-
-	for i := range rm.Entries {
-		e := &rm.Entries[i]
-		key := string(e.ControlID) + "@" + string(e.AssetID)
-		m := findingIdx[key]
-
-		severity := ""
-		assetType := ""
-		owner := ""
-		slaHours := ""
-		slaStatus := ""
-		chainMembership := ""
-		if m != nil {
-			severity = m.severity
-			assetType = m.assetType
-			owner = m.owner
-			slaHours = m.slaHours
-			slaStatus = m.slaStatus
-			chainMembership = strings.Join(m.chainIDs, ",")
-		}
-
-		if err := cw.Write([]string{
-			strconv.Itoa(e.Rank),
-			string(e.ControlID),
-			e.ControlName,
-			severity,
-			string(e.AssetID),
-			assetType,
-			owner,
-			fmt.Sprintf("%.1f", e.PriorityScore),
-			slaHours,
-			slaStatus,
-			chainMembership,
-			e.FixAction,
-		}); err != nil {
-			return fmt.Errorf("write csv row %d: %w", e.Rank, err)
-		}
-	}
-
-	cw.Flush()
-	return cw.Error()
+	return formatter.TextIdentityRanking{}.Render(stdout, ranking)
 }
 
 func runSprint(stdout io.Writer, opts *options, assessment *report.Assessment) error {
@@ -459,108 +302,7 @@ func runSprint(stdout io.Writer, opts *options, assessment *report.Assessment) e
 		}
 		fmt.Fprintln(stdout, string(output))
 	default:
-		writeTextSprint(stdout, result)
+		return formatter.TextSprint{}.Render(stdout, result)
 	}
 	return nil
-}
-
-func writeTextSprint(w io.Writer, r sprintplanner.SprintResult) {
-	fmt.Fprintf(w, "SPRINT PLAN (%.0fh capacity)\n", r.Capacity)
-	fmt.Fprintln(w, strings.Repeat("=", 60))
-
-	if len(r.Items) == 0 {
-		fmt.Fprintln(w, "No items fit within the capacity budget.")
-		return
-	}
-
-	fmt.Fprintf(w, "\nINCLUDED (%d items, %.1fh total, %.1f risk reduction)\n",
-		len(r.Items), r.TotalHours, r.RiskReduction)
-	fmt.Fprintln(w, strings.Repeat("-", 60))
-	fmt.Fprintf(w, "  %-8s %-30s %-15s %6s %6s\n", "Severity", "Control", "Asset", "Hours", "ROI")
-
-	for i := range r.Items {
-		item := &r.Items[i]
-		ctl := item.ControlID
-		if len(ctl) > 30 {
-			ctl = ctl[:27] + "..."
-		}
-		ast := item.AssetID
-		if len(ast) > 15 {
-			ast = ast[:12] + "..."
-		}
-		fmt.Fprintf(w, "  %-8s %-30s %-15s %6.1f %6.1f\n",
-			strings.ToUpper(item.Severity), ctl, ast, item.EffortHours, item.ROI)
-	}
-
-	if len(r.LeftOut) > 0 {
-		fmt.Fprintf(w, "\nLEFT OUT (%d items)\n", len(r.LeftOut))
-		fmt.Fprintln(w, strings.Repeat("-", 60))
-		for i := range r.LeftOut {
-			item := &r.LeftOut[i]
-			fmt.Fprintf(w, "  %-8s %s on %s (%.1fh)\n",
-				strings.ToUpper(item.Severity), item.ControlID, item.AssetID, item.EffortHours)
-		}
-	}
-}
-
-func writeTextIdentityRanking(w io.Writer, ranking apprank.IdentityRanking) {
-	if len(ranking.Entries) == 0 {
-		fmt.Fprintln(w, "No identity risk entries found.")
-		return
-	}
-
-	fmt.Fprintf(w, "IDENTITY BLAST RADIUS RANKING\n")
-	fmt.Fprintf(w, "Identities evaluated: %d  |  Total risk score: %.0f\n",
-		ranking.IdentitiesEvaluated, ranking.TotalPortfolioRisk)
-	fmt.Fprintln(w, strings.Repeat("=", 90))
-
-	for idx := range ranking.Entries {
-		e := &ranking.Entries[idx]
-
-		privilegeLabel := strings.ToUpper(e.PrivilegeLevel)
-		if privilegeLabel == "" {
-			privilegeLabel = "STANDARD"
-		}
-
-		directLabel := "\u2014"
-		if len(e.DirectFindingIDs) > 0 {
-			directLabel = fmt.Sprintf("%d findings (%s)", len(e.DirectFindingIDs), strings.ToUpper(e.DirectSeverity))
-		}
-
-		fmt.Fprintf(w, "\n[#%d]  %s\n", e.Rank, e.IdentityARN)
-		fmt.Fprintf(w, "      Type: %s  |  Privilege: %s  |  Reaches: %d resources  |  Risk\u2193 %.1f%%\n",
-			e.IdentityType, privilegeLabel, e.ReachableCount, e.RiskReductionPercent)
-		fmt.Fprintf(w, "      Direct: %s\n", directLabel)
-
-		if len(e.ReachableResources) > 0 {
-			fmt.Fprintf(w, "      Reachable resources with findings:\n")
-			limit := min(len(e.ReachableResources), 10)
-			for ri := range limit {
-				rr := &e.ReachableResources[ri]
-				if len(rr.FindingIDs) == 0 {
-					continue
-				}
-				sevLabel := strings.ToUpper(rr.MaxSeverity)
-				if sevLabel == "" {
-					sevLabel = "?"
-				}
-				fmt.Fprintf(w, "        %-50s [%s] via %s\n",
-					rr.ResourceARN, sevLabel, rr.AccessPath)
-			}
-			if len(e.ReachableResources) > 10 {
-				fmt.Fprintf(w, "        ... (%d more resources)\n", len(e.ReachableResources)-10)
-			}
-		}
-
-		if len(e.RemediationActions) > 0 {
-			fmt.Fprintf(w, "      Recommended actions:\n")
-			for i, act := range e.RemediationActions {
-				action := act
-				if len(action) > 76 {
-					action = action[:73] + "..."
-				}
-				fmt.Fprintf(w, "        %d. %s\n", i+1, action)
-			}
-		}
-	}
 }
