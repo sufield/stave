@@ -25,26 +25,11 @@ type controlHeader struct {
 // data that was previously hand-maintained in the controls: section of
 // index.yaml.
 func DeriveControlRefs(fsys embed.FS, root string) (map[kernel.ControlID]ControlRef, error) {
-	root = path.Clean(strings.TrimSpace(root))
 	refs := make(map[kernel.ControlID]ControlRef)
 
-	err := fs.WalkDir(fsys, root, func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			name := d.Name()
-			if p != root && (strings.HasPrefix(name, "_") || strings.HasPrefix(name, ".")) {
-				return fs.SkipDir
-			}
-			return nil
-		}
-		if !strings.HasSuffix(p, ".yaml") {
-			return nil
-		}
+	err := walkControlYAMLs(fsys, root, func(p string, _ fs.DirEntry) error {
 		// Skip non-control files (index.yaml, README, etc.)
-		base := path.Base(p)
-		if !strings.HasPrefix(base, "CTL.") {
+		if !strings.HasPrefix(path.Base(p), "CTL.") {
 			return nil
 		}
 

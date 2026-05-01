@@ -122,6 +122,19 @@ func Build(input BuildInput) *GraphData {
 	// dependency on the post-pass dedup actually running.
 	seenMapsTo := sets.New[string]()
 
+	// emitOnce appends node to g.Nodes the first time id is seen and
+	// records the id in seenNodes. Replaces the eight-times-repeated
+	// `if !seen.Contains(id) { seen.Add(id); append(...) }` block —
+	// the node-emission pattern needed a single source of truth so
+	// the dedup invariant is impossible to forget at a new call site.
+	emitOnce := func(id string, node Node) {
+		if seenNodes.Contains(id) {
+			return
+		}
+		seenNodes.Add(id)
+		g.Nodes = append(g.Nodes, node)
+	}
+
 	// Findings → Finding nodes, Resource nodes, Control nodes,
 	// ComplianceRequirement nodes, TenantScope nodes, and edges.
 	for i := range input.Findings {
@@ -132,55 +145,49 @@ func Build(input BuildInput) *GraphData {
 		// chain, and control IDs in the same field. Cast at the
 		// boundary so the rest of this builder stays string-only.
 		findingID := string(f.FindingID)
-		if !seenNodes.Contains(findingID) {
-			seenNodes.Add(findingID)
-			props := map[string]any{
-				"finding_id":   f.FindingID,
-				"control_id":   string(f.ControlID),
-				"control_name": f.ControlName,
-				"verdict":      "fail",
-				"severity":     f.ControlSeverity.String(),
-				"message":      f.Evidence.TemporalRisk,
-			}
-			if f.SLABreached {
-				props["sla_breached"] = true
-			}
-			if len(f.ChainMembership) > 0 {
-				membership := make([]map[string]any, len(f.ChainMembership))
-				for ci, cm := range f.ChainMembership {
-					membership[ci] = map[string]any{
-						"chain_id":       cm.ChainID,
-						"chain_severity": cm.ChainSeverity,
-						"stage_span":     TranslateStages(cm.StageSpan),
-						"narrative":      cm.Narrative,
-					}
-				}
-				props["x_stave_chain_membership"] = membership
-			}
-			g.Nodes = append(g.Nodes, Node{
-				ID: findingID, Type: "Finding",
-				Standard: "ocsf", StandardType: "Security Finding (2001)",
-				Properties: props,
-			})
+		findingProps := map[string]any{
+			"finding_id":   f.FindingID,
+			"control_id":   string(f.ControlID),
+			"control_name": f.ControlName,
+			"verdict":      "fail",
+			"severity":     f.ControlSeverity.String(),
+			"message":      f.Evidence.TemporalRisk,
 		}
+		if f.SLABreached {
+			findingProps["sla_breached"] = true
+		}
+		if len(f.ChainMembership) > 0 {
+			membership := make([]map[string]any, len(f.ChainMembership))
+			for ci, cm := range f.ChainMembership {
+				membership[ci] = map[string]any{
+					"chain_id":       cm.ChainID,
+					"chain_severity": cm.ChainSeverity,
+					"stage_span":     TranslateStages(cm.StageSpan),
+					"narrative":      cm.Narrative,
+				}
+			}
+			findingProps["x_stave_chain_membership"] = membership
+		}
+		emitOnce(findingID, Node{
+			ID: findingID, Type: "Finding",
+			Standard: "ocsf", StandardType: "Security Finding (2001)",
+			Properties: findingProps,
+		})
 
 		// Resource node.
 		resourceID := string(f.AssetID)
-		if !seenNodes.Contains(resourceID) {
-			seenNodes.Add(resourceID)
-			providerType := string(f.AssetType)
-			g.Nodes = append(g.Nodes, Node{
-				ID: resourceID, Type: "Resource",
-				Standard: "ocsf", StandardType: "Infrastructure",
-				Properties: map[string]any{
-					"resource_arn":   resourceID,
-					"resource_class": ToResourceClass(providerType),
-					"provider":       string(f.AssetVendor),
-					"provider_type":  providerType,
-					"account_id":     extractAccountID(resourceID),
-				},
-			})
-		}
+		providerType := string(f.AssetType)
+		emitOnce(resourceID, Node{
+			ID: resourceID, Type: "Resource",
+			Standard: "ocsf", StandardType: "Infrastructure",
+			Properties: map[string]any{
+				"resource_arn":   resourceID,
+				"resource_class": ToResourceClass(providerType),
+				"provider":       string(f.AssetVendor),
+				"provider_type":  providerType,
+				"account_id":     extractAccountID(resourceID),
+			},
+		})
 
 		// TARGETS edge.
 		g.Edges = append(g.Edges, Edge{
@@ -254,17 +261,14 @@ func Build(input BuildInput) *GraphData {
 		// recorded for a sibling finding) so dedup runs after.
 		if f.RemediationSpec.Action != "" {
 			remID := "remediation_" + findingID
-			if !seenNodes.Contains(remID) {
-				seenNodes.Add(remID)
-				g.Nodes = append(g.Nodes, Node{
-					ID: remID, Type: "RemediationAction",
-					Standard: "ocsf", StandardType: "Remediation Activity (9001)",
-					Properties: map[string]any{
-						"finding_id": findingID,
-						"action":     f.RemediationSpec.Action,
-					},
-				})
-			}
+			emitOnce(remID, Node{
+				ID: remID, Type: "RemediationAction",
+				Standard: "ocsf", StandardType: "Remediation Activity (9001)",
+				Properties: map[string]any{
+					"finding_id": findingID,
+					"action":     f.RemediationSpec.Action,
+				},
+			})
 			g.Edges = append(g.Edges, Edge{
 				From: findingID, To: remID, Type: "HAS_REMEDIATION",
 			})
@@ -288,44 +292,36 @@ func Build(input BuildInput) *GraphData {
 		cf := &input.ChainFindings[i]
 		chainID := string(cf.ChainID)
 
-		if !seenNodes.Contains(chainID) {
-			seenNodes.Add(chainID)
-
-			memberControls := make([]string, len(cf.ControlsFailing))
-			for j, cid := range cf.ControlsFailing {
-				memberControls[j] = string(cid)
-			}
-
-			g.Nodes = append(g.Nodes, Node{
-				ID: chainID, Type: "ThreatChain",
-				Standard: "stix", StandardType: "Attack Pattern",
-				Properties: map[string]any{
-					"chain_id":          chainID,
-					"narrative":         cf.Description,
-					"compound_severity": cf.Severity.String(),
-					"active":            true,
-					"member_controls":   memberControls,
-					"stage_span_stave":  cf.AttackStages,
-					"stage_span_attck":  TranslateStages(cf.AttackStages),
-					"kill_chain_phases": ToKillChainPhases(cf.AttackStages),
-				},
-			})
+		memberControls := make([]string, len(cf.ControlsFailing))
+		for j, cid := range cf.ControlsFailing {
+			memberControls[j] = string(cid)
 		}
+		emitOnce(chainID, Node{
+			ID: chainID, Type: "ThreatChain",
+			Standard: "stix", StandardType: "Attack Pattern",
+			Properties: map[string]any{
+				"chain_id":          chainID,
+				"narrative":         cf.Description,
+				"compound_severity": cf.Severity.String(),
+				"active":            true,
+				"member_controls":   memberControls,
+				"stage_span_stave":  cf.AttackStages,
+				"stage_span_attck":  TranslateStages(cf.AttackStages),
+				"kill_chain_phases": ToKillChainPhases(cf.AttackStages),
+			},
+		})
 
 		// AttackerCapability node.
 		capID := "capability_" + chainID
-		if !seenNodes.Contains(capID) {
-			seenNodes.Add(capID)
-			g.Nodes = append(g.Nodes, Node{
-				ID: capID, Type: "AttackerCapability",
-				Standard: "stix", StandardType: "Attack Pattern",
-				Properties: map[string]any{
-					"chain_id":          chainID,
-					"compound_severity": cf.Severity.String(),
-					"stage_span_attck":  TranslateStages(cf.AttackStages),
-				},
-			})
-		}
+		emitOnce(capID, Node{
+			ID: capID, Type: "AttackerCapability",
+			Standard: "stix", StandardType: "Attack Pattern",
+			Properties: map[string]any{
+				"chain_id":          chainID,
+				"compound_severity": cf.Severity.String(),
+				"stage_span_attck":  TranslateStages(cf.AttackStages),
+			},
+		})
 
 		// PRODUCES edge.
 		g.Edges = append(g.Edges, Edge{

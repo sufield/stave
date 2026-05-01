@@ -68,6 +68,17 @@ var frameworkAliases = map[Framework]Framework{
 
 // ParseFramework validates and normalizes a raw string into a Framework type.
 func ParseFramework(s string) (Framework, error) {
+	return canonicalizeFramework(s)
+}
+
+// canonicalizeFramework applies the project's framework name normalization:
+// lowercase + dash/space → underscore, then alias resolution against
+// frameworkAliases, then membership check against supportedFrameworks.
+//
+// Centralizes the rule so ParseFramework and filterAndNormalizeRefs
+// share one definition. A typo or missing-alias bug used to require
+// fixing both call sites; now there is one.
+func canonicalizeFramework(s string) (Framework, error) {
 	f := Framework(normalize(s))
 	if alias, ok := frameworkAliases[f]; ok {
 		f = alias
@@ -238,20 +249,16 @@ func resolveFrameworks(raw []string) ([]Framework, error) {
 func filterAndNormalizeRefs(checkID string, refs []ControlRef, allowed map[Framework]struct{}) ([]ControlRef, error) {
 	out := make([]ControlRef, 0, len(refs))
 	for _, r := range refs {
-		f := Framework(normalize(string(r.Framework)))
-		if alias, ok := frameworkAliases[f]; ok {
-			f = alias
-		}
 		// A framework name that isn't in the global supported set is a
 		// typo in the crosswalk file — surface it instead of silently
 		// dropping the row, which used to make missing frameworks look
 		// like missing controls. The user-filter step (`allowed`) is a
 		// separate concern: a known framework that the operator filtered
 		// out is correctly skipped.
-		if _, supported := supportedFrameworks[f]; !supported {
-			supportedList := strings.Join(FrameworkStrings(SupportedFrameworks()), ", ")
-			return nil, fmt.Errorf("crosswalk entry for %q references unknown framework %q (valid: %s)",
-				checkID, r.Framework, supportedList)
+		f, canonErr := canonicalizeFramework(string(r.Framework))
+		if canonErr != nil {
+			return nil, fmt.Errorf("crosswalk entry for %q references unknown framework %q: %w",
+				checkID, r.Framework, canonErr)
 		}
 		if _, ok := allowed[f]; !ok {
 			continue

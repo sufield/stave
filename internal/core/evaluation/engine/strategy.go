@@ -39,6 +39,81 @@ var (
 	_ strategy = (*unsupportedStrategy)(nil)
 )
 
+// validateCoverage runs the standard coverage check used by every
+// duration- or recurrence-style strategy: minimum coverage span equal
+// to the threshold (or recurrence window), maximum gap equal to the
+// strategy's continuity limit. Returns (reason, false) when coverage
+// is insufficient and the caller should downgrade to INCONCLUSIVE.
+//
+// The validator was constructed inline by both unsafeDurationStrategy
+// and unsafeRecurrenceStrategy with identical field assignments —
+// centralizing the construction makes the "what does sufficient
+// coverage mean" decision live in one place.
+func validateCoverage(deps strategyDeps, t *asset.ExposureLifecycle, minSpan time.Duration) (string, bool) {
+	v := CoverageValidator{
+		minRequiredSpan: minSpan,
+		maxAllowedGap:   deps.ContinuityLimit(),
+	}
+	return v.IsSufficient(t)
+}
+
+// emitViolationFinding builds the violation finding for a duration-style
+// control and finalizes the observation row. Centralizes the
+// CreateDurationFinding-call → nil-guard → durErr-warning →
+// finalizeRow(VerdictViolation) sequence repeated by both
+// unsafeStateStrategy and unsafeDurationStrategy. A change to the
+// "what does a violation row look like" contract now lands in one place.
+//
+// On unrecoverable construction failure, returns the row marked
+// INCONCLUSIVE and nil findings — the assessor counts violations from
+// the findings slice, so emitting a Violation verdict without a finding
+// would inflate report totals.
+func emitViolationFinding(
+	deps strategyDeps,
+	ctl *policy.ControlDefinition,
+	t *asset.ExposureLifecycle,
+	maxUnsafe time.Duration,
+	now time.Time,
+	ids IdentityIndex,
+	observation evaluation.ResourceCheck,
+) (evaluation.ResourceCheck, []*evaluation.Finding) {
+	observation.TemporalRisk = t.FormatExposureSummary(maxUnsafe, now)
+	finding, durErr := CreateDurationFinding(DurationFindingInput{
+		ExposureLifecycle: t,
+		Control:           ctl,
+		Threshold:         maxUnsafe,
+		Now:               now,
+		Identities:        ids.At(t.LastObservedAt()),
+		PredicateParser:   deps.PredicateParser(),
+	})
+	// CreateDurationFinding's contract is "(*Finding, error)" with the
+	// finding always non-nil. If a future refactor returns nil anyway,
+	// we cannot describe the violation — downgrade to INCONCLUSIVE so
+	// the assessor's violation count stays consistent with the findings
+	// list. The alternative (emit VerdictViolation with empty findings)
+	// inflates the violations summary above the visible finding count.
+	if finding == nil {
+		deps.Logger().Warn("CreateDurationFinding returned nil finding; downgrading verdict to INCONCLUSIVE to keep counts consistent",
+			"control", ctl.ID, "asset", t.ID)
+		observation.MarkInconclusive("violation finding could not be constructed")
+		return observation, nil
+	}
+	findings := []*evaluation.Finding{finding}
+	if durErr != nil {
+		// Mark evidence invalid so report renderers avoid arithmetic
+		// on the sentinel duration (-1.0). The verdict still stands —
+		// CreateDurationFinding's contract is "the asset is in
+		// violation, but I couldn't compute exact dwell" — but
+		// evidence-derived numbers are unreliable.
+		finding.Evidence.EvidenceInvalid = true
+		deps.Logger().Warn("duration calculation failed; emitting violation with sentinel duration -1.0 and evidence_invalid=true",
+			"control", ctl.ID, "asset", t.ID, "error", durErr,
+			"finding_emitted", true)
+	}
+	confidence := deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
+	return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings
+}
+
 // strategyFor returns the appropriate evaluator based on the control type.
 // The Assessor version is used by tests; the session version adds the trace span.
 func (a *Assessor) strategyFor(ctl *policy.ControlDefinition) strategy {
@@ -50,19 +125,35 @@ func (s *assessmentSession) strategyFor(ctl *policy.ControlDefinition) strategy 
 	return buildStrategy(&sessionDeps{Assessor: s.assessor, span: s.activeSpan}, ctl)
 }
 
-func buildStrategy(deps strategyDeps, ctl *policy.ControlDefinition) strategy {
-	switch ctl.Type {
-	case policy.TypeUnsafeState:
+// StrategyFactory constructs the appropriate strategy for a control of a
+// given Type. Registered into strategyRegistry; buildStrategy looks the
+// factory up by control type.
+type StrategyFactory func(deps strategyDeps, ctl *policy.ControlDefinition) strategy
+
+// strategyRegistry maps control type to its constructor. Adding a new
+// control type means a new entry here — no switch case to keep in sync,
+// no fallthrough to forget. Existing control types are listed in their
+// declaration order; ordering is irrelevant for lookups.
+var strategyRegistry = map[policy.ControlType]StrategyFactory{
+	policy.TypeUnsafeState: func(deps strategyDeps, ctl *policy.ControlDefinition) strategy {
 		return &unsafeStateStrategy{deps: deps, ctl: ctl}
-	case policy.TypeUnsafeDuration:
+	},
+	policy.TypeUnsafeDuration: func(deps strategyDeps, ctl *policy.ControlDefinition) strategy {
 		return &unsafeDurationStrategy{deps: deps, ctl: ctl}
-	case policy.TypeUnsafeRecurrence:
+	},
+	policy.TypeUnsafeRecurrence: func(deps strategyDeps, ctl *policy.ControlDefinition) strategy {
 		return &unsafeRecurrenceStrategy{deps: deps, ctl: ctl}
-	case policy.TypePrefixExposure:
+	},
+	policy.TypePrefixExposure: func(_ strategyDeps, ctl *policy.ControlDefinition) strategy {
 		return &prefixExposureStrategy{ctl: ctl}
-	default:
-		return &unsupportedStrategy{ctl: ctl}
+	},
+}
+
+func buildStrategy(deps strategyDeps, ctl *policy.ControlDefinition) strategy {
+	if factory, ok := strategyRegistry[ctl.Type]; ok {
+		return factory(deps, ctl)
 	}
+	return &unsupportedStrategy{ctl: ctl}
 }
 
 // --- Duration & State Strategies ---
@@ -124,45 +215,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 	})
 
 	if exceeds {
-		observation.TemporalRisk = t.FormatExposureSummary(maxUnsafe, now)
-		finding, durErr := CreateDurationFinding(DurationFindingInput{
-			ExposureLifecycle: t,
-			Control:           s.ctl,
-			Threshold:         maxUnsafe,
-			Now:               now,
-			Identities:        ids.At(t.LastObservedAt()),
-			PredicateParser:   s.deps.PredicateParser(),
-		})
-		// CreateDurationFinding's contract is "(*Finding, error)"
-		// with the finding always non-nil. If a future refactor
-		// returns nil anyway, we cannot describe the violation —
-		// downgrade to INCONCLUSIVE so the assessor's violation
-		// count stays consistent with the findings list. The
-		// alternative (emit VerdictViolation with empty findings)
-		// inflates the violations summary above the visible
-		// finding count and makes report totals diverge in a way
-		// that's hard to debug from the user-facing output.
-		if finding == nil {
-			s.deps.Logger().Warn("CreateDurationFinding returned nil finding; downgrading verdict to INCONCLUSIVE to keep counts consistent",
-				"control", s.ctl.ID, "asset", t.ID)
-			observation.MarkInconclusive("violation finding could not be constructed")
-			return observation, nil
-		}
-		findings := []*evaluation.Finding{finding}
-		if durErr != nil {
-			// Mark the evidence invalid so downstream report
-			// renderers can avoid arithmetic on the sentinel
-			// duration (-1.0). The verdict still stands —
-			// CreateDurationFinding's contract is "the asset is
-			// in violation, but I couldn't compute exact dwell"
-			// — but evidence-derived numbers are unreliable.
-			finding.Evidence.EvidenceInvalid = true
-			s.deps.Logger().Warn("duration calculation failed; emitting violation with sentinel duration -1.0 and evidence_invalid=true",
-				"control", s.ctl.ID, "asset", t.ID, "error", durErr,
-				"finding_emitted", true)
-		}
-		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
-		return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings
+		return emitViolationFinding(s.deps, s.ctl, t, maxUnsafe, now, ids, observation)
 	}
 
 	span.RecordStep("verdict_decision", nil, map[string]any{
@@ -210,53 +263,11 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 	})
 
 	if exceeds {
-		observation.TemporalRisk = t.FormatExposureSummary(maxUnsafe, now)
-		finding, durErr := CreateDurationFinding(DurationFindingInput{
-			ExposureLifecycle: t,
-			Control:           s.ctl,
-			Threshold:         maxUnsafe,
-			Now:               now,
-			Identities:        ids.At(t.LastObservedAt()),
-			PredicateParser:   s.deps.PredicateParser(),
-		})
-		// CreateDurationFinding's contract is "(*Finding, error)"
-		// with the finding always non-nil. If a future refactor
-		// returns nil anyway, we cannot describe the violation —
-		// downgrade to INCONCLUSIVE so the assessor's violation
-		// count stays consistent with the findings list. The
-		// alternative (emit VerdictViolation with empty findings)
-		// inflates the violations summary above the visible
-		// finding count and makes report totals diverge in a way
-		// that's hard to debug from the user-facing output.
-		if finding == nil {
-			s.deps.Logger().Warn("CreateDurationFinding returned nil finding; downgrading verdict to INCONCLUSIVE to keep counts consistent",
-				"control", s.ctl.ID, "asset", t.ID)
-			observation.MarkInconclusive("violation finding could not be constructed")
-			return observation, nil
-		}
-		findings := []*evaluation.Finding{finding}
-		if durErr != nil {
-			// Mark the evidence invalid so downstream report
-			// renderers can avoid arithmetic on the sentinel
-			// duration (-1.0). The verdict still stands —
-			// CreateDurationFinding's contract is "the asset is
-			// in violation, but I couldn't compute exact dwell"
-			// — but evidence-derived numbers are unreliable.
-			finding.Evidence.EvidenceInvalid = true
-			s.deps.Logger().Warn("duration calculation failed; emitting violation with sentinel duration -1.0 and evidence_invalid=true",
-				"control", s.ctl.ID, "asset", t.ID, "error", durErr,
-				"finding_emitted", true)
-		}
-		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
-		return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings
+		return emitViolationFinding(s.deps, s.ctl, t, maxUnsafe, now, ids, observation)
 	}
 
 	// 2. Coverage Check (Is the data sufficient to say it's a PASS?)
-	coverage := CoverageValidator{
-		minRequiredSpan: maxUnsafe,
-		maxAllowedGap:   s.deps.ContinuityLimit(),
-	}
-	if reason, ok := coverage.IsSufficient(t); !ok {
+	if reason, ok := validateCoverage(s.deps, t, maxUnsafe); !ok {
 		span.RecordStep("coverage_check", map[string]any{
 			"min_required_span_hours": maxUnsafe.Hours(),
 			"observation_span_hours":  t.Stats().CoverageSpan().Hours(),
@@ -329,11 +340,7 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 	// control would PASS on a sparse snapshot history that
 	// could legitimately be missing several recurrence windows
 	// inside the gap, producing a false-clean verdict.
-	coverage := CoverageValidator{
-		minRequiredSpan: p.WindowDuration(),
-		maxAllowedGap:   s.deps.ContinuityLimit(),
-	}
-	if reason, ok := coverage.IsSufficient(t); !ok {
+	if reason, ok := validateCoverage(s.deps, t, p.WindowDuration()); !ok {
 		span.RecordStep("coverage_check", nil, map[string]any{
 			"sufficient": false,
 			"reason":     reason,

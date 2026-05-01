@@ -61,8 +61,8 @@ const (
 
 // ── Alias Entry ──────────────────────────────────────────
 
-// aliasEntry bundles a predicate with human-readable metadata.
-type aliasEntry struct {
+// AliasEntry bundles a predicate with human-readable metadata.
+type AliasEntry struct {
 	Predicate   policy.UnsafePredicate
 	Description string
 	Category    string
@@ -91,7 +91,7 @@ func (e *UnknownAliasError) Error() string {
 // service internally but maintain a flat naming convention (e.g.
 // "s3.is_public_readable") for the public API.
 type AliasRegistry struct {
-	entries map[string]aliasEntry
+	entries map[string]AliasEntry
 }
 
 // Resolve returns a deep copy of the expanded predicate for an alias.
@@ -198,7 +198,7 @@ func ValidateAliases() error {
 	return errors.Join(errs...)
 }
 
-func validateEntry(name string, entry aliasEntry) error {
+func validateEntry(name string, entry AliasEntry) error {
 	var errs []error
 	for i := range entry.Predicate.Any {
 		rule := &entry.Predicate.Any[i]

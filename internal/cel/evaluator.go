@@ -29,32 +29,9 @@ func Evaluate(cp CompiledPredicate, a asset.Asset, identities []asset.CloudIdent
 		idList[i] = stringifyNamedTypes(id.Map())
 	}
 
-	if params == nil {
-		params = map[string]any{}
-	}
+	activation := NewActivation(props, params, idList)
 
-	// `identity` is the convenience accessor for the *first* identity
-	// when a control wants to talk about "the" identity attached to an
-	// asset (single-principal resources, IAM-bound services).
-	// Multi-identity controls iterate `identities` instead. Hardcoding
-	// an empty map silently masked all per-identity field reads in
-	// single-identity controls — predicates like
-	// `identity.type == "service_role"` evaluated against `{}`,
-	// returning false on every asset regardless of input.
-	identity := map[string]any{}
-	if len(idList) > 0 {
-		if first, ok := idList[0].(map[string]any); ok {
-			identity = first
-		}
-	}
-	activation := map[string]any{
-		"properties": props,
-		"params":     params,
-		"identities": idList,
-		"identity":   identity,
-	}
-
-	out, _, err := cp.program.Eval(activation)
+	out, _, err := cp.program.Eval(map[string]any(activation))
 	if err != nil {
 		return false, fmt.Errorf("cel eval: %w\n  expression: %s", err, cp.Expression)
 	}

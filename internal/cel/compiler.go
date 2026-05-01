@@ -169,6 +169,17 @@ func predicateToExpr(pred policy.UnsafePredicate, scopeVar string) (string, erro
 	return strings.Join(parts, " && "), nil
 }
 
+// resolveValueExprFn returns the CEL expression for a rule's right-hand
+// side. ValueFromParam wins over the inline value: when a rule sets
+// `value_from_param: foo`, the rule reads `params.foo` at evaluation
+// time; otherwise the value is encoded as a literal.
+func resolveValueExprFn(r *policy.PredicateRule, v any) (string, error) {
+	if r.ValueFromParam != "" {
+		return "params." + string(r.ValueFromParam), nil
+	}
+	return literal(v)
+}
+
 // ruleToExpr converts a single PredicateRule to a CEL expression.
 // scopeVar is passed through for field resolution and recursive calls.
 func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
@@ -192,20 +203,21 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
 		return "", errors.New("rule has empty field name")
 	}
 
-	// Resolve field access and existence check using current scope
-	fa := scopedFieldAccess(field, scopeVar)
-	hf := scopedHasField(field, scopeVar)
+	// Resolve field access and existence check using current scope.
+	// fa/hf are kept as separate locals so existing call sites read
+	// naturally; scopedFieldExprs is the structured form used where
+	// the pair travels together.
+	exprs := scopedFieldExprs(field, scopeVar)
+	fa := exprs.access
+	hf := exprs.exists
 
-	// resolveValueExpr resolves values that reference params via the
-	// documented `value_from_param` field — emits `params.<name>`
-	// so CEL resolves the param at evaluation time. Plain `value`
-	// is treated as a literal; an unsupported value type fails fast
-	// at compile time.
+	// resolveValueExpr is the rule-aware right-hand-side resolver:
+	// `value_from_param` references emit `params.<name>` so CEL reads
+	// the param at evaluation time; plain `value` is treated as a
+	// literal. Promoted from inline closure to a free function so the
+	// 7+ call sites all bind to the same definition.
 	resolveValueExpr := func(v any) (string, error) {
-		if r.ValueFromParam != "" {
-			return "params." + string(r.ValueFromParam), nil
-		}
-		return literal(v)
+		return resolveValueExprFn(r, v)
 	}
 
 	switch op {

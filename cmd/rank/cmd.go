@@ -282,7 +282,7 @@ func runGroupByOwner(stdout io.Writer, opts *options, assessment *report.Assessm
 	switch opts.Format {
 	case "json":
 		output := struct {
-			Roadmap      apprank.Roadmap `json:"roadmap"`
+			Roadmap      apprank.Roadmap       `json:"roadmap"`
 			TeamRoadmaps []apprank.TeamRoadmap `json:"team_roadmaps"`
 		}{Roadmap: roadmap, TeamRoadmaps: teamRoadmaps}
 		data, marshalErr := json.MarshalIndent(output, "", "  ")

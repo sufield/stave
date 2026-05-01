@@ -21,22 +21,20 @@ const (
 	SeverityCritical          // 5
 )
 
+// severityCodec is the canonical String/Parse pair for Severity.
+// Case-insensitive on Decode so "Critical" and "CRITICAL" parse the
+// same as "critical" — matches the prior ParseSeverity behavior.
+var severityCodec = NewEnumCodec(true, map[Severity]string{
+	SeverityInfo:     "info",
+	SeverityLow:      "low",
+	SeverityMedium:   "medium",
+	SeverityHigh:     "high",
+	SeverityCritical: "critical",
+})
+
 // String returns the canonical lowercase name of the severity.
 func (s Severity) String() string {
-	switch s {
-	case SeverityInfo:
-		return "info"
-	case SeverityLow:
-		return "low"
-	case SeverityMedium:
-		return "medium"
-	case SeverityHigh:
-		return "high"
-	case SeverityCritical:
-		return "critical"
-	default:
-		return ""
-	}
+	return severityCodec.Encode(s)
 }
 
 // IsValid reports whether s is a recognized severity level (excluding None).

@@ -10,8 +10,8 @@ func newBuiltinAliasRegistry() *AliasRegistry {
 	return &AliasRegistry{entries: builtinAliases()}
 }
 
-func builtinAliases() map[string]aliasEntry {
-	return map[string]aliasEntry{
+func builtinAliases() map[string]AliasEntry {
+	return map[string]AliasEntry{
 		// ── Public exposure (composite) ──────────────────────────
 		S3IsPublicReadable: {
 			Description: "Any path grants public read access (direct, identity-based, or resource-based)",

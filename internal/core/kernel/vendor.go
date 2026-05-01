@@ -83,7 +83,7 @@ func AppliesToVendor(scopeTags []ScopeTag, vendor Vendor) bool {
 		if tag == "multicloud" {
 			return true
 		}
-		if len(tag) > 10 {
+		if !isVendorTag(tag) {
 			continue
 		}
 		hasVendorTag = true
@@ -92,4 +92,17 @@ func AppliesToVendor(scopeTags []ScopeTag, vendor Vendor) bool {
 		}
 	}
 	return !hasVendorTag
+}
+
+// isVendorTag reports whether a scope tag is plausibly a vendor name.
+// Vendor names in this project are short ASCII strings ("aws", "gcp",
+// "azure", "k8s", "github", "dns") — at most 10 characters. Tags longer
+// than that are domain or capability classifiers that AppliesToVendor
+// must skip rather than treat as vendor mismatches.
+//
+// The 10-char threshold is calibrated on the existing vendor catalog;
+// extend ScopeTag with a richer kind discriminator if a longer vendor
+// name lands.
+func isVendorTag(tag ScopeTag) bool {
+	return len(tag) <= 10
 }

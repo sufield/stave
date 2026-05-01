@@ -54,33 +54,32 @@ const (
 )
 
 // validSchemas enables fast membership checks for validation.
-var validSchemas = map[Schema]struct{}{
-	SchemaObservation:              {},
-	SchemaControl:                  {},
-	SchemaOutput:                   {},
-	SchemaDiagnose:                 {},
-	SchemaDiff:                     {},
-	SchemaBaseline:                 {},
-	SchemaEnforce:                  {},
-	SchemaGate:                     {},
-	SchemaValidate:                 {},
-	SchemaSnapshotPlan:             {},
-	SchemaSnapshotPrune:            {},
-	SchemaSnapshotQuality:          {},
-	SchemaSnapshotArchive:          {},
-	SchemaCIDiff:                   {},
-	SchemaFixLoop:                  {},
-	SchemaCrosswalkResolution:      {},
-	SchemaSecurityAudit:            {},
-	SchemaSecurityAuditArtifacts:   {},
-	SchemaSecurityAuditRunManifest: {},
-	SchemaBugReport:                {},
-}
+var validSchemas = NewEnumSet(
+	SchemaObservation,
+	SchemaControl,
+	SchemaOutput,
+	SchemaDiagnose,
+	SchemaDiff,
+	SchemaBaseline,
+	SchemaEnforce,
+	SchemaGate,
+	SchemaValidate,
+	SchemaSnapshotPlan,
+	SchemaSnapshotPrune,
+	SchemaSnapshotQuality,
+	SchemaSnapshotArchive,
+	SchemaCIDiff,
+	SchemaFixLoop,
+	SchemaCrosswalkResolution,
+	SchemaSecurityAudit,
+	SchemaSecurityAuditArtifacts,
+	SchemaSecurityAuditRunManifest,
+	SchemaBugReport,
+)
 
 // IsValid reports whether the schema version is recognized by the system.
 func (s Schema) IsValid() bool {
-	_, ok := validSchemas[s]
-	return ok
+	return validSchemas.Contains(s)
 }
 
 // RegistryLayoutStandard is the directory key used by the schema loader to

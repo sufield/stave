@@ -61,15 +61,15 @@ type AssetLoaderFunc = func(ctx context.Context, obsDir, ctlDir string) (Assets,
 // WireCommands destructures this into individual variables — no command
 // ever receives the whole struct.
 type Factories struct {
-	NewObsRepo             ObsRepoFactory
-	NewStdinObsRepo        func(io.Reader) (appcontracts.ObservationRepository, error)
-	NewCtlRepo             CtlRepoFactory
-	NewFindingWriter       FindingWriterFactory
-	NewCELEvaluator        CELEvaluatorFactory
-	NewSnapshotRepo        SnapshotRepoFactory
-	NewChainLoader         ChainLoaderFactory
-	NewSLALoader           SLALoaderFactory
-	NewArtifactLoader      ArtifactLoaderFactory
+	NewObsRepo              ObsRepoFactory
+	NewStdinObsRepo         func(io.Reader) (appcontracts.ObservationRepository, error)
+	NewCtlRepo              CtlRepoFactory
+	NewFindingWriter        FindingWriterFactory
+	NewCELEvaluator         CELEvaluatorFactory
+	NewSnapshotRepo         SnapshotRepoFactory
+	NewChainLoader          ChainLoaderFactory
+	NewSLALoader            SLALoaderFactory
+	NewArtifactLoader       ArtifactLoaderFactory
 	NewSnapshotBundleLoader SnapshotBundleLoaderFactory
 }
 

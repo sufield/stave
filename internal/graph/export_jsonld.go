@@ -162,11 +162,7 @@ func (enc *jsonldNodeEncoder) encodeNode(n *rdfNode, outgoing []rdfEdge) []byte 
 	// Datatype properties — emit in sorted key order so the document
 	// is byte-deterministic across runs.
 	if len(n.Properties) > 0 {
-		keys := make([]string, 0, len(n.Properties))
-		for k := range n.Properties {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
+		keys := sortedPropKeys(n.Properties)
 		for _, k := range keys {
 			enc.buf.WriteString(",\n      ")
 			encodeJSONString(&enc.buf, k)
@@ -286,11 +282,7 @@ func writeEdgeGroup(buf *bytes.Buffer, grp *edgeGroup) {
 				if grp.shortcut {
 					buf.WriteString(", \"isAlgorithmShortcut\": true")
 				}
-				keys := make([]string, 0, len(props))
-				for k := range props {
-					keys = append(keys, k)
-				}
-				sort.Strings(keys)
+				keys := sortedPropKeys(props)
 				for _, k := range keys {
 					buf.WriteString(", ")
 					encodeJSONString(buf, k)

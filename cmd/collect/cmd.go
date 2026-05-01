@@ -22,7 +22,7 @@ import (
 	"github.com/sufield/stave/internal/builtin/capabilities"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/controldata"
-	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
@@ -210,16 +210,9 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 	}
 
 	// Count findings by severity.
-	criticalCount := 0
-	highCount := 0
-	for i := range result.Findings {
-		switch result.Findings[i].ControlSeverity {
-		case policy.SeverityCritical:
-			criticalCount++
-		case policy.SeverityHigh:
-			highCount++
-		}
-	}
+	sevCounts := evaluation.CountBySeverity(result.Findings)
+	criticalCount := sevCounts.Critical
+	highCount := sevCounts.High
 
 	// Compute posture score.
 	slaTotal := 0

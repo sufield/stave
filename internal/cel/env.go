@@ -257,6 +257,25 @@ func hasField(dotPath string) string {
 
 // --- Scope-aware field helpers ---
 
+// fieldExprs bundles the access expression and existence-guard
+// expression that always travel together when CEL emits a
+// scope-aware field reference. Names the previously anonymous
+// (access, exists) tuple so call sites read what each half is for.
+type fieldExprs struct {
+	access string
+	exists string
+}
+
+// scopedFieldExprs returns the (access, exists) pair for a dotted path
+// resolved against scopeVar. Wraps scopedFieldAccess + scopedHasField
+// so callers that need both halves don't compute them in parallel.
+func scopedFieldExprs(dotPath, scopeVar string) fieldExprs {
+	return fieldExprs{
+		access: scopedFieldAccess(dotPath, scopeVar),
+		exists: scopedHasField(dotPath, scopeVar),
+	}
+}
+
 // scopedFieldAccess generates a CEL field access expression.
 // When scopeVar is empty, uses the field's first segment as the root variable.
 // When scopeVar is set (e.g., "__id"), all segments are indexed from that variable.

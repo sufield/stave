@@ -242,31 +242,16 @@ func (r *Index) ControlRefs() map[kernel.ControlID]ControlRef {
 
 // VerifyNoOrphans checks fsys under root for YAML files not referenced by index metadata.
 func (r *Index) VerifyNoOrphans(fsys embed.FS, root string) ([]string, error) {
-	root = path.Clean(strings.TrimSpace(root))
 	referenced := make(map[string]struct{}, len(r.controls))
-
 	for _, ref := range r.controls {
 		referenced[normalizeControlFSPath(ref.Path)] = struct{}{}
 	}
 
 	var orphans []string
-	err := fs.WalkDir(fsys, root, func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			name := d.Name()
-			if p != root && (strings.HasPrefix(name, "_") || strings.HasPrefix(name, ".")) {
-				return fs.SkipDir
-			}
+	err := walkControlYAMLs(fsys, root, func(p string, _ fs.DirEntry) error {
+		if path.Base(p) == "index.yaml" {
 			return nil
 		}
-
-		p = path.Clean(p)
-		if !strings.HasSuffix(p, ".yaml") || path.Base(p) == "index.yaml" {
-			return nil
-		}
-
 		if _, ok := referenced[p]; !ok {
 			orphans = append(orphans, p)
 		}

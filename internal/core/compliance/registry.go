@@ -96,14 +96,20 @@ func GetControlRegistry() *ControlCatalog {
 	return controlRegistry
 }
 
+// ControlFactory constructs a fresh Control instance. Named so the
+// factory-of-X pattern stays self-documenting at every call site —
+// the prior anonymous func() Control type required a comment to
+// explain what the function returned.
+type ControlFactory func() Control
+
 // allControlConstructors holds factory functions for every built-in control.
 // Populated by RegisterControl() calls in init() — the source of truth
 // that both the global controlRegistry and NewTestCatalog() draw from.
-var allControlConstructors []func() Control
+var allControlConstructors []ControlFactory
 
 // RegisterControl records a control factory and registers it in the global
 // control registry. Called from init() in each control file.
-func RegisterControl(factory func() Control) {
+func RegisterControl(factory ControlFactory) {
 	allControlConstructors = append(allControlConstructors, factory)
 	controlRegistry.MustRegister(factory())
 }

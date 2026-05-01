@@ -36,22 +36,21 @@ const (
 )
 
 // validOutputKinds provides a fast lookup for validation.
-var validOutputKinds = map[OutputKind]struct{}{
-	KindBaseline:          {},
-	KindBaselineCheck:     {},
-	KindCIDiff:            {},
-	KindEnforcement:       {},
-	KindGateCheck:         {},
-	KindObservationDelta:  {},
-	KindRemediationReport: {},
-	KindSnapshotArchive:   {},
-	KindSnapshotPlan:      {},
-	KindSnapshotPrune:     {},
-	KindSnapshotQuality:   {},
-}
+var validOutputKinds = NewEnumSet(
+	KindBaseline,
+	KindBaselineCheck,
+	KindCIDiff,
+	KindEnforcement,
+	KindGateCheck,
+	KindObservationDelta,
+	KindRemediationReport,
+	KindSnapshotArchive,
+	KindSnapshotPlan,
+	KindSnapshotPrune,
+	KindSnapshotQuality,
+)
 
 // IsValid reports whether the kind is a recognized output document type.
 func (k OutputKind) IsValid() bool {
-	_, ok := validOutputKinds[k]
-	return ok
+	return validOutputKinds.Contains(k)
 }

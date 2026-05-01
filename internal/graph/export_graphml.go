@@ -250,12 +250,7 @@ func writeGraphMLNode(xw *graphmlWriter, scratch *bytes.Buffer, n *rdfNode, idx 
 		xw.writeString("</data>\n")
 	}
 
-	propKeys := make([]string, 0, len(n.Properties))
-	for k := range n.Properties {
-		propKeys = append(propKeys, k)
-	}
-	sort.Strings(propKeys)
-	for _, k := range propKeys {
+	for _, k := range sortedPropKeys(n.Properties) {
 		id, ok := idx["node:"+k]
 		if !ok {
 			continue
@@ -293,12 +288,7 @@ func writeGraphMLEdge(xw *graphmlWriter, scratch *bytes.Buffer, e *rdfEdge, keyI
 		}
 	}
 
-	propKeys := make([]string, 0, len(e.Properties))
-	for k := range e.Properties {
-		propKeys = append(propKeys, k)
-	}
-	sort.Strings(propKeys)
-	for _, k := range propKeys {
+	for _, k := range sortedPropKeys(e.Properties) {
 		id, ok := keyIdx["edge:"+k]
 		if !ok {
 			continue

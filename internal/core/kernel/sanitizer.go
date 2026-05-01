@@ -15,8 +15,22 @@ type ValueSanitizer interface {
 	Value(v string) string
 }
 
-// Sanitizer aggregates all primitive sanitization operations.
-// Domain objects typically accept this interface to prepare themselves for public output.
+// MessageSanitizer scrubs free-form strings (log messages, error text)
+// of paths, IDs, and other identifiers. Implemented by *sanitize.Sanitizer.
+//
+// The interface lives in kernel because consumers (logger middleware,
+// error formatters) belong outside sanitize and need a kernel-level
+// type to depend on without pulling the full sanitize package.
+type MessageSanitizer interface {
+	ScrubMessage(msg string) string
+}
+
+// Sanitizer aggregates the primitive ID/Path/Value sanitization operations.
+// Domain objects typically accept this interface to prepare themselves for
+// public output. MessageSanitizer is intentionally NOT embedded here:
+// most consumers only need ID/Path/Value, and forcing every test stub to
+// implement ScrubMessage adds noise. Callers that need free-form string
+// scrubbing should depend on MessageSanitizer directly (ISP).
 type Sanitizer interface {
 	IDSanitizer
 	PathSanitizer

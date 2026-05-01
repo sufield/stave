@@ -214,12 +214,9 @@ func run(w io.Writer, opts *options) error {
 	if fmtErr != nil {
 		return fmtErr
 	}
-	var rep reporter.Reporter
-	switch format {
-	case appcontracts.FormatJSON:
-		rep = reporter.JSONReporter{}
-	default:
-		rep = reporter.TextReporter{}
+	rep, repErr := reporter.New(string(format))
+	if repErr != nil {
+		return repErr
 	}
 
 	if err := rep.Write(w, report, meta); err != nil {
