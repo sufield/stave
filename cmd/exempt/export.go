@@ -227,8 +227,8 @@ func buildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment, syst
 				continue // acknowledged — already in Type 1
 			}
 
-			findingUUID := poamUUID("poam-item", f.FindingID)
-			riskUUID := poamUUID("risk", f.FindingID)
+			findingUUID := poamUUID("poam-item", string(f.FindingID))
+			riskUUID := poamUUID("risk", string(f.FindingID))
 
 			risks = append(risks, map[string]any{
 				"uuid":   riskUUID,
@@ -237,7 +237,7 @@ func buildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment, syst
 			})
 
 			props := []map[string]string{
-				{"name": "stave-finding-id", "value": f.FindingID},
+				{"name": "stave-finding-id", "value": string(f.FindingID)},
 				{"name": "stave-severity", "value": f.ControlSeverity.String()},
 			}
 

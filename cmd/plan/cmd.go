@@ -219,7 +219,7 @@ func writeComplianceFormat(w io.Writer, result *compliancepath.PathResult, forma
 		enc.SetIndent("", "  ")
 		return enc.Encode(result)
 	case "csv":
-		return &ui.UserError{Err: fmt.Errorf("--format csv is not supported in compliance-path mode (use json or md)")}
+		return &ui.UserError{Err: errors.New("--format csv is not supported in compliance-path mode (use json or md)")}
 	default:
 		// Markdown / "md" — render a small section per missing
 		// control. Falling through to plan.WriteMarkdown isn't

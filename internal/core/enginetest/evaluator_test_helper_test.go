@@ -31,14 +31,14 @@ func testIDGen() ports.IdentityGenerator { return crypto.NewHasher() }
 var (
 	sharedCompiler     *stavecel.Compiler
 	sharedCompilerOnce sync.Once
-	sharedCompilerErr  error
+	errSharedCompiler  error
 )
 
 func getSharedCompiler() (*stavecel.Compiler, error) {
 	sharedCompilerOnce.Do(func() {
-		sharedCompiler, sharedCompilerErr = stavecel.NewCompiler()
+		sharedCompiler, errSharedCompiler = stavecel.NewCompiler()
 	})
-	return sharedCompiler, sharedCompilerErr
+	return sharedCompiler, errSharedCompiler
 }
 
 // testCELEvaluator returns a CEL-based PredicateEval for domain tests.

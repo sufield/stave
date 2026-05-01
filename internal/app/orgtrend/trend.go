@@ -141,14 +141,15 @@ func Compute(in Input) *OrgTrendReport {
 		// Track chain activations.
 		for i := range latest.ChainFindings {
 			cf := &latest.ChainFindings[i]
-			ca, exists := chainCounts[cf.ChainID]
+			cid := string(cf.ChainID)
+			ca, exists := chainCounts[cid]
 			if !exists {
 				ca = &ChainActivation{
-					ChainID:    cf.ChainID,
+					ChainID:    cid,
 					TotalCount: len(in.Accounts),
 					Severity:   cf.Severity.String(),
 				}
-				chainCounts[cf.ChainID] = ca
+				chainCounts[cid] = ca
 			}
 			ca.ActiveCount++
 		}

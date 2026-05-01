@@ -19,7 +19,7 @@ type FailingControl struct {
 // CompoundFinding represents a chain-detected compound risk — multiple
 // co-failing controls that together create a risk greater than their sum.
 type CompoundFinding struct {
-	ChainID           string             `json:"chain"`
+	ChainID           kernel.ChainID     `json:"chain"`
 	AssetID           asset.ID           `json:"asset_id,omitempty"`
 	Description       string             `json:"description,omitempty"`
 	ControlsFailing   []kernel.ControlID `json:"controls_failing"`
@@ -125,7 +125,7 @@ func DetectChains(
 	// surfaces as fixture flakes (e.g. etcd-dev-01 vs etcd-staging-01
 	// swapping positions in k8s-cis-level1's golden).
 	slices.SortFunc(findings, func(a, b CompoundFinding) int {
-		if c := strings.Compare(a.ChainID, b.ChainID); c != 0 {
+		if c := strings.Compare(string(a.ChainID), string(b.ChainID)); c != 0 {
 			return c
 		}
 		return strings.Compare(string(a.AssetID), string(b.AssetID))

@@ -100,7 +100,12 @@ func LoadSnapshotsFromDir(t *testing.T, dir string) []asset.Snapshot {
 			continue
 		}
 		path := filepath.Join(abs, entry.Name())
-		data, readErr := os.ReadFile(path)
+		// gosec G304: path is built from a directory listing under
+		// `abs` (a caller-provided fixture root), not user input.
+		// This file is in `internal/testutil` and only callable
+		// from tests.
+		data, readErr := os.ReadFile(path) //nolint:gosec
+
 		if readErr != nil {
 			t.Fatalf("read %s: %v", path, readErr)
 		}

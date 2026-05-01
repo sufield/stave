@@ -68,12 +68,6 @@ func TestLimitedReadAll_OneByteOverLimit(t *testing.T) {
 	}
 }
 
-// errReader returns (0, customErr) on Read. Used to verify that the
-// probe-stage error is propagated rather than swallowed.
-type errReader struct{ err error }
-
-func (r *errReader) Read(p []byte) (int, error) { return 0, r.err }
-
 // chainReader yields the contents of `head` first, then delegates
 // further Read calls to `tail`. Used to push LimitedReadAll past
 // Phase 1 with real bytes and observe Phase 2's probe behavior.

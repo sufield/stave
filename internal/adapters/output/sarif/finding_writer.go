@@ -54,7 +54,7 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 			if i >= len(remFindings) {
 				break
 			}
-			if issueID, ok := fidToIssue[remFindings[i].FindingID]; ok {
+			if issueID, ok := fidToIssue[string(remFindings[i].FindingID)]; ok {
 				if results[i].PartialFingerprints == nil {
 					results[i].PartialFingerprints = map[string]string{}
 				}

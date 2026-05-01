@@ -457,8 +457,8 @@ func TestExposureLifecycleZeroThresholdImmediateBreach(t *testing.T) {
 	// First observation flips to exposed at base; lookup also at base
 	// so duration is exactly zero. At threshold 0, this is the case
 	// the old strict-greater rule got wrong — it returned false here.
-	if err := tl.RecordCheck(base, true); err != nil {
-		t.Fatal(err)
+	if recErr := tl.RecordCheck(base, true); recErr != nil {
+		t.Fatal(recErr)
 	}
 	exceeds, err = tl.ExceedsSLA(base, 0)
 	if err != nil {
@@ -470,8 +470,8 @@ func TestExposureLifecycleZeroThresholdImmediateBreach(t *testing.T) {
 
 	// Asset becomes secure → no active window → does not breach
 	// even at zero threshold.
-	if err := tl.RecordCheck(base.Add(time.Hour), false); err != nil {
-		t.Fatal(err)
+	if recErr := tl.RecordCheck(base.Add(time.Hour), false); recErr != nil {
+		t.Fatal(recErr)
 	}
 	exceeds, err = tl.ExceedsSLA(base.Add(time.Hour), 0)
 	if err != nil {

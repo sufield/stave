@@ -94,7 +94,7 @@ func Analyze(in Input) *Report {
 	for id, cf := range beforeChains {
 		if _, active := afterChains[id]; !active {
 			deactivated = append(deactivated, DeactivatedChain{
-				ChainID:          id,
+				ChainID:          string(id),
 				PreviousSeverity: cf.Severity.String(),
 			})
 		}
@@ -161,8 +161,8 @@ func buildKeySet(findings []remediation.Finding) map[findingKey]*remediation.Fin
 	return m
 }
 
-func buildChainSet(chains []risk.CompoundFinding) map[string]*risk.CompoundFinding {
-	m := make(map[string]*risk.CompoundFinding, len(chains))
+func buildChainSet(chains []risk.CompoundFinding) map[kernel.ChainID]*risk.CompoundFinding {
+	m := make(map[kernel.ChainID]*risk.CompoundFinding, len(chains))
 	for i := range chains {
 		m[chains[i].ChainID] = &chains[i]
 	}

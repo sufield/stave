@@ -139,7 +139,6 @@ func TestResolveStorePath_RelativeEnv_ResolvedFromCwd(t *testing.T) {
 	}
 }
 
-
 // TestValidateName_RejectsEmbeddedSpace pins that ASCII space is in
 // the forbidden set. Names with spaces would silently break: shell
 // scripts that pass $STAVE_CONTEXT through unquoted variables would

@@ -254,7 +254,7 @@ func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue
 			}
 			return 1
 		}
-		return cmp.Compare(string(fa.FindingID), string(fb.FindingID))
+		return cmp.Compare(fa.FindingID, fb.FindingID)
 	})
 
 	// Collect member IDs + find the headline (already first after sort).
@@ -265,7 +265,7 @@ func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue
 	var maxBlast float64
 	for i, idx := range indices {
 		f := &findings[idx]
-		memberIDs = append(memberIDs, kernel.FindingID(f.FindingID))
+		memberIDs = append(memberIDs, f.FindingID)
 		for k := range rootCauseKeys(f.ReasoningTrace) {
 			sharedSet[k] = struct{}{}
 		}
@@ -288,7 +288,7 @@ func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue
 		IssueID:                 stableIssueID(assetID, shared, findings[headlineIdx].ControlID.String()),
 		AssetID:                 assetID,
 		SharedKeys:              shared,
-		HeadlineFindingID:       kernel.FindingID(findings[headlineIdx].FindingID),
+		HeadlineFindingID:       findings[headlineIdx].FindingID,
 		MemberFindingIDs:        memberIDs,
 		ConsolidatedScore:       headlineScore,
 		ConsolidatedBlastRadius: maxBlast,

@@ -422,7 +422,7 @@ func writeCSVRoadmap(w io.Writer, rm apprank.Roadmap, assessment *report.Assessm
 			m.slaStatus = "OK"
 		}
 		for j := range f.ChainMembership {
-			m.chainIDs = append(m.chainIDs, f.ChainMembership[j].ChainID)
+			m.chainIDs = append(m.chainIDs, string(f.ChainMembership[j].ChainID))
 		}
 		findingIdx[key] = m
 	}

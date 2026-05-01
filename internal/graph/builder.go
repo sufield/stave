@@ -93,8 +93,11 @@ func Build(input BuildInput) *GraphData {
 	for i := range input.Findings {
 		f := &input.Findings[i]
 
-		// Finding node.
-		findingID := f.FindingID
+		// Finding node. The graph layer uses untyped string IDs
+		// (Node.ID, Edge.From/To) since they mix finding, asset,
+		// chain, and control IDs in the same field. Cast at the
+		// boundary so the rest of this builder stays string-only.
+		findingID := string(f.FindingID)
 		if !seenNodes.Contains(findingID) {
 			seenNodes.Add(findingID)
 			props := map[string]any{
@@ -249,7 +252,7 @@ func Build(input BuildInput) *GraphData {
 	// ChainFindings → ThreatChain + AttackerCapability nodes and edges.
 	for i := range input.ChainFindings {
 		cf := &input.ChainFindings[i]
-		chainID := cf.ChainID
+		chainID := string(cf.ChainID)
 
 		if !seenNodes.Contains(chainID) {
 			seenNodes.Add(chainID)
@@ -301,7 +304,7 @@ func Build(input BuildInput) *GraphData {
 			for _, j := range findingsByControl[ctlID] {
 				ff := &input.Findings[j]
 				g.Edges = append(g.Edges, Edge{
-					From: ff.FindingID, To: chainID, Type: "MEMBER_OF",
+					From: string(ff.FindingID), To: chainID, Type: "MEMBER_OF",
 					Properties: map[string]any{
 						"chain_severity":   cf.Severity.String(),
 						"stage_span_attck": TranslateStages(cf.AttackStages),

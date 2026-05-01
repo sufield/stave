@@ -92,7 +92,7 @@ func Build(input BuildInput) *Graph {
 	for i := range input.Chains {
 		ch := &input.Chains[i]
 		status := "inactive"
-		if activeChains[ch.ID] {
+		if activeChains[string(ch.ID)] {
 			status = "active"
 		}
 
@@ -106,8 +106,8 @@ func Build(input BuildInput) *Graph {
 		}
 
 		node := ChainNode{
-			ChainID:        ch.ID,
-			Name:           strings.ReplaceAll(ch.ID, "_", " "),
+			ChainID:        string(ch.ID),
+			Name:           strings.ReplaceAll(string(ch.ID), "_", " "),
 			Severity:       ch.CompoundSeverity.String(),
 			Status:         status,
 			Preconditions:  ch.Preconditions,
@@ -137,22 +137,22 @@ func Build(input BuildInput) *Graph {
 	var edges []Edge
 	for i := range input.Chains {
 		a := &input.Chains[i]
-		if !activeChains[a.ID] || len(a.Postconditions) == 0 {
+		if !activeChains[string(a.ID)] || len(a.Postconditions) == 0 {
 			continue
 		}
 		for j := range input.Chains {
 			b := &input.Chains[j]
-			if a.ID == b.ID || !activeChains[b.ID] || len(b.Preconditions) == 0 {
+			if a.ID == b.ID || !activeChains[string(b.ID)] || len(b.Preconditions) == 0 {
 				continue
 			}
 			for _, post := range a.Postconditions {
 				for _, pre := range b.Preconditions {
 					if post == pre {
 						edges = append(edges, Edge{
-							FromChain:     a.ID,
-							ToChain:       b.ID,
+							FromChain:     string(a.ID),
+							ToChain:       string(b.ID),
 							ViaCapability: post,
-							Description:   capLabel(post) + " enables " + strings.ReplaceAll(b.ID, "_", " "),
+							Description:   capLabel(post) + " enables " + strings.ReplaceAll(string(b.ID), "_", " "),
 						})
 					}
 				}

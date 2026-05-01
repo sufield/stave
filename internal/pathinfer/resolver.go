@@ -158,8 +158,12 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErrIn error) error 
 	if entry.Type()&fs.ModeSymlink != 0 {
 		info, err := os.Stat(path)
 		if err != nil {
+			// nilerr: the error is captured on s.walkErrs for the
+			// caller to inspect; returning it would abort the whole
+			// walk on a single broken symlink, which is exactly
+			// what we want to avoid.
 			s.walkErrs = append(s.walkErrs, walkErr{Path: path, Err: err})
-			return nil
+			return nil //nolint:nilerr
 		}
 		if !info.IsDir() {
 			return nil

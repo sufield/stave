@@ -85,7 +85,6 @@ func buildKeyUsageIndexForSnapshot(snap asset.Snapshot) KeyUsageIndex {
 	return idx
 }
 
-
 // EnrichKeyIsolation injects derived key isolation properties into each
 // asset's properties map. Each snapshot uses its OWN key sharing state
 // to avoid retroactively applying future key sharing to historical data.

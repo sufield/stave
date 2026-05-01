@@ -348,7 +348,7 @@ func pluralize(n int, singular, plural string) string {
 
 func lookupControlForFindingID(findings []evaluation.Finding, fid string) (string, string, bool) {
 	for i := range findings {
-		if findings[i].FindingID == fid {
+		if string(findings[i].FindingID) == fid {
 			return string(findings[i].ControlID), string(findings[i].AssetID), true
 		}
 	}

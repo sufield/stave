@@ -105,7 +105,7 @@ func (c *AssessmentCollector) RecordFindings(findings []*evaluation.Finding) {
 		if f == nil {
 			continue
 		}
-		fid := kernel.FindingID(f.FindingID)
+		fid := f.FindingID
 		if fid == "" {
 			// Empty FindingID skips the dedup index, so two
 			// "same" findings can both be recorded. Surface this

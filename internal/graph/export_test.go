@@ -22,7 +22,7 @@ import (
 func fixtureFinding(severity policy.Severity, controlID, assetID, assetType string, vendor kernel.Vendor) remediation.Finding {
 	return remediation.Finding{
 		Finding: evaluation.Finding{
-			FindingID:       "finding-" + assetID,
+			FindingID:       kernel.FindingID("finding-" + assetID),
 			ControlID:       kernel.ControlID(controlID),
 			ControlName:     "Test Control",
 			ControlSeverity: severity,

@@ -29,7 +29,7 @@ func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFinger
 		e := Event{
 			SchemaVersion:     schemaVersion,
 			CapturedAt:        a.Run.Now,
-			FindingID:         f.FindingID,
+			FindingID:         string(f.FindingID),
 			ControlID:         string(f.ControlID),
 			ControlName:       f.ControlName,
 			Severity:          f.ControlSeverity.String(),

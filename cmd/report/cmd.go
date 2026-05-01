@@ -505,7 +505,7 @@ func buildChainsSection(a *corereport.Assessment) er.ChainsSection {
 			members = append(members, string(cid))
 		}
 		active = append(active, er.ActiveChain{
-			ChainID:   cf.ChainID,
+			ChainID:   string(cf.ChainID),
 			Severity:  cf.Severity.String(),
 			Members:   members,
 			Narrative: cf.Narrative,

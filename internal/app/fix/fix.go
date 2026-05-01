@@ -112,7 +112,7 @@ func WriteFixResult(w io.Writer, f remediation.Finding) error {
 		Changes     []policy.PropertyChange     `json:"changes"`
 		FixPlan     *evaluation.RemediationPlan `json:"fix_plan"`
 	}{
-		FindingID:   f.FindingID,
+		FindingID:   string(f.FindingID),
 		Finding:     FindingKey(f),
 		ControlID:   f.ControlID.String(),
 		ControlName: f.ControlName,

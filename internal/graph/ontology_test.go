@@ -324,7 +324,7 @@ func TestExperiment04_NoChain(t *testing.T) {
 	for i, tt := range types {
 		findings[i] = remediation.Finding{
 			Finding: evaluation.Finding{
-				FindingID: "sha256:exp04" + string(rune('a'+i)),
+				FindingID: kernel.FindingID("sha256:exp04" + string(rune('a'+i))),
 				ControlID: kernel.ControlID("CTL.TEST." + string(rune('A'+i))),
 				AssetID:   asset.ID(tt.assetID), AssetType: kernel.AssetType(tt.assetType),
 				AssetVendor: "aws", ControlSeverity: policy.SeverityHigh,

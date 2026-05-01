@@ -78,7 +78,7 @@ func BuildPlaybook(input *Input) Playbook {
 	f := &input.Finding
 
 	pb := Playbook{
-		FindingID:   f.FindingID,
+		FindingID:   string(f.FindingID),
 		ControlID:   string(f.ControlID),
 		AssetID:     string(f.AssetID),
 		Severity:    f.ControlSeverity.String(),
@@ -263,7 +263,7 @@ func buildChainContext(f *remediation.Finding, chainDefs []policy.ChainDefinitio
 	}
 
 	ctx := &ChainContext{
-		ChainID:        cm.ChainID,
+		ChainID:        string(cm.ChainID),
 		ChainActive:    true,
 		ChainNarrative: cm.Narrative,
 	}

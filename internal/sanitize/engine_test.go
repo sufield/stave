@@ -144,7 +144,7 @@ func TestScrubMap_NeutralKeyPreservesPrimitive(t *testing.T) {
 // flagged subtree leaked through.
 func TestScrubMap_NestedRemoveBeneathSanitize(t *testing.T) {
 	prof := NewProfile(
-		map[string]struct{}{"tags": {}},      // remove "tags" anywhere
+		map[string]struct{}{"tags": {}},        // remove "tags" anywhere
 		map[string]struct{}{"bucket_meta": {}}, // sanitize the parent
 	)
 	s := New(WithIDSanitization(true))

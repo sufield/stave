@@ -15,7 +15,7 @@ import (
 // FromFinding projects a single remediation.Finding into a FindingDTO.
 func FromFinding(f *remediation.Finding) FindingDTO {
 	dto := FindingDTO{
-		FindingID:          f.FindingID,
+		FindingID:          string(f.FindingID),
 		ControlID:          f.ControlID,
 		ControlName:        f.ControlName,
 		ControlDescription: f.ControlDescription,
@@ -276,7 +276,7 @@ func fromRemediationAction(a evaluation.RemediationAction) RemediationActionDTO 
 
 func fromChainMembershipEntry(e evaluation.ChainMembershipEntry) ChainMembershipEntryDTO {
 	return ChainMembershipEntryDTO{
-		ChainID:       e.ChainID,
+		ChainID:       string(e.ChainID),
 		ChainSeverity: e.ChainSeverity,
 		StageSpan:     e.StageSpan,
 		Narrative:     e.Narrative,

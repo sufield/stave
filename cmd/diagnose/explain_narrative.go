@@ -118,7 +118,7 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 	for i := range assessment.Findings {
 		f := &assessment.Findings[i]
 		switch {
-		case opts.FindingID != "" && f.FindingID == opts.FindingID:
+		case opts.FindingID != "" && string(f.FindingID) == opts.FindingID:
 			selected = append(selected, i)
 		case opts.ControlID != "" && string(f.ControlID) == opts.ControlID:
 			selected = append(selected, i)

@@ -107,9 +107,9 @@ func TestOpListEmpty_DynamicNestedList(t *testing.T) {
 	}
 
 	cases := []struct {
-		name  string
-		ids   any
-		want  bool
+		name string
+		ids  any
+		want bool
 	}{
 		{"empty []any", []any{}, true},
 		{"non-empty []any", []any{"123"}, false},

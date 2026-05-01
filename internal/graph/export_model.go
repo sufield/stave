@@ -205,8 +205,8 @@ const (
 // graph requires a one-line change here. Edges whose wire name is
 // not in this table are dropped from the RDF export and logged.
 var wireToPredicate = map[string]string{
-	"TARGETS":              predTargets,
-	"VIOLATES":             predViolatesRequirement,
+	"TARGETS":  predTargets,
+	"VIOLATES": predViolatesRequirement,
 	// VIOLATES_INVARIANT names the edge from a finding to the
 	// invariant the control was checking. The earlier shape was
 	// missing this entry, so any builder that emitted the wire name

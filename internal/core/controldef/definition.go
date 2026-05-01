@@ -270,22 +270,26 @@ func (d *ControlDefinition) AttackStage() string {
 
 // ChainIDs returns the chain definition IDs this control participates in.
 // Read from params.chain_ids. Defaults to nil.
-func (d *ControlDefinition) ChainIDs() []string {
+func (d *ControlDefinition) ChainIDs() []kernel.ChainID {
 	raw, ok := d.Params.Get("chain_ids")
 	if !ok {
 		return nil
 	}
 	switch v := raw.(type) {
 	case []any:
-		ids := make([]string, 0, len(v))
+		ids := make([]kernel.ChainID, 0, len(v))
 		for _, item := range v {
 			if s, ok := item.(string); ok {
-				ids = append(ids, s)
+				ids = append(ids, kernel.ChainID(s))
 			}
 		}
 		return ids
 	case []string:
-		return v
+		ids := make([]kernel.ChainID, len(v))
+		for i, s := range v {
+			ids[i] = kernel.ChainID(s)
+		}
+		return ids
 	default:
 		return nil
 	}

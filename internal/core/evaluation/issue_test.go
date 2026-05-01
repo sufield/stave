@@ -16,7 +16,7 @@ func mkFinding(findingID, assetIDStr string, score float64, keys ...string) Find
 		mcs[i] = MatchedClause{ObservationKey: k, Operator: "eq"}
 	}
 	return Finding{
-		FindingID:      findingID,
+		FindingID:      kernel.FindingID(findingID),
 		AssetID:        asset.ID(assetIDStr),
 		ExposureScore:  score,
 		ReasoningTrace: mcs,

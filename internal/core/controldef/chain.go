@@ -12,7 +12,7 @@ import (
 // findings. When the number of failing controls meets the escalation
 // threshold, the chain engine emits a compound finding.
 type ChainDefinition struct {
-	ID                  string             `yaml:"id"                  json:"id"`
+	ID                  kernel.ChainID     `yaml:"id"                  json:"id"`
 	Description         string             `yaml:"description"         json:"description"`
 	ControlIDs          []kernel.ControlID `yaml:"controls"            json:"controls"`
 	EscalationThreshold int                `yaml:"escalation_threshold" json:"escalation_threshold"`
@@ -85,7 +85,7 @@ func (c *ChainDefinition) ValidateCapabilities(registry CapabilityRegistry) erro
 // from the catalog passed to [ValidateChainRefs]. Consumers format
 // the list into user-facing warnings or errors.
 type ChainRefIssue struct {
-	ChainID        string
+	ChainID        kernel.ChainID
 	MissingControl []kernel.ControlID
 }
 

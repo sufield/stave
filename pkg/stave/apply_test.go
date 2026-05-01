@@ -22,14 +22,23 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 // TestApply_LordofheavenBuiltinControls runs the library against
 // the lordofheaven snapshot using the embedded builtin catalog
 // (Config.ControlsDir empty). The expected shape is load-bearing
-// for both prototypes: 54 findings after asset-type gating, 18
-// Issues after consolidation, NON_COMPLIANT status. The numbers
-// dropped back from 62/23 to 54/18 once ExceedsSLA was changed
-// to strict-greater, which stopped 0h-threshold controls from
-// flagging assets with zero exposure (CTL.S3.PUBLIC.004 and
-// CTL.S3.INCOMPLETE.001 firing on safe buckets was the symptom).
+// for both prototypes: 42 findings after asset-type gating + the
+// collector's per-FindingID dedup, 18 Issues after consolidation,
+// NON_COMPLIANT status. The numbers dropped:
+//
+//   - 62/23 → 54/18 once ExceedsSLA was changed to strict-greater,
+//     which stopped 0h-threshold controls from flagging assets with
+//     zero exposure (CTL.S3.PUBLIC.004 and CTL.S3.INCOMPLETE.001
+//     firing on safe buckets was the symptom).
+//   - 54 → 42 once the AssessmentCollector started deduplicating by
+//     FindingID across RecordFindings calls (Phase 18). Recurrence
+//     strategies fire on every snapshot the input contains; with two
+//     lordofheaven snapshots, CTL.S3.PUBLIC.PREFIX.001 used to
+//     emit four findings per asset where one is correct. Issue count
+//     stayed at 18 because the dropped duplicates already shared an
+//     issue with the kept finding.
 func TestApply_LordofheavenBuiltinControls(t *testing.T) {
-	const wantFindings = 54
+	const wantFindings = 42
 	const wantIssues = 18
 
 	a, err := stave.Apply(context.Background(), stave.Config{

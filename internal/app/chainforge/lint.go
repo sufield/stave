@@ -19,7 +19,7 @@ type LintResult struct {
 // LintChain validates a chain definition against the control catalog
 // and the catalog-supplied capability registry.
 func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]bool, registry policy.CapabilityRegistry) LintResult {
-	result := LintResult{ChainID: chain.ID}
+	result := LintResult{ChainID: string(chain.ID)}
 
 	if chain.ID == "" {
 		result.Errors = append(result.Errors, "missing required field: id")

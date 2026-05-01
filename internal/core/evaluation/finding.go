@@ -16,7 +16,7 @@ import (
 // Finding represents a detected control violation.
 // A Finding is purely factual: evidence + classification, no advice.
 type Finding struct {
-	FindingID          string                   `json:"finding_id"`
+	FindingID          kernel.FindingID         `json:"finding_id"`
 	ControlID          kernel.ControlID         `json:"control_id"`
 	ControlName        string                   `json:"control_name"`
 	ControlDescription string                   `json:"control_description"`
@@ -179,7 +179,7 @@ type ReachabilityContext struct {
 // ChainMembershipEntry records that a finding contributed to a fired chain.
 type ChainMembershipEntry struct {
 	// ChainID is the chain definition ID (e.g. "data_exfiltration_path").
-	ChainID string `json:"chain_id"`
+	ChainID kernel.ChainID `json:"chain_id"`
 
 	// ChainSeverity is the compound severity of the chain.
 	ChainSeverity string `json:"chain_severity"`
@@ -219,13 +219,13 @@ func SortFindings(fs []Finding) {
 
 // StableFindingID computes a deterministic fingerprint for a (control, asset) pair.
 // Same inputs always produce the same ID, enabling cross-run finding correlation.
-func StableFindingID(ctlID kernel.ControlID, astID asset.ID) string {
+func StableFindingID(ctlID kernel.ControlID, astID asset.ID) kernel.FindingID {
 	h := sha256.New()
 	h.Write([]byte("finding:"))
 	h.Write([]byte(ctlID))
 	h.Write([]byte(":"))
 	h.Write([]byte(astID))
-	return "sha256:" + hex.EncodeToString(h.Sum(nil))[:16]
+	return kernel.FindingID("sha256:" + hex.EncodeToString(h.Sum(nil))[:16])
 }
 
 // NewFindingFromMetadata creates a Finding pre-populated with control metadata.

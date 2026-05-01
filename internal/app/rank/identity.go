@@ -167,7 +167,7 @@ func buildIdentityEntries(
 		var directScore float64
 		var directMaxSev policy.Severity
 		for _, idx := range findingsByAsset[arn] {
-			entry.DirectFindingIDs = append(entry.DirectFindingIDs, findings[idx].FindingID)
+			entry.DirectFindingIDs = append(entry.DirectFindingIDs, string(findings[idx].FindingID))
 			directScore += findingScores[idx]
 			if findings[idx].ControlSeverity > directMaxSev {
 				directMaxSev = findings[idx].ControlSeverity
@@ -190,7 +190,7 @@ func buildIdentityEntries(
 			}
 			var maxSev policy.Severity
 			for _, idx := range findingsByAsset[reach.resourceARN] {
-				fid := findings[idx].FindingID
+				fid := string(findings[idx].FindingID)
 				rr.FindingIDs = append(rr.FindingIDs, fid)
 				if !seenTransitive[fid] {
 					seenTransitive[fid] = true

@@ -106,7 +106,7 @@ func MapChainFindings(chains []risk.CompoundFinding, timestamp string) []ASFFind
 		cf := &chains[i]
 		findings = append(findings, ASFFinding{
 			SchemaVersion: "2018-10-08",
-			ID:            "stave/chain/" + cf.ChainID,
+			ID:            "stave/chain/" + string(cf.ChainID),
 			ProductARN:    "arn:aws:securityhub:local:stave:product/stave/safety-engine",
 			GeneratorID:   "stave-logic-engine",
 			AWSAccountID:  "000000000000",
@@ -117,11 +117,11 @@ func MapChainFindings(chains []risk.CompoundFinding, timestamp string) []ASFFind
 				Label:      cf.Severity.String(),
 				Normalized: severityToNormalized(cf.Severity.String()),
 			},
-			Title:       "Compound Risk: " + cf.ChainID,
+			Title:       "Compound Risk: " + string(cf.ChainID),
 			Description: cf.Narrative,
-			Resources:   []ASFFResource{{Type: "Other", ID: cf.ChainID}},
+			Resources:   []ASFFResource{{Type: "Other", ID: string(cf.ChainID)}},
 			ProductFields: map[string]string{
-				"ChainId":       cf.ChainID,
+				"ChainId":       string(cf.ChainID),
 				"CompoundScore": fmt.Sprintf("%.1f", cf.CompoundScore),
 			},
 		})

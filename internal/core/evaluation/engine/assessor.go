@@ -565,7 +565,7 @@ func applyAcknowledgments(
 		}
 
 		af := policy.AcknowledgedFinding{
-			FindingID:        f.FindingID,
+			FindingID:        string(f.FindingID),
 			ControlID:        f.ControlID,
 			AssetID:          f.AssetID,
 			Severity:         f.ControlSeverity,

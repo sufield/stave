@@ -65,7 +65,7 @@ func Run(input Input) *Result {
 			ch := &input.Chains[j]
 			if ch.ID == cf.ChainID && remainingFailing < ch.EscalationThreshold {
 				deactivated = append(deactivated, ChainChange{
-					ChainID:  ch.ID,
+					ChainID:  string(ch.ID),
 					Severity: ch.CompoundSeverity.String(),
 					Status:   "DEACTIVATED",
 				})
