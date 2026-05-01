@@ -151,6 +151,8 @@ func TestCommonShortAliasesRegistered(t *testing.T) {
 		NewStdinObsRepo:  f.NewStdinObsRepo,
 		NewFindingWriter: f.NewFindingWriter,
 		NewCELEvaluator:  f.NewCELEvaluator,
+		NewChainLoader:   f.NewChainLoader,
+		NewSLALoader:     f.NewSLALoader,
 	})
 	validateCmd := applyvalidate.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime())
 	cases := []struct {

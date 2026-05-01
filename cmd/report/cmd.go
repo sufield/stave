@@ -16,19 +16,25 @@ import (
 
 	"github.com/spf13/cobra"
 
-	artifact "github.com/sufield/stave/internal/adapters/artifacts"
-	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	"github.com/sufield/stave/internal/adapters/observations"
-	infraSLA "github.com/sufield/stave/internal/adapters/sla"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/app/contracts"
 	appcoverage "github.com/sufield/stave/internal/app/coverage"
 	er "github.com/sufield/stave/internal/app/execreport"
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/app/teams"
-	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/evaluation"
 	corereport "github.com/sufield/stave/internal/core/report"
 )
+
+// Deps holds the adapter factories the report command depends on.
+type Deps struct {
+	NewChainLoader          compose.ChainLoaderFactory
+	NewSLALoader            compose.SLALoaderFactory
+	NewArtifactLoader       compose.ArtifactLoaderFactory
+	NewSnapshotBundleLoader compose.SnapshotBundleLoaderFactory
+	NewCtlRepo              compose.CtlRepoFactory
+}
 
 type options struct {
 	HistoryDir    string
@@ -44,8 +50,20 @@ type options struct {
 	TeamBreakdown bool
 }
 
-// NewCmd constructs the report command.
+// NewCmd constructs the report command with default factories.
 func NewCmd() *cobra.Command {
+	f := compose.DefaultFactories()
+	return NewCmdWithDeps(Deps{
+		NewChainLoader:          f.NewChainLoader,
+		NewSLALoader:            f.NewSLALoader,
+		NewArtifactLoader:       f.NewArtifactLoader,
+		NewSnapshotBundleLoader: f.NewSnapshotBundleLoader,
+		NewCtlRepo:              f.NewCtlRepo,
+	})
+}
+
+// NewCmdWithDeps constructs the report command with explicit dependencies.
+func NewCmdWithDeps(deps Deps) *cobra.Command {
 	opts := &options{
 		ControlsDir: "controls",
 		ChainsDir:   "chains",
@@ -85,7 +103,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runReport(cmd.Context(), cmd.OutOrStdout(), opts)
+			return runReport(cmd.Context(), cmd.OutOrStdout(), opts, deps)
 		},
 	}
 
@@ -107,11 +125,11 @@ Exit Codes:
 	return cmd
 }
 
-func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
+func runReport(ctx context.Context, stdout io.Writer, opts *options, deps Deps) error {
 	now := time.Now().UTC()
 
 	// Load history assessments.
-	assessments, err := loadHistory(ctx, opts.HistoryDir)
+	assessments, err := loadHistory(ctx, opts.HistoryDir, deps.NewArtifactLoader)
 	if err != nil {
 		return &ui.UserError{Err: err}
 	}
@@ -124,13 +142,17 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	latest := assessments[len(assessments)-1]
 
 	// Load chains and controls for ATT&CK.
-	chains, chainsErr := ctlyaml.LoadChains(opts.ChainsDir, capabilities.Builtin())
+	chains, chainsErr := compose.LoadChainDefinitions(ctx, deps.NewChainLoader, opts.ChainsDir)
 	if chainsErr != nil {
 		return fmt.Errorf("loading chains: %w", chainsErr)
 	}
 
 	// Load snapshot for coverage count.
-	snapshots, snapshotErr := observations.LoadBundle(opts.SnapshotPath)
+	bundleLoader, blErr := deps.NewSnapshotBundleLoader()
+	if blErr != nil {
+		return fmt.Errorf("create snapshot bundle loader: %w", blErr)
+	}
+	snapshots, snapshotErr := bundleLoader.LoadBundle(ctx, opts.SnapshotPath)
 	if snapshotErr != nil {
 		return fmt.Errorf("loading snapshots for report: %w", snapshotErr)
 	}
@@ -193,11 +215,11 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	// rather than receive a report that quietly omits SLA content.
 	var slaSection *er.SLASection
 	if opts.SLAFile != "" {
-		pol, slaErr := infraSLA.LoadFromFile(opts.SLAFile)
+		cfg, slaErr := compose.LoadSLAPolicy(ctx, deps.NewSLALoader, "", opts.SLAFile)
 		if slaErr != nil {
 			return &ui.UserError{Err: fmt.Errorf("load --sla-profile-file %q: %w", opts.SLAFile, slaErr)}
 		}
-		slaSection = buildSLASection(latest, pol)
+		slaSection = buildSLASection(latest, cfg)
 	}
 
 	// Top findings.
@@ -207,7 +229,7 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	chainsSection := buildChainsSection(latest)
 
 	// ATT&CK coverage (static from catalog).
-	attck := buildATTCKSection(ctx, opts.ControlsDir)
+	attck := buildATTCKSection(ctx, opts.ControlsDir, deps.NewCtlRepo)
 
 	// Honest ControlsTotal: count what's actually loaded from
 	// opts.ControlsDir. Falling back to the previous TacticsTotal*10
@@ -216,7 +238,10 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	// reported as "140 controls total" regardless of reality.
 	controlsTotal := 0
 	if opts.ControlsDir != "" {
-		ctlLoader := ctlyaml.NewControlLoader()
+		ctlLoader, lErr := deps.NewCtlRepo()
+		if lErr != nil {
+			return fmt.Errorf("create control loader: %w", lErr)
+		}
 		loaded, loadErr := ctlLoader.LoadControls(ctx, opts.ControlsDir)
 		if loadErr != nil {
 			// The earlier shape silently dropped the error and left
@@ -406,7 +431,10 @@ func countFindings(a *corereport.Assessment) er.FindingsSummary {
 	return fs
 }
 
-func buildSLASection(a *corereport.Assessment, pol *infraSLA.Policy) *er.SLASection {
+func buildSLASection(a *corereport.Assessment, cfg *evaluation.SLAConfig) *er.SLASection {
+	if cfg == nil {
+		return nil
+	}
 	bySev := make(map[string]er.SLASev)
 	burnRates := make(map[string]float64)
 	burnCounts := make(map[string]int)
@@ -415,7 +443,7 @@ func buildSLASection(a *corereport.Assessment, pol *infraSLA.Policy) *er.SLASect
 	for i := range a.Findings {
 		f := &a.Findings[i]
 		sev := strings.ToLower(f.ControlSeverity.String())
-		deadline := pol.DeadlineHoursFor(sev)
+		deadline := cfg.DeadlineBySeverity[sev]
 		if deadline <= 0 {
 			continue
 		}
@@ -451,7 +479,7 @@ func buildSLASection(a *corereport.Assessment, pol *infraSLA.Policy) *er.SLASect
 	}
 
 	return &er.SLASection{
-		ProfileName:   pol.Name,
+		ProfileName:   cfg.ProfileID,
 		CompliancePct: overallPct,
 		BySeverity:    bySev,
 		BurnRates:     burnRates,
@@ -518,7 +546,7 @@ func buildChainsSection(a *corereport.Assessment) er.ChainsSection {
 	}
 }
 
-func buildATTCKSection(ctx context.Context, controlsDir string) er.AttackCoverageSection {
+func buildATTCKSection(ctx context.Context, controlsDir string, newCtlRepo compose.CtlRepoFactory) er.AttackCoverageSection {
 	total := len(appcoverage.AllTactics)
 
 	// Without controls, we cannot honestly say what's covered. Fall
@@ -545,7 +573,10 @@ func buildATTCKSection(ctx context.Context, controlsDir string) er.AttackCoverag
 	if controlsDir == "" {
 		return emptyReport("not_covered")
 	}
-	loader := ctlyaml.NewControlLoader()
+	loader, lErr := newCtlRepo()
+	if lErr != nil {
+		return emptyReport("error")
+	}
 	controls, err := loader.LoadControls(ctx, controlsDir)
 	if err != nil {
 		return emptyReport("not_covered")
@@ -610,12 +641,15 @@ func buildTeamSections(a *corereport.Assessment, manifest *teams.Manifest) []er.
 	return sections
 }
 
-func loadHistory(ctx context.Context, dir string) ([]*corereport.Assessment, error) {
+func loadHistory(ctx context.Context, dir string, newLoader compose.ArtifactLoaderFactory) ([]*corereport.Assessment, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("read history: %w", err)
 	}
-	loader := artifact.NewLoader()
+	loader, lErr := newLoader()
+	if lErr != nil {
+		return nil, fmt.Errorf("create artifact loader: %w", lErr)
+	}
 	var out []*corereport.Assessment
 	skipped := 0
 	for _, e := range entries {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
+	"github.com/sufield/stave/internal/core/diag"
 	"gopkg.in/yaml.v3"
 )
 
@@ -31,6 +32,35 @@ type Request struct {
 	ActualVersion string
 	Data          []byte
 	IsYAML        bool
+}
+
+// RequestValidator runs schema validation against a typed Request.
+// The Request.Kind discriminator selects which schema is applied. Used by
+// callers that already have a Request value (e.g. JSON output writers).
+type RequestValidator interface {
+	Validate(req Request) ([]Diagnostic, error)
+}
+
+// ControlYAMLValidator validates control YAML documents.
+// Implemented by *Validator.
+type ControlYAMLValidator interface {
+	ValidateControlYAML(raw []byte, opts ...Option) (*diag.Assessment, error)
+}
+
+// ObservationJSONValidator validates observation JSON documents.
+// Implemented by *Validator.
+type ObservationJSONValidator interface {
+	ValidateObservationJSON(raw []byte, opts ...Option) (*diag.Assessment, error)
+}
+
+// SchemaValidator is the umbrella interface composing all three
+// document-kind validators. Adapter and app-layer code that needs to
+// validate multiple document kinds depends on this; consumers that
+// only need one kind should depend on the narrower interface (ISP).
+type SchemaValidator interface {
+	RequestValidator
+	ControlYAMLValidator
+	ObservationJSONValidator
 }
 
 // Validator manages the compilation and caching of JSON schemas.

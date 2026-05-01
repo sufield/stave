@@ -3,26 +3,31 @@
 package rank
 
 import (
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/sufield/stave/internal/adapters/observations"
+	"github.com/sufield/stave/cmd/cmdutil/compose"
 	apprank "github.com/sufield/stave/internal/app/rank"
 	"github.com/sufield/stave/internal/app/sprintplanner"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
+
+// Deps holds the adapter factories required by the rank command.
+type Deps struct {
+	NewSnapshotBundleLoader compose.SnapshotBundleLoaderFactory
+}
 
 type options struct {
 	InputPath           string
@@ -38,8 +43,14 @@ type options struct {
 	EffortModel         string
 }
 
-// NewCmd constructs the top-level rank command.
+// NewCmd constructs the rank command with default factories.
 func NewCmd() *cobra.Command {
+	f := compose.DefaultFactories()
+	return NewCmdWithDeps(Deps{NewSnapshotBundleLoader: f.NewSnapshotBundleLoader})
+}
+
+// NewCmdWithDeps constructs the rank command with explicit dependencies.
+func NewCmdWithDeps(deps Deps) *cobra.Command {
 	opts := &options{
 		TopN:   5,
 		Format: "text",
@@ -71,7 +82,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return run(cmd.OutOrStdout(), cmd.ErrOrStderr(), opts)
+			return run(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), opts, deps)
 		},
 	}
 
@@ -90,7 +101,7 @@ Exit Codes:
 	return cmd
 }
 
-func run(stdout, _ io.Writer, opts *options) error {
+func run(ctx context.Context, stdout, _ io.Writer, opts *options, deps Deps) error {
 	// Read assessment JSON.
 	var data []byte
 	var err error
@@ -119,7 +130,7 @@ func run(stdout, _ io.Writer, opts *options) error {
 
 	// Identity-centric ranking.
 	if opts.Identity {
-		return runIdentity(stdout, opts, &assessment)
+		return runIdentity(ctx, stdout, opts, &assessment, deps)
 	}
 
 	// Sprint planning mode.
@@ -132,21 +143,7 @@ func run(stdout, _ io.Writer, opts *options) error {
 
 	// Re-sort by blast radius if requested.
 	if opts.SortBy == "blast-radius" {
-		blastIndex := buildBlastIndex(&assessment)
-		slices.SortFunc(roadmap.Entries, func(a, b apprank.PriorityEntry) int {
-			as := blastIndex[string(a.ControlID)+"@"+string(a.AssetID)]
-			bs := blastIndex[string(b.ControlID)+"@"+string(b.AssetID)]
-			if as > bs {
-				return -1
-			}
-			if as < bs {
-				return 1
-			}
-			return 0
-		})
-		for i := range roadmap.Entries {
-			roadmap.Entries[i].Rank = i + 1
-		}
+		apprank.SortByBlastRadius(&roadmap, apprank.BuildBlastIndex(&assessment))
 	}
 
 	// Group by owner if requested.
@@ -196,17 +193,6 @@ func run(stdout, _ io.Writer, opts *options) error {
 	return nil
 }
 
-func buildBlastIndex(a *report.Assessment) map[string]float64 {
-	idx := make(map[string]float64, len(a.Findings))
-	for i := range a.Findings {
-		f := &a.Findings[i]
-		if f.Reachability != nil {
-			idx[string(f.ControlID)+"@"+string(f.AssetID)] = f.Reachability.BlastRadiusScore
-		}
-	}
-	return idx
-}
-
 func writeTextRoadmap(w io.Writer, rm apprank.Roadmap, showReach bool, assessment *report.Assessment) {
 	if len(rm.Entries) == 0 {
 		fmt.Fprintln(w, "No findings to rank.")
@@ -233,7 +219,7 @@ func writeTextRoadmap(w io.Writer, rm apprank.Roadmap, showReach bool, assessmen
 		}
 		if showReach && assessment != nil {
 			key := string(e.ControlID) + "@" + string(e.AssetID)
-			blastIdx := buildBlastIndex(assessment)
+			blastIdx := apprank.BuildBlastIndex(assessment)
 			if score, ok := blastIdx[key]; ok {
 				fmt.Fprintf(w, "      Reach: blast_radius=%.0f\n", score)
 			} else {
@@ -281,18 +267,7 @@ func writeTextRoadmap(w io.Writer, rm apprank.Roadmap, showReach bool, assessmen
 	}
 }
 
-// teamRoadmap groups prioritized entries by team.
-type teamRoadmap struct {
-	TeamID       string                  `json:"team_id"`
-	TeamName     string                  `json:"team_name"`
-	FindingCount int                     `json:"finding_count"`
-	TotalRisk    float64                 `json:"total_risk_score"`
-	SLABreaches  int                     `json:"sla_breaches"`
-	ActiveChains int                     `json:"active_chains"`
-	Entries      []apprank.PriorityEntry `json:"entries"`
-}
-
-func runGroupByOwner(stdout io.Writer, opts *options, _ *report.Assessment, roadmap apprank.Roadmap) error {
+func runGroupByOwner(stdout io.Writer, opts *options, assessment *report.Assessment, roadmap apprank.Roadmap) error {
 	manifestPath := opts.TeamManifest
 	if manifestPath == "" {
 		manifestPath = "stave-teams.yaml"
@@ -302,47 +277,13 @@ func runGroupByOwner(stdout io.Writer, opts *options, _ *report.Assessment, road
 		return fmt.Errorf("load team manifest: %w", err)
 	}
 
-	// Group entries by team.
-	teamMap := make(map[string]*teamRoadmap)
-	for i := range roadmap.Entries {
-		e := &roadmap.Entries[i]
-		owner := manifest.ResolveOwner(nil, string(e.AssetID), string(e.ControlID))
-		tr, ok := teamMap[owner.TeamID]
-		if !ok {
-			tr = &teamRoadmap{TeamID: owner.TeamID, TeamName: owner.TeamName}
-			teamMap[owner.TeamID] = tr
-		}
-		tr.FindingCount++
-		tr.TotalRisk += e.PriorityScore
-		if e.SLABreached {
-			tr.SLABreaches++
-		}
-		if e.IsChainMember {
-			tr.ActiveChains++
-		}
-		tr.Entries = append(tr.Entries, *e)
-	}
-
-	// Collect teams sorted by total risk (highest first).
-	var teamRoadmaps []teamRoadmap
-	for _, tr := range teamMap {
-		teamRoadmaps = append(teamRoadmaps, *tr)
-	}
-	slices.SortFunc(teamRoadmaps, func(a, b teamRoadmap) int {
-		if a.TotalRisk > b.TotalRisk {
-			return -1
-		}
-		if a.TotalRisk < b.TotalRisk {
-			return 1
-		}
-		return strings.Compare(a.TeamID, b.TeamID)
-	})
+	teamRoadmaps := apprank.GroupByOwner(assessment, roadmap, manifest)
 
 	switch opts.Format {
 	case "json":
 		output := struct {
 			Roadmap      apprank.Roadmap `json:"roadmap"`
-			TeamRoadmaps []teamRoadmap   `json:"team_roadmaps"`
+			TeamRoadmaps []apprank.TeamRoadmap `json:"team_roadmaps"`
 		}{Roadmap: roadmap, TeamRoadmaps: teamRoadmaps}
 		data, marshalErr := json.MarshalIndent(output, "", "  ")
 		if marshalErr != nil {
@@ -364,12 +305,16 @@ func runGroupByOwner(stdout io.Writer, opts *options, _ *report.Assessment, road
 	return nil
 }
 
-func runIdentity(stdout io.Writer, opts *options, assessment *report.Assessment) error {
+func runIdentity(ctx context.Context, stdout io.Writer, opts *options, assessment *report.Assessment, deps Deps) error {
 	if opts.SnapshotPath == "" {
 		return errors.New("--snapshot is required for --identity (path to observation snapshots)")
 	}
 
-	snapshots, err := observations.LoadBundle(opts.SnapshotPath)
+	bundleLoader, blErr := deps.NewSnapshotBundleLoader()
+	if blErr != nil {
+		return fmt.Errorf("create snapshot bundle loader: %w", blErr)
+	}
+	snapshots, err := bundleLoader.LoadBundle(ctx, opts.SnapshotPath)
 	if err != nil {
 		return fmt.Errorf("load snapshot: %w", err)
 	}
@@ -481,7 +426,7 @@ func writeCSVRoadmap(w io.Writer, rm apprank.Roadmap, assessment *report.Assessm
 }
 
 func runSprint(stdout io.Writer, opts *options, assessment *report.Assessment) error {
-	capacityHours, err := parseCapacity(opts.Capacity)
+	capacityHours, err := apprank.ParseCapacity(opts.Capacity)
 	if err != nil {
 		return fmt.Errorf("invalid --capacity %q: %w", opts.Capacity, err)
 	}
@@ -517,36 +462,6 @@ func runSprint(stdout io.Writer, opts *options, assessment *report.Assessment) e
 		writeTextSprint(stdout, result)
 	}
 	return nil
-}
-
-func parseCapacity(s string) (float64, error) {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return 0, errors.New("empty capacity")
-	}
-
-	if before, ok := strings.CutSuffix(s, "d"); ok {
-		val, err := strconv.ParseFloat(before, 64)
-		if err != nil {
-			return 0, err
-		}
-		return val * 8, nil
-	}
-
-	if before, ok := strings.CutSuffix(s, "h"); ok {
-		val, err := strconv.ParseFloat(before, 64)
-		if err != nil {
-			return 0, err
-		}
-		return val, nil
-	}
-
-	// Try bare number as hours.
-	val, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		return 0, errors.New("use format: 40h or 5d")
-	}
-	return val, nil
 }
 
 func writeTextSprint(w io.Writer, r sprintplanner.SprintResult) {

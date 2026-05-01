@@ -10,12 +10,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
-	"github.com/sufield/stave/internal/adapters/sla"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/builtin/capabilities"
-	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -33,6 +30,8 @@ type Deps struct {
 	NewStdinObsRepo  func(io.Reader) (appcontracts.ObservationRepository, error)
 	NewFindingWriter compose.FindingWriterFactory
 	NewCELEvaluator  compose.CELEvaluatorFactory
+	NewChainLoader   compose.ChainLoaderFactory
+	NewSLALoader     compose.SLALoaderFactory
 }
 
 // Builder encapsulates the cmd-layer resolution needed before building
@@ -53,6 +52,9 @@ type Builder struct {
 	NewFindingWriter compose.FindingWriterFactory
 	NewCtlRepo       compose.CtlRepoFactory
 	NewStdinObsRepo  func(io.Reader) (appcontracts.ObservationRepository, error)
+	NewCELEvaluator  compose.CELEvaluatorFactory
+	NewChainLoader   compose.ChainLoaderFactory
+	NewSLALoader     compose.SLALoaderFactory
 
 	// Pre-loaded project config from Resolve(), shared across the pipeline.
 	ProjectConfig     *appconfig.WorkspacePolicy
@@ -109,45 +111,22 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 		return nil, fmt.Errorf("resolve project config: %w", err)
 	}
 
-	celEval, err := stavecel.NewPredicateEval()
+	celEval, err := b.NewCELEvaluator()
 	if err != nil {
 		return nil, fmt.Errorf("initialize CEL evaluator: %w", err)
 	}
 
 	// Auto-discover chain definitions from chains/ directory at project root,
 	// independent of --controls path.
-	chains, chainsErr := ctlyaml.LoadChains("chains", capabilities.Builtin())
+	chains, chainsErr := compose.LoadChainDefinitions(ctx, b.NewChainLoader, "chains")
 	if chainsErr != nil {
 		return nil, fmt.Errorf("loading chains: %w", chainsErr)
 	}
 
 	// Load SLA policy — file takes precedence over embedded.
-	var slaCfg *evaluation.SLAConfig
-	var slaPol *sla.Policy
-	if b.Opts.SLAProfileFile != "" {
-		pol, slaErr := sla.LoadFromFile(b.Opts.SLAProfileFile)
-		if slaErr != nil {
-			return nil, fmt.Errorf("load sla profile file: %w", slaErr)
-		}
-		slaPol = pol
-	} else if b.Opts.SLAProfile != "" {
-		pol, slaErr := sla.LoadEmbedded(b.Opts.SLAProfile)
-		if slaErr != nil {
-			return nil, fmt.Errorf("load sla profile: %w", slaErr)
-		}
-		slaPol = pol
-	}
-	if slaPol != nil {
-		slaCfg = &evaluation.SLAConfig{
-			ProfileID: slaPol.ID,
-			DeadlineBySeverity: map[string]float64{
-				"critical": slaPol.DeadlineHoursFor("critical"),
-				"high":     slaPol.DeadlineHoursFor("high"),
-				"medium":   slaPol.DeadlineHoursFor("medium"),
-				"low":      slaPol.DeadlineHoursFor("low"),
-			},
-			EscalationFactor: slaPol.EscalationFactor,
-		}
+	slaCfg, err := compose.LoadSLAPolicy(ctx, b.NewSLALoader, b.Opts.SLAProfile, b.Opts.SLAProfileFile)
+	if err != nil {
+		return nil, err
 	}
 
 	built, err := appeval.BuildDependencies(ctx, &appeval.BuildDependenciesInput{

@@ -1,14 +1,33 @@
 package observations
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
+
+// BundleLoader implements appcontracts.SnapshotBundleLoader for the
+// single-file multi-snapshot observation bundle format. Distinct from
+// ObservationLoader (directory of files) because bundles skip per-file
+// schema validation — see ParseBundle for why.
+type BundleLoader struct{}
+
+// NewBundleLoader returns the standard bundle loader.
+func NewBundleLoader() *BundleLoader { return &BundleLoader{} }
+
+var _ appcontracts.SnapshotBundleLoader = (*BundleLoader)(nil)
+
+// LoadBundle reads and parses a bundle file. The ctx parameter is accepted
+// for interface conformance; the underlying read is not yet cancellation-aware.
+func (BundleLoader) LoadBundle(_ context.Context, path string) ([]asset.Snapshot, error) {
+	return LoadBundle(path)
+}
 
 // ObservationBundle represents a bundled observations file containing multiple snapshots.
 type ObservationBundle struct {

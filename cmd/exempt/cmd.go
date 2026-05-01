@@ -15,6 +15,7 @@ import (
 	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	appexempt "github.com/sufield/stave/internal/app/exempt"
 	"github.com/sufield/stave/internal/controldata"
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 const defaultFile = "./stave-acknowledgments.yaml"
@@ -91,10 +92,10 @@ func runAcknowledge(opts acknowledgeOptions) (acknowledgeResult, error) {
 		Approver:             opts.Approver,
 		ExpiryDate:           opts.Expires,
 		CompensatingControls: comps,
-	}, time.Now().UTC().Format(time.RFC3339)); addErr != nil {
+	}, appexempt.NewTimestamp(ports.RealClock{})); addErr != nil {
 		return acknowledgeResult{}, addErr
 	}
-	if saveErr := appexempt.Save(opts.File, f, "stave exempt acknowledge", time.Now().UTC().Format(time.RFC3339)); saveErr != nil {
+	if saveErr := appexempt.Save(opts.File, f, "stave exempt acknowledge", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
 		return acknowledgeResult{}, saveErr
 	}
 	return acknowledgeResult{ControlID: opts.ControlID, AssetID: opts.AssetID, Expires: opts.Expires}, nil
@@ -181,7 +182,7 @@ func runExcept(opts exceptOptions) error {
 	}); addErr != nil {
 		return addErr
 	}
-	return appexempt.Save(opts.File, f, "stave exempt except", time.Now().UTC().Format(time.RFC3339))
+	return appexempt.Save(opts.File, f, "stave exempt except", appexempt.NewTimestamp(ports.RealClock{}))
 }
 
 func newExceptCmd() *cobra.Command {
@@ -240,7 +241,7 @@ func runAsset(opts assetOptions) error {
 	}); addErr != nil {
 		return addErr
 	}
-	return appexempt.Save(opts.File, f, "stave exempt asset", time.Now().UTC().Format(time.RFC3339))
+	return appexempt.Save(opts.File, f, "stave exempt asset", appexempt.NewTimestamp(ports.RealClock{}))
 }
 
 func newExemptSubCmd() *cobra.Command {
@@ -342,10 +343,10 @@ func runRemove(opts removeOptions) (removeResult, error) {
 	if err != nil {
 		return removeResult{}, err
 	}
-	if rmErr := f.Remove(opts.ID, time.Now().UTC().Format(time.RFC3339)); rmErr != nil {
+	if rmErr := f.Remove(opts.ID, appexempt.NewTimestamp(ports.RealClock{})); rmErr != nil {
 		return removeResult{}, rmErr
 	}
-	if saveErr := appexempt.Save(opts.File, f, "stave exempt remove", time.Now().UTC().Format(time.RFC3339)); saveErr != nil {
+	if saveErr := appexempt.Save(opts.File, f, "stave exempt remove", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
 		return removeResult{}, saveErr
 	}
 	return removeResult{ID: opts.ID}, nil
@@ -592,7 +593,9 @@ func runValidate(opts validateOptions) (validateResult, error) {
 		return validateResult{}, err
 	}
 
-	// Load catalog for compensating control validation.
+	// Load built-in catalog for compensating-control validation. cmd/ is
+	// the composition root; routing through compose was considered but
+	// adds churn for a single-purpose helper that has no other consumers.
 	knownIDs := make(map[string]bool)
 	store := builtinctl.NewControlStore(controldata.FS, ".")
 	if controls, loadErr := store.All(); loadErr == nil {

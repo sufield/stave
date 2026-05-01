@@ -23,7 +23,7 @@ import (
 
 // ControlLoader loads control definitions from YAML files.
 type ControlLoader struct {
-	validator     *contractvalidator.Validator
+	validator     contractvalidator.ControlYAMLValidator
 	aliasResolver policy.AliasResolver
 	onProgress    func(processed, total int)
 }

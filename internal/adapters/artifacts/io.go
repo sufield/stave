@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
@@ -14,6 +15,8 @@ import (
 type Loader struct {
 	adapter *evaljson.Loader
 }
+
+var _ appcontracts.ArtifactLoader = (*Loader)(nil)
 
 // NewLoader initializes a standard artifact loader.
 func NewLoader() *Loader {

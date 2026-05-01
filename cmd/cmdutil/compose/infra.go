@@ -7,8 +7,10 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"github.com/sufield/stave/internal/adapters/artifacts"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
+	"github.com/sufield/stave/internal/adapters/sla"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/builtin/predicate"
 	stavecel "github.com/sufield/stave/internal/cel"
@@ -31,6 +33,19 @@ type CELEvaluatorFactory = func() (policy.PredicateEval, error)
 // FindingWriterFactory creates a finding marshaler for the given output format.
 type FindingWriterFactory = func(appcontracts.OutputFormat, bool) (appcontracts.FindingMarshaler, error)
 
+// ChainLoaderFactory constructs a ChainDefinitionLoader for loading chain YAML.
+type ChainLoaderFactory = func() (appcontracts.ChainDefinitionLoader, error)
+
+// SLALoaderFactory constructs an SLAProvider for resolving SLA policies.
+type SLALoaderFactory = func() (appcontracts.SLAProvider, error)
+
+// ArtifactLoaderFactory constructs an ArtifactLoader for reading prior runs.
+type ArtifactLoaderFactory = func() (appcontracts.ArtifactLoader, error)
+
+// SnapshotBundleLoaderFactory constructs a SnapshotBundleLoader for
+// loading multi-snapshot observation bundles from a single file.
+type SnapshotBundleLoaderFactory = func() (appcontracts.SnapshotBundleLoader, error)
+
 // SnapshotLoader loads observation snapshots from a directory.
 type SnapshotLoader = func(ctx context.Context, dir string) ([]asset.Snapshot, error)
 
@@ -46,12 +61,16 @@ type AssetLoaderFunc = func(ctx context.Context, obsDir, ctlDir string) (Assets,
 // WireCommands destructures this into individual variables — no command
 // ever receives the whole struct.
 type Factories struct {
-	NewObsRepo       ObsRepoFactory
-	NewStdinObsRepo  func(io.Reader) (appcontracts.ObservationRepository, error)
-	NewCtlRepo       CtlRepoFactory
-	NewFindingWriter FindingWriterFactory
-	NewCELEvaluator  CELEvaluatorFactory
-	NewSnapshotRepo  SnapshotRepoFactory
+	NewObsRepo             ObsRepoFactory
+	NewStdinObsRepo        func(io.Reader) (appcontracts.ObservationRepository, error)
+	NewCtlRepo             CtlRepoFactory
+	NewFindingWriter       FindingWriterFactory
+	NewCELEvaluator        CELEvaluatorFactory
+	NewSnapshotRepo        SnapshotRepoFactory
+	NewChainLoader         ChainLoaderFactory
+	NewSLALoader           SLALoaderFactory
+	NewArtifactLoader      ArtifactLoaderFactory
+	NewSnapshotBundleLoader SnapshotBundleLoaderFactory
 }
 
 // DefaultFactories returns factory functions configured with standard adapters.
@@ -70,6 +89,18 @@ func DefaultFactories() Factories {
 		NewCELEvaluator:  stavecel.NewPredicateEval,
 		NewSnapshotRepo: func() (appcontracts.SnapshotReader, error) {
 			return observations.NewObservationLoader(), nil
+		},
+		NewChainLoader: func() (appcontracts.ChainDefinitionLoader, error) {
+			return ctlyaml.NewChainProvider(), nil
+		},
+		NewSLALoader: func() (appcontracts.SLAProvider, error) {
+			return sla.NewProvider(), nil
+		},
+		NewArtifactLoader: func() (appcontracts.ArtifactLoader, error) {
+			return artifacts.NewLoader(), nil
+		},
+		NewSnapshotBundleLoader: func() (appcontracts.SnapshotBundleLoader, error) {
+			return observations.NewBundleLoader(), nil
 		},
 	}
 }

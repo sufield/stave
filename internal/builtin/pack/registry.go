@@ -1,9 +1,12 @@
 package pack
 
 import (
+	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"maps"
 	"path"
@@ -14,8 +17,31 @@ import (
 
 	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/platform/crypto"
 )
+
+// hashBytes returns the SHA-256 hex digest of data.
+// Inlined from internal/platform/crypto so the builtin pack registry
+// (which is closer to the domain layer than platform) does not depend
+// on platform/crypto for what amounts to two stdlib calls.
+func hashBytes(data []byte) kernel.Digest {
+	sum := sha256.Sum256(data)
+	return kernel.Digest(hex.EncodeToString(sum[:]))
+}
+
+// hashDelimited returns the SHA-256 hex digest of parts joined by sep.
+// Each part is followed by sep so the encoding is reversible at the
+// digest boundary (no two distinct part lists collide on this digest
+// for any single-byte sep).
+func hashDelimited(parts []string, sep byte) kernel.Digest {
+	h := sha256.New()
+	var sepBuf [1]byte
+	sepBuf[0] = sep
+	for _, p := range parts {
+		_, _ = io.WriteString(h, p)
+		_, _ = h.Write(sepBuf[:])
+	}
+	return kernel.Digest(hex.EncodeToString(h.Sum(nil)))
+}
 
 //go:embed embedded/index.yaml embedded/packs/*.yaml
 var embeddedRegistryFS embed.FS
@@ -80,7 +106,7 @@ func NewIndex(data []byte) (*Index, error) {
 	}
 	r := &Index{
 		version:   strings.TrimSpace(idx.Version),
-		hash:      crypto.HashBytes(data),
+		hash:      hashBytes(data),
 		packs:     make(map[string]Pack, len(idx.Packs)),
 		controls:  make(map[kernel.ControlID]ControlRef, len(idx.Controls)),
 		packNames: make([]string, 0, len(idx.Packs)),
@@ -302,7 +328,7 @@ func NewEmbeddedRegistry() (*Index, error) {
 		specs[spec.ID] = spec
 		hashParts = append(hashParts, ref.Path, string(packData))
 	}
-	r.hash = crypto.HashDelimited(hashParts, 0x00)
+	r.hash = hashDelimited(hashParts, 0x00)
 
 	if err := r.loadPacks(specs); err != nil {
 		return nil, err

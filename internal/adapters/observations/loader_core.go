@@ -23,7 +23,7 @@ import (
 
 // ObservationLoader loads snapshots from JSON files.
 type ObservationLoader struct {
-	validator              *contractvalidator.Validator
+	validator              contractvalidator.ObservationJSONValidator
 	integrityManifestPath  string
 	integrityPublicKeyPath string
 	onProgress             func(processed, total int)

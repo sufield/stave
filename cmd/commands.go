@@ -123,6 +123,8 @@ func WireCommands(app *App) error {
 		NewStdinObsRepo:  f.NewStdinObsRepo,
 		NewFindingWriter: f.NewFindingWriter,
 		NewCELEvaluator:  f.NewCELEvaluator,
+		NewChainLoader:   f.NewChainLoader,
+		NewSLALoader:     f.NewSLALoader,
 	}))
 	root.AddCommand(applyverify.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime()))
 	diagnoseCmd := diagnose.NewDiagnoseCmd(f.NewObsRepo, f.NewCtlRepo)

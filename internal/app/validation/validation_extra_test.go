@@ -11,7 +11,7 @@ import (
 // ---------------------------------------------------------------------------
 
 func TestContentService_ValidateObservationJSON(t *testing.T) {
-	svc := NewContentService(func() *contractvalidator.Validator {
+	svc := NewContentService(func() contractvalidator.SchemaValidator {
 		return contractvalidator.New()
 	})
 
@@ -32,7 +32,7 @@ func TestContentService_ValidateObservationJSON(t *testing.T) {
 }
 
 func TestContentService_ValidateControlYAML(t *testing.T) {
-	svc := NewContentService(func() *contractvalidator.Validator {
+	svc := NewContentService(func() contractvalidator.SchemaValidator {
 		return contractvalidator.New()
 	})
 
@@ -76,7 +76,7 @@ func TestIsLikelyJSONContent(t *testing.T) {
 }
 
 func TestContentService_ValidateInvalidJSON(t *testing.T) {
-	svc := NewContentService(func() *contractvalidator.Validator {
+	svc := NewContentService(func() contractvalidator.SchemaValidator {
 		return contractvalidator.New()
 	})
 
@@ -92,7 +92,7 @@ func TestContentService_ValidateInvalidJSON(t *testing.T) {
 }
 
 func TestContentService_ValidateInvalidControlYAML(t *testing.T) {
-	svc := NewContentService(func() *contractvalidator.Validator {
+	svc := NewContentService(func() contractvalidator.SchemaValidator {
 		return contractvalidator.New()
 	})
 

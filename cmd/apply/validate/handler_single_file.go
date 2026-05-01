@@ -29,7 +29,7 @@ func runValidateSingleFile(stdin io.Reader, reporter *Reporter, opts *options) e
 		return err
 	}
 
-	service := appvalidation.NewContentService(contractvalidator.New)
+	service := appvalidation.NewContentService(func() contractvalidator.SchemaValidator { return contractvalidator.New() })
 	result, err := service.Validate(req)
 	if err != nil {
 		return fmt.Errorf("validation failed for %q: %w", source, err)

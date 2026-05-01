@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/coverage"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/core/report"
 )
 
 // LoadResult holds the output of a snapshot load: the parsed snapshots and
@@ -102,4 +103,35 @@ type SnapshotFile struct {
 	RelPath    string
 	Name       string
 	CapturedAt time.Time
+}
+
+// SnapshotBundleLoader loads a multi-snapshot observation bundle from a single file.
+// Used by ranking when an `--identity` snapshot is supplied directly. Distinct from
+// ObservationRepository (directory of single-snapshot files); a bundle is one file
+// holding many snapshots and skips the per-file schema validation pass.
+type SnapshotBundleLoader interface {
+	LoadBundle(ctx context.Context, path string) ([]asset.Snapshot, error)
+}
+
+// ChainDefinitionLoader loads chain definitions from a directory.
+// A nil capability registry skips capability validation; structural validation
+// always runs.
+type ChainDefinitionLoader interface {
+	LoadChains(ctx context.Context, dir string, registry policy.CapabilityRegistry) ([]policy.ChainDefinition, error)
+}
+
+// SLAProvider resolves an SLA policy from either a file path or an embedded
+// profile name. Implementations apply the file-takes-precedence rule when
+// both are non-empty. Returns a nil *evaluation.SLAConfig when both inputs
+// are empty (no SLA configured).
+type SLAProvider interface {
+	LoadSLAConfig(ctx context.Context, profileID, filePath string) (*evaluation.SLAConfig, error)
+}
+
+// ArtifactLoader loads previously persisted Stave artifacts (assessment
+// envelopes) from filesystem paths. Used by report, score, monitor, trend,
+// and gate commands to read prior runs. The method name matches the
+// existing *artifacts.Loader concrete adapter to minimize call-site churn.
+type ArtifactLoader interface {
+	Evaluation(ctx context.Context, path string) (*report.Assessment, error)
 }

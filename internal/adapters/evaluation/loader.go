@@ -31,7 +31,7 @@ var ErrNoFindings = errors.New("input JSON does not contain evaluation findings"
 // historical baselines) can keep the default lax behavior to stay
 // compatible with stub fixtures.
 type Loader struct {
-	validator     *validator.Validator
+	validator     validator.RequestValidator
 	validatorOnce sync.Once
 	strictSchema  bool
 }
@@ -62,7 +62,7 @@ func (l *Loader) WithStrictSchema() *Loader {
 // (the cost is small, but the previous unsynchronized double-check
 // pattern was a textbook race that a future heavier validator init
 // — schema compilation, embedded read — would amplify into corruption).
-func (l *Loader) schemaValidator() *validator.Validator {
+func (l *Loader) schemaValidator() validator.RequestValidator {
 	l.validatorOnce.Do(func() { l.validator = validator.New() })
 	return l.validator
 }

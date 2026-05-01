@@ -8,7 +8,7 @@ import (
 )
 
 func TestValidateContentService_ContractModeRuns(t *testing.T) {
-	svc := appvalidation.NewContentService(contractvalidator.New)
+	svc := appvalidation.NewContentService(func() contractvalidator.SchemaValidator { return contractvalidator.New() })
 
 	data := []byte(`
 dsl_version: ctrl.v1
@@ -50,7 +50,7 @@ unknown_field: true
 }
 
 func TestValidateContentService_AutoModeSetsSummary(t *testing.T) {
-	svc := appvalidation.NewContentService(contractvalidator.New)
+	svc := appvalidation.NewContentService(func() contractvalidator.SchemaValidator { return contractvalidator.New() })
 
 	ctlData := []byte(`
 dsl_version: ctrl.v1

@@ -36,6 +36,9 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	builder.NewFindingWriter = ec.NewFindingWriter
 	builder.NewCtlRepo = ec.NewCtlRepo
 	builder.NewStdinObsRepo = ec.NewStdinObsRepo
+	builder.NewCELEvaluator = ec.NewCELEvaluator
+	builder.NewChainLoader = ec.NewChainLoader
+	builder.NewSLALoader = ec.NewSLALoader
 	builder.ProjectConfig = ec.ProjectConfig
 	builder.ProjectConfigPath = ec.ProjectConfigPath
 	builder.OnObsProgress = progress.Update

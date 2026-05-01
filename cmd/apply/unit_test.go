@@ -239,6 +239,9 @@ func testBuilder(opts *Options, params applyParams) *Builder {
 		NewFindingWriter: f.NewFindingWriter,
 		NewCtlRepo:       f.NewCtlRepo,
 		NewStdinObsRepo:  f.NewStdinObsRepo,
+		NewCELEvaluator:  f.NewCELEvaluator,
+		NewChainLoader:   f.NewChainLoader,
+		NewSLALoader:     f.NewSLALoader,
 	}
 }
 

@@ -23,6 +23,9 @@ type evalContext struct {
 	NewFindingWriter  compose.FindingWriterFactory
 	NewCtlRepo        compose.CtlRepoFactory
 	NewStdinObsRepo   func(io.Reader) (appcontracts.ObservationRepository, error)
+	NewCELEvaluator   compose.CELEvaluatorFactory
+	NewChainLoader    compose.ChainLoaderFactory
+	NewSLALoader      compose.SLALoaderFactory
 	Opts              *Options
 	Params            applyParams
 	IO                StandardIO
@@ -63,6 +66,9 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 		NewFindingWriter:  deps.NewFindingWriter,
 		NewCtlRepo:        deps.NewCtlRepo,
 		NewStdinObsRepo:   deps.NewStdinObsRepo,
+		NewCELEvaluator:   deps.NewCELEvaluator,
+		NewChainLoader:    deps.NewChainLoader,
+		NewSLALoader:      deps.NewSLALoader,
 		Opts:              opts,
 		Params:            params,
 		IO:                sio,
