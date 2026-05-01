@@ -302,6 +302,9 @@ type unsafeRecurrenceStrategy struct {
 }
 
 func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
+	if s.ctl == nil {
+		return evaluation.ResourceCheck{}, nil
+	}
 	observation := newControlRow(s.ctl, t)
 	p := s.ctl.RecurrencePolicy()
 	span := s.deps.currentSpan()

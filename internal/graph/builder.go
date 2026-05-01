@@ -302,7 +302,7 @@ func Build(input BuildInput) *GraphData {
 					},
 				})
 			}
-			belongsKey := resourceID + "→" + scopeID
+			belongsKey := resourceID + "->" + scopeID
 			if !seenBelongsTo.Contains(belongsKey) {
 				seenBelongsTo.Add(belongsKey)
 				g.Edges = append(g.Edges, Edge{

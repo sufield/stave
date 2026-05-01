@@ -98,3 +98,29 @@ func TestSanitizer_ScrubMessage_SingleComponentPath(t *testing.T) {
 		}
 	}
 }
+
+// TestSanitizer_ScrubMessage_TrailingSlashPath pins the trailing-slash
+// alternation. Mount-point and container-volume paths surface in error
+// messages with a trailing `/` (`/run/secrets/`, `/var/run/keys/`) and
+// the earlier regex left them untouched because the non-slash-terminal
+// branch was leftmost-first and consumed the prefix without the
+// trailing slash.
+func TestSanitizer_ScrubMessage_TrailingSlashPath(t *testing.T) {
+	s := Policy{SanitizeIDs: true, PathMode: PathBase}.NewSanitizer()
+	cases := []struct {
+		in   string
+		want string
+	}{
+		{"failed to read /run/secrets/", "failed to read secrets/"},
+		{"mount: /var/run/keys/ is read-only", "mount: keys/ is read-only"},
+		// Confirm the non-trailing-slash variant still matches via
+		// the basename branch.
+		{"open /run/secrets/token", "open token"},
+	}
+	for _, tc := range cases {
+		got := s.ScrubMessage(tc.in)
+		if got != tc.want {
+			t.Errorf("ScrubMessage(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}

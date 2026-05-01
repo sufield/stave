@@ -236,11 +236,16 @@ jobs:
           check-latest: true
           cache: true
       - name: Build and run E2E tests
-        # -v so a stuck case surfaces its own name in the log instead
-        # of the package timing out silently after 30 minutes. Cases
-        # are serialised inside the suite (see e2e/e2e_test.go), so
-        # the suite-level timeout is now generous rather than tight.
-        run: make build && go test -v ./e2e/ -run E2E -count=1 -timeout 30m
+        # -v so a stuck case surfaces its own name in the log
+        # instead of the package timing out silently. Cases are
+        # serialised inside the suite (see e2e/e2e_test.go) and
+        # -parallel 1 is the belt-and-braces override at the
+        # command level — enforces the no-concurrency contract
+        # even if a future test forgets the convention. Suite
+        # timeout is 45m (raised from 30m) to absorb the serial
+        # cost over ~5800 fixtures with comfortable headroom for
+        # transient slow builds.
+        run: make build && go test -v -parallel 1 -count=1 -timeout 45m -run E2E ./e2e/
 
   release-check:
     name: GoReleaser config check

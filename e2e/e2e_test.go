@@ -28,22 +28,25 @@ const e2eCaseTimeout = 90 * time.Second
 //	go test ./e2e/ -run E2E/e2e-h1     # HackerOne cases only
 //	go test -short ./e2e/              # skipped (e2e is CI-only)
 func TestE2E(t *testing.T) {
-	// Inner subtests use t.Parallel() so Go runs them concurrently
-	// up to the GOMAXPROCS-derived limit (overridable with
-	// -parallel). The outer TestE2E intentionally does NOT call
-	// t.Parallel(): there is only one TestE2E in this package, so
-	// pausing it yields no benefit and only complicates the
-	// goroutine ordering when a subtest panics.
+	// Cases run serially. Each case spawns the stave binary and
+	// exercises real CLI plumbing (filesystem, schema loaders,
+	// engine); running them concurrently produced two distinct
+	// failure modes on CI:
+	//   - "thundering herd" CPU/I/O contention that stretched
+	//     per-case runtime well past the 90s e2eCaseTimeout
+	//   - filesystem-isolation hazards (shared temp dirs, config
+	//     paths) that produced exec.CommandContext().Run() hangs
+	//     waiting on locked files
+	// Serial execution makes total suite time the sum of individual
+	// cases — predictable and well-bounded by the package timeout.
+	// CI also passes -parallel 1 as a belt-and-braces override.
 	//
-	// History: the suite was briefly run fully serial after a
-	// vpc-peering-crossaccount case appeared to hang the previous
-	// fully-parallel run. The hang turned out to be a fixture-YAML
-	// schema validation issue (the closed attack_stage enum landed
-	// while fixture-local copies still carried deprecated values),
-	// not a runtime retry/backoff problem. Once the fixture
-	// migration shipped, that case runs in ~1 second again, so
-	// per-case parallelism is safe to re-enable. Each case still
-	// has its own e2eCaseTimeout (90s) which fires per subtest.
+	// The package-level go test timeout in CI is 45m to absorb the
+	// serial cost over ~5800 fixtures (the prior 30m budget was
+	// tight; the buffer prevents a transient slow build from
+	// flipping the suite red). Each case still has its own 90s
+	// e2eCaseTimeout enforced via context.WithTimeout in
+	// runE2ECase.
 	if testing.Short() {
 		t.Skip("skipping e2e tests in short mode (CI-only — see Makefile test-ci target)")
 	}
@@ -61,7 +64,6 @@ func TestE2E(t *testing.T) {
 		}
 		name := entry.Name()
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
 			runE2ECase(t, bin, filepath.Join(root, name))
 		})
 	}

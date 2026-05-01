@@ -90,6 +90,13 @@ func isPathSafe(path string) bool {
 	if cleaned != path {
 		return false
 	}
+	// The slices.Contains(..., "..") check is NOT redundant with
+	// filepath.Clean. Clean collapses traversal that can be
+	// canceled (e.g. "a/../b" → "b"), but leaves leading or
+	// otherwise-uncancelable parent refs intact: "../etc/passwd"
+	// stays "../etc/passwd" after Clean, and survives the
+	// `cleaned != path` check above. The explicit ".." segment
+	// scan below is the actual traversal guard.
 	return !slices.Contains(strings.Split(cleaned, string(filepath.Separator)), "..")
 }
 
@@ -288,14 +295,25 @@ func NormalizeName(name string) string {
 const maxContextNameLen = 100
 
 // ValidateName checks that a normalized context name is well-formed.
+//
 // It rejects empty strings, overlong inputs, and characters that are
-// unsafe in filesystem paths or YAML keys. The forbidden set includes
-// path separators, control bytes, embedded ASCII space, and YAML
-// structural/indicator characters — a name persisted as a YAML map
-// key must not require quoting or escaping, and a name interpolated
-// into a filesystem path must not let an attacker traverse, glob,
-// alias, or smuggle multi-token values into shell commands that read
-// the active context.
+// unsafe in filesystem paths or YAML keys. The exact forbidden set
+// (mirrored in the error message below) is:
+//
+//	/  \  NUL  \n  \r  \t  ASCII space  :  {  }  [  ]  #  *  &  !  |  >  '  "  %
+//
+// Path separators (/ \) prevent traversal when a name is
+// interpolated into a path. NUL and whitespace controls prevent
+// argument-list smuggling. YAML structural / indicator characters
+// (: { } [ ] # * & ! | > ' " %) ensure the name is YAML-safe as a
+// bare map key without quoting or escaping.
+//
+// Shell metacharacters not in the forbidden set (@ ~ ^ ( ) ; ,)
+// are allowed by design — context names like "prod@aws" or
+// "user~home" are legitimate; the boundary against shell injection
+// is owned by the call sites that interpolate into shell commands
+// (none today; future ones must escape, not rely on validator
+// rejection).
 func ValidateName(name string) error {
 	if name == "" {
 		return errors.New("context name cannot be empty")

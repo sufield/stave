@@ -2,6 +2,7 @@ package engine
 
 import (
 	"log/slog"
+	"slices"
 	"sync"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -182,10 +183,18 @@ type CollectorSnapshot struct {
 func (c *AssessmentCollector) Snapshot() CollectorSnapshot {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	// Clone every slice. The earlier shape returned shared slice
+	// headers; compileReport then in-place sorted Findings / Checks
+	// / ExemptedAssets, which mutated the collector's underlying
+	// arrays under the lock-protected writes' nose. Cloning at
+	// the read boundary turns Snapshot into a true snapshot —
+	// callers can sort, filter, or otherwise mutate the returned
+	// slices without poisoning the collector for any subsequent
+	// run that reuses the same instance.
 	return CollectorSnapshot{
-		Findings:        c.findings,
-		Checks:          c.checks,
-		SkippedControls: c.skippedControls,
-		ExemptedAssets:  c.exemptedAssets,
+		Findings:        slices.Clone(c.findings),
+		Checks:          slices.Clone(c.checks),
+		SkippedControls: slices.Clone(c.skippedControls),
+		ExemptedAssets:  slices.Clone(c.exemptedAssets),
 	}
 }

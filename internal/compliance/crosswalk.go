@@ -90,22 +90,38 @@ func canonicalizeFramework(s string) (Framework, error) {
 	return f, nil
 }
 
-// SupportedFrameworks returns the list of frameworks recognized by the system, sorted alphabetically.
+// SupportedFrameworks returns the list of frameworks recognized by
+// the system, sorted alphabetically. Derived dynamically from the
+// supportedFrameworks map so adding a new framework constant + map
+// entry is the only change needed; the previous shape kept a
+// hand-maintained slice and silently went stale when authors forgot
+// to mirror the new entry here.
 func SupportedFrameworks() []Framework {
-	return []Framework{
-		FrameworkCISAWS, FrameworkCISAWSV3,
-		FrameworkFedRAMP, FrameworkFFIEC, FrameworkGDPR,
-		FrameworkHIPAA, FrameworkISO27001,
-		FrameworkNIST, FrameworkNISTR5, FrameworkNISTCSF,
-		FrameworkPCIDSS, FrameworkPCIDSSV4,
-		FrameworkSOC2,
+	out := make([]Framework, 0, len(supportedFrameworks))
+	for f := range supportedFrameworks {
+		out = append(out, f)
 	}
+	slices.SortFunc(out, func(a, b Framework) int {
+		return strings.Compare(string(a), string(b))
+	})
+	return out
 }
 
-// CrosswalkResolution captures the mapping between internal audit checks and external controls.
+// CrosswalkResolution captures the mapping between internal audit
+// checks and external controls.
+//
+// MissingChecks vs FilteredChecks: the earlier shape collapsed both
+// "no crosswalk mapping defined for this control" and "mappings
+// existed but every one was excluded by --frameworks" into the same
+// MissingChecks bucket, hiding genuine catalog gaps from operators
+// who passed a framework filter. They are now distinct:
+//   - MissingChecks  → no crosswalk mapping at all
+//   - FilteredChecks → mapping existed; all entries excluded by
+//                      the framework filter
 type CrosswalkResolution struct {
 	ByCheck        map[kernel.ControlID][]ControlRef
 	MissingChecks  []kernel.ControlID
+	FilteredChecks []kernel.ControlID
 	ResolutionJSON []byte
 }
 
@@ -143,16 +159,27 @@ func ResolveControlCrosswalk(
 
 	byCheck := make(map[kernel.ControlID][]ControlRef, len(expectedCheckIDs))
 	var missing []kernel.ControlID
+	var filtered []kernel.ControlID
 
 	for _, id := range expectedCheckIDs {
 		cid := kernel.ControlID(id)
-		refs, filterErr := filterAndNormalizeRefs(id, parsed.Checks[id], allowedSet)
+		rawRefs := parsed.Checks[id]
+		refs, filterErr := filterAndNormalizeRefs(id, rawRefs, allowedSet)
 		if filterErr != nil {
 			return CrosswalkResolution{}, filterErr
 		}
 
 		if len(refs) == 0 {
-			missing = append(missing, cid)
+			// Distinguish "no mapping at all" from "mapping
+			// existed but all entries were excluded by the
+			// --frameworks filter". The latter is operator
+			// noise filtered by intent; only the former
+			// represents a catalog gap.
+			if len(rawRefs) == 0 {
+				missing = append(missing, cid)
+			} else {
+				filtered = append(filtered, cid)
+			}
 			byCheck[cid] = []ControlRef{}
 			continue
 		}
@@ -167,6 +194,7 @@ func ResolveControlCrosswalk(
 	}
 
 	slices.SortFunc(missing, cmp.Compare[kernel.ControlID])
+	slices.SortFunc(filtered, cmp.Compare[kernel.ControlID])
 
 	checksOut := make(map[string][]ControlRef, len(byCheck))
 	for k, v := range byCheck {
@@ -199,6 +227,7 @@ func ResolveControlCrosswalk(
 	return CrosswalkResolution{
 		ByCheck:        byCheck,
 		MissingChecks:  missing,
+		FilteredChecks: filtered,
 		ResolutionJSON: append(jsonBytes, '\n'),
 	}, nil
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 	"text/tabwriter"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -43,6 +44,27 @@ func (r *TraceResult) RenderJSON(w io.Writer) error {
 	return enc.Encode(r)
 }
 
+// sharedTraceCompiler is the package-level compiler used by
+// BuildTrace. cel.Compiler holds a Compile cache that is only useful
+// when the same compiler instance sees an expression more than once;
+// the earlier shape constructed a fresh compiler on every BuildTrace
+// invocation and threw the cache away with it. A single shared
+// compiler — protected by sync.Once for lazy init — keeps the cache
+// warm across the trace API, mirroring the pattern NewPredicateEval
+// already follows.
+var (
+	sharedTraceCompiler     *Compiler
+	sharedTraceCompilerOnce sync.Once
+	sharedTraceCompilerErr  error
+)
+
+func getTraceCompiler() (*Compiler, error) {
+	sharedTraceCompilerOnce.Do(func() {
+		sharedTraceCompiler, sharedTraceCompilerErr = NewCompiler()
+	})
+	return sharedTraceCompiler, sharedTraceCompilerErr
+}
+
 // BuildTrace compiles and evaluates a control's predicate against an
 // asset, returning a TraceResult with the CEL expression and
 // evaluation result. Returns (nil, error) for missing inputs (a nil
@@ -62,7 +84,7 @@ func BuildTrace(
 		return nil, errors.New("BuildTrace: asset is nil")
 	}
 
-	compiler, err := NewCompiler()
+	compiler, err := getTraceCompiler()
 	if err != nil {
 		return nil, fmt.Errorf("BuildTrace: CEL compiler init: %w", err)
 	}

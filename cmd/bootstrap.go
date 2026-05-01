@@ -63,12 +63,19 @@ func (a *App) phaseContext(cmd *cobra.Command) error {
 	return a.validateBuiltins()
 }
 
-// phaseConfig resolves flag defaults from project/user config, env vars, and limits.
+// phaseConfig resolves flag defaults from project/user config and env vars.
+//
+// resolveConfigurableLimits intentionally does NOT run here. The
+// limits resolver may emit Warn lines (e.g. "ignoring invalid
+// max_input_file_size"); routing those through the structured
+// logger requires a.Logger to be wired, which only happens in
+// phaseLogging. The earlier shape called resolveConfigurableLimits
+// here and silently routed every warning through slog.Default()
+// because a.Logger was still nil. Moved into phaseLogging below.
 func (a *App) phaseConfig(cmd *cobra.Command) error {
 	a.configResult = projconfig.BuildResolver()
 	a.resolveGlobalFlagDefaults(cmd, a.configResult.Resolver)
 	a.resolveEnvVarDefaults(cmd)
-	a.resolveConfigurableLimits(a.configResult.Resolver)
 	return nil
 }
 
@@ -93,6 +100,12 @@ func (a *App) phaseLogging(_ *cobra.Command) error {
 	for _, w := range a.configResult.Warnings {
 		a.Logger.Warn("config load warning", "error", w)
 	}
+	// Resolve configurable limits AFTER initLogger so any warnings
+	// the resolver emits (invalid max_input_file_size, etc.) flow
+	// through the structured logger rather than slog.Default(). The
+	// limits themselves are pure setters with no dependency on the
+	// logger; only the diagnostic path required this ordering fix.
+	a.resolveConfigurableLimits(a.configResult.Resolver)
 	return nil
 }
 

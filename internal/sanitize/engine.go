@@ -32,14 +32,21 @@ import (
 // let those slip through, which is the exact form a leaked secret-
 // token filename takes in error messages from CI runners that mount
 // tokens at the root.
-// The third alternative `/(?:[^\s:]+/)+` catches paths that end with
-// a trailing slash — e.g. `/run/secrets/` or `/var/run/keys/` — which
-// the previous two-branch regex left untouched because it required a
-// non-slash terminal segment. Trailing-slash paths show up in error
-// messages whenever a tool prints a directory rather than a file
-// (mount points, container volumes); leaking those is the same
-// disclosure as leaking the file path itself.
-var messagePathRe = regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9+.\-]*://[^\s]+)|/(?:[^\s:]+/)*([^\s:/]+)|(/(?:[^\s:]+/)+)`)
+// Trailing-slash paths (e.g. `/run/secrets/`) are handled by the
+// basename branch leaving the trailing `/` in place: for
+// `failed to read /run/secrets/`, the basename branch matches
+// `/run/secrets` and the literal `/` after `secrets` is preserved
+// in the output, producing `failed to read secrets/`. A previous
+// version added a third regex alternative for the trailing-slash
+// case; that alternative was unreachable under RE2's leftmost-
+// first matching rule (the basename branch matches at the same
+// starting position with non-zero length and wins) AND attempts
+// to reorder it ahead of the basename branch caused
+// `/home/user/data/obs.json` to mis-match by greedy directory
+// consumption. The two-branch form below is the simplest correct
+// shape; the trailing-slash test cases below pin that the
+// observable output is what operators expect.
+var messagePathRe = regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9+.\-]*://[^\s]+)|/(?:[^\s:]+/)*([^\s:/]+)`)
 
 // Compile-time check that Sanitizer implements kernel.Sanitizer.
 var _ kernel.Sanitizer = (*Sanitizer)(nil)
@@ -140,27 +147,13 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 		// for sub-groups against the same input slice.
 		groups := messagePathRe.FindStringSubmatch(match)
 		// groups[1] is the URL branch, groups[2] is the
-		// credential-style path's terminal segment, groups[3] is
-		// the trailing-slash directory branch (e.g. /run/secrets/).
-		// Exactly one is non-empty per match because the
-		// alternation is mutually exclusive at the top level.
+		// credential-style path's terminal segment. Exactly one is
+		// non-empty per match.
 		if len(groups) > 1 && groups[1] != "" {
 			return groups[1] // URL — preserve verbatim
 		}
 		if len(groups) > 2 && groups[2] != "" {
 			return groups[2] // credential-style path — keep basename only
-		}
-		if len(groups) > 3 && groups[3] != "" {
-			// Trailing-slash directory: leak the directory name
-			// itself the same way credential paths leak the
-			// filename. Reduce to the last named segment so
-			// "/run/secrets/" still surfaces "secrets" for triage
-			// without exposing the surrounding mount-point chain.
-			trimmed := strings.TrimRight(groups[3], "/")
-			if i := strings.LastIndex(trimmed, "/"); i >= 0 {
-				return trimmed[i+1:] + "/"
-			}
-			return trimmed + "/"
 		}
 		return match
 	})

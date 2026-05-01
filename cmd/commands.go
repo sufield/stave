@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -368,6 +369,16 @@ func wireCISubtree(
 func assignCommandGroup(root *cobra.Command, use, groupID string) {
 	cmd, _, err := root.Find([]string{use})
 	if err != nil || cmd == nil {
+		return
+	}
+	// Cobra's Find returns the root command (with no error) when no
+	// matching subcommand exists — the caller's `use` was a typo or
+	// references a command that hasn't been registered yet. Silently
+	// stamping GroupID onto the root would corrupt the help-tree
+	// layout for every other command in the group. Log and bail.
+	if cmd == root {
+		slog.Warn("assignCommandGroup: subcommand not found, skipping group assignment",
+			"use", use, "group_id", groupID)
 		return
 	}
 	cmd.GroupID = groupID

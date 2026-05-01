@@ -41,16 +41,17 @@ func ExecuteDev() {
 }
 
 func (a *App) execute() {
-	// Capture args AFTER expandAliasIfMatch mutates os.Args. The
-	// earlier shape captured the pre-expansion form, so any
-	// downstream consumer (first-run hint, no-project hint,
-	// session persistence) saw the alias name (e.g. `enf`) instead
-	// of the expanded subcommand (`enforce`). Aliases are pure
-	// command-name rewrites; consumers should always operate on
-	// the post-expansion shape so command-specific hint text
-	// matches what the user just ran.
-	a.expandAliasIfMatch()
-	args := os.Args[1:]
+	// Capture args from the alias-expansion return so downstream
+	// consumers see the resolved command name. Root.SetArgs writes
+	// to Cobra's internal slot but does NOT mutate os.Args; the
+	// earlier `args := os.Args[1:]` after expandAliasIfMatch left
+	// the caller's view at the pre-expansion alias name, so the
+	// first-run hint, no-project hint, and session persistence
+	// all keyed off "enf" instead of "enforce" when the user
+	// invoked `stave enf ...`. Returning the resolved argv keeps
+	// the two views in lockstep.
+	expandedArgs := a.expandAliasIfMatch()
+	args := expandedArgs[1:]
 
 	showFirstRunHint, firstRunMarkerPath := prepareFirstRunHint(args)
 
