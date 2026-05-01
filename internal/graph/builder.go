@@ -497,10 +497,22 @@ func mergeEdgeProperties(dst, src map[string]any) {
 					"existing_type", fmt.Sprintf("%T", existing))
 			}
 		}
-		set := asAnySet(dst[pluralKey])
-		set[fmt.Sprint(pv)] = struct{}{}
-		set[fmt.Sprint(dst[pk])] = struct{}{}
-		dst[pluralKey] = set
+		// Build a fresh set seeded from any existing entries.
+		// Mutating an existing plural-key set in place would couple
+		// this merge step to the assumption that no other edge
+		// shares the reference; allocating a fresh map breaks that
+		// coupling — the caller's properties map is the only place
+		// this set is ever written, regardless of what other edges
+		// might (in a future graph pipeline) carry pointers to.
+		newSet := make(map[string]struct{})
+		if existing, ok := dst[pluralKey].(map[string]struct{}); ok {
+			for k := range existing {
+				newSet[k] = struct{}{}
+			}
+		}
+		newSet[fmt.Sprint(pv)] = struct{}{}
+		newSet[fmt.Sprint(dst[pk])] = struct{}{}
+		dst[pluralKey] = newSet
 	}
 }
 
@@ -534,24 +546,6 @@ func finalizeMultiValueProps(edges []Edge) {
 			props[pluralKey] = values
 		}
 	}
-}
-
-// asAnySet returns the input as a map[string]struct{} accumulator.
-// A nil input legitimately falls through to the new-map path (first
-// merge into the plural slot). A non-nil input of any other concrete
-// type is unexpected — callers should have run a type-check first;
-// this function logs and returns a fresh map so the merge can
-// proceed rather than panic, but the warning surfaces the data loss.
-func asAnySet(v any) map[string]struct{} {
-	if v == nil {
-		return make(map[string]struct{}, 2)
-	}
-	if s, ok := v.(map[string]struct{}); ok {
-		return s
-	}
-	slog.Warn("graph dedup: asAnySet given non-set type, discarding existing values",
-		"type", fmt.Sprintf("%T", v))
-	return make(map[string]struct{}, 2)
 }
 
 func computeMetadata(nodes []Node, edges []Edge) GraphMetadata {

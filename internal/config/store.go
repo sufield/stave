@@ -236,6 +236,13 @@ func Load() (*Store, string, error) {
 		if err := ValidateName(store.Active); err != nil {
 			return nil, "", fmt.Errorf("active context name at %q is invalid: %w", path, err)
 		}
+		// Existence check: a YAML that names an active context not
+		// present in the contexts map is internally inconsistent
+		// (the resolver downstream returns ErrContextNotFound mid-
+		// command, with no path-of-origin). Catch it at load.
+		if _, ok := store.contexts[store.Active]; !ok {
+			return nil, "", fmt.Errorf("active context %q not found in store at %q", store.Active, path)
+		}
 	}
 
 	return store, path, nil
@@ -373,24 +380,46 @@ func (s *Store) ResolveSelected() (string, *Context, bool, error) {
 // so operators see the gap; preserve the cwd-relative behavior so
 // existing scripts that rely on the implicit fallback don't break,
 // but flag the configuration drift in the logs.
+// AbsPath returns the absolute form of p, anchored against the
+// context's ProjectRoot when p is relative. Empty p returns "" (the
+// "no path supplied" signal callers depend on).
+//
+// PRECONDITION: ProjectRoot must be non-empty for relative inputs.
+// The function logs a warning and falls back to filepath.Clean(p)
+// (cwd-relative) for relative inputs when ProjectRoot is empty —
+// this preserves long-standing behaviour for existing scripts but
+// hides a configuration gap. New code should call AbsPathStrict
+// instead, which surfaces the empty-ProjectRoot case as an error.
 func (c Context) AbsPath(p string) string {
+	out, err := c.AbsPathStrict(p)
+	if err != nil {
+		slog.Warn("config.Context.AbsPath: ProjectRoot empty for relative path; resolving against cwd",
+			"path", p, "error", err)
+		return filepath.Clean(strings.TrimSpace(p))
+	}
+	return out
+}
+
+// AbsPathStrict returns the absolute form of p anchored against the
+// context's ProjectRoot. Returns an error when p is relative and
+// ProjectRoot is empty — the caller asked for "anchor against the
+// project root" but never supplied a root, and silently substituting
+// cwd produces an inconsistent answer depending on where the binary
+// was launched. Empty p returns ("", nil) as the "no path supplied"
+// signal.
+func (c Context) AbsPathStrict(p string) (string, error) {
 	p = strings.TrimSpace(p)
 	if p == "" {
-		return ""
+		return "", nil
 	}
-
 	if filepath.IsAbs(p) {
-		return filepath.Clean(p)
+		return filepath.Clean(p), nil
 	}
-
 	root := strings.TrimSpace(c.ProjectRoot)
 	if root == "" {
-		slog.Warn("config.Context.AbsPath: ProjectRoot empty for relative path; resolving against cwd",
-			"path", p)
-		return filepath.Clean(p)
+		return "", fmt.Errorf("cannot resolve relative path %q: context project_root is empty", p)
 	}
-
-	return filepath.Clean(filepath.Join(root, p))
+	return filepath.Clean(filepath.Join(root, p)), nil
 }
 
 // resolveStorePath determines where the context file should be stored.

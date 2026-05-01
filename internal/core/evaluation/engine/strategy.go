@@ -164,6 +164,9 @@ type unsafeStateStrategy struct {
 }
 
 func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
+	if s.ctl == nil {
+		return evaluation.ResourceCheck{}, nil
+	}
 	observation := newControlRow(s.ctl, t)
 	// unsafe_state is "this state must not be true" — not "this state
 	// must not last longer than X." If the control author did NOT set
@@ -232,6 +235,9 @@ type unsafeDurationStrategy struct {
 }
 
 func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
+	if s.ctl == nil {
+		return evaluation.ResourceCheck{}, nil
+	}
 	observation := newControlRow(s.ctl, t)
 	maxUnsafe := s.deps.slaThresholdFor(s.ctl)
 	span := s.deps.currentSpan()
@@ -373,6 +379,9 @@ type unsupportedStrategy struct {
 }
 
 func (s *unsupportedStrategy) Evaluate(t *asset.ExposureLifecycle, _ time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
+	if s.ctl == nil {
+		return evaluation.ResourceCheck{}, nil
+	}
 	observation := newControlRow(s.ctl, t)
 	observation.Reason = "type not evaluatable: " + s.ctl.Type.String()
 	return finalizeRow(observation, evaluation.VerdictSkipped, evaluation.ConfidenceHigh), nil
@@ -381,6 +390,14 @@ func (s *unsupportedStrategy) Evaluate(t *asset.ExposureLifecycle, _ time.Time, 
 // --- Internal Helpers ---
 
 func newControlRow(ctl *policy.ControlDefinition, t *asset.ExposureLifecycle) evaluation.ResourceCheck {
+	// nil ctl: every Evaluate path passes a control owned by its
+	// strategy struct, but a future caller (test scaffold, future
+	// strategy refactor) could legitimately pass nil. Returning a
+	// zero ResourceCheck is the safest no-information answer; the
+	// downstream collector treats an empty ControlID as a skip.
+	if ctl == nil {
+		return evaluation.ResourceCheck{}
+	}
 	if t == nil {
 		return evaluation.ResourceCheck{ControlID: ctl.ID}
 	}

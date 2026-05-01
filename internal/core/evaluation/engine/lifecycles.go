@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -79,10 +80,15 @@ func buildControlVendorIndex(controls []policy.ControlDefinition) *controlVendor
 // though they read as a per-call mutation. Pointer makes the
 // shared-state contract explicit.
 func (idx *controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.ControlDefinition) []policy.ControlDefinition {
-	// Return cached result if available — avoids per-asset
-	// re-evaluation of the heuristic.
+	// Return a CLONE of the cached result. The cache holds the
+	// canonical filtered list per vendor; if a caller mutated the
+	// returned slice (sort, append, swap-replace), the next caller
+	// would see the corrupted ordering or a length mismatch with
+	// the underlying scopeTags. Cloning at the read boundary keeps
+	// the cache immutable from the caller's perspective without
+	// requiring callers to remember to clone themselves.
 	if cached, ok := idx.cache[vendor]; ok {
-		return cached
+		return slices.Clone(cached)
 	}
 
 	var result []policy.ControlDefinition
@@ -95,7 +101,9 @@ func (idx *controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.Co
 	if idx.cache != nil {
 		idx.cache[vendor] = result
 	}
-	return result
+	// Return a clone here too so the first caller cannot mutate
+	// the just-cached slice via the returned reference.
+	return slices.Clone(result)
 }
 
 // recordAssetObservation evaluates a single asset against all controls at one

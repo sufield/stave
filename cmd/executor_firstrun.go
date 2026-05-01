@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -22,11 +23,26 @@ func prepareFirstRunHint(args []string) (bool, string) {
 	if err != nil {
 		return false, ""
 	}
-	if _, statErr := os.Stat(markerPath); os.IsNotExist(statErr) {
+	_, statErr := os.Stat(markerPath)
+	switch {
+	case statErr == nil:
+		// Marker present — operator has already seen the hint.
+		return false, markerPath
+	case os.IsNotExist(statErr):
+		// Marker absent — first run; emit the hint and signal the
+		// caller to write the marker after a successful command.
 		fmt.Fprintln(os.Stderr, ui.FirstRunHintMessage)
 		return true, markerPath
+	default:
+		// Some other error (permission denied, I/O failure). Surface
+		// it via slog rather than silently treating it as "first run"
+		// — emitting the hint on every invocation would be the wrong
+		// signal, and silently suppressing reveals nothing about the
+		// underlying access problem.
+		slog.Warn("first-run marker stat failed; suppressing hint",
+			"path", markerPath, "error", statErr)
+		return false, ""
 	}
-	return false, markerPath
 }
 
 func ensureFirstRunRunHint(message string, args []string) string {

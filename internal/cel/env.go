@@ -231,16 +231,22 @@ func hasField(dotPath string) string {
 		// Single-segment path after normalization is always a known
 		// top-level CEL variable (properties, params, identities,
 		// identity); normalizePath prefixes anything else with
-		// "properties.". Top-level vars are declared in NewEnv and
-		// always present at evaluation time, so "true" is the
-		// correct answer for genuinely-known namespaces. Guard
-		// against an unknown name slipping through (e.g. a future
-		// addition to knownNamespaces that isn't declared on the
-		// CEL env) by emitting a runtime size() probe — `size(x)
-		// >= 0` evaluates against the variable and surfaces the
-		// missing-binding case as an error instead of a silent
-		// "true".
-		return fmt.Sprintf("size(%s) >= 0", parts[0])
+		// "properties.". Those four are declared in NewEnv AND
+		// always supplied by NewActivation (with nil-normalization
+		// to empty maps), so a top-level variable is guaranteed
+		// present at evaluation time.
+		//
+		// The earlier shape emitted `size(x) >= 0` as a defensive
+		// runtime probe — that expression is functionally equivalent
+		// to `true` for any non-error binding (size returns a
+		// non-negative int) and CEL-errors for an undefined binding,
+		// surfacing the gap as an evaluation error rather than a
+		// silent true. The activation guarantee added in L-batch's
+		// NewActivation nil-normalization makes the defensive probe
+		// unreachable: every top-level variable now has a concrete
+		// (possibly empty) map. Return "true" directly so the
+		// emitted CEL is honest about what it's asserting.
+		return "true"
 	}
 
 	checks := make([]string, 0, len(parts)-1)

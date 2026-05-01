@@ -86,6 +86,15 @@ func (c *Compiler) Compile(pred policy.UnsafePredicate) (CompiledPredicate, erro
 	// Compile under no lock — env.Compile is safe to call concurrently and
 	// holding the write lock during compilation would serialize all
 	// compiles across goroutines.
+	//
+	// Thread-safety contract for the cached value: cel.Program (per
+	// the cel-go contract documented at
+	// https://pkg.go.dev/github.com/google/cel-go/cel#Program) is
+	// safe to call Eval on from multiple goroutines after Program()
+	// has returned. This compiler caches the *cel.Program directly,
+	// so concurrent readers of `cached` can call Eval without
+	// further synchronisation. The cache map itself is the only
+	// mutable state and is guarded by c.mu.
 	ast, issues := c.env.Compile(expr)
 	if issues != nil && issues.Err() != nil {
 		return CompiledPredicate{}, fmt.Errorf("compile CEL expression: %w\n  expression: %s", issues.Err(), expr)
@@ -101,6 +110,9 @@ func (c *Compiler) Compile(pred policy.UnsafePredicate) (CompiledPredicate, erro
 	// Double-checked write: another goroutine may have populated the
 	// cache while we were compiling. Prefer the existing entry to keep
 	// program identity stable for any callers that compared earlier.
+	// The duplicate-compile cost on the losing goroutine is bounded by
+	// expression count and accepted as cheaper than serialising every
+	// compile under the write lock.
 	c.mu.Lock()
 	if existing, exists := c.cache[expr]; exists {
 		c.mu.Unlock()

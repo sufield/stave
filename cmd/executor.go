@@ -226,6 +226,21 @@ func (a *App) handleExecutionError(err error, args []string) {
 // underlying close is idempotent.
 func (a *App) cleanupBeforeExit() {
 	a.stopCPUProfile()
+	// Mirror finalizeExecute: invoke the bootstrap-allocated cancel
+	// so the cancelCtx goroutine + any associated timer are reclaimed
+	// even on the error path. The earlier shape released cancel only
+	// in finalizeExecute (the success path), leaving long-lived
+	// in-process callers (test harnesses re-executing the binary)
+	// with a leaked cancelCtx per failed run.
+	if cancel := a.cancel.Load(); cancel != nil {
+		(*cancel)()
+	}
+	// Write the memory profile on error too. The success path runs
+	// it via postRun -> writeMemProfile; without this hook a command
+	// that crashed before postRun never produced the requested
+	// --mem-profile artifact, hiding the very allocation pattern an
+	// operator was trying to capture.
+	a.writeMemProfileTo(os.Stderr)
 	a.bootstrapMu.Lock()
 	closer := a.LogCloser
 	a.bootstrapMu.Unlock()

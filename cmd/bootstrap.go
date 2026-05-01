@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -230,37 +231,47 @@ func (a *App) stopCPUProfile() {
 }
 
 func (a *App) writeMemProfile(cmd *cobra.Command) {
+	var stderr io.Writer
+	if cmd != nil {
+		stderr = cmd.ErrOrStderr()
+	}
+	a.writeMemProfileTo(stderr)
+}
+
+// writeMemProfileTo is the cmd-independent body of writeMemProfile.
+// The error-path cleanup (cleanupBeforeExit) calls this directly so
+// the profile is written even when the command failed before
+// finalizeExecute ran. stderr may be nil; it is used only as the
+// fallback when a.Logger is also nil.
+func (a *App) writeMemProfileTo(stderr io.Writer) {
 	if a.Flags.MemProfile == "" {
 		return
+	}
+	warnf := func(msg string, err error) {
+		if a.Logger != nil {
+			a.Logger.Warn(msg, "error", err)
+			return
+		}
+		if stderr != nil {
+			fmt.Fprintf(stderr, "Warning: %s: %v\n", msg, err)
+		}
 	}
 	opts := fsutil.DefaultWriteOpts()
 	opts.Overwrite = true
 	opts.AllowSymlink = a.Flags.AllowSymlinkOut
 	f, err := fsutil.SafeCreateFile(fsutil.CleanUserPath(a.Flags.MemProfile), opts)
 	if err != nil {
-		if a.Logger != nil {
-			a.Logger.Warn("failed to create memory profile", "error", err)
-		} else {
-			fmt.Fprintf(cmd.ErrOrStderr(), "Warning: create memory profile: %v\n", err)
-		}
+		warnf("create memory profile", err)
 		return
 	}
 	defer func() {
 		if closeErr := f.Close(); closeErr != nil {
-			if a.Logger != nil {
-				a.Logger.Warn("failed to close memory profile", "error", closeErr)
-			} else {
-				fmt.Fprintf(cmd.ErrOrStderr(), "Warning: close memory profile: %v\n", closeErr)
-			}
+			warnf("close memory profile", closeErr)
 		}
 	}()
 	runtime.GC()
-	if err := pprof.WriteHeapProfile(f); err != nil {
-		if a.Logger != nil {
-			a.Logger.Warn("failed to write memory profile", "error", err)
-		} else {
-			fmt.Fprintf(cmd.ErrOrStderr(), "Warning: write memory profile: %v\n", err)
-		}
+	if writeErr := pprof.WriteHeapProfile(f); writeErr != nil {
+		warnf("write memory profile", writeErr)
 	}
 }
 
