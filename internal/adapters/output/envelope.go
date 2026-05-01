@@ -9,7 +9,14 @@ import (
 
 // BuildAssessmentFromEnriched assembles an assessment from a
 // pipeline-produced EnrichedResult.
+//
+// Returns nil when enriched is nil — callers downstream of optional
+// pipeline stages can pass a nil pointer when the previous stage
+// produced no result, and an NPE here would mask the upstream gap.
 func BuildAssessmentFromEnriched(enriched *appcontracts.EnrichedResult) *report.Assessment {
+	if enriched == nil {
+		return nil
+	}
 	findings := toRemediationFindings(enriched.Findings)
 	if findings == nil {
 		findings = []remediation.Finding{}

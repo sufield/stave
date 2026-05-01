@@ -54,7 +54,13 @@ type ASFFResource struct {
 }
 
 // MapAssessment transforms a Stave assessment into ASFF findings.
+// Returns an empty slice when assessment is nil so callers in the
+// output dispatch can pass nil during error paths without an NPE
+// at len(assessment.Findings).
 func MapAssessment(assessment *report.Assessment) []ASFFinding {
+	if assessment == nil {
+		return []ASFFinding{}
+	}
 	now := time.Now().UTC().Format(time.RFC3339)
 	findings := make([]ASFFinding, 0, len(assessment.Findings))
 
@@ -130,7 +136,12 @@ func MapChainFindings(chains []risk.CompoundFinding, timestamp string) []ASFFind
 }
 
 // MarshalASFF produces the complete ASFF JSON output.
+// Returns an empty JSON array when assessment is nil rather than
+// dereferencing assessment.ChainFindings.
 func MarshalASFF(assessment *report.Assessment) ([]byte, error) {
+	if assessment == nil {
+		return []byte("[]"), nil
+	}
 	now := time.Now().UTC().Format(time.RFC3339)
 	findings := MapAssessment(assessment)
 	findings = append(findings, MapChainFindings(assessment.ChainFindings, now)...)

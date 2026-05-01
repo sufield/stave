@@ -58,7 +58,15 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 // validateEvaluationEnvelope performs schema and optional contract validation.
 // The validateContract flag is captured at construction time (from env vars)
 // so this function remains pure.
+//
+// A nil output is rejected immediately rather than passed into
+// ValidateAssessment which would dereference it. The earlier shape
+// would have produced a confusing schema-failure error chain instead
+// of the clear "nil envelope" diagnosis.
 func validateEvaluationEnvelope(output *report.Assessment, validateContract bool) error {
+	if output == nil {
+		return errors.New("json: nil evaluation envelope")
+	}
 	if err := report.ValidateAssessment(output); err != nil {
 		return fmt.Errorf("failed to validate output schema: %w", err)
 	}

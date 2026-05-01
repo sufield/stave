@@ -6,7 +6,13 @@ import (
 )
 
 // FromEvaluation projects a report.Assessment into a ResultDTO.
+// Returns the zero ResultDTO when e is nil rather than panicking on
+// e.SchemaVersion — the public marshaller calls this directly and
+// upstream callers may still hold a nil result during error paths.
 func FromEvaluation(e *report.Assessment) ResultDTO {
+	if e == nil {
+		return ResultDTO{}
+	}
 	return ResultDTO{
 		SchemaVersion:     e.SchemaVersion,
 		Kind:              string(e.Kind),

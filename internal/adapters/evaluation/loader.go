@@ -258,6 +258,12 @@ func parseFindings(raw []byte, depth int) ([]remediation.Finding, error) {
 		if err := json.Unmarshal(raw, &env); err != nil {
 			lastUnmarshalErr = err
 		} else {
+			// Normalize nil to empty slice so callers can iterate
+			// without nil-checking. PrepareBaseline and
+			// BuildAssessmentFromEnriched apply the same shape.
+			if env.Findings == nil {
+				env.Findings = []remediation.Finding{}
+			}
 			return env.Findings, nil
 		}
 	} else if rawFindings, hasFindings := probe["findings"]; hasFindings {
@@ -265,6 +271,9 @@ func parseFindings(raw []byte, depth int) ([]remediation.Finding, error) {
 		if err := json.Unmarshal(rawFindings, &list); err != nil {
 			lastUnmarshalErr = err
 		} else {
+			if list == nil {
+				list = []remediation.Finding{}
+			}
 			return list, nil
 		}
 	}

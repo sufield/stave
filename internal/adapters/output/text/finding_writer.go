@@ -4,6 +4,7 @@ package text
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -24,7 +25,14 @@ var _ appcontracts.FindingMarshaler = (*FindingWriter)(nil)
 
 // MarshalFindings transforms enriched findings into human-readable text bytes
 // without performing I/O.
+//
+// Returns an error when enriched is nil rather than panicking on
+// the .Result access. Mirrors the same nil-guard added to the SARIF
+// and JSON marshallers.
 func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) ([]byte, error) {
+	if enriched == nil {
+		return nil, errors.New("text: nil EnrichedResult")
+	}
 	var buf bytes.Buffer
 	d := &drawer{w: &buf}
 	result := enriched.Result

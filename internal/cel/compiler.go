@@ -359,14 +359,14 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string, depth int) (string, er
 		ofa, ohf := resolveCrossFieldRef(r, val, scopeVar)
 		return fmt.Sprintf("(%s && %s && %s.exists(x, x in %s))", hf, ohf, fa, ofa), nil
 	case predicate.OpAnyMatch:
-		return ruleToExprAnyMatch(r, val, scopeVar, false)
+		return ruleToExprAnyMatch(r, val, scopeVar, false, depth)
 	case predicate.OpAnyIdentityMatch:
 		// Explicit identity-iteration shorthand. Field can be empty
 		// or "identities" — both mean the same thing. The control
 		// author writes `op: any_identity_match` so the iteration
 		// target is unambiguous, instead of relying on the legacy
 		// silent default that any_match used to apply.
-		return ruleToExprAnyMatch(r, val, scopeVar, true)
+		return ruleToExprAnyMatch(r, val, scopeVar, true, depth)
 	default:
 		return "", fmt.Errorf("unsupported operator: %s", op)
 	}
@@ -431,7 +431,7 @@ func coerceBool(val any, defaultVal bool) (bool, error) {
 // any_match), an empty Field is now an error — silent defaulting
 // produced controls that compiled cleanly but iterated the wrong
 // list.
-func ruleToExprAnyMatch(r *policy.PredicateRule, val any, outerScope string, identityShorthand bool) (string, error) {
+func ruleToExprAnyMatch(r *policy.PredicateRule, val any, outerScope string, identityShorthand bool, depth int) (string, error) {
 	var nested *policy.UnsafePredicate
 	switch v := val.(type) {
 	case *policy.UnsafePredicate:
@@ -451,10 +451,12 @@ func ruleToExprAnyMatch(r *policy.PredicateRule, val any, outerScope string, ide
 
 	// Compile the nested predicate with "__id" scope — field references
 	// like "type", "id", "purpose" will resolve to __id["type"], etc.
-	// any_match adds one nesting level (the comprehension itself).
-	// Inner depth starts at 1 so the cap counts the comprehension
-	// frame the same way a literal Any/All branch would.
-	innerExpr, err := predicateToExpr(*nested, ScopeVarItem, 1)
+	// Forward depth+1 so any_match / any_identity_match comprehensions
+	// count toward the maxPredicateDepth cap. The earlier shape
+	// hardcoded depth=1 here, which let a chain of nested any_match
+	// rules bypass the cap and reach unbounded recursion — a stack-
+	// overflow vector at compile time.
+	innerExpr, err := predicateToExpr(*nested, ScopeVarItem, depth+1)
 	if err != nil {
 		return "", fmt.Errorf("any_match: %w", err)
 	}

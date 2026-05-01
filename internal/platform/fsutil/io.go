@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 )
 
@@ -248,7 +249,15 @@ func SafeWriteFile(path string, data []byte, opts WriteOptions) error {
 // testHookAfterLstat is called between the Lstat check and Mkdir call
 // in SafeMkdirAll. Nil in production. Set in tests to inject TOCTOU
 // race conditions for symlink swap testing.
-var testHookAfterLstat func(component string)
+//
+// testHookAfterLstatMu guards both the read in SafeMkdirAll and any
+// test code that writes the hook. -race flagged the unsynchronised
+// read whenever a parallel test set the hook on a sibling goroutine;
+// the hook is rare enough that the lock overhead is negligible.
+var (
+	testHookAfterLstat   func(component string)
+	testHookAfterLstatMu sync.Mutex
+)
 
 func SafeMkdirAll(path string, opts WriteOptions) error {
 	if opts.AllowSymlink {
@@ -282,8 +291,11 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("security check failed for %q: %w", current, err)
 		}
-		if testHookAfterLstat != nil {
-			testHookAfterLstat(current)
+		testHookAfterLstatMu.Lock()
+		hook := testHookAfterLstat
+		testHookAfterLstatMu.Unlock()
+		if hook != nil {
+			hook(current)
 		}
 		if mkErr := os.Mkdir(current, opts.Perm); mkErr != nil && !os.IsExist(mkErr) {
 			return mkErr
@@ -466,7 +478,20 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 		return err
 	}
 	tmpName := tmp.Name()
-	defer os.Remove(tmpName) // cleanup on any failure
+	// renamed flips to true after a successful os.Rename so the
+	// defer skips the cleanup. The earlier defer ran unconditionally,
+	// which on a successful path issued an os.Remove against the
+	// new destination's path (since rename moves the inode under
+	// the new name) — harmless on POSIX but visible in audit
+	// instrumentation (extra syscall, ENOENT noise) and a foot-gun
+	// if a future filesystem treats the path-after-rename specially.
+	// Mirrors the `committed` sentinel pattern in WriteFileAtomic.
+	renamed := false
+	defer func() {
+		if !renamed {
+			_ = os.Remove(tmpName)
+		}
+	}()
 
 	_, err = tmp.Write(data)
 	if err != nil {
@@ -501,6 +526,7 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 	if err = os.Rename(tmpName, dst); err != nil {
 		return err
 	}
+	renamed = true
 
 	// Fsync the parent directory so the rename itself is durable. Without
 	// this, a crash between rename and the OS's next flush can leave the

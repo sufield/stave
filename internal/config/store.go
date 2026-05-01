@@ -58,6 +58,18 @@ func (c Context) Validate() error {
 	if cfg != "" && !isPathSafe(cfg) {
 		return fmt.Errorf("project_config contains unsafe path components: %q", cfg)
 	}
+	// Defaults paths resolve relative to project_root at the call
+	// site, so the same isPathSafe contract that protects
+	// project_config applies: no absolute paths, no `..` traversal,
+	// and the value must equal its filepath.Clean form. A malicious
+	// stored context could otherwise pin defaults at "../../etc/..."
+	// and redirect every default-path read out of the working tree.
+	if d := strings.TrimSpace(c.Defaults.ControlsDir); d != "" && !isPathSafe(d) {
+		return fmt.Errorf("defaults.controls_dir contains unsafe path components: %q", d)
+	}
+	if d := strings.TrimSpace(c.Defaults.ObservationsDir); d != "" && !isPathSafe(d) {
+		return fmt.Errorf("defaults.observations_dir contains unsafe path components: %q", d)
+	}
 	return nil
 }
 
@@ -210,6 +222,19 @@ func Load() (*Store, string, error) {
 	for name, ctx := range store.contexts {
 		if err := ctx.Validate(); err != nil {
 			return nil, "", fmt.Errorf("context %q at %q: %w", name, path, err)
+		}
+	}
+
+	// Validate the active context name itself. ValidateName covers
+	// the same charset rules used when adding entries via SetContext;
+	// without this check a stored YAML with a malicious or otherwise
+	// invalid `active:` value (path-traversal in a future caller that
+	// uses Active as a path component, embedded null bytes, etc.)
+	// would round-trip through Load unobserved. Empty Active is
+	// allowed — that means "no context selected".
+	if store.Active != "" {
+		if err := ValidateName(store.Active); err != nil {
+			return nil, "", fmt.Errorf("active context name at %q is invalid: %w", path, err)
 		}
 	}
 

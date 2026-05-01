@@ -4,6 +4,7 @@ package sarif
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -35,7 +36,15 @@ func NewFindingWriter(opts ...Option) *FindingWriter {
 
 // MarshalFindings transforms enriched findings into SARIF v2.1.0 JSON bytes
 // without performing I/O.
+//
+// Returns an error when enriched is nil rather than panicking on
+// the .Findings access — the public marshaller is reachable from
+// error paths where the upstream pipeline may legitimately yield
+// no result and pass nil through.
 func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) ([]byte, error) {
+	if enriched == nil {
+		return nil, errors.New("sarif: nil EnrichedResult")
+	}
 	remFindings := toRemediationFindings(enriched.Findings)
 	rules, ruleIndex := buildRules(remFindings)
 	results := buildResults(remFindings, ruleIndex)
