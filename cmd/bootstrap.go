@@ -121,17 +121,23 @@ func (a *App) phaseEnrich(cmd *cobra.Command) error {
 // The resolver is stored in Cobra's context so all downstream commands
 // retrieve it via cmdctx.ResolverFromCmd(cmd).
 func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command, eval *appconfig.GovernanceResolver) {
-	ctx := cmdctx.WithResolver(cmd.Context(), eval)
-	cmd.SetContext(ctx)
-
 	// Bootstrap can hand a nil resolver when project-config loading
 	// failed and the command is annotated as config-optional.
 	// Calling eval.Quiet() / Sanitize() / PathMode() on nil panics;
 	// in the optional-config case the right behaviour is to fall
 	// back to whatever defaults the persistent flags already carry.
+	//
+	// The early return runs BEFORE cmdctx.WithResolver(ctx, eval) so
+	// downstream commands looking up the resolver via
+	// cmdctx.ResolverFromCmd never observe a typed-nil
+	// (*GovernanceResolver)(nil) stored in the context — that form
+	// of nil produces NPEs at every method call site, hiding the
+	// "no resolver" semantic the caller intended.
 	if eval == nil {
 		return
 	}
+	ctx := cmdctx.WithResolver(cmd.Context(), eval)
+	cmd.SetContext(ctx)
 
 	p := cmd.Root().PersistentFlags()
 	if !p.Changed(cliflags.FlagQuiet) {

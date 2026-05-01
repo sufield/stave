@@ -132,6 +132,18 @@ func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) 
 		return unsupportedVersionResult(actual, cfg.Accepted, "Use a supported schema version"), nil
 	}
 
+	// kernel.RegistryLayoutStandard ("v1") names the schema-registry
+	// layout version, NOT the document's content version. The two
+	// are distinct: the registry currently ships exactly one layout,
+	// while documents carry their own dsl_version / schema_version
+	// (already validated against cfg.Accepted above). Passing the
+	// document's version here would dispatch into a non-existent
+	// registry slot ("ctrl.v1" → "no such schema").
+	//
+	// Earlier audit suggested this was a bug; verified by running
+	// the parallel-CEL test suite — substituting `actual` produced
+	// "unsupported version 'ctrl.v1' for kind 'control'" failures
+	// across every fixture.
 	diags, err := v.Validate(Request{
 		Kind:          schemas.Kind(cfg.Kind),
 		ActualVersion: kernel.RegistryLayoutStandard,

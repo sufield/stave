@@ -94,6 +94,19 @@ func stringifyValue(v any) any {
 				cp[i] = stringifyValue(rv.Index(i).Interface())
 			}
 			return cp
+		case reflect.Struct, reflect.Pointer, reflect.Interface:
+			// Producer leaks: a custom struct (or pointer/interface
+			// wrapping one) escaped into the activation map. CEL
+			// cannot dereference fields on Go structs and the
+			// previous pass-through silently let the value reach
+			// the evaluator as `dyn` — predicates against it
+			// returned undefined-behaviour results that varied
+			// across cel-go releases. Render to a stringified
+			// fingerprint with %+v so the value appears in CEL as
+			// a comparable scalar; predicates that depend on
+			// internal struct fields will visibly fail to match
+			// rather than evaluating against a phantom value.
+			return fmt.Sprintf("%+v", v)
 		default:
 			return v
 		}

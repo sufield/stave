@@ -266,18 +266,33 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string, depth int) (string, er
 
 	switch op {
 	case predicate.OpEq:
+		// Fail-OPEN semantics for OpEq: a missing field can never
+		// equal anything, so the rule does not fire (`hasField &&
+		// field == value`). Equality predicates are typically
+		// "this state must hold" assertions where the control
+		// fires WHEN the equality holds — an absent field is the
+		// "we don't know" state and produces no false-positive
+		// violation. Pair with OpPresent if you need to also fail
+		// on the absence itself.
 		ve, err := resolveValueExpr(val)
 		if err != nil {
 			return "", fmt.Errorf("op eq: %w", err)
 		}
 		return fmt.Sprintf("(%s && %s == %s)", hf, fa, ve), nil
 	case predicate.OpNe:
-		// Fail-closed semantics: a missing field is itself the
-		// violation. Security-critical inequalities (require_tls=true,
-		// encryption_enabled=true) interpret an absent field as
-		// "the safety property might not hold," which is the
-		// reading the control author wanted. The previous fail-
-		// open default produced silent-pass on extractor drift.
+		// Fail-CLOSED semantics for OpNe (asymmetric vs OpEq): a
+		// missing field is itself the violation
+		// (`!hasField || field != value`). Security-critical
+		// inequalities (require_tls=true, encryption_enabled=true)
+		// interpret an absent field as "the safety property might
+		// not hold," which is the reading the control author wanted.
+		// The previous fail-open default produced silent-pass on
+		// extractor drift.
+		//
+		// The asymmetry is intentional: OpEq says "match this
+		// specific value" (absent field = no match), OpNe says
+		// "this value must not be set" (absent field is suspicious
+		// because the producer should have emitted it).
 		ve, err := resolveValueExpr(val)
 		if err != nil {
 			return "", fmt.Errorf("op ne: %w", err)

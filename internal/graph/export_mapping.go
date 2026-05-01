@@ -197,6 +197,16 @@ func mapTordfGraph(g *GraphData) *rdfGraph {
 	for findingID, controlID := range findingControl {
 		resourceID, ok := findingResource[findingID]
 		if !ok {
+			// Finding has a control_id but no TARGETS edge to a
+			// Resource. The shortcut edge requires both endpoints,
+			// so this finding contributes no Resource->Control
+			// shortcut. Surface the gap instead of silently
+			// skipping — typical causes: a strategy emitted a
+			// finding without recording the asset link, or the
+			// asset-side dedup pass dropped the edge before this
+			// loop ran.
+			slog.Warn("graph export: finding has control_id but no TARGETS edge; skipping shortcut",
+				"finding_id", findingID, "control_id", controlID)
 			continue
 		}
 		k := rcKey{resourceID, controlID}

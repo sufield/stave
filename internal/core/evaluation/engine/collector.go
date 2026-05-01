@@ -108,21 +108,26 @@ func (c *AssessmentCollector) RecordFindings(findings []*evaluation.Finding) {
 		}
 		fid := f.FindingID
 		if fid == "" {
-			// Empty FindingID skips the dedup index, so two
-			// "same" findings can both be recorded. Surface this
-			// so a strategy that forgot to assign the ID isn't
-			// silently producing duplicates that show up only
-			// after a long debugging detour.
-			slog.Warn("collector: finding has empty FindingID; dedup bypassed",
-				"control_id", f.ControlID, "asset_id", f.AssetID)
-		} else {
-			if _, dup := c.findingIDs[fid]; dup {
-				slog.Warn("collector: duplicate finding suppressed",
-					"finding_id", fid, "control_id", f.ControlID)
-				continue
-			}
-			c.findingIDs[fid] = struct{}{}
+			// Synthesise a deterministic fallback ID from the
+			// (control, asset) pair so the finding still
+			// participates in dedup. The earlier shape warned and
+			// then appended, so a strategy that forgot to assign a
+			// FindingID could produce N copies of the same finding
+			// — silent duplicate output. The fallback gives every
+			// such finding an ID that collides on repeat
+			// (control,asset) pairs, restoring the dedup contract.
+			fallback := kernel.FindingID(string(f.ControlID) + "/" + string(f.AssetID))
+			slog.Warn("collector: finding has empty FindingID; using fallback for dedup",
+				"control_id", f.ControlID, "asset_id", f.AssetID,
+				"fallback_finding_id", fallback)
+			fid = fallback
 		}
+		if _, dup := c.findingIDs[fid]; dup {
+			slog.Warn("collector: duplicate finding suppressed",
+				"finding_id", fid, "control_id", f.ControlID)
+			continue
+		}
+		c.findingIDs[fid] = struct{}{}
 		c.findings = append(c.findings, *f)
 	}
 }

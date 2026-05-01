@@ -117,7 +117,7 @@ func SupportedFrameworks() []Framework {
 // who passed a framework filter. They are now distinct:
 //   - MissingChecks  → no crosswalk mapping at all
 //   - FilteredChecks → mapping existed; all entries excluded by
-//                      the framework filter
+//     the framework filter
 type CrosswalkResolution struct {
 	ByCheck        map[kernel.ControlID][]ControlRef
 	MissingChecks  []kernel.ControlID

@@ -497,17 +497,31 @@ func mergeEdgeProperties(dst, src map[string]any) {
 					"existing_type", fmt.Sprintf("%T", existing))
 			}
 		}
-		// Build a fresh set seeded from any existing entries.
-		// Mutating an existing plural-key set in place would couple
-		// this merge step to the assumption that no other edge
-		// shares the reference; allocating a fresh map breaks that
-		// coupling — the caller's properties map is the only place
-		// this set is ever written, regardless of what other edges
-		// might (in a future graph pipeline) carry pointers to.
+		// Build a fresh set seeded from any existing entries. The
+		// expected shape is map[string]struct{} (the dedup
+		// accumulator); legacy edges that landed here pre-stamped
+		// with []string or a single string are also recovered
+		// rather than silently discarded — the warn block above
+		// already names the type-mismatch case for triage, but
+		// data preservation across producer-version skew is the
+		// safer default than data loss.
 		newSet := make(map[string]struct{})
-		if existing, ok := dst[pluralKey].(map[string]struct{}); ok {
+		switch existing := dst[pluralKey].(type) {
+		case map[string]struct{}:
 			for k := range existing {
 				newSet[k] = struct{}{}
+			}
+		case []string:
+			for _, s := range existing {
+				newSet[s] = struct{}{}
+			}
+		case []any:
+			for _, s := range existing {
+				newSet[fmt.Sprint(s)] = struct{}{}
+			}
+		case string:
+			if existing != "" {
+				newSet[existing] = struct{}{}
 			}
 		}
 		newSet[fmt.Sprint(pv)] = struct{}{}

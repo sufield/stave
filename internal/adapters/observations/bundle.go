@@ -43,10 +43,21 @@ func (BundleLoader) LoadBundle(ctx context.Context, path string) ([]asset.Snapsh
 	}()
 	select {
 	case <-ctx.Done():
-		// The read goroutine is left running until the OS returns;
-		// we can't interrupt fsutil.ReadFileLimited, but we can stop
-		// blocking the caller. The goroutine writes to a buffered
-		// channel so it does not leak after the result is dropped.
+		// LEAK NOTE: the read goroutine outlives this call when ctx
+		// is cancelled before fsutil.ReadFileLimited returns. Go
+		// cannot interrupt a blocked read on a non-deadline-capable
+		// fd (the disk read here), so the goroutine remains parked
+		// on the syscall until the OS returns control —
+		// typically when the read completes naturally. The
+		// channel send is buffered (capacity 1) so the goroutine's
+		// eventual write does not deadlock, but the goroutine
+		// itself is genuinely leaked for the duration of the read.
+		//
+		// Acceptable for one-shot CLI invocations. Long-lived
+		// daemons should wrap the path in something that supports
+		// SetReadDeadline (a *net.Conn-style adapter) or close the
+		// underlying fd from a sibling goroutine on ctx
+		// cancellation.
 		return nil, ctx.Err()
 	case r := <-done:
 		return r.data, r.err

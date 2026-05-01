@@ -95,9 +95,27 @@ func isPathSafe(path string) bool {
 	// canceled (e.g. "a/../b" → "b"), but leaves leading or
 	// otherwise-uncancelable parent refs intact: "../etc/passwd"
 	// stays "../etc/passwd" after Clean, and survives the
-	// `cleaned != path` check above. The explicit ".." segment
-	// scan below is the actual traversal guard.
-	return !slices.Contains(strings.Split(cleaned, string(filepath.Separator)), "..")
+	// `cleaned != path` check above.
+	//
+	// Windows compatibility: filepath.Separator is '\' on Windows,
+	// so a Unix-style "../etc" submitted from a config file would
+	// split into a single segment and miss detection. We also
+	// scan via strings.Contains(cleaned, "..") as a separator-
+	// agnostic backstop, AND replace `\` with `/` before the
+	// segment split so the explicit ".." check fires regardless
+	// of which separator the platform uses.
+	if strings.Contains(cleaned, "..") {
+		// Fast path: "..\foo" (Windows) or "../foo" (POSIX) or
+		// embedded "..foo" — over-rejects edge cases like a real
+		// segment named "..safe" but those are not legitimate
+		// directory names in any plausible context use; favour
+		// strict over permissive at the trust boundary.
+		normalized := strings.ReplaceAll(cleaned, "\\", "/")
+		if slices.Contains(strings.Split(normalized, "/"), "..") {
+			return false
+		}
+	}
+	return true
 }
 
 // IsProduction reports whether the context is marked as a production

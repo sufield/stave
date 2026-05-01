@@ -8,6 +8,7 @@ import (
 	"io"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/sufield/stave/internal/contracts/schema"
 	"github.com/sufield/stave/internal/contracts/validator"
@@ -33,7 +34,13 @@ var ErrNoFindings = errors.New("input JSON does not contain evaluation findings"
 type Loader struct {
 	validator     validator.RequestValidator
 	validatorOnce sync.Once
-	strictSchema  bool
+	// strictSchema is read on every parseResult / LoadEnvelopeFromFile
+	// call from any goroutine; WithStrictSchema is the only writer.
+	// atomic.Bool removes the need to coordinate the
+	// validatorOnce mutex with these reads — the previous bool field
+	// was a textbook data race even though writers and readers
+	// happened to be sequential in practice today.
+	strictSchema atomic.Bool
 }
 
 // NewLoader returns a Loader with a default schema validator.
@@ -51,7 +58,7 @@ func NewLoader() *Loader {
 // LoadEnvelopeFromFile against the embedded out.v0.1 schema. Required
 // for trust-boundary inputs (gating, enforcement-config generation).
 func (l *Loader) WithStrictSchema() *Loader {
-	l.strictSchema = true
+	l.strictSchema.Store(true)
 	l.validatorOnce.Do(func() { l.validator = validator.New() })
 	return l
 }
@@ -87,7 +94,37 @@ func (l *Loader) LoadFromReader(r io.Reader, sourceName string) (*evaluation.Com
 }
 
 // parseResult is the shared unmarshaling path for both file and reader loading.
+//
+// Honours WithStrictSchema by validating the bytes against the
+// out.v0.1 schema before unmarshaling. The earlier shape skipped
+// validation here entirely — only LoadEnvelopeFromFile checked the
+// schema — so a strict-mode caller using LoadFromFile / LoadFromReader
+// got the laxness of the non-strict path silently. Mirrors the
+// validation logic in LoadEnvelopeFromFile.
 func (l *Loader) parseResult(data []byte, source string) (*evaluation.ComplianceReport, error) {
+	if l.strictSchema.Load() {
+		diags, valErr := l.schemaValidator().Validate(validator.Request{
+			Kind: schema.KindOutput,
+			Data: data,
+		})
+		if valErr != nil {
+			return nil, fmt.Errorf("validating evaluation %q: %w", source, valErr)
+		}
+		if len(diags) > 0 {
+			var b strings.Builder
+			b.WriteString("evaluation schema violations in ")
+			b.WriteString(source)
+			b.WriteString(":")
+			for i, d := range diags {
+				if i >= 5 {
+					fmt.Fprintf(&b, "\n  ... (+%d more)", len(diags)-5)
+					break
+				}
+				fmt.Fprintf(&b, "\n  %s: %s", d.Path, d.Message)
+			}
+			return nil, fmt.Errorf("%s: %w", b.String(), validator.ErrSchemaValidationFailed)
+		}
+	}
 	var result evaluation.ComplianceReport
 	if err := json.Unmarshal(data, &result); err != nil {
 		return nil, fmt.Errorf("failed to load output file %s: invalid JSON: %w", source, err)
@@ -121,7 +158,7 @@ func (l *Loader) LoadEnvelopeFromFile(ctx context.Context, path string) (*report
 	// rather than a silent zero-valued Assessment. Opt-in (strict
 	// callers must use WithStrictSchema) — this preserves backward
 	// compatibility for callers feeding stub envelopes.
-	if l.strictSchema {
+	if l.strictSchema.Load() {
 		diags, valErr := l.schemaValidator().Validate(validator.Request{
 			Kind: schema.KindOutput,
 			Data: data,

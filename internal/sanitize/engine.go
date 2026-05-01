@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -155,7 +156,17 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 		if len(groups) > 2 && groups[2] != "" {
 			return groups[2] // credential-style path — keep basename only
 		}
-		return match
+		// The two-branch regex is exhaustive over its alternation,
+		// so reaching here would mean the regex matched but no
+		// capture group did — typically the result of a regex edit
+		// that adds a new alternative without updating the handler.
+		// Return [REDACTED] rather than the verbatim match so the
+		// failure mode is "scrubbed even though we didn't recognize
+		// the form" rather than "leaked because we didn't classify".
+		// slog so the gap surfaces during triage.
+		slog.Warn("sanitize: ScrubMessage regex matched but no capture group fired; emitting [REDACTED]",
+			"match", match)
+		return "[REDACTED]"
 	})
 }
 
@@ -432,15 +443,21 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 		// switch above. Numbers, booleans, time stamps, and JSON
 		// raw messages have dedicated cases; arriving here means a
 		// new type leaked into the activation map (a custom struct
-		// from a producer, a typed alias, etc.). Log so the gap is
-		// visible — silently sentinelling an unknown type can hide
-		// a real schema drift between producer and engine.
-		slog.Warn("sanitize: unknown leaf type, emitting SANITIZED_UNKNOWN_TYPE sentinel",
+		// from a producer, a typed alias, etc.).
+		//
+		// Return a TYPE-PRESERVING zero via reflection. Earlier this
+		// branch returned the string "SANITIZED_UNKNOWN_TYPE", which
+		// flipped the slot's JSON type and broke downstream type
+		// assertions in consumers that expected the producer-declared
+		// shape. Reflection is the only way to get the right zero
+		// without enumerating every possible Go type. We still log
+		// so the schema-drift surfaces during triage.
+		slog.Warn("sanitize: unknown leaf type, returning type-preserving zero value",
 			"go_type", fmt.Sprintf("%T", v))
-		// Sentinel string lets a downstream parser distinguish
-		// "engine reached a type it didn't classify" from "the
-		// value was nil"; the JSON-type cost (an int field becomes
-		// a string) is accepted for triage visibility.
-		return "SANITIZED_UNKNOWN_TYPE"
+		rv := reflect.ValueOf(v)
+		if !rv.IsValid() {
+			return nil
+		}
+		return reflect.Zero(rv.Type()).Interface()
 	}
 }

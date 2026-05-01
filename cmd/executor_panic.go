@@ -114,7 +114,12 @@ func (a *App) sanitizeExecuteMessage(message string) string {
 var fallbackScrubPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`arn:aws:[a-z0-9-]+:[a-z0-9-]*:\d{12}:[^\s"'<>]+`),
 	regexp.MustCompile(`\b\d{12}\b`),                         // account IDs
-	regexp.MustCompile(`/(?:[^/\s:"'<>]+/){2,}[^/\s:"'<>]+`), // absolute paths
+	// Absolute paths: at least one `/segment/` followed by a non-slash
+	// terminal segment. The earlier `{2,}` minimum required two
+	// intermediate components, so single-deep paths like `/etc/passwd`
+	// or `/tmp/foo` slipped through unredacted in the pre-bootstrap
+	// panic path. `+` matches both shallow and deep paths.
+	regexp.MustCompile(`/(?:[^/\s:"'<>]+/)+[^/\s:"'<>]+`),
 }
 
 // ipv4Candidate matches a four-octet dotted candidate. The regex is

@@ -47,22 +47,44 @@ func (r *TraceResult) RenderJSON(w io.Writer) error {
 // sharedTraceCompiler is the package-level compiler used by
 // BuildTrace. cel.Compiler holds a Compile cache that is only useful
 // when the same compiler instance sees an expression more than once;
-// the earlier shape constructed a fresh compiler on every BuildTrace
-// invocation and threw the cache away with it. A single shared
-// compiler — protected by sync.Once for lazy init — keeps the cache
-// warm across the trace API, mirroring the pattern NewPredicateEval
-// already follows.
+// constructing a fresh compiler on every BuildTrace would throw the
+// cache away. A single shared compiler keeps the cache warm across
+// the trace API, mirroring NewPredicateEval.
+//
+// Lazy init is guarded by sync.RWMutex with double-checked write
+// rather than sync.Once so that a transient init failure (a
+// platform-specific permission error during environment construction,
+// for example) does not lock the package into a permanent error
+// state. sync.Once would memoize the failure and every subsequent
+// call would return the same error — even after the underlying
+// condition cleared. The double-check pattern retries on each call
+// until init succeeds, then takes the read-locked fast path.
 var (
-	sharedTraceCompiler     *Compiler
-	sharedTraceCompilerOnce sync.Once
-	sharedTraceCompilerErr  error
+	sharedTraceCompiler   *Compiler
+	sharedTraceCompilerMu sync.RWMutex
 )
 
 func getTraceCompiler() (*Compiler, error) {
-	sharedTraceCompilerOnce.Do(func() {
-		sharedTraceCompiler, sharedTraceCompilerErr = NewCompiler()
-	})
-	return sharedTraceCompiler, sharedTraceCompilerErr
+	sharedTraceCompilerMu.RLock()
+	c := sharedTraceCompiler
+	sharedTraceCompilerMu.RUnlock()
+	if c != nil {
+		return c, nil
+	}
+
+	sharedTraceCompilerMu.Lock()
+	defer sharedTraceCompilerMu.Unlock()
+	// Re-check under the write lock: another goroutine may have
+	// initialised between our RUnlock and Lock.
+	if sharedTraceCompiler != nil {
+		return sharedTraceCompiler, nil
+	}
+	compiler, err := NewCompiler()
+	if err != nil {
+		return nil, err
+	}
+	sharedTraceCompiler = compiler
+	return compiler, nil
 }
 
 // BuildTrace compiles and evaluates a control's predicate against an

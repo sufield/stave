@@ -12,11 +12,20 @@ import (
 //
 // Rules:
 //   - "true"/"false" (case-insensitive, trimmed) → bool
-//   - Strings that parse as float64 → float64 (only pure numeric strings)
 //   - nil values are preserved (field-absence semantics)
 //   - Nested maps are recursed
-//   - Slices are element-wise normalized
+//   - Slices are element-wise normalized (new slice — slices in Go
+//     are value types but their backing arrays are shared, so we
+//     allocate a new one rather than mutate the caller's array
+//     header in place)
 //   - Already-typed values (bool, float64, int) are left unchanged
+//
+// Mutation strategy: maps are mutated in place at every nesting
+// level. The earlier shape mutated the top-level map but cloned
+// nested maps; that hybrid surprised callers reasoning about
+// aliased sub-trees. Uniform in-place mutation matches the public
+// contract (caller hands us a map, we normalize it) and matches
+// what every caller already does (they pass owned maps).
 func normalizeProperties(m map[string]any) {
 	for k, v := range m {
 		m[k] = normalizeValue(v)
@@ -26,11 +35,12 @@ func normalizeProperties(m map[string]any) {
 func normalizeValue(v any) any {
 	switch val := v.(type) {
 	case map[string]any:
-		cloned := make(map[string]any, len(val))
-		for k, v := range val {
-			cloned[k] = normalizeValue(v)
+		// Mutate in place to match normalizeProperties' top-level
+		// strategy (see comment on normalizeProperties).
+		for k, vv := range val {
+			val[k] = normalizeValue(vv)
 		}
-		return cloned
+		return val
 	case []any:
 		out := make([]any, len(val))
 		for i, elem := range val {

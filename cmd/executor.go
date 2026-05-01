@@ -109,6 +109,16 @@ func (a *App) installInterruptHandler() func() {
 			fmt.Fprintln(os.Stderr, "Interrupted")
 			if cancel := a.cancel.Load(); cancel != nil {
 				(*cancel)()
+				// Returning here is safe: the cleanup closure
+				// returned by installInterruptHandler (and called
+				// from the main goroutine's defer + the panic
+				// recovery path) is what calls signal.Stop and
+				// close(done). The signal.Stop call must NOT be
+				// duplicated here — sync.Once in the closure
+				// already serializes it, but doubling the
+				// Notify→Stop pair across goroutines without
+				// shared coordination would race. The goroutine
+				// simply exits; cleanup is the closure's job.
 				return
 			}
 			// Pre-bootstrap signal: cancel function not yet stored.

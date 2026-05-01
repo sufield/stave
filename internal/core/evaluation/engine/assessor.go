@@ -299,9 +299,18 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 		return evaluation.ComplianceReport{}, fmt.Errorf("lifecycle analysis failed: %w", err)
 	}
 
+	// Use the maximum asset count across snapshots as the
+	// pre-allocation hint. The earlier shape used sequenced[0]
+	// (the EARLIEST snapshot), which under-allocated whenever the
+	// asset count grew over the observation window — every
+	// subsequent append then forced a re-grow. Picking the max
+	// produces a one-shot allocation that fits any snapshot the
+	// session will see.
 	assetHint := 0
-	if len(sequenced) > 0 {
-		assetHint = len(sequenced[0].Assets)
+	for i := range sequenced {
+		if n := len(sequenced[i].Assets); n > assetHint {
+			assetHint = n
+		}
 	}
 
 	auditTime, refErr := a.referenceTime(sequenced)
