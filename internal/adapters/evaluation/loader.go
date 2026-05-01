@@ -242,21 +242,30 @@ func parseFindings(raw []byte, depth int) ([]remediation.Finding, error) {
 	// misses, hiding malformed envelopes from operators.
 	var lastUnmarshalErr error
 
+	// Format 2 takes precedence: if the document declares its kind,
+	// only that shape applies. The previous structure used two
+	// independent ifs and fell through to Format 3 when Format 2's
+	// unmarshal failed, which masked malformed safety envelopes by
+	// trying to re-parse them as a bare findings array.
+	//
+	// Empty findings arrays are accepted as a valid result: a clean
+	// evaluation with zero violations is structurally well-formed.
+	// ErrNoFindings remains reserved for "no recognizable shape at
+	// all" — strict callers that want to reject empty results should
+	// check len(findings) on the returned slice.
 	if _, hasKind := probe["kind"]; hasKind {
 		var env report.Assessment
-		if err := json.Unmarshal(raw, &env); err == nil {
+		if err := json.Unmarshal(raw, &env); err != nil {
+			lastUnmarshalErr = err
+		} else {
 			return env.Findings, nil
-		} else {
-			lastUnmarshalErr = err
 		}
-	}
-
-	if rawFindings, hasFindings := probe["findings"]; hasFindings {
+	} else if rawFindings, hasFindings := probe["findings"]; hasFindings {
 		var list []remediation.Finding
-		if err := json.Unmarshal(rawFindings, &list); err == nil {
-			return list, nil
-		} else {
+		if err := json.Unmarshal(rawFindings, &list); err != nil {
 			lastUnmarshalErr = err
+		} else {
+			return list, nil
 		}
 	}
 

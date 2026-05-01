@@ -23,10 +23,34 @@ func NewBundleLoader() *BundleLoader { return &BundleLoader{} }
 
 var _ appcontracts.SnapshotBundleLoader = (*BundleLoader)(nil)
 
-// LoadBundle reads and parses a bundle file. The ctx parameter is accepted
-// for interface conformance; the underlying read is not yet cancellation-aware.
-func (BundleLoader) LoadBundle(_ context.Context, path string) ([]asset.Snapshot, error) {
-	return LoadBundle(path)
+// LoadBundle reads and parses a bundle file. ctx is honoured around
+// the blocking disk read so a long-stalled read on a network mount
+// or a paused filesystem can be interrupted by the caller cancelling
+// the context. The previous shape ignored ctx; a stuck call to
+// fsutil.ReadFileLimited would hang the runner with no recourse.
+func (BundleLoader) LoadBundle(ctx context.Context, path string) ([]asset.Snapshot, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	type result struct {
+		data []asset.Snapshot
+		err  error
+	}
+	done := make(chan result, 1)
+	go func() {
+		snaps, err := LoadBundle(path)
+		done <- result{snaps, err}
+	}()
+	select {
+	case <-ctx.Done():
+		// The read goroutine is left running until the OS returns;
+		// we can't interrupt fsutil.ReadFileLimited, but we can stop
+		// blocking the caller. The goroutine writes to a buffered
+		// channel so it does not leak after the result is dropped.
+		return nil, ctx.Err()
+	case r := <-done:
+		return r.data, r.err
+	}
 }
 
 // ObservationBundle represents a bundled observations file containing multiple snapshots.

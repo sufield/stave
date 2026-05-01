@@ -28,17 +28,22 @@ const e2eCaseTimeout = 90 * time.Second
 //	go test ./e2e/ -run E2E/e2e-h1     # HackerOne cases only
 //	go test -short ./e2e/              # skipped (e2e is CI-only)
 func TestE2E(t *testing.T) {
-	// Intentionally NOT parallel: each case spawns the stave binary
-	// and exercises real CLI plumbing (filesystem, schema loaders,
-	// engine). Running thousands of cases concurrently on a GitHub
-	// runner saturated the box and let one slow case (the
-	// vpc-peering-crossaccount path, which exercises a retry/backoff
-	// branch) push the whole package past the 30-minute timeout —
-	// the package-level panic obscured the actually-stuck case
-	// because parallel cases surface the timeout on the suite, not
-	// on the offender. Serial execution keeps each case's own
-	// e2eCaseTimeout authoritative and produces a clean
-	// "this fixture timed out" line in CI logs.
+	// Inner subtests use t.Parallel() so Go runs them concurrently
+	// up to the GOMAXPROCS-derived limit (overridable with
+	// -parallel). The outer TestE2E intentionally does NOT call
+	// t.Parallel(): there is only one TestE2E in this package, so
+	// pausing it yields no benefit and only complicates the
+	// goroutine ordering when a subtest panics.
+	//
+	// History: the suite was briefly run fully serial after a
+	// vpc-peering-crossaccount case appeared to hang the previous
+	// fully-parallel run. The hang turned out to be a fixture-YAML
+	// schema validation issue (the closed attack_stage enum landed
+	// while fixture-local copies still carried deprecated values),
+	// not a runtime retry/backoff problem. Once the fixture
+	// migration shipped, that case runs in ~1 second again, so
+	// per-case parallelism is safe to re-enable. Each case still
+	// has its own e2eCaseTimeout (90s) which fires per subtest.
 	if testing.Short() {
 		t.Skip("skipping e2e tests in short mode (CI-only — see Makefile test-ci target)")
 	}
@@ -56,6 +61,7 @@ func TestE2E(t *testing.T) {
 		}
 		name := entry.Name()
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			runE2ECase(t, bin, filepath.Join(root, name))
 		})
 	}

@@ -36,7 +36,7 @@ func TestApplyAcknowledgments_AssetAAckSurvivesAssetBFailure(t *testing.T) {
 		{FindingID: "f2", ControlID: "CTL.Y", AssetID: asset.ID("asset-B")}, // B fails CTL.Y
 	}
 
-	active, ackd := applyAcknowledgments(findings, acks, now)
+	active, ackd := applyAcknowledgments(findings, nil, acks, now)
 
 	// A's ack for CTL.X must be valid: CTL.Y passes on A.
 	if len(ackd) != 1 {
@@ -78,7 +78,7 @@ func TestApplyAcknowledgments_AckInvalidatedByOwnAssetFailure(t *testing.T) {
 		{FindingID: "f2", ControlID: "CTL.Y", AssetID: asset.ID("asset-A")}, // A's own CTL.Y fails
 	}
 
-	_, ackd := applyAcknowledgments(findings, acks, now)
+	_, ackd := applyAcknowledgments(findings, nil, acks, now)
 	if len(ackd) != 1 {
 		t.Fatalf("expected 1 acknowledged record, got %d", len(ackd))
 	}

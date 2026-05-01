@@ -280,6 +280,15 @@ func scopedFieldExprs(dotPath, scopeVar string) fieldExprs {
 // When scopeVar is empty, uses the field's first segment as the root variable.
 // When scopeVar is set (e.g., "__id"), all segments are indexed from that variable.
 func scopedFieldAccess(dotPath, scopeVar string) string {
+	if dotPath == "" {
+		// An empty path is a degenerate case: the caller is asking
+		// for the scope root itself. Without this guard the
+		// strings.Split below produces [""] and the loop emits
+		// `__id[""]`, which is a CEL error rather than the root
+		// reference the caller wanted. scopedHasField already has
+		// this guard (line 303); mirror it here for consistency.
+		return scopeVar
+	}
 	if scopeVar == "" {
 		return fieldAccess(dotPath)
 	}

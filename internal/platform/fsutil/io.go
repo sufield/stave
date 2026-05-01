@@ -54,24 +54,48 @@ var (
 
 // --- READ SAFETY ---
 
-// ReadFileLimited reads a file after verifying it does not exceed the active
-// safety limit (default 256 MB). Returns a descriptive error if the file is
-// too large. Override the limit with SetMaxInputFileBytes.
+// ReadFileLimited reads a file after verifying it does not exceed the
+// active safety limit (default 256 MB). Returns a descriptive error
+// if the file is too large. Override the limit with
+// SetMaxInputFileBytes.
+//
+// The earlier shape used an os.Stat-then-os.ReadFile pair; that
+// pattern has a TOCTOU window between the size check and the read,
+// so a racing writer could grow the file past the limit and the
+// read would still succeed at the new larger size. Switching to
+// os.Open + io.LimitReader (the same pattern as LimitedReadAll)
+// closes the window: the read itself is bounded, and a one-byte
+// probe afterwards tells us whether the limit was exceeded.
 func ReadFileLimited(path string) ([]byte, error) {
-	fi, err := os.Stat(path)
+	// #nosec G304 -- this helper intentionally reads caller-supplied paths after size checks.
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	if fi.Size() > maxInputFileBytes.Load() {
+	defer f.Close()
+
+	limit := maxInputFileBytes.Load()
+	data, err := io.ReadAll(io.LimitReader(f, limit))
+	if err != nil {
+		return nil, err
+	}
+
+	// Probe for overflow: if any byte remains beyond the limit,
+	// reject. Mirrors LimitedReadAll's overflow handling.
+	var probe [1]byte
+	n, probeErr := f.Read(probe[:])
+	if n > 0 {
 		return nil, fmt.Errorf(
 			"%w: file %q exceeds the internal safety limit of %dMB; "+
 				"to prevent resource exhaustion, Stave does not process files larger than this — "+
 				"please check if this file was generated correctly",
 			ErrFileTooLarge,
-			filepath.Base(path), maxInputFileBytes.Load()>>20)
+			filepath.Base(path), limit>>20)
 	}
-	// #nosec G304 -- this helper intentionally reads caller-supplied paths after size checks.
-	return os.ReadFile(path)
+	if probeErr != nil && !errors.Is(probeErr, io.EOF) {
+		return nil, probeErr
+	}
+	return data, nil
 }
 
 // ReadFileOrStdin reads from a file path if non-empty, otherwise from stdin.
@@ -482,11 +506,22 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 	// this, a crash between rename and the OS's next flush can leave the
 	// destination's directory entry unpersisted — on some filesystems that
 	// manifests as a zero-byte or missing destination after reboot.
+	//
+	// Errors from open / sync / close are propagated rather than
+	// swallowed: the rename has already succeeded, but a sync
+	// failure means we cannot promise the entry is durable, and a
+	// caller relying on the post-condition deserves to know.
 	d, openErr := os.Open(dir) //nolint:gosec // directory path from caller's dst
 	if openErr != nil {
-		return nil
+		return fmt.Errorf("sync parent dir: open %s: %w", dir, openErr)
 	}
-	_ = d.Sync()
-	_ = d.Close()
+	syncErr := d.Sync()
+	closeErr := d.Close()
+	if syncErr != nil {
+		return fmt.Errorf("sync parent dir: %w", syncErr)
+	}
+	if closeErr != nil {
+		return fmt.Errorf("close parent dir: %w", closeErr)
+	}
 	return nil
 }

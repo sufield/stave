@@ -214,7 +214,16 @@ func (a *Assessor) referenceTime(snapshots []asset.Snapshot) (time.Time, error) 
 		return a.clock.Now(), nil
 	}
 	if len(snapshots) > 0 {
-		return snapshots[len(snapshots)-1].CapturedAt, nil
+		// Find the latest CapturedAt rather than trusting slice
+		// order. The earlier shape returned snapshots[last], which
+		// silently produced the wrong reference time when the
+		// caller passed snapshots in any order other than ascending
+		// CapturedAt — a precondition the type signature did not
+		// advertise. slices.MaxFunc makes the intent explicit.
+		latest := slices.MaxFunc(snapshots, func(a, b asset.Snapshot) int {
+			return a.CapturedAt.Compare(b.CapturedAt)
+		})
+		return latest.CapturedAt, nil
 	}
 	return a.clock.Now(), nil
 }
@@ -477,9 +486,15 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		s.auditTime,
 	)
 
-	// Apply acknowledgments.
+	// Apply acknowledgments. exceptedFindings is passed in so the
+	// compensating-control validation can distinguish "this cc
+	// genuinely passed" from "this cc was excepted from evaluation
+	// and we don't actually know its state". Treating an excepted
+	// control as passing would let an acknowledgment pretend its
+	// safety net is in place while no signal exists.
 	activeFindings, acknowledgedFindings := applyAcknowledgments(
 		activeFindings,
+		exceptedFindings,
 		s.assessor.acknowledgments,
 		s.auditTime,
 	)
@@ -598,10 +613,17 @@ func buildSuppressionSet(
 
 // applyAcknowledgments separates acknowledged findings from active findings.
 // Returns remaining active findings and a slice of acknowledged finding records.
-// Compensating control validation uses the active findings set — already-excepted
-// findings are not counted as failing, so they don't block valid acknowledgments.
+//
+// Compensating-control validation tracks failing AND excepted controls
+// per asset. A compensating control is only counted "passing" when it
+// genuinely passed evaluation; if it was filtered by an exception we
+// have no positive signal that the safety net is in place, so it
+// counts as failing for acknowledgment purposes. The earlier shape
+// treated excepted controls as passing, which let an acknowledgment
+// quietly stand on a control that was never verified.
 func applyAcknowledgments(
 	findings []evaluation.Finding,
+	exceptedFindings []evaluation.ExceptedFinding,
 	acks *policy.AcknowledgmentConfig,
 	now time.Time,
 ) ([]evaluation.Finding, []policy.AcknowledgedFinding) {
@@ -610,16 +632,12 @@ func applyAcknowledgments(
 	}
 
 	// Build per-asset failing-control sets from the active (non-excepted)
-	// findings only. The earlier shape used a single global set keyed by
+	// findings. The earlier shape used a single global set keyed by
 	// ControlID, so a failure of CTL.X on asset B invalidated every
 	// acknowledgment for CTL.X on asset A — even though A's compensating
 	// control was passing on A. Per-asset partitioning preserves the
 	// original intent: a compensating control is "passing" relative to
 	// the asset whose acknowledgment we're validating.
-	//
-	// Using allFindings here would allow already-excepted findings to
-	// invalidate unrelated acknowledgments whose compensating controls
-	// were also excepted.
 	failingByAsset := make(map[asset.ID]map[kernel.ControlID]bool)
 	for i := range findings {
 		assetID := findings[i].AssetID
@@ -627,6 +645,19 @@ func applyAcknowledgments(
 			failingByAsset[assetID] = make(map[kernel.ControlID]bool)
 		}
 		failingByAsset[assetID][findings[i].ControlID] = true
+	}
+
+	// Excepted controls are tracked separately so we can distinguish
+	// "passed" from "filtered". A compensating control that was
+	// excepted on this asset has no verification signal — treating
+	// it as passing was the bug.
+	exceptedByAsset := make(map[asset.ID]map[kernel.ControlID]bool)
+	for i := range exceptedFindings {
+		ef := &exceptedFindings[i]
+		if exceptedByAsset[ef.AssetID] == nil {
+			exceptedByAsset[ef.AssetID] = make(map[kernel.ControlID]bool)
+		}
+		exceptedByAsset[ef.AssetID][ef.ControlID] = true
 	}
 
 	var active []evaluation.Finding
@@ -663,14 +694,25 @@ func applyAcknowledgments(
 
 		// Check compensating controls scoped to *this* asset's failures.
 		// A different asset's failure of the same control does not
-		// invalidate this acknowledgment.
+		// invalidate this acknowledgment. A compensating control
+		// that was excepted on this asset has no verification
+		// signal, so it does not count as passing — we record its
+		// status as "excepted" to surface the gap rather than
+		// silently treating absence as success.
 		assetFailing := failingByAsset[f.AssetID]
+		assetExcepted := exceptedByAsset[f.AssetID]
 		allCompPassing := true
 		for _, cc := range rule.CompensatingControls {
-			status := "pass"
-			if assetFailing[cc] {
+			var status string
+			switch {
+			case assetFailing[cc]:
 				status = "fail"
 				allCompPassing = false
+			case assetExcepted[cc]:
+				status = "excepted"
+				allCompPassing = false
+			default:
+				status = "pass"
 			}
 			af.CompensatingControls = append(af.CompensatingControls,
 				policy.CompensatingControlStatus{ControlID: cc, Status: status})

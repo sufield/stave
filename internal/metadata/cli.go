@@ -1,7 +1,7 @@
 package metadata
 
 import (
-	"os"
+	"net/url"
 	"strings"
 
 	"github.com/sufield/stave/internal/env"
@@ -30,12 +30,23 @@ func IssuesRef() string {
 // DocsRef returns a documentation reference for the given topic.
 // If STAVE_DOCS_URL is set, it returns a URL with the topic as fragment.
 // Otherwise it returns a local command reference.
+//
+// Reads via env.DocsURL.Value() (matching IssuesRef) rather than
+// os.Getenv directly, so the Entry's DefaultValue is honoured if
+// one is later added — keeping the env-resolution policy
+// centralised in the env package.
+//
+// Topics are PathEscaped before being concatenated into the fragment
+// so a topic that happens to contain a space (e.g. "stave docs
+// search no controls found") produces a valid URL — the previous
+// raw concatenation produced URLs like "...#no controls found"
+// which most browsers reject.
 func DocsRef(topic string) string {
 	if topic == "" {
 		topic = "troubleshooting"
 	}
-	if base := strings.TrimSpace(os.Getenv(env.DocsURL.Name)); base != "" {
-		return base + "#" + topic
+	if base := strings.TrimSpace(env.DocsURL.Value()); base != "" {
+		return base + "#" + url.PathEscape(topic)
 	}
 	return "run 'stave docs search " + topic + "'"
 }

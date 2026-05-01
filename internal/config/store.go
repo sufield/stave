@@ -43,16 +43,58 @@ type Context struct {
 // newly-set context so a malformed entry surfaces at the
 // configuration boundary rather than mid-evaluation.
 func (c Context) Validate() error {
-	if strings.TrimSpace(c.ProjectRoot) == "" {
+	root := strings.TrimSpace(c.ProjectRoot)
+	if root == "" {
 		return errors.New("project_root must not be empty")
 	}
+	// ProjectRoot is normally absolute (a stave context labels a
+	// working directory) so the absolute/relative check is skipped
+	// here; only reject traversal that would let a context escape
+	// itself once joined with a sub-path.
+	if filepath.Clean(root) != root || strings.Contains(root, "..") {
+		return fmt.Errorf("project_root contains unsafe path components: %q", root)
+	}
+	cfg := strings.TrimSpace(c.ProjectConfig)
+	if cfg != "" && !isPathSafe(cfg) {
+		return fmt.Errorf("project_config contains unsafe path components: %q", cfg)
+	}
 	return nil
+}
+
+// isPathSafe reports whether a path is structurally safe to store
+// in a stave context entry: not absolute, not containing parent
+// (`..`) traversal, and identical to its filepath.Clean form. Used
+// for fields expected to resolve relative to the project root —
+// absolute paths and traversal there could let a malicious context
+// file redirect reads outside the working tree.
+func isPathSafe(path string) bool {
+	if path == "" {
+		return true
+	}
+	if filepath.IsAbs(path) {
+		return false
+	}
+	cleaned := filepath.Clean(path)
+	if cleaned != path {
+		return false
+	}
+	return !slices.Contains(strings.Split(cleaned, string(filepath.Separator)), "..")
 }
 
 // IsProduction reports whether the context is marked as a production
 // environment. Wraps the boolean field so audit-logging can be
 // added at the read site if needed.
 func (c Context) IsProduction() bool { return c.Production }
+
+// Clone returns a deep copy of the context. Context contains only
+// value-typed fields (strings, struct of strings, bool) so a plain
+// struct copy IS the deep copy; the explicit method exists so
+// callers signal intent ("I want a mutable working copy") rather
+// than relying on Go's value-semantics trick. After mutating the
+// clone, persist via (*Store).SetContext + (*Store).Save.
+func (c Context) Clone() Context {
+	return c
+}
 
 // Store represents the persistent collection of named stave contexts.
 // The contexts map is unexported so callers cannot bypass ValidateName
@@ -236,13 +278,21 @@ func (s *Store) Names() []string {
 	return names
 }
 
-// ResolveSelected identifies which context is currently active.
+// ResolveSelected returns a read-only snapshot of the active context.
+//
 // Precedence: STAVE_CONTEXT env var > active field in contexts.yaml.
 //
-// The returned *Context points at a stack-local COPY of the in-map value,
-// so mutations through the pointer are not visible to subsequent
-// ResolveSelected calls and are not persisted by Save. To update a
-// context, modify s.Contexts[name] directly and call Save.
+// The returned *Context points at a stack-local COPY of the in-map
+// value, so mutations through the pointer are not visible to
+// subsequent ResolveSelected calls and are not persisted by Save.
+// The pointer return shape is kept for ergonomic nil-checking; the
+// pointer must not be used to write back into the store. Callers
+// that need a mutable working copy should call (*Context).Clone()
+// — the contract documents the snapshot semantics clearly so a
+// reader does not have to remember Go's "maps return values" rule.
+//
+// To update a context, mutate via SetContext / DeleteContext on the
+// Store, or take a Clone, mutate, and call SetContext.
 func (s *Store) ResolveSelected() (string, *Context, bool, error) {
 	name := strings.TrimSpace(os.Getenv(env.Context.Name))
 	source := "environment variable"

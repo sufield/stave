@@ -150,6 +150,13 @@ func Build(input BuildInput) *GraphData {
 	// O(N) wasted work in the hot path and a latent correctness
 	// dependency on the post-pass dedup actually running.
 	seenMapsTo := sets.New[string]()
+	// seenBelongsTo tracks (resource, scope) pairs already emitted as
+	// BELONGS_TO_SCOPE edges. Multiple findings on the same asset
+	// share the same TenantScope, so without this dedup the same
+	// edge was emitted once per finding and a downstream cleanup
+	// pass had to remove the duplicates. Inline dedup here matches
+	// the seenMapsTo pattern and avoids the post-pass entirely.
+	seenBelongsTo := sets.New[string]()
 
 	// emitOnce appends node to g.Nodes the first time id is seen and
 	// records the id in seenNodes. Replaces the eight-times-repeated
@@ -279,9 +286,13 @@ func Build(input BuildInput) *GraphData {
 					},
 				})
 			}
-			g.Edges = append(g.Edges, Edge{
-				From: resourceID, To: scopeID, Type: EdgeTypeBelongsToScope,
-			})
+			belongsKey := resourceID + "→" + scopeID
+			if !seenBelongsTo.Contains(belongsKey) {
+				seenBelongsTo.Add(belongsKey)
+				g.Edges = append(g.Edges, Edge{
+					From: resourceID, To: scopeID, Type: EdgeTypeBelongsToScope,
+				})
+			}
 		}
 
 		// RemediationAction node + HAS_REMEDIATION edge from the parent

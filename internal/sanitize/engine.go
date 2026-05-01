@@ -30,7 +30,14 @@ import (
 // let those slip through, which is the exact form a leaked secret-
 // token filename takes in error messages from CI runners that mount
 // tokens at the root.
-var messagePathRe = regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9+.\-]*://[^\s]+)|/(?:[^\s:]+/)*([^\s:/]+)`)
+// The third alternative `/(?:[^\s:]+/)+` catches paths that end with
+// a trailing slash — e.g. `/run/secrets/` or `/var/run/keys/` — which
+// the previous two-branch regex left untouched because it required a
+// non-slash terminal segment. Trailing-slash paths show up in error
+// messages whenever a tool prints a directory rather than a file
+// (mount points, container volumes); leaking those is the same
+// disclosure as leaking the file path itself.
+var messagePathRe = regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9+.\-]*://[^\s]+)|/(?:[^\s:]+/)*([^\s:/]+)|(/(?:[^\s:]+/)+)`)
 
 // Compile-time check that Sanitizer implements kernel.Sanitizer.
 var _ kernel.Sanitizer = (*Sanitizer)(nil)
@@ -216,7 +223,8 @@ func (s *Sanitizer) ScrubMap(props map[string]any, profile Profile) map[string]a
 			continue
 		}
 		if list, ok := v.([]any); ok {
-			out[k] = s.scrubList(list, profile)
+			// Neutral-parent path: scalars preserved.
+			out[k] = s.scrubList(list, profile, false)
 			continue
 		}
 		out[k] = v
@@ -224,10 +232,18 @@ func (s *Sanitizer) ScrubMap(props map[string]any, profile Profile) map[string]a
 	return out
 }
 
-// scrubList recurses into list elements, scrubbing nested maps/lists with
-// the same profile. Non-container elements are kept as-is — the profile is
-// keyed by map property name and does not classify list elements directly.
-func (s *Sanitizer) scrubList(list []any, profile Profile) []any {
+// scrubList recurses into list elements, scrubbing nested maps/lists
+// with the same profile.
+//
+// When inSanitizedScope is false (the default — the caller hit a
+// neutral parent key), scalar elements are preserved as-is because
+// the profile is keyed by map property name and does not classify
+// list elements directly. When inSanitizedScope is true (the caller
+// reached this list via a Sanitize-flagged parent key), scalar
+// strings are replaced with their per-value scrub form so a list
+// of secret tokens does not leak through just because the values
+// happen to be string scalars rather than nested maps.
+func (s *Sanitizer) scrubList(list []any, profile Profile, inSanitizedScope bool) []any {
 	if list == nil {
 		return nil
 	}
@@ -237,7 +253,13 @@ func (s *Sanitizer) scrubList(list []any, profile Profile) []any {
 		case map[string]any:
 			out[i] = s.ScrubMap(v, profile)
 		case []any:
-			out[i] = s.scrubList(v, profile)
+			out[i] = s.scrubList(v, profile, inSanitizedScope)
+		case string:
+			if inSanitizedScope && v != "" {
+				out[i] = "SANITIZED_" + crypto.ShortToken(v)
+			} else {
+				out[i] = item
+			}
 		default:
 			out[i] = item
 		}
@@ -340,11 +362,12 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 	case json.Number:
 		return json.Number("0")
 	case []any:
-		out := make([]any, len(val))
-		for i, item := range val {
-			out[i] = s.scrubValueWithProfile(item, profile)
-		}
-		return out
+		// scrubValueWithProfile fires when a Sanitize-flagged parent
+		// reached a list value, so propagate inSanitizedScope=true
+		// to scrubList. That way scalar strings in the list — which
+		// scrubList's neutral path leaves alone — get the same
+		// per-value scrub treatment that nested maps would get.
+		return s.scrubList(val, profile, true)
 	case map[string]any:
 		out := make(map[string]any, len(val))
 		for k, sub := range val {
@@ -377,6 +400,13 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 		}
 		return out
 	default:
-		return SanitizedValue
+		// Non-string, non-container leaf values reach this branch
+		// (numbers, booleans, time stamps, custom struct types).
+		// Returning the string SanitizedValue would change the JSON
+		// type of the slot — an int field would suddenly serialize
+		// as a string, breaking downstream parsers that pinned the
+		// shape. Returning nil scrubs the value while leaving the
+		// type-coercion contract clean: it serializes as JSON null.
+		return nil
 	}
 }

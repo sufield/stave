@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"regexp"
 	"runtime/debug"
 	"strconv"
@@ -18,12 +19,18 @@ func (a *App) recoverExecutePanic() {
 		panicMsg := panicMessageFromValue(recovered)
 		sanitized := a.sanitizeExecuteMessage(panicMsg)
 
-		if a.Logger != nil {
-			a.Logger.Error("panic recovered",
-				"panic", sanitized,
-				"stack", string(stack),
-			)
+		// Match handleExecutionError: bootstrap failures can panic
+		// before the structured logger is wired, so fall back to
+		// slog.Default() rather than dropping the trace silently.
+		// A panic that goes unlogged is the worst case for triage.
+		logger := a.Logger
+		if logger == nil {
+			logger = slog.Default()
 		}
+		logger.Error("panic recovered",
+			"panic", sanitized,
+			"stack", string(stack),
+		)
 
 		// postRun is skipped on panic-recovery, so stop any active CPU
 		// profile and flush the log file before exit. cleanupBeforeExit

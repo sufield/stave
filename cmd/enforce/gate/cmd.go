@@ -167,9 +167,19 @@ Exit Codes:
 					TeamID:     opts.Team,
 					Thresholds: teamgate.DefaultThresholds(),
 				})
-				result.Passed = teamResult.Passed
+				// Combine: the gate must clear BOTH the global policy
+				// (already in result.Passed) and the per-team policy.
+				// Earlier code overwrote Passed with the team result,
+				// which let a passing team gate erase a failing
+				// global gate verdict — a security regression.
 				if !teamResult.Passed {
-					result.Reason = fmt.Sprintf("team %s: %s", teamResult.TeamID, teamResult.Reason)
+					teamReason := fmt.Sprintf("team %s: %s", teamResult.TeamID, teamResult.Reason)
+					if !result.Passed && result.Reason != "" {
+						result.Reason = result.Reason + "; " + teamReason
+					} else {
+						result.Reason = teamReason
+					}
+					result.Passed = false
 				}
 			}
 

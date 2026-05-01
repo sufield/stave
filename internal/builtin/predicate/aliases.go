@@ -109,8 +109,16 @@ func builtinAliases() map[string]AliasEntry {
 			Category:    CategoryAdminGrants,
 			Service:     "s3",
 			Predicate: policy.UnsafePredicate{
+				// READ_ACP grants disclose the bucket's grant list to
+				// anonymous callers — that is reconnaissance signal,
+				// not write-ACP. The earlier shape pointed at
+				// public_admin (the anonymous-WRITE-ACP flag) and
+				// fired on a different threat. The canonical field
+				// for "ACL is readable by public" is acl_public_read,
+				// which is the same field name defect_derive.go uses
+				// to label the defect line.
 				Any: []policy.PredicateRule{
-					{Field: predicate.NewFieldPath("properties.storage.access.public_admin"), Op: predicate.OpEq, Value: policy.Bool(true)},
+					{Field: predicate.NewFieldPath("properties.storage.access.acl_public_read"), Op: predicate.OpEq, Value: policy.Bool(true)},
 				},
 			},
 		},

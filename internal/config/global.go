@@ -69,7 +69,7 @@ type GlobalSettings struct {
 // build a GlobalSettings outside of the cobra entry point.
 func (g GlobalSettings) Validate() error {
 	if g.PathMode != "" && g.PathMode != sanitize.PathBase && g.PathMode != sanitize.PathFull {
-		return errors.New("invalid PathMode (use \"\" or \"full\")")
+		return errors.New(`invalid PathMode (use "", "base", or "full")`)
 	}
 	return nil
 }

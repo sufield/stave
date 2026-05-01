@@ -110,6 +110,15 @@ func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command, eval *appconfig.Gove
 	ctx := cmdctx.WithResolver(cmd.Context(), eval)
 	cmd.SetContext(ctx)
 
+	// Bootstrap can hand a nil resolver when project-config loading
+	// failed and the command is annotated as config-optional.
+	// Calling eval.Quiet() / Sanitize() / PathMode() on nil panics;
+	// in the optional-config case the right behaviour is to fall
+	// back to whatever defaults the persistent flags already carry.
+	if eval == nil {
+		return
+	}
+
 	p := cmd.Root().PersistentFlags()
 	if !p.Changed(cliflags.FlagQuiet) {
 		a.Flags.Quiet = eval.Quiet()
@@ -173,8 +182,16 @@ func hasAnnotation(cmd *cobra.Command, key string) bool {
 func (a *App) postRun(cmd *cobra.Command, _ []string) {
 	a.stopCPUProfile()
 	a.writeMemProfile(cmd)
-	if a.LogCloser != nil {
-		_ = a.LogCloser.Close()
+	// bootstrapMu mirrors cleanupBeforeExit: phaseLogging assigns
+	// LogCloser under the same mutex, and a signal handler can call
+	// cleanupBeforeExit concurrently with postRun on the normal exit
+	// path. Reading the pointer without the lock is a data race even
+	// though Close itself is sync.Once-guarded.
+	a.bootstrapMu.Lock()
+	closer := a.LogCloser
+	a.bootstrapMu.Unlock()
+	if closer != nil {
+		_ = closer.Close()
 	}
 }
 

@@ -17,7 +17,7 @@
           "name": "acl-readable-bucket",
           "access": {
             "public_read": false,
-            "public_admin": true
+            "acl_public_read": true
           },
           "controls": {
             "public_access_fully_blocked": false
