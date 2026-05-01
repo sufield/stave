@@ -60,6 +60,11 @@ func collectClauses(r *PredicateRule, dr *deriveResult) {
 		return
 	}
 
+	if clause, ok := specialClause(clean, r.Op, r.Value.Raw()); ok {
+		dr.clauses = append(dr.clauses, clause)
+		return
+	}
+
 	label := pathLabel(clean)
 	if label == "" {
 		dr.ok = false
@@ -72,6 +77,43 @@ func collectClauses(r *PredicateRule, dr *deriveResult) {
 	}
 
 	dr.clauses = append(dr.clauses, capitalize(label)+" "+phrase)
+}
+
+// specialClause returns a fully-formed defect line for predicate
+// rules whose generic "<label> <phrase>" rendering would obscure the
+// posture issue. The rules are exact (path, op, value) matches so the
+// table doubles as a registry of "we said exactly this when this
+// predicate fired" — easy to grep, easy to extend.
+//
+// Three policy-state rules that benefit from a custom phrasing:
+//   - empty policy_json: the absence of a resource policy is itself
+//     the defect; "policy json is empty" reads like a typo, the
+//     fully-formed line names AWS implicit deny so the operator
+//     understands why the bucket still works without a policy.
+//   - policy_is_effectively_public=true and
+//     policy_has_scoping_condition=false: distinct postures whose
+//     remediation steps differ; collapsing both into a generic
+//     "access control issue" line was the failure mode this
+//     replaces.
+func specialClause(path string, op predicate.Operator, value any) (string, bool) {
+	if op != predicate.OpEq {
+		return "", false
+	}
+	switch path {
+	case "storage.policy_json":
+		if s, ok := value.(string); ok && s == "" {
+			return "Bucket has no explicit policy (relying on implicit deny)", true
+		}
+	case "storage.access.policy_is_effectively_public":
+		if b, ok := value.(bool); ok && b {
+			return "Bucket policy allows overly broad access (effectively public per AWS PolicyStatus)", true
+		}
+	case "storage.access.policy_has_scoping_condition":
+		if b, ok := value.(bool); ok && !b {
+			return "Bucket policy contains a non-narrow Allow without a scoping Condition", true
+		}
+	}
+	return "", false
 }
 
 func isKindGate(path string, op predicate.Operator) bool {

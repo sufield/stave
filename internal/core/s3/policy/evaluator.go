@@ -26,6 +26,15 @@ func NewEvaluator(trusted []string, resolver risk.PermissionResolver) *Evaluator
 // by the AWS engine itself. An empty or missing Effect defaults to
 // "not Allow" (safe) per AWS policy semantics.
 func (e *Evaluator) Evaluate(doc *Document) risk.Report {
+	// AWS implicit deny: if the bucket has no policy, or the policy
+	// has zero statements, every API request is denied unless an
+	// identity-based or session policy explicitly allows it. The
+	// resource-based policy alone confers no access, so from the
+	// policy-evaluator's perspective the report is ScoreSafe — the
+	// absence of a policy does not by itself create exposure. The
+	// "should this bucket have a policy at all?" question is a
+	// posture concern handled by CTL.S3.POLICY.EXISTS.001, not here.
+	// See: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html
 	if doc == nil || len(doc.statements) == 0 {
 		return risk.Report{Score: risk.ScoreSafe}
 	}

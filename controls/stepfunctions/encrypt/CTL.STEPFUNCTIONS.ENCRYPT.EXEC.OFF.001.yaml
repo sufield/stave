@@ -12,7 +12,7 @@ description: >
   service-level encryption — adequate for
   general data, insufficient for regulated
   PII / PHI / PCI-scope workloads.
-domain: encrypt
+domain: encryption
 severity: high
 compliance:
   soc2: "CC6.7"

@@ -12,7 +12,7 @@ description: >
   with a software KMS key — the cluster keeps running, the
   compliance attestation lapses, and the operator only finds out
   during the next audit.
-domain: compliance
+domain: governance
 severity: high
 compliance:
   nist_800_53_r5: SC-13

@@ -15,7 +15,7 @@ scope_tags: [azure]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Alert Rule Targets Deleted Action Group — finding detected.
   action: Update the alert rule to reference a valid action group.

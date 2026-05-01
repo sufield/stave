@@ -9,7 +9,7 @@ description: >
   carry the Task token plus the downstream
   result; cleartext SNS / SQS exposes them
   to anyone with read access on the channel.
-domain: encrypt
+domain: encryption
 severity: high
 compliance:
   soc2: "CC6.7"

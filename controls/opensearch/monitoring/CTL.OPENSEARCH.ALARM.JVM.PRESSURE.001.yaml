@@ -9,7 +9,7 @@ description: >
   Master pressure (handled separately) stalls
   cluster state; data pressure stalls user
   workload.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2, A1.1"

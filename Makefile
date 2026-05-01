@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture
+.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check
 # Binary name
 BINARY=stave
 
@@ -485,6 +485,41 @@ docs-controls: sync-controls
 ## docs-controls-check: Verify control reference is up to date
 docs-controls-check: sync-controls
 	$(GOCMD) run ./internal/tools/gencontroldocs -check
+
+## attack-stage-check: Reject deprecated attack_stage values in control YAMLs
+##
+## The canonical 12-stage taxonomy is enforced by the JSON Schema enum
+## under params.attack_stage. This guard catches deprecated literals
+## before the schema validation kicks in, so the failure message is
+## obvious rather than buried in a validator backtrace.
+attack-stage-check:
+	@bad=$$(grep -rEln '^[[:space:]]*attack_stage:[[:space:]]*(defense_evasion|credential_theft|data_access|reconnaissance|data_in_transit_exposure|command_and_control|none)[[:space:]]*$$' controls/ || true); \
+	if [ -n "$$bad" ]; then \
+		echo "ERROR: deprecated attack_stage values found in:"; echo "$$bad"; \
+		echo "Migration map: defense_evasion->detection_evasion, credential_theft->credential_access, data_access->collection, reconnaissance->discovery, data_in_transit_exposure->exfiltration, command_and_control->REMOVED, none->REMOVE the params block"; \
+		exit 2; \
+	fi
+
+## domain-check: Soft-enum check on `domain:` values in control YAMLs
+##
+## domain is intentionally an open string field — local extensions are
+## allowed — but values outside docs/ontology/domains.json indicate
+## potential drift. This target prints WARN lines for non-canonical
+## values and reports any deprecated spellings (e.g. detect, encrypt,
+## cryptography, compliance, availability) as ERROR. It exits 0 on
+## warnings, 2 on deprecated values.
+domain-check:
+	@deprecated=$$(grep -rEln '^[[:space:]]*domain:[[:space:]]*(detect|encrypt|cryptography|compliance|availability)[[:space:]]*$$' controls/ || true); \
+	if [ -n "$$deprecated" ]; then \
+		echo "ERROR: deprecated domain values found in:"; echo "$$deprecated"; \
+		echo "Migration map (see docs/ontology/domains.json): detect->detection, encrypt->encryption, cryptography->encryption, compliance->governance, availability->resilience"; \
+		exit 2; \
+	fi
+	@canonical='exposure governance identity detection encryption audit network resilience lifecycle storage access hygiene secrets capacity'; \
+	values=$$(grep -rh --include='*.yaml' "^[[:space:]]*domain:" controls/ | awk -F: '{gsub(/^[[:space:]]*/,"",$$2); gsub(/[[:space:]]*$$/,"",$$2); print $$2}' | sort -u); \
+	for v in $$values; do \
+		case " $$canonical " in *" $$v "*) ;; *) echo "WARN: non-canonical domain '$$v' (see docs/ontology/domains.json)" ;; esac; \
+	done
 
 ## docs-coverage: Regenerate methodology-coverage docs from control + inventory data
 docs-coverage: sync-controls sync-alternatives

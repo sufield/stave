@@ -10,7 +10,7 @@ description: >
   alarm, the workflow appears to "process less
   data than expected" without traceable
   cause.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2, A1.1"

@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/metadata"
 )
 
 func TestBuild_FindingsProduceCorrectNodes(t *testing.T) {
@@ -191,8 +192,8 @@ func TestBuild_SchemaVersion(t *testing.T) {
 	if g.SchemaVersion != "1" {
 		t.Errorf("SchemaVersion = %q, want 1", g.SchemaVersion)
 	}
-	if g.OntologyVersion != "1.0" {
-		t.Errorf("OntologyVersion = %q, want 1.0", g.OntologyVersion)
+	if g.OntologyVersion != metadata.OntologyVersion {
+		t.Errorf("OntologyVersion = %q, want %q", g.OntologyVersion, metadata.OntologyVersion)
 	}
 }
 

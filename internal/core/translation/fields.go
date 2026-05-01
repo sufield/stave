@@ -41,6 +41,28 @@ var defaultFieldRegistry = FieldRegistry{ //nolint:gosec // G101 false positive:
 	"storage.access.latent_public_list":             "the bucket would be publicly listable if PAB were removed",
 	"storage.access.policy_has_scoping_condition":   "every non-narrow Allow carries a scoping Condition",
 	"storage.access.policy_is_effectively_public":   "the bucket policy is effectively public per AWS PolicyStatus",
+	// `storage.policy_json` is the raw resource-based policy text.
+	// Empty string means no policy is attached; under AWS implicit
+	// deny, that bucket denies every request unless an identity-
+	// or session-policy explicitly grants access. The absence is a
+	// posture signal (CTL.S3.POLICY.EXISTS.001), not an exposure
+	// signal — exposure is determined by the policy *content* via
+	// the access.* booleans below.
+	//
+	// Three-state policy posture is encoded by two booleans rather
+	// than a single enum:
+	//   absent      → policy_json == ""
+	//   scoped      → policy_json != "" AND policy_is_effectively_public == false
+	//                 AND (policy_has_scoping_condition is null OR true)
+	//   overly_broad → policy_json != "" AND
+	//                  (policy_is_effectively_public == true OR
+	//                   policy_has_scoping_condition == false)
+	// A consolidating `policy_state` enum was considered and rejected:
+	// the two-boolean form is already the producer's wire shape, the
+	// controls read it that way, and adding a third derived field
+	// would create a consistency hazard (producer must keep all three
+	// in lockstep) for a labeling win.
+	"storage.policy_json": "the bucket's resource-based policy text (empty = no policy attached, AWS implicit deny applies)",
 	"storage.access.has_vpc_condition":              "a VPC-scoping Condition is present (aws:SourceVpc / aws:SourceVpce)",
 	"storage.access.has_ip_condition":               "an IP-scoping Condition is present (aws:SourceIp with a fixed CIDR)",
 	"storage.access.effective_network_scope":        "the bucket's effective network scope",

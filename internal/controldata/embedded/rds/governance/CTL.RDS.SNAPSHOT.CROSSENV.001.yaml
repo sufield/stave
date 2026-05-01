@@ -34,7 +34,7 @@ scope_tags: [aws, rds]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: data_access
+  attack_stage: collection
 remediation:
   description: Production-tagged RDS snapshot is shared with a non-production account.
   action: Revoke the share; supply synthetic or anonymized data to non-production environments instead.

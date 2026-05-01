@@ -10,7 +10,7 @@ description: >
   it's gone. Post-mortem of older failures has
   no source data; on-call response to repeat
   failures has no aggregate signal.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2, CC7.4"

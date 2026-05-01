@@ -57,6 +57,16 @@ type Document struct {
 
 // Parse turns raw policy JSON into a typed Document.
 func Parse(policyJSON string) (*Document, error) {
+	// Empty input represents "no resource-based policy attached" or
+	// "policy is the empty object". Both map to a zero-statement
+	// Document. Under AWS implicit deny semantics, a bucket with no
+	// resource-based policy denies every API call unless an
+	// identity-based or session policy explicitly allows it — the
+	// downstream Assess() returns a fully-zero Assessment for this
+	// case, which is the correct posture (no exposure flagged from
+	// policy alone). The "missing policy is itself a posture issue"
+	// concern lives in CTL.S3.POLICY.EXISTS.001, not here.
+	// See: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html
 	if policyJSON == "" || policyJSON == "{}" {
 		return &Document{}, nil
 	}

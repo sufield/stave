@@ -11,7 +11,7 @@ description: >
   pattern: log group renamed or deleted by
   another team without checking which services
   delivered to it.
-domain: detect
+domain: detection
 severity: high
 compliance:
   soc2: "CC7.2, A1.2"

@@ -9,7 +9,7 @@ description: >
   both tunnels down, the VPN is non-functional and traffic either
   fails outright or silently falls back to internet paths (which may
   be unencrypted).
-domain: availability
+domain: resilience
 severity: high
 compliance:
   cis_aws_v3.0: "5.5"

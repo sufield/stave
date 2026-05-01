@@ -28,7 +28,7 @@ scope_tags: [aws, rds]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: credential_theft
+  attack_stage: credential_access
 remediation:
   description: RDS Proxy does not require IAM authentication on client connections.
   action: Set the Proxy's auth scheme to require IAM (RequireIAM=true on the auth descriptor).

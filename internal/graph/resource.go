@@ -10,6 +10,16 @@ import (
 // for deterministic iteration and to avoid substring collisions
 // (e.g. "ecr" inside "secretsmanager").
 // Source: docs/ontology/resource-classes.json
+//
+// Compound rule keys (those containing an underscore — virtual_machine,
+// compute_engine, security_group, key_vault, service_bus, front_door)
+// intentionally rely on the substring fallback below: ToResourceClass
+// first attempts exact-token matching against the underscore-split
+// tokens; only the substring pass can match a multi-token key like
+// `virtual_machine` against an input like `azure_virtual_machine_scale_set`.
+// Splitting them into single-token rules would let `virtual` or
+// `service` match unrelated tokens (e.g. `serviceaccount` -> queue),
+// so the compound form is preserved and resolved via fallback.
 var resourceClassRules = []struct {
 	key   string
 	class string

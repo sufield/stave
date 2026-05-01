@@ -10,7 +10,7 @@ description: >
   Without long-retention archival (S3 export,
   SIEM ingestion), evidence beyond the CWL
   retention window is gone.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2"

@@ -9,7 +9,7 @@ description: >
   algorithms for backward compatibility with legacy on-premises
   equipment — compatibility should not override cryptographic strength
   for traffic that carries production data.
-domain: cryptography
+domain: encryption
 severity: high
 compliance:
   cis_aws_v3.0: "5.5"
@@ -25,7 +25,7 @@ scope_tags:
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: data_access
+  attack_stage: collection
 observation_fields:
   - network.kind
   - network.vpn.connection_id

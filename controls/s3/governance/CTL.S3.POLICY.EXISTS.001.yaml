@@ -25,9 +25,26 @@ remediation:
     S3 bucket has no bucket policy attached. Resource-level access
     controls cannot be enforced.
   action: >
-    Attach an explicit bucket policy. At minimum the policy should deny
-    HTTP requests (aws:SecureTransport false), deny unencrypted PutObject,
-    and restrict access to known principals or VPC endpoints.
+    Attach a bucket policy that restricts access to known principals,
+    VPC endpoints, or organization IDs (aws:PrincipalArn,
+    aws:PrincipalOrgID, aws:SourceVpc, aws:SourceVpce). The scoped
+    Allow is the primary control: it defines who can reach the bucket
+    at all and is the line of defence that would still hold if every
+    other guard were removed.
+
+    Layered Deny statements (deny aws:SecureTransport=false to enforce
+    TLS, deny PutObject without server-side encryption headers) are
+    valuable secondary guards but do not replace a scoped Allow —
+    they harden a bucket whose Allow is already narrow, they do not
+    rescue one whose Allow is broad. Apply them after the Allow has
+    been scoped, not instead of scoping it.
+
+    Warning: do not add Deny statements before scoping the Allow. A
+    Deny that references your own principals (e.g. denying access
+    unless aws:PrincipalOrgID matches and SourceIP is on a missing
+    list) can lock the account out of its own bucket if the Allow
+    has not been verified to admit the operator first. Order matters:
+    scope the Allow, verify access still works, then add Deny guards.
   example: |
     {
       "storage": {

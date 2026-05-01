@@ -10,7 +10,7 @@ description: >
   AUTHENTICATED bounds the timeline of who logged
   in. Both are required for any meaningful
   intrusion-detection workflow on the cluster.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2, CC7.3"

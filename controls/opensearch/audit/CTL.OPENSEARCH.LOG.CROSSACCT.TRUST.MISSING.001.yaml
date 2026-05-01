@@ -13,7 +13,7 @@ description: >
   Common after re-org / account splits where the
   central account got the role created without
   trust for the new domain accounts.
-domain: detect
+domain: detection
 severity: high
 compliance:
   soc2: "CC7.2"

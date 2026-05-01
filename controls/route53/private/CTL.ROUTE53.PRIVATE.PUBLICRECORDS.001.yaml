@@ -32,7 +32,7 @@ scope_tags:
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: >
     Route 53 private hosted zone has A records resolving to public

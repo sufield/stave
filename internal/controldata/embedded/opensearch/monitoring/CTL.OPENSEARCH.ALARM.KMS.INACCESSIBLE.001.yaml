@@ -11,7 +11,7 @@ description: >
   fail until access is restored. Without an
   alarm, on-call is paged by customer impact
   rather than the cause.
-domain: detect
+domain: detection
 severity: critical
 compliance:
   soc2: "CC7.2, A1.2"

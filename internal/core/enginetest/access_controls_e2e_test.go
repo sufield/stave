@@ -38,6 +38,28 @@ func accessBucket(id string, access map[string]any) asset.Asset {
 	}
 }
 
+// policyBucket creates an S3 bucket with storage.kind="bucket",
+// the given policy_json (empty string == no policy attached), and
+// the given access map. Used by POLICY.EXISTS.001 tests to drive
+// the absent-vs-attached distinction directly.
+func policyBucket(id, policyJSON string, access map[string]any) asset.Asset {
+	storage := map[string]any{
+		"kind":        "bucket",
+		"policy_json": policyJSON,
+	}
+	if access != nil {
+		storage["access"] = access
+	}
+	return asset.Asset{
+		ID:     asset.ID(id),
+		Type:   kernel.NewAssetType("aws_s3_bucket"),
+		Vendor: "aws",
+		Properties: map[string]any{
+			"storage": storage,
+		},
+	}
+}
+
 // accessGrantsBucket creates an S3 bucket with storage.kind="bucket" and access_grants properties.
 func accessGrantsBucket(id string, grants map[string]any) asset.Asset {
 	return asset.Asset{
@@ -98,6 +120,7 @@ func loadAccessControls(t *testing.T) []policy.ControlDefinition {
 		"CTL.S3.AUTH.WRITE.001":     {},
 		"CTL.S3.POLICY.SCOPING.001": {},
 		"CTL.S3.ACCESS.004":         {},
+		"CTL.S3.POLICY.EXISTS.001":  {},
 	}
 	var controls []policy.ControlDefinition
 	for _, ctl := range all {
@@ -302,6 +325,76 @@ func TestAccess004_TrueNegative_PolicyNotPublic(t *testing.T) {
 	result := ev.Evaluate(accessSnapshot(bucket))
 
 	assertNoAccessFinding(t, &result, "CTL.S3.ACCESS.004", "scoped-bucket")
+}
+
+func TestAccess004_TrueNegative_NoPolicy(t *testing.T) {
+	t.Parallel()
+	ev := accessEvaluator(t)
+	// No policy attached at all. ACCESS.004 must not fire — a missing
+	// policy is implicit-deny under AWS semantics, which is captured by
+	// POLICY.EXISTS.001, not by the effectively-public signal.
+	bucket := policyBucket("no-policy-bucket", "", nil)
+
+	result := ev.Evaluate(accessSnapshot(bucket))
+
+	assertNoAccessFinding(t, &result, "CTL.S3.ACCESS.004", "no-policy-bucket")
+}
+
+// --- E2E Tests: CTL.S3.POLICY.EXISTS.001 (Bucket must have an explicit policy attached) ---
+//
+// Three-state matrix:
+//   - No policy (policy_json == "")           → fires
+//   - Narrow Allow (specific principal ARNs)  → does not fire
+//   - Broad Allow without conditions          → does not fire
+//
+// EXISTS.001 is an attachment check, not a policy-content check.
+// Effectively-public detection is the job of CTL.S3.ACCESS.004.
+
+func TestPolicyExists001_TruePositive_NoPolicy(t *testing.T) {
+	t.Parallel()
+	ev := accessEvaluator(t)
+	bucket := policyBucket("no-policy-bucket", "", nil)
+
+	result := ev.Evaluate(accessSnapshot(bucket))
+
+	assertHasAccessFinding(t, &result, "CTL.S3.POLICY.EXISTS.001", "no-policy-bucket")
+}
+
+func TestPolicyExists001_TrueNegative_NarrowAllow(t *testing.T) {
+	t.Parallel()
+	ev := accessEvaluator(t)
+	// Policy attached and well-scoped: a single Allow naming a specific
+	// account principal. EXISTS.001 fires only on absence; well-scoped
+	// content is correct content from the attachment-check perspective.
+	narrow := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow",` +
+		`"Principal":{"AWS":"arn:aws:iam::123456789012:role/data-loader"},` +
+		`"Action":"s3:GetObject","Resource":"arn:aws:s3:::example/*"}]}`
+	bucket := policyBucket("narrow-policy-bucket", narrow, map[string]any{
+		"policy_is_effectively_public": false,
+	})
+
+	result := ev.Evaluate(accessSnapshot(bucket))
+
+	assertNoAccessFinding(t, &result, "CTL.S3.POLICY.EXISTS.001", "narrow-policy-bucket")
+}
+
+func TestPolicyExists001_TrueNegative_BroadAllow(t *testing.T) {
+	t.Parallel()
+	ev := accessEvaluator(t)
+	// Policy attached but unsafe: wildcard principal with no Conditions.
+	// EXISTS.001 still does not fire — the bucket has a policy. The
+	// unsafe content is the concern of ACCESS.002 / ACCESS.004 /
+	// POLICY.SCOPING.001, not EXISTS.001.
+	broad := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow",` +
+		`"Principal":"*","Action":"s3:GetObject",` +
+		`"Resource":"arn:aws:s3:::example/*"}]}`
+	bucket := policyBucket("broad-policy-bucket", broad, map[string]any{
+		"policy_is_effectively_public": true,
+	})
+
+	result := ev.Evaluate(accessSnapshot(bucket))
+
+	assertNoAccessFinding(t, &result, "CTL.S3.POLICY.EXISTS.001", "broad-policy-bucket")
 }
 
 // --- E2E Tests: CTL.S3.POLICY.SCOPING.001 (Non-narrow principal grants must carry a scoping Condition) ---

@@ -58,22 +58,22 @@
       "type": "string",
       "enum": [
         "initial_access", "execution", "persistence", "privilege_escalation",
-        "defense_evasion", "credential_access", "discovery", "lateral_movement",
-        "collection", "exfiltration", "impact", "command_and_control"
+        "detection_evasion", "credential_access", "discovery", "lateral_movement",
+        "collection", "exfiltration", "impact", "resilience"
       ],
       "mitre_mapping": {
         "initial_access": "TA0001",
         "execution": "TA0002",
         "persistence": "TA0003",
         "privilege_escalation": "TA0004",
-        "defense_evasion": "TA0005",
+        "detection_evasion": "TA0005",
         "credential_access": "TA0006",
         "discovery": "TA0007",
         "lateral_movement": "TA0008",
         "collection": "TA0009",
         "exfiltration": "TA0010",
         "impact": "TA0040",
-        "command_and_control": "TA0011"
+        "resilience": "x_stave_resilience"
       }
     },
     "capability": {

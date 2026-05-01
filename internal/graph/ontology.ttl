@@ -146,20 +146,20 @@ stave:Exemption a owl:Class ;
 # Object properties — the edges between nodes.
 #
 # Edges are split into two groups:
-#   (1) Detail edges: hasFinding, violatesInvariant, mapsTo, ...
-#       — the full reasoning chain.
-#   (2) Algorithm shortcut edges: violates, hasAccess
+#   (1) Detail edges: targets, violatesInvariant, violatesRequirement,
+#       mapsTo, ... — the full reasoning chain.
+#   (2) Algorithm shortcut edges: violates, hasEffectiveAccess
 #       — materialized one-hop versions of multi-hop chains, marked
 #       with stave:isAlgorithmShortcut "true" so a graph-data-science
 #       run can ignore the chain and treat them as direct edges.
+#
+# The reverse "Resource has Finding" relationship is intentionally
+# not declared as a separate property: stave:targets carries the
+# Finding -> Resource direction, and consumers that need the inverse
+# can derive it from owl:inverseOf at reasoning time. Adding both
+# directions as first-class predicates would double the edge count
+# in queries without adding information.
 # -----------------------------------------------------------------
-
-stave:hasFinding a owl:ObjectProperty ;
-  rdfs:label "has finding" ;
-  rdfs:domain stave:Resource ;
-  rdfs:range stave:Finding ;
-  rdfs:comment "Resource is the subject of a Finding. Inverse of stave:targets." ;
-  owl:inverseOf stave:targets .
 
 stave:targets a owl:ObjectProperty ;
   rdfs:label "targets" ;
@@ -187,12 +187,10 @@ stave:mapsTo a owl:ObjectProperty ;
   rdfs:comment "Control satisfies a Compliance Requirement. Wire name: MAPS_TO." .
 
 stave:violatesRequirement a owl:ObjectProperty ;
-  rdfs:subPropertyOf stave:violates ;
-  rdfs:label "violates requirement (algorithm shortcut)" ;
+  rdfs:label "violates requirement" ;
   rdfs:domain stave:Finding ;
   rdfs:range stave:ComplianceRequirement ;
-  stave:isAlgorithmShortcut true ;
-  rdfs:comment "Wire name: VIOLATES. Materialized shortcut for Finding → Control → ComplianceRequirement." .
+  rdfs:comment "Wire name: VIOLATES. First-class Finding -> ComplianceRequirement edge in the source graph — emitted directly by the builder, not synthesized. Distinct from stave:violates, which is the synthesized Resource -> Control shortcut. The earlier shape annotated this as an algorithm shortcut; that was wrong (consumers filtering on isAlgorithmShortcut were skipping a real edge) and the annotation has been removed." .
 
 stave:hasRemediation a owl:ObjectProperty ;
   rdfs:label "has remediation" ;
@@ -286,7 +284,7 @@ stave:active a owl:DatatypeProperty ;
 stave:resourceClass a owl:DatatypeProperty ;
   rdfs:label "resource class" ;
   rdfs:range xsd:string ;
-  rdfs:comment "Provider-agnostic class label: storage | compute | network | data | secret | log | key | role." .
+  rdfs:comment "Provider-agnostic class label. Closed vocabulary of 14 values: storage | database | compute | instance | container | network | identity | key | secret | cdn | dns | registry | queue | log. Source of truth: docs/ontology/resource-classes.json (provider-to-class mapping table)." .
 
 stave:provider a owl:DatatypeProperty ;
   rdfs:label "provider" ;

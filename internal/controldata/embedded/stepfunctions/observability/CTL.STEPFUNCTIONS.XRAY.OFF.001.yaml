@@ -11,7 +11,7 @@ description: >
   Performance investigations rely on per-
   service log correlation by execution ID,
   which is fragile.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2"

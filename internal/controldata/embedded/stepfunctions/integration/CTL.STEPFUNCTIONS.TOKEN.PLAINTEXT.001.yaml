@@ -12,7 +12,7 @@ description: >
   `SendTaskFailure` for the workflow,
   spoofing worker responses and progressing
   the workflow with attacker-supplied data.
-domain: encrypt
+domain: encryption
 severity: high
 compliance:
   soc2: "CC6.1, CC6.7"

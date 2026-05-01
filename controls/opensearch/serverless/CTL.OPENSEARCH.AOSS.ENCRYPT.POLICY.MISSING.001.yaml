@@ -9,7 +9,7 @@ description: >
   inventory lists encryption as enabled but key
   custody is AWS-owned. Encryption policy must
   be created before the collection.
-domain: encrypt
+domain: encryption
 severity: medium
 compliance:
   soc2: "CC6.7, CC8.1"

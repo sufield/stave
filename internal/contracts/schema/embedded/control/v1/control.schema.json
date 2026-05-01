@@ -252,7 +252,28 @@
         "params": {
           "type": "object",
           "title": "Configurable Parameters",
-          "description": "Configurable parameters referenced by value_from_param in predicate rules. Intentionally flexible (any JSON object) to support diverse parameterization patterns."
+          "description": "Configurable parameters referenced by value_from_param in predicate rules. Intentionally flexible (any JSON object) to support diverse parameterization patterns.",
+          "properties": {
+            "attack_stage": {
+              "type": "string",
+              "title": "MITRE ATT&CK Stage",
+              "description": "Canonical Stave attack stage. Closed enum aligned with docs/ontology/attack-stages.json (12 stages: 11 ATT&CK tactics plus the Stave-specific 'resilience'). Omit the field for posture / hygiene controls that do not map to a MITRE tactic.",
+              "enum": [
+                "initial_access",
+                "execution",
+                "persistence",
+                "privilege_escalation",
+                "detection_evasion",
+                "credential_access",
+                "discovery",
+                "lateral_movement",
+                "collection",
+                "exfiltration",
+                "impact",
+                "resilience"
+              ]
+            }
+          }
         },
         "observation_fields": {
           "type": "array",

@@ -12,7 +12,7 @@ description: >
   clients have already removed support. Domains
   created before late 2023 commonly carry the older
   default and are never updated.
-domain: encrypt
+domain: encryption
 severity: high
 compliance:
   soc2: "CC6.7"

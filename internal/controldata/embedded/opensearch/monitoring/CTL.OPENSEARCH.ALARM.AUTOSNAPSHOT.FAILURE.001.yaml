@@ -9,7 +9,7 @@ description: >
   paged for an incident, the available snapshot
   may be days old. Discovered too late, this is
   a data-loss-magnifying defect.
-domain: detect
+domain: detection
 severity: high
 compliance:
   soc2: "CC7.2, A1.2"

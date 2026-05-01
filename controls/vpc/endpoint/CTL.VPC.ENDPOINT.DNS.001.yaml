@@ -28,8 +28,6 @@ scope_tags:
   - vpc
 type: unsafe_state
 classification: state_assertion
-params:
-  attack_stage: none
 observation_fields:
   - network.kind
   - network.endpoint.private_dns_enabled

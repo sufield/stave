@@ -9,7 +9,7 @@ description: >
   data indefinitely. NIST / PCI-DSS guidance
   recommends automatic rotation for keys with
   long-lived data.
-domain: encrypt
+domain: encryption
 severity: medium
 compliance:
   soc2: "CC6.7, CC8.1"

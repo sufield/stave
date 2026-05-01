@@ -11,7 +11,7 @@ description: >
   Trade-off: body-capture increases audit log
   volume / cost, but is required for any
   meaningful exfil-grade investigation.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2"

@@ -13,7 +13,7 @@ description: >
   export job that runs every Monday — events from
   Tuesday-Sunday survive but the prior week's
   Monday events are gone.
-domain: detect
+domain: detection
 severity: high
 compliance:
   soc2: "CC7.2"

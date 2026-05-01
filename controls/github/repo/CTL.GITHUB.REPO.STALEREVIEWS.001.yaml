@@ -15,7 +15,7 @@ scope_tags: [github]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Default Branch Does Not Dismiss Stale Reviews — finding detected.
   action: Enable "Dismiss stale pull request approvals when new commits are pushed."

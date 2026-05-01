@@ -1,0 +1,69 @@
+{
+  "version": "1",
+  "description": "Recommended values for the `domain` field on control YAMLs. Soft enum: control authors may use a value not on this list, but `make domain-check` will warn so the choice is deliberate. Drift prevention without losing room for new categories.",
+  "canonical": [
+    {
+      "id": "exposure",
+      "description": "Public reachability and broad-principal access. The single largest domain — covers anonymous read/write paths, wildcard policies, public IPs, internet-routable backplanes."
+    },
+    {
+      "id": "governance",
+      "description": "Posture / configuration discipline that does not directly create exposure. Includes compliance posture, organisational guardrails, SCP coverage, and account-level hygiene."
+    },
+    {
+      "id": "identity",
+      "description": "IAM principals, roles, trust policies, MFA, federation, blast radius."
+    },
+    {
+      "id": "detection",
+      "description": "Monitoring, alerting, alarm coverage, and detection-evasion concerns. Was previously also spelled `detect`; the canonical form is `detection`."
+    },
+    {
+      "id": "encryption",
+      "description": "At-rest, in-transit, and key-management concerns. Was previously also spelled `encrypt` or `cryptography`; the canonical form is `encryption`."
+    },
+    {
+      "id": "audit",
+      "description": "Audit-trail completeness, retention, immutability, and integrity."
+    },
+    {
+      "id": "network",
+      "description": "VPC, subnet, security group, peering, and routing posture distinct from exposure (which is the resulting reachability)."
+    },
+    {
+      "id": "resilience",
+      "description": "Backup, recovery, replication, multi-region availability. Subsumes the older `availability` value."
+    },
+    {
+      "id": "lifecycle",
+      "description": "Resource lifecycle: orphans, stale snapshots, version retention, deletion protection."
+    },
+    {
+      "id": "storage",
+      "description": "Storage-specific posture not captured by exposure, encryption, or lifecycle (e.g. object lock, write-once, classification tagging)."
+    },
+    {
+      "id": "access",
+      "description": "Authorization mechanics distinct from identity (e.g. resource-based policy scoping, ACL semantics, presigned-URL hygiene)."
+    },
+    {
+      "id": "hygiene",
+      "description": "Posture / cleanup signals with no specific MITRE attack-stage mapping. Used by orphan and stale-resource controls."
+    },
+    {
+      "id": "secrets",
+      "description": "Secrets-management posture (Secrets Manager, Vault, SSM Parameter Store) — distinct from encryption-at-rest."
+    },
+    {
+      "id": "capacity",
+      "description": "Operational capacity / quota concerns (per-region limits, scale ceilings)."
+    }
+  ],
+  "deprecated": {
+    "detect": "use 'detection'",
+    "encrypt": "use 'encryption'",
+    "cryptography": "use 'encryption'",
+    "compliance": "use 'governance'",
+    "availability": "use 'resilience'"
+  }
+}

@@ -10,7 +10,7 @@ description: >
   co-location personnel) can tap the connection and read traffic.
   Either a VPN over the Direct Connect or MACsec provides
   confidentiality; the control passes if either is configured.
-domain: cryptography
+domain: encryption
 severity: high
 compliance:
   cis_aws_v3.0: "5.5"
@@ -26,7 +26,7 @@ scope_tags:
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: data_access
+  attack_stage: collection
 observation_fields:
   - network.kind
   - network.dx.connection_id

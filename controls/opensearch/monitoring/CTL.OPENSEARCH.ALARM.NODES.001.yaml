@@ -10,7 +10,7 @@ description: >
   important for clusters with dedicated masters
   where the loss of a master is immediately
   service-impacting.
-domain: detect
+domain: detection
 severity: high
 compliance:
   soc2: "CC7.2, A1.1"

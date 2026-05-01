@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/iam"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/util/sets"
 )
 
@@ -57,6 +58,11 @@ const (
 	NodeTypeRemediationAction     NodeType = "RemediationAction"
 	NodeTypeThreatChain           NodeType = "ThreatChain"
 	NodeTypeAttackerCapability    NodeType = "AttackerCapability"
+	// NodeTypeIdentity covers IAM principals (roles, users, service
+	// accounts) when the graph carries the identity layer. Surfaced
+	// as a STIX 2.1 Identity SDO in the STIX export and as
+	// stave:Identity in JSON-LD.
+	NodeTypeIdentity NodeType = "Identity"
 )
 
 // EdgeType names the closed vocabulary of graph edge kinds. Same
@@ -66,11 +72,34 @@ type EdgeType string
 const (
 	EdgeTypeTargets        EdgeType = "TARGETS"
 	EdgeTypeMapsTo         EdgeType = "MAPS_TO"
-	EdgeTypeViolates       EdgeType = "VIOLATES"
 	EdgeTypeBelongsToScope EdgeType = "BELONGS_TO_SCOPE"
 	EdgeTypeHasRemediation EdgeType = "HAS_REMEDIATION"
 	EdgeTypeMemberOf       EdgeType = "MEMBER_OF"
 	EdgeTypeProduces       EdgeType = "PRODUCES"
+
+	// EdgeTypeViolates / EdgeTypeViolatesRequirement is the
+	// Finding -> ComplianceRequirement edge mapped to the ontology
+	// predicate stave:violatesRequirement. Both names point at the
+	// same wire string ("VIOLATES") so older callers keep working;
+	// new code should prefer the ViolatesRequirement spelling
+	// because the unqualified "violates" predicate is the shortcut
+	// edge synthesized by the export layer (Resource -> Control)
+	// and is conceptually distinct.
+	EdgeTypeViolates            EdgeType = "VIOLATES"
+	EdgeTypeViolatesRequirement EdgeType = "VIOLATES"
+
+	// EdgeTypeViolatesInvariant is the Finding -> Control edge:
+	// "this finding asserts the control's invariant was false on
+	// this asset at this time". Distinct from ViolatesRequirement,
+	// which connects the finding to the compliance requirement the
+	// control claims to cover.
+	EdgeTypeViolatesInvariant EdgeType = "VIOLATES_INVARIANT"
+
+	// Identity-layer edges. Used when the graph carries IAM
+	// principals as Identity nodes alongside Resource nodes.
+	EdgeTypeHasEffectiveAccess EdgeType = "HAS_EFFECTIVE_ACCESS"
+	EdgeTypeCanImpersonate     EdgeType = "CAN_IMPERSONATE"
+	EdgeTypeGovernedBy         EdgeType = "GOVERNED_BY"
 )
 
 // Node is a graph node with typed properties.
@@ -102,7 +131,7 @@ type BuildInput struct {
 func Build(input BuildInput) *GraphData {
 	g := &GraphData{
 		SchemaVersion:   "1",
-		OntologyVersion: "1.0",
+		OntologyVersion: metadata.OntologyVersion,
 		GeneratedAt:     input.Now,
 		Source: GraphSource{
 			AssessmentOutput: input.SourcePath,
@@ -169,7 +198,7 @@ func Build(input BuildInput) *GraphData {
 			findingProps["x_stave_chain_membership"] = membership
 		}
 		emitOnce(findingID, Node{
-			ID: findingID, Type: "Finding",
+			ID: findingID, Type: NodeTypeFinding,
 			Standard: "ocsf", StandardType: "Security Finding (2001)",
 			Properties: findingProps,
 		})
@@ -178,7 +207,7 @@ func Build(input BuildInput) *GraphData {
 		resourceID := string(f.AssetID)
 		providerType := string(f.AssetType)
 		emitOnce(resourceID, Node{
-			ID: resourceID, Type: "Resource",
+			ID: resourceID, Type: NodeTypeResource,
 			Standard: "ocsf", StandardType: "Infrastructure",
 			Properties: map[string]any{
 				"resource_arn":   resourceID,
@@ -191,14 +220,14 @@ func Build(input BuildInput) *GraphData {
 
 		// TARGETS edge.
 		g.Edges = append(g.Edges, Edge{
-			From: findingID, To: resourceID, Type: "TARGETS",
+			From: findingID, To: resourceID, Type: EdgeTypeTargets,
 		})
 
 		// Control node.
 		if !seenControls.Contains(f.ControlID) {
 			seenControls.Add(f.ControlID)
 			g.Nodes = append(g.Nodes, Node{
-				ID: string(f.ControlID), Type: "Control",
+				ID: string(f.ControlID), Type: NodeTypeControl,
 				Standard: "oscal", StandardType: "control",
 				Properties: map[string]any{
 					"control_id":   string(f.ControlID),
@@ -214,7 +243,7 @@ func Build(input BuildInput) *GraphData {
 			if !seenRequirements.Contains(reqNodeID) {
 				seenRequirements.Add(reqNodeID)
 				g.Nodes = append(g.Nodes, Node{
-					ID: reqNodeID, Type: "ComplianceRequirement",
+					ID: reqNodeID, Type: NodeTypeComplianceRequirement,
 					Standard: "oscal", StandardType: "control",
 					Properties: map[string]any{
 						"framework":      string(framework),
@@ -226,11 +255,11 @@ func Build(input BuildInput) *GraphData {
 			if !seenMapsTo.Contains(mapsKey) {
 				seenMapsTo.Add(mapsKey)
 				g.Edges = append(g.Edges, Edge{
-					From: string(f.ControlID), To: reqNodeID, Type: "MAPS_TO",
+					From: string(f.ControlID), To: reqNodeID, Type: EdgeTypeMapsTo,
 				})
 			}
 			g.Edges = append(g.Edges, Edge{
-				From: findingID, To: reqNodeID, Type: "VIOLATES",
+				From: findingID, To: reqNodeID, Type: EdgeTypeViolatesRequirement,
 				Properties: map[string]any{"verdict": "fail"},
 			})
 		}
@@ -242,7 +271,7 @@ func Build(input BuildInput) *GraphData {
 			if !seenAccounts.Contains(acctID) {
 				seenAccounts.Add(acctID)
 				g.Nodes = append(g.Nodes, Node{
-					ID: scopeID, Type: "TenantScope",
+					ID: scopeID, Type: NodeTypeTenantScope,
 					Standard: "ocsf", StandardType: "cloud.account",
 					Properties: map[string]any{
 						"account_id": acctID,
@@ -251,7 +280,7 @@ func Build(input BuildInput) *GraphData {
 				})
 			}
 			g.Edges = append(g.Edges, Edge{
-				From: resourceID, To: scopeID, Type: "BELONGS_TO_SCOPE",
+				From: resourceID, To: scopeID, Type: EdgeTypeBelongsToScope,
 			})
 		}
 
@@ -262,7 +291,7 @@ func Build(input BuildInput) *GraphData {
 		if f.RemediationSpec.Action != "" {
 			remID := "remediation_" + findingID
 			emitOnce(remID, Node{
-				ID: remID, Type: "RemediationAction",
+				ID: remID, Type: NodeTypeRemediationAction,
 				Standard: "ocsf", StandardType: "Remediation Activity (9001)",
 				Properties: map[string]any{
 					"finding_id": findingID,
@@ -270,7 +299,7 @@ func Build(input BuildInput) *GraphData {
 				},
 			})
 			g.Edges = append(g.Edges, Edge{
-				From: findingID, To: remID, Type: "HAS_REMEDIATION",
+				From: findingID, To: remID, Type: EdgeTypeHasRemediation,
 			})
 		}
 	}
@@ -297,7 +326,7 @@ func Build(input BuildInput) *GraphData {
 			memberControls[j] = string(cid)
 		}
 		emitOnce(chainID, Node{
-			ID: chainID, Type: "ThreatChain",
+			ID: chainID, Type: NodeTypeThreatChain,
 			Standard: "stix", StandardType: "Attack Pattern",
 			Properties: map[string]any{
 				"chain_id":          chainID,
@@ -314,7 +343,7 @@ func Build(input BuildInput) *GraphData {
 		// AttackerCapability node.
 		capID := "capability_" + chainID
 		emitOnce(capID, Node{
-			ID: capID, Type: "AttackerCapability",
+			ID: capID, Type: NodeTypeAttackerCapability,
 			Standard: "stix", StandardType: "Attack Pattern",
 			Properties: map[string]any{
 				"chain_id":          chainID,
@@ -325,7 +354,7 @@ func Build(input BuildInput) *GraphData {
 
 		// PRODUCES edge.
 		g.Edges = append(g.Edges, Edge{
-			From: chainID, To: capID, Type: "PRODUCES",
+			From: chainID, To: capID, Type: EdgeTypeProduces,
 		})
 
 		// MEMBER_OF edges from findings to chain. O(1) lookup via the
@@ -334,7 +363,7 @@ func Build(input BuildInput) *GraphData {
 			for _, j := range findingsByControl[ctlID] {
 				ff := &input.Findings[j]
 				g.Edges = append(g.Edges, Edge{
-					From: string(ff.FindingID), To: chainID, Type: "MEMBER_OF",
+					From: string(ff.FindingID), To: chainID, Type: EdgeTypeMemberOf,
 					Properties: map[string]any{
 						"chain_severity":   cf.Severity.String(),
 						"stage_span_attck": TranslateStages(cf.AttackStages),

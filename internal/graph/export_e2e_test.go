@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/sufield/stave/internal/metadata"
 )
 
 // TestGraphExportE2E builds the stave binary and runs
@@ -60,8 +62,8 @@ func TestGraphExportE2E(t *testing.T) {
 	if g["schema_version"] != "1" {
 		t.Errorf("schema_version = %v, want 1", g["schema_version"])
 	}
-	if g["ontology_version"] != "1.0" {
-		t.Errorf("ontology_version = %v, want 1.0", g["ontology_version"])
+	if g["ontology_version"] != metadata.OntologyVersion {
+		t.Errorf("ontology_version = %v, want %q", g["ontology_version"], metadata.OntologyVersion)
 	}
 
 	// Metadata.

@@ -102,7 +102,7 @@ jobs:
           cache: true
 
       - name: Download regenerated goldens
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v7.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: goldens
           path: .
@@ -145,7 +145,7 @@ jobs:
           check-latest: true
           cache: true
       - name: Download regenerated goldens
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v7.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: goldens
           path: .
@@ -236,7 +236,11 @@ jobs:
           check-latest: true
           cache: true
       - name: Build and run E2E tests
-        run: make build && go test ./e2e/ -run E2E -count=1 -timeout 30m
+        # -v so a stuck case surfaces its own name in the log instead
+        # of the package timing out silently after 30 minutes. Cases
+        # are serialised inside the suite (see e2e/e2e_test.go), so
+        # the suite-level timeout is now generous rather than tight.
+        run: make build && go test -v ./e2e/ -run E2E -count=1 -timeout 30m
 
   release-check:
     name: GoReleaser config check
@@ -245,7 +249,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - uses: goreleaser/goreleaser-action@e24998b8b67b290c2fa8b7c14fcfa7de2c5c9b8c # v7.1.0
+      - uses: goreleaser/goreleaser-action@1a80836c5c9d9e5755a25cb59ec6f45a3b5f41a8 # v7.2.1
         with:
           distribution: goreleaser
           version: '~> v2'

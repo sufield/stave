@@ -10,7 +10,7 @@ description: >
   (worse) operators globally disable verification to
   make the connection work, eliminating any value
   TLS provides.
-domain: encrypt
+domain: encryption
 severity: high
 compliance:
   soc2: "CC6.7"

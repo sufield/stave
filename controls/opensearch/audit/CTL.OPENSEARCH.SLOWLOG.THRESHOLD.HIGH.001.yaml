@@ -10,7 +10,7 @@ description: >
   copy-pasted thresholds from cluster docs (5
   minutes default warn) without tuning to actual
   query SLA.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2"

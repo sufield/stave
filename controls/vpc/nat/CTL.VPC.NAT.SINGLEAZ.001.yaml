@@ -9,7 +9,7 @@ description: >
   outbound communication. Security-critical updates and log shipping
   stop. Production workloads should have a NAT gateway in each AZ
   that contains private subnets.
-domain: availability
+domain: resilience
 severity: medium
 compliance:
   cis_aws_v3.0: "5.1"

@@ -10,7 +10,7 @@ description: >
   cluster issues via downstream complaints.
   Common cause: subscriber email account
   deactivated when team member left.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2, A1.1"

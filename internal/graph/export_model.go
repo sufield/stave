@@ -192,19 +192,42 @@ func iriSegment(s string) string {
 // the mapping layer all reference the same constants.
 
 const (
-	predTargets             = ontologyBaseIRI + "targets"
-	predHasFinding          = ontologyBaseIRI + "hasFinding"
-	predViolatesInvariant   = ontologyBaseIRI + "violatesInvariant"
-	predViolates            = ontologyBaseIRI + "violates"
+	// predTargets — Finding -> Resource. The "the finding is about
+	// this asset" edge. Wire name TARGETS, emitted by the builder
+	// for every finding.
+	predTargets = ontologyBaseIRI + "targets"
+
+	// predViolatesInvariant — Finding -> Control. "this finding
+	// asserts the control's invariant was false on this asset".
+	// Distinct from violatesRequirement, which connects the same
+	// finding to the compliance requirement the control covers.
+	// Not currently emitted by the in-tree builder; reserved for
+	// identity-layer enrichment passes and graph merges that
+	// produce richer finding→control linkage.
+	predViolatesInvariant = ontologyBaseIRI + "violatesInvariant"
+
+	// predViolates — Resource -> Control. The export-layer
+	// shortcut edge synthesized by mapTordfGraph. Annotated with
+	// stave:isAlgorithmShortcut so GDS workloads can skip the
+	// Finding hop. Distinct from predViolatesRequirement (which
+	// is the real Finding -> Requirement edge in the source graph).
+	predViolates = ontologyBaseIRI + "violates"
+
+	// predViolatesRequirement — Finding -> ComplianceRequirement.
+	// Real first-class edge in the source graph. NOT a shortcut —
+	// the previous TTL annotation marking it as one was wrong and
+	// has been removed; consumers that filter on
+	// isAlgorithmShortcut were incorrectly skipping this edge.
 	predViolatesRequirement = ontologyBaseIRI + "violatesRequirement"
-	predMapsTo              = ontologyBaseIRI + "mapsTo"
-	predHasRemediation      = ontologyBaseIRI + "hasRemediation"
-	predMemberOf            = ontologyBaseIRI + "memberOf"
-	predProduces            = ontologyBaseIRI + "produces"
-	predBelongsToScope      = ontologyBaseIRI + "belongsToScope"
-	predHasEffectiveAccess  = ontologyBaseIRI + "hasEffectiveAccess"
-	predCanImpersonate      = ontologyBaseIRI + "canImpersonate"
-	predGovernedBy          = ontologyBaseIRI + "governedBy"
+
+	predMapsTo             = ontologyBaseIRI + "mapsTo"
+	predHasRemediation     = ontologyBaseIRI + "hasRemediation"
+	predMemberOf           = ontologyBaseIRI + "memberOf"
+	predProduces           = ontologyBaseIRI + "produces"
+	predBelongsToScope     = ontologyBaseIRI + "belongsToScope"
+	predHasEffectiveAccess = ontologyBaseIRI + "hasEffectiveAccess"
+	predCanImpersonate     = ontologyBaseIRI + "canImpersonate"
+	predGovernedBy         = ontologyBaseIRI + "governedBy"
 )
 
 // wireToPredicate maps the existing GraphData edge type strings (the
@@ -213,23 +236,26 @@ const (
 // graph requires a one-line change here. Edges whose wire name is
 // not in this table are dropped from the RDF export and logged.
 var wireToPredicate = map[EdgeType]string{
-	"TARGETS":  predTargets,
-	"VIOLATES": predViolatesRequirement,
+	EdgeTypeTargets:             predTargets,
+	EdgeTypeViolatesRequirement: predViolatesRequirement,
 	// VIOLATES_INVARIANT names the edge from a finding to the
 	// invariant the control was checking. The earlier shape was
 	// missing this entry, so any builder that emitted the wire name
 	// dropped its edges with the generic "unmapped edge type"
 	// warning. The matching predicate constant predViolatesInvariant
-	// already exists; route to it.
-	"VIOLATES_INVARIANT":   predViolatesInvariant,
-	"MAPS_TO":              predMapsTo,
-	"BELONGS_TO_SCOPE":     predBelongsToScope,
-	"MEMBER_OF":            predMemberOf,
-	"PRODUCES":             predProduces,
-	"HAS_REMEDIATION":      predHasRemediation,
-	"HAS_EFFECTIVE_ACCESS": predHasEffectiveAccess,
-	"CAN_IMPERSONATE":      predCanImpersonate,
-	"GOVERNED_BY":          predGovernedBy,
+	// already exists; route to it. The builder does not currently
+	// emit this edge type — entry is retained so external producers
+	// (graph merges, identity-layer enrichment passes) that emit
+	// VIOLATES_INVARIANT round-trip cleanly through the export.
+	EdgeTypeViolatesInvariant:  predViolatesInvariant,
+	EdgeTypeMapsTo:             predMapsTo,
+	EdgeTypeBelongsToScope:     predBelongsToScope,
+	EdgeTypeMemberOf:           predMemberOf,
+	EdgeTypeProduces:           predProduces,
+	EdgeTypeHasRemediation:     predHasRemediation,
+	EdgeTypeHasEffectiveAccess: predHasEffectiveAccess,
+	EdgeTypeCanImpersonate:     predCanImpersonate,
+	EdgeTypeGovernedBy:         predGovernedBy,
 }
 
 // shortcutPredicates are predicates Stave annotates with

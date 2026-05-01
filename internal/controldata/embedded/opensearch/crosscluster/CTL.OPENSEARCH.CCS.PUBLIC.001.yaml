@@ -10,7 +10,7 @@ description: >
   contains the data being queried; transiting
   the public path exposes it to interception
   and inflates egress cost.
-domain: encrypt
+domain: encryption
 severity: high
 compliance:
   soc2: "CC6.7"

@@ -24,15 +24,21 @@ import (
 //     export honors the same fail-loud-but-visible policy used by the
 //     STIX marshaler for dangling edges.
 //
-//  3. Two algorithm-ready shortcut edges are materialized:
+//  3. One algorithm-ready shortcut edge is materialized:
 //
 //     Resource --stave:violates--> Control            (1 hop)
-//     (alongside) Resource --hasFinding--> Finding --violatesInvariant--> Control
 //
-//     This lets graph-data-science workloads run centrality and
-//     community detection over the shortcut subgraph without first
-//     traversing through intermediate Finding nodes, while auditors
-//     get the full chain.
+//     The auditor path through the source graph is the inverse:
+//     Finding --stave:targets--> Resource AND
+//     Finding --stave:violatesRequirement--> ComplianceRequirement.
+//     RDF reasoners derive Resource <- Finding via owl:inverseOf
+//     on stave:targets; the explicit Resource --hasFinding--> edge
+//     was redundant with the inverse and has been removed.
+//
+//     The shortcut lets graph-data-science workloads run centrality
+//     and community detection over the shortcut subgraph without
+//     first traversing through intermediate Finding nodes, while
+//     auditors still get the full chain via the source edges.
 //
 // UnmappedEdge records an edge that was dropped during RDF mapping
 // because its Type was not in the wireToPredicate vocabulary. The
@@ -119,12 +125,12 @@ func mapTordfGraph(g *GraphData) *rdfGraph {
 		nodesByID[n.ID] = n
 
 		props := flattenNodeProperties(n)
-		if n.Type == "Finding" {
+		if n.Type == NodeTypeFinding {
 			if cid, ok := stringProp(n.Properties, "control_id"); ok {
 				findingControl[n.ID] = cid
 			}
 		}
-		if n.Type == "Control" {
+		if n.Type == NodeTypeControl {
 			// Always map node-ID → node-ID so simple cases work even
 			// when control_id isn't set as a separate property.
 			controlIDToNodeID[n.ID] = n.ID
@@ -175,7 +181,7 @@ func mapTordfGraph(g *GraphData) *rdfGraph {
 			Shortcut:   shortcutPredicates[pred],
 		})
 
-		if e.Type == "TARGETS" {
+		if e.Type == EdgeTypeTargets {
 			// Wire direction: Finding -[TARGETS]-> Resource. Stash so
 			// the shortcut step can pivot to Resource → Control.
 			findingResource[e.From] = e.To
@@ -260,7 +266,7 @@ func mapTordfGraph(g *GraphData) *rdfGraph {
 // else falls back to the generic resource/finding/invariant prefixes.
 func nodeIRI(n *Node) (instanceIRI, classIRI string) {
 	switch n.Type {
-	case "Resource":
+	case NodeTypeResource:
 		account, _ := stringProp(n.Properties, "account_id")
 		class, _ := stringProp(n.Properties, "resource_class")
 		providerType, _ := stringProp(n.Properties, "provider_type")
@@ -272,25 +278,25 @@ func nodeIRI(n *Node) (instanceIRI, classIRI string) {
 			return BucketIRI(account, bucketName), ontologyBaseIRI + "Bucket"
 		}
 		return ResourceIRI(n.ID), ontologyBaseIRI + classFromResourceClass(class)
-	case "Finding":
+	case NodeTypeFinding:
 		return FindingIRI(n.ID), ontologyBaseIRI + "Finding"
-	case "Control":
+	case NodeTypeControl:
 		category, number := splitControlID(n.ID)
 		return InvariantIRI(category, number), ontologyBaseIRI + "Control"
-	case "ComplianceRequirement":
+	case NodeTypeComplianceRequirement:
 		framework, _ := stringProp(n.Properties, "framework")
 		reqID, _ := stringProp(n.Properties, "requirement_id")
 		return RequirementIRI(framework, reqID), ontologyBaseIRI + "ComplianceRequirement"
-	case "TenantScope":
+	case NodeTypeTenantScope:
 		account, _ := stringProp(n.Properties, "account_id")
 		return ScopeIRI(account), ontologyBaseIRI + "TenantScope"
-	case "ThreatChain":
+	case NodeTypeThreatChain:
 		return ChainIRI(n.ID), ontologyBaseIRI + "ThreatChain"
-	case "AttackerCapability":
+	case NodeTypeAttackerCapability:
 		return CapabilityIRI(strings.TrimPrefix(n.ID, "capability_")), ontologyBaseIRI + "AttackerCapability"
-	case "RemediationAction":
+	case NodeTypeRemediationAction:
 		return RemediationIRI(strings.TrimPrefix(n.ID, "remediation_")), ontologyBaseIRI + "RemediationAction"
-	case "Identity":
+	case NodeTypeIdentity:
 		return IdentityIRI(n.ID), ontologyBaseIRI + "Identity"
 	default:
 		return ResourceIRI(n.ID), ontologyBaseIRI + string(n.Type)
@@ -299,19 +305,53 @@ func nodeIRI(n *Node) (instanceIRI, classIRI string) {
 
 // classFromResourceClass maps the provider-agnostic resource class
 // label produced by ToResourceClass to an ontology subclass of
-// stave:Resource. Unknown classes fall back to the generic Resource.
+// stave:Resource. Covers every class in
+// docs/ontology/resource-classes.json (14 values). Unknown classes
+// fall back to the generic Resource.
+//
+// Mapping rationale:
+//   - instance, container       -> ComputeResource (workloads that run code)
+//   - database, log             -> DataResource    (data-at-rest stores)
+//   - identity                  -> Identity        (a separate top-level node type, not a Resource subclass)
+//   - key                       -> SecretResource  (cryptographic material is a secret)
+//   - cdn, dns, queue           -> NetworkResource (traffic-shaping infrastructure)
+//   - registry                  -> StorageResource (artifact bytes; if the ontology grows an
+//                                                  ArtifactResource, registry should move there)
 func classFromResourceClass(class string) string {
 	switch class {
 	case "storage":
 		return "StorageResource"
+	case "database":
+		return "DataResource"
 	case "compute":
+		return "ComputeResource"
+	case "instance":
+		return "ComputeResource"
+	case "container":
 		return "ComputeResource"
 	case "network":
 		return "NetworkResource"
-	case "data":
-		return "DataResource"
+	case "identity":
+		return "Identity"
+	case "key":
+		return "SecretResource"
 	case "secret":
 		return "SecretResource"
+	case "cdn":
+		return "NetworkResource"
+	case "dns":
+		return "NetworkResource"
+	case "registry":
+		return "StorageResource"
+	case "queue":
+		return "NetworkResource"
+	case "log":
+		return "DataResource"
+	case "data":
+		// Legacy / pre-14-class label. Retained for backward
+		// compatibility with snapshots emitted before the taxonomy
+		// expansion; new producers emit "database" or "log".
+		return "DataResource"
 	default:
 		return "Resource"
 	}
@@ -340,7 +380,7 @@ func flattenNodeProperties(n *Node) map[string]any {
 	if sev, ok := stringProp(n.Properties, "severity"); ok {
 		out["severity_weight"] = SeverityWeight(sev)
 	}
-	if n.Type == "Control" {
+	if n.Type == NodeTypeControl {
 		category, number := splitControlID(n.ID)
 		out["category"] = category
 		out["invariant_number"] = number
@@ -360,9 +400,9 @@ func edgeProperties(e *Edge, fromKind, toKind NodeType, nodesByID map[string]*No
 	}
 	// If either endpoint is a Finding, propagate its severity weight
 	// so edges incident on findings carry a numeric weight.
-	if w := findingSeverityWeight(e.From, nodesByID); w > 0 && fromKind == "Finding" {
+	if w := findingSeverityWeight(e.From, nodesByID); w > 0 && fromKind == NodeTypeFinding {
 		props["weight"] = w
-	} else if w := findingSeverityWeight(e.To, nodesByID); w > 0 && toKind == "Finding" {
+	} else if w := findingSeverityWeight(e.To, nodesByID); w > 0 && toKind == NodeTypeFinding {
 		props["weight"] = w
 	}
 	if len(props) == 0 {
@@ -378,7 +418,7 @@ func edgeProperties(e *Edge, fromKind, toKind NodeType, nodesByID map[string]*No
 // Switching to the prebuilt index keeps the hot path O(1).
 func findingSeverityWeight(nodeID string, nodesByID map[string]*Node) float64 {
 	n, ok := nodesByID[nodeID]
-	if !ok || n.Type != "Finding" {
+	if !ok || n.Type != NodeTypeFinding {
 		return 0
 	}
 	if sev, ok := stringProp(n.Properties, "severity"); ok {

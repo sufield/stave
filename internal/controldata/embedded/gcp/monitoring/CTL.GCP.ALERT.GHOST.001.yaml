@@ -14,7 +14,7 @@ scope_tags: [gcp]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Alerting Policy References Deleted Channel — finding detected.
   action: Update the alerting policy to reference a valid notification channel.

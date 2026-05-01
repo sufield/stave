@@ -30,13 +30,27 @@ remediation:
     Unless a Condition restricts the caller, any AWS identity or
     anonymous caller can invoke the statement's allowed actions.
   action: >
-    Replace the wildcard principal with the specific AWS account IDs
-    or ARNs that need access, or add a restricting Condition on
-    aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed
-    CIDR), or aws:SourceArn. If the bucket genuinely needs to be
-    public (CDN origin, static asset bucket), narrow the Actions to
-    the minimum set and keep Public Access Block enabled where
-    compatible.
+    1. Narrow the Allow. Replace the wildcard principal with the
+       specific AWS account IDs or role ARNs that actually need
+       access. If a wildcard must remain (cross-org distribution,
+       service-bound caller), add a restricting Condition that fixes
+       the caller set: aws:PrincipalOrgID, aws:SourceVpc /
+       aws:SourceVpce, aws:SourceIp with a fixed CIDR, or
+       aws:SourceArn.
+
+    2. If the bucket genuinely needs to be reachable from the
+       public internet (CDN origin, static asset distribution),
+       prefer scoped mechanisms over a wildcard bucket policy:
+       CloudFront Origin Access Control, S3 Access Points with
+       network-bound policies, or signed/presigned URLs. These
+       give you a narrow Allow on a defined caller surface
+       instead of a "*" Allow with hopeful Conditions.
+
+    3. Keep S3 Block Public Access fully enforced as an interim
+       guard while the policy change is being rolled out — PAB
+       does not fix a broad Allow, it only suppresses its effect
+       at the network boundary, so treat it as a containment
+       layer rather than the remediation.
   example: |
     {
       "storage": {

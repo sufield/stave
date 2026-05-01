@@ -50,3 +50,38 @@ func TestToResourceClass_Unknown(t *testing.T) {
 		t.Errorf("unknown type should return 'unknown', got %q", got)
 	}
 }
+
+// TestToResourceClass_CompoundTokens covers provider_types whose
+// rule key is a multi-token literal (virtual_machine, compute_engine,
+// security_group, key_vault, service_bus, front_door). These cannot
+// match through the exact-token path because token splitting breaks
+// the compound apart; they resolve via the substring fallback. The
+// test fixes that contract so a future "single-token-only" refactor
+// of ToResourceClass cannot silently drop these mappings.
+func TestToResourceClass_CompoundTokens(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		providerType string
+		want         string
+	}{
+		{"azure_virtual_machine", "instance"},
+		{"azure_virtual_machine_scale_set", "instance"},
+		{"gcp_compute_engine_instance", "instance"},
+		{"aws_security_group", "network"},
+		{"azure_key_vault", "key"},
+		// azure_key_vault_secret is the secret stored INSIDE the vault,
+		// not the vault itself — the single-token `secret` rule wins
+		// over the compound `key_vault` fallback, which is the correct
+		// classification for the resource (secret material, not the
+		// HSM). The vault container surfaces as `azure_key_vault`.
+		{"azure_key_vault_secret", "secret"},
+		{"azure_service_bus_queue", "queue"},
+		{"azure_front_door_profile", "cdn"},
+	}
+	for _, tt := range tests {
+		got := ToResourceClass(tt.providerType)
+		if got != tt.want {
+			t.Errorf("ToResourceClass(%q) = %q, want %q", tt.providerType, got, tt.want)
+		}
+	}
+}

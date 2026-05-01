@@ -9,7 +9,7 @@ description: >
   bulk operations). Without it, ingest slowdowns
   become visible only through ThreadpoolWriteRejected
   metrics or downstream pipeline backups.
-domain: detect
+domain: detection
 severity: low
 compliance:
   soc2: "CC7.2, A1.1"

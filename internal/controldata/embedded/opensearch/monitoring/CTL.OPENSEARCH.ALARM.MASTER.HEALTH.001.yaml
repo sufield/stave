@@ -10,7 +10,7 @@ description: >
   propagation, and routing — degradation here
   manifests as cluster-wide stalls. The set is
   load-bearing for any production-tier domain.
-domain: detect
+domain: detection
 severity: high
 compliance:
   soc2: "CC7.2, A1.1"

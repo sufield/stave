@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/metadata"
 )
 
 // --- Experiment 1: Minimal single finding ---
@@ -47,8 +48,8 @@ func TestExperiment01_MinimalFinding(t *testing.T) {
 	if g.SchemaVersion != "1" {
 		t.Errorf("schema_version = %q, want 1", g.SchemaVersion)
 	}
-	if g.OntologyVersion != "1.0" {
-		t.Errorf("ontology_version = %q, want 1.0", g.OntologyVersion)
+	if g.OntologyVersion != metadata.OntologyVersion {
+		t.Errorf("ontology_version = %q, want %q", g.OntologyVersion, metadata.OntologyVersion)
 	}
 
 	// Node counts: Finding + Resource + Control + TenantScope + RemediationAction = 5.

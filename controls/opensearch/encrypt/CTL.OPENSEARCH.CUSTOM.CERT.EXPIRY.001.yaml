@@ -11,7 +11,7 @@ description: >
   domain is reachable but unusable for any
   TLS-verifying client. Outage scope is every
   client that talks to the custom endpoint.
-domain: encrypt
+domain: encryption
 severity: high
 compliance:
   soc2: "CC7.4, A1.2"

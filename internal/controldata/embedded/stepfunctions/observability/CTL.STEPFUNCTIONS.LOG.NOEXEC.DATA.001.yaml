@@ -12,7 +12,7 @@ description: >
   workflows handling regulated data, this is
   also a compliance gap (state changes
   without event content fail HIPAA AU-3).
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2"

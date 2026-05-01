@@ -9,7 +9,7 @@ description: >
   parent's input source. For workflows fan-out
   to thousands of items, this is operationally
   intractable.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2"

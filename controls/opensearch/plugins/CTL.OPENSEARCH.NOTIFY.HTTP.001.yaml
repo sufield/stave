@@ -9,7 +9,7 @@ description: >
   Webhook bodies often contain alert content
   including sensitive data; HTTP makes it
   visible to network observers.
-domain: encrypt
+domain: encryption
 severity: medium
 compliance:
   soc2: "CC6.7"

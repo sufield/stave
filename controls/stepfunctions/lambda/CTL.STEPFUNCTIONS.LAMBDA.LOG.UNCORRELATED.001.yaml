@@ -10,7 +10,7 @@ description: >
   timestamp — fragile and slow. Standard
   practice: include execution ID in every
   Lambda log line.
-domain: detect
+domain: detection
 severity: low
 compliance:
   soc2: "CC7.2"

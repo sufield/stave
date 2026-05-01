@@ -42,17 +42,27 @@ remediation:
     the finding is a posture / fragility signal. If BPA is not fully
     enforcing, the bucket is actively reachable from the internet.
   action: >
-    1. Identify the Allow statement with the wildcard principal. If it is
-       not intentional, remove it.
-    2. If the statement is intentional (CDN origin, cross-organization
-       data distribution), add a Condition that fixes the caller set —
+    1. Narrow the Allow. Identify the Allow statement with the
+       wildcard principal. If it is not intentional, remove it. If
+       it is intentional (CDN origin, cross-organization data
+       distribution), add a Condition that fixes the caller set —
        `aws:PrincipalOrgID` for same-org access, `aws:SourceVpc` or
        `aws:SourceVpce` for VPC-bound access, `aws:SourceIp` with a
        fixed CIDR for known network ranges, or `aws:SourceArn` for a
        specific invoking service or distribution.
-    3. Until the policy is fixed, keep S3 Block Public Access fully
-       enforced at the account and bucket level so the exposure stays
-       latent rather than active.
+
+    2. If the bucket genuinely needs internet reachability, prefer
+       scoped mechanisms over a wildcard bucket policy: CloudFront
+       Origin Access Control, S3 Access Points, or signed /
+       presigned URLs. These collapse the reachable principal set
+       to a defined surface instead of "*" with restricting
+       Conditions stacked on top.
+
+    3. Keep S3 Block Public Access fully enforced at the account
+       and bucket level as an interim containment guard while the
+       policy change is in flight. PAB does not fix the underlying
+       broad Allow — it only suppresses its effect at the network
+       boundary, leaving the exposure latent rather than active.
   example: |
     {
       "storage": {

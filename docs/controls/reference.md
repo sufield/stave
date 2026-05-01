@@ -3,37 +3,33 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2575
-**Pack hash:** `880482355c19699838b58a4cf5881e0040378e204f2e6c25fab3f4c63f1cae18`
+**Total controls:** 2612
+**Pack hash:** `ca3192c93be57bb1c601cb7a2262b7fe71c4e0e9935ec39bc62345526c9edf5e`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 261 |
-| high | 1114 |
+| critical | 268 |
+| high | 1129 |
 | info | 16 |
-| low | 196 |
-| medium | 988 |
+| low | 198 |
+| medium | 1001 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 82 |
-| availability | 2 |
+| audit | 88 |
 | capacity | 3 |
-| cryptography | 3 |
-| detect | 35 |
-| detection | 98 |
-| encrypt | 18 |
-| encryption | 92 |
-| exposure | 1169 |
-| governance | 555 |
-| hygiene | 16 |
-| identity | 393 |
+| detection | 133 |
+| encryption | 113 |
+| exposure | 1184 |
+| governance | 557 |
+| hygiene | 18 |
+| identity | 399 |
 | lifecycle | 31 |
-| network | 28 |
-| resilience | 29 |
+| network | 32 |
+| resilience | 33 |
 | secrets | 4 |
 | storage | 8 |
 
@@ -11249,6 +11245,21 @@ DNS records or URLs that reference software distribution endpoints (package repo
 
 ---
 
+### CTL.DOCUMENTDB.AUDIT.PARAM.OFF.001
+
+**DocumentDB Audit Log Parameter Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+DocumentDB clusters must have the `audit_logs` cluster parameter set to `enabled` so authentication, authorization, and CRUD events are recorded by the engine. Distinct from the existing CTL.DOCUMENTDB.LOG.AUDIT.001 — which checks the *export* of audit logs to CloudWatch — this control catches the upstream gap where no audit events are produced in the first place. With `audit_logs=disabled`, the CWL exporter receives nothing and the forensic trail is empty even though the operator believes audit logging is "on".
+
+**Remediation:** Update the cluster parameter group so `audit_logs=enabled` and apply the change. Verify CTL.DOCUMENTDB.LOG.AUDIT.001 (CloudWatch export) is also satisfied — both are needed for an end-to-end audit trail.
+
+---
+
 ### CTL.DOCUMENTDB.BACKUP.001
 
 **DocumentDB Automated Backups Must Be Enabled**
@@ -11261,6 +11272,21 @@ DNS records or URLs that reference software distribution endpoints (package repo
 DocumentDB clusters must have automated backups.
 
 **Remediation:** Set backup retention period to at least 7 days.
+
+---
+
+### CTL.DOCUMENTDB.CONFIG.ADMIN.001
+
+**DocumentDB Must Not Use a Default Admin Username**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5;
+
+DocumentDB clusters must not be configured with a guessable default master username (`admin`, `docdb`, `root`, `administrator`, `superuser`). The master username appears in every connection string and CloudTrail event, and credential- stuffing tools test the well-known defaults first. Picking a non-default username eliminates the easiest enumeration path and forces an attacker to harvest the username separately before any password attempt becomes useful.
+
+**Remediation:** Provision a new cluster with a non-default master username (e.g. `svc_<team>_admin`) and migrate. The master username cannot be renamed in place; replacement requires a snapshot-restore-and-cutover rotation.
 
 ---
 
@@ -11279,6 +11305,36 @@ DocumentDB clusters must have deletion protection enabled.
 
 ---
 
+### CTL.DOCUMENTDB.ENCRYPT.KMS.AWSMANAGED.001
+
+**DocumentDB Cluster Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+DocumentDB clusters must encrypt at rest with a customer-managed KMS key, not the AWS-managed `aws/rds` default. The AWS-managed key is shared across every RDS-family cluster in the account, has a key policy the customer cannot edit, and cannot be revoked or rotated on the customer's schedule. Using it satisfies the at-rest encryption checkbox but eliminates the per-tenant key-policy and per-incident key-revocation controls customer- managed keys provide.
+
+**Remediation:** Create a customer-managed KMS key with a scoped key policy, then re-encrypt the cluster (requires a snapshot restore to a new cluster pointed at the customer-managed key). Rotate any cross-region snapshot copy grants to use the same CMK.
+
+---
+
+### CTL.DOCUMENTDB.ENCRYPT.KMS.CROSSACCOUNT.001
+
+**DocumentDB Cluster KMS Key Must Not Permit Cross-Org Decrypt**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 3.6.1; soc2: CC6.6;
+
+The KMS key encrypting a DocumentDB cluster (and its snapshots) must not have a key policy that grants `kms:Decrypt` to principals outside the organization's allow-list. A snapshot copy encrypted with such a key is decryptable wherever those principals reach — turning a cross-account snapshot share into a clear-text exfil path even when storage encryption is on and snapshot sharing is restricted, because the recipient still legitimately holds Decrypt against the source key.
+
+**Remediation:** Tighten the key policy: scope `kms:Decrypt` to specific `aws:PrincipalOrgID` or explicit account ARNs that legitimately need to read the encrypted data, and add `aws:ViaService = rds.<region>.amazonaws.com` so the grant only applies through the DocDB integration path.
+
+---
+
 ### CTL.DOCUMENTDB.ENCRYPT.REST.001
 
 **DocumentDB Clusters Must Have Encryption at Rest**
@@ -11291,6 +11347,51 @@ DocumentDB clusters must have deletion protection enabled.
 DocumentDB clusters must encrypt data at rest.
 
 **Remediation:** Enable encryption. Requires creating a new encrypted cluster.
+
+---
+
+### CTL.DOCUMENTDB.ENGINE.DEPRECATED.001
+
+**DocumentDB Engine Version Must Not Be End-of-Life**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+DocumentDB clusters must run an engine version that AWS still supports — not one on the end-of-life list. AWS publishes a deprecation calendar per engine major version; clusters left on a deprecated version no longer receive security patches and will eventually be force-upgraded by AWS during a maintenance window the operator did not choose. The same scenario as CTL.REDSHIFT.MAINTENANCE.DEFERRED.001 / CTL.REDSHIFT.UPGRADE.001 but for the document store.
+
+**Remediation:** Upgrade the cluster to a supported major version with `aws docdb modify-db-cluster --engine-version <ver> --apply-immediately`. Coordinate the upgrade window with application teams — major-version upgrades can require driver updates on the client side.
+
+---
+
+### CTL.DOCUMENTDB.IAM.AUTH.OFF.001
+
+**DocumentDB Cluster Must Permit IAM Database Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-2; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
+
+DocumentDB clusters must have IAM database authentication enabled so human and service principals authenticate with short-lived IAM-derived credentials instead of long-lived database-local passwords. AWS added IAM auth to DocumentDB after the engine had already been in production for years — most existing clusters still rely exclusively on the master password and any rotated-in application user, leaving no IAM-side audit trail tying a connection to a human identity.
+
+**Remediation:** Modify the cluster with `--enable-iam-database-authentication`. Create dbuser entries that authenticate via IAM, attach `rds-db:connect` IAM policies to the human / service principals that need access, and rotate the existing database-local passwords out.
+
+---
+
+### CTL.DOCUMENTDB.INSTANCE.PUBLIC.001
+
+**DocumentDB Instances Must Not Be Publicly Accessible**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+No member instance of a DocumentDB cluster may have `publicly_accessible=true`. The cluster-level connection string routes to whichever member is the current writer; even one publicly accessible member exposes the document store to internet scanners. Distinct from CTL.DOCUMENTDB.SG.OPEN.001 (which catches the security-group dimension): this control catches the per-instance flag that drives DNS / public IP assignment regardless of SG configuration.
+
+**Remediation:** Modify each affected member instance with `--no-publicly-accessible`. Per-instance changes apply during the next maintenance window — schedule outside business hours so the brief failover is invisible.
 
 ---
 
@@ -11324,6 +11425,51 @@ DocumentDB clusters must deploy across multiple availability zones.
 
 ---
 
+### CTL.DOCUMENTDB.PI.OFF.001
+
+**DocumentDB Performance Insights Should Be Enabled in Production**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.2;
+
+Production DocumentDB clusters should enable Performance Insights so per-query wait-state and load-by-wait data are retained for post-incident analysis. PI captures information that the audit log and profiler do not — specifically, which wait events dominated during an outage or query saturation episode. Without PI, root-cause analysis of a slowdown reduces to "the cluster was slow then it wasn't" because the underlying wait-state data was never recorded.
+
+**Remediation:** Enable Performance Insights: `aws docdb modify-db-instance --enable-performance-insights` on each member instance. Default retention is 7 days; extend to 731 days if the operator wants long-baseline trend data.
+
+---
+
+### CTL.DOCUMENTDB.PROFILER.OFF.001
+
+**DocumentDB Profiler Must Be Enabled in Production**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2.5; soc2: CC7.2;
+
+DocumentDB clusters in production should have the `profiler` cluster parameter enabled so slow-query operations are captured alongside the audit log. The profiler is the only mechanism that records query *shape* (collection, predicate fields, sort order) for queries that exceed the profiling threshold — without it, a post-incident question of "what did the attacker query?" is unanswerable because the audit log only records the operation category, not the query body.
+
+**Remediation:** Update the cluster parameter group so `profiler=enabled`, set `profiler_threshold_ms` to a value matching the team's slow-query baseline (typically 100–500 ms), and apply the change. Pair with `LOG.AUDIT.001` so the profiler output reaches CloudWatch.
+
+---
+
+### CTL.DOCUMENTDB.SG.OPEN.001
+
+**DocumentDB Cluster Security Group Must Not Allow 0.0.0.0/0 Ingress on 27017**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+DocumentDB clusters must not have a VPC security group attached that allows 0.0.0.0/0 ingress on the cluster port (27017). Even with member instances configured `publicly_accessible=false`, an open security group on a cluster placed in a public subnet — or reachable through a misconfigured NAT / transit gateway — exposes the document store to internet scanners. Distinct from CTL.DOCUMENTDB.SNAPSHOT.PUBLIC.001 (snapshot share) and CTL.DOCUMENTDB.INSTANCE.PUBLIC.001 (instance flag): this control catches the network-policy gap that admits the wrong source even when the per-instance flag is correct.
+
+**Remediation:** Replace the 0.0.0.0/0 rule with the CIDR block(s) of the application tier or VPN range that legitimately needs cluster access. Avoid scoping rules to "any private RFC1918" — that admits the entire VPC's compute fleet.
+
+---
+
 ### CTL.DOCUMENTDB.SNAPSHOT.PUBLIC.001
 
 **DocumentDB Snapshots Must Not Be Public**
@@ -11336,6 +11482,36 @@ DocumentDB clusters must deploy across multiple availability zones.
 DocumentDB snapshots must not be publicly accessible.
 
 **Remediation:** Remove public access from the snapshot.
+
+---
+
+### CTL.DOCUMENTDB.SNAPSHOT.SHARED.CROSSACCOUNT.001
+
+**DocumentDB Snapshots Must Not Be Shared With Out-of-Org Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.5; soc2: CC6.6;
+
+A DocumentDB manual snapshot must not be shared with AWS account IDs outside the organization's snapshot-sharing allow-list. Snapshot sharing is the legitimate cross-account data-handoff mechanism for DocDB — but the failure mode is sharing with an account that used to be a partner, has been compromised, or was never authorized. Once shared, the recipient can restore at any time, typically months after the share was set up and forgotten. Distinct from CTL.DOCUMENTDB.SNAPSHOT.PUBLIC.001 (which catches `all`); this one catches specific out-of-org account IDs.
+
+**Remediation:** Revoke each unauthorized account's restore access: `aws docdb modify-db-cluster-snapshot-attribute --db-cluster-snapshot-identifier <id> --attribute-name restore --values-to-remove <acct>`. If cross-account sharing is genuinely required, register the target account in the allow-list first.
+
+---
+
+### CTL.DOCUMENTDB.TLS.DISABLED.001
+
+**DocumentDB Cluster Must Require TLS**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+DocumentDB clusters must have the `tls` cluster parameter set to `enabled` so connections without TLS are rejected. The pre-2024 default for newly created clusters used `disabled`, and many long-lived production clusters still inherit that setting through custom parameter groups copied from the original default. With TLS off, MongoDB-wire-protocol authentication frames (including the SCRAM challenge/response) traverse the VPC in clear and any in-VPC packet capture recovers the cluster's master credentials.
+
+**Remediation:** Update (or replace) the cluster parameter group so `tls=enabled`, associate it with the cluster, and apply the change immediately (`ApplyImmediately=true`). Drivers connecting without `tls=true` / `ssl=true` will then fail closed instead of falling back to clear text.
 
 ---
 
@@ -11886,7 +12062,7 @@ EC2 instances must not run on AMIs that are deprecated by AWS or the AMI owner, 
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** cryptography
+- **Domain:** encryption
 - **Compliance:** cis_aws_v3.0: 2.2.1; fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.7;
 
 AMI's EBS snapshots are not encrypted. Instances launched from this AMI inherit unencrypted root volumes — even when account- level EBS default encryption is enabled, certain launch configurations propagate the AMI's snapshot encryption state rather than overriding to the default. AMIs are commonly shared across accounts and regions; an unencrypted AMI's snapshot can be copied (or accidentally exposed) without the protection a workload's data classification would otherwise require. Encrypting AMI snapshots is a one-time per-AMI operation that propagates to every instance launched from it.
@@ -27371,6 +27547,21 @@ MSK clusters must run a supported Kafka version. Outdated versions lack security
 
 ---
 
+### CTL.NEPTUNE.AUDIT.PARAM.OFF.001
+
+**Neptune Audit Log Cluster Parameter Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+Neptune clusters must have the `neptune_enable_audit_log` cluster parameter set to 1 so authentication, authorization, and query events are produced by the engine. Distinct from CTL.NEPTUNE.LOG.AUDIT.001 (CloudWatch export): if the parameter is 0, no audit events are produced in the first place and the CloudWatch exporter has nothing to forward — the operator sees CWL log groups but they remain empty until something actually generates events.
+
+**Remediation:** Update the cluster parameter group so `neptune_enable_audit_log=1` and apply the change. Verify CTL.NEPTUNE.LOG.AUDIT.001 (CloudWatch export) is also satisfied — both are required for an end-to-end audit trail.
+
+---
+
 ### CTL.NEPTUNE.AUTH.IAM.001
 
 **Neptune Must Enable IAM Authentication**
@@ -27416,6 +27607,36 @@ Neptune clusters must have deletion protection enabled.
 
 ---
 
+### CTL.NEPTUNE.ENCRYPT.KMS.AWSMANAGED.001
+
+**Neptune Cluster Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+Neptune clusters must encrypt at rest with a customer-managed KMS key, not the AWS-managed `aws/rds` default. The AWS-managed key is shared across every RDS-family cluster in the account, has a key policy the customer cannot edit, and cannot be revoked or rotated on the customer's schedule. Using it satisfies the at-rest encryption checkbox but eliminates the per-tenant key-policy and per-incident key-revocation controls that customer-managed keys provide.
+
+**Remediation:** Create a customer-managed KMS key with a scoped key policy and re-encrypt the cluster (requires a snapshot restore to a new cluster pointed at the customer-managed key). Rotate any snapshot copy grants to use the same CMK.
+
+---
+
+### CTL.NEPTUNE.ENCRYPT.KMS.CROSSACCOUNT.001
+
+**Neptune Cluster KMS Key Must Not Permit Cross-Org Decrypt**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 3.6.1; soc2: CC6.6;
+
+The KMS key encrypting a Neptune cluster (and its snapshots) must not have a key policy granting `kms:Decrypt` to principals outside the organization's allow-list. A snapshot copy encrypted with such a key is decryptable wherever those principals reach — turning a cross-account snapshot share into a clear-text exfil path. Especially material for graph workloads since a single Neptune snapshot typically captures the relationships between *every* identity / asset / policy the organization tracks.
+
+**Remediation:** Tighten the key policy: scope `kms:Decrypt` to specific `aws:PrincipalOrgID` or explicit account ARNs that legitimately need to read the encrypted data, and add `aws:ViaService = rds.<region>.amazonaws.com` so the grant only applies through the Neptune integration path.
+
+---
+
 ### CTL.NEPTUNE.ENCRYPT.REST.001
 
 **Neptune Clusters Must Have Encryption at Rest**
@@ -27428,6 +27649,36 @@ Neptune clusters must have deletion protection enabled.
 Neptune clusters must encrypt data at rest with KMS.
 
 **Remediation:** Enable encryption. Requires creating a new encrypted cluster.
+
+---
+
+### CTL.NEPTUNE.LOADER.ROLE.CROSSBUCKET.001
+
+**Neptune Loader Role Must Stay Inside the Bucket Allow-List**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+An IAM role attached to a Neptune cluster's `LOADER` feature must permit only the buckets explicitly registered in the organization's data-source allow-list. Even when the role does not use a wildcard resource, granting access to buckets outside the curated list (a former data partner, a stale staging bucket) lets a Gremlin/SPARQL execute principal pivot the loader into clear-text reads against data the warehouse has no business touching. The control is the cross-bucket complement to LOADER.ROLE.WILDCARD.001 — that one catches `s3:*`; this one catches narrowly scoped roles that drift outside the allow-list.
+
+**Remediation:** Inventory the role's S3 statements against the allow-list and remove each unauthorized bucket ARN. If the bucket genuinely needs to be a Neptune data source, register it in the allow- list first so the deviation does not return on the next audit.
+
+---
+
+### CTL.NEPTUNE.LOADER.ROLE.WILDCARD.001
+
+**Neptune Loader IAM Role Must Not Use Wildcard S3 Resource**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.5; soc2: CC6.3;
+
+An IAM role attached to a Neptune cluster's `LOADER` feature must not grant `s3:*` or `Resource: "*"` on any S3 statement. The loader role is assumed by the cluster when an operator runs `loader` against an S3 source — any database principal with Gremlin/SPARQL execute can issue that load call, so a role with wildcard S3 access turns graph-query execute into arbitrary- bucket *write* (the loader can also stage transformed data back to S3) and exfiltration vector.
+
+**Remediation:** Replace `Resource: "*"` with explicit bucket ARNs the cluster legitimately ingests data from. Split read and write into separate roles when the data sources differ, and limit the `LOADER` association to the read-only role.
 
 ---
 
@@ -27461,6 +27712,36 @@ Neptune clusters must deploy across multiple availability zones.
 
 ---
 
+### CTL.NEPTUNE.QUERY.LOG.OFF.001
+
+**Neptune Slow-Query Log Must Be Enabled in Production**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2.5; soc2: CC7.2;
+
+Neptune clusters in production should have the `neptune_query_log_mode` cluster parameter set to a recording mode (e.g. `enabledForAllQueries` or `enabledForSlowQueriesOnly`). Without slow-query logging, the audit log records that a query happened but not what it queried — post-incident "what data did the attacker traverse?" reduces to "every node and edge the compromised principal could reach", which on a graph workload is typically the entire organizational map.
+
+**Remediation:** Update the cluster parameter group so `neptune_query_log_mode=enabledForSlowQueriesOnly` and set `neptune_query_log_slow_query_threshold` to a value matching the team's slow-query baseline. Pair with CTL.NEPTUNE.LOG.AUDIT.001 so the query log reaches CloudWatch.
+
+---
+
+### CTL.NEPTUNE.SG.OPEN.001
+
+**Neptune Cluster Security Group Must Not Allow 0.0.0.0/0 Ingress on 8182**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+Neptune clusters must not have a VPC security group attached that allows 0.0.0.0/0 ingress on the Gremlin / SPARQL endpoint port (8182). Distinct from CTL.NEPTUNE.SUBNET.PUBLIC.001 (subnet placement): even with the cluster in a private subnet, an open security group plus a transit gateway peer or misconfigured NAT exposes the graph endpoint to internet scanners. Neptune has no database-local password — IAM auth is the only auth mechanism — so the security boundary is entirely the network policy plus CTL.NEPTUNE.AUTH.IAM.001.
+
+**Remediation:** Replace the 0.0.0.0/0 rule with the CIDR block(s) of the application tier or VPN range that legitimately needs cluster access. Even in private deployments, scope the rule to the specific tier rather than the whole VPC.
+
+---
+
 ### CTL.NEPTUNE.SNAPSHOT.ENCRYPT.001
 
 **Neptune Snapshots Must Be Encrypted**
@@ -27488,6 +27769,36 @@ Neptune cluster snapshots must be encrypted.
 Neptune snapshots must not be publicly accessible.
 
 **Remediation:** Remove public access from the snapshot.
+
+---
+
+### CTL.NEPTUNE.SNAPSHOT.SHARED.CROSSACCOUNT.001
+
+**Neptune Snapshots Must Not Be Shared With Out-of-Org Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.5; soc2: CC6.6;
+
+A Neptune manual snapshot must not be shared with AWS account IDs outside the organization's snapshot-sharing allow-list. Snapshot sharing is the legitimate cross-account graph handoff mechanism — but the failure mode is sharing with an account that used to be a partner, has been compromised, or was never authorized. Once shared, the recipient can restore the graph in their own VPC and traverse every relationship the snapshot captured. Distinct from CTL.NEPTUNE.SNAPSHOT.PUBLIC.001 (which catches `all`); this one catches specific out-of-org account IDs.
+
+**Remediation:** Revoke each unauthorized account's restore access: `aws neptune modify-db-cluster-snapshot-attribute --db-cluster-snapshot-identifier <id> --attribute-name restore --values-to-remove <acct>`. If cross-account sharing is genuinely required, register the target account in the allow-list first.
+
+---
+
+### CTL.NEPTUNE.STREAMS.UNINTENDED.001
+
+**Neptune Streams Must Have a Bounded Consumer Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.6;
+
+When `neptune_streams=1` is enabled at the cluster parameter group, the cluster exposes a change-feed endpoint that any in-VPC consumer can poll. Streams are intentional for some pipelines (Lambda subscribers, ETL into a search index) but unintentional exposure is the failure mode: the parameter is toggled on for a one-off integration and never paired with a bounded consumer-policy registry, so any newly-deployed workload in the VPC can subscribe to the stream and receive every mutation. The control fires when streams are on and the registered consumer-policy list is empty.
+
+**Remediation:** Register the legitimate stream consumers (Lambda ARNs, EC2 role ARNs) in the cluster's stream consumer-policy list. If no consumer is currently using the stream, set `neptune_streams=0` until a real subscriber arrives.
 
 ---
 
@@ -27707,7 +28018,7 @@ OpenSearch domain access policies must not grant access to wildcard principals (
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
 OpenSearch domain has no CloudWatch alarm on HTTP 5xx error rate (`5xx` metric). 5xx surge indicates internal cluster errors — query parser failures, JVM out-of-memory, plugin crashes — and is the most direct user-impact signal. Without an alarm, error spikes appear in dashboards but do not page anyone.
@@ -27722,7 +28033,7 @@ OpenSearch domain has no CloudWatch alarm on HTTP 5xx error rate (`5xx` metric).
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16, A.8.13; nist_800_53_r5: AU-12, CP-9; soc2: CC7.2, A1.2;
 
 OpenSearch domain has no CloudWatch alarm on the `AutomatedSnapshotFailure` metric. A run of failed automated snapshots silently degrades the recovery position; by the time on-call is paged for an incident, the available snapshot may be days old. Discovered too late, this is a data-loss-magnifying defect.
@@ -27737,7 +28048,7 @@ OpenSearch domain has no CloudWatch alarm on the `AutomatedSnapshotFailure` metr
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
 OpenSearch domain has no CloudWatch alarm on the `ClusterStatus.red` metric. ClusterStatus.red means at least one primary shard is unassigned; data is unavailable for queries on that shard. Without an alarm, the cluster sits red until a customer or downstream pipeline complains.
@@ -27752,7 +28063,7 @@ OpenSearch domain has no CloudWatch alarm on the `ClusterStatus.red` metric. Clu
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
 OpenSearch domain has no CloudWatch alarm on the `ClusterStatus.yellow` metric. Yellow means replicas unassigned (data still queryable from primaries, but resilience reduced). A persistent yellow state usually precedes red by hours; an alarm gives operators time to react before data unavailability.
@@ -27767,7 +28078,7 @@ OpenSearch domain has no CloudWatch alarm on the `ClusterStatus.yellow` metric. 
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
 OpenSearch domain has no CloudWatch alarm on the `FreeStorageSpace` metric. Once FreeStorageSpace drops below the cluster's flood-stage watermark (default 95% utilization), OpenSearch sets indices read-only and writes fail. Recovery requires manual intervention and is slow.
@@ -27782,7 +28093,7 @@ OpenSearch domain has no CloudWatch alarm on the `FreeStorageSpace` metric. Once
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
 OpenSearch domain has no CloudWatch alarm on the `JVMMemoryPressure` metric (data nodes). Sustained JVM pressure > 85% causes long GC pauses, search timeouts, and indexer rejects. Master pressure (handled separately) stalls cluster state; data pressure stalls user workload.
@@ -27797,7 +28108,7 @@ OpenSearch domain has no CloudWatch alarm on the `JVMMemoryPressure` metric (dat
 
 - **Severity:** critical
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16, A.8.24; nist_800_53_r5: AU-12, SC-12; soc2: CC7.2, A1.2;
 
 OpenSearch domain has no CloudWatch alarm on `KMSKeyError` or `KMSKeyInaccessible` metrics. When the at-rest encryption KMS key becomes unreachable (key disabled, policy change, cross-account grant revoked), the domain cannot decrypt indices — search and indexing fail until access is restored. Without an alarm, on-call is paged by customer impact rather than the cause.
@@ -27812,7 +28123,7 @@ OpenSearch domain has no CloudWatch alarm on `KMSKeyError` or `KMSKeyInaccessibl
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
 OpenSearch domain has no CloudWatch alarms on master-node health metrics: `MasterReachableFromNode`, `MasterCPUUtilization`, or `MasterJVMMemoryPressure`. The master node drives shard allocation, cluster-state propagation, and routing — degradation here manifests as cluster-wide stalls. The set is load-bearing for any production-tier domain.
@@ -27827,7 +28138,7 @@ OpenSearch domain has no CloudWatch alarms on master-node health metrics: `Maste
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
 OpenSearch domain has no CloudWatch alarm on the `Nodes` metric. Silent node loss reduces capacity and resilience; without an alarm, on-call learns about it from downstream capacity / latency degradation. Particularly important for clusters with dedicated masters where the loss of a master is immediately service-impacting.
@@ -27842,7 +28153,7 @@ OpenSearch domain has no CloudWatch alarm on the `Nodes` metric. Silent node los
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
 OpenSearch domain has no CloudWatch alarms on threadpool saturation metrics: `ThreadpoolSearchQueue`, `ThreadpoolWriteQueue`, or `ThreadpoolSearchRejected`. Threadpool saturation precedes user-visible latency or rejects; without alarms, the cluster appears to slow down for no traceable reason.
@@ -27887,7 +28198,7 @@ OpenSearch Serverless collection has no capacity policy (max_indexing / max_sear
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.7;
 
 OpenSearch Serverless collection's encryption policy uses an AWS-owned key (default) rather than a customer-managed KMS key. AWS-owned keys are not auditable, can't be selectively revoked, and can't be rotated under customer schedule. For regulated workloads (HIPAA, PCI, SOC2), customer-managed keys are required.
@@ -27902,7 +28213,7 @@ OpenSearch Serverless collection's encryption policy uses an AWS-owned key (defa
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, CM-3; soc2: CC6.7, CC8.1;
 
 OpenSearch Serverless collection was created without an explicit encryption policy attached before creation. AOSS applies a default AWS-owned encryption silently; the collection inventory lists encryption as enabled but key custody is AWS-owned. Encryption policy must be created before the collection.
@@ -27947,7 +28258,7 @@ OpenSearch Serverless collection has a network policy declaring `VPC` access typ
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-2; iso_27001_2022: A.8.15; nist_800_53_r5: AU-2, AU-3; pci_dss_v4.0: 10.2.1, 10.2.2; soc2: CC7.2, CC7.3;
 
 OpenSearch FGAC audit log is enabled but the enabled categories do not include `FAILED_LOGIN` and `AUTHENTICATED`. Without FAILED_LOGIN, password-spraying / credential-stuffing campaigns generate no signal in audit. AUTHENTICATED bounds the timeline of who logged in. Both are required for any meaningful intrusion-detection workflow on the cluster.
@@ -27977,7 +28288,7 @@ OpenSearch audit logs record all requests to the domain including queries, index
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-3; iso_27001_2022: A.8.15; nist_800_53_r5: AU-3, AU-12; pci_dss_v4.0: 10.4.1; soc2: CC7.2, A1.2;
 
 OpenSearch domain audit log destination references a CloudWatch Log group that does not exist. Audit log delivery silently drops events — the domain reports audit-enabled, the log pipeline appears healthy from inventory, but no events arrive at any consumer. Common pattern: log group renamed / deleted by another team without checking which services delivered to it.
@@ -27992,7 +28303,7 @@ OpenSearch domain audit log destination references a CloudWatch Log group that d
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-3; iso_27001_2022: A.8.15; nist_800_53_r5: AU-3, AU-12; pci_dss_v4.0: 10.2.5; soc2: CC7.2;
 
 OpenSearch audit log body capture is disabled. REQUEST events show that a search ran, but the query body — `_source` filters, aggregations, or DSL clauses — is not in the audit record. Without the body, "did the attacker exfiltrate PII?" is unanswerable from audit alone. Trade-off: body-capture increases audit log volume / cost, but is required for any meaningful exfil-grade investigation.
@@ -28007,7 +28318,7 @@ OpenSearch audit log body capture is disabled. REQUEST events show that a search
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-3; iso_27001_2022: A.8.15; nist_800_53_r5: AU-3, AU-12; pci_dss_v4.0: 10.2.4; soc2: CC7.2;
 
 OpenSearch audit log REQUEST events are configured to omit the target index name. Audit events show "user X ran a search" but not "on index Y." During incident review, attribution to specific tenants / data classes is impossible without the index name. The `audit_log_resolve_indices` setting is required for index-aware audit.
@@ -28176,7 +28487,7 @@ OpenSearch CCS / CCR connection between two domains crosses a compliance scope b
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-8; iso_27001_2022: A.8.24; nist_800_53_r5: SC-8, SC-12; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
 
 OpenSearch cross-cluster connection between two domains is configured to skip TLS certificate verification, or runs unencrypted. Either permits MITM on the cross-cluster path; the remote cluster's identity is not authenticated. Common during initial setup with self-signed certs that operators "temporarily" disable verification for and never re-enable.
@@ -28191,7 +28502,7 @@ OpenSearch cross-cluster connection between two domains is configured to skip TL
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-7; iso_27001_2022: A.8.20; nist_800_53_r5: SC-7, SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
 
 OpenSearch cross-cluster search (CCS) or cross- cluster replication (CCR) connection between two domains traverses the public internet endpoint of either side rather than VPC PrivateLink. Search / replication traffic contains the data being queried; transiting the public path exposes it to interception and inflates egress cost.
@@ -28236,7 +28547,7 @@ OpenSearch cross-cluster setup is over-broad: CCS trust granted to a non-product
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-12, SC-17; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-17; soc2: CC7.4, A1.2;
 
 OpenSearch domain custom endpoint TLS certificate expires within 30 days and no automated rotation is configured. ACM-issued certs auto-renew if the CNAME validation record is in place; certs imported from external sources do not. Once a cert expires, every TLS handshake fails: the domain is reachable but unusable for any TLS-verifying client. Outage scope is every client that talks to the custom endpoint.
@@ -28251,7 +28562,7 @@ OpenSearch domain custom endpoint TLS certificate expires within 30 days and no 
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-8, SC-13; iso_27001_2022: A.8.24; nist_800_53_r5: SC-8, SC-12, SC-13; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
 
 OpenSearch domain has a custom endpoint configured with an ACM certificate issued by a private / internal / untrusted CA whose root is not in the client trust store. Clients connecting to the custom endpoint either fail TLS verification or (worse) operators globally disable verification to make the connection work, eliminating any value TLS provides.
@@ -28671,7 +28982,7 @@ OpenSearch domains must have audit logging enabled to track authentication attem
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.15; nist_800_53_r5: AU-12; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
 
 OpenSearch domain configured for cross-account log delivery (logs go to a CloudWatch group in a central observability account) — but the delivery role in the destination account does not include the OpenSearch service principal in its trust policy. Logs are generated in the domain's account but cannot be assumed-into the destination account; events drop silently. Common after re-org / account splits where the central account got the role created without trust for the new domain accounts.
@@ -28690,7 +29001,7 @@ OpenSearch domain configured for cross-account log delivery (logs go to a CloudW
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-11; iso_27001_2022: A.5.33; nist_800_53_r5: AU-11; pci_dss_v4.0: 10.5.1; soc2: CC7.2;
 
 OpenSearch domain log group has retention shorter than the cadence of its scheduled S3 export job. Events age out of the CloudWatch group before the export task copies them to S3 long-term storage. The export job picks up only the retained events, leaving a gap between the export window and what was actually generated. Common pattern: 7-day retention with weekly export job that runs every Monday — events from Tuesday-Sunday survive but the prior week's Monday events are gone.
@@ -28857,7 +29168,7 @@ OpenSearch domain has no `cost-center`, `team`, `owner`, or `data-classification
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-8; iso_27001_2022: A.8.24; nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
 
 OpenSearch notification plugin webhook configured over plain HTTP (cleartext alert bodies) or Async-Search results retained indefinitely (storage growth + privacy). Webhook bodies often contain alert content including sensitive data; HTTP makes it visible to network observers.
@@ -28872,7 +29183,7 @@ OpenSearch notification plugin webhook configured over plain HTTP (cleartext ale
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, IR-6; soc2: CC7.2, A1.1;
 
 OpenSearch domain CloudWatch alarms route to an SNS topic / EventBridge rule that has no active subscriber (or only subscribers that are themselves dormant). Alarms fire and drain into the void; on-call learns of cluster issues via downstream complaints. Common cause: subscriber email account deactivated when team member left.
@@ -29359,7 +29670,7 @@ OpenSearch domain has time-series index pattern (e.g., `logs-2026.01.01`, `metri
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-17; soc2: CC7.4, A1.2;
 
 OpenSearch domain SAML configuration's IdP metadata signing certificate is expired or expires within 30 days. SAML responses signed by the IdP fail validation; users cannot log in. SAML metadata must be re-imported when the IdP rotates its signing cert. Operators rarely automate this; when the cert expires, it's a hard outage with login failures across the org.
@@ -29406,7 +29717,7 @@ OpenSearch domain has more than 1000 shards per data node (commonly recommended 
 
 - **Severity:** low
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-2; iso_27001_2022: A.8.16; nist_800_53_r5: AU-2, AU-12; soc2: CC7.2, A1.1;
 
 OpenSearch domain has index slow-log delivery to CloudWatch disabled. Index slow-log is the primary signal for ingest regressions (write saturation, mapping explosion, expensive bulk operations). Without it, ingest slowdowns become visible only through ThreadpoolWriteRejected metrics or downstream pipeline backups.
@@ -29421,7 +29732,7 @@ OpenSearch domain has index slow-log delivery to CloudWatch disabled. Index slow
 
 - **Severity:** low
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-2; iso_27001_2022: A.8.16; nist_800_53_r5: AU-2, AU-12; soc2: CC7.2, A1.1;
 
 OpenSearch domain has search slow-log delivery to CloudWatch disabled. Slow-log is the primary signal for query-shape regressions (mapping bloat, missing index, expensive aggregations, cross-cluster search latency). Without it, search performance issues become visible only via the customer-side complaint chain.
@@ -29436,7 +29747,7 @@ OpenSearch domain has search slow-log delivery to CloudWatch disabled. Slow-log 
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12; soc2: CC7.2;
 
 OpenSearch domain slow-log threshold (per-tier warn / info / debug / trace) is set high enough that no operational query crosses it. Effectively off, but config inventory and compliance reports show slow-log enabled. Common pattern: operator copy-pasted thresholds from cluster docs (5 minutes default warn) without tuning to actual query SLA.
@@ -29481,7 +29792,7 @@ OpenSearch snapshot retention policy and ISM (Index State Management) index-dele
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-13; soc2: CC6.7;
 
 OpenSearch domain's manual snapshot S3 bucket uses a KMS key different from the domain's at-rest encryption key. During restore, the destination domain (which expects to decrypt with its at-rest key) cannot read snapshots encrypted with a separate key — restore fails unless the target domain is granted access to both keys, or unless the snapshot bucket re-encrypts on the fly. Common cause: bucket was created with default account key and domain was later assigned a tenant-specific key.
@@ -29618,7 +29929,7 @@ OpenSearch domain's automated snapshot hour falls within the production peak tra
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: SI-2; iso_27001_2022: A.8.16, A.8.32; nist_800_53_r5: SI-2, AU-12; soc2: CC7.2, CC8.1;
 
 OpenSearch domain has no EventBridge rule subscribed to `aws.opensearch` / `ServiceSoftwareUpdate` events. Service software updates appear in the AWS Health dashboard but unless wired to a notification channel, operators don't see them until the update becomes mandatory or causes a maintenance- window outage.
@@ -29678,7 +29989,7 @@ OpenSearch domain has UltraWarm / Cold storage tiers available (engine + instanc
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-8, SC-13; iso_27001_2022: A.8.20, A.8.24; nist_800_53_r5: SC-8, SC-13; pci_dss_v4.0: 4.2.1, A2.1; soc2: CC6.7;
 
 OpenSearch domain's `tls_security_policy` is below `Policy-Min-TLS-1.2-PFS-2023-10`. Older policies (`Policy-Min-TLS-1.0-2019-07`, `Policy-Min-TLS-1.2-2019-07`) permit TLS 1.0 / 1.1 negotiation and / or non-PFS cipher suites. PCI-DSS v4.0 requires TLS 1.2+, NIST guidance deprecates TLS 1.0/1.1 entirely, and modern browsers / clients have already removed support. Domains created before late 2023 commonly carry the older default and are never updated.
@@ -30775,6 +31086,21 @@ RDS instances must reject TLS 1.0 and TLS 1.1 connections and require TLS 1.2 or
 
 ---
 
+### CTL.REDSHIFT.AUDIT.LOGDESTINATION.001
+
+**Redshift Audit Log Destination Must Be Bucket-Hardened**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-9; pci_dss_v4.0: 10.3.1; soc2: CC7.2;
+
+When Redshift audit logging is configured to deliver to S3 (`logging.log_destination_type=s3`), the destination bucket must itself be hardened: a bucket policy restricting writes to the Redshift service principal, a deny-without-MFA policy on delete, and a configured lifecycle policy. A misconfigured destination bucket means audit logs land in storage anyone can delete or overwrite — turning the audit trail into something an attacker reaches *as part of* covering their tracks. The control is paired with CTL.REDSHIFT.LOG.AUDIT.001 (which only asserts logging is on); this one asserts where logging lands is itself defended.
+
+**Remediation:** Update the destination bucket: add a bucket policy granting PutObject only to `redshift.amazonaws.com`, deny `s3:Delete*` without MFA, configure a lifecycle policy aligned with the organization's retention requirement, and enable bucket-level Object Lock if the framework demands write-once retention.
+
+---
+
 ### CTL.REDSHIFT.BACKUP.001
 
 **Redshift Automated Snapshots Must Be Enabled**
@@ -30819,6 +31145,66 @@ Redshift clusters should not use the default database name (dev).
 
 ---
 
+### CTL.REDSHIFT.DATASHARE.CROSSACCOUNT.UNAUTHORIZED.001
+
+**Redshift Datashare Consumers Must Stay Inside the Allow-List**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.5; soc2: CC6.6;
+
+Each cross-account consumer associated with a Redshift datashare must be in the organization's datashare allow-list. Datashare is a legitimate cross-account data-handoff mechanism, but the failure mode is a former partner / acquired-and-divested business unit / one-off project consumer that was never removed from the producer's datashare. Once associated, the consumer account can query the producer's tables in place — no snapshot copy, no audit on the producer side beyond the initial share — for as long as the association persists. The control is the cross-account sibling of CTL.REDSHIFT.DATASHARE.PUBLIC.001: that one catches `AllowPubliclyAccessibleConsumers=true`; this one catches consumer ARNs that drift outside the allow-list.
+
+**Remediation:** Disassociate each unauthorized consumer: `aws redshift disassociate-data-share-consumer --data-share-arn <arn> --consumer-arn <arn>`. If a consumer is genuinely still authorized, register them in the allow-list first so the deviation does not return on the next audit.
+
+---
+
+### CTL.REDSHIFT.DATASHARE.PUBLIC.001
+
+**Redshift Datashare Must Not Allow Publicly Accessible Consumers**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+Redshift datashares can be created with `AllowPubliclyAccessibleConsumers=true` — a setting that permits a datashare to be consumed by clusters whose `PubliclyAccessible` flag is set. Combining a datashare with public consumers effectively re-exports warehouse data to any internet-reachable cluster the consumer account creates, bypassing the producer's network controls entirely. This is distinct from the cross-account share check: a cross-account share to a trusted partner is fine, but allowing that partner to consume from a public-facing cluster reintroduces the exposure the producer's PUBLIC.001 control was preventing.
+
+**Remediation:** Update the datashare with `aws redshift modify-data-share --data-share-arn <arn> --no-allow-publicly-accessible-consumers`. Audit any consumer cluster ARNs to confirm none are themselves publicly accessible.
+
+---
+
+### CTL.REDSHIFT.ENCRYPT.KMS.AWSMANAGED.001
+
+**Redshift Cluster Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+Redshift clusters must encrypt at rest with a customer-managed KMS key, not the AWS-managed `aws/redshift` default. The AWS-managed key is shared across every Redshift cluster in the account, has a key policy the customer cannot edit, and cannot be revoked or rotated on the customer's schedule. Using it satisfies the at-rest encryption checkbox but eliminates the per-tenant key-policy and per-incident key-revocation controls that customer-managed keys provide.
+
+**Remediation:** Create a customer-managed KMS key with a scoped key policy, then re-encrypt the cluster (requires a snapshot restore to a new cluster pointed at the customer-managed key). Update the snapshot copy grants to use the same CMK.
+
+---
+
+### CTL.REDSHIFT.ENCRYPT.KMS.CROSSACCOUNT.001
+
+**Redshift Cluster KMS Key Must Not Permit Cross-Org Decrypt**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 3.6.1; soc2: CC6.6;
+
+The KMS key encrypting a Redshift cluster (and its automated / manual snapshots, plus any cross-region copies via the snapshot copy grant) must not have a key policy granting `kms:Decrypt` to principals outside the organization's allow-list. A snapshot copy encrypted with such a key is decryptable wherever those principals reach — turning a cross-account snapshot share into a clear-text exfil path even when storage encryption is "on" and snapshot sharing is restricted, because the recipient still legitimately holds Decrypt against the source key. The combination is the least-visible warehouse exfil pattern: the share looks compliant, the encryption looks compliant, only the key policy breaks containment.
+
+**Remediation:** Tighten the key policy: scope `kms:Decrypt` to specific `aws:PrincipalOrgID` or explicit account ARNs that legitimately need to read the encrypted data, and add `aws:ViaService = redshift.<region>.amazonaws.com` so the grant only applies through the Redshift integration path. Re-issue any cross-region snapshot-copy grants against the tightened key.
+
+---
+
 ### CTL.REDSHIFT.ENCRYPT.REST.001
 
 **Redshift Clusters Must Have Encryption at Rest Enabled**
@@ -30831,6 +31217,66 @@ Redshift clusters should not use the default database name (dev).
 Redshift clusters must have encryption at rest enabled with KMS.
 
 **Remediation:** Enable encryption. Requires creating a new encrypted cluster and migrating data.
+
+---
+
+### CTL.REDSHIFT.FIPS.001
+
+**Redshift Cluster Must Use FIPS-Validated SSL When Required**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_high: SC-13; fedramp_moderate: SC-13; nist_800_53_r5: SC-13; pci_dss_v4.0: 4.2.1;
+
+Redshift clusters subject to FIPS 140-2 / FIPS 140-3 compliance obligations (FedRAMP Moderate / High, DoD IL2+, certain healthcare data residencies) must set `use_fips_ssl=true` in the cluster parameter group so the SSL endpoint serves only FIPS-validated cipher suites. The default `use_fips_ssl=false` permits non-FIPS ciphers and disqualifies the cluster from attestation under those frameworks even when `require_ssl` is enabled.
+
+**Remediation:** Update the cluster parameter group so `use_fips_ssl=true` and apply the change. Verify with `aws redshift describe-cluster-parameters` that the parameter actually applied — Redshift sometimes silently retains the previous value when the parameter group is detached and reattached.
+
+---
+
+### CTL.REDSHIFT.HSM.MISCONFIG.001
+
+**Redshift HSM Encryption Mode Must Match Compliance Profile**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_high: SC-13; nist_800_53_r5: SC-13; pci_dss_v4.0: 3.6.1;
+
+When the organization's compliance profile mandates HSM-backed key custody (FedRAMP High, FIPS 140-2 Level 3, certain financial-services attestations), the Redshift cluster's `hsm_status` must report `active` against the configured HSM client certificate and HSM configuration. The failure mode is silent drift: an HSM-required cluster restored from snapshot without re-attaching the HSM configuration ends up encrypted with a software KMS key — the cluster keeps running, the compliance attestation lapses, and the operator only finds out during the next audit.
+
+**Remediation:** Re-attach the HSM configuration: `aws redshift modify-cluster-iam-roles ... --hsm-client-certificate-identifier <cert> --hsm-configuration-identifier <cfg>` and verify with `describe-clusters` that `HsmStatus.Status` is `active`. If the HSM is no longer needed because the compliance profile changed, document the profile change rather than letting the cluster drift.
+
+---
+
+### CTL.REDSHIFT.IAM.DBAUTH.OFF.001
+
+**Redshift Cluster Must Permit IAM Database Authentication**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-2; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
+
+Redshift clusters must permit IAM-based database authentication via `GetClusterCredentials` so that human and service principals authenticate with short-lived credentials tied to IAM identity, not with long-lived database-local passwords. A cluster that accepts only DB-local credentials is one shared password rotation away from a credential-stuffing incident, and offers no audit trail back to a human IAM user.
+
+**Remediation:** Create an IAM policy granting `redshift:GetClusterCredentials` scoped to the specific dbuser/dbgroup on this cluster, attach it to the human/service principals that need warehouse access, and rotate the existing database-local passwords out.
+
+---
+
+### CTL.REDSHIFT.IAM.ROLE.WILDCARD.001
+
+**Redshift Attached IAM Role Must Not Use Wildcard Resource**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.5; soc2: CC6.3;
+
+An IAM role attached to a Redshift cluster (used by COPY, UNLOAD, Redshift Spectrum) must not grant `s3:*` or `Resource: "*"` on any S3 statement. The cluster's role is assumable by anyone with database-level execute on COPY/UNLOAD; an `s3:GetObject` / `s3:PutObject` with `Resource: "*"` turns SQL execute into arbitrary-bucket read/write — a one-step exfiltration pivot.
+
+**Remediation:** Replace `Resource: "*"` with explicit bucket ARNs that the warehouse legitimately ingests from or exports to. Split read and write privileges into separate roles if they target different buckets, and attach roles via cluster IAM role associations rather than via the cluster's primary execution role where possible.
 
 ---
 
@@ -30864,6 +31310,36 @@ Redshift audit logging must be enabled for connection, user, and query activity.
 
 ---
 
+### CTL.REDSHIFT.MAINTENANCE.DEFERRED.001
+
+**Redshift Cluster Must Not Have Maintenance Indefinitely Deferred**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+Redshift exposes a `DeferredMaintenanceWindows` mechanism so operators can postpone an engine patch through an in-flight business window. The mechanism becomes a security failure when a cluster has had maintenance deferred continuously for longer than the maximum supported window — engine CVEs queue up unpatched, and the cluster runs an unsupported version that AWS will eventually force-upgrade in a less convenient window than the one the operator was protecting.
+
+**Remediation:** Schedule a maintenance window outside of business hours, allow the deferred window to expire, then verify with `aws redshift describe-clusters --query 'Clusters[].DeferredMaintenanceWindows'` that no active deferred window remains.
+
+---
+
+### CTL.REDSHIFT.MULTI.AZ.OFF.001
+
+**Redshift RA3 Cluster Should Run Multi-AZ for Production**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-7; soc2: A1.2;
+
+Production Redshift clusters on the RA3 node family should run with `multi_az=true` so a single Availability Zone outage does not take the warehouse offline. The setting is RA3-only — DC2 / DS2 nodes do not support Multi-AZ — and is opt-in per cluster. Running production warehouses single-AZ is a quiet availability bet: the cluster comes back online when the AZ recovers, but the dependent BI / analytics workload was unavailable for the duration of the outage.
+
+**Remediation:** Modify the cluster with `--multi-az=true`. The conversion is online for RA3 clusters but applies during the next maintenance window — schedule outside business hours so the intermediate brief failover is invisible.
+
+---
+
 ### CTL.REDSHIFT.PUBLIC.001
 
 **Redshift Clusters Must Not Be Publicly Accessible**
@@ -30876,6 +31352,66 @@ Redshift audit logging must be enabled for connection, user, and query activity.
 Redshift clusters must not have the publicly accessible setting enabled.
 
 **Remediation:** Disable public accessibility and place the cluster in a private subnet.
+
+---
+
+### CTL.REDSHIFT.SG.OPEN.001
+
+**Redshift Cluster Security Group Must Not Allow 0.0.0.0/0 Ingress on 5439**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+
+Redshift clusters must not have a VPC security group attached that allows 0.0.0.0/0 ingress on the cluster port (5439). Even with PubliclyAccessible=false, an open security group on a cluster placed in a public subnet — or behind a misconfigured NAT / transit gateway — exposes the warehouse to internet scanners. Distinct from CTL.REDSHIFT.PUBLIC.001 which catches the cluster-level flag; this control catches the network-policy gap that leaves the cluster reachable when the flag is off.
+
+**Remediation:** Replace the 0.0.0.0/0 rule with the CIDR block(s) of the application tier or VPN range that legitimately needs cluster access. If the cluster must be accessible from on-premises, scope the rule to the enterprise NAT gateway IPs, not to the public internet.
+
+---
+
+### CTL.REDSHIFT.SNAPSHOT.COPY.UNENCRYPTED.001
+
+**Redshift Cross-Region Snapshot Copies Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.7;
+
+When Redshift cross-region snapshot copying is enabled (`snapshot_copy.destination_region` set), every copy in the destination region must be encrypted with a customer-managed KMS key registered through a snapshot copy grant. Copies that land unencrypted in the destination region defeat the source region's encryption: the snapshot data exists in plaintext on AWS infrastructure, and any account principal with `redshift:RestoreFromClusterSnapshot` in the destination region reads it without ever touching the source key.
+
+**Remediation:** Create a customer-managed KMS key in the destination region, create a snapshot copy grant on it, and re-enable cross-region copying with `--snapshot-copy-grant-name`. Re-copy any in-flight snapshots so the historical chain is also encrypted.
+
+---
+
+### CTL.REDSHIFT.SNAPSHOT.SHARED.CROSSACCOUNT.001
+
+**Redshift Manual Snapshot Must Not Be Shared With Out-of-Org Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.5; soc2: CC6.6;
+
+A Redshift manual snapshot must not be shared with AWS account IDs that are outside the organization's allow-list of trusted accounts. Snapshot sharing is a legitimate cross-account data-handoff mechanism — but the failure mode is sharing with an attacker- controlled or partner account that no longer needs access. Once shared, the recipient account can restore the snapshot and exfil data without ever touching the source VPC.
+
+**Remediation:** Revoke each unauthorized account's restore access: `aws redshift revoke-snapshot-access --snapshot-identifier <id> --account-with-restore-access <acct>`. If cross-account sharing is genuinely required, register the target account in the allow-list and re-share so future audits treat the share as expected.
+
+---
+
+### CTL.REDSHIFT.SNAPSHOT.SHARED.PUBLIC.001
+
+**Redshift Manual Snapshot Must Not Be Shared Publicly**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.7;
+
+A Redshift manual snapshot must not be shared with `all` (every AWS account in the world). A public snapshot is the data-warehouse equivalent of a public S3 bucket: any AWS account can restore the snapshot into their own cluster and read the contents at their leisure. This is the single highest-impact misconfiguration on a warehouse — full historical data egress with no in-VPC log trail.
+
+**Remediation:** Revoke the public share immediately: `aws redshift revoke-snapshot-access --snapshot-identifier <id> --account-with-restore-access all`. Audit CloudTrail for any `RestoreFromClusterSnapshot` calls from accounts outside your organization since the snapshot was created.
 
 ---
 
@@ -30921,6 +31457,21 @@ Redshift clusters should have automatic version upgrades enabled.
 Redshift clusters must use enhanced VPC routing to force all COPY and UNLOAD traffic through the VPC.
 
 **Remediation:** Enable enhanced VPC routing on the cluster.
+
+---
+
+### CTL.REDSHIFT.WLM.QUERY.LIMIT.001
+
+**Redshift Default WLM Queue Should Have Query Monitoring Rules**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: SC-5; soc2: A1.2;
+
+Production Redshift clusters should have at least one Query Monitoring Rule (QMR) on the default WLM queue. QMRs cap per-query resource consumption — query_execution_time, scan_row_count, return_row_count, query_temp_blocks_to_disk — and abort or log outliers that exceed thresholds. Without any rule, a single malformed query (or a deliberate denial-of-service from a compromised dbuser) can saturate the cluster and starve every other workload until manual intervention. The default queue is the one most callers land in, so a QMR there is the simplest way to bound the worst-case query.
+
+**Remediation:** Add at least one QMR to the default queue via the parameter group's `wlm_json_configuration` — typical baseline: abort queries running >300s, log queries scanning >1B rows, abort queries spilling >50GB to disk. Tune to the workload's actual baseline rather than copying the example values verbatim.
 
 ---
 
@@ -31713,7 +32264,27 @@ S3 bucket policies must not grant access to external AWS accounts. `allowed_acco
 
 S3 bucket policies must not grant access to a wildcard principal (Principal "*" or AWS: "*"). A wildcard principal makes every statement in the policy effectively anonymous or cross-account unless a restricting Condition (aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp with a fixed CIDR, aws:SourceArn, etc.) narrows it. Without such a Condition, the policy is a public-access grant regardless of which specific S3 actions are allowed.
 
-**Remediation:** Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible.
+**Remediation:** 1. Narrow the Allow. Replace the wildcard principal with the
+   specific AWS account IDs or role ARNs that actually need
+   access. If a wildcard must remain (cross-org distribution,
+   service-bound caller), add a restricting Condition that fixes
+   the caller set: aws:PrincipalOrgID, aws:SourceVpc /
+   aws:SourceVpce, aws:SourceIp with a fixed CIDR, or
+   aws:SourceArn.
+
+2. If the bucket genuinely needs to be reachable from the
+   public internet (CDN origin, static asset distribution),
+   prefer scoped mechanisms over a wildcard bucket policy:
+   CloudFront Origin Access Control, S3 Access Points with
+   network-bound policies, or signed/presigned URLs. These
+   give you a narrow Allow on a defined caller surface
+   instead of a "*" Allow with hopeful Conditions.
+
+3. Keep S3 Block Public Access fully enforced as an interim
+   guard while the policy change is being rolled out — PAB
+   does not fix a broad Allow, it only suppresses its effect
+   at the network boundary, so treat it as a containment
+   layer rather than the remediation.
 
 ---
 
@@ -31742,17 +32313,27 @@ S3 buckets must not grant write or delete permissions to external AWS accounts. 
 
 Bucket policy evaluates as effectively public under AWS PolicyStatus.IsPublic semantics — a wildcard principal (`Principal: "*"` or `Principal: {"AWS": "*"}`) without a scoping Condition on `aws:SourceVpc`, `aws:SourceVpce`, `aws:PrincipalOrgID`, `aws:PrincipalArn`, or a narrow `aws:SourceIp`. The control reads the policy in isolation: Public Access Block state does not affect whether it fires — PAB only affects whether the exposure is active right now or latent (one account-level or bucket-level PAB toggle away from active). Paired with the PAB controls, this is the posture signal that says "if every PAB layer were removed tomorrow, this bucket would be public". Distinct from CTL.S3.ACCESS.002, which detects the raw presence of a wildcard principal without reasoning about scoping Conditions: ACCESS.002 answers "is there a wildcard whose Conditions we still need to verify?", ACCESS.004 answers "has the verification already concluded that the policy is public?".
 
-**Remediation:** 1. Identify the Allow statement with the wildcard principal. If it is
-   not intentional, remove it.
-2. If the statement is intentional (CDN origin, cross-organization
-   data distribution), add a Condition that fixes the caller set —
+**Remediation:** 1. Narrow the Allow. Identify the Allow statement with the
+   wildcard principal. If it is not intentional, remove it. If
+   it is intentional (CDN origin, cross-organization data
+   distribution), add a Condition that fixes the caller set —
    `aws:PrincipalOrgID` for same-org access, `aws:SourceVpc` or
    `aws:SourceVpce` for VPC-bound access, `aws:SourceIp` with a
    fixed CIDR for known network ranges, or `aws:SourceArn` for a
    specific invoking service or distribution.
-3. Until the policy is fixed, keep S3 Block Public Access fully
-   enforced at the account and bucket level so the exposure stays
-   latent rather than active.
+
+2. If the bucket genuinely needs internet reachability, prefer
+   scoped mechanisms over a wildcard bucket policy: CloudFront
+   Origin Access Control, S3 Access Points, or signed /
+   presigned URLs. These collapse the reachable principal set
+   to a defined surface instead of "*" with restricting
+   Conditions stacked on top.
+
+3. Keep S3 Block Public Access fully enforced at the account
+   and bucket level as an interim containment guard while the
+   policy change is in flight. PAB does not fix the underlying
+   broad Allow — it only suppresses its effect at the network
+   boundary, leaving the exposure latent rather than active.
 
 ---
 
@@ -32941,7 +33522,9 @@ S3 bucket policies must not grant s3:GetBucketPolicy to an anonymous or wildcard
 
 S3 buckets must have an explicit resource-based bucket policy. Without a policy, access controls rely entirely on IAM and ACLs — there is no resource-level enforcement of encryption requirements, VPC restrictions, or transport security.
 
-**Remediation:** Attach an explicit bucket policy. At minimum the policy should deny HTTP requests (aws:SecureTransport false), deny unencrypted PutObject, and restrict access to known principals or VPC endpoints.
+**Remediation:** Attach a bucket policy that restricts access to known principals, VPC endpoints, or organization IDs (aws:PrincipalArn, aws:PrincipalOrgID, aws:SourceVpc, aws:SourceVpce). The scoped Allow is the primary control: it defines who can reach the bucket at all and is the line of defence that would still hold if every other guard were removed.
+Layered Deny statements (deny aws:SecureTransport=false to enforce TLS, deny PutObject without server-side encryption headers) are valuable secondary guards but do not replace a scoped Allow — they harden a bucket whose Allow is already narrow, they do not rescue one whose Allow is broad. Apply them after the Allow has been scoped, not instead of scoping it.
+Warning: do not add Deny statements before scoping the Allow. A Deny that references your own principals (e.g. denying access unless aws:PrincipalOrgID matches and SourceIP is on a missing list) can lock the account out of its own bucket if the Allow has not been verified to admit the operator first. Order matters: scope the Allow, verify access still works, then add Deny guards.
 
 ---
 
@@ -35425,7 +36008,7 @@ Step Functions Activity (legacy worker pattern, polled via GetActivityTask) was 
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
 No CloudWatch alarm on the `ExecutionsFailed` metric. Failed executions accumulate without paging on-call; only customer impact (or daily review) surfaces them. The metric is the most direct workflow-health signal.
@@ -35440,7 +36023,7 @@ No CloudWatch alarm on the `ExecutionsFailed` metric. Failed executions accumula
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
 No CloudWatch alarm on `ExecutionThrottled`. When the workflow hits Step Functions rate limits (10K/sec StartExecution per region, account-level concurrent execution quota), events are dropped silently. Without an alarm, the workflow appears to "process less data than expected" without traceable cause.
@@ -35455,7 +36038,7 @@ No CloudWatch alarm on `ExecutionThrottled`. When the workflow hits Step Functio
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12; soc2: CC7.2, A1.1;
 
 No CloudWatch alarm on `ExecutionTime` bounded by an SLO (e.g., p99 < 60s). Long-running stuck executions accumulate invisibly; downstream consumers wait on results that arrive far past expected. Particularly important for synchronous Express patterns where the caller has its own timeout.
@@ -35470,7 +36053,7 @@ No CloudWatch alarm on `ExecutionTime` bounded by an SLO (e.g., p99 < 60s). Long
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12; soc2: CC7.2, A1.1;
 
 No CloudWatch alarms on `ActivityScheduleTime` or `LambdaFunctionScheduleTime`. These metrics capture time-to-schedule (queue wait) on worker queues — high values mean workers are saturated. Without alarms, ingest queues back up invisibly until customer impact.
@@ -35670,7 +36253,7 @@ Distributed Map's S3 `ItemReader` source has no `Prefix` filter set. Map iterate
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-3; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-3, AU-12, IR-4; soc2: CC7.2, CC7.4;
 
 ASL terminal `Fail` state (or terminal Catch handler routing to Fail) doesn't capture the error context to a persistent store — S3, CloudWatch, SNS, DDB. The execution history retains the error for ~90 days, then it's gone. Post-mortem of older failures has no source data; on-call response to repeat failures has no aggregate signal.
@@ -35925,7 +36508,7 @@ Step Functions state machine in a dev / staging region or dev / staging account 
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12; soc2: CC7.2;
 
 Distributed Map child executions don't have X-Ray tracing or per-iteration logging enabled — debugging per-item failures requires reconstructing input from the parent's input source. For workflows fan-out to thousands of items, this is operationally intractable.
@@ -36000,7 +36583,7 @@ Step Functions Task using EMR Serverless `.sync` integration runs a job without 
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.7;
 
 Step Functions state machine definition is encrypted with an AWS-owned key (default) rather than a customer-managed KMS key. AWS-owned keys are not auditable, can't be selectively revoked, and can't be rotated on a customer schedule. For regulated workloads (HIPAA, PCI, SOC2), customer- managed keys are required.
@@ -36015,7 +36598,7 @@ Step Functions state machine definition is encrypted with an AWS-owned key (defa
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv), 164.312(e)(2)(ii); iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.7;
 
 Step Functions execution input and output payloads are not encrypted with a customer- managed KMS key. Execution data persists in the execution history and (when IncludeExecutionData is on) in CloudWatch Logs. Without per-execution KMS encryption, these payloads are protected only by AWS service-level encryption — adequate for general data, insufficient for regulated PII / PHI / PCI-scope workloads.
@@ -36030,7 +36613,7 @@ Step Functions execution input and output payloads are not encrypted with a cust
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, CM-3; soc2: CC6.7, CC8.1;
 
 Step Functions state machine's definition encryption key differs from the per- execution data encryption key. Operators rotating one key out without rotating the other lose the ability to read either old definitions or old execution histories. Compliance / forensic recovery requires both keys; key custody must be coherent.
@@ -36045,7 +36628,7 @@ Step Functions state machine's definition encryption key differs from the per- e
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: CP-7; iso_27001_2022: A.8.24, A.8.14; nist_800_53_r5: CP-7, SC-12; soc2: CC7.4, A1.2;
 
 Step Functions state machine's KMS key is a single-region key. Cross-region disaster recovery requires a multi-region key (or manually replicated key material) — without it, restored state machines and execution histories in the alternate region cannot be decrypted. Region-failure DR plans that assume cross-region recovery fail at the KMS layer.
@@ -36060,7 +36643,7 @@ Step Functions state machine's KMS key is a single-region key. Cross-region disa
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.4; soc2: CC6.7, CC8.1;
 
 Step Functions state machine's KMS key has automatic rotation disabled. AWS rotates the key material annually when enabled; without it, the same material protects data indefinitely. NIST / PCI-DSS guidance recommends automatic rotation for keys with long-lived data.
@@ -36078,7 +36661,7 @@ Effective annually; safe for symmetric keys (no client coordination needed).
 
 - **Severity:** critical
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); iso_27001_2022: A.5.34, A.8.24; nist_800_53_r5: SC-28, SI-12; pci_dss_v4.0: 3.4.1, 3.5.1; soc2: CC6.1, CC6.7;
 
 Step Functions has `IncludeExecutionData: true` on a workflow whose payloads contain secrets / PII / PHI without input/output redaction. Logs end up holding the sensitive data; anyone with CloudWatch Logs read access reads it. The right pattern is IncludeExecutionData: true PLUS explicit redaction (Pass state mapping that strips secret fields) before the log-captured states.
@@ -36093,7 +36676,7 @@ Step Functions has `IncludeExecutionData: true` on a workflow whose payloads con
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, IR-6; soc2: CC7.2, CC8.1;
 
 No EventBridge rule subscribed to Step Functions `Execution Status Change` or `State Machine Status Change` events. Without these rules, terminal-state events (SUCCEEDED, FAILED, ABORTED, TIMED_OUT) and state-machine config changes (CREATE, UPDATE, DELETE) flow only to the audit log — no real-time hooks for downstream processing or notification.
@@ -36408,7 +36991,7 @@ Lambda function called via async invocation pattern (e.g., from Step Functions M
 
 - **Severity:** low
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-3; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-3, AU-12; soc2: CC7.2;
 
 Lambda function called from Step Functions doesn't log the workflow's execution ID (passed via `$$.Execution.Id` context object). When debugging a failed execution, operators must correlate Lambda logs by timestamp — fragile and slow. Standard practice: include execution ID in every Lambda log line.
@@ -36535,7 +37118,7 @@ Step Functions logging configuration produces high CloudWatch Logs volume: Expre
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-11; iso_27001_2022: A.5.33, A.8.15; nist_800_53_r5: AU-11; pci_dss_v4.0: 10.5.1; soc2: CC7.2;
 
 Express workflow logs go only to CloudWatch with default retention. Unlike Standard (which retains execution history for ~90 days via the API), Express has no API history at all — logs are the only record. Without long-retention archival (S3 export, SIEM ingestion), evidence beyond the CWL retention window is gone.
@@ -36550,7 +37133,7 @@ Express workflow logs go only to CloudWatch with default retention. Unlike Stand
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-3; iso_27001_2022: A.8.15; nist_800_53_r5: AU-3, AU-12; pci_dss_v4.0: 10.4.1; soc2: CC7.2, A1.2;
 
 Step Functions log configuration references a CloudWatch Log group that does not exist. Log delivery silently drops events — the state machine reports logging-enabled, the pipeline appears healthy from inventory, but no events arrive at any consumer. Common pattern: log group renamed or deleted by another team without checking which services delivered to it.
@@ -36565,7 +37148,7 @@ Step Functions log configuration references a CloudWatch Log group that does not
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-2; iso_27001_2022: A.8.15; nist_800_53_r5: AU-2, AU-3, AU-12; pci_dss_v4.0: 10.2.1, 10.2.2; soc2: CC7.2;
 
 Step Functions logging is enabled but `Level` is `OFF` (effectively no logs) or `ERROR` (only failures captured). Successful executions, state transitions, retry events, and Catch-handled errors all go unrecorded. Without this signal, post-mortem of a silent failure or behavior drift is impossible.
@@ -36580,7 +37163,7 @@ Step Functions logging is enabled but `Level` is `OFF` (effectively no logs) or 
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-3; hipaa: 164.312(b); iso_27001_2022: A.8.15; nist_800_53_r5: AU-3, AU-12; pci_dss_v4.0: 10.2.5; soc2: CC7.2;
 
 Step Functions Standard workflow has `IncludeExecutionData: false`. Logs capture state-transition events but not the input / output payloads. During incident review, the operator sees "state X completed at timestamp T" but cannot reconstruct what data flowed through the workflow. For workflows handling regulated data, this is also a compliance gap (state changes without event content fail HIPAA AU-3).
@@ -36640,7 +37223,7 @@ Step Functions state machine has no `cost-center`, `team`, `owner`, `environment
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
 Step Functions IAM role used to invoke StartExecution has no rate-limit on the caller side, and no CloudWatch alarm / EventBridge rule configured to notify on approach to the StartExecution burst / account-level concurrent quota. Sudden bursts (event-storm scenarios) silently exhaust quota; downstream consumers see failed invocations without traceable source.
@@ -36951,7 +37534,7 @@ Step Functions Task uses `.sync` integration pattern on a resource type that doe
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-28; iso_27001_2022: A.8.24; nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1, 4.2.1; soc2: CC6.7;
 
 Step Functions Task using `.sync` integration receives the downstream's terminal-state notification via SNS or SQS that doesn't have SSE-KMS enabled. Callback payloads carry the Task token plus the downstream result; cleartext SNS / SQS exposes them to anyone with read access on the channel.
@@ -36996,7 +37579,7 @@ Step Functions state machine and its versions don't share a consistent set of ta
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** encrypt
+- **Domain:** encryption
 - **Compliance:** fedramp_moderate: SC-28; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: IA-5, SC-28; pci_dss_v4.0: 3.5.1, 8.3.2; soc2: CC6.1, CC6.7;
 
 Step Functions Task token (used by `.waitForTaskToken` integrations) is captured in workflow logs (CloudWatch), persisted in SQS / SNS / S3 without encryption, or otherwise reachable in plaintext. Anyone reading the captured token can call `SendTaskSuccess` / `SendTaskFailure` for the workflow, spoofing worker responses and progressing the workflow with attacker-supplied data.
@@ -37116,7 +37699,7 @@ Step Functions Standard workflow used for short, high-volume executions (cost pr
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** detect
+- **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2;
 
 Step Functions production workflow has X-Ray tracing disabled. Cross-service correlation (Lambda + DDB + SQS / SNS spans linked to the workflow execution) is impossible without it; latency / error breakdown per-service and per-state is also lost. Performance investigations rely on per- service log correlation by execution ID, which is fragile.
@@ -37251,7 +37834,7 @@ DNS Firewall is associated with the VPC but the rule group does not include AWS 
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** cryptography
+- **Domain:** encryption
 - **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
 
 Direct Connect connection carries unencrypted traffic. Neither a site-to-site VPN overlay nor MACsec is configured. Direct Connect is a dedicated physical link — not shared with other customers — but the traffic on it is plaintext by default. Anyone with physical access to the fiber path (datacenter staff, transit providers, co-location personnel) can tap the connection and read traffic. Either a VPN over the Direct Connect or MACsec provides confidentiality; the control passes if either is configured.
@@ -37685,7 +38268,7 @@ NAT gateway's ENI does not have flow logs enabled. All outbound internet traffic
 
 - **Severity:** medium
 - **Type:** unsafe_state
-- **Domain:** availability
+- **Domain:** resilience
 - **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: CP-7; nist_800_53_r5: CP-7; soc2: A1.2;
 
 NAT gateways for this VPC exist in only one AZ while private subnets exist in multiple AZs. If the NAT's AZ fails, all private subnet instances in other AZs lose outbound internet connectivity — no software updates, no AWS API calls via public endpoints, no outbound communication. Security-critical updates and log shipping stop. Production workloads should have a NAT gateway in each AZ that contains private subnets.
@@ -38240,7 +38823,7 @@ Transit Gateway route table has routes that allow every attached VPC to communic
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** cryptography
+- **Domain:** encryption
 - **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
 
 Site-to-site VPN tunnel uses encryption below AES-256 or integrity hashing below SHA-256. Phase 1 (IKE) or Phase 2 (IPsec) parameters include deprecated algorithms (DES, 3DES, AES-128, SHA-1, MD5). AWS permits customer-configured tunnel options that may include weak algorithms for backward compatibility with legacy on-premises equipment — compatibility should not override cryptographic strength for traffic that carries production data.
@@ -38285,7 +38868,7 @@ VPN tunnel uses pre-shared key (PSK) authentication instead of certificate-based
 
 - **Severity:** high
 - **Type:** unsafe_state
-- **Domain:** availability
+- **Domain:** resilience
 - **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: CP-7; nist_800_53_r5: CP-7; soc2: A1.2;
 
 One or both VPN tunnels are not in UP state. AWS provisions two tunnels per site-to-site VPN connection for high availability. With one tunnel down, the VPN operates on a single tunnel with no failover — a single point of failure for hybrid connectivity. With both tunnels down, the VPN is non-functional and traffic either fails outright or silently falls back to internet paths (which may be unencrypted).

@@ -7,7 +7,7 @@ description: >
   paging on-call; only customer impact (or
   daily review) surfaces them. The metric is
   the most direct workflow-health signal.
-domain: detect
+domain: detection
 severity: high
 compliance:
   soc2: "CC7.2, A1.1"

@@ -17,7 +17,7 @@ scope_tags: [gcp]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Cloud Audit Logging Not Enabled for All Services — finding detected.
   action: Enable Data Access audit logs for all services.

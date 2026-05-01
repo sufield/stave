@@ -10,7 +10,7 @@ description: >
   permits non-FIPS ciphers and disqualifies the cluster from
   attestation under those frameworks even when `require_ssl` is
   enabled.
-domain: compliance
+domain: governance
 severity: medium
 compliance:
   nist_800_53_r5: SC-13

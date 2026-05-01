@@ -11,7 +11,7 @@ description: >
   be decrypted. Region-failure DR plans that
   assume cross-region recovery fail at the
   KMS layer.
-domain: encrypt
+domain: encryption
 severity: medium
 compliance:
   soc2: "CC7.4, A1.2"

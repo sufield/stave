@@ -15,7 +15,7 @@ scope_tags: [github]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Default Branch Does Not Require Signed Commits — finding detected.
   action: Enable "Require signed commits" in branch protection.

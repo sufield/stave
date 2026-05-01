@@ -12,7 +12,7 @@ description: >
   exhaust quota; downstream consumers see
   failed invocations without traceable
   source.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2, A1.1"

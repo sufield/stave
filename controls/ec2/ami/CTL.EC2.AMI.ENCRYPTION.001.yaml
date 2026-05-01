@@ -12,7 +12,7 @@ description: >
   protection a workload's data classification would otherwise
   require. Encrypting AMI snapshots is a one-time per-AMI
   operation that propagates to every instance launched from it.
-domain: cryptography
+domain: encryption
 severity: medium
 compliance:
   cis_aws_v3.0: "2.2.1"
@@ -28,7 +28,7 @@ scope_tags:
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: data_access
+  attack_stage: collection
 observation_fields:
   - compute.kind
   - compute.ami.id

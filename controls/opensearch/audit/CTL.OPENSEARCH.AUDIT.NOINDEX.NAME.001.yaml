@@ -10,7 +10,7 @@ description: >
   impossible without the index name. The
   `audit_log_resolve_indices` setting is
   required for index-aware audit.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2"

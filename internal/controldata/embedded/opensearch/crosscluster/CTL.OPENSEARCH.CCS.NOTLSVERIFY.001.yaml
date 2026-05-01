@@ -10,7 +10,7 @@ description: >
   Common during initial setup with self-signed
   certs that operators "temporarily" disable
   verification for and never re-enable.
-domain: encrypt
+domain: encryption
 severity: high
 compliance:
   soc2: "CC6.7"

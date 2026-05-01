@@ -13,7 +13,7 @@ scope_tags: [azure]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Defender Alert Suppression Rules Overly Broad — finding detected.
   action: Review and narrow suppression rules.

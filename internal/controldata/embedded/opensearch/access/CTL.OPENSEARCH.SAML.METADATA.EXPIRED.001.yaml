@@ -11,7 +11,7 @@ description: >
   rarely automate this; when the cert expires,
   it's a hard outage with login failures across
   the org.
-domain: encrypt
+domain: encryption
 severity: high
 compliance:
   soc2: "CC7.4, A1.2"

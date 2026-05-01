@@ -32,7 +32,7 @@ scope_tags: [aws, rds]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: data_in_transit_exposure
+  attack_stage: exfiltration
 remediation:
   description: RDS Proxy does not require TLS on backend connections to the database.
   action: Set RequireTLS=true on the Proxy's target group; ensure the backend instance has TLS enforcement enabled.

@@ -9,7 +9,7 @@ description: >
   worker queues — high values mean workers are
   saturated. Without alarms, ingest queues
   back up invisibly until customer impact.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2, A1.1"

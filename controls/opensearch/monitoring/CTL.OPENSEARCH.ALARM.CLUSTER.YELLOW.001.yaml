@@ -9,7 +9,7 @@ description: >
   yellow state usually precedes red by hours; an
   alarm gives operators time to react before
   data unavailability.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2, A1.1"

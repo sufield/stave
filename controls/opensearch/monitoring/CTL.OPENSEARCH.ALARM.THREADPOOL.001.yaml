@@ -9,7 +9,7 @@ description: >
   saturation precedes user-visible latency or
   rejects; without alarms, the cluster appears
   to slow down for no traceable reason.
-domain: detect
+domain: detection
 severity: medium
 compliance:
   soc2: "CC7.2, A1.1"

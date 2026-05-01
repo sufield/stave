@@ -25,7 +25,7 @@ scope_tags:
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: >
     API Gateway access log destination has been deleted. Access logs

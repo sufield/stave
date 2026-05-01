@@ -11,28 +11,30 @@ import (
 
 // stixRelTypeMap maps Stave edge types to STIX relationship types.
 var stixRelTypeMap = map[EdgeType]string{
-	"TARGETS":              "targets",
-	"MEMBER_OF":            "indicates",
-	"PRODUCES":             "uses",
-	"BELONGS_TO_SCOPE":     "located-at",
-	"MAPS_TO":              "related-to",
-	"VIOLATES":             "related-to",
-	"HAS_EFFECTIVE_ACCESS": "uses",
-	"CAN_IMPERSONATE":      "impersonates",
-	"HAS_REMEDIATION":      "remediates",
+	EdgeTypeTargets:             "targets",
+	EdgeTypeMemberOf:            "indicates",
+	EdgeTypeProduces:            "uses",
+	EdgeTypeBelongsToScope:      "located-at",
+	EdgeTypeMapsTo:              "related-to",
+	EdgeTypeViolatesRequirement: "related-to",
+	EdgeTypeViolatesInvariant:   "related-to",
+	EdgeTypeHasEffectiveAccess:  "uses",
+	EdgeTypeCanImpersonate:      "impersonates",
+	EdgeTypeHasRemediation:      "remediates",
+	EdgeTypeGovernedBy:          "related-to",
 }
 
 // stixObjectTypeMap maps Stave node types to STIX object type prefixes.
 var stixObjectTypeMap = map[NodeType]string{
-	"Finding":               "observed-data",
-	"Resource":              "infrastructure",
-	"Control":               "course-of-action",
-	"ThreatChain":           "attack-pattern",
-	"AttackerCapability":    "attack-pattern",
-	"Identity":              "identity",
-	"ComplianceRequirement": "course-of-action",
-	"TenantScope":           "identity",
-	"RemediationAction":     "course-of-action",
+	NodeTypeFinding:               "observed-data",
+	NodeTypeResource:              "infrastructure",
+	NodeTypeControl:               "course-of-action",
+	NodeTypeThreatChain:           "attack-pattern",
+	NodeTypeAttackerCapability:    "attack-pattern",
+	NodeTypeIdentity:              "identity",
+	NodeTypeComplianceRequirement: "course-of-action",
+	NodeTypeTenantScope:           "identity",
+	NodeTypeRemediationAction:     "course-of-action",
 }
 
 // MarshalSTIX writes a STIX 2.1 Bundle JSON from GraphData.
@@ -78,19 +80,19 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 		}
 
 		switch n.Type {
-		case "Finding":
+		case NodeTypeFinding:
 			obj["first_observed"] = now
 			obj["last_observed"] = now
 			obj["number_observed"] = 1
 			obj["extensions"] = map[string]any{
 				"x_stave_finding": n.Properties,
 			}
-		case "Resource":
+		case NodeTypeResource:
 			obj["name"] = n.ID
 			if rc, ok := n.Properties["resource_class"].(string); ok {
 				obj["infrastructure_types"] = []string{rc}
 			}
-		case "ThreatChain":
+		case NodeTypeThreatChain:
 			obj["name"] = n.ID
 			if desc, ok := n.Properties["narrative"]; ok {
 				obj["description"] = desc
@@ -98,12 +100,12 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 			if phases, ok := n.Properties["kill_chain_phases"]; ok {
 				obj["kill_chain_phases"] = phases
 			}
-		case "AttackerCapability":
+		case NodeTypeAttackerCapability:
 			obj["name"] = "Capability: " + n.ID
 			if desc, ok := n.Properties["compound_severity"]; ok {
 				obj["description"] = fmt.Sprintf("Chain capability — severity: %s", desc)
 			}
-		case "Control", "ComplianceRequirement", "RemediationAction":
+		case NodeTypeControl, NodeTypeComplianceRequirement, NodeTypeRemediationAction:
 			if name, ok := n.Properties["control_name"].(string); ok {
 				obj["name"] = name
 			} else if name, ok := n.Properties["action"].(string); ok {
@@ -114,10 +116,10 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 			if desc, ok := n.Properties["control_id"].(string); ok {
 				obj["description"] = desc
 			}
-		case "TenantScope":
+		case NodeTypeTenantScope:
 			obj["name"] = "Account " + n.ID
 			obj["identity_class"] = "organization"
-		case "Identity":
+		case NodeTypeIdentity:
 			obj["name"] = n.ID
 			obj["identity_class"] = "system"
 		}

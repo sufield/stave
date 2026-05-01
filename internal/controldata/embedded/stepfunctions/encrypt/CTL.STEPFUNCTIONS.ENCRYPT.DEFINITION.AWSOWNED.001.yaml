@@ -10,7 +10,7 @@ description: >
   on a customer schedule. For regulated
   workloads (HIPAA, PCI, SOC2), customer-
   managed keys are required.
-domain: encrypt
+domain: encryption
 severity: high
 compliance:
   soc2: "CC6.7"

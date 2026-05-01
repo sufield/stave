@@ -14,7 +14,7 @@ scope_tags: [gcp]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Metric Filters Without Alert Policies — finding detected.
   action: Create alert policies for all metric filters.
