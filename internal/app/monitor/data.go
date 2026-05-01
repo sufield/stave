@@ -194,7 +194,7 @@ func rankFindings(findings []remediation.Finding, n int) []TopFinding {
 	var items []ranked
 	for i := range findings {
 		f := &findings[i]
-		w, ok := policy.SeverityWeight[f.ControlSeverity]
+		w, ok := policy.SeverityWeight(f.ControlSeverity)
 		if !ok {
 			// Unrecognized severity (e.g. SeverityNone, SeverityInfo)
 			// drops to the lowest non-zero rank rather than 0,

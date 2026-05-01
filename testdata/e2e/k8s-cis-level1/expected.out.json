@@ -2232,14 +2232,14 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:9918c6471a3b6846",
+      "issue_id": "sha256:94fe179ee995fff5",
       "asset_id": "apiserver-dev-01",
       "shared_keys": [
         "apiserver.anonymous_auth_enabled",
         "apiserver.audit_log_enabled",
         "type"
       ],
-      "headline_finding_id": "sha256:db73b532f51cfd39",
+      "headline_finding_id": "sha256:aea5c891baf7d41e",
       "member_finding_ids": [
         "sha256:aea5c891baf7d41e",
         "sha256:db73b532f51cfd39"
@@ -2740,7 +2740,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "968e6c2d9fbf4e1fd96f26b0a79c5bc0b2d13887",
       "dirty": false
     }
   }

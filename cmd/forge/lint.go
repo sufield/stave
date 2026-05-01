@@ -181,7 +181,7 @@ func lintControl(path string, celEval policy.PredicateEval, semantic bool) lintR
 	// Check E: invalid attack_stage value.
 	stage := ctl.AttackStage()
 	if stage != "" {
-		valid := slices.Contains(risk.AllAttackStages, stage)
+		valid := slices.Contains(risk.AttackStages(), stage)
 		if !valid {
 			result.Errors = append(result.Errors,
 				fmt.Sprintf("attack_stage %q is not a valid stage", stage))

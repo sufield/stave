@@ -120,7 +120,7 @@ func runPlan(stdout io.Writer, opts *options) error {
 		// `max(len(Findings), 1)` produced absurd readiness scores —
 		// 1 finding and a 50-control framework reported as 0%-ready
 		// against a 1-control denominator.
-		totalControls := len(compliance.ControlRegistry.ByProfile(opts.ComplianceProfile))
+		totalControls := len(compliance.GetControlRegistry().ByProfile(opts.ComplianceProfile))
 		if totalControls == 0 {
 			return &ui.UserError{Err: fmt.Errorf("compliance profile %q has no controls in the catalog; check the profile name", opts.ComplianceProfile)}
 		}

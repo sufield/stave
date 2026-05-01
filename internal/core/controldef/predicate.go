@@ -20,11 +20,35 @@ type PredicateEval func(ctl ControlDefinition, a asset.Asset, identities []asset
 
 // EvalContext encapsulates all state available to a predicate during evaluation.
 type EvalContext struct {
-	Properties      map[string]any
+	properties      map[string]any
 	CloudIdentity   *asset.CloudIdentity
 	Identities      []asset.CloudIdentity
 	Params          ControlParams
 	PredicateParser PredicateParser
+}
+
+// GetProperty returns the property at key. ok is false when the key
+// is not present, which is distinct from "present with nil value".
+func (c *EvalContext) GetProperty(key string) (any, bool) {
+	v, ok := c.properties[key]
+	return v, ok
+}
+
+// SetProperty stores val under key. Allocates the backing map on
+// first write so the zero-value EvalContext is usable.
+func (c *EvalContext) SetProperty(key string, val any) {
+	if c.properties == nil {
+		c.properties = make(map[string]any, 1)
+	}
+	c.properties[key] = val
+}
+
+// PropertyMap returns the underlying property map for predicate
+// evaluators that need to walk dotted property paths. The returned
+// map is the live backing map; callers that need a mutation-safe
+// view should clone it.
+func (c *EvalContext) PropertyMap() map[string]any {
+	return c.properties
 }
 
 // NewAssetEvalContext builds a context focused on resource properties.
@@ -33,7 +57,7 @@ func NewAssetEvalContext(a asset.Asset, params ControlParams, parser PredicatePa
 	copy(ids, identities)
 
 	return &EvalContext{
-		Properties:      a.Map(),
+		properties:      a.Map(),
 		Params:          params,
 		Identities:      ids,
 		PredicateParser: parser,

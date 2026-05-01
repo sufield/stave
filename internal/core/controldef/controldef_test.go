@@ -417,13 +417,13 @@ func TestControlDefinitionPrepare(t *testing.T) {
 	if err := ctl.Prepare(); err != nil {
 		t.Fatalf("Prepare() err = %v", err)
 	}
-	if !ctl.Prepared.Ready {
+	if !ctl.prepared.Ready {
 		t.Fatal("should be ready")
 	}
-	if ctl.Prepared.MaxUnsafeDuration != 24*time.Hour {
-		t.Fatalf("MaxUnsafeDuration = %v", ctl.Prepared.MaxUnsafeDuration)
+	if ctl.prepared.MaxUnsafeDuration != 24*time.Hour {
+		t.Fatalf("MaxUnsafeDuration = %v", ctl.prepared.MaxUnsafeDuration)
 	}
-	if !ctl.Prepared.HasMaxUnsafeDuration {
+	if !ctl.prepared.HasMaxUnsafeDuration {
 		t.Fatal("HasMaxUnsafeDuration should be true")
 	}
 
@@ -442,7 +442,7 @@ func TestControlDefinitionPrepareInvalidDuration(t *testing.T) {
 		t.Fatal("expected error for invalid duration")
 	}
 	// Not marked ready on error — prevents silently using zero-value duration.
-	if ctl.Prepared.Ready {
+	if ctl.prepared.Ready {
 		t.Fatal("should not be ready after parse error")
 	}
 }
@@ -1233,10 +1233,10 @@ func TestNewAssetEvalContext(t *testing.T) {
 	}
 	params := NewParams(map[string]any{"p": 1})
 	ctx := NewAssetEvalContext(a, params, nil)
-	if ctx.Properties == nil {
+	if ctx.PropertyMap() == nil {
 		t.Fatal("Properties should not be nil")
 	}
-	if _, ok := ctx.Properties["k"]; !ok {
+	if _, ok := ctx.GetProperty("k"); !ok {
 		t.Fatal("should have properties from asset")
 	}
 }

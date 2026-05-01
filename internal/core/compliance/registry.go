@@ -3,6 +3,7 @@ package compliance
 import (
 	"fmt"
 	"slices"
+	"sync"
 
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -73,21 +74,38 @@ func (r *ControlCatalog) Len() int {
 	return len(r.controls)
 }
 
-// ControlRegistry is the default global registry, populated by init()
-// functions in each control implementation file. Production code uses this
-// directly. Tests that need isolation should use NewTestCatalog() instead.
-var ControlRegistry = NewRegistry()
+// controlRegistry is the default global registry, populated by init()
+// functions in each control implementation file. Production code reaches it
+// via GetControlRegistry() — the variable itself is unexported so a
+// consumer cannot reseat it.
+var (
+	controlRegistry     = NewRegistry()
+	controlRegistryOnce sync.Once
+)
+
+// GetControlRegistry returns the singleton control catalog. The first
+// call ensures the catalog has had every package init() chance to
+// register; the sync.Once is defensive only — register-on-init is
+// already complete by the time main runs — but it documents the
+// "initialise once" contract.
+func GetControlRegistry() *ControlCatalog {
+	controlRegistryOnce.Do(func() {
+		// init() functions ran before main. The Once just locks
+		// the entry-state contract.
+	})
+	return controlRegistry
+}
 
 // allControlConstructors holds factory functions for every built-in control.
 // Populated by RegisterControl() calls in init() — the source of truth
-// that both the global ControlRegistry and NewTestCatalog() draw from.
+// that both the global controlRegistry and NewTestCatalog() draw from.
 var allControlConstructors []func() Control
 
 // RegisterControl records a control factory and registers it in the global
-// ControlRegistry. Called from init() in each control file.
+// control registry. Called from init() in each control file.
 func RegisterControl(factory func() Control) {
 	allControlConstructors = append(allControlConstructors, factory)
-	ControlRegistry.MustRegister(factory())
+	controlRegistry.MustRegister(factory())
 }
 
 // NewTestCatalog creates an isolated ControlCatalog with all built-in controls.

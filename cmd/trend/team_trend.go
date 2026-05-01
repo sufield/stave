@@ -27,7 +27,7 @@ func computeTeamTrends(
 	manifest *teams.Manifest,
 	teamFilter string,
 	regressionOnly bool,
-) ([]TeamTrend, *TeamTrendSummary) {
+) ([]teamTrend, *teamTrendSummary) {
 	if manifest == nil || len(assessments) == 0 {
 		return nil, nil
 	}
@@ -73,7 +73,7 @@ func computeTeamTrends(
 	}
 
 	// Compute team trends.
-	var trends []TeamTrend
+	var trends []teamTrend
 	for i := range manifest.Teams {
 		t := &manifest.Teams[i]
 		findings := teamFindings[t.ID]
@@ -136,7 +136,7 @@ func computeTeamTrends(
 			continue
 		}
 
-		trends = append(trends, TeamTrend{
+		trends = append(trends, teamTrend{
 			ID:           t.ID,
 			Name:         t.DisplayName,
 			Contact:      t.Contact,
@@ -153,7 +153,7 @@ func computeTeamTrends(
 	// Also include "unassigned" if there are unassigned findings.
 	if teamFilter == "" {
 		if uf := teamFindings["unassigned"]; len(uf) > 0 {
-			trends = append(trends, TeamTrend{
+			trends = append(trends, teamTrend{
 				ID:           "unassigned",
 				Name:         "Unassigned",
 				PostureScore: 0,
@@ -169,7 +169,7 @@ func computeTeamTrends(
 	})
 
 	// Summary.
-	summary := &TeamTrendSummary{TeamsTracked: len(trends)}
+	summary := &teamTrendSummary{TeamsTracked: len(trends)}
 	for i := range trends {
 		switch trends[i].Trajectory {
 		case trajectoryImproving:
@@ -185,7 +185,7 @@ func computeTeamTrends(
 }
 
 // computeRollup aggregates team trends for a hierarchy group.
-func computeRollup(trends []TeamTrend, group *teams.HierarchyGroup) *RollupResult {
+func computeRollup(trends []teamTrend, group *teams.HierarchyGroup) *rollupResult {
 	if group == nil {
 		return nil
 	}
@@ -223,7 +223,7 @@ func computeRollup(trends []TeamTrend, group *teams.HierarchyGroup) *RollupResul
 		slaPct = float64(totalSLAWithin) / float64(totalSLAAll) * 100
 	}
 
-	return &RollupResult{
+	return &rollupResult{
 		GroupID:      group.ID,
 		GroupName:    group.Name,
 		PostureScore: totalScore / float64(count),
@@ -235,7 +235,7 @@ func computeRollup(trends []TeamTrend, group *teams.HierarchyGroup) *RollupResul
 }
 
 // renderExecutiveSummary writes a plain-text paragraph for board reporting.
-func renderExecutiveSummary(w io.Writer, r *TrendReport) error { //nolint:unparam // error return for format-dispatch consistency
+func renderExecutiveSummary(w io.Writer, r *trendReport) error { //nolint:unparam // error return for format-dispatch consistency
 	score := 0.0
 	if r.PostureScore != nil {
 		score = *r.PostureScore
@@ -277,7 +277,7 @@ func renderExecutiveSummary(w io.Writer, r *TrendReport) error { //nolint:unpara
 		}
 
 		// Top performer: best improving team.
-		var best *TeamTrend
+		var best *teamTrend
 		for i := range r.TeamTrends {
 			t := &r.TeamTrends[i]
 			if t.Trajectory == trajectoryImproving {

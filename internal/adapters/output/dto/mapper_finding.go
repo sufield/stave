@@ -146,7 +146,7 @@ func buildRemediationContext(f *remediation.Finding) *RemediationContextDTO {
 				Operator:       string(mc.Operator),
 				ExpectedValue:  mc.ExpectedValue,
 				ObservedValue:  mc.ObservedValue,
-			}, translation.DefaultFieldRegistry),
+			}, translation.GetDefaultFieldRegistry()),
 			ObservationKey: mc.ObservationKey,
 			ObservedValue:  mc.ObservedValue,
 		})

@@ -10,7 +10,7 @@ import (
 )
 
 func TestControls001Strict(t *testing.T) {
-	ctl := ControlRegistry.Lookup("CONTROLS.001.STRICT")
+	ctl := GetControlRegistry().Lookup("CONTROLS.001.STRICT")
 	if ctl == nil {
 		t.Fatal("CONTROLS.001.STRICT not registered")
 	}
@@ -80,8 +80,8 @@ func TestControls001Strict(t *testing.T) {
 }
 
 func TestControls001Strict_RegisteredSeparately(t *testing.T) {
-	base := ControlRegistry.Lookup("CONTROLS.001")
-	strict := ControlRegistry.Lookup("CONTROLS.001.STRICT")
+	base := GetControlRegistry().Lookup("CONTROLS.001")
+	strict := GetControlRegistry().Lookup("CONTROLS.001.STRICT")
 
 	if base == nil || strict == nil {
 		t.Fatal("both CONTROLS.001 and CONTROLS.001.STRICT must be registered")

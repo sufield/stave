@@ -2,6 +2,7 @@ package report
 
 import (
 	"context"
+	"errors"
 
 	corereport "github.com/sufield/stave/internal/core/report"
 )
@@ -11,10 +12,19 @@ type EvaluationLoaderFunc func(ctx context.Context, path string) (*corereport.As
 
 // EvaluationLoader loads a persisted evaluation artifact.
 type EvaluationLoader struct {
-	LoadEval EvaluationLoaderFunc
+	loadEval EvaluationLoaderFunc
+}
+
+// NewEvaluationLoader constructs an EvaluationLoader. loader must
+// be non-nil.
+func NewEvaluationLoader(loader EvaluationLoaderFunc) (*EvaluationLoader, error) {
+	if loader == nil {
+		return nil, errors.New("report.NewEvaluationLoader: loader is nil")
+	}
+	return &EvaluationLoader{loadEval: loader}, nil
 }
 
 // LoadEvaluation loads a safety envelope evaluation artifact.
 func (l *EvaluationLoader) LoadEvaluation(ctx context.Context, path string) (*corereport.Assessment, error) {
-	return l.LoadEval(ctx, path)
+	return l.loadEval(ctx, path)
 }

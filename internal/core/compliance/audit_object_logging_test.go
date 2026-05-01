@@ -7,7 +7,7 @@ import (
 )
 
 func TestAudit002(t *testing.T) {
-	ctl := ControlRegistry.Lookup("AUDIT.002")
+	ctl := GetControlRegistry().Lookup("AUDIT.002")
 	if ctl == nil {
 		t.Fatal("AUDIT.002 not registered")
 	}

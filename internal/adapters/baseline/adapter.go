@@ -4,6 +4,7 @@ package baseline
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -51,7 +52,15 @@ func (l *Loader) LoadBaseline(ctx context.Context, path string) ([]reporting.Bas
 
 // Writer persists a baseline artifact to disk.
 type Writer struct {
-	OpenFile FileOpener
+	openFile FileOpener
+}
+
+// NewWriter constructs a Writer. opener must be non-nil.
+func NewWriter(opener FileOpener) (*Writer, error) {
+	if opener == nil {
+		return nil, errors.New("baseline.NewWriter: opener is nil")
+	}
+	return &Writer{openFile: opener}, nil
 }
 
 // WriteBaseline writes a baseline snapshot to disk atomically: the
@@ -81,7 +90,7 @@ func (w *Writer) WriteBaseline(ctx context.Context, path string, findings []repo
 	}
 
 	cleanPath := fsutil.CleanUserPath(path)
-	f, err := w.OpenFile(cleanPath)
+	f, err := w.openFile(cleanPath)
 	if err != nil {
 		return fmt.Errorf("create %s: %w", path, err)
 	}

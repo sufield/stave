@@ -10,8 +10,8 @@ import (
 
 func makeTestAssessor(controls []policy.ControlDefinition) *Assessor {
 	return &Assessor{
-		Controls: controls,
-		Hasher:   crypto.NewHasher(),
+		controls: controls,
+		hasher:   crypto.NewHasher(),
 	}
 }
 

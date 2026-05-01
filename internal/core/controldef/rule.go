@@ -75,7 +75,7 @@ func (r *PredicateRule) collect(ctx *EvalContext, misconfigurations []Misconfigu
 		return misconfigurations
 	}
 
-	val, _ := resolvePropertyValue(ctx.Properties, r.Field.Parts())
+	val, _ := resolvePropertyValue(ctx.PropertyMap(), r.Field.Parts())
 
 	return append(misconfigurations, Misconfiguration{
 		Property:    predicate.NewFieldPath(r.Field.TrimPrefix(propertiesPathPrefix)),

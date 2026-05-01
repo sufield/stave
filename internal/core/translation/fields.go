@@ -1,8 +1,10 @@
 package translation
 
-// DefaultFieldRegistry is the plain-language translation table for
+// defaultFieldRegistry is the plain-language translation table for
 // observation field paths that appear in shipped findings'
 // ReasoningTrace output. See docs/product/metrics.md § Metric 5.
+// Access via GetDefaultFieldRegistry() so the table cannot be
+// mutated by callers.
 //
 // Entries are hand-maintained. When a new control lands that reads
 // a path not present here, the text writer falls back to the raw
@@ -17,7 +19,7 @@ package translation
 // Inventory source: `grep "observation_key" testdata/e2e/*/
 // expected.out.json | sort -u`. Re-run when adding controls that
 // emit new paths.
-var DefaultFieldRegistry = FieldRegistry{ //nolint:gosec // G101 false positive: translation labels for property-path keys, not credentials.
+var defaultFieldRegistry = FieldRegistry{ //nolint:gosec // G101 false positive: translation labels for property-path keys, not credentials.
 	// --- storage: access control ---
 	"storage.access.public_read":                    "the bucket allows anonymous read",
 	"storage.access.public_list":                    "the bucket allows anonymous list",
@@ -1275,4 +1277,12 @@ var DefaultFieldRegistry = FieldRegistry{ //nolint:gosec // G101 false positive:
 	"overlap_with":                    "the overlapping prefix",
 	"public":                          "the resource is public",
 	"type":                            "the asset type",
+}
+
+// GetDefaultFieldRegistry returns the registry used by RenderClause
+// for plain-language field translation. The returned map is shared
+// (FieldRegistry is read-only by contract — RenderClause never
+// writes to it); callers that need a private copy can clone it.
+func GetDefaultFieldRegistry() FieldRegistry {
+	return defaultFieldRegistry
 }

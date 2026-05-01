@@ -299,9 +299,9 @@ func (a *App) initLogger() error {
 
 	a.bootstrapMu.Lock()
 	a.LogCloser = lc
-	a.Logger = lc.Logger
+	a.Logger = lc.Logger()
 	a.bootstrapMu.Unlock()
-	logging.SetDefaultLogger(lc.Logger)
+	logging.SetDefaultLogger(lc.Logger())
 
 	return nil
 }

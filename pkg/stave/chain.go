@@ -75,7 +75,7 @@ type ChainMembershipEntry struct {
 // conversion at the boundary.
 func convertCompoundFinding(cf *risk.CompoundFinding) ChainFinding {
 	return ChainFinding{
-		ChainID:           kernel.ChainID(cf.ChainID),
+		ChainID:           cf.ChainID,
 		Description:       cf.Description,
 		ControlsFailing:   cloneControlIDs(cf.ControlsFailing),
 		MissingSafeguards: cloneControlIDs(cf.MissingSafeguards),
@@ -95,7 +95,7 @@ func convertChainMembership(ms []evaluation.ChainMembershipEntry) []ChainMembers
 	out := make([]ChainMembershipEntry, len(ms))
 	for i, m := range ms {
 		out[i] = ChainMembershipEntry{
-			ChainID:       kernel.ChainID(m.ChainID),
+			ChainID:       m.ChainID,
 			ChainSeverity: Severity(m.ChainSeverity.String()),
 			StageSpan:     attackStagesToStrings(m.StageSpan),
 			Narrative:     m.Narrative,

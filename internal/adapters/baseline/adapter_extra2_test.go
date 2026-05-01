@@ -121,7 +121,7 @@ func TestWriteBaseline_CloseErrorPropagated(t *testing.T) {
 	// jsonutil.WriteIndented will fail on the closed FD, and the
 	// fix path returns that error rather than dropping it.
 	w := &Writer{
-		OpenFile: func(p string) (*os.File, error) {
+		openFile: func(p string) (*os.File, error) {
 			f, err := os.Create(p)
 			if err != nil {
 				return nil, err

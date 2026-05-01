@@ -32,7 +32,7 @@ func evaluateWithParams(cp CompiledPredicate, props map[string]any, params map[s
 		"identity":   identity,
 	}
 
-	out, _, err := cp.Program.Eval(activation)
+	out, _, err := cp.program.Eval(activation)
 	if err != nil {
 		return false, fmt.Errorf("CEL eval: %w", err)
 	}

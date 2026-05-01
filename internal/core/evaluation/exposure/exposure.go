@@ -46,8 +46,17 @@ type ComplianceReport struct {
 
 func (r ComplianceReport) String() string { return r.Source.String() }
 
-// SafeResult is a pre-built audit result indicating no exposure.
-var SafeResult = ComplianceReport{Exposed: false}
+// safeResult is the pre-built audit result indicating no exposure.
+// Callers reach it via NewSafeResult so the value cannot be mutated
+// by a misbehaving consumer.
+var safeResult = ComplianceReport{Exposed: false}
+
+// NewSafeResult returns a copy of the canonical "no exposure"
+// compliance report. Each call yields an independent value safe
+// for the caller to mutate.
+func NewSafeResult() ComplianceReport {
+	return safeResult
+}
 
 // Grant pairs a scope (e.g. "*", "invoices/") with the statement ID that granted it.
 type Grant struct {
@@ -126,5 +135,5 @@ func (f AccessSummary) CheckExposure(prefix kernel.ObjectPrefix) ComplianceRepor
 		return ComplianceReport{Exposed: true, Source: NewSource(SourceMissingEvidence, "")}
 	}
 
-	return SafeResult
+	return NewSafeResult()
 }

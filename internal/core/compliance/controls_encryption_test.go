@@ -21,7 +21,7 @@ func encBucket(id string, atRest bool, algorithm, keyID string) asset.Asset {
 }
 
 func TestControls001(t *testing.T) {
-	ctl := ControlRegistry.Lookup("CONTROLS.001")
+	ctl := GetControlRegistry().Lookup("CONTROLS.001")
 	if ctl == nil {
 		t.Fatal("CONTROLS.001 not registered")
 	}

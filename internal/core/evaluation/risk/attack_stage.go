@@ -8,8 +8,9 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// AllAttackStages lists the MITRE ATT&CK-aligned stages that Stave recognizes.
-var AllAttackStages = []kernel.AttackStage{
+// allAttackStages lists the MITRE ATT&CK-aligned stages that Stave recognizes.
+// Access via AttackStages() so the slice cannot be mutated by callers.
+var allAttackStages = []kernel.AttackStage{
 	"initial_access",
 	"execution",
 	"credential_access",
@@ -22,6 +23,16 @@ var AllAttackStages = []kernel.AttackStage{
 	"detection_evasion",
 	"impact",
 	"resilience",
+}
+
+// AttackStages returns a defensive copy of the recognised attack
+// stages. Callers that need a stable list use this instead of touching
+// the (now unexported) backing slice directly so a misbehaving
+// consumer cannot mutate the catalog.
+func AttackStages() []kernel.AttackStage {
+	out := make([]kernel.AttackStage, len(allAttackStages))
+	copy(out, allAttackStages)
+	return out
 }
 
 // BuildAttackStageSummary maps each attack stage to the worst severity
@@ -53,8 +64,8 @@ func BuildAttackStageSummary(
 	}
 
 	// Build summary with all known stages.
-	summary := make(map[kernel.AttackStage]string, len(AllAttackStages))
-	for _, stage := range AllAttackStages {
+	summary := make(map[kernel.AttackStage]string, len(allAttackStages))
+	for _, stage := range allAttackStages {
 		if sev, ok := worstPerStage[stage]; ok {
 			summary[stage] = severityLabel(sev)
 		} else {

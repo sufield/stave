@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-// mapToRDFGraph converts the internal GraphData (output of Build) into
-// the export-shaped RDFGraph consumable by JSON-LD and GraphML
+// mapTordfGraph converts the internal GraphData (output of Build) into
+// the export-shaped rdfGraph consumable by JSON-LD and GraphML
 // serializers.
 //
 // Three things happen here:
@@ -70,16 +70,16 @@ func (e *UnmappedEdgesError) Error() string {
 		len(e.Edges), strings.Join(out, ", "))
 }
 
-func mapToRDFGraph(g *GraphData) *RDFGraph {
+func mapTordfGraph(g *GraphData) *rdfGraph {
 	if g == nil {
-		return &RDFGraph{OntologyIRI: strings.TrimSuffix(ontologyBaseIRI, "#")}
+		return &rdfGraph{OntologyIRI: strings.TrimSuffix(ontologyBaseIRI, "#")}
 	}
 
-	out := &RDFGraph{
+	out := &rdfGraph{
 		OntologyIRI: strings.TrimSuffix(ontologyBaseIRI, "#"),
 		GeneratedAt: g.GeneratedAt.UTC().Format("2006-01-02T15:04:05Z"),
-		Nodes:       make([]RDFNode, 0, len(g.Nodes)),
-		Edges:       make([]RDFEdge, 0, len(g.Edges)+len(g.Nodes)),
+		Nodes:       make([]rdfNode, 0, len(g.Nodes)),
+		Edges:       make([]rdfEdge, 0, len(g.Edges)+len(g.Nodes)),
 	}
 
 	// idMap maps internal node IDs (ARNs, finding hashes, control IDs,
@@ -133,7 +133,7 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 			}
 		}
 
-		out.Nodes = append(out.Nodes, RDFNode{
+		out.Nodes = append(out.Nodes, rdfNode{
 			ID:         iri,
 			Type:       classIRI,
 			Properties: props,
@@ -167,7 +167,7 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 		}
 
 		props := edgeProperties(e, nodeKind[e.From], nodeKind[e.To], nodesByID)
-		out.Edges = append(out.Edges, RDFEdge{
+		out.Edges = append(out.Edges, rdfEdge{
 			From:       fromIRI,
 			To:         toIRI,
 			Predicate:  pred,
@@ -239,7 +239,7 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 			}
 		}
 
-		out.Edges = append(out.Edges, RDFEdge{
+		out.Edges = append(out.Edges, rdfEdge{
 			From:      fromIRI,
 			To:        toIRI,
 			Predicate: predViolates,

@@ -25,15 +25,17 @@ type GraphExporter interface {
 }
 
 // JSONLDExporter implements GraphExporter for JSON-LD output. The
-// embedded Format field is informational only; consumers that
-// negotiate format strings can use it to assert the exporter
-// matches.
+// embedded format field is informational only; consumers that
+// negotiate format strings reach it via Format().
 type JSONLDExporter struct {
-	Format string // "jsonld"
+	format string // "jsonld"
 }
 
 // NewJSONLDExporter returns a JSON-LD GraphExporter.
-func NewJSONLDExporter() *JSONLDExporter { return &JSONLDExporter{Format: "jsonld"} }
+func NewJSONLDExporter() *JSONLDExporter { return &JSONLDExporter{format: "jsonld"} }
+
+// Format returns the wire format identifier for this exporter.
+func (e *JSONLDExporter) Format() string { return e.format }
 
 // Export serializes the graph as JSON-LD bound to the embedded Stave
 // ontology. The returned bytes are a single JSON document with
@@ -60,11 +62,14 @@ func (e *JSONLDExporter) Export(graph *FindingsGraph) ([]byte, error) {
 
 // GraphMLExporter implements GraphExporter for GraphML XML output.
 type GraphMLExporter struct {
-	Format string // "graphml"
+	format string // "graphml"
 }
 
 // NewGraphMLExporter returns a GraphML GraphExporter.
-func NewGraphMLExporter() *GraphMLExporter { return &GraphMLExporter{Format: "graphml"} }
+func NewGraphMLExporter() *GraphMLExporter { return &GraphMLExporter{format: "graphml"} }
+
+// Format returns the wire format identifier for this exporter.
+func (e *GraphMLExporter) Format() string { return e.format }
 
 // Export serializes the graph as GraphML XML. Schema-first: typed
 // <key> declarations precede the <graph> body so consumers know the

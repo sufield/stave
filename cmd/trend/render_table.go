@@ -6,11 +6,11 @@ import (
 	"strings"
 )
 
-func renderTrendTable(w io.Writer, r *TrendReport) error { //nolint:unparam // error return for format-dispatch consistency
+func renderTrendTable(w io.Writer, r *trendReport) error { //nolint:unparam // error return for format-dispatch consistency
 	sep := strings.Repeat("-", 70)
 
 	fmt.Fprintln(w, "POSTURE TREND REPORT")
-	fmt.Fprintf(w, "Period: %s -> %s  |  Runs: %d\n\n",
+	fmt.Fprintf(w, "period: %s -> %s  |  Runs: %d\n\n",
 		r.Period.Start.Format("2006-01-02"), r.Period.End.Format("2006-01-02"), r.Period.RunCount)
 
 	// Violation rate over time.

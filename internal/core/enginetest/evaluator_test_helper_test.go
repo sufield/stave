@@ -62,14 +62,15 @@ func NewEvaluator(controls []policy.ControlDefinition, maxUnsafe time.Duration, 
 	for i := range controls {
 		_ = controls[i].Prepare()
 	}
-	r := engine.NewAssessor()
-	r.Controls = controls
-	r.SLAThreshold = maxUnsafe
-	r.Clock = clock
-	r.PredicateEval = testCELEvaluator()
-	r.PredicateParser = func(_ any) (*policy.UnsafePredicate, error) {
-		return &policy.UnsafePredicate{}, nil
-	}
+	r := engine.NewAssessor(
+		engine.WithControls(controls),
+		engine.WithSLAThreshold(maxUnsafe),
+		engine.WithClock(clock),
+		engine.WithPredicateEval(testCELEvaluator()),
+		engine.WithPredicateParser(func(_ any) (*policy.UnsafePredicate, error) {
+			return &policy.UnsafePredicate{}, nil
+		}),
+	)
 	return &testEvaluator{runner: *r}
 }
 
@@ -79,7 +80,7 @@ type testEvaluator struct {
 }
 
 func (e *testEvaluator) Controls() []policy.ControlDefinition {
-	return e.runner.Controls
+	return e.runner.Controls()
 }
 
 func (e *testEvaluator) Evaluate(snapshots []asset.Snapshot) evaluation.ComplianceReport {

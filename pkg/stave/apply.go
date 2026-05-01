@@ -262,7 +262,7 @@ func convertFindings(fs []evaluation.Finding) []Finding {
 
 func convertFinding(f *evaluation.Finding) Finding {
 	return Finding{
-		FindingID:         FindingID(f.FindingID),
+		FindingID:         f.FindingID,
 		ControlID:         f.ControlID,
 		ControlName:       f.ControlName,
 		AssetID:           f.AssetID,

@@ -60,7 +60,7 @@ func fixtureSnapshot() asset.Snapshot {
 
 func allRegistries() []*compliance.ControlCatalog {
 	return []*compliance.ControlCatalog{
-		compliance.ControlRegistry,
+		compliance.GetControlRegistry(),
 	}
 }
 

@@ -52,15 +52,15 @@ func TestDefinition_ProfileSeverityOverride(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestRegistry_ByProfile(t *testing.T) {
-	// The global ControlRegistry should have controls for "hipaa"
-	controls := ControlRegistry.ByProfile("hipaa")
+	// The global GetControlRegistry() should have controls for "hipaa"
+	controls := GetControlRegistry().ByProfile("hipaa")
 	if len(controls) == 0 {
 		t.Fatal("expected HIPAA controls in registry")
 	}
 }
 
 func TestRegistry_ByProfile_Unknown(t *testing.T) {
-	controls := ControlRegistry.ByProfile("nonexistent_profile")
+	controls := GetControlRegistry().ByProfile("nonexistent_profile")
 	if len(controls) != 0 {
 		t.Fatalf("expected 0 controls for unknown profile, got %d", len(controls))
 	}

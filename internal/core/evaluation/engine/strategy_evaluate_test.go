@@ -32,8 +32,8 @@ func buildLifecycle(t *testing.T, observations []struct {
 
 func testAssessor(maxUnsafe time.Duration, now time.Time) *Assessor {
 	return &Assessor{
-		SLAThreshold: maxUnsafe,
-		Clock:        ports.FixedClock(now),
+		slaThreshold: maxUnsafe,
+		clock:        ports.FixedClock(now),
 	}
 }
 

@@ -43,7 +43,7 @@ func TestBuildRoadmap_ChainMembersSortFirst(t *testing.T) {
 					{
 						ChainID:       "data_exfiltration_path",
 						ChainSeverity: policy.SeverityCritical,
-						StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"},
+						StageSpan:     []kernel.AttackStage{"initial_access", "exfiltration"},
 						Narrative:     "test chain",
 					},
 				},

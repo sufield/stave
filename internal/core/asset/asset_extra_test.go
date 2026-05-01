@@ -941,7 +941,7 @@ func TestSnapshotHasTimestamp(t *testing.T) {
 
 func TestUniversalFilter(t *testing.T) {
 	a := Asset{ID: "anything"}
-	if !GlobalScope.IsInScope(a) {
+	if !GetGlobalScope().IsInScope(a) {
 		t.Fatal("universal should match all")
 	}
 }
@@ -958,7 +958,7 @@ func TestNewScopeFilterAllowlist(t *testing.T) {
 
 func TestNewScopeFilterEmptyReturnsUniversal(t *testing.T) {
 	f := NewAuditScope(nil, nil)
-	if f != GlobalScope {
+	if f != GetGlobalScope() {
 		t.Fatal("empty constraints should return universal")
 	}
 }
@@ -984,7 +984,7 @@ func TestFilterSnapshotsNilOrUniversal(t *testing.T) {
 	if got := ApplyScopeToSnapshots(nil, snaps); len(got) != 1 {
 		t.Fatal("nil filter should pass through")
 	}
-	if got := ApplyScopeToSnapshots(GlobalScope, snaps); len(got) != 1 {
+	if got := ApplyScopeToSnapshots(GetGlobalScope(), snaps); len(got) != 1 {
 		t.Fatal("universal filter should pass through")
 	}
 }

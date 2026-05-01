@@ -253,18 +253,18 @@ func TestUnsupportedStrategy(t *testing.T) {
 
 func TestAssessorContinuityLimit(t *testing.T) {
 	a := NewAssessor()
-	if got := a.continuityLimit(); got != DefaultContinuityLimit {
+	if got := a.ContinuityLimit(); got != DefaultContinuityLimit {
 		t.Fatalf("default = %v", got)
 	}
 
-	a.ContinuityLimit = 6 * time.Hour
-	if got := a.continuityLimit(); got != 6*time.Hour {
+	a.continuityLimit = 6 * time.Hour
+	if got := a.ContinuityLimit(); got != 6*time.Hour {
 		t.Fatalf("custom = %v", got)
 	}
 }
 
 func TestAssessorSLAThresholdFor(t *testing.T) {
-	a := &Assessor{SLAThreshold: 168 * time.Hour}
+	a := &Assessor{slaThreshold: 168 * time.Hour}
 
 	// No per-control override
 	ctl := &policy.ControlDefinition{}

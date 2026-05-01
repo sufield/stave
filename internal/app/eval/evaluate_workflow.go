@@ -45,32 +45,35 @@ type EvaluateInput struct {
 // Evaluate runs domain evaluation over already-loaded inputs.
 func Evaluate(input EvaluateInput) (evaluation.ComplianceReport, error) {
 	catalog := policy.NewCatalog(input.Controls)
-	runner := engine.NewAssessor()
-	runner.Controls = catalog.List()
-	runner.SLAThreshold = input.MaxUnsafeDuration
-	runner.Clock = input.Clock
-	// Hasher must be injected from the cmd/ composition root because
-	// neither core/ nor app/ can import internal/platform/crypto under
-	// the hexagonal-architecture rules (TestHexagonalDependencyDirection).
-	// FingerprintPolicy() returns "" when Hasher is nil, so omitting it
-	// is a soft degradation — the assessment still runs, only the
-	// policy fingerprint is empty.
-	runner.Hasher = input.Hasher
-	runner.Exemptions = input.ExemptionConfig
-	runner.Exceptions = input.ExceptionConfig
-	runner.Acknowledgments = input.AcknowledgmentConfig
-	runner.PredicateParser = input.PredicateParser
-	if runner.PredicateParser == nil {
-		runner.PredicateParser = noopPredicateParser
+	parser := input.PredicateParser
+	if parser == nil {
+		parser = noopPredicateParser
 	}
-	runner.PredicateEval = input.CELEvaluator
-	if runner.PredicateEval == nil {
-		runner.PredicateEval = inconclusiveCELEvaluator
+	celEval := input.CELEvaluator
+	if celEval == nil {
+		celEval = inconclusiveCELEvaluator
 	}
-	runner.Tracer = input.Tracer
+	opts := []engine.AssessorOption{
+		engine.WithControls(catalog.List()),
+		engine.WithSLAThreshold(input.MaxUnsafeDuration),
+		engine.WithClock(input.Clock),
+		// Hasher must be injected from the cmd/ composition root —
+		// neither core/ nor app/ can import internal/platform/crypto
+		// under the hexagonal-architecture rules. FingerprintPolicy()
+		// returns "" when Hasher is nil, so omitting it is a soft
+		// degradation.
+		engine.WithHasher(input.Hasher),
+		engine.WithExemptions(input.ExemptionConfig),
+		engine.WithExceptions(input.ExceptionConfig),
+		engine.WithAcknowledgments(input.AcknowledgmentConfig),
+		engine.WithPredicateParser(parser),
+		engine.WithPredicateEval(celEval),
+		engine.WithTracer(input.Tracer),
+	}
 	if input.Confidence.HighMultiplier > 0 {
-		runner.Confidence = input.Confidence
+		opts = append(opts, engine.WithConfidence(input.Confidence))
 	}
+	runner := engine.NewAssessor(opts...)
 	result, err := runner.Assess(derive.Pipeline(input.Snapshots), engine.AssessmentOptions{
 		StaveVersion:     input.StaveVersion,
 		InputHashes:      input.InputHashes,

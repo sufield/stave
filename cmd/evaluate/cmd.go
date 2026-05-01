@@ -288,7 +288,7 @@ func validateSchema(version kernel.Schema) error {
 
 func allRegistries() []*compliance.ControlCatalog {
 	return []*compliance.ControlCatalog{
-		compliance.ControlRegistry,
+		compliance.GetControlRegistry(),
 	}
 }
 

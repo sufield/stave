@@ -11,7 +11,7 @@ import (
 
 func TestSaveLoadAndResolveSelected(t *testing.T) {
 	t.Setenv(env.ContextsFile.Name, filepath.Join(t.TempDir(), "contexts.yaml"))
-	st := &Store{Active: "prod", Contexts: map[string]Context{
+	st := &Store{Active: "prod", contexts: map[string]Context{
 		"prod": {ProjectRoot: "/repo/prod", ProjectConfig: "stave.yaml", Defaults: Defaults{ControlsDir: "controls", ObservationsDir: "observations"}},
 		"dev":  {ProjectRoot: "/repo/dev", ProjectConfig: "stave.yaml"},
 	}}
@@ -44,7 +44,7 @@ func TestSaveLoadAndResolveSelected(t *testing.T) {
 }
 
 func TestResolveSelectedMissingEnvContext(t *testing.T) {
-	st := &Store{Active: "prod", Contexts: map[string]Context{"prod": {ProjectRoot: "/repo/prod"}}}
+	st := &Store{Active: "prod", contexts: map[string]Context{"prod": {ProjectRoot: "/repo/prod"}}}
 	t.Setenv(env.Context.Name, "missing")
 	_, _, _, err := st.ResolveSelected()
 	if err == nil {
@@ -53,7 +53,7 @@ func TestResolveSelectedMissingEnvContext(t *testing.T) {
 }
 
 func TestSortedNamesDeterministic(t *testing.T) {
-	st := &Store{Contexts: map[string]Context{"z": {}, "a": {}, "m": {}}}
+	st := &Store{contexts: map[string]Context{"z": {}, "a": {}, "m": {}}}
 	got := st.Names()
 	want := []string{"a", "m", "z"}
 	if !reflect.DeepEqual(got, want) {
@@ -81,7 +81,7 @@ func TestLoadMissingFileReturnsEmptyStore(t *testing.T) {
 	if path != p {
 		t.Fatalf("path=%q want=%q", path, p)
 	}
-	if st == nil || st.Contexts == nil || len(st.Contexts) != 0 {
+	if st == nil || st.contexts == nil || len(st.contexts) != 0 {
 		t.Fatalf("unexpected store: %#v", st)
 	}
 	if _, statErr := os.Stat(p); !os.IsNotExist(statErr) {

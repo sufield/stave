@@ -22,14 +22,14 @@ func TestControlDefinitionPrepareNoDuration(t *testing.T) {
 	if err := ctl.Prepare(); err != nil {
 		t.Fatalf("Prepare() err = %v", err)
 	}
-	if !ctl.Prepared.Ready {
+	if !ctl.prepared.Ready {
 		t.Fatal("should be ready")
 	}
-	if ctl.Prepared.HasMaxUnsafeDuration {
+	if ctl.prepared.HasMaxUnsafeDuration {
 		t.Fatal("HasMaxUnsafeDuration should be false when param not set")
 	}
-	if ctl.Prepared.MaxUnsafeDuration != 0 {
-		t.Fatalf("MaxUnsafeDuration should be 0, got %v", ctl.Prepared.MaxUnsafeDuration)
+	if ctl.prepared.MaxUnsafeDuration != 0 {
+		t.Fatalf("MaxUnsafeDuration should be 0, got %v", ctl.prepared.MaxUnsafeDuration)
 	}
 }
 
@@ -85,7 +85,7 @@ func TestControlDefinitionEnsurePreparedLazy(t *testing.T) {
 	if d != 48*time.Hour {
 		t.Fatalf("expected 48h, got %v", d)
 	}
-	if !ctl.Prepared.Ready {
+	if !ctl.prepared.Ready {
 		t.Fatal("ensurePrepared should have called Prepare()")
 	}
 }
@@ -409,7 +409,7 @@ func TestExtractMisconfigurationsNil(t *testing.T) {
 
 func TestExtractMisconfigurationsEmpty(t *testing.T) {
 	pred := &UnsafePredicate{}
-	ctx := &EvalContext{Properties: map[string]any{}}
+	ctx := &EvalContext{properties: map[string]any{}}
 	result := ExtractMisconfigurations(pred, ctx)
 	if result != nil {
 		t.Fatal("empty predicate should return nil")
@@ -424,7 +424,7 @@ func TestExtractMisconfigurationsSorted(t *testing.T) {
 		},
 	}
 	ctx := &EvalContext{
-		Properties: map[string]any{
+		properties: map[string]any{
 			"z_field": true,
 			"a_field": false,
 		},
@@ -449,7 +449,7 @@ func TestExtractMisconfigurationsDedup(t *testing.T) {
 		},
 	}
 	ctx := &EvalContext{
-		Properties: map[string]any{"x": true},
+		properties: map[string]any{"x": true},
 	}
 	results := ExtractMisconfigurations(pred, ctx)
 	if len(results) != 1 {

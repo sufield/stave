@@ -21,54 +21,125 @@ import (
 
 // Assessor orchestrates the evaluation of security controls against cloud resource states.
 // It is the central engine that transforms raw snapshots into a verified ComplianceReport.
+//
+// Fields are unexported so callers must construct via NewAssessor and
+// configure via the WithX options. The functional-options pattern
+// keeps the construction site explicit (each dep is named at the
+// call) and prevents drift toward partially-initialised instances
+// produced by struct-literal assignment.
 type Assessor struct {
 	// Infrastructure — stateless services injected at construction.
-	Logger          *slog.Logger
-	Clock           ports.Clock
-	Hasher          ports.Digester
-	PredicateEval   policy.PredicateEval
-	PredicateParser func(any) (*policy.UnsafePredicate, error)
-	Confidence      evaluation.ConfidenceCalculator
+	logger          *slog.Logger
+	clock           ports.Clock
+	hasher          ports.Digester
+	predicateEval   policy.PredicateEval
+	predicateParser func(any) (*policy.UnsafePredicate, error)
+	confidence      evaluation.ConfidenceCalculator
 
 	// Observability — optional logic trace for audit transparency.
-	// When set, the engine records every decision step (predicate evaluation,
-	// threshold check, coverage analysis) so security researchers can verify
-	// the reasoning chain for both PASS and VIOLATION verdicts.
-	Tracer ports.Tracer
+	tracer ports.Tracer
 
 	// Governance — the policy-set and override configurations.
-	Controls        []policy.ControlDefinition
-	Exemptions      *policy.ExemptionConfig
-	Exceptions      *policy.ExceptionConfig
-	Acknowledgments *policy.AcknowledgmentConfig
+	controls        []policy.ControlDefinition
+	exemptions      *policy.ExemptionConfig
+	exceptions      *policy.ExceptionConfig
+	acknowledgments *policy.AcknowledgmentConfig
 
 	// Risk Thresholds — global parameters for SLA and data continuity.
-	SLAThreshold    time.Duration
-	ContinuityLimit time.Duration
+	slaThreshold    time.Duration
+	continuityLimit time.Duration
+}
+
+// AssessorOption configures an Assessor at construction time.
+type AssessorOption func(*Assessor)
+
+// WithLogger sets the structured logger.
+func WithLogger(l *slog.Logger) AssessorOption { return func(a *Assessor) { a.logger = l } }
+
+// WithClock sets the wall-clock source.
+func WithClock(c ports.Clock) AssessorOption { return func(a *Assessor) { a.clock = c } }
+
+// WithHasher sets the policy-fingerprint hasher. Domain code cannot
+// import platform/crypto under the hexagonal architecture; the
+// composition root injects crypto.NewHasher() here.
+func WithHasher(h ports.Digester) AssessorOption { return func(a *Assessor) { a.hasher = h } }
+
+// WithPredicateEval sets the CEL predicate evaluator.
+func WithPredicateEval(e policy.PredicateEval) AssessorOption {
+	return func(a *Assessor) { a.predicateEval = e }
+}
+
+// WithPredicateParser sets the predicate parser used for raw rule decoding.
+func WithPredicateParser(p func(any) (*policy.UnsafePredicate, error)) AssessorOption {
+	return func(a *Assessor) { a.predicateParser = p }
+}
+
+// WithConfidence overrides the default confidence calculator.
+func WithConfidence(c evaluation.ConfidenceCalculator) AssessorOption {
+	return func(a *Assessor) { a.confidence = c }
+}
+
+// WithTracer attaches an optional logic tracer for audit transparency.
+func WithTracer(t ports.Tracer) AssessorOption { return func(a *Assessor) { a.tracer = t } }
+
+// WithControls installs the control catalog.
+func WithControls(ctls []policy.ControlDefinition) AssessorOption {
+	return func(a *Assessor) { a.controls = ctls }
+}
+
+// WithExemptions installs the exemption configuration. nil is
+// permitted — the assessor treats a nil ExemptionConfig as "no
+// exemptions configured".
+func WithExemptions(e *policy.ExemptionConfig) AssessorOption {
+	return func(a *Assessor) { a.exemptions = e }
+}
+
+// WithExceptions installs the exception configuration; nil is permitted.
+func WithExceptions(e *policy.ExceptionConfig) AssessorOption {
+	return func(a *Assessor) { a.exceptions = e }
+}
+
+// WithAcknowledgments installs the acknowledgment configuration; nil is permitted.
+func WithAcknowledgments(ack *policy.AcknowledgmentConfig) AssessorOption {
+	return func(a *Assessor) { a.acknowledgments = ack }
+}
+
+// WithSLAThreshold sets the global max-unsafe-duration default.
+func WithSLAThreshold(d time.Duration) AssessorOption {
+	return func(a *Assessor) { a.slaThreshold = d }
+}
+
+// WithContinuityLimit overrides the default continuity limit.
+func WithContinuityLimit(d time.Duration) AssessorOption {
+	return func(a *Assessor) { a.continuityLimit = d }
 }
 
 // NewAssessor creates an engine with sensible defaults for security
-// evaluation. The Hasher field is intentionally left nil — the domain
+// evaluation. The hasher is intentionally left nil — the domain
 // layer cannot import platform/crypto, so callers that need a non-empty
-// PolicyFingerprint must inject a hasher explicitly. The composition
-// roots in app/eval and cmd/* (which are allowed to depend on platform
-// packages) wire crypto.NewHasher() onto the returned Assessor before
-// calling Assess().
+// PolicyFingerprint must inject a hasher explicitly via WithHasher.
 //
 // Nil-receiver contract: Exemptions, Exceptions, and Acknowledgments
 // may be left nil. Their *ShouldExempt / *ShouldExcept / *FindRule
 // methods are nil-safe and treat a nil receiver as "no rules
 // configured" — so the assessor never panics on a partially-wired
-// configuration. Tests and integration callers that want fully empty
-// configs can pass freshly constructed instances; the result is the
-// same.
-func NewAssessor() *Assessor {
-	return &Assessor{
-		Logger:          slog.Default(),
-		ContinuityLimit: DefaultContinuityLimit,
-		Confidence:      evaluation.DefaultConfidenceCalculator(),
+// configuration.
+func NewAssessor(opts ...AssessorOption) *Assessor {
+	a := &Assessor{
+		logger:          slog.Default(),
+		continuityLimit: DefaultContinuityLimit,
+		confidence:      evaluation.DefaultConfidenceCalculator(),
 	}
+	for _, opt := range opts {
+		opt(a)
+	}
+	return a
 }
+
+// Controls returns the control catalog the assessor is configured
+// to evaluate. Returned slice is the live backing slice — callers
+// must not mutate it.
+func (a *Assessor) Controls() []policy.ControlDefinition { return a.controls }
 
 // sessionDeps wraps the Assessor to satisfy strategyDeps, adding the
 // active trace span from the current assessmentSession.
@@ -85,23 +156,28 @@ var (
 	_ strategyDeps = (*Assessor)(nil)
 )
 
-// ErrClockMissing is returned by referenceTime when a.Clock is nil.
+// ErrClockMissing is returned by referenceTime when the clock is nil.
 // Mirrors the precondition error returned by Assess at its boundary.
-var ErrClockMissing = errors.New("Assessor.Clock is nil; construct via NewAssessor or set Clock explicitly")
+var ErrClockMissing = errors.New("Assessor: clock is nil; supply WithClock to NewAssessor")
 
-func (a *Assessor) logger() *slog.Logger              { return a.Logger }
 func (a *Assessor) currentSpan() ports.AssessmentSpan { return nopSpan{} }
+
+// Logger returns the structured logger configured at construction.
+func (a *Assessor) Logger() *slog.Logger { return a.logger }
+
+// PredicateParser returns the configured predicate parser.
+func (a *Assessor) PredicateParser() policy.PredicateParser { return a.predicateParser }
+
+// ContinuityLimit returns the configured continuity limit (max
+// allowed gap between observation snapshots).
+func (a *Assessor) ContinuityLimit() time.Duration { return a.continuityLimit }
 
 // slaThresholdFor returns the effective SLA (Max Unsafe Duration) for a control.
 func (a *Assessor) slaThresholdFor(ctl *policy.ControlDefinition) time.Duration {
-	return ctl.EffectiveMaxUnsafeDuration(a.SLAThreshold)
+	return ctl.EffectiveMaxUnsafeDuration(a.slaThreshold)
 }
 
-func (a *Assessor) predicateParser() policy.PredicateParser {
-	return a.PredicateParser
-}
-
-func (a *Assessor) confidenceCalculator() evaluation.ConfidenceCalculator { return a.Confidence }
+func (a *Assessor) confidenceCalculator() evaluation.ConfidenceCalculator { return a.confidence }
 
 // sortSnapshots returns a chronological copy of the snapshots.
 // Uses stable sort with source as secondary key for determinism
@@ -121,7 +197,7 @@ func (a *Assessor) sortSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
 // If --now was set (FixedClock), the user's explicit time takes precedence.
 // Otherwise, the latest snapshot's CapturedAt is used for reproducibility.
 //
-// Contract: a.Clock MUST be non-nil. Returns ErrClockMissing instead
+// Contract: a.clock MUST be non-nil. Returns ErrClockMissing instead
 // of panicking so callers can surface the misuse via a normal error
 // path. The earlier defensive fallback called wall-clock time
 // directly, which snuck a side effect into the core runtime —
@@ -131,16 +207,16 @@ func (a *Assessor) sortSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
 // error return matches how Assess already handles the same nil-Clock
 // condition at its boundary.
 func (a *Assessor) referenceTime(snapshots []asset.Snapshot) (time.Time, error) {
-	if a.Clock == nil {
+	if a.clock == nil {
 		return time.Time{}, ErrClockMissing
 	}
-	if _, isFixed := a.Clock.(ports.FixedClock); isFixed {
-		return a.Clock.Now(), nil
+	if _, isFixed := a.clock.(ports.FixedClock); isFixed {
+		return a.clock.Now(), nil
 	}
 	if len(snapshots) > 0 {
 		return snapshots[len(snapshots)-1].CapturedAt, nil
 	}
-	return a.Clock.Now(), nil
+	return a.clock.Now(), nil
 }
 
 // AssessmentOptions holds ephemeral parameters for a specific evaluation run.
@@ -180,21 +256,21 @@ type assessmentSession struct {
 // beginTrace starts a trace span for a control×asset evaluation.
 // Returns a nopSpan if no tracer is configured — avoids nil checks at call sites.
 func (s *assessmentSession) beginTrace(resourceID, policyID string) ports.AssessmentSpan {
-	if s.assessor.Tracer == nil {
+	if s.assessor.tracer == nil {
 		return nopSpan{}
 	}
-	return s.assessor.Tracer.BeginAssessment(resourceID, policyID)
+	return s.assessor.tracer.BeginAssessment(resourceID, policyID)
 }
 
 // Assess processes the observation snapshots and returns a comprehensive ComplianceReport.
 func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions) (evaluation.ComplianceReport, error) {
-	if a.Clock == nil {
+	if a.clock == nil {
 		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a Clock")
 	}
-	if a.PredicateEval == nil {
+	if a.predicateEval == nil {
 		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a PredicateEval")
 	}
-	if a.PredicateParser == nil {
+	if a.predicateParser == nil {
 		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a PredicateParser")
 	}
 	var opt AssessmentOptions
@@ -209,7 +285,7 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 	// evaluation, enabling cross-resource reasoning via standard predicates.
 	sequenced = EnrichKeyIsolation(sequenced)
 
-	lifecycles, err := BuildLifecyclesPerControl(a.Controls, sequenced, a.PredicateEval)
+	lifecycles, err := BuildLifecyclesPerControl(a.controls, sequenced, a.predicateEval)
 	if err != nil {
 		return evaluation.ComplianceReport{}, fmt.Errorf("lifecycle analysis failed: %w", err)
 	}
@@ -232,8 +308,8 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 		opts:      opt,
 	}
 
-	for i := range a.Controls {
-		ctl := &a.Controls[i]
+	for i := range a.controls {
+		ctl := &a.controls[i]
 		if !ctl.IsEvaluatable() {
 			sess.collector.RecordSkippedControl(
 				ctl.ID,
@@ -285,7 +361,7 @@ func (s *assessmentSession) applyControl(
 		span := s.beginTrace(string(id), ctl.ID.String())
 
 		// 1. Check for organizational exemptions (Policy Overrides)
-		if rule := s.assessor.Exemptions.ShouldExempt(id); rule != nil {
+		if rule := s.assessor.exemptions.ShouldExempt(id); rule != nil {
 			span.RecordStep("exemption_check", map[string]any{
 				"pattern": rule.Pattern,
 			}, map[string]any{
@@ -314,7 +390,7 @@ func (s *assessmentSession) applyControl(
 				check.AssetType = lifecycle.Asset().Type
 				check.AssetDomain = lifecycle.Asset().Type.Domain()
 			} else {
-				s.assessor.logger().Debug("exemption check: nil lifecycle",
+				s.assessor.Logger().Debug("exemption check: nil lifecycle",
 					"control", ctl.ID, "asset", id)
 			}
 			s.collector.RecordCheck(check)
@@ -345,7 +421,7 @@ func (s *assessmentSession) applyControl(
 		// A nil here would panic the assessor; record an inconclusive
 		// check + log instead.
 		if lifecycle == nil {
-			s.assessor.logger().Warn("strategy evaluation: nil lifecycle",
+			s.assessor.Logger().Warn("strategy evaluation: nil lifecycle",
 				"control", ctl.ID, "asset", id)
 			s.collector.RecordCheck(evaluation.ResourceCheck{
 				ControlID:  ctl.ID,
@@ -397,14 +473,14 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	// Filter findings through active security exceptions.
 	activeFindings, exceptedFindings := partitionFindings(
 		s.collector.findings,
-		s.assessor.Exceptions,
+		s.assessor.exceptions,
 		s.auditTime,
 	)
 
 	// Apply acknowledgments.
 	activeFindings, acknowledgedFindings := applyAcknowledgments(
 		activeFindings,
-		s.assessor.Acknowledgments,
+		s.assessor.acknowledgments,
 		s.auditTime,
 	)
 
@@ -419,12 +495,12 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	// already accepted.
 	suppressed := buildSuppressionSet(exceptedFindings, acknowledgedFindings)
 	riskSignals := risk.ComputeItems(risk.ThresholdRequest{
-		Controls:                s.assessor.Controls,
+		Controls:                s.assessor.Controls(),
 		Snapshots:               s.snapshots,
-		GlobalMaxUnsafeDuration: s.assessor.SLAThreshold,
+		GlobalMaxUnsafeDuration: s.assessor.slaThreshold,
 		Now:                     s.auditTime,
-		PredicateEval:           s.assessor.PredicateEval,
-		Exemptions:              s.assessor.Exemptions,
+		PredicateEval:           s.assessor.predicateEval,
+		Exemptions:              s.assessor.exemptions,
 		SuppressedFindings:      suppressed,
 	})
 
@@ -435,7 +511,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 			StaveVersion:      s.opts.StaveVersion,
 			Offline:           true,
 			Now:               s.auditTime,
-			MaxUnsafeDuration: kernel.Duration(s.assessor.SLAThreshold),
+			MaxUnsafeDuration: kernel.Duration(s.assessor.slaThreshold),
 			Snapshots:         len(s.snapshots),
 			InputHashes:       s.opts.InputHashes,
 			PolicyFingerprint: s.assessor.FingerprintPolicy(),
@@ -461,7 +537,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		report.EvidencePackage = buildEvidencePackage(
 			activeFindings,
 			s.collector.checks,
-			s.assessor.Controls,
+			s.assessor.Controls(),
 			latestSnap,
 			s.auditTime,
 		)
@@ -622,27 +698,25 @@ func applyAcknowledgments(
 // FingerprintPolicy returns a deterministic hash of the active control-set.
 // This provides an integrity check for auditors to verify which rules were enforced.
 func (a *Assessor) FingerprintPolicy() kernel.Digest {
-	if len(a.Controls) == 0 || a.Hasher == nil {
+	if len(a.controls) == 0 || a.hasher == nil {
 		return ""
 	}
 	// Include evaluator identity — prevents silent evaluator swap.
 	// Hash per-control fingerprints (which include predicate, severity,
 	// type — not just IDs) sorted by ID for determinism.
-	fingerprints := make([]string, 0, len(a.Controls)+1)
+	fingerprints := make([]string, 0, len(a.controls)+1)
 	fingerprints = append(fingerprints, "eval_version:"+stavecel.EvalVersion)
-	for i := range a.Controls {
-		ctl := &a.Controls[i]
-		fingerprints = append(fingerprints, string(ctl.ID)+":"+string(ctl.Fingerprint(a.Hasher)))
+	for i := range a.controls {
+		ctl := &a.controls[i]
+		fingerprints = append(fingerprints, string(ctl.ID)+":"+string(ctl.Fingerprint(a.hasher)))
 	}
 	slices.Sort(fingerprints)
-	return a.Hasher.Digest(fingerprints, '\n')
+	return a.hasher.Digest(fingerprints, '\n')
 }
 
 // DefaultContinuityLimit defines the maximum gap allowed between scans
 // before results are considered INCONCLUSIVE.
 const DefaultContinuityLimit = 12 * time.Hour
-
-func (a *Assessor) continuityLimit() time.Duration { return a.ContinuityLimit }
 
 // evaluatedState extracts the source context from the latest snapshot.
 func evaluatedState(snapshots []asset.Snapshot) string {

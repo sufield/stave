@@ -281,8 +281,8 @@ func writeTextRoadmap(w io.Writer, rm apprank.Roadmap, showReach bool, assessmen
 	}
 }
 
-// TeamRoadmap groups prioritized entries by team.
-type TeamRoadmap struct {
+// teamRoadmap groups prioritized entries by team.
+type teamRoadmap struct {
 	TeamID       string                  `json:"team_id"`
 	TeamName     string                  `json:"team_name"`
 	FindingCount int                     `json:"finding_count"`
@@ -303,13 +303,13 @@ func runGroupByOwner(stdout io.Writer, opts *options, _ *report.Assessment, road
 	}
 
 	// Group entries by team.
-	teamMap := make(map[string]*TeamRoadmap)
+	teamMap := make(map[string]*teamRoadmap)
 	for i := range roadmap.Entries {
 		e := &roadmap.Entries[i]
 		owner := manifest.ResolveOwner(nil, string(e.AssetID), string(e.ControlID))
 		tr, ok := teamMap[owner.TeamID]
 		if !ok {
-			tr = &TeamRoadmap{TeamID: owner.TeamID, TeamName: owner.TeamName}
+			tr = &teamRoadmap{TeamID: owner.TeamID, TeamName: owner.TeamName}
 			teamMap[owner.TeamID] = tr
 		}
 		tr.FindingCount++
@@ -324,11 +324,11 @@ func runGroupByOwner(stdout io.Writer, opts *options, _ *report.Assessment, road
 	}
 
 	// Collect teams sorted by total risk (highest first).
-	var teamRoadmaps []TeamRoadmap
+	var teamRoadmaps []teamRoadmap
 	for _, tr := range teamMap {
 		teamRoadmaps = append(teamRoadmaps, *tr)
 	}
-	slices.SortFunc(teamRoadmaps, func(a, b TeamRoadmap) int {
+	slices.SortFunc(teamRoadmaps, func(a, b teamRoadmap) int {
 		if a.TotalRisk > b.TotalRisk {
 			return -1
 		}
@@ -342,7 +342,7 @@ func runGroupByOwner(stdout io.Writer, opts *options, _ *report.Assessment, road
 	case "json":
 		output := struct {
 			Roadmap      apprank.Roadmap `json:"roadmap"`
-			TeamRoadmaps []TeamRoadmap   `json:"team_roadmaps"`
+			TeamRoadmaps []teamRoadmap   `json:"team_roadmaps"`
 		}{Roadmap: roadmap, TeamRoadmaps: teamRoadmaps}
 		data, marshalErr := json.MarshalIndent(output, "", "  ")
 		if marshalErr != nil {

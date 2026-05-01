@@ -15,17 +15,17 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// InventoryReport is the top-level output.
-type InventoryReport struct {
+// inventoryReport is the top-level output.
+type inventoryReport struct {
 	GeneratedAt     time.Time        `json:"generated_at"`
 	ObservationsDir string           `json:"observations_dir"`
 	RetentionDays   int              `json:"retention_days"`
-	Summary         InventorySummary `json:"summary"`
-	Snapshots       []SnapshotEntry  `json:"snapshots"`
+	Summary         inventorySummary `json:"summary"`
+	Snapshots       []snapshotEntry  `json:"snapshots"`
 }
 
-// InventorySummary aggregates counts by action.
-type InventorySummary struct {
+// inventorySummary aggregates counts by action.
+type inventorySummary struct {
 	TotalFiles         int   `json:"total_files"`
 	TotalSizeBytes     int64 `json:"total_size_bytes"`
 	RecommendedKeep    int   `json:"recommended_keep"`
@@ -34,8 +34,8 @@ type InventorySummary struct {
 	RecommendedReview  int   `json:"recommended_review"`
 }
 
-// SnapshotEntry is per-file inventory data.
-type SnapshotEntry struct {
+// snapshotEntry is per-file inventory data.
+type snapshotEntry struct {
 	Path                    string    `json:"path"`
 	CapturedAt              time.Time `json:"captured_at"`
 	FileSizeBytes           int64     `json:"file_size_bytes"`
@@ -57,7 +57,7 @@ func runInventory(w io.Writer, opts *inventoryOptions) error {
 	now := time.Now().UTC()
 	retentionThreshold := time.Duration(opts.RetentionDays) * 24 * time.Hour
 
-	var snapshots []SnapshotEntry
+	var snapshots []snapshotEntry
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
 			continue
@@ -73,7 +73,7 @@ func runInventory(w io.Writer, opts *inventoryOptions) error {
 		return snapshots[i].CapturedAt.After(snapshots[j].CapturedAt)
 	})
 
-	report := InventoryReport{
+	report := inventoryReport{
 		GeneratedAt:     now,
 		ObservationsDir: opts.ObservationsDir,
 		RetentionDays:   opts.RetentionDays,
@@ -101,7 +101,7 @@ func runInventory(w io.Writer, opts *inventoryOptions) error {
 	}
 }
 
-func buildSnapshotEntry(path string, now time.Time, retentionThreshold time.Duration, minAssets int) *SnapshotEntry {
+func buildSnapshotEntry(path string, now time.Time, retentionThreshold time.Duration, minAssets int) *snapshotEntry {
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil
@@ -134,7 +134,7 @@ func buildSnapshotEntry(path string, now time.Time, retentionThreshold time.Dura
 
 	action, reason := recommendAction(retentionEligible, qualityPass, assessed)
 
-	return &SnapshotEntry{
+	return &snapshotEntry{
 		Path:                    path,
 		CapturedAt:              capturedAt,
 		FileSizeBytes:           info.Size(),
@@ -182,8 +182,8 @@ func recommendAction(retentionEligible, qualityPass, assessed bool) (string, str
 	}
 }
 
-func computeSummary(snapshots []SnapshotEntry) InventorySummary {
-	var s InventorySummary
+func computeSummary(snapshots []snapshotEntry) inventorySummary {
+	var s inventorySummary
 	s.TotalFiles = len(snapshots)
 	for i := range snapshots {
 		s.TotalSizeBytes += snapshots[i].FileSizeBytes
@@ -201,13 +201,13 @@ func computeSummary(snapshots []SnapshotEntry) InventorySummary {
 	return s
 }
 
-func renderInventoryJSON(w io.Writer, r *InventoryReport) error {
+func renderInventoryJSON(w io.Writer, r *inventoryReport) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(r)
 }
 
-func renderInventoryTable(w io.Writer, r *InventoryReport) error { //nolint:unparam // error return for format-dispatch consistency
+func renderInventoryTable(w io.Writer, r *inventoryReport) error { //nolint:unparam // error return for format-dispatch consistency
 	totalMB := float64(r.Summary.TotalSizeBytes) / (1024 * 1024)
 	fmt.Fprintln(w, "SNAPSHOT INVENTORY")
 	fmt.Fprintf(w, "Directory: %s  |  Retention: %d days  |  %d files  (%.0f MB)\n\n",
@@ -240,7 +240,7 @@ func renderInventoryTable(w io.Writer, r *InventoryReport) error { //nolint:unpa
 	return nil
 }
 
-func renderInventoryOpenMetrics(w io.Writer, r *InventoryReport) error { //nolint:unparam // error return for format-dispatch consistency
+func renderInventoryOpenMetrics(w io.Writer, r *inventoryReport) error { //nolint:unparam // error return for format-dispatch consistency
 	tsMs := r.GeneratedAt.UnixMilli()
 
 	fmt.Fprintln(w, "# HELP stave_snapshot_count Total snapshot files by recommended action")

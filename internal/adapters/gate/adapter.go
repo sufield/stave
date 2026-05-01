@@ -2,6 +2,7 @@ package gate
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -44,12 +45,22 @@ type Assets struct {
 
 // FindingsCounter counts findings from a persisted evaluation artifact.
 type FindingsCounter struct {
-	LoadEvaluation EvaluationLoaderFunc
+	loadEvaluation EvaluationLoaderFunc
+}
+
+// NewFindingsCounter constructs a FindingsCounter. Returns an error
+// when loader is nil so a misconfigured wiring is caught at startup
+// rather than panicking on first use.
+func NewFindingsCounter(loader EvaluationLoaderFunc) (*FindingsCounter, error) {
+	if loader == nil {
+		return nil, errors.New("gate.NewFindingsCounter: loader is nil")
+	}
+	return &FindingsCounter{loadEvaluation: loader}, nil
 }
 
 // CountFindings loads an evaluation and returns the number of findings.
 func (f *FindingsCounter) CountFindings(ctx context.Context, path string) (int, error) {
-	eval, err := f.LoadEvaluation(ctx, path)
+	eval, err := f.loadEvaluation(ctx, path)
 	if err != nil {
 		return 0, err
 	}
@@ -58,39 +69,79 @@ func (f *FindingsCounter) CountFindings(ctx context.Context, path string) (int, 
 
 // BaselineComparer compares an evaluation against a baseline artifact.
 type BaselineComparer struct {
-	Sanitizer      kernel.Sanitizer
-	LoadEvaluation EvaluationLoaderFunc
-	LoadBaseline   BaselineLoaderFunc
-	Compare        BaselineCompareFunc
+	sanitizer      kernel.Sanitizer
+	loadEvaluation EvaluationLoaderFunc
+	loadBaseline   BaselineLoaderFunc
+	compare        BaselineCompareFunc
+}
+
+// NewBaselineComparer constructs a BaselineComparer. The three
+// loader/comparator deps are required; san may be nil — the compare
+// function decides what nil means (typically: no sanitization).
+func NewBaselineComparer(
+	san kernel.Sanitizer,
+	loadEval EvaluationLoaderFunc,
+	loadBaseline BaselineLoaderFunc,
+	compare BaselineCompareFunc,
+) (*BaselineComparer, error) {
+	switch {
+	case loadEval == nil:
+		return nil, errors.New("gate.NewBaselineComparer: loadEvaluation is nil")
+	case loadBaseline == nil:
+		return nil, errors.New("gate.NewBaselineComparer: loadBaseline is nil")
+	case compare == nil:
+		return nil, errors.New("gate.NewBaselineComparer: compare is nil")
+	}
+	return &BaselineComparer{
+		sanitizer:      san,
+		loadEvaluation: loadEval,
+		loadBaseline:   loadBaseline,
+		compare:        compare,
+	}, nil
 }
 
 // CompareAgainstBaseline loads evaluation and baseline, returns current and new counts.
 func (b *BaselineComparer) CompareAgainstBaseline(ctx context.Context, evalPath, baselinePath string) (currentCount, newCount int, err error) {
-	eval, err := b.LoadEvaluation(ctx, evalPath)
+	eval, err := b.loadEvaluation(ctx, evalPath)
 	if err != nil {
 		return 0, 0, fmt.Errorf("loading evaluation: %w", err)
 	}
-	base, err := b.LoadBaseline(ctx, baselinePath, kernel.KindBaseline)
+	base, err := b.loadBaseline(ctx, baselinePath, kernel.KindBaseline)
 	if err != nil {
 		return 0, 0, fmt.Errorf("loading baseline: %w", err)
 	}
-	bc := b.Compare(b.Sanitizer, base.Findings, eval.Findings)
+	bc := b.compare(b.sanitizer, base.Findings, eval.Findings)
 	return len(bc.Current), len(bc.Comparison.New), nil
 }
 
 // OverdueCounter counts overdue upcoming risk items.
 type OverdueCounter struct {
-	LoadAssets      AssetLoaderFunc
-	NewCELEvaluator CELEvaluatorFactory
+	loadAssets      AssetLoaderFunc
+	newCELEvaluator CELEvaluatorFactory
+}
+
+// NewOverdueCounter constructs an OverdueCounter; both dependencies
+// are required.
+func NewOverdueCounter(
+	loadAssets AssetLoaderFunc,
+	newCEL CELEvaluatorFactory,
+) (*OverdueCounter, error) {
+	switch {
+	case loadAssets == nil:
+		return nil, errors.New("gate.NewOverdueCounter: loadAssets is nil")
+	case newCEL == nil:
+		return nil, errors.New("gate.NewOverdueCounter: newCELEvaluator is nil")
+	}
+	return &OverdueCounter{loadAssets: loadAssets, newCELEvaluator: newCEL}, nil
 }
 
 // CountOverdue loads assets and computes the number of overdue upcoming actions.
 func (o *OverdueCounter) CountOverdue(ctx context.Context, controlsDir, observationsDir string, maxUnsafe time.Duration, now time.Time) (int, error) {
-	loaded, err := o.LoadAssets(ctx, observationsDir, controlsDir)
+	loaded, err := o.loadAssets(ctx, observationsDir, controlsDir)
 	if err != nil {
 		return 0, err
 	}
-	celEval, err := o.NewCELEvaluator()
+	celEval, err := o.newCELEvaluator()
 	if err != nil {
 		return 0, err
 	}

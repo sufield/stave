@@ -10,8 +10,19 @@ import (
 // CoverageValidator defines the criteria for determining if a lifecycle
 // has enough data for a confident PASS/VIOLATION decision.
 type CoverageValidator struct {
-	MinRequiredSpan time.Duration
-	MaxAllowedGap   time.Duration
+	minRequiredSpan time.Duration
+	maxAllowedGap   time.Duration
+}
+
+// NewCoverageValidator constructs a CoverageValidator. minSpan must
+// be > maxGap; a maxGap that exceeds the minimum required span would
+// always trip the gap check before the span check, leaving no
+// observation pattern that could pass.
+func NewCoverageValidator(minSpan, maxGap time.Duration) (*CoverageValidator, error) {
+	if maxGap > 0 && minSpan <= maxGap {
+		return nil, fmt.Errorf("engine.NewCoverageValidator: minSpan (%s) must exceed maxGap (%s)", minSpan, maxGap)
+	}
+	return &CoverageValidator{minRequiredSpan: minSpan, maxAllowedGap: maxGap}, nil
 }
 
 // IsSufficient checks if the provided lifecycle meets the coverage criteria.
@@ -29,12 +40,12 @@ func (v CoverageValidator) IsSufficient(t *asset.ExposureLifecycle) (string, boo
 
 	if v.auditWindowTooShort(stats) {
 		return fmt.Sprintf("observation span %s is less than required %s",
-			stats.CoverageSpan(), v.MinRequiredSpan), false
+			stats.CoverageSpan(), v.minRequiredSpan), false
 	}
 
 	if v.hasBlindSpots(stats) {
 		return fmt.Sprintf("maximum observation gap %s exceeds threshold %s",
-			stats.MaxGap(), v.MaxAllowedGap), false
+			stats.MaxGap(), v.maxAllowedGap), false
 	}
 
 	return "", true
@@ -43,11 +54,11 @@ func (v CoverageValidator) IsSufficient(t *asset.ExposureLifecycle) (string, boo
 // auditWindowTooShort reports whether the observation span is shorter than
 // the minimum required for a confident evaluation.
 func (v CoverageValidator) auditWindowTooShort(stats asset.ObservationStats) bool {
-	return stats.CoverageSpan() < v.MinRequiredSpan
+	return stats.CoverageSpan() < v.minRequiredSpan
 }
 
 // hasBlindSpots reports whether the data contains gaps large enough to
 // miss a state change, making the evaluation unreliable.
 func (v CoverageValidator) hasBlindSpots(stats asset.ObservationStats) bool {
-	return v.MaxAllowedGap > 0 && stats.MaxGap() > v.MaxAllowedGap
+	return v.maxAllowedGap > 0 && stats.MaxGap() > v.maxAllowedGap
 }

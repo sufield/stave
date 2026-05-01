@@ -39,7 +39,7 @@ func TestSeverityOverrideAppliedInResults(t *testing.T) {
 func TestProfileRationaleAccessible(t *testing.T) {
 	// Verify that ProfileRationale returns non-empty strings for controls
 	// that have rationales set.
-	catalog := compliance.ControlRegistry
+	catalog := compliance.GetControlRegistry()
 	controlsWithRationale := 0
 
 	for _, def := range catalog.All() {
@@ -87,7 +87,7 @@ func TestAllHIPAATaggedControlsAppearInResults(t *testing.T) {
 	}
 
 	// Find all controls tagged for hipaa.
-	catalog := compliance.ControlRegistry
+	catalog := compliance.GetControlRegistry()
 	hipaaControlIDs := make(map[kernel.ControlID]bool)
 	for _, def := range catalog.All() {
 		for _, prof := range def.Def().ComplianceProfiles() {

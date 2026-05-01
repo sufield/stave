@@ -69,7 +69,7 @@ type GroupInput struct {
 func Group(input GroupInput) *Plan {
 	minSev := 2 // default: medium
 	if parsed, err := policy.ParseSeverity(input.MinSeverity); err == nil && parsed != policy.SeverityNone {
-		if v, ok := policy.SeverityOrder[parsed]; ok {
+		if v, ok := policy.SeverityOrder(parsed); ok {
 			minSev = v
 		}
 	}
@@ -84,7 +84,7 @@ func Group(input GroupInput) *Plan {
 	var items []attributed
 	for i := range input.Findings {
 		f := &input.Findings[i]
-		sev := policy.SeverityOrder[f.ControlSeverity]
+		sev, _ := policy.SeverityOrder(f.ControlSeverity)
 		if sev > minSev {
 			continue
 		}
@@ -102,8 +102,8 @@ func Group(input GroupInput) *Plan {
 
 	// Sort by severity DESC, dwell DESC.
 	sort.Slice(items, func(i, j int) bool {
-		si := policy.SeverityOrder[items[i].finding.ControlSeverity]
-		sj := policy.SeverityOrder[items[j].finding.ControlSeverity]
+		si, _ := policy.SeverityOrder(items[i].finding.ControlSeverity)
+		sj, _ := policy.SeverityOrder(items[j].finding.ControlSeverity)
 		if si != sj {
 			return si < sj
 		}

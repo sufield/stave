@@ -63,8 +63,10 @@ type ControlDefinition struct {
 	// excluded from `stave expand` results. See internal/archetype.
 	Archetype string
 
-	// Prepared holds pre-calculated values to optimize the evaluation hot path.
-	Prepared PreparedParams `json:"-"`
+	// prepared holds pre-calculated values to optimize the evaluation
+	// hot path. Read via PreparedParams(); only Prepare()
+	// (in this package) writes to it.
+	prepared PreparedParams `json:"-"`
 }
 
 // HasCompliance reports whether the control has a non-empty mapping for the given framework key.
@@ -84,17 +86,26 @@ func (ctl *ControlDefinition) AppliesToAssetType(assetType kernel.AssetType) boo
 	return slices.Contains(ctl.ApplicableAssetTypes, assetType)
 }
 
+// PreparedParams returns the cached pre-calculated parameters
+// populated by Prepare(). Read-only view — callers must not mutate
+// the returned struct's reference fields. Useful for callers that
+// want to inspect prepare state without going through the
+// per-attribute accessors below.
+func (ctl *ControlDefinition) PreparedParams() PreparedParams {
+	return ctl.prepared
+}
+
 // Prepare extracts and validates typed parameters from the raw Params map.
 // Idempotent — safe to call multiple times but not concurrently.
 // See PreparedParams for concurrency notes.
 func (ctl *ControlDefinition) Prepare() error {
-	if ctl.Prepared.Ready {
+	if ctl.prepared.Ready {
 		return nil
 	}
 
 	// Non-failable params — always parse.
-	ctl.Prepared.Recurrence = ParseRecurrencePolicy(ctl.Params)
-	ctl.Prepared.PrefixExposure = preparePrefixExposure(ctl.Params)
+	ctl.prepared.Recurrence = ParseRecurrencePolicy(ctl.Params)
+	ctl.prepared.PrefixExposure = preparePrefixExposure(ctl.Params)
 
 	// Failable param — duration parsing.
 	if raw := ctl.Params.paramString("max_unsafe_duration"); raw != "" {
@@ -102,8 +113,8 @@ func (ctl *ControlDefinition) Prepare() error {
 		if err != nil {
 			return fmt.Errorf("invalid max_unsafe_duration %q: %w", raw, err)
 		}
-		ctl.Prepared.MaxUnsafeDuration = d
-		ctl.Prepared.HasMaxUnsafeDuration = true
+		ctl.prepared.MaxUnsafeDuration = d
+		ctl.prepared.HasMaxUnsafeDuration = true
 	}
 
 	if raw := ctl.Params.paramString("sla_deadline"); raw != "" {
@@ -111,12 +122,12 @@ func (ctl *ControlDefinition) Prepare() error {
 		if err != nil {
 			return fmt.Errorf("invalid sla_deadline %q: %w", raw, err)
 		}
-		ctl.Prepared.SLADeadline = d
-		ctl.Prepared.HasSLADeadline = true
+		ctl.prepared.SLADeadline = d
+		ctl.prepared.HasSLADeadline = true
 	}
 
 	// Mark Ready only after all parsing succeeds.
-	ctl.Prepared.Ready = true
+	ctl.prepared.Ready = true
 	return nil
 }
 
@@ -132,34 +143,34 @@ func preparePrefixExposure(params ControlParams) PrefixExposureParams {
 // RecurrencePolicy returns the parsed recurrence parameters.
 func (ctl *ControlDefinition) RecurrencePolicy() RecurrencePolicy {
 	_ = ctl.ensurePrepared() // load-time Prepare() validates; lazy fallback logs.
-	return ctl.Prepared.Recurrence
+	return ctl.prepared.Recurrence
 }
 
 // MaxUnsafeDuration returns the per-control max_unsafe_duration param.
 // Returns 0 if not set (caller should apply CLI default fallback).
 func (ctl *ControlDefinition) MaxUnsafeDuration() time.Duration {
 	_ = ctl.ensurePrepared()
-	return ctl.Prepared.MaxUnsafeDuration
+	return ctl.prepared.MaxUnsafeDuration
 }
 
 // SLADeadline returns the per-control sla_deadline if set, otherwise 0.
 func (ctl *ControlDefinition) SLADeadline() time.Duration {
 	_ = ctl.ensurePrepared()
-	return ctl.Prepared.SLADeadline
+	return ctl.prepared.SLADeadline
 }
 
 // HasSLADeadline reports whether this control has an explicit sla_deadline param.
 func (ctl *ControlDefinition) HasSLADeadline() bool {
 	_ = ctl.ensurePrepared()
-	return ctl.Prepared.HasSLADeadline
+	return ctl.prepared.HasSLADeadline
 }
 
 // EffectiveMaxUnsafeDuration returns the per-control max_unsafe_duration if explicitly set,
 // otherwise returns the provided fallback (typically the CLI --max-unsafe value).
 func (ctl *ControlDefinition) EffectiveMaxUnsafeDuration(fallback time.Duration) time.Duration {
 	_ = ctl.ensurePrepared()
-	if ctl.Prepared.HasMaxUnsafeDuration {
-		return ctl.Prepared.MaxUnsafeDuration
+	if ctl.prepared.HasMaxUnsafeDuration {
+		return ctl.prepared.MaxUnsafeDuration
 	}
 	return fallback
 }
@@ -167,7 +178,7 @@ func (ctl *ControlDefinition) EffectiveMaxUnsafeDuration(fallback time.Duration)
 // ExposurePrefixes returns the typed prefix lists for prefix_exposure controls.
 func (ctl *ControlDefinition) ExposurePrefixes() PrefixExposureParams {
 	_ = ctl.ensurePrepared()
-	return ctl.Prepared.PrefixExposure
+	return ctl.prepared.PrefixExposure
 }
 
 // ensurePrepared lazily calls Prepare() on first access. Returns the

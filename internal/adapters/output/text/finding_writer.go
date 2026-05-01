@@ -392,13 +392,13 @@ func writeFindingReasoning(d *drawer, f *remediation.Finding) {
 	if len(scope) > 0 {
 		d.f("   Scope:\n")
 		for _, c := range scope {
-			d.f("     %s\n", translation.RenderClause(c, translation.DefaultFieldRegistry))
+			d.f("     %s\n", translation.RenderClause(c, translation.GetDefaultFieldRegistry()))
 		}
 	}
 	if len(reasoning) > 0 {
 		d.f("   Reasoning:\n")
 		for _, c := range reasoning {
-			d.f("     %s\n", translation.RenderClause(c, translation.DefaultFieldRegistry))
+			d.f("     %s\n", translation.RenderClause(c, translation.GetDefaultFieldRegistry()))
 		}
 	}
 }
@@ -654,5 +654,3 @@ func attackStageStrings(stages []kernel.AttackStage) []string {
 	}
 	return s
 }
-
-

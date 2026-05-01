@@ -19,14 +19,14 @@ type FailingControl struct {
 // CompoundFinding represents a chain-detected compound risk — multiple
 // co-failing controls that together create a risk greater than their sum.
 type CompoundFinding struct {
-	ChainID           kernel.ChainID     `json:"chain"`
-	AssetID           asset.ID           `json:"asset_id,omitempty"`
-	Description       string             `json:"description,omitempty"`
-	ControlsFailing   []kernel.ControlID `json:"controls_failing"`
-	MissingSafeguards []kernel.ControlID `json:"missing_safeguards,omitempty"`
-	CompoundScore     float64            `json:"compound_score"`
-	Severity          policy.Severity    `json:"severity"`
-	Narrative         string             `json:"narrative"`
+	ChainID           kernel.ChainID       `json:"chain"`
+	AssetID           asset.ID             `json:"asset_id,omitempty"`
+	Description       string               `json:"description,omitempty"`
+	ControlsFailing   []kernel.ControlID   `json:"controls_failing"`
+	MissingSafeguards []kernel.ControlID   `json:"missing_safeguards,omitempty"`
+	CompoundScore     float64              `json:"compound_score"`
+	Severity          policy.Severity      `json:"severity"`
+	Narrative         string               `json:"narrative"`
 	AttackStages      []kernel.AttackStage `json:"attack_stages,omitempty"`
 }
 

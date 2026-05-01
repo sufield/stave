@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-func renderTrendJSON(w io.Writer, r *TrendReport) error {
+func renderTrendJSON(w io.Writer, r *trendReport) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(r); err != nil {

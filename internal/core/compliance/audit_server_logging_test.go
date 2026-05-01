@@ -19,7 +19,7 @@ func loggingBucket(id, targetBucket string) asset.Asset {
 }
 
 func TestAudit001(t *testing.T) {
-	ctl := ControlRegistry.Lookup("AUDIT.001")
+	ctl := GetControlRegistry().Lookup("AUDIT.001")
 	if ctl == nil {
 		t.Fatal("AUDIT.001 not registered")
 	}

@@ -82,14 +82,15 @@ func runBisect(ctx context.Context, in Input) error {
 	// Build evaluator function for the single control.
 	evaluator := appbisect.MakeEvaluator(
 		func(snaps []asset.Snapshot) (evaluation.ComplianceReport, error) {
-			a := engine.NewAssessor()
-			a.Controls = []policy.ControlDefinition{target}
-			a.Clock = clock
-			a.Hasher = crypto.NewHasher()
-			a.PredicateEval = celEval
-			a.PredicateParser = func(_ any) (*policy.UnsafePredicate, error) {
-				return &policy.UnsafePredicate{}, nil
-			}
+			a := engine.NewAssessor(
+				engine.WithControls([]policy.ControlDefinition{target}),
+				engine.WithClock(clock),
+				engine.WithHasher(crypto.NewHasher()),
+				engine.WithPredicateEval(celEval),
+				engine.WithPredicateParser(func(_ any) (*policy.UnsafePredicate, error) {
+					return &policy.UnsafePredicate{}, nil
+				}),
+			)
 			return a.Assess(snaps)
 		},
 		targetID,

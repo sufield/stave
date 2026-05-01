@@ -22,7 +22,7 @@ func TestAnnotateChainMembership_SingleChain(t *testing.T) {
 				Description:     "Test chain fires",
 				ControlsFailing: []kernel.ControlID{"CTL.A", "CTL.B"},
 				Severity:        policy.SeverityCritical,
-				AttackStages: []kernel.AttackStage{"exfiltration", "initial_access"},
+				AttackStages:    []kernel.AttackStage{"exfiltration", "initial_access"},
 			},
 		},
 	}
@@ -68,14 +68,14 @@ func TestAnnotateChainMembership_MultipleChains(t *testing.T) {
 				Description:     "Chain A",
 				ControlsFailing: []kernel.ControlID{"CTL.SHARED", "CTL.ONLY_A"},
 				Severity:        policy.SeverityCritical,
-				AttackStages: []kernel.AttackStage{"initial_access"},
+				AttackStages:    []kernel.AttackStage{"initial_access"},
 			},
 			{
 				ChainID:         "chain_b",
 				Description:     "Chain B",
 				ControlsFailing: []kernel.ControlID{"CTL.SHARED"},
 				Severity:        policy.SeverityHigh,
-				AttackStages: []kernel.AttackStage{"exfiltration"},
+				AttackStages:    []kernel.AttackStage{"exfiltration"},
 			},
 		},
 	}

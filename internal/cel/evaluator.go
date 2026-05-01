@@ -11,7 +11,7 @@ import (
 // Returns true if the asset matches the unsafe predicate (i.e., is unsafe).
 // params are the control's configured parameters (e.g., min_retention_days).
 func Evaluate(cp CompiledPredicate, a asset.Asset, identities []asset.CloudIdentity, params map[string]any) (bool, error) {
-	if cp.Program == nil {
+	if cp.program == nil {
 		// Reach the caller with the source expression (when present)
 		// so the operator can correlate the failure back to the
 		// control YAML even though compilation never succeeded.
@@ -54,7 +54,7 @@ func Evaluate(cp CompiledPredicate, a asset.Asset, identities []asset.CloudIdent
 		"identity":   identity,
 	}
 
-	out, _, err := cp.Program.Eval(activation)
+	out, _, err := cp.program.Eval(activation)
 	if err != nil {
 		return false, fmt.Errorf("cel eval: %w\n  expression: %s", err, cp.Expression)
 	}

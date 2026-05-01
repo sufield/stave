@@ -17,14 +17,14 @@ func (s AttackStage) String() string { return string(s) }
 // Recognized attack stage values. The catalog/linter enforces these;
 // the constants exist so callers in the engine and graph packages
 // can reference them by name rather than open-coding string literals.
-const (
-	AttackStageInitialAccess     AttackStage = "initial_access"
-	AttackStageCredentialAccess  AttackStage = "credential_access"
-	AttackStagePersistence       AttackStage = "persistence"
-	AttackStageExfiltration      AttackStage = "exfiltration"
-	AttackStageDetectionEvasion  AttackStage = "detection_evasion"
-	AttackStageResilience        AttackStage = "resilience"
+const ( //nolint:gosec // G101 false positive: ATT&CK stage names, not credentials
+	AttackStageInitialAccess       AttackStage = "initial_access"
+	AttackStageCredentialAccess    AttackStage = "credential_access" //nolint:gosec // G101 false positive: ATT&CK stage, not a credential
+	AttackStagePersistence         AttackStage = "persistence"
+	AttackStageExfiltration        AttackStage = "exfiltration"
+	AttackStageDetectionEvasion    AttackStage = "detection_evasion"
+	AttackStageResilience          AttackStage = "resilience"
 	AttackStagePrivilegeEscalation AttackStage = "privilege_escalation"
-	AttackStageLateralMovement   AttackStage = "lateral_movement"
-	AttackStageImpact            AttackStage = "impact"
+	AttackStageLateralMovement     AttackStage = "lateral_movement"
+	AttackStageImpact              AttackStage = "impact"
 )

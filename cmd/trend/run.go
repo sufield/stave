@@ -44,9 +44,9 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 	}
 
 	// Compute per-run metrics.
-	runs := make([]RunMetrics, len(assessments))
+	runs := make([]runMetrics, len(assessments))
 	for i, a := range assessments {
-		var prev *RunMetrics
+		var prev *runMetrics
 		if i > 0 {
 			prev = &runs[i-1]
 		}
@@ -82,14 +82,14 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 	scoreResult := computePostureScore(latestAssessment, slaTrend, chainDefs, maxChainWeight)
 
 	// Build report.
-	trendReport := TrendReport{
+	report := trendReport{
 		GeneratedAt: time.Now().UTC(),
-		Period: Period{
+		Period: period{
 			Start:    assessments[0].Run.Now,
 			End:      assessments[len(assessments)-1].Run.Now,
 			RunCount: len(assessments),
 		},
-		Summary: TrendSummary{
+		Summary: trendSummary{
 			FirstViolationRate:  runs[0].ViolationRate,
 			LatestViolationRate: runs[len(runs)-1].ViolationRate,
 		},
@@ -104,12 +104,12 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 	}
 
 	// Compute summary direction.
-	if trendReport.Summary.FirstViolationRate > 0 {
-		change := (trendReport.Summary.LatestViolationRate - trendReport.Summary.FirstViolationRate) /
-			trendReport.Summary.FirstViolationRate * 100
-		trendReport.Summary.NetChangePercent = change
+	if report.Summary.FirstViolationRate > 0 {
+		change := (report.Summary.LatestViolationRate - report.Summary.FirstViolationRate) /
+			report.Summary.FirstViolationRate * 100
+		report.Summary.NetChangePercent = change
 	}
-	trendReport.Summary.Direction = velocity.Direction
+	report.Summary.Direction = velocity.Direction
 
 	// Per-team trends if manifest provided.
 	if opts.TeamManifest != "" {
@@ -118,15 +118,15 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 			return fmt.Errorf("load team manifest: %w", manifestErr)
 		}
 		teamTrends, teamSummary := computeTeamTrends(assessments, manifest, opts.Team, opts.RegressionOnly)
-		trendReport.TeamTrends = teamTrends
-		trendReport.TeamSummary = teamSummary
+		report.TeamTrends = teamTrends
+		report.TeamSummary = teamSummary
 
 		if opts.Rollup != "" {
 			group := manifest.HierarchyByID(opts.Rollup)
 			if group == nil {
 				return fmt.Errorf("hierarchy group %q not found in manifest", opts.Rollup)
 			}
-			trendReport.Rollup = computeRollup(teamTrends, group)
+			report.Rollup = computeRollup(teamTrends, group)
 		}
 	}
 
@@ -143,17 +143,17 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 
 	switch opts.Format {
 	case "json":
-		return renderTrendJSON(out, &trendReport)
+		return renderTrendJSON(out, &report)
 	case "openmetrics":
-		return renderTrendOpenMetrics(out, &trendReport)
+		return renderTrendOpenMetrics(out, &report)
 	case "executive-summary":
-		return renderExecutiveSummary(out, &trendReport)
+		return renderExecutiveSummary(out, &report)
 	default:
-		return renderTrendTable(out, &trendReport)
+		return renderTrendTable(out, &report)
 	}
 }
 
-func computePostureScore(a *report.Assessment, slaTrend []SLATrendMetric, chainDefs int, maxChainWeight float64) appscore.Result {
+func computePostureScore(a *report.Assessment, slaTrend []slaTrendMetric, chainDefs int, maxChainWeight float64) appscore.Result {
 	slaTotal := 0
 	slaBreached := 0
 	hasSLA := false

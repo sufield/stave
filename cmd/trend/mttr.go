@@ -16,7 +16,7 @@ type violationWindow struct {
 }
 
 // computeMTTR calculates mean time to remediate from a sequence of assessments.
-func computeMTTR(assessments []*report.Assessment) map[string]MTTREntry {
+func computeMTTR(assessments []*report.Assessment) map[string]mttrEntry {
 	// Track open windows by violation key.
 	windows := make(map[string]*violationWindow)
 	var closedWindows []violationWindow
@@ -81,13 +81,13 @@ func computeMTTR(assessments []*report.Assessment) map[string]MTTREntry {
 		acc.count++
 	}
 
-	result := make(map[string]MTTREntry, len(bySev))
+	result := make(map[string]mttrEntry, len(bySev))
 	for sev, acc := range bySev {
 		avg := 0.0
 		if acc.count > 0 {
 			avg = acc.totalDays / float64(acc.count)
 		}
-		result[sev] = MTTREntry{
+		result[sev] = mttrEntry{
 			AvgDays:     avg,
 			WindowCount: acc.count,
 		}

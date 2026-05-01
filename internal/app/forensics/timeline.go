@@ -132,14 +132,15 @@ func BuildTimeline(input Input) (*Timeline, error) {
 
 		// Control verdict changes.
 		if input.CELEval != nil {
-			a := engine.NewAssessor()
-			a.Controls = input.Controls
-			a.Clock = input.Clock
-			a.Hasher = input.Hasher
-			a.PredicateEval = input.CELEval
-			a.PredicateParser = func(_ any) (*policy.UnsafePredicate, error) {
-				return &policy.UnsafePredicate{}, nil
-			}
+			a := engine.NewAssessor(
+				engine.WithControls(input.Controls),
+				engine.WithClock(input.Clock),
+				engine.WithHasher(input.Hasher),
+				engine.WithPredicateEval(input.CELEval),
+				engine.WithPredicateParser(func(_ any) (*policy.UnsafePredicate, error) {
+					return &policy.UnsafePredicate{}, nil
+				}),
+			)
 			report, err := a.Assess([]asset.Snapshot{snap})
 			if err == nil {
 				currentVerdicts := make(map[kernel.ControlID]bool)

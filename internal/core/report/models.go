@@ -45,24 +45,24 @@ type AssessmentRequest struct {
 
 // Assessment is the top-level schema for a security evaluation outcome.
 type Assessment struct {
-	SchemaVersion        kernel.Schema                `json:"schema_version"`
-	Kind                 Kind                         `json:"kind"`
-	Run                  evaluation.RunInfo           `json:"run"`
-	Summary              evaluation.ComplianceSummary `json:"summary"`
-	Status               evaluation.SecurityState     `json:"status"`
-	RiskSignals          risk.ThresholdItems          `json:"risk_signals,omitempty"`
-	Findings             []remediation.Finding        `json:"findings"`
-	ChainFindings        []risk.CompoundFinding       `json:"chain_findings,omitempty"`
-	AttackStageSummary   map[kernel.AttackStage]string            `json:"attack_stage_summary,omitempty"`
-	TopExposures         []risk.ExposureRank          `json:"top_exposures,omitempty"`
-	Issues               []evaluation.Issue           `json:"issues,omitempty"`
-	ExceptedFindings     []evaluation.ExceptedFinding `json:"excepted_findings,omitempty"`
-	AcknowledgedFindings []policy.AcknowledgedFinding `json:"acknowledged_findings,omitempty"`
-	RemediationGroups    []remediation.Group          `json:"remediation_groups,omitempty"`
-	SkippedControls      []evaluation.SkippedControl  `json:"skipped_controls,omitempty"`
-	ExemptedAssets       []asset.ExemptedAsset        `json:"exempted_assets,omitempty"`
-	CoveragePosture      *coverage.CoverageIndex      `json:"-"`
-	Extensions           *evaluation.Extensions       `json:"extensions,omitempty"`
+	SchemaVersion        kernel.Schema                 `json:"schema_version"`
+	Kind                 Kind                          `json:"kind"`
+	Run                  evaluation.RunInfo            `json:"run"`
+	Summary              evaluation.ComplianceSummary  `json:"summary"`
+	Status               evaluation.SecurityState      `json:"status"`
+	RiskSignals          risk.ThresholdItems           `json:"risk_signals,omitempty"`
+	Findings             []remediation.Finding         `json:"findings"`
+	ChainFindings        []risk.CompoundFinding        `json:"chain_findings,omitempty"`
+	AttackStageSummary   map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
+	TopExposures         []risk.ExposureRank           `json:"top_exposures,omitempty"`
+	Issues               []evaluation.Issue            `json:"issues,omitempty"`
+	ExceptedFindings     []evaluation.ExceptedFinding  `json:"excepted_findings,omitempty"`
+	AcknowledgedFindings []policy.AcknowledgedFinding  `json:"acknowledged_findings,omitempty"`
+	RemediationGroups    []remediation.Group           `json:"remediation_groups,omitempty"`
+	SkippedControls      []evaluation.SkippedControl   `json:"skipped_controls,omitempty"`
+	ExemptedAssets       []asset.ExemptedAsset         `json:"exempted_assets,omitempty"`
+	CoveragePosture      *coverage.CoverageIndex       `json:"-"`
+	Extensions           *evaluation.Extensions        `json:"extensions,omitempty"`
 }
 
 // NewAssessment constructs an Assessment with normalized slices

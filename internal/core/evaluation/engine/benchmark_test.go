@@ -48,9 +48,9 @@ func BenchmarkEvaluate(b *testing.B) {
 	}
 
 	assessor := &Assessor{
-		Controls:     controls,
-		SLAThreshold: 12 * time.Hour,
-		Clock:        ports.FixedClock(now),
+		controls:     controls,
+		slaThreshold: 12 * time.Hour,
+		clock:        ports.FixedClock(now),
 	}
 
 	b.ResetTimer()
@@ -132,9 +132,9 @@ func BenchmarkEvaluate10kAssets(b *testing.B) {
 	}
 
 	assessor := &Assessor{
-		Controls:     controls,
-		SLAThreshold: 168 * time.Hour,
-		Clock:        ports.FixedClock(now),
+		controls:     controls,
+		slaThreshold: 168 * time.Hour,
+		clock:        ports.FixedClock(now),
 	}
 
 	b.ResetTimer()
@@ -169,9 +169,9 @@ func BenchmarkEvaluateMultiControlScaling(b *testing.B) {
 		}
 
 		assessor := &Assessor{
-			Controls:     controls,
-			SLAThreshold: 168 * time.Hour,
-			Clock:        ports.FixedClock(now),
+			controls:     controls,
+			slaThreshold: 168 * time.Hour,
+			clock:        ports.FixedClock(now),
 		}
 
 		b.Run(fmt.Sprintf("controls=%d", ctlCount), func(b *testing.B) {

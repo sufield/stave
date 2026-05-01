@@ -41,8 +41,8 @@ func TestFingerprintPolicy_PredicateChangeDetected(t *testing.T) {
 		},
 	}}
 
-	a1 := &Assessor{Controls: strict, Hasher: crypto.NewHasher()}
-	a2 := &Assessor{Controls: weakened, Hasher: crypto.NewHasher()}
+	a1 := &Assessor{controls: strict, hasher: crypto.NewHasher()}
+	a2 := &Assessor{controls: weakened, hasher: crypto.NewHasher()}
 
 	fp1 := a1.FingerprintPolicy()
 	fp2 := a2.FingerprintPolicy()
@@ -74,8 +74,8 @@ func TestFingerprintPolicy_PredicateFieldPathMatters(t *testing.T) {
 		}}},
 	}}
 
-	fp1 := (&Assessor{Controls: a, Hasher: crypto.NewHasher()}).FingerprintPolicy()
-	fp2 := (&Assessor{Controls: b, Hasher: crypto.NewHasher()}).FingerprintPolicy()
+	fp1 := (&Assessor{controls: a, hasher: crypto.NewHasher()}).FingerprintPolicy()
+	fp2 := (&Assessor{controls: b, hasher: crypto.NewHasher()}).FingerprintPolicy()
 
 	if fp1 == fp2 {
 		t.Error("changing predicate field path did not change fingerprint")

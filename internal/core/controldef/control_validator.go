@@ -180,7 +180,7 @@ func (ctl *ControlDefinition) validateDuration() []diag.Finding {
 	if !ctl.Params.HasKey(durationKey) {
 		return nil
 	}
-	if ctl.Prepared.Ready && ctl.Prepared.HasMaxUnsafeDuration {
+	if ctl.prepared.Ready && ctl.prepared.HasMaxUnsafeDuration {
 		return nil
 	}
 

@@ -347,14 +347,14 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:f340511f6437360f",
+      "issue_id": "sha256:5ef0482eaab0237a",
       "asset_id": "exposed-bucket",
       "shared_keys": [
         "storage.access",
         "storage.access.public_read",
         "storage.access.read_via_resource"
       ],
-      "headline_finding_id": "sha256:2e48317513355283",
+      "headline_finding_id": "sha256:011146815d21ed0b",
       "member_finding_ids": [
         "sha256:011146815d21ed0b",
         "sha256:2e48317513355283"
@@ -536,7 +536,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "968e6c2d9fbf4e1fd96f26b0a79c5bc0b2d13887",
       "dirty": false
     }
   }

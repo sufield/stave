@@ -63,7 +63,7 @@ func TestComputeRunMetrics_Basic(t *testing.T) {
 }
 
 func TestComputeVelocity_Improving(t *testing.T) {
-	runs := []RunMetrics{
+	runs := []runMetrics{
 		{ViolationCount: 50},
 		{ViolationCount: 45},
 		{ViolationCount: 38},
@@ -81,7 +81,7 @@ func TestComputeVelocity_Improving(t *testing.T) {
 }
 
 func TestComputeVelocity_Regressing(t *testing.T) {
-	runs := []RunMetrics{
+	runs := []runMetrics{
 		{ViolationCount: 10},
 		{ViolationCount: 15},
 		{ViolationCount: 22},
@@ -147,12 +147,12 @@ func TestComputeMTTR_NoClosedWindows(t *testing.T) {
 }
 
 func TestComputeProjection_Improving(t *testing.T) {
-	runs := []RunMetrics{
+	runs := []runMetrics{
 		{ViolationCount: 20, PassCount: 80, ViolationRate: 0.2},
 		{ViolationCount: 15, PassCount: 85, ViolationRate: 0.15},
 		{ViolationCount: 10, PassCount: 90, ViolationRate: 0.1},
 	}
-	velocity := VelocityMetrics{Direction: "improving", AvgNetChange: -5}
+	velocity := velocityMetrics{Direction: "improving", AvgNetChange: -5}
 
 	p := computeProjection(runs, velocity)
 	if p == nil {
@@ -164,10 +164,10 @@ func TestComputeProjection_Improving(t *testing.T) {
 }
 
 func TestComputeProjection_Regressing(t *testing.T) {
-	runs := []RunMetrics{
+	runs := []runMetrics{
 		{ViolationCount: 10, PassCount: 90, ViolationRate: 0.1},
 	}
-	velocity := VelocityMetrics{Direction: "regressing", AvgNetChange: 5}
+	velocity := velocityMetrics{Direction: "regressing", AvgNetChange: 5}
 
 	p := computeProjection(runs, velocity)
 	if p != nil {
@@ -176,21 +176,21 @@ func TestComputeProjection_Regressing(t *testing.T) {
 }
 
 func TestRenderOpenMetrics_ContainsAllMetrics(t *testing.T) {
-	r := &TrendReport{
-		Runs: []RunMetrics{{
+	r := &trendReport{
+		Runs: []runMetrics{{
 			CapturedAt:     time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 			ViolationCount: 10,
 			PassCount:      90,
 			ViolationRate:  0.1,
 			BySeverity:     map[string]int{"critical": 3, "high": 7},
 		}},
-		MTTR: map[string]MTTREntry{
+		MTTR: map[string]mttrEntry{
 			"critical": {AvgDays: 3.2, WindowCount: 5},
 		},
-		FrameworkTrends: []FrameworkTrend{
+		FrameworkTrends: []frameworkTrend{
 			{Framework: "hipaa", Scores: []float64{0.8}, Direction: "stable"},
 		},
-		Velocity: VelocityMetrics{AvgNetChange: -2.0, Direction: "improving"},
+		Velocity: velocityMetrics{AvgNetChange: -2.0, Direction: "improving"},
 	}
 
 	var buf bytes.Buffer
@@ -215,14 +215,14 @@ func TestRenderOpenMetrics_ContainsAllMetrics(t *testing.T) {
 }
 
 func TestRenderOpenMetrics_MTTROmittedWhenNoWindows(t *testing.T) {
-	r := &TrendReport{
-		Runs: []RunMetrics{{
+	r := &trendReport{
+		Runs: []runMetrics{{
 			CapturedAt:    time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 			ViolationRate: 0.1,
 			BySeverity:    map[string]int{"high": 5},
 		}},
 		MTTR:     nil, // no closed windows
-		Velocity: VelocityMetrics{AvgNetChange: 0},
+		Velocity: velocityMetrics{AvgNetChange: 0},
 	}
 
 	var buf bytes.Buffer

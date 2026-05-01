@@ -105,7 +105,7 @@ func TestBuild_ChainsProduceCorrectNodes(t *testing.T) {
 			Description:     "Multiple detection controls disabled",
 			ControlsFailing: []kernel.ControlID{"CTL.S3.PUBLIC.001", "CTL.CLOUDTRAIL.ENABLED.001"},
 			Severity:        policy.SeverityCritical,
-			AttackStages: []kernel.AttackStage{"initial_access", "detection_evasion"},
+			AttackStages:    []kernel.AttackStage{"initial_access", "detection_evasion"},
 		},
 	}
 

@@ -42,7 +42,7 @@ func MarshalGraphMLWithDiagnostics(w io.Writer, g *GraphData) ([]UnmappedEdge, e
 	if g == nil {
 		return nil, errors.New("MarshalGraphML: nil GraphData")
 	}
-	rdf := mapToRDFGraph(g)
+	rdf := mapTordfGraph(g)
 
 	keys := collectGraphMLKeys(rdf)
 	// Build the key index once. The previous implementation rebuilt
@@ -131,7 +131,7 @@ type graphmlKey struct {
 // the document. It walks every node and edge once, infers the
 // attribute type from the value's Go type, and returns a sorted slice
 // keyed by (for, name) so GraphML imports are deterministic.
-func collectGraphMLKeys(rdf *RDFGraph) []graphmlKey {
+func collectGraphMLKeys(rdf *rdfGraph) []graphmlKey {
 	type seenKey struct{ for_, name string }
 	seen := make(map[seenKey]graphmlKey)
 
@@ -237,7 +237,7 @@ func indexKeys(keys []graphmlKey) keyIndex {
 	return out
 }
 
-func writeGraphMLNode(xw *graphmlWriter, scratch *bytes.Buffer, n *RDFNode, idx keyIndex) {
+func writeGraphMLNode(xw *graphmlWriter, scratch *bytes.Buffer, n *rdfNode, idx keyIndex) {
 	xw.writeString("  <node id=\"")
 	xw.writeString(xmlEscape(n.ID))
 	xw.writeString("\">\n")
@@ -265,7 +265,7 @@ func writeGraphMLNode(xw *graphmlWriter, scratch *bytes.Buffer, n *RDFNode, idx 
 	xw.writeString("  </node>\n")
 }
 
-func writeGraphMLEdge(xw *graphmlWriter, scratch *bytes.Buffer, e *RDFEdge, keyIdx keyIndex, idx int) {
+func writeGraphMLEdge(xw *graphmlWriter, scratch *bytes.Buffer, e *rdfEdge, keyIdx keyIndex, idx int) {
 	xw.writeString("  <edge id=\"e")
 	xw.writeString(strconv.Itoa(idx))
 	xw.writeString("\" source=\"")

@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-func renderTrendOpenMetrics(w io.Writer, r *TrendReport) error { //nolint:unparam // error return for format-dispatch consistency
+func renderTrendOpenMetrics(w io.Writer, r *trendReport) error { //nolint:unparam // error return for format-dispatch consistency
 	if len(r.Runs) == 0 {
 		fmt.Fprintln(w, "# EOF")
 		return nil

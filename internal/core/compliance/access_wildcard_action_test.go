@@ -12,7 +12,7 @@ func policyBucket(id, policyJSON string) asset.Asset {
 }
 
 func TestAccess002(t *testing.T) {
-	ctl := ControlRegistry.Lookup("ACCESS.002")
+	ctl := GetControlRegistry().Lookup("ACCESS.002")
 	if ctl == nil {
 		t.Fatal("ACCESS.002 not registered")
 	}

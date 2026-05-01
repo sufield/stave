@@ -44,8 +44,8 @@ func TestFingerprintPolicy_NonDeterministic(t *testing.T) {
 	}
 
 	a := &Assessor{
-		Controls: []controldef.ControlDefinition{ctl},
-		Hasher:   mockDigester{},
+		controls: []controldef.ControlDefinition{ctl},
+		hasher:   mockDigester{},
 	}
 
 	first := a.FingerprintPolicy()

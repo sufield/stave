@@ -26,9 +26,9 @@ const (
 
 // String / Set / Type satisfy pflag.Value so a Format-typed CLI flag
 // field can bind via cobra's Flags().Var(&cfg.Format, "log-format", ...).
-func (f Format) String() string         { return string(f) }
-func (f *Format) Set(v string) error    { *f = Format(v); return nil }
-func (f Format) Type() string           { return "string" }
+func (f Format) String() string      { return string(f) }
+func (f *Format) Set(v string) error { *f = Format(v); return nil }
+func (f Format) Type() string        { return "string" }
 
 // LevelFlag is the string the user types on the --log-level CLI flag.
 // Stored typed so the flag value flows through the program with its
@@ -37,9 +37,9 @@ func (f Format) Type() string           { return "string" }
 type LevelFlag string
 
 // String / Set / Type satisfy pflag.Value.
-func (l LevelFlag) String() string         { return string(l) }
-func (l *LevelFlag) Set(v string) error    { *l = LevelFlag(v); return nil }
-func (l LevelFlag) Type() string           { return "string" }
+func (l LevelFlag) String() string      { return string(l) }
+func (l *LevelFlag) Set(v string) error { *l = LevelFlag(v); return nil }
+func (l LevelFlag) Type() string        { return "string" }
 
 // LevelDebug and related constants.
 const (

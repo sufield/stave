@@ -49,7 +49,7 @@ func (r *Runner) List(st *contexts.Store, format appcontracts.OutputFormat) erro
 
 	items := make([]ListItem, 0, len(names))
 	for _, name := range names {
-		c := st.Contexts[name]
+		c, _ := st.GetContext(name)
 		items = append(items, ListItem{
 			Name:          name,
 			ProjectRoot:   strings.TrimSpace(c.ProjectRoot),
@@ -89,7 +89,9 @@ func (r *Runner) Create(st *contexts.Store, name string, c contexts.Context) err
 		return &ui.UserError{Err: err}
 	}
 
-	st.Contexts[name] = c
+	if err := st.SetContext(name, c); err != nil {
+		return &ui.UserError{Err: err}
+	}
 	if strings.TrimSpace(st.Active) == "" {
 		st.Active = name
 	}
@@ -105,7 +107,7 @@ func (r *Runner) Create(st *contexts.Store, name string, c contexts.Context) err
 // Use sets a context as the active default in the store.
 func (r *Runner) Use(st *contexts.Store, name string) error {
 	name = contexts.NormalizeName(name)
-	if _, ok := st.Contexts[name]; !ok {
+	if _, ok := st.GetContext(name); !ok {
 		return &ui.UserError{Err: fmt.Errorf("context %q not found (available: %s)", name, strings.Join(st.Names(), ", "))}
 	}
 
@@ -139,11 +141,9 @@ func (r *Runner) Show(format appcontracts.OutputFormat, res ShowResult) error {
 // Delete removes a context from the store.
 func (r *Runner) Delete(st *contexts.Store, name string) error {
 	name = contexts.NormalizeName(name)
-	if _, ok := st.Contexts[name]; !ok {
+	if err := st.DeleteContext(name); err != nil {
 		return &ui.UserError{Err: fmt.Errorf("context %q not found", name)}
 	}
-
-	delete(st.Contexts, name)
 	if strings.TrimSpace(st.Active) == name {
 		st.Active = ""
 	}

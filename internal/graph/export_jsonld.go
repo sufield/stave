@@ -16,10 +16,14 @@ import (
 var embeddedOntology []byte
 
 // Ontology returns the embedded Stave ontology as Turtle bytes.
-// Callers that need to ship the ontology alongside an export (or
-// expose it via an HTTP endpoint) can use this directly. The bytes
-// are read-only; do not mutate the returned slice.
-func Ontology() []byte { return embeddedOntology }
+// Callers that need to ship the ontology alongside an export use
+// this directly. Returns a defensive copy so a write through the
+// returned slice cannot corrupt the process-shared embedded bytes.
+func Ontology() []byte {
+	out := make([]byte, len(embeddedOntology))
+	copy(out, embeddedOntology)
+	return out
+}
 
 // MarshalJSONLD writes a JSON-LD document for the graph. The output
 // is one JSON object with @context (binding short names from the
@@ -45,14 +49,14 @@ func MarshalJSONLDWithDiagnostics(w io.Writer, g *GraphData) ([]UnmappedEdge, er
 	if g == nil {
 		return nil, errors.New("MarshalJSONLD: nil GraphData")
 	}
-	rdf := mapToRDFGraph(g)
+	rdf := mapTordfGraph(g)
 
 	// Group edges by subject IRI so the document is one node per
 	// subject with all outgoing properties inline. JSON-LD's @graph
 	// can hold flat triples too, but the grouped form is what tools
 	// like rdflib's parse() expect to see by default and is also
 	// half the byte count.
-	edgesBySubject := make(map[string][]RDFEdge, len(rdf.Nodes))
+	edgesBySubject := make(map[string][]rdfEdge, len(rdf.Nodes))
 	for i := range rdf.Edges {
 		e := &rdf.Edges[i]
 		edgesBySubject[e.From] = append(edgesBySubject[e.From], *e)
@@ -148,7 +152,7 @@ type edgeGroup struct {
 	shortcut   bool
 }
 
-func (enc *jsonldNodeEncoder) encodeNode(n *RDFNode, outgoing []RDFEdge) []byte {
+func (enc *jsonldNodeEncoder) encodeNode(n *rdfNode, outgoing []rdfEdge) []byte {
 	enc.buf.Reset()
 	enc.buf.WriteString("    {\n      \"@id\": ")
 	encodeJSONString(&enc.buf, n.ID)
@@ -196,7 +200,7 @@ func (enc *jsonldNodeEncoder) encodeNode(n *RDFNode, outgoing []RDFEdge) []byte 
 // groupEdges keys edges by their predicate IRI. Predicates appear
 // in the JSON-LD document under their short context name where one
 // is bound — see jsonldHeader.
-func groupEdges(edges []RDFEdge) map[string]*edgeGroup {
+func groupEdges(edges []rdfEdge) map[string]*edgeGroup {
 	out := make(map[string]*edgeGroup, len(edges))
 	for i := range edges {
 		e := &edges[i]
@@ -335,7 +339,7 @@ func encodeJSONValue(buf *bytes.Buffer, v any) {
 // sortRDF orders nodes and edges so the output is byte-deterministic
 // across runs — important for golden tests and for diffing two
 // exports of the same assessment.
-func sortRDF(g *RDFGraph) {
+func sortRDF(g *rdfGraph) {
 	sort.Slice(g.Nodes, func(i, j int) bool {
 		return g.Nodes[i].ID < g.Nodes[j].ID
 	})

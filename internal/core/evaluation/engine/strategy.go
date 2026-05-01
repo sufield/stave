@@ -12,13 +12,16 @@ import (
 )
 
 // strategyDeps abstracts the Assessor capabilities that strategies need,
-// decoupling them from the concrete Assessor type.
+// decoupling them from the concrete Assessor type. Methods are
+// capitalized so they don't collide with the unexported field names
+// of the same concept on the Assessor itself (Go differentiates by
+// case but the duplicate-name diagnostic fires at compile time).
 type strategyDeps interface {
 	slaThresholdFor(ctl *policy.ControlDefinition) time.Duration
-	continuityLimit() time.Duration
+	ContinuityLimit() time.Duration
 	confidenceCalculator() evaluation.ConfidenceCalculator
-	logger() *slog.Logger
-	predicateParser() policy.PredicateParser
+	Logger() *slog.Logger
+	PredicateParser() policy.PredicateParser
 	currentSpan() ports.AssessmentSpan
 }
 
@@ -81,7 +84,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 	// control author intended immediate detection. Per-control
 	// max_unsafe_duration is still honored when explicitly declared.
 	var maxUnsafe time.Duration
-	if s.ctl.Prepared.HasMaxUnsafeDuration {
+	if s.ctl.PreparedParams().HasMaxUnsafeDuration {
 		maxUnsafe = s.deps.slaThresholdFor(s.ctl)
 	}
 	span := s.deps.currentSpan()
@@ -108,7 +111,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 
 	exceeds, threshErr := t.ExceedsSLA(now, maxUnsafe)
 	if threshErr != nil {
-		s.deps.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
+		s.deps.Logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
 		observation.MarkInconclusive("threshold check error")
 		return observation, nil
 	}
@@ -128,7 +131,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 			Threshold:         maxUnsafe,
 			Now:               now,
 			Identities:        ids.At(t.LastObservedAt()),
-			PredicateParser:   s.deps.predicateParser(),
+			PredicateParser:   s.deps.PredicateParser(),
 		})
 		// CreateDurationFinding's contract is "(*Finding, error)"
 		// with the finding always non-nil. If a future refactor
@@ -140,7 +143,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 		// finding count and makes report totals diverge in a way
 		// that's hard to debug from the user-facing output.
 		if finding == nil {
-			s.deps.logger().Warn("CreateDurationFinding returned nil finding; downgrading verdict to INCONCLUSIVE to keep counts consistent",
+			s.deps.Logger().Warn("CreateDurationFinding returned nil finding; downgrading verdict to INCONCLUSIVE to keep counts consistent",
 				"control", s.ctl.ID, "asset", t.ID)
 			observation.MarkInconclusive("violation finding could not be constructed")
 			return observation, nil
@@ -154,7 +157,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 			// in violation, but I couldn't compute exact dwell"
 			// — but evidence-derived numbers are unreliable.
 			finding.Evidence.EvidenceInvalid = true
-			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration -1.0 and evidence_invalid=true",
+			s.deps.Logger().Warn("duration calculation failed; emitting violation with sentinel duration -1.0 and evidence_invalid=true",
 				"control", s.ctl.ID, "asset", t.ID, "error", durErr,
 				"finding_emitted", true)
 		}
@@ -194,7 +197,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 	// 1. Violation Check (Always takes precedence)
 	exceeds, threshErr := t.ExceedsSLA(now, maxUnsafe)
 	if threshErr != nil {
-		s.deps.logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
+		s.deps.Logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
 		observation.MarkInconclusive("threshold check error")
 		return observation, nil
 	}
@@ -214,7 +217,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 			Threshold:         maxUnsafe,
 			Now:               now,
 			Identities:        ids.At(t.LastObservedAt()),
-			PredicateParser:   s.deps.predicateParser(),
+			PredicateParser:   s.deps.PredicateParser(),
 		})
 		// CreateDurationFinding's contract is "(*Finding, error)"
 		// with the finding always non-nil. If a future refactor
@@ -226,7 +229,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 		// finding count and makes report totals diverge in a way
 		// that's hard to debug from the user-facing output.
 		if finding == nil {
-			s.deps.logger().Warn("CreateDurationFinding returned nil finding; downgrading verdict to INCONCLUSIVE to keep counts consistent",
+			s.deps.Logger().Warn("CreateDurationFinding returned nil finding; downgrading verdict to INCONCLUSIVE to keep counts consistent",
 				"control", s.ctl.ID, "asset", t.ID)
 			observation.MarkInconclusive("violation finding could not be constructed")
 			return observation, nil
@@ -240,7 +243,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 			// in violation, but I couldn't compute exact dwell"
 			// — but evidence-derived numbers are unreliable.
 			finding.Evidence.EvidenceInvalid = true
-			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration -1.0 and evidence_invalid=true",
+			s.deps.Logger().Warn("duration calculation failed; emitting violation with sentinel duration -1.0 and evidence_invalid=true",
 				"control", s.ctl.ID, "asset", t.ID, "error", durErr,
 				"finding_emitted", true)
 		}
@@ -250,8 +253,8 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 
 	// 2. Coverage Check (Is the data sufficient to say it's a PASS?)
 	coverage := CoverageValidator{
-		MinRequiredSpan: maxUnsafe,
-		MaxAllowedGap:   s.deps.continuityLimit(),
+		minRequiredSpan: maxUnsafe,
+		maxAllowedGap:   s.deps.ContinuityLimit(),
 	}
 	if reason, ok := coverage.IsSufficient(t); !ok {
 		span.RecordStep("coverage_check", map[string]any{
@@ -327,8 +330,8 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 	// could legitimately be missing several recurrence windows
 	// inside the gap, producing a false-clean verdict.
 	coverage := CoverageValidator{
-		MinRequiredSpan: p.WindowDuration(),
-		MaxAllowedGap:   s.deps.continuityLimit(),
+		minRequiredSpan: p.WindowDuration(),
+		maxAllowedGap:   s.deps.ContinuityLimit(),
 	}
 	if reason, ok := coverage.IsSufficient(t); !ok {
 		span.RecordStep("coverage_check", nil, map[string]any{

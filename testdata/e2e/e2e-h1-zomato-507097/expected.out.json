@@ -430,7 +430,7 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:c48f09ea303625f6",
+      "issue_id": "sha256:b842cf7ab7d3930c",
       "asset_id": "zomato-chat-images",
       "shared_keys": [
         "storage.access",
@@ -439,7 +439,7 @@
         "storage.tags",
         "storage.tags.public_list_intended"
       ],
-      "headline_finding_id": "sha256:78623a97e68d01d5",
+      "headline_finding_id": "sha256:0eedb6ab2f180541",
       "member_finding_ids": [
         "sha256:0eedb6ab2f180541",
         "sha256:78623a97e68d01d5"
@@ -621,7 +621,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "968e6c2d9fbf4e1fd96f26b0a79c5bc0b2d13887",
       "dirty": false
     }
   }

@@ -1,6 +1,10 @@
 package config
 
-import "github.com/sufield/stave/internal/sanitize"
+import (
+	"errors"
+
+	"github.com/sufield/stave/internal/sanitize"
+)
 
 // GlobalSettings is the pure, adapter-free representation of the
 // root persistent flags a CLI run resolves at the boundary. It lives
@@ -14,6 +18,11 @@ import "github.com/sufield/stave/internal/sanitize"
 // populates it) rather than reading the flag ad-hoc inside command
 // logic — that way the ban on cobra in non-adapter packages keeps
 // enforcing itself.
+//
+// Treat instances as immutable after the bootstrap PreRunE has
+// populated them. Downstream code reads but never writes to the
+// struct; mutating it during a command run produces a hard-to-debug
+// time-of-check-vs-time-of-use class of bug.
 type GlobalSettings struct {
 	// Quiet suppresses progress and hint output. Machine-readable
 	// formats (JSON, SARIF) remain on stdout.
@@ -51,4 +60,16 @@ type GlobalSettings struct {
 	// AllowUnknownInput accepts observations whose source type is
 	// not recognized.
 	AllowUnknownInput bool
+}
+
+// Validate checks the GlobalSettings shape. The CLI flag layer
+// already constrains each value individually (cobra rejects
+// unknown PathMode strings, log paths are sanitized by fsutil),
+// so this method is a programmatic safety net for callers that
+// build a GlobalSettings outside of the cobra entry point.
+func (g GlobalSettings) Validate() error {
+	if g.PathMode != "" && g.PathMode != sanitize.PathBase && g.PathMode != sanitize.PathFull {
+		return errors.New("invalid PathMode (use \"\" or \"full\")")
+	}
+	return nil
 }

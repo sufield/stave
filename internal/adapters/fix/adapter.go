@@ -13,15 +13,26 @@ import (
 
 // FindingLoader loads a single finding from an evaluation artifact.
 type FindingLoader struct {
-	CELEvaluator policy.PredicateEval
-	ReadFile     func(string) ([]byte, error) // injected by cmd layer; must enforce size limits
+	celEvaluator policy.PredicateEval
+	readFile     func(string) ([]byte, error) // injected by cmd layer; must enforce size limits
+}
+
+// NewFindingLoader constructs a FindingLoader. readFile must be
+// non-nil (it MUST enforce size limits at the byte boundary);
+// celEvaluator may be nil for callers that don't need predicate
+// re-evaluation.
+func NewFindingLoader(celEval policy.PredicateEval, readFile func(string) ([]byte, error)) (*FindingLoader, error) {
+	if readFile == nil {
+		return nil, errors.New("fix.NewFindingLoader: readFile is nil")
+	}
+	return &FindingLoader{celEvaluator: celEval, readFile: readFile}, nil
 }
 
 // LoadFindingWithPlan loads an evaluation, selects the matching finding,
 // generates a remediation plan if missing, and returns it.
 func (l *FindingLoader) LoadFindingWithPlan(_ context.Context, inputPath, findingRef string) (any, error) {
 	path := filepath.Clean(inputPath)
-	readFn := l.ReadFile
+	readFn := l.readFile
 	if readFn == nil {
 		return nil, errors.New("readFile not configured on FindingLoader")
 	}

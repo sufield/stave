@@ -15,9 +15,16 @@ type TestAsset struct {
 	Properties map[string]any `yaml:"properties"  json:"properties"`
 }
 
-// ValidTestVerdicts lists the accepted verdict strings.
-var ValidTestVerdicts = map[string]bool{
+// validTestVerdicts lists the accepted verdict strings. Access via
+// IsValidVerdict so the table cannot be mutated by callers.
+var validTestVerdicts = map[string]bool{
 	"PASS":         true,
 	"VIOLATION":    true,
 	"INCONCLUSIVE": true,
+}
+
+// IsValidVerdict reports whether v is a recognised test verdict
+// (PASS / VIOLATION / INCONCLUSIVE).
+func IsValidVerdict(v string) bool {
+	return validTestVerdicts[v]
 }

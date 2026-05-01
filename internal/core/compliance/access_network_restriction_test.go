@@ -7,7 +7,7 @@ import (
 )
 
 func TestAccess003(t *testing.T) {
-	ctl := ControlRegistry.Lookup("ACCESS.003")
+	ctl := GetControlRegistry().Lookup("ACCESS.003")
 	if ctl == nil {
 		t.Fatal("ACCESS.003 not registered")
 	}

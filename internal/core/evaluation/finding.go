@@ -41,11 +41,11 @@ type Finding struct {
 	ChainMembership []ChainMembershipEntry `json:"chain_membership,omitempty"`
 
 	// SLA fields — populated when an SLA deadline applies to this finding.
-	SLADeadlineHours     *float64 `json:"sla_deadline_hours,omitempty"`
-	SLABreached          bool     `json:"sla_breached,omitempty"`
-	SLAOverdueHours      *float64 `json:"sla_overdue_hours,omitempty"`
+	SLADeadlineHours     *float64        `json:"sla_deadline_hours,omitempty"`
+	SLABreached          bool            `json:"sla_breached,omitempty"`
+	SLAOverdueHours      *float64        `json:"sla_overdue_hours,omitempty"`
 	SLAEscalatedSeverity policy.Severity `json:"sla_escalated_severity,omitempty"`
-	SLAPolicySource      string   `json:"sla_policy_source,omitempty"`
+	SLAPolicySource      string          `json:"sla_policy_source,omitempty"`
 
 	// Owner routing — populated when a team manifest is loaded.
 	OwnerTeamID     string `json:"owner_team_id,omitempty"`

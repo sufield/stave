@@ -4,12 +4,12 @@ import "testing"
 
 func TestNewTestCatalog_ProducesSameControlsAsGlobal(t *testing.T) {
 	isolated := NewTestCatalog()
-	if isolated.Len() != ControlRegistry.Len() {
-		t.Fatalf("NewTestCatalog has %d controls, global has %d", isolated.Len(), ControlRegistry.Len())
+	if isolated.Len() != GetControlRegistry().Len() {
+		t.Fatalf("NewTestCatalog has %d controls, global has %d", isolated.Len(), GetControlRegistry().Len())
 	}
 
 	// Verify every control from the global is present in the isolated catalog.
-	for _, ctl := range ControlRegistry.All() {
+	for _, ctl := range GetControlRegistry().All() {
 		id := ctl.Def().ID()
 		found := isolated.Lookup(id)
 		if found == nil {

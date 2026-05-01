@@ -2,6 +2,7 @@ package asset
 
 import (
 	"strings"
+	"sync"
 )
 
 // AuditScope defines the boundary for security evaluation.
@@ -19,8 +20,32 @@ type AuditScope struct {
 	requiredKeys map[string]struct{}            // Keys that must exist regardless of value
 }
 
-// GlobalScope is an inclusion boundary that encompasses all discovered assets.
-var GlobalScope = &AuditScope{global: true}
+// globalScope is the singleton "include every asset" boundary. The
+// global flag short-circuits filtering inside AuditScope methods, so
+// every consumer that needs an unbounded scope shares the same value
+// rather than allocating their own. Access via GetGlobalScope so the
+// pointer cannot be reseated; SetGlobalScope is provided for tests
+// that need to install a stub.
+var (
+	globalScope   = &AuditScope{global: true}
+	globalScopeMu sync.RWMutex
+)
+
+// GetGlobalScope returns the process-wide unbounded audit scope.
+func GetGlobalScope() *AuditScope {
+	globalScopeMu.RLock()
+	defer globalScopeMu.RUnlock()
+	return globalScope
+}
+
+// SetGlobalScope installs s as the process-wide unbounded scope.
+// Intended for tests that need to inject a stub boundary; production
+// code should never call this.
+func SetGlobalScope(s *AuditScope) {
+	globalScopeMu.Lock()
+	defer globalScopeMu.Unlock()
+	globalScope = s
+}
 
 // PHIBoundary returns the default scope for HIPAA/Healthcare compliance,
 // targeting assets tagged as containing Protected Health Information.
@@ -39,7 +64,7 @@ func NewAuditScopeFromAllowlist(resourceIDs []string) *AuditScope {
 // NewAuditScope initializes a scope boundary with specific inclusion criteria.
 func NewAuditScope(resourceIDs []string, tagCriteria map[string][]string) *AuditScope {
 	if len(resourceIDs) == 0 && len(tagCriteria) == 0 {
-		return GlobalScope
+		return GetGlobalScope()
 	}
 
 	s := &AuditScope{
@@ -52,7 +77,7 @@ func NewAuditScope(resourceIDs []string, tagCriteria map[string][]string) *Audit
 	s.registerTagCriteria(tagCriteria)
 
 	if s.isBoundaryEmpty() {
-		return GlobalScope
+		return GetGlobalScope()
 	}
 
 	return s

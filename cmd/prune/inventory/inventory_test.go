@@ -31,7 +31,7 @@ func TestRecommendAction_ReviewWithinRetentionQualityFail(t *testing.T) {
 }
 
 func TestComputeSummary(t *testing.T) {
-	snapshots := []SnapshotEntry{
+	snapshots := []snapshotEntry{
 		{RecommendedAction: "keep", FileSizeBytes: 100},
 		{RecommendedAction: "keep", FileSizeBytes: 200},
 		{RecommendedAction: "archive", FileSizeBytes: 50},

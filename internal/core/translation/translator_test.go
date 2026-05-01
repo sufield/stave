@@ -62,7 +62,7 @@ func TestRenderClause_Eq(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := RenderClause(tc.c, DefaultFieldRegistry)
+			got := RenderClause(tc.c, GetDefaultFieldRegistry())
 			if got != tc.want {
 				t.Errorf("RenderClause = %q, want %q", got, tc.want)
 			}
@@ -79,7 +79,7 @@ func TestRenderClause_NoContradictionShape(t *testing.T) {
 		{ObservationKey: "storage.kind", Operator: "eq", ExpectedValue: "bucket", ObservedValue: "bucket"},
 	}
 	for _, c := range cases {
-		got := RenderClause(c, DefaultFieldRegistry)
+		got := RenderClause(c, GetDefaultFieldRegistry())
 		if strings.Contains(got, "must equal") || strings.Contains(got, "but is") {
 			t.Errorf("RenderClause(%+v) = %q — contradiction-shape wording leaked", c, got)
 		}
@@ -88,7 +88,7 @@ func TestRenderClause_NoContradictionShape(t *testing.T) {
 
 func TestRenderClause_Missing(t *testing.T) {
 	c := Clause{ObservationKey: "storage.object_ownership.rule", Operator: "missing", ExpectedValue: true, ObservedValue: nil}
-	got := RenderClause(c, DefaultFieldRegistry)
+	got := RenderClause(c, GetDefaultFieldRegistry())
 	want := "the Object Ownership rule is not set"
 	if got != want {
 		t.Errorf("RenderClause(missing) = %q, want %q", got, want)
@@ -97,7 +97,7 @@ func TestRenderClause_Missing(t *testing.T) {
 
 func TestRenderClause_Ne(t *testing.T) {
 	c := Clause{ObservationKey: "storage.object_ownership.rule", Operator: "ne", ExpectedValue: "BucketOwnerEnforced", ObservedValue: nil}
-	got := RenderClause(c, DefaultFieldRegistry)
+	got := RenderClause(c, GetDefaultFieldRegistry())
 	want := "the Object Ownership rule not equal \"BucketOwnerEnforced\" (observed: not set)"
 	if got != want {
 		t.Errorf("RenderClause(ne) = %q, want %q", got, want)
@@ -106,7 +106,7 @@ func TestRenderClause_Ne(t *testing.T) {
 
 func TestRenderClause_GenericOperator(t *testing.T) {
 	c := Clause{ObservationKey: "storage.object_lock.retention_days", Operator: "gte", ExpectedValue: 365, ObservedValue: 30}
-	got := RenderClause(c, DefaultFieldRegistry)
+	got := RenderClause(c, GetDefaultFieldRegistry())
 	if !strings.Contains(got, "(observed: 30)") {
 		t.Errorf("RenderClause(gte) = %q, expected '(observed: 30)' suffix", got)
 	}

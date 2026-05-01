@@ -44,23 +44,23 @@ func SeverityWeight(severity string) float64 {
 	return severityWeights[parsed]
 }
 
-// RDFNode is the export-shaped representation of a graph node. The
+// rdfNode is the export-shaped representation of a graph node. The
 // JSON tags drive JSON-LD; the same struct is consumed by the GraphML
 // serializer. Fields are intentionally a small flat shape — JSON-LD
 // nesting is handled by the @context, not by struct nesting.
-type RDFNode struct {
+type rdfNode struct {
 	ID         string         `json:"@id"`
 	Type       string         `json:"@type"`
 	Properties map[string]any `json:"-"`
 }
 
-// RDFEdge is the export-shaped representation of a graph edge.
+// rdfEdge is the export-shaped representation of a graph edge.
 // JSON-LD does not have first-class edges; the JSON-LD serializer
 // emits each edge as a triple (subject IRI, predicate IRI, object
 // IRI) inside the @graph array, optionally annotated with a
 // reification node when edge attributes are present. GraphML keeps
 // edges first-class.
-type RDFEdge struct {
+type rdfEdge struct {
 	From       string         // subject IRI
 	To         string         // object IRI
 	Predicate  string         // predicate IRI (full, not prefixed)
@@ -68,14 +68,14 @@ type RDFEdge struct {
 	Shortcut   bool           // true for materialized algorithm shortcuts
 }
 
-// RDFGraph is the export-shaped graph model. Built from an internal
-// graph.GraphData by mapToRDFGraph; consumed by MarshalJSONLD and
+// rdfGraph is the export-shaped graph model. Built from an internal
+// graph.GraphData by mapTordfGraph; consumed by MarshalJSONLD and
 // MarshalGraphML.
-type RDFGraph struct {
+type rdfGraph struct {
 	OntologyIRI   string         // urn:stave:ontology
 	GeneratedAt   string         // RFC3339
-	Nodes         []RDFNode      // sorted by ID for determinism
-	Edges         []RDFEdge      // sorted by (From, Predicate, To)
+	Nodes         []rdfNode      // sorted by ID for determinism
+	Edges         []rdfEdge      // sorted by (From, Predicate, To)
 	UnmappedEdges []UnmappedEdge // edges dropped because Type was outside the wireToPredicate vocabulary
 }
 

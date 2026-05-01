@@ -106,7 +106,7 @@ func TestNewLogger_TextFormat(t *testing.T) {
 	}
 	defer func() { _ = lc.Close() }()
 
-	if lc.Logger == nil {
+	if lc.Logger() == nil {
 		t.Error("NewLogger returned nil logger")
 	}
 }
@@ -124,7 +124,7 @@ func TestNewLogger_JSONFormat(t *testing.T) {
 	}
 	defer func() { _ = lc.Close() }()
 
-	if lc.Logger == nil {
+	if lc.Logger() == nil {
 		t.Error("NewLogger returned nil logger")
 	}
 }
@@ -144,7 +144,7 @@ func TestNewLogger_LogFile(t *testing.T) {
 		t.Fatalf("NewLogger failed: %v", err)
 	}
 
-	lc.Logger.Info("test message")
+	lc.Logger().Info("test message")
 	_ = lc.Close()
 
 	// Verify file was created and has content

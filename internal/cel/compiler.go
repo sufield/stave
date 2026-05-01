@@ -22,8 +22,11 @@ type CELExpression string
 func (e CELExpression) String() string { return string(e) }
 
 // CompiledPredicate holds a compiled CEL program and its source expression.
+// The cel.Program is wrapped behind Evaluate / IsValid so the vendor
+// type does not leak across the package boundary; consumers read
+// Expression directly because it is just a string.
 type CompiledPredicate struct {
-	Program    cel.Program
+	program    cel.Program
 	Expression CELExpression
 }
 
@@ -40,7 +43,7 @@ const (
 // from heterogeneous sources (caches, decoders) where a zero-value
 // struct could otherwise reach Eval and panic.
 func (cp CompiledPredicate) IsValid() bool {
-	return cp.Program != nil
+	return cp.program != nil
 }
 
 // Compiler translates UnsafePredicate structures into compiled CEL programs.
@@ -92,7 +95,7 @@ func (c *Compiler) Compile(pred policy.UnsafePredicate) (CompiledPredicate, erro
 		return CompiledPredicate{}, fmt.Errorf("program CEL expression: %w", err)
 	}
 
-	result := CompiledPredicate{Program: prg, Expression: CELExpression(expr)}
+	result := CompiledPredicate{program: prg, Expression: CELExpression(expr)}
 
 	// Double-checked write: another goroutine may have populated the
 	// cache while we were compiling. Prefer the existing entry to keep

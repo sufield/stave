@@ -246,22 +246,22 @@ type SkippedControl struct {
 
 // ComplianceReport is the root aggregate of an evaluation execution.
 type ComplianceReport struct {
-	Run                  RunInfo                      `json:"run"`
-	Summary              ComplianceSummary            `json:"summary"`
-	SecurityState        SecurityState                `json:"security_state"`
-	RiskSignals          risk.ThresholdItems          `json:"risk_signals,omitempty"`
-	Findings             []Finding                    `json:"findings"`
-	Issues               []Issue                      `json:"issues,omitempty"`
-	ChainFindings        []risk.CompoundFinding       `json:"chain_findings,omitempty"`
+	Run                  RunInfo                       `json:"run"`
+	Summary              ComplianceSummary             `json:"summary"`
+	SecurityState        SecurityState                 `json:"security_state"`
+	RiskSignals          risk.ThresholdItems           `json:"risk_signals,omitempty"`
+	Findings             []Finding                     `json:"findings"`
+	Issues               []Issue                       `json:"issues,omitempty"`
+	ChainFindings        []risk.CompoundFinding        `json:"chain_findings,omitempty"`
 	AttackStageSummary   map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
-	TopExposures         []risk.ExposureRank          `json:"top_exposures,omitempty"`
-	ExceptedFindings     []ExceptedFinding            `json:"excepted_findings,omitempty"`
-	AcknowledgedFindings []policy.AcknowledgedFinding `json:"acknowledged_findings,omitempty"`
-	SkippedControls      []SkippedControl             `json:"skipped_controls,omitempty"`
-	ExemptedAssets       []asset.ExemptedAsset        `json:"exempted_assets,omitempty"`
-	Metadata             Metadata                     `json:"-"`
-	Checks               []ResourceCheck              `json:"checks,omitempty"`
-	EvidencePackage      *evidence.EvidencePackage    `json:"evidence_package,omitempty"`
+	TopExposures         []risk.ExposureRank           `json:"top_exposures,omitempty"`
+	ExceptedFindings     []ExceptedFinding             `json:"excepted_findings,omitempty"`
+	AcknowledgedFindings []policy.AcknowledgedFinding  `json:"acknowledged_findings,omitempty"`
+	SkippedControls      []SkippedControl              `json:"skipped_controls,omitempty"`
+	ExemptedAssets       []asset.ExemptedAsset         `json:"exempted_assets,omitempty"`
+	Metadata             Metadata                      `json:"-"`
+	Checks               []ResourceCheck               `json:"checks,omitempty"`
+	EvidencePackage      *evidence.EvidencePackage     `json:"evidence_package,omitempty"`
 }
 
 // GetFindingByResource retrieves a finding for a specific control/asset pair.

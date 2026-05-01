@@ -11,11 +11,16 @@ import (
 
 // LogCloser wraps a logger with an optional closer for file handles.
 type LogCloser struct {
-	Logger *slog.Logger
+	logger *slog.Logger
 	closer io.Closer
 	once   sync.Once
 	err    error
 }
+
+// Logger returns the underlying *slog.Logger. Always returns a
+// non-nil value: NewLogger guarantees the logger is wired before
+// the LogCloser is returned, and the field is never reseated.
+func (lc *LogCloser) Logger() *slog.Logger { return lc.logger }
 
 // Close closes the underlying writer. Safe to call multiple times —
 // the panic-recovery path in cmd/executor_panic.go and the post-run
@@ -39,7 +44,7 @@ func NewLogger(cfg Config) (*LogCloser, error) {
 	logger := slog.New(newHandler(cfg, wc))
 
 	return &LogCloser{
-		Logger: logger,
+		logger: logger,
 		closer: wc,
 	}, nil
 }

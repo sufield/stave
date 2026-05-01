@@ -173,7 +173,7 @@ func TestComputeTeamTrends_TeamFilter(t *testing.T) {
 }
 
 func TestComputeRollup_WeightedScoreAverage(t *testing.T) {
-	trends := []TeamTrend{
+	trends := []teamTrend{
 		{ID: "alpha", PostureScore: 80, MTTRHours: 20, SLACompPct: 90, OpenFindings: 5, CriticalOpen: 1},
 		{ID: "beta", PostureScore: 60, MTTRHours: 40, SLACompPct: 70, OpenFindings: 10, CriticalOpen: 2},
 		{ID: "gamma", PostureScore: 100, MTTRHours: 10, SLACompPct: 100, OpenFindings: 0, CriticalOpen: 0},
@@ -224,10 +224,10 @@ func TestManifest_NoHierarchy(t *testing.T) {
 
 func TestRenderExecutiveSummary_ContainsScore(t *testing.T) {
 	score := 81.2
-	r := &TrendReport{
-		Period:       Period{End: time.Now()},
+	r := &trendReport{
+		Period:       period{End: time.Now()},
 		PostureScore: &score,
-		Summary:      TrendSummary{NetChangePercent: 4.1, Direction: "improving"},
+		Summary:      trendSummary{NetChangePercent: 4.1, Direction: "improving"},
 	}
 
 	var buf bytes.Buffer
@@ -245,12 +245,12 @@ func TestRenderExecutiveSummary_ContainsScore(t *testing.T) {
 
 func TestRenderExecutiveSummary_ContainsAttentionTeam(t *testing.T) {
 	score := 68.0
-	r := &TrendReport{
-		Period:       Period{End: time.Now()},
+	r := &trendReport{
+		Period:       period{End: time.Now()},
 		PostureScore: &score,
-		Summary:      TrendSummary{NetChangePercent: -5, Direction: "regressing"},
-		TeamSummary:  &TeamTrendSummary{TeamsTracked: 2, TeamsImproving: 1, TeamsRegressing: 1},
-		TeamTrends: []TeamTrend{
+		Summary:      trendSummary{NetChangePercent: -5, Direction: "regressing"},
+		TeamSummary:  &teamTrendSummary{TeamsTracked: 2, TeamsImproving: 1, TeamsRegressing: 1},
+		TeamTrends: []teamTrend{
 			{ID: "identity", Name: "Team Identity", PostureScore: 55, ScoreDelta: -10, Trajectory: trajectoryRegressing, CriticalOpen: 3, Contact: "id@test.com"},
 			{ID: "payments", Name: "Team Payments", PostureScore: 90, ScoreDelta: 8, Trajectory: trajectoryImproving, MTTRHours: 18, SLACompPct: 94},
 		},

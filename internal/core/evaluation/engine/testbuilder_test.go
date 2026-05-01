@@ -79,23 +79,23 @@ func (b *assessorBuilder) withTracer(t ports.Tracer) *assessorBuilder {
 
 func (b *assessorBuilder) build() *Assessor {
 	a := NewAssessor()
-	a.Clock = b.clock
-	a.SLAThreshold = b.sla
-	a.Controls = b.controls
-	a.Exemptions = b.exemptions
-	a.Exceptions = b.exceptions
-	a.PredicateEval = b.predicateEval
-	if a.PredicateEval == nil {
+	a.clock = b.clock
+	a.slaThreshold = b.sla
+	a.controls = b.controls
+	a.exemptions = b.exemptions
+	a.exceptions = b.exceptions
+	a.predicateEval = b.predicateEval
+	if a.predicateEval == nil {
 		// Default the precondition fields so tests that don't care about
 		// predicate evaluation continue to satisfy Assess()'s preconditions.
-		a.PredicateEval = func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+		a.predicateEval = func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 			return false, nil
 		}
 	}
-	a.PredicateParser = func(_ any) (*policy.UnsafePredicate, error) {
+	a.predicateParser = func(_ any) (*policy.UnsafePredicate, error) {
 		return &policy.UnsafePredicate{}, nil
 	}
-	a.Tracer = b.tracer
+	a.tracer = b.tracer
 	return a
 }
 

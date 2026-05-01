@@ -160,14 +160,14 @@ func WireCommands(app *App) error {
 
 	// Data & Artifacts
 	root.AddCommand(enforce.NewGenerateCmd())
+	reportLoader, rlErr := infrareport.NewEvaluationLoader(func(ctx context.Context, path string) (*report.Assessment, error) {
+		return artifact.NewLoader().Evaluation(ctx, fsutil.CleanUserPath(path))
+	})
+	if rlErr != nil {
+		return fmt.Errorf("wire report loader: %w", rlErr)
+	}
 	root.AddCommand(diagreport.NewReportCmd(diagreport.Deps{
-		UseCaseDeps: reporting.ReportDeps{
-			Loader: &infrareport.EvaluationLoader{
-				LoadEval: func(ctx context.Context, path string) (*report.Assessment, error) {
-					return artifact.NewLoader().Evaluation(ctx, fsutil.CleanUserPath(path))
-				},
-			},
-		},
+		UseCaseDeps: reporting.ReportDeps{Loader: reportLoader},
 	}))
 	root.AddCommand(artifacts.NewLintCmd())
 	root.AddCommand(artifacts.NewFmtCmd())
@@ -324,15 +324,17 @@ func wireCISubtree(
 
 	baselineFileOpts := fileout.FileOptions{}
 
+	baselineWriter, bwErr := infrabaseline.NewWriter(func(path string) (*os.File, error) {
+		return fileout.OpenOutputFile(path, baselineFileOpts)
+	})
+	if bwErr != nil {
+		return fmt.Errorf("wire baseline writer: %w", bwErr)
+	}
 	ciCmd.AddCommand(enforce.NewBaselineCmd(baseline.Deps{
 		SaveDeps: reporting.BaselineSaveDeps{
 			Loader: &infrabaseline.EvaluationLoader{},
-			Writer: &infrabaseline.Writer{
-				OpenFile: func(path string) (*os.File, error) {
-					return fileout.OpenOutputFile(path, baselineFileOpts)
-				},
-			},
-			Clock: ports.RealClock{},
+			Writer: baselineWriter,
+			Clock:  ports.RealClock{},
 		},
 		CheckDeps: reporting.BaselineCheckDeps{
 			EvalLoader:     &infrabaseline.EvaluationLoader{},
@@ -340,36 +342,47 @@ func wireCISubtree(
 			Clock:          ports.RealClock{},
 		},
 	}))
+	findingsCounter, fcErr := infragate.NewFindingsCounter(loader.Evaluation)
+	if fcErr != nil {
+		return fmt.Errorf("wire findings counter: %w", fcErr)
+	}
+	baselineComparer, bcErr := infragate.NewBaselineComparer(
+		nil, // sanitizer wired downstream by gate.NewGateCmd
+		loader.Evaluation,
+		loader.Baseline,
+		func(san kernel.Sanitizer, baseEntries []evaluation.BaselineEntry, currentFindings []remediation.Finding) infragate.BaselineComparisonResult {
+			bc := artifact.CompareAgainstBaseline(san, baseEntries, currentFindings)
+			return infragate.BaselineComparisonResult{
+				Current:    bc.Current,
+				Comparison: bc.Comparison,
+			}
+		},
+	)
+	if bcErr != nil {
+		return fmt.Errorf("wire baseline comparer: %w", bcErr)
+	}
+	overdueCounter, ocErr := infragate.NewOverdueCounter(
+		func(ctx context.Context, obsDir, ctlDir string) (infragate.Assets, error) {
+			a, err := loadAssets(ctx, obsDir, ctlDir)
+			if err != nil {
+				return infragate.Assets{}, err
+			}
+			return infragate.Assets{
+				Snapshots: a.Snapshots,
+				Controls:  a.Controls,
+			}, nil
+		},
+		newCELEvaluator,
+	)
+	if ocErr != nil {
+		return fmt.Errorf("wire overdue counter: %w", ocErr)
+	}
 	ciCmd.AddCommand(enforce.NewGateCmd(gate.Deps{
 		UseCaseDeps: usecase.GateDeps{
-			FindingsCounter: &infragate.FindingsCounter{
-				LoadEvaluation: loader.Evaluation,
-			},
-			BaselineComparer: &infragate.BaselineComparer{
-				LoadEvaluation: loader.Evaluation,
-				LoadBaseline:   loader.Baseline,
-				Compare: func(san kernel.Sanitizer, baseEntries []evaluation.BaselineEntry, currentFindings []remediation.Finding) infragate.BaselineComparisonResult {
-					bc := artifact.CompareAgainstBaseline(san, baseEntries, currentFindings)
-					return infragate.BaselineComparisonResult{
-						Current:    bc.Current,
-						Comparison: bc.Comparison,
-					}
-				},
-			},
-			OverdueCounter: &infragate.OverdueCounter{
-				LoadAssets: func(ctx context.Context, obsDir, ctlDir string) (infragate.Assets, error) {
-					a, err := loadAssets(ctx, obsDir, ctlDir)
-					if err != nil {
-						return infragate.Assets{}, err
-					}
-					return infragate.Assets{
-						Snapshots: a.Snapshots,
-						Controls:  a.Controls,
-					}, nil
-				},
-				NewCELEvaluator: newCELEvaluator,
-			},
-			Clock: ports.RealClock{},
+			FindingsCounter:  findingsCounter,
+			BaselineComparer: baselineComparer,
+			OverdueCounter:   overdueCounter,
+			Clock:            ports.RealClock{},
 		},
 	}))
 	ciCmd.AddCommand(enforce.NewFixLoopCmd(fix.LoopDeps{
@@ -390,7 +403,7 @@ func wireCISubtree(
 			if err != nil {
 				return nil, fmt.Errorf("initialize CEL evaluator for fix command: %w", err)
 			}
-			return &infrafix.FindingLoader{CELEvaluator: celEval, ReadFile: fsutil.ReadFileLimited}, nil
+			return infrafix.NewFindingLoader(celEval, fsutil.ReadFileLimited)
 		},
 	}))
 	return nil

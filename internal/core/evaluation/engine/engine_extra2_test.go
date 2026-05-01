@@ -180,7 +180,7 @@ func (d *testDigester) Digest(_ []string, _ byte) kernel.Digest {
 }
 
 func TestAssessorFingerprintPolicy_Empty(t *testing.T) {
-	a := &Assessor{Hasher: &testDigester{}}
+	a := &Assessor{hasher: &testDigester{}}
 	if hash := a.FingerprintPolicy(); hash != "" {
 		t.Fatalf("empty controls should return empty hash, got %v", hash)
 	}
@@ -188,7 +188,7 @@ func TestAssessorFingerprintPolicy_Empty(t *testing.T) {
 
 func TestAssessorFingerprintPolicy_NilHasher(t *testing.T) {
 	a := &Assessor{
-		Controls: []policy.ControlDefinition{{ID: "CTL.A.001"}},
+		controls: []policy.ControlDefinition{{ID: "CTL.A.001"}},
 	}
 	if hash := a.FingerprintPolicy(); hash != "" {
 		t.Fatalf("nil hasher should return empty hash, got %v", hash)
@@ -197,11 +197,11 @@ func TestAssessorFingerprintPolicy_NilHasher(t *testing.T) {
 
 func TestAssessorFingerprintPolicy_WithControls(t *testing.T) {
 	a := &Assessor{
-		Controls: []policy.ControlDefinition{
+		controls: []policy.ControlDefinition{
 			{ID: "CTL.B.001"},
 			{ID: "CTL.A.001"},
 		},
-		Hasher: &testDigester{},
+		hasher: &testDigester{},
 	}
 	hash := a.FingerprintPolicy()
 	if hash != "sha256:testhash" {
@@ -219,7 +219,7 @@ func (c stubClock) Now() time.Time { return c.t }
 
 func TestReferenceTime_FromSnapshots(t *testing.T) {
 	base := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	a := &Assessor{Clock: stubClock{t: time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)}}
+	a := &Assessor{clock: stubClock{t: time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)}}
 	sorted := []asset.Snapshot{
 		{CapturedAt: base},
 		{CapturedAt: base.Add(time.Hour)},
@@ -235,7 +235,7 @@ func TestReferenceTime_FromSnapshots(t *testing.T) {
 
 func TestReferenceTime_Fallback(t *testing.T) {
 	fallback := time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)
-	a := &Assessor{Clock: stubClock{t: fallback}}
+	a := &Assessor{clock: stubClock{t: fallback}}
 	now, err := a.referenceTime(nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -272,13 +272,13 @@ func TestAssessorAssess_NilClock(t *testing.T) {
 
 func TestAssessorAssess_EmptySnapshots(t *testing.T) {
 	a := &Assessor{
-		Clock:      stubClock{t: time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)},
-		Exemptions: policy.NewExemptionConfig("", nil),
-		Exceptions: policy.NewExceptionConfig(nil),
-		PredicateEval: func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+		clock:      stubClock{t: time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)},
+		exemptions: policy.NewExemptionConfig("", nil),
+		exceptions: policy.NewExceptionConfig(nil),
+		predicateEval: func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 			return false, nil
 		},
-		PredicateParser: func(_ any) (*policy.UnsafePredicate, error) {
+		predicateParser: func(_ any) (*policy.UnsafePredicate, error) {
 			return &policy.UnsafePredicate{}, nil
 		},
 	}
@@ -294,7 +294,7 @@ func TestAssessorAssess_EmptySnapshots(t *testing.T) {
 func TestAssessorAssess_BasicViolation(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	a := &Assessor{
-		Controls: []policy.ControlDefinition{
+		controls: []policy.ControlDefinition{
 			{
 				ID:       "CTL.A.001",
 				Name:     "Test",
@@ -302,14 +302,14 @@ func TestAssessorAssess_BasicViolation(t *testing.T) {
 				Type:     policy.TypeUnsafeState,
 			},
 		},
-		SLAThreshold: 1 * time.Hour,
-		Clock:        stubClock{t: base.Add(48 * time.Hour)},
-		Exemptions:   policy.NewExemptionConfig("", nil),
-		Exceptions:   policy.NewExceptionConfig(nil),
-		PredicateEval: func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+		slaThreshold: 1 * time.Hour,
+		clock:        stubClock{t: base.Add(48 * time.Hour)},
+		exemptions:   policy.NewExemptionConfig("", nil),
+		exceptions:   policy.NewExceptionConfig(nil),
+		predicateEval: func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 			return true, nil
 		},
-		PredicateParser: func(_ any) (*policy.UnsafePredicate, error) {
+		predicateParser: func(_ any) (*policy.UnsafePredicate, error) {
 			return &policy.UnsafePredicate{}, nil
 		},
 	}
@@ -349,7 +349,7 @@ func TestCoverageValidator(t *testing.T) {
 	// Single observation
 	_ = tl.RecordCheck(base, false)
 
-	cv := CoverageValidator{MinRequiredSpan: 24 * time.Hour}
+	cv := CoverageValidator{minRequiredSpan: 24 * time.Hour}
 	reason, ok := cv.IsSufficient(tl)
 	if ok {
 		t.Fatal("single observation should be insufficient")
@@ -367,7 +367,7 @@ func TestCoverageValidator_Sufficient(t *testing.T) {
 	_ = tl.RecordCheck(base, false)
 	_ = tl.RecordCheck(base.Add(48*time.Hour), false)
 
-	cv := CoverageValidator{MinRequiredSpan: 24 * time.Hour}
+	cv := CoverageValidator{minRequiredSpan: 24 * time.Hour}
 	_, ok := cv.IsSufficient(tl)
 	if !ok {
 		t.Fatal("48h span should be sufficient for 24h requirement")

@@ -9,8 +9,8 @@ import (
 	"github.com/sufield/stave/internal/core/report"
 )
 
-// RunMetrics captures posture metrics for a single assessment run.
-type RunMetrics struct {
+// runMetrics captures posture metrics for a single assessment run.
+type runMetrics struct {
 	CapturedAt         time.Time      `json:"captured_at"`
 	FilePath           string         `json:"-"`
 	ViolationCount     int            `json:"violation_count"`
@@ -23,21 +23,21 @@ type RunMetrics struct {
 	ViolationsResolved int            `json:"violations_resolved"`
 }
 
-// MTTREntry holds MTTR data for a single severity level.
-type MTTREntry struct {
+// mttrEntry holds MTTR data for a single severity level.
+type mttrEntry struct {
 	AvgDays     float64 `json:"avg_days"`
 	WindowCount int     `json:"window_count"`
 }
 
-// FrameworkTrend captures a framework's satisfaction rate over time.
-type FrameworkTrend struct {
+// frameworkTrend captures a framework's satisfaction rate over time.
+type frameworkTrend struct {
 	Framework string    `json:"framework"`
 	Scores    []float64 `json:"scores"`
 	Direction string    `json:"direction"`
 }
 
-// SLATrendMetric captures SLA compliance for a single run.
-type SLATrendMetric struct {
+// slaTrendMetric captures SLA compliance for a single run.
+type slaTrendMetric struct {
 	CapturedAt        time.Time      `json:"captured_at"`
 	TotalWithSLA      int            `json:"total_with_sla"`
 	BreachedCount     int            `json:"breached_count"`
@@ -45,26 +45,26 @@ type SLATrendMetric struct {
 	BreachedBySev     map[string]int `json:"breached_by_severity,omitempty"`
 }
 
-// TrendReport is the complete trend analysis output.
-type TrendReport struct {
+// trendReport is the complete trend analysis output.
+type trendReport struct {
 	GeneratedAt     time.Time            `json:"generated_at"`
-	Period          Period               `json:"period"`
-	Summary         TrendSummary         `json:"summary"`
-	Runs            []RunMetrics         `json:"runs"`
-	MTTR            map[string]MTTREntry `json:"mttr,omitempty"`
-	FrameworkTrends []FrameworkTrend     `json:"framework_trends"`
-	Velocity        VelocityMetrics      `json:"velocity"`
-	Projection      *ProjectionMetrics   `json:"projection,omitempty"`
-	SLATrend        []SLATrendMetric     `json:"sla_trend,omitempty"`
+	Period          period               `json:"period"`
+	Summary         trendSummary         `json:"summary"`
+	Runs            []runMetrics         `json:"runs"`
+	MTTR            map[string]mttrEntry `json:"mttr,omitempty"`
+	FrameworkTrends []frameworkTrend     `json:"framework_trends"`
+	Velocity        velocityMetrics      `json:"velocity"`
+	Projection      *projectionMetrics   `json:"projection,omitempty"`
+	SLATrend        []slaTrendMetric     `json:"sla_trend,omitempty"`
 	PostureScore    *float64             `json:"posture_score,omitempty"`
 	PostureRubric   string               `json:"posture_rubric,omitempty"`
-	TeamSummary     *TeamTrendSummary    `json:"team_summary,omitempty"`
-	TeamTrends      []TeamTrend          `json:"team_trends,omitempty"`
-	Rollup          *RollupResult        `json:"rollup,omitempty"`
+	TeamSummary     *teamTrendSummary    `json:"team_summary,omitempty"`
+	TeamTrends      []teamTrend          `json:"team_trends,omitempty"`
+	Rollup          *rollupResult        `json:"rollup,omitempty"`
 }
 
-// RollupResult holds aggregated metrics for a hierarchy group.
-type RollupResult struct {
+// rollupResult holds aggregated metrics for a hierarchy group.
+type rollupResult struct {
 	GroupID      string  `json:"group_id"`
 	GroupName    string  `json:"group_name"`
 	PostureScore float64 `json:"posture_score"`
@@ -74,30 +74,30 @@ type RollupResult struct {
 	CriticalOpen int     `json:"critical_open"`
 }
 
-// Period defines the time range of the trend analysis.
-type Period struct {
+// period defines the time range of the trend analysis.
+type period struct {
 	Start    time.Time `json:"start"`
 	End      time.Time `json:"end"`
 	RunCount int       `json:"run_count"`
 }
 
-// TrendSummary provides high-level direction.
-type TrendSummary struct {
+// trendSummary provides high-level direction.
+type trendSummary struct {
 	FirstViolationRate  float64 `json:"first_violation_rate"`
 	LatestViolationRate float64 `json:"latest_violation_rate"`
 	NetChangePercent    float64 `json:"net_change_percent"`
 	Direction           string  `json:"direction"`
 }
 
-// VelocityMetrics captures the rate of change.
-type VelocityMetrics struct {
+// velocityMetrics captures the rate of change.
+type velocityMetrics struct {
 	WindowRuns   int     `json:"window_runs"`
 	AvgNetChange float64 `json:"avg_net_change_per_run"`
 	Direction    string  `json:"direction"`
 }
 
-// TeamTrend holds per-team trend metrics.
-type TeamTrend struct {
+// teamTrend holds per-team trend metrics.
+type teamTrend struct {
 	ID           string    `json:"id"`
 	Name         string    `json:"name"`
 	Contact      string    `json:"contact,omitempty"`
@@ -111,16 +111,16 @@ type TeamTrend struct {
 	ScoreHistory []float64 `json:"score_history,omitempty"`
 }
 
-// TeamTrendSummary holds aggregate team statistics.
-type TeamTrendSummary struct {
+// teamTrendSummary holds aggregate team statistics.
+type teamTrendSummary struct {
 	TeamsTracked    int `json:"teams_tracked"`
 	TeamsImproving  int `json:"teams_improving"`
 	TeamsStable     int `json:"teams_stable"`
 	TeamsRegressing int `json:"teams_regressing"`
 }
 
-// ProjectionMetrics provides a linear extrapolation.
-type ProjectionMetrics struct {
+// projectionMetrics provides a linear extrapolation.
+type projectionMetrics struct {
 	TargetRate    float64 `json:"target_rate"`
 	EstimatedRuns int     `json:"estimated_runs"`
 	Basis         string  `json:"basis"`
@@ -128,7 +128,7 @@ type ProjectionMetrics struct {
 }
 
 // computeRunMetrics extracts metrics from a single assessment.
-func computeRunMetrics(a *report.Assessment, prev *RunMetrics) RunMetrics {
+func computeRunMetrics(a *report.Assessment, prev *runMetrics) runMetrics {
 	violations := len(a.Findings)
 	total := a.Summary.TotalAssets
 	passCount := total - a.Summary.ExposedResources
@@ -163,7 +163,7 @@ func computeRunMetrics(a *report.Assessment, prev *RunMetrics) RunMetrics {
 		}
 	}
 
-	m := RunMetrics{
+	m := runMetrics{
 		CapturedAt:     a.Run.Now,
 		ViolationCount: violations,
 		PassCount:      passCount,
@@ -183,9 +183,9 @@ func computeRunMetrics(a *report.Assessment, prev *RunMetrics) RunMetrics {
 }
 
 // computeVelocity computes rolling average net change.
-func computeVelocity(runs []RunMetrics, windowSize int) VelocityMetrics {
+func computeVelocity(runs []runMetrics, windowSize int) velocityMetrics {
 	if len(runs) < 2 {
-		return VelocityMetrics{Direction: "insufficient_data"}
+		return velocityMetrics{Direction: "insufficient_data"}
 	}
 
 	start := 0
@@ -207,7 +207,7 @@ func computeVelocity(runs []RunMetrics, windowSize int) VelocityMetrics {
 		dir = "regressing"
 	}
 
-	return VelocityMetrics{
+	return velocityMetrics{
 		WindowRuns:   len(window),
 		AvgNetChange: avg,
 		Direction:    dir,
@@ -215,7 +215,7 @@ func computeVelocity(runs []RunMetrics, windowSize int) VelocityMetrics {
 }
 
 // computeProjection provides a linear extrapolation if improving.
-func computeProjection(runs []RunMetrics, velocity VelocityMetrics) *ProjectionMetrics {
+func computeProjection(runs []runMetrics, velocity velocityMetrics) *projectionMetrics {
 	if velocity.Direction != "improving" || len(runs) == 0 {
 		return nil
 	}
@@ -239,7 +239,7 @@ func computeProjection(runs []RunMetrics, velocity VelocityMetrics) *ProjectionM
 		runsNeeded = 1
 	}
 
-	return &ProjectionMetrics{
+	return &projectionMetrics{
 		TargetRate:    targetRate,
 		EstimatedRuns: runsNeeded,
 		Basis:         "linear_extrapolation",
@@ -248,9 +248,9 @@ func computeProjection(runs []RunMetrics, velocity VelocityMetrics) *ProjectionM
 }
 
 // computeFrameworkTrends computes per-framework satisfaction rates across runs.
-func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag string) []FrameworkTrend {
+func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag string) []frameworkTrend {
 	if complianceFlag == "" {
-		return []FrameworkTrend{}
+		return []frameworkTrend{}
 	}
 
 	frameworks := strings.Split(complianceFlag, ",")
@@ -268,7 +268,7 @@ func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag str
 		profileReqs[fw] = len(p.Requirements)
 	}
 
-	var trends []FrameworkTrend
+	var trends []frameworkTrend
 	for _, fw := range frameworks {
 		totalReqs := profileReqs[fw]
 		if totalReqs == 0 {
@@ -302,7 +302,7 @@ func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag str
 			}
 		}
 
-		trends = append(trends, FrameworkTrend{
+		trends = append(trends, frameworkTrend{
 			Framework: fw,
 			Scores:    scores,
 			Direction: dir,
@@ -313,8 +313,8 @@ func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag str
 
 // computeSLATrend extracts SLA compliance rate per assessment run.
 // Runs where no findings have SLA data are skipped.
-func computeSLATrend(assessments []*report.Assessment) []SLATrendMetric {
-	var metrics []SLATrendMetric
+func computeSLATrend(assessments []*report.Assessment) []slaTrendMetric {
+	var metrics []slaTrendMetric
 	for _, a := range assessments {
 		totalWithSLA := 0
 		breachedCount := 0
@@ -336,7 +336,7 @@ func computeSLATrend(assessments []*report.Assessment) []SLATrendMetric {
 		}
 		withinSLA := totalWithSLA - breachedCount
 		pct := float64(withinSLA) / float64(totalWithSLA) * 100
-		metrics = append(metrics, SLATrendMetric{
+		metrics = append(metrics, slaTrendMetric{
 			CapturedAt:        a.Run.Now,
 			TotalWithSLA:      totalWithSLA,
 			BreachedCount:     breachedCount,

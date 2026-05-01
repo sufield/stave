@@ -90,8 +90,9 @@ func ChainEscalation(failingCount int) float64 {
 	}
 }
 
-// AssetSensitivity maps data classification tags to multipliers.
-var AssetSensitivity = map[string]float64{
+// assetSensitivity maps data classification tags to multipliers.
+// Access via GetAssetSensitivity / LookupSensitivity.
+var assetSensitivity = map[string]float64{
 	"phi":        phiSensitivity,
 	"cde":        cdeSensitivity,
 	"production": productionSensitivity,
@@ -100,18 +101,35 @@ var AssetSensitivity = map[string]float64{
 	"sandbox":    devSensitivity,
 }
 
-// ExposureVector maps network reachability to multipliers.
-var ExposureVector = map[string]float64{
+// exposureVector maps network reachability to multipliers.
+// Access via GetExposureScore / LookupExposure.
+var exposureVector = map[string]float64{
 	"public_internet": publicInternetMultiplier,
 	"cross_account":   crossAccountMultiplier,
 	"vpc_internal":    1.0,
 	"no_network":      noNetworkMultiplier,
 }
 
+// GetAssetSensitivity returns the sensitivity multiplier for a
+// classification, or 0 when the classification is not in the table.
+// ok lets callers distinguish "unknown classification" from
+// "classification with multiplier 0".
+func GetAssetSensitivity(class string) (float64, bool) {
+	v, ok := assetSensitivity[class]
+	return v, ok
+}
+
+// GetExposureScore returns the exposure multiplier for a network
+// reachability vector. ok is false when the vector is unknown.
+func GetExposureScore(vector string) (float64, bool) {
+	v, ok := exposureVector[vector]
+	return v, ok
+}
+
 // LookupSensitivity returns the sensitivity multiplier for a classification.
 // Returns 1.0 for unknown classifications.
 func LookupSensitivity(classification string) float64 {
-	if v, ok := AssetSensitivity[classification]; ok {
+	if v, ok := assetSensitivity[classification]; ok {
 		return v
 	}
 	return 1.0
@@ -120,7 +138,7 @@ func LookupSensitivity(classification string) float64 {
 // LookupExposure returns the exposure multiplier for a vector.
 // Returns 1.0 for unknown vectors.
 func LookupExposure(vector string) float64 {
-	if v, ok := ExposureVector[vector]; ok {
+	if v, ok := exposureVector[vector]; ok {
 		return v
 	}
 	return 1.0

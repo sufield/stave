@@ -64,13 +64,13 @@ const (
 type EdgeType string
 
 const (
-	EdgeTypeTargets         EdgeType = "TARGETS"
-	EdgeTypeMapsTo          EdgeType = "MAPS_TO"
-	EdgeTypeViolates        EdgeType = "VIOLATES"
-	EdgeTypeBelongsToScope  EdgeType = "BELONGS_TO_SCOPE"
-	EdgeTypeHasRemediation  EdgeType = "HAS_REMEDIATION"
-	EdgeTypeMemberOf        EdgeType = "MEMBER_OF"
-	EdgeTypeProduces        EdgeType = "PRODUCES"
+	EdgeTypeTargets        EdgeType = "TARGETS"
+	EdgeTypeMapsTo         EdgeType = "MAPS_TO"
+	EdgeTypeViolates       EdgeType = "VIOLATES"
+	EdgeTypeBelongsToScope EdgeType = "BELONGS_TO_SCOPE"
+	EdgeTypeHasRemediation EdgeType = "HAS_REMEDIATION"
+	EdgeTypeMemberOf       EdgeType = "MEMBER_OF"
+	EdgeTypeProduces       EdgeType = "PRODUCES"
 )
 
 // Node is a graph node with typed properties.

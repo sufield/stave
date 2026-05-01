@@ -37,31 +37,102 @@ type Context struct {
 	Production    bool     `yaml:"production,omitempty"`
 }
 
+// Validate checks the context shape. Returns an error when a
+// required field is missing or a path is structurally invalid.
+// Production callers should run this on every newly-loaded or
+// newly-set context so a malformed entry surfaces at the
+// configuration boundary rather than mid-evaluation.
+func (c Context) Validate() error {
+	if strings.TrimSpace(c.ProjectRoot) == "" {
+		return errors.New("project_root must not be empty")
+	}
+	return nil
+}
+
+// IsProduction reports whether the context is marked as a production
+// environment. Wraps the boolean field so audit-logging can be
+// added at the read site if needed.
+func (c Context) IsProduction() bool { return c.Production }
+
 // Store represents the persistent collection of named stave contexts.
+// The contexts map is unexported so callers cannot bypass ValidateName
+// when adding entries; use GetContext / SetContext / DeleteContext.
 type Store struct {
 	Active   string             `yaml:"active,omitempty"`
-	Contexts map[string]Context `yaml:"contexts,omitempty"`
+	contexts map[string]Context `yaml:"contexts,omitempty"`
 	path     string             `yaml:"-"`
 }
 
 // NewStore initializes an empty Store.
 func NewStore() *Store {
 	return &Store{
-		Contexts: make(map[string]Context),
+		contexts: make(map[string]Context),
 	}
 }
 
 // UnmarshalYAML handles custom decoding to ensure maps are always initialized.
+//
+// The intermediate type carries an exported `Contexts` field so the
+// YAML decoder can populate it; we then move the data into the
+// unexported `contexts` map on the live Store.
 func (s *Store) UnmarshalYAML(value *yaml.Node) error {
-	type rawStore Store
-	var aux rawStore
+	var aux struct {
+		Active   string             `yaml:"active,omitempty"`
+		Contexts map[string]Context `yaml:"contexts,omitempty"`
+	}
 	if err := value.Decode(&aux); err != nil {
 		return err
 	}
-	*s = Store(aux)
-	if s.Contexts == nil {
-		s.Contexts = make(map[string]Context)
+	s.Active = aux.Active
+	s.contexts = aux.Contexts
+	if s.contexts == nil {
+		s.contexts = make(map[string]Context)
 	}
+	return nil
+}
+
+// MarshalYAML emits the store with the exported `contexts` key the
+// on-disk format has always used.
+func (s *Store) MarshalYAML() (any, error) {
+	return struct {
+		Active   string             `yaml:"active,omitempty"`
+		Contexts map[string]Context `yaml:"contexts,omitempty"`
+	}{Active: s.Active, Contexts: s.contexts}, nil
+}
+
+// GetContext returns the context registered under name, or false
+// when the name is unknown. The caller receives a copy — mutations
+// must go through SetContext to persist.
+func (s *Store) GetContext(name string) (Context, bool) {
+	c, ok := s.contexts[name]
+	return c, ok
+}
+
+// SetContext stores ctx under name. Validates the name and the
+// context shape; rejects malformed entries instead of accepting
+// them and surfacing the failure later at load time.
+func (s *Store) SetContext(name string, ctx Context) error {
+	if err := ValidateName(name); err != nil {
+		return err
+	}
+	if err := ctx.Validate(); err != nil {
+		return fmt.Errorf("invalid context %q: %w", name, err)
+	}
+	if s.contexts == nil {
+		s.contexts = make(map[string]Context, 1)
+	}
+	s.contexts[name] = ctx
+	return nil
+}
+
+// DeleteContext removes name from the store. Returns
+// ErrContextNotFound when the name is unknown so callers can
+// distinguish "removed it" from "wasn't there to begin with".
+func (s *Store) DeleteContext(name string) error {
+	if _, ok := s.contexts[name]; !ok {
+		return fmt.Errorf("%w: %q", ErrContextNotFound, name)
+	}
+	delete(s.contexts, name)
 	return nil
 }
 
@@ -154,11 +225,11 @@ func ValidateName(name string) error {
 
 // Names returns a sorted list of all available context names.
 func (s *Store) Names() []string {
-	if len(s.Contexts) == 0 {
+	if len(s.contexts) == 0 {
 		return nil
 	}
-	names := make([]string, 0, len(s.Contexts))
-	for n := range s.Contexts {
+	names := make([]string, 0, len(s.contexts))
+	for n := range s.contexts {
 		names = append(names, n)
 	}
 	slices.Sort(names)
@@ -185,7 +256,7 @@ func (s *Store) ResolveSelected() (string, *Context, bool, error) {
 		return "", nil, false, nil
 	}
 
-	selected, ok := s.Contexts[name]
+	selected, ok := s.contexts[name]
 	if !ok {
 		available := strings.Join(s.Names(), ", ")
 		return "", nil, false, fmt.Errorf("%w: %q (from %s); available: [%s]",

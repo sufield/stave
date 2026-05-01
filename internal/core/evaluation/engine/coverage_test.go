@@ -15,8 +15,8 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 	t.Run("no coverage data", func(t *testing.T) {
 		lifecycle, _ := asset.NewExposureLifecycle(asset.Asset{ID: "res-1"})
 		v := CoverageValidator{
-			MinRequiredSpan: 24 * time.Hour,
-			MaxAllowedGap:   12 * time.Hour,
+			minRequiredSpan: 24 * time.Hour,
+			maxAllowedGap:   12 * time.Hour,
 		}
 		reason, ok := v.IsSufficient(lifecycle)
 		if ok {
@@ -37,8 +37,8 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 		}
 
 		v := CoverageValidator{
-			MinRequiredSpan: 24 * time.Hour,
-			MaxAllowedGap:   12 * time.Hour,
+			minRequiredSpan: 24 * time.Hour,
+			maxAllowedGap:   12 * time.Hour,
 		}
 		reason, ok := v.IsSufficient(lifecycle)
 		if ok {
@@ -62,8 +62,8 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 		}
 
 		v := CoverageValidator{
-			MinRequiredSpan: 24 * time.Hour,
-			MaxAllowedGap:   12 * time.Hour,
+			minRequiredSpan: 24 * time.Hour,
+			maxAllowedGap:   12 * time.Hour,
 		}
 		reason, ok := v.IsSufficient(lifecycle)
 		if ok {
@@ -90,8 +90,8 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 		}
 
 		v := CoverageValidator{
-			MinRequiredSpan: 24 * time.Hour,
-			MaxAllowedGap:   12 * time.Hour,
+			minRequiredSpan: 24 * time.Hour,
+			maxAllowedGap:   12 * time.Hour,
 		}
 		reason, ok := v.IsSufficient(lifecycle)
 		if !ok {
@@ -104,7 +104,7 @@ func TestCoverageValidatorIsSufficient(t *testing.T) {
 
 	t.Run("nil lifecycle", func(t *testing.T) {
 		v := CoverageValidator{
-			MinRequiredSpan: 24 * time.Hour,
+			minRequiredSpan: 24 * time.Hour,
 		}
 		reason, ok := v.IsSufficient(nil)
 		if ok {

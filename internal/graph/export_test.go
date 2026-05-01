@@ -209,10 +209,10 @@ func TestOntology_Embedded(t *testing.T) {
 	}
 }
 
-func TestMapToRDFGraph_MaterializesShortcutEdge(t *testing.T) {
+func TestMapTordfGraph_MaterializesShortcutEdge(t *testing.T) {
 	t.Parallel()
 	g := buildFixtureGraph(t)
-	rdf := mapToRDFGraph(g)
+	rdf := mapTordfGraph(g)
 
 	var found bool
 	for _, e := range rdf.Edges {
@@ -229,10 +229,10 @@ func TestMapToRDFGraph_MaterializesShortcutEdge(t *testing.T) {
 	}
 }
 
-func TestMapToRDFGraph_FindingViolatesEdgeIsNotShortcut(t *testing.T) {
+func TestMapTordfGraph_FindingViolatesEdgeIsNotShortcut(t *testing.T) {
 	t.Parallel()
 	g := buildFixtureGraph(t)
-	rdf := mapToRDFGraph(g)
+	rdf := mapTordfGraph(g)
 
 	var sawFindingViolates bool
 	for _, e := range rdf.Edges {
@@ -251,7 +251,7 @@ func TestMapToRDFGraph_FindingViolatesEdgeIsNotShortcut(t *testing.T) {
 
 // largeFixtureGraph builds a graph with `findingCount` findings and an
 // equal number of resources, sized so the previous O(N×F) severity
-// lookup degrades visibly. Used by BenchmarkMapToRDFGraph_LargeInput
+// lookup degrades visibly. Used by BenchmarkMapTordfGraph_LargeInput
 // to confirm the hot path stays linear in input size.
 func largeFixtureGraph(findingCount int) *GraphData {
 	now := time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
@@ -269,9 +269,9 @@ func largeFixtureGraph(findingCount int) *GraphData {
 	})
 }
 
-func BenchmarkMapToRDFGraph_LargeInput(b *testing.B) {
+func BenchmarkMapTordfGraph_LargeInput(b *testing.B) {
 	g := largeFixtureGraph(2000)
 	for b.Loop() {
-		_ = mapToRDFGraph(g)
+		_ = mapTordfGraph(g)
 	}
 }
