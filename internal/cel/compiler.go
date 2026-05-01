@@ -69,7 +69,7 @@ func NewCompiler() (*Compiler, error) {
 // Compile translates an UnsafePredicate into a compiled CEL program.
 // Results are cached by the generated expression string.
 func (c *Compiler) Compile(pred policy.UnsafePredicate) (CompiledPredicate, error) {
-	expr, err := predicateToExpr(pred, scopeVarTopLevel)
+	expr, err := predicateToExpr(pred, scopeVarTopLevel, 0)
 	if err != nil {
 		return CompiledPredicate{}, fmt.Errorf("predicate to expression: %w", err)
 	}
@@ -114,20 +114,34 @@ func (c *Compiler) Compile(pred policy.UnsafePredicate) (CompiledPredicate, erro
 // PredicateToExpr converts an UnsafePredicate to a CEL expression string.
 // Exported for diagnostic use; callers should use Compile instead.
 func PredicateToExpr(pred policy.UnsafePredicate) (string, error) {
-	return predicateToExpr(pred, "")
+	return predicateToExpr(pred, "", 0)
 }
+
+// maxPredicateDepth caps recursion depth between predicateToExpr and
+// ruleToExpr. A pathological YAML (or a future bug that re-enters via
+// rule.Any/rule.All cycles) would otherwise blow the stack at compile
+// time and surface as a process crash rather than a control-load error.
+// 100 is well above any legitimate nesting any human-authored control
+// catalog would produce.
+const maxPredicateDepth = 100
 
 // predicateToExpr converts an UnsafePredicate to a CEL expression string.
 // scopeVar controls field resolution:
 //   - "" (empty): top-level — fields like "properties.x" resolve normally
 //   - "__id": inside any_match — bare fields like "type" resolve to __id["type"]
-func predicateToExpr(pred policy.UnsafePredicate, scopeVar string) (string, error) {
+//
+// depth is the current recursion depth (0 at top level). Callers
+// outside this file should use PredicateToExpr.
+func predicateToExpr(pred policy.UnsafePredicate, scopeVar string, depth int) (string, error) {
+	if depth > maxPredicateDepth {
+		return "", fmt.Errorf("predicate nesting exceeds maximum depth (%d) — possible cycle in control YAML", maxPredicateDepth)
+	}
 	var parts []string
 
 	if len(pred.Any) > 0 {
 		anyExprs := make([]string, 0, len(pred.Any))
 		for i := range pred.Any {
-			e, err := ruleToExpr(&pred.Any[i], scopeVar)
+			e, err := ruleToExpr(&pred.Any[i], scopeVar, depth+1)
 			if err != nil {
 				return "", fmt.Errorf("any[%d]: %w", i, err)
 			}
@@ -143,7 +157,7 @@ func predicateToExpr(pred policy.UnsafePredicate, scopeVar string) (string, erro
 	if len(pred.All) > 0 {
 		allExprs := make([]string, 0, len(pred.All))
 		for i := range pred.All {
-			e, err := ruleToExpr(&pred.All[i], scopeVar)
+			e, err := ruleToExpr(&pred.All[i], scopeVar, depth+1)
 			if err != nil {
 				return "", fmt.Errorf("all[%d]: %w", i, err)
 			}
@@ -182,11 +196,11 @@ func resolveValueExprFn(r *policy.PredicateRule, v any) (string, error) {
 
 // ruleToExpr converts a single PredicateRule to a CEL expression.
 // scopeVar is passed through for field resolution and recursive calls.
-func ruleToExpr(r *policy.PredicateRule, scopeVar string) (string, error) {
+func ruleToExpr(r *policy.PredicateRule, scopeVar string, depth int) (string, error) {
 	// Handle nested logic blocks (recursive any/all)
 	if len(r.Any) > 0 || len(r.All) > 0 {
 		nested := policy.UnsafePredicate{Any: r.Any, All: r.All}
-		return predicateToExpr(nested, scopeVar)
+		return predicateToExpr(nested, scopeVar, depth+1)
 	}
 
 	field := r.Field.String()
@@ -437,7 +451,10 @@ func ruleToExprAnyMatch(r *policy.PredicateRule, val any, outerScope string, ide
 
 	// Compile the nested predicate with "__id" scope — field references
 	// like "type", "id", "purpose" will resolve to __id["type"], etc.
-	innerExpr, err := predicateToExpr(*nested, ScopeVarItem)
+	// any_match adds one nesting level (the comprehension itself).
+	// Inner depth starts at 1 so the cap counts the comprehension
+	// frame the same way a literal Any/All branch would.
+	innerExpr, err := predicateToExpr(*nested, ScopeVarItem, 1)
 	if err != nil {
 		return "", fmt.Errorf("any_match: %w", err)
 	}

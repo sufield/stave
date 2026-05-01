@@ -137,14 +137,28 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 		// gives only the full match, so we have to ask the regex
 		// for sub-groups against the same input slice.
 		groups := messagePathRe.FindStringSubmatch(match)
-		// groups[1] is the URL branch, groups[2] is the path
-		// basename. Exactly one is non-empty per match because the
+		// groups[1] is the URL branch, groups[2] is the
+		// credential-style path's terminal segment, groups[3] is
+		// the trailing-slash directory branch (e.g. /run/secrets/).
+		// Exactly one is non-empty per match because the
 		// alternation is mutually exclusive at the top level.
 		if len(groups) > 1 && groups[1] != "" {
 			return groups[1] // URL — preserve verbatim
 		}
 		if len(groups) > 2 && groups[2] != "" {
 			return groups[2] // credential-style path — keep basename only
+		}
+		if len(groups) > 3 && groups[3] != "" {
+			// Trailing-slash directory: leak the directory name
+			// itself the same way credential paths leak the
+			// filename. Reduce to the last named segment so
+			// "/run/secrets/" still surfaces "secrets" for triage
+			// without exposing the surrounding mount-point chain.
+			trimmed := strings.TrimRight(groups[3], "/")
+			if i := strings.LastIndex(trimmed, "/"); i >= 0 {
+				return trimmed[i+1:] + "/"
+			}
+			return trimmed + "/"
 		}
 		return match
 	})
@@ -402,11 +416,16 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 	default:
 		// Non-string, non-container leaf values reach this branch
 		// (numbers, booleans, time stamps, custom struct types).
-		// Returning the string SanitizedValue would change the JSON
-		// type of the slot — an int field would suddenly serialize
-		// as a string, breaking downstream parsers that pinned the
-		// shape. Returning nil scrubs the value while leaving the
-		// type-coercion contract clean: it serializes as JSON null.
-		return nil
+		// Returning a sentinel string makes unknown types visible
+		// in the output rather than silently null-erasing them. The
+		// JSON-type cost (an int field becomes a string) is the
+		// trade-off accepted for triage visibility — a downstream
+		// parser that sees "SANITIZED_UNKNOWN_TYPE" knows the
+		// engine reached an un-classified Go type and can extend
+		// the type switch above. Numeric / boolean leaves with
+		// dedicated cases (above) still get their type-preserving
+		// zero-value scrub; this fallback only fires when the
+		// switch added a new type without updating the engine.
+		return "SANITIZED_UNKNOWN_TYPE"
 	}
 }

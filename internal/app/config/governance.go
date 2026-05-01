@@ -74,6 +74,9 @@ func IdentifySetting(raw string) (SettingPath, error) {
 
 // GetAttribute retrieves the current value of a governance setting.
 func GetAttribute(cfg *WorkspacePolicy, name string) (string, bool) {
+	if cfg == nil {
+		return "", false
+	}
 	field, ok := fieldByYAMLTag(reflect.ValueOf(cfg).Elem(), name)
 	if !ok {
 		return "", false
@@ -82,11 +85,26 @@ func GetAttribute(cfg *WorkspacePolicy, name string) (string, bool) {
 }
 
 // UpdateAttribute validates and applies a change to a governance setting.
+//
+// On validation failure the field is restored to its pre-update value
+// (snapshot taken before the type-specific assignment) so a rejected
+// value does not leave the field zeroed — the earlier shape called
+// reflect.Zero on the field which silently corrupted the policy.
 func UpdateAttribute(cfg *WorkspacePolicy, name, value string) error {
+	if cfg == nil {
+		return errors.New("governance: nil WorkspacePolicy")
+	}
 	field, ok := fieldByYAMLTag(reflect.ValueOf(cfg).Elem(), name)
 	if !ok {
 		return fmt.Errorf("unknown governance setting: %s", name)
 	}
+
+	// Snapshot the original so we can restore on validation error.
+	// reflect.Value carries an internal flag for addressability; the
+	// snapshot value itself is a copy and is safe to keep across the
+	// mutation that follows.
+	original := reflect.New(field.Type()).Elem()
+	original.Set(field)
 
 	if field.Kind() == reflect.String {
 		field.Set(reflect.ValueOf(value).Convert(field.Type()))
@@ -101,7 +119,7 @@ func UpdateAttribute(cfg *WorkspacePolicy, name, value string) error {
 	fieldName := structFieldNameByYAMLTag(cfg, name)
 	if fieldName != "" {
 		if err := validateAuditSetting(cfg, fieldName); err != nil {
-			field.Set(reflect.Zero(field.Type()))
+			field.Set(original)
 			return fmt.Errorf("invalid value %q for %s: %w", value, name, err)
 		}
 	}

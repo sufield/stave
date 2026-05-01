@@ -466,13 +466,21 @@ func (s *assessmentSession) applyControl(
 }
 
 func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
-	evaluation.SortFindings(s.collector.findings)
+	// Snapshot the collector under its own mutex so the compile pass
+	// sees a consistent view of findings / checks / skippedControls /
+	// exemptedAssets. Direct reads were technically safe today (Assess
+	// finishes all writers before compileReport runs), but the absence
+	// of a happens-before relationship means a future async writer
+	// would race silently.
+	snap := s.collector.Snapshot()
 
-	slices.SortFunc(s.collector.exemptedAssets, func(a, b asset.ExemptedAsset) int {
+	evaluation.SortFindings(snap.Findings)
+
+	slices.SortFunc(snap.ExemptedAssets, func(a, b asset.ExemptedAsset) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
 
-	slices.SortFunc(s.collector.checks, func(a, b evaluation.ResourceCheck) int {
+	slices.SortFunc(snap.Checks, func(a, b evaluation.ResourceCheck) int {
 		if c := cmp.Compare(a.ControlID, b.ControlID); c != 0 {
 			return c
 		}
@@ -481,7 +489,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 
 	// Filter findings through active security exceptions.
 	activeFindings, exceptedFindings := partitionFindings(
-		s.collector.findings,
+		snap.Findings,
 		s.assessor.exceptions,
 		s.auditTime,
 	)
@@ -542,16 +550,16 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		Findings:             activeFindings,
 		ExceptedFindings:     exceptedFindings,
 		AcknowledgedFindings: acknowledgedFindings,
-		SkippedControls:      s.collector.skippedControls,
-		ExemptedAssets:       s.collector.exemptedAssets,
-		Checks:               s.collector.checks,
+		SkippedControls:      snap.SkippedControls,
+		ExemptedAssets:       snap.ExemptedAssets,
+		Checks:               snap.Checks,
 	}
 
 	if s.opts.GenerateEvidence && len(s.snapshots) > 0 {
 		latestSnap := &s.snapshots[len(s.snapshots)-1]
 		report.EvidencePackage = buildEvidencePackage(
 			activeFindings,
-			s.collector.checks,
+			snap.Checks,
 			s.assessor.Controls(),
 			latestSnap,
 			s.auditTime,

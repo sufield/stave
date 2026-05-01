@@ -47,6 +47,12 @@ func (s *FileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 }
 
 // Close flushes and closes the file. Subsequent Emit calls return errSinkClosed.
+//
+// Sync is called before Close so a process exit immediately after
+// Close cannot lose buffered alert lines on filesystems where the
+// page cache hasn't yet flushed (the same durability concern that
+// drives fsync on rename in fsutil.crossFSCopy). The earlier shape
+// dropped buffered writes silently.
 func (s *FileSink) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -54,7 +60,11 @@ func (s *FileSink) Close() error {
 	if s.f == nil {
 		return nil
 	}
-	err := s.f.Close()
+	syncErr := s.f.Sync()
+	closeErr := s.f.Close()
 	s.f = nil
-	return err
+	if syncErr != nil {
+		return syncErr
+	}
+	return closeErr
 }

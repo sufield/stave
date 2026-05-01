@@ -38,7 +38,7 @@ func TestBuildCompositeGaps_SharedGap(t *testing.T) {
 		},
 	}
 
-	report := BuildCompositeGaps(assessments, nil)
+	report := BuildCompositeGaps(assessments)
 
 	if len(report.SharedGaps) != 1 {
 		t.Fatalf("SharedGaps = %d, want 1", len(report.SharedGaps))
@@ -78,7 +78,7 @@ func TestBuildCompositeGaps_UniqueGap(t *testing.T) {
 		},
 	}
 
-	report := BuildCompositeGaps(assessments, nil)
+	report := BuildCompositeGaps(assessments)
 
 	if len(report.SharedGaps) != 0 {
 		t.Errorf("SharedGaps = %d, want 0 (only 1 framework)", len(report.SharedGaps))
@@ -110,7 +110,7 @@ func TestBuildCompositeGaps_TopNImpact(t *testing.T) {
 		}},
 	}
 
-	report := BuildCompositeGaps(assessments, nil)
+	report := BuildCompositeGaps(assessments)
 
 	if len(report.SharedGaps) != 2 {
 		t.Fatalf("SharedGaps = %d, want 2", len(report.SharedGaps))
@@ -154,7 +154,7 @@ func TestBuildCompositeGaps_DeduplicatedViolations(t *testing.T) {
 		}},
 	}
 
-	report := BuildCompositeGaps(assessments, nil)
+	report := BuildCompositeGaps(assessments)
 
 	if len(report.SharedGaps) != 1 {
 		t.Fatalf("SharedGaps = %d, want 1", len(report.SharedGaps))
@@ -180,7 +180,7 @@ func TestBuildCompositeGaps_PassingRecordsIgnored(t *testing.T) {
 		}},
 	}
 
-	report := BuildCompositeGaps(assessments, nil)
+	report := BuildCompositeGaps(assessments)
 
 	// Only the failing record should appear.
 	if report.UniqueGapCount != 1 {

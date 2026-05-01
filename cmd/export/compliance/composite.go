@@ -35,7 +35,8 @@ func runComposite(
 	_ time.Time,
 ) error {
 	// Build composite gap report.
-	gapReport := evidence.BuildCompositeGaps(assessments, pkg)
+	gapReport := evidence.BuildCompositeGaps(assessments)
+	_ = pkg // reserved for future evidence-enrichment hookups; see BuildCompositeGaps doc.
 
 	// Build export DTO.
 	var frameworks []string

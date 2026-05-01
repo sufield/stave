@@ -125,8 +125,8 @@ const jsonldHeader = `{
     "canImpersonate": { "@id": "stave:canImpersonate", "@type": "@id" },
     "governedBy": { "@id": "stave:governedBy", "@type": "@id" },
     "isAlgorithmShortcut": "stave:isAlgorithmShortcut",
-    "severity_weight": { "@id": "stave:severityWeight", "@type": "xsd:double" },
-    "weight": { "@id": "stave:severityWeight", "@type": "xsd:double" }
+    "severity_weight": { "@id": "stave:nodeSeverityWeight", "@type": "xsd:double" },
+    "weight": { "@id": "stave:edgeSeverityWeight", "@type": "xsd:double" }
   },
   "@graph": [
 `

@@ -202,7 +202,18 @@ func run(w io.Writer, opts *options) error {
 		report.Pass = false
 	}
 
-	// Build metadata.
+	// Build metadata. A zero CapturedAt would render as
+	// "0001-01-01T00:00:00Z" — Go's zero-time is a valid wall-clock
+	// instant in the year 1, indistinguishable from a real but
+	// ancient observation. Surface a warning so an upstream producer
+	// emitting unset captured_at fields is visible rather than
+	// silently flowing through every report.
+	if snap.CapturedAt.IsZero() {
+		slog.Warn("snapshot has zero captured_at; report timestamp will render as 0001-01-01T00:00:00Z",
+			"bucket", extractBucketName(snap),
+			"account", extractAccountID(snap),
+		)
+	}
 	meta := reporter.ReportMeta{
 		BucketName: extractBucketName(snap),
 		AccountID:  extractAccountID(snap),

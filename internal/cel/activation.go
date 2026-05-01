@@ -28,6 +28,13 @@ func NewActivation(properties, params map[string]any, identities []any) Activati
 			identity = first
 		}
 	}
+	// Mirror the params guard: a nil properties map dereferences to
+	// an unknown-field error in CEL, surfacing as a confusing
+	// "no such key" rather than the cleaner "field absent" semantic
+	// the rest of the engine relies on.
+	if properties == nil {
+		properties = map[string]any{}
+	}
 	if params == nil {
 		params = map[string]any{}
 	}

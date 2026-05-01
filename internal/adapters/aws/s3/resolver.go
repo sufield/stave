@@ -35,7 +35,12 @@ func NewResolver() *Resolver {
 	r.insert("s3:deleteobject", risk.PermDelete)
 	r.insert("s3:deletebucket", risk.PermDelete)
 	r.insert("s3:listbucketversions", risk.PermList)
-	// Prefix catch-alls (longest-prefix-match means exact entries above win)
+	// Prefix catch-alls (longest-prefix-match means exact entries above win).
+	// s3:get* and s3:list* mirror the existing put/delete catch-alls so
+	// novel actions added by AWS (s3:GetObjectVersionTagging, s3:ListMultipartUploadParts,
+	// etc.) are classified by intent rather than reported as unknown.
+	r.insert("s3:get", risk.PermRead)
+	r.insert("s3:list", risk.PermList)
 	r.insert("s3:put", risk.PermWrite)
 	r.insert("s3:delete", risk.PermDelete)
 	return r

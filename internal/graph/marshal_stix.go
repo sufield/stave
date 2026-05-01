@@ -17,6 +17,7 @@ var stixRelTypeMap = map[EdgeType]string{
 	EdgeTypeBelongsToScope:      "located-at",
 	EdgeTypeMapsTo:              "related-to",
 	EdgeTypeViolatesRequirement: "related-to",
+	EdgeTypeViolates:            "related-to", // legacy alias, see builder.go
 	EdgeTypeViolatesInvariant:   "related-to",
 	EdgeTypeHasEffectiveAccess:  "uses",
 	EdgeTypeCanImpersonate:      "impersonates",

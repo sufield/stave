@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"fmt"
 	"os/exec"
 	"slices"
 	"strings"
@@ -76,6 +77,13 @@ func IsDirty(ctx context.Context, repoRoot string, paths []string) (bool, []stri
 			continue
 		}
 		dirty[p] = true
+	}
+	// Surface scanner errors (e.g. token too long for the default
+	// buffer) instead of silently returning the partial dirty set.
+	// A truncated scan would tell the caller "clean" for paths that
+	// happened to fall after the truncation point.
+	if err := s.Err(); err != nil {
+		return false, nil, fmt.Errorf("scan git status: %w", err)
 	}
 	list := make([]string, 0, len(dirty))
 	for p := range dirty {

@@ -233,10 +233,12 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 		t.Errorf("ComplianceRequirement.standard = %q, want oscal", req.Standard)
 	}
 
-	// VIOLATES edge.
-	violates := filterEdges(g.Edges, "VIOLATES")
+	// VIOLATES_REQUIREMENT edge — wire string distinguishes the
+	// real Finding -> ComplianceRequirement edge from the synthesized
+	// Resource -> Control shortcut.
+	violates := filterEdges(g.Edges, "VIOLATES_REQUIREMENT")
 	if len(violates) == 0 {
-		t.Error("expected at least one VIOLATES edge")
+		t.Error("expected at least one VIOLATES_REQUIREMENT edge")
 	}
 
 	// No duplicate edges.
@@ -283,10 +285,10 @@ func TestExperiment03_ComplianceMapping(t *testing.T) {
 		t.Errorf("MAPS_TO edges = %d, want 3", len(mapsTo))
 	}
 
-	// 3 VIOLATES edges (finding → requirement).
-	violates := filterEdges(g.Edges, "VIOLATES")
+	// 3 VIOLATES_REQUIREMENT edges (finding → requirement).
+	violates := filterEdges(g.Edges, "VIOLATES_REQUIREMENT")
 	if len(violates) != 3 {
-		t.Errorf("VIOLATES edges = %d, want 3", len(violates))
+		t.Errorf("VIOLATES_REQUIREMENT edges = %d, want 3", len(violates))
 	}
 
 	// Check requirement IDs.

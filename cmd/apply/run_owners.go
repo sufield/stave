@@ -1,6 +1,8 @@
 package apply
 
 import (
+	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -12,16 +14,28 @@ import (
 // annotateOwners resolves team ownership for each finding when a team
 // manifest is configured. When --owner-filter is also set, findings
 // not owned by an allowed team are removed from the report.
-func annotateOwners(result *evaluation.ComplianceReport, opts *Options) {
+//
+// A failed manifest load with no --owner-filter logs a warning and
+// returns nil — the manifest is optional decoration in that mode.
+// A failed load with --owner-filter set returns an error: silently
+// ignoring the filter would emit a report that contradicts the
+// caller's explicit filter request.
+func annotateOwners(result *evaluation.ComplianceReport, opts *Options) error {
 	manifestPath := resolveTeamManifest(opts.TeamManifest)
 	if manifestPath == "" {
-		return
+		if len(opts.OwnerFilter) > 0 {
+			return errors.New("--owner-filter requires a team manifest (set --team-manifest or place stave-teams.yaml in cwd)")
+		}
+		return nil
 	}
 
 	manifest, err := teams.LoadManifest(manifestPath)
 	if err != nil {
-		slog.Debug("skipping owner annotation", "error", err)
-		return
+		if len(opts.OwnerFilter) > 0 {
+			return fmt.Errorf("load team manifest %q: %w", manifestPath, err)
+		}
+		slog.Warn("skipping owner annotation", "manifest", manifestPath, "error", err)
+		return nil
 	}
 
 	// Annotate each finding with resolved owner.
@@ -36,7 +50,7 @@ func annotateOwners(result *evaluation.ComplianceReport, opts *Options) {
 
 	// Filter by --owner-filter if set.
 	if len(opts.OwnerFilter) == 0 {
-		return
+		return nil
 	}
 
 	allowed := make(map[string]bool, len(opts.OwnerFilter))
@@ -51,6 +65,7 @@ func annotateOwners(result *evaluation.ComplianceReport, opts *Options) {
 		}
 	}
 	result.Findings = filtered
+	return nil
 }
 
 // resolveTeamManifest returns the team manifest path from the flag,

@@ -386,7 +386,9 @@ func TestExposureLifecycle_SetAsset_EmptyID(t *testing.T) {
 	a := Asset{ID: "bucket-1"}
 	tl, _ := NewExposureLifecycle(a)
 	// SetAsset with same ID is fine
-	tl.SetAsset(Asset{ID: "bucket-1", Type: "s3_bucket"})
+	if err := tl.SetAsset(Asset{ID: "bucket-1", Type: "s3_bucket"}); err != nil {
+		t.Fatalf("SetAsset: %v", err)
+	}
 	if tl.Asset().Type != "s3_bucket" {
 		t.Fatalf("Type = %v", tl.Asset().Type)
 	}

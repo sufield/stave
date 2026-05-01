@@ -164,7 +164,9 @@ func recordAssetObservation(
 		if err := t.RecordCheck(snap.CapturedAt, isUnsafe); err != nil {
 			return fmt.Errorf("record observation for control %s, asset %s: %w", ctl.ID, a.ID, err)
 		}
-		t.SetAsset(a)
+		if err := t.SetAsset(a); err != nil {
+			return fmt.Errorf("set asset for control %s, asset %s: %w", ctl.ID, a.ID, err)
+		}
 	}
 	return nil
 }

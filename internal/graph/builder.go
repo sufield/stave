@@ -77,16 +77,20 @@ const (
 	EdgeTypeMemberOf       EdgeType = "MEMBER_OF"
 	EdgeTypeProduces       EdgeType = "PRODUCES"
 
-	// EdgeTypeViolates / EdgeTypeViolatesRequirement is the
-	// Finding -> ComplianceRequirement edge mapped to the ontology
-	// predicate stave:violatesRequirement. Both names point at the
-	// same wire string ("VIOLATES") so older callers keep working;
-	// new code should prefer the ViolatesRequirement spelling
-	// because the unqualified "violates" predicate is the shortcut
-	// edge synthesized by the export layer (Resource -> Control)
-	// and is conceptually distinct.
-	EdgeTypeViolates            EdgeType = "VIOLATES"
-	EdgeTypeViolatesRequirement EdgeType = "VIOLATES"
+	// EdgeTypeViolatesRequirement is the Finding -> ComplianceRequirement
+	// edge mapped to the ontology predicate stave:violatesRequirement.
+	// Wire string VIOLATES_REQUIREMENT keeps it distinct from the
+	// generic VIOLATES used by the synthesized Resource->Control
+	// shortcut, so RDF consumers can filter the two without parsing
+	// edge endpoints.
+	EdgeTypeViolatesRequirement EdgeType = "VIOLATES_REQUIREMENT"
+
+	// EdgeTypeViolates is retained as a legacy alias for the same
+	// Finding -> ComplianceRequirement edge. Older producers emitted
+	// VIOLATES; the export layer maps both wire strings to the
+	// stave:violatesRequirement predicate. New code should use
+	// EdgeTypeViolatesRequirement for clarity.
+	EdgeTypeViolates EdgeType = "VIOLATES"
 
 	// EdgeTypeViolatesInvariant is the Finding -> Control edge:
 	// "this finding asserts the control's invariant was false on

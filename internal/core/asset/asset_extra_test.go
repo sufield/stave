@@ -527,7 +527,9 @@ func TestExposureLifecycleSetAsset(t *testing.T) {
 	tl, _ := NewExposureLifecycle(a)
 
 	newAsset := Asset{ID: ID("bucket-1"), Type: "new_type"}
-	tl.SetAsset(newAsset)
+	if err := tl.SetAsset(newAsset); err != nil {
+		t.Fatalf("SetAsset: %v", err)
+	}
 	if tl.Asset().Type != "new_type" {
 		t.Fatalf("Type = %v", tl.Asset().Type)
 	}

@@ -158,3 +158,34 @@ func (c *AssessmentCollector) NonCompliantAssetCount() int {
 	defer c.mu.Unlock()
 	return len(c.nonCompliantAssets)
 }
+
+// CollectorSnapshot is the read-only view compileReport needs.
+// All fields are slices owned by the receiver — the caller must
+// not mutate them in place. Returned slices share the underlying
+// backing array with the collector; if a caller needs to mutate
+// (e.g. sort), they should re-slice or clone first.
+type CollectorSnapshot struct {
+	Findings        []evaluation.Finding
+	Checks          []evaluation.ResourceCheck
+	SkippedControls []evaluation.SkippedControl
+	ExemptedAssets  []asset.ExemptedAsset
+}
+
+// Snapshot captures the slice headers under the mutex so a single
+// compileReport call sees a consistent view of the collector. The
+// earlier shape read s.collector.findings / .checks / .exemptedAssets
+// directly without locking; the writers (RecordFindings,
+// RecordCheck, etc.) acquire the mutex, but compileReport's
+// unsynchronised reads were a race even when serialised by the
+// session's applyControlInUse atomic — Go's memory model treats
+// the unsynchronised slice-header read as undefined behaviour.
+func (c *AssessmentCollector) Snapshot() CollectorSnapshot {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return CollectorSnapshot{
+		Findings:        c.findings,
+		Checks:          c.checks,
+		SkippedControls: c.skippedControls,
+		ExemptedAssets:  c.exemptedAssets,
+	}
+}

@@ -201,6 +201,18 @@ func Load() (*Store, string, error) {
 		return nil, "", fmt.Errorf("failed to parse context YAML at %q: %w", path, err)
 	}
 
+	// Validate every context entry before returning the store. The
+	// per-context validators (project_root structure, project_config
+	// path safety, etc.) are the trust boundary for what a stored
+	// context file can contain. The earlier shape unmarshalled and
+	// returned without checking, so a malicious or corrupted entry
+	// only surfaced mid-evaluation as a confusing path error.
+	for name, ctx := range store.contexts {
+		if err := ctx.Validate(); err != nil {
+			return nil, "", fmt.Errorf("context %q at %q: %w", name, path, err)
+		}
+	}
+
 	return store, path, nil
 }
 

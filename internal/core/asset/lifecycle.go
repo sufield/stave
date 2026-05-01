@@ -66,12 +66,22 @@ func (l *ExposureLifecycle) Asset() Asset {
 }
 
 // SetAsset updates the lifecycle with the most recent asset metadata.
-func (l *ExposureLifecycle) SetAsset(a Asset) {
+//
+// Returns ErrEmptyAssetID when the resulting lifecycle ID would be
+// empty (the lifecycle had no ID and the incoming asset has no ID).
+// The earlier shape called checkContracts() which panicked on the
+// same condition; callers (currently engine/lifecycles.go) can now
+// surface the failure via a normal error path, matching the
+// error-returning style of NewExposureLifecycle.
+func (l *ExposureLifecycle) SetAsset(a Asset) error {
 	if l.ID.IsEmpty() {
 		l.ID = a.ID
 	}
 	l.asset = a
-	l.checkContracts()
+	if l.ID.IsEmpty() {
+		return ErrEmptyAssetID
+	}
+	return nil
 }
 
 // Stats returns continuity and frequency metrics for this asset.

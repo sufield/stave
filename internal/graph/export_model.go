@@ -238,6 +238,9 @@ const (
 var wireToPredicate = map[EdgeType]string{
 	EdgeTypeTargets:             predTargets,
 	EdgeTypeViolatesRequirement: predViolatesRequirement,
+	// Legacy VIOLATES wire string maps to the same predicate so
+	// older producers / replayed graph exports keep round-tripping.
+	EdgeTypeViolates: predViolatesRequirement,
 	// VIOLATES_INVARIANT names the edge from a finding to the
 	// invariant the control was checking. The earlier shape was
 	// missing this entry, so any builder that emitted the wire name

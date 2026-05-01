@@ -81,7 +81,9 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	}
 
 	// Owner annotation — resolve team ownership for each finding.
-	annotateOwners(&result, ec.Opts)
+	if err := annotateOwners(&result, ec.Opts); err != nil {
+		return EvaluateResult{}, err
+	}
 
 	// Reachability annotation — annotate findings with IAM blast radius.
 	annotateReachability(&result, ec.Opts.ObservationsDir)

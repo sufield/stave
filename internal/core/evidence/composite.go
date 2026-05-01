@@ -61,8 +61,14 @@ type GapImpactSummary struct {
 }
 
 // BuildCompositeGaps analyzes gaps across multiple framework assessments.
-// Each assessment is paired with its EvidencePackage for evidence access.
-func BuildCompositeGaps(assessments []*ProfileAssessment, pkg *EvidencePackage) CompositeGapReport {
+//
+// The signature previously took a *EvidencePackage parameter that was
+// never read inside the function — leftover plumbing from an earlier
+// shape that intended to enrich gap entries with evidence-package
+// metadata. Removed: the per-assessment EvidencePackage is already
+// reachable via assessments[i] when (if ever) the enrichment is
+// implemented.
+func BuildCompositeGaps(assessments []*ProfileAssessment) CompositeGapReport {
 	type gapKey struct {
 		controlID   string
 		resourceARN string

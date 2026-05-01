@@ -24,6 +24,15 @@ var (
 // "wrong profile loaded" symptom into a deterministic startup
 // failure.
 func RegisterProfile(p *Profile) {
+	// Guard against nil / empty-ID profiles before touching the
+	// registry. A nil pointer would NPE on profiles[p.ID]; an
+	// empty ID would cause every later registration with no ID
+	// to clobber the same map slot. RegisterProfile is called
+	// from init() so a panic is the right failure mode — the
+	// startup-time crash names the offender.
+	if p == nil || p.ID == "" {
+		panic("profile: RegisterProfile called with nil profile or empty ID")
+	}
 	profilesMu.Lock()
 	defer profilesMu.Unlock()
 	if _, exists := profiles[p.ID]; exists {

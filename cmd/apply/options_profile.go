@@ -13,6 +13,13 @@ func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
 	if err != nil {
 		return RunConfig{}, &ui.UserError{Err: err}
 	}
+	if len(profiles) == 0 {
+		// Defensive: ParseProfiles is meant to either return a
+		// non-empty slice or an error. The bounds check guards
+		// against profiles[0] panicking if a future ParseProfiles
+		// edit introduces an empty-slice success path.
+		return RunConfig{}, &ui.UserError{Err: fmt.Errorf("--profile %q resolved to no profiles", o.Profile)}
+	}
 
 	if o.InputFile == "" {
 		return RunConfig{}, &ui.UserError{Err: fmt.Errorf("--input is required when using --profile %s", o.Profile)}
