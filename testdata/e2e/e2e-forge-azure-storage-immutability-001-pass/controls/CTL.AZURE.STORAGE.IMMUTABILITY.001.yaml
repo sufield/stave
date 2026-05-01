@@ -13,7 +13,7 @@ scope_tags: [azure]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Storage Container Without Immutability Policy — finding detected.
   action: Configure an immutability policy on the container.

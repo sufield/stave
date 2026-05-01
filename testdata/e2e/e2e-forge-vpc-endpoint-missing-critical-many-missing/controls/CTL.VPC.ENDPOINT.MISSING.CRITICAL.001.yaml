@@ -32,7 +32,7 @@ scope_tags:
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: data_access
+  attack_stage: collection
 observation_fields:
   - network.kind
   - network.endpoint.critical_services_missing

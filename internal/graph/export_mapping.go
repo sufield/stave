@@ -316,7 +316,7 @@ func nodeIRI(n *Node) (instanceIRI, classIRI string) {
 //   - key                       -> SecretResource  (cryptographic material is a secret)
 //   - cdn, dns, queue           -> NetworkResource (traffic-shaping infrastructure)
 //   - registry                  -> StorageResource (artifact bytes; if the ontology grows an
-//                                                  ArtifactResource, registry should move there)
+//     ArtifactResource, registry should move there)
 func classFromResourceClass(class string) string {
 	switch class {
 	case "storage":

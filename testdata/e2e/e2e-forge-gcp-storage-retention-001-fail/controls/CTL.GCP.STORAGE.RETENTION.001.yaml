@@ -15,7 +15,7 @@ scope_tags: [gcp]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Cloud Storage Bucket Without Retention Policy — finding detected.
   action: Configure and lock a retention policy.

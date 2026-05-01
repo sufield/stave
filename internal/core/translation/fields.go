@@ -62,11 +62,11 @@ var defaultFieldRegistry = FieldRegistry{ //nolint:gosec // G101 false positive:
 	// controls read it that way, and adding a third derived field
 	// would create a consistency hazard (producer must keep all three
 	// in lockstep) for a labeling win.
-	"storage.policy_json": "the bucket's resource-based policy text (empty = no policy attached, AWS implicit deny applies)",
-	"storage.access.has_vpc_condition":              "a VPC-scoping Condition is present (aws:SourceVpc / aws:SourceVpce)",
-	"storage.access.has_ip_condition":               "an IP-scoping Condition is present (aws:SourceIp with a fixed CIDR)",
-	"storage.access.effective_network_scope":        "the bucket's effective network scope",
-	"storage.access.exposes_bucket_policy":          "the bucket policy grants s3:GetBucketPolicy to anonymous callers",
+	"storage.policy_json":                    "the bucket's resource-based policy text (empty = no policy attached, AWS implicit deny applies)",
+	"storage.access.has_vpc_condition":       "a VPC-scoping Condition is present (aws:SourceVpc / aws:SourceVpce)",
+	"storage.access.has_ip_condition":        "an IP-scoping Condition is present (aws:SourceIp with a fixed CIDR)",
+	"storage.access.effective_network_scope": "the bucket's effective network scope",
+	"storage.access.exposes_bucket_policy":   "the bucket policy grants s3:GetBucketPolicy to anonymous callers",
 
 	// --- storage: PAB (bucket level) ---
 	"storage.controls.public_access_fully_blocked":                 "all four Public Access Block flags are enabled",

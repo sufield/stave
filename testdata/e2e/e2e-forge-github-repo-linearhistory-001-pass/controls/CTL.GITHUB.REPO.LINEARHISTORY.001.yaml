@@ -13,7 +13,7 @@ scope_tags: [github]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Linear History Not Required — finding detected.
   action: Enable "Require linear history" in branch protection.

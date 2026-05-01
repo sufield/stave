@@ -15,7 +15,7 @@ scope_tags: [gcp]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: BigQuery Data Access Logging Not Enabled — finding detected.
   action: Enable Data Access audit logs for BigQuery.

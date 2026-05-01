@@ -17,7 +17,7 @@ scope_tags: [gcp]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: CIS-Required Log Metric Filters Not Configured — finding detected.
   action: Configure metric filters for all CIS-required operations.

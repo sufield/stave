@@ -14,7 +14,7 @@ scope_tags: [gcp]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: No Notification Channels Configured — finding detected.
   action: Configure notification channels (email, SMS, PagerDuty, webhook).

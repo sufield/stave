@@ -170,7 +170,7 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 		}
 	}
 
-	checkExitCode(t, caseDir, exitCode)
+	checkExitCode(t, caseDir, exitCode, stdout.Bytes(), stderr.Bytes())
 	checkStderrPattern(t, caseDir, stderr.String())
 
 	out := stdout.Bytes()
@@ -190,7 +190,7 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 
 // --- Assertions ---
 
-func checkExitCode(t *testing.T, caseDir string, got int) {
+func checkExitCode(t *testing.T, caseDir string, got int, stdout, stderr []byte) {
 	t.Helper()
 	path := filepath.Join(caseDir, "expected.exit")
 	if !fileExists(path) {
@@ -198,8 +198,23 @@ func checkExitCode(t *testing.T, caseDir string, got int) {
 	}
 	want := readFileTrimmed(t, path)
 	if strconv.Itoa(got) != want {
-		t.Errorf("exit code = %d, want %s", got, want)
+		// Include stdout / stderr so a CI failure shows the actual
+		// stave error message instead of just "exit 2 want 0". The
+		// argument list is reconstructed by the caller; printing its
+		// outputs is the only signal a reader gets in the log.
+		t.Errorf("exit code = %d, want %s\nstdout:\n%s\nstderr:\n%s",
+			got, want, truncate(stdout, 4096), truncate(stderr, 4096))
 	}
+}
+
+// truncate caps a byte slice at n bytes for log output, replacing the
+// tail with a "(...truncated)" marker. Stave error frames can be
+// chatty; without this a single failing case can flood the CI log.
+func truncate(b []byte, n int) string {
+	if len(b) <= n {
+		return string(b)
+	}
+	return string(b[:n]) + "\n(...truncated " + strconv.Itoa(len(b)-n) + " bytes)"
 }
 
 func checkStderrPattern(t *testing.T, caseDir string, stderr string) {

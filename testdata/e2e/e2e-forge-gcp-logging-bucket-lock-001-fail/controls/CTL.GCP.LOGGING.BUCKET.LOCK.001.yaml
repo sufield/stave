@@ -15,7 +15,7 @@ scope_tags: [gcp]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Log Bucket Retention Not Locked — finding detected.
   action: Lock the log bucket retention policy.

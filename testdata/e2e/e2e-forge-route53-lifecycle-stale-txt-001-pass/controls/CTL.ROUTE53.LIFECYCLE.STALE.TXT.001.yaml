@@ -30,7 +30,7 @@ scope_tags:
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: reconnaissance
+  attack_stage: discovery
 remediation:
   description: >
     Route 53 zone contains TXT records with old verification tokens

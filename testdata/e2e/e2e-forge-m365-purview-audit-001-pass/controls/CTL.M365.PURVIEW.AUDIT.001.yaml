@@ -16,7 +16,7 @@ scope_tags: [m365]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Unified Audit Log Search Not Enabled — finding detected.
   action: Remediate per control description.

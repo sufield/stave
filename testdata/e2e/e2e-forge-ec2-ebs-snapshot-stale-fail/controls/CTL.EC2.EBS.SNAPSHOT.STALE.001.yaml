@@ -26,8 +26,6 @@ scope_tags:
   - ec2
 type: unsafe_state
 classification: state_assertion
-params:
-  attack_stage: none
 observation_fields:
   - compute.kind
   - compute.ebs.snapshot_id

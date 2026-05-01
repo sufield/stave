@@ -19,7 +19,7 @@ scope_tags: [azure]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: CIS-Required Activity Log Alerts Not Configured — finding detected.
   action: Configure Activity Log alerts for all CIS-required operations.

@@ -27,7 +27,7 @@ scope_tags: [aws, rds]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: data_access
+  attack_stage: collection
 remediation:
   description: RDS instance is encrypted with the aws/rds AWS-managed key instead of a customer-managed KMS key.
   action: Re-encrypt the instance via snapshot/copy/restore using a CMK that the team controls.

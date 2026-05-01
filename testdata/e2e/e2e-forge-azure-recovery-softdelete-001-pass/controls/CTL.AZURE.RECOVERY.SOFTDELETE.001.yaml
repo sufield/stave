@@ -15,7 +15,7 @@ scope_tags: [azure]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Recovery Services Vault Soft Delete Not Enabled — finding detected.
   action: Enable soft delete for backup items.

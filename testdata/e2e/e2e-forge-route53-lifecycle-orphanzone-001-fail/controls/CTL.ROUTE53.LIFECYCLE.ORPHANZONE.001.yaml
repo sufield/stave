@@ -32,7 +32,7 @@ scope_tags:
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: reconnaissance
+  attack_stage: discovery
 remediation:
   description: >
     Route 53 hosted zone has no matching domain registration or

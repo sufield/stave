@@ -22,7 +22,7 @@ scope_tags:
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 observation_fields:
   - identity.kind
   - identity.trust_policy.requires_source_identity

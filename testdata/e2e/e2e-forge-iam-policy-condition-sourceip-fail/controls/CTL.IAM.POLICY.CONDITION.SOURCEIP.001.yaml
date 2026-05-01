@@ -20,7 +20,7 @@ scope_tags:
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
   base_impact: 7
   blast_radius:
     type: prevention

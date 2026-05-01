@@ -13,7 +13,7 @@ scope_tags: [github]
 type: unsafe_state
 classification: state_assertion
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
 remediation:
   description: Organization Allows All Members to Delete Repos — finding detected.
   action: Restrict repository deletion to administrators.
