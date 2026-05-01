@@ -107,3 +107,13 @@ func (a *App) writeErrorInfo(errInfo *ui.ErrorInfo) {
 func isSentinelError(err error) bool {
 	return ui.IsSentinel(err)
 }
+
+// isValidationSentinel returns true for the validation-failed family
+// of sentinels. Validation errors stay in IsSentinel so they map to
+// the right exit code, but unlike finding sentinels they don't
+// always emit user-facing output before returning, so the executor
+// must run writeCommandError for them. Carved out as a tiny named
+// helper rather than inlining errors.Is twice in handleExecutionError.
+func isValidationSentinel(err error) bool {
+	return errors.Is(err, ui.ErrValidationWarnings) || errors.Is(err, ui.ErrValidationFailed)
+}

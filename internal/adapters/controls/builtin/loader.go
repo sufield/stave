@@ -3,6 +3,7 @@ package builtin
 import (
 	"cmp"
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"path/filepath"
@@ -124,8 +125,15 @@ func (r *ControlStore) load() ([]policy.ControlDefinition, error) {
 		return cmp.Compare(a.ID, b.ID)
 	})
 
+	// Triage data is optional. fs.Sub returns ErrNotExist when the
+	// triage directory genuinely doesn't exist in the embedded
+	// filesystem (a binary built without triage data is valid).
+	// Other Sub errors (filesystem corruption, invalid path) should
+	// surface — the earlier shape silently swallowed every Sub
+	// failure under one branch, hiding real problems.
 	triageSub, subErr := fs.Sub(r.fsys, filepath.Join(r.root, controlyaml.TriageDir))
-	if subErr == nil {
+	switch {
+	case subErr == nil:
 		triageIdx, triageErr := controlyaml.LoadTriageIndexFS(triageSub, ".")
 		if triageErr != nil {
 			return nil, fmt.Errorf("loading built-in triage: %w", triageErr)
@@ -133,6 +141,10 @@ func (r *ControlStore) load() ([]policy.ControlDefinition, error) {
 		if triageIdx != nil {
 			controlyaml.ApplyTriage(controls, triageIdx)
 		}
+	case errors.Is(subErr, fs.ErrNotExist):
+		// Optional directory not present — proceed without triage.
+	default:
+		return nil, fmt.Errorf("loading built-in triage subdirectory: %w", subErr)
 	}
 
 	return controls, nil

@@ -138,13 +138,23 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErrIn error) error 
 		return nil //nolint:nilerr // intentional: best-effort walk continues, error captured on walkState
 	}
 	// fs.DirEntry.IsDir() returns false for a symlink that *points
-	// at* a directory, because IsDir reads the entry's own type bits
-	// rather than following the link. The earlier shape stopped
-	// walking through any symlinked directory — including the
-	// common operator pattern of `controls -> ../shared/controls`,
-	// which made stave-find fail to locate controls in symlinked
-	// project layouts. Detect symlinks and resolve via os.Stat so
-	// the walk follows the link if its target is a directory.
+	// at* a directory, because IsDir reads the entry's own type
+	// bits rather than following the link. The earlier shape
+	// stopped walking through any symlinked directory — so the
+	// common pattern `controls -> ../shared/controls` made the
+	// directory-name match impossible because the symlink entry
+	// looked like a non-directory.
+	//
+	// What this branch does and does NOT do:
+	//   - DOES treat a directory-targeting symlink as a directory
+	//     for the rest of this function (so its name can satisfy
+	//     the search-for-`name` predicate below).
+	//   - DOES NOT descend into the target directory's contents.
+	//     filepath.WalkDir does not follow symlinks regardless of
+	//     what we return here, so a symlinked directory is
+	//     visible AS a candidate but its inner files are not
+	//     reached. To inspect inner contents, the caller must
+	//     pass the resolved path explicitly.
 	if entry.Type()&fs.ModeSymlink != 0 {
 		info, err := os.Stat(path)
 		if err != nil {
@@ -154,9 +164,7 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErrIn error) error 
 		if !info.IsDir() {
 			return nil
 		}
-		// Follow the symlink: walk the target as if it were the
-		// entry itself. fs.DirEntry-from-FileInfo covers IsDir()
-		// for the rest of this function.
+		// fall through to treat-as-directory
 	} else if !entry.IsDir() {
 		return nil
 	}
@@ -175,6 +183,14 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErrIn error) error 
 	if entry.Name() == s.name {
 		if depth <= s.maxDepth {
 			s.candidates = append(s.candidates, path)
+		} else {
+			// Operators investigating "why didn't Stave find my
+			// directory?" benefit from a debug log naming the
+			// excluded path and the depth budget — the search
+			// otherwise looks like the directory genuinely doesn't
+			// exist.
+			slog.Debug("pathinfer: candidate excluded by depth limit",
+				"path", path, "depth", depth, "max_depth", s.maxDepth)
 		}
 		return fs.SkipDir
 	}

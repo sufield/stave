@@ -37,10 +37,16 @@ func ComputeOverall(files map[evaluation.FilePath]kernel.Digest) kernel.Digest {
 
 // ValidateOverall recomputes the aggregate hash and returns an error if
 // it doesn't match the stored Overall digest.
+//
+// Error wording: "expected" is the stored manifest value (what we
+// trust), "got" is the recomputed value (what we now observe). The
+// earlier shape had these swapped — diagnostics that a reader scans
+// to figure out "which side changed?" pointed in the wrong
+// direction. verify.go:76 already uses the corrected order.
 func (m Manifest) ValidateOverall() error {
 	recomputed := ComputeOverall(m.Files)
 	if m.Overall != recomputed {
-		return fmt.Errorf("overall hash mismatch (expected %s, got %s)", recomputed, m.Overall)
+		return fmt.Errorf("overall hash mismatch (expected %s, got %s)", m.Overall, recomputed)
 	}
 	return nil
 }

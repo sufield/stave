@@ -106,7 +106,15 @@ func (c *AssessmentCollector) RecordFindings(findings []*evaluation.Finding) {
 			continue
 		}
 		fid := kernel.FindingID(f.FindingID)
-		if fid != "" {
+		if fid == "" {
+			// Empty FindingID skips the dedup index, so two
+			// "same" findings can both be recorded. Surface this
+			// so a strategy that forgot to assign the ID isn't
+			// silently producing duplicates that show up only
+			// after a long debugging detour.
+			slog.Warn("collector: finding has empty FindingID; dedup bypassed",
+				"control_id", f.ControlID, "asset_id", f.AssetID)
+		} else {
 			if _, dup := c.findingIDs[fid]; dup {
 				slog.Warn("collector: duplicate finding suppressed",
 					"finding_id", fid, "control_id", f.ControlID)

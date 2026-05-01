@@ -147,7 +147,14 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 		}
 		findings := []*evaluation.Finding{finding}
 		if durErr != nil {
-			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration",
+			// Mark the evidence invalid so downstream report
+			// renderers can avoid arithmetic on the sentinel
+			// duration (-1.0). The verdict still stands —
+			// CreateDurationFinding's contract is "the asset is
+			// in violation, but I couldn't compute exact dwell"
+			// — but evidence-derived numbers are unreliable.
+			finding.Evidence.EvidenceInvalid = true
+			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration -1.0 and evidence_invalid=true",
 				"control", s.ctl.ID, "asset", t.ID, "error", durErr,
 				"finding_emitted", true)
 		}
@@ -226,7 +233,14 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 		}
 		findings := []*evaluation.Finding{finding}
 		if durErr != nil {
-			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration",
+			// Mark the evidence invalid so downstream report
+			// renderers can avoid arithmetic on the sentinel
+			// duration (-1.0). The verdict still stands —
+			// CreateDurationFinding's contract is "the asset is
+			// in violation, but I couldn't compute exact dwell"
+			// — but evidence-derived numbers are unreliable.
+			finding.Evidence.EvidenceInvalid = true
+			s.deps.logger().Warn("duration calculation failed; emitting violation with sentinel duration -1.0 and evidence_invalid=true",
 				"control", s.ctl.ID, "asset", t.ID, "error", durErr,
 				"finding_emitted", true)
 		}

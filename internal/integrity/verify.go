@@ -72,6 +72,17 @@ func (v *Validator) Verify(m Manifest) error {
 		return fmt.Errorf("%w: %s", ErrUntrustedFile, strings.Join(extra, ", "))
 	}
 
+	// Empty ActualHashes.Overall means the caller didn't supply
+	// the recomputed overall digest — typically because they
+	// hashed individual files but skipped the aggregate step.
+	// The earlier shape compared "" against the manifest's stored
+	// digest, which always failed and surfaced as a confusing
+	// "overall digest mismatch (expected X, got )" error. Surface
+	// the supply gap with a precise sentinel so the caller can
+	// fix their input rather than chase a nonexistent hash bug.
+	if v.ActualHashes.Overall == "" {
+		return fmt.Errorf("%w: overall digest not supplied by caller", ErrHashMismatch)
+	}
 	if v.ActualHashes.Overall != m.Overall {
 		return fmt.Errorf("%w: overall digest mismatch (expected %s, got %s)", ErrHashMismatch, m.Overall, v.ActualHashes.Overall)
 	}

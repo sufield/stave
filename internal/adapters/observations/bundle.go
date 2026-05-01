@@ -20,12 +20,21 @@ type ObservationBundle struct {
 // and applies minimum-shape validation: the top-level
 // `snapshots` array must be present and non-empty, and every
 // contained snapshot must carry a non-zero `captured_at`
-// timestamp. Without these checks, a single-snapshot file
-// shaped like a flat snapshot (no `snapshots` key) would
-// unmarshal into an empty bundle and look like
-// success-with-no-data; missing timestamps would propagate
-// into duration arithmetic and produce silent inconclusives.
-// Standard directory loading runs equivalent checks via
+// timestamp.
+//
+// Why bundle entries are NOT schema-validated against the
+// obs.v0.1 single-file schema: the obs.v0.1 schema requires
+// `schema_version`, `captured_at`, and `assets` at the top
+// level. Bundle entries omit `schema_version` (it's hoisted to
+// the bundle wrapper), so applying the single-file schema would
+// reject every legitimate bundle. The validation contract is
+// instead carried by the type-system (ObservationBundle field
+// definitions) and the explicit captured_at + non-empty
+// snapshots checks below. Single-file intake (loader_core.go)
+// runs the full schema validator because each file is itself a
+// complete obs.v0.1 document.
+//
+// Standard directory loading runs equivalent shape checks via
 // ObservationLoader.process; bundle loading must match.
 func ParseBundle(data []byte) ([]asset.Snapshot, error) {
 	var bundle ObservationBundle

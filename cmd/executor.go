@@ -41,9 +41,16 @@ func ExecuteDev() {
 }
 
 func (a *App) execute() {
-	args := os.Args[1:]
-
+	// Capture args AFTER expandAliasIfMatch mutates os.Args. The
+	// earlier shape captured the pre-expansion form, so any
+	// downstream consumer (first-run hint, no-project hint,
+	// session persistence) saw the alias name (e.g. `enf`) instead
+	// of the expanded subcommand (`enforce`). Aliases are pure
+	// command-name rewrites; consumers should always operate on
+	// the post-expansion shape so command-specific hint text
+	// matches what the user just ran.
 	a.expandAliasIfMatch()
+	args := os.Args[1:]
 
 	showFirstRunHint, firstRunMarkerPath := prepareFirstRunHint(args)
 
@@ -182,7 +189,17 @@ func (a *App) handleExecutionError(err error, args []string) {
 	}
 	logger.Debug("command failed", "error", msg, "exit_code", exitCode)
 
-	if !isSentinelError(err) {
+	// Sentinel errors (ErrViolationsFound, ErrSecurityAuditFindings,
+	// ErrInterrupted) already had their user-facing output produced
+	// by the command itself before returning, so writeCommandError
+	// would print a duplicate "Violations detected" message under
+	// the actual finding listing. Validation errors are different:
+	// the validation command often returns the sentinel without
+	// having printed anything user-facing, so the operator sees
+	// only an exit code with no explanation. Surface those
+	// explicitly via writeCommandError, keeping the silent-on-
+	// finding-sentinels behavior for the rest.
+	if !isSentinelError(err) || isValidationSentinel(err) {
 		a.writeCommandError(err, args)
 	}
 
@@ -201,10 +218,19 @@ func (a *App) handleExecutionError(err error, args []string) {
 // would normally close (CPU profile, log file). Idempotent: each
 // underlying close is itself idempotent (LogCloser uses sync.Once,
 // stopCPUProfile no-ops if no profile is active).
+//
+// bootstrapMu protects the LogCloser read against a race with
+// phaseLogging's bootstrap-time assignment: a pre-bootstrap signal
+// can fire before the logger is fully wired, and reading a
+// half-assigned pointer field is a Go data race even if the
+// underlying close is idempotent.
 func (a *App) cleanupBeforeExit() {
 	a.stopCPUProfile()
-	if a.LogCloser != nil {
-		_ = a.LogCloser.Close()
+	a.bootstrapMu.Lock()
+	closer := a.LogCloser
+	a.bootstrapMu.Unlock()
+	if closer != nil {
+		_ = closer.Close()
 	}
 }
 

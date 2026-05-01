@@ -191,6 +191,36 @@ func TestUnique(t *testing.T) {
 	}
 }
 
+// TestUnique_FollowsNestedSymlinkToDirectory pins the walk-path
+// symlink branch (vs. the fast-path one-level check at base/name).
+// A symlink placed inside a nested directory forces the walker to
+// recognize the directory-targeting symlink as a candidate; without
+// the entry.Type()&fs.ModeSymlink check, the walk would skip it.
+func TestUnique_FollowsNestedSymlinkToDirectory(t *testing.T) {
+	base := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(base, "project", "shared"), 0o755); err != nil {
+		t.Fatalf("mkdir nested target: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(base, "project", "shared", "controls"), 0o755); err != nil {
+		t.Fatalf("mkdir target dir: %v", err)
+	}
+	// Place the symlink inside the nested project subdir so the
+	// fast-path (base/controls) does not short-circuit.
+	link := filepath.Join(base, "project", "controls")
+	if err := os.Symlink(filepath.Join("shared", "controls"), link); err != nil {
+		t.Fatalf("symlink: %v", err)
+	}
+
+	got, _, err := Unique(base, "controls", 5)
+	if err != nil {
+		t.Fatalf("Unique: %v", err)
+	}
+	want := filepath.Join(base, "project", "controls")
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
 // TestUnique_FollowsSymlinkToDirectory pins the symlink fix:
 // `controls -> ../shared/controls` is a common operator layout and
 // the walker must resolve through it. Earlier shape stopped at any

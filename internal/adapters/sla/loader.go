@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -120,10 +121,16 @@ func LoadEmbedded(id string) (*Policy, error) {
 }
 
 // AvailableProfiles returns the IDs of all embedded SLA policies.
+//
+// The embedded filesystem is built into the binary, so a walk error
+// here is structural — likely a missing build-time embed directive.
+// It cannot be returned to the caller without a signature change,
+// so log a warning instead. The earlier shape silently swallowed
+// the error, leaving operators without any signal when a build
+// shipped without the embedded SLA catalog.
 func AvailableProfiles() []string {
 	var ids []string
-	// Embedded FS walk cannot fail; the callback never returns an error.
-	_ = fs.WalkDir(policiesFS, "embedded", func(_ string, d fs.DirEntry, err error) error {
+	walkErr := fs.WalkDir(policiesFS, "embedded", func(_ string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -135,5 +142,9 @@ func AvailableProfiles() []string {
 		}
 		return nil
 	})
+	if walkErr != nil {
+		slog.Warn("sla: failed to walk embedded SLA profile catalog",
+			"error", walkErr)
+	}
 	return ids
 }

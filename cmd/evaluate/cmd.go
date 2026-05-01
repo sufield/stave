@@ -171,26 +171,35 @@ func run(w io.Writer, opts *options) error {
 			}
 		}
 		report.CompoundFindings = filteredCompound
+	}
 
-		// Recount after exceptions. Compound findings carry their own
-		// severity (often higher than any single contributing control's
-		// severity, which is the entire point of "compound risk") — fold
-		// those into FailCounts so the exit-code check below reflects
-		// chain criticality, not just per-control criticality.
-		report.FailCounts = make(map[policy.Severity]int)
-		report.Pass = true
-		for _, r := range report.Results {
-			if !r.Pass {
-				report.FailCounts[r.Severity]++
-				report.Pass = false
-			}
-		}
-		for i := range report.CompoundFindings {
-			report.FailCounts[report.CompoundFindings[i].Severity]++
-		}
-		if len(report.CompoundFindings) > 0 {
+	// Recount FailCounts and Pass from the final filtered results,
+	// regardless of whether exceptions were applied. The earlier
+	// shape only ran this recount inside the `len(excs) > 0` block,
+	// so a profile evaluation without exceptions silently used the
+	// stale FailCounts that prof.Evaluate computed before any
+	// post-processing — including before compound findings were
+	// folded in. The exit-code check downstream then read the
+	// stale count and could pass a run that had compound findings
+	// at higher severity than any single control's verdict.
+	//
+	// Compound findings carry their own severity (often higher
+	// than any single contributing control's severity, which is
+	// the entire point of "compound risk"); fold those into
+	// FailCounts so the exit-code check reflects chain criticality.
+	report.FailCounts = make(map[policy.Severity]int)
+	report.Pass = true
+	for _, r := range report.Results {
+		if !r.Pass {
+			report.FailCounts[r.Severity]++
 			report.Pass = false
 		}
+	}
+	for i := range report.CompoundFindings {
+		report.FailCounts[report.CompoundFindings[i].Severity]++
+	}
+	if len(report.CompoundFindings) > 0 {
+		report.Pass = false
 	}
 
 	// Build metadata.

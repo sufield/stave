@@ -281,6 +281,16 @@ func scopedFieldAccess(dotPath, scopeVar string) string {
 // When scopeVar is empty, uses the standard hasField logic.
 // When scopeVar is set, checks each segment relative to scopeVar.
 func scopedHasField(dotPath, scopeVar string) string {
+	if dotPath == "" {
+		// An empty path cannot exist. Mirrors the non-scoped
+		// hasField guard: returning "false" prevents the regex
+		// engine from emitting `"" in __id`, which would compile
+		// to an always-true membership check (every map "contains"
+		// the empty string in CEL? actually false, but the
+		// expression is invalid YAML for this context). False is
+		// the safe / correct verdict for an empty path.
+		return "false"
+	}
 	if scopeVar == "" {
 		return hasField(dotPath)
 	}
@@ -331,10 +341,28 @@ func literal(v any) (string, error) {
 			return strconv.FormatInt(int64(val), 10), nil
 		}
 		return fmt.Sprintf("%g", val), nil
+	case float32:
+		// Promote float32 values into the float64 path: CEL has a
+		// single double type, so the textual representation is the
+		// same. The earlier shape only handled float64 and would
+		// reject float32 values from tests or non-JSON sources.
+		f := float64(val)
+		if f == float64(int64(f)) {
+			return strconv.FormatInt(int64(f), 10), nil
+		}
+		return fmt.Sprintf("%g", f), nil
 	case int:
 		return strconv.Itoa(val), nil
+	case int32:
+		return strconv.FormatInt(int64(val), 10), nil
 	case int64:
 		return strconv.FormatInt(val, 10), nil
+	case uint:
+		return strconv.FormatUint(uint64(val), 10), nil
+	case uint32:
+		return strconv.FormatUint(uint64(val), 10), nil
+	case uint64:
+		return strconv.FormatUint(val, 10), nil
 	case []string:
 		quoted := make([]string, len(val))
 		for i, s := range val {

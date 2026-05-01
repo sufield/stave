@@ -85,6 +85,10 @@ var (
 	_ strategyDeps = (*Assessor)(nil)
 )
 
+// ErrClockMissing is returned by referenceTime when a.Clock is nil.
+// Mirrors the precondition error returned by Assess at its boundary.
+var ErrClockMissing = errors.New("Assessor.Clock is nil; construct via NewAssessor or set Clock explicitly")
+
 func (a *Assessor) logger() *slog.Logger              { return a.Logger }
 func (a *Assessor) currentSpan() ports.AssessmentSpan { return nopSpan{} }
 
@@ -117,25 +121,26 @@ func (a *Assessor) sortSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
 // If --now was set (FixedClock), the user's explicit time takes precedence.
 // Otherwise, the latest snapshot's CapturedAt is used for reproducibility.
 //
-// Contract: a.Clock MUST be non-nil. Assess (the only public entry
-// point that reaches here) validates this before dispatching, so a
-// nil Clock is a programmer error in a test setup or refactor.
-// The earlier defensive fallback called wall-clock time directly,
-// which snuck a side effect into the core runtime — caught by the
-// TestCoreRuntimeNoHardwiredSideEffects architecture test.
-// Panic with a clear message instead so the misuse is surfaced
-// immediately rather than producing a non-reproducible verdict.
-func (a *Assessor) referenceTime(snapshots []asset.Snapshot) time.Time {
+// Contract: a.Clock MUST be non-nil. Returns ErrClockMissing instead
+// of panicking so callers can surface the misuse via a normal error
+// path. The earlier defensive fallback called wall-clock time
+// directly, which snuck a side effect into the core runtime —
+// caught by the TestCoreRuntimeNoHardwiredSideEffects architecture
+// test. The brief panic-replacement was the right architecture fix
+// but the wrong error mode for tests / programmatic callers; an
+// error return matches how Assess already handles the same nil-Clock
+// condition at its boundary.
+func (a *Assessor) referenceTime(snapshots []asset.Snapshot) (time.Time, error) {
 	if a.Clock == nil {
-		panic("Assessor.referenceTime: Clock is nil; construct via NewAssessor or set Clock explicitly")
+		return time.Time{}, ErrClockMissing
 	}
 	if _, isFixed := a.Clock.(ports.FixedClock); isFixed {
-		return a.Clock.Now()
+		return a.Clock.Now(), nil
 	}
 	if len(snapshots) > 0 {
-		return snapshots[len(snapshots)-1].CapturedAt
+		return snapshots[len(snapshots)-1].CapturedAt, nil
 	}
-	return a.Clock.Now()
+	return a.Clock.Now(), nil
 }
 
 // AssessmentOptions holds ephemeral parameters for a specific evaluation run.
@@ -214,10 +219,14 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 		assetHint = len(sequenced[0].Assets)
 	}
 
+	auditTime, refErr := a.referenceTime(sequenced)
+	if refErr != nil {
+		return evaluation.ComplianceReport{}, refErr
+	}
 	sess := &assessmentSession{
 		assessor:  a,
 		snapshots: sequenced,
-		auditTime: a.referenceTime(sequenced),
+		auditTime: auditTime,
 		collector: NewCollector(assetHint),
 		idIndex:   BuildIdentityIndex(sequenced),
 		opts:      opt,

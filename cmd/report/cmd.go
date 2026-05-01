@@ -216,9 +216,19 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 	controlsTotal := 0
 	if opts.ControlsDir != "" {
 		ctlLoader := ctlyaml.NewControlLoader()
-		if loaded, loadErr := ctlLoader.LoadControls(ctx, opts.ControlsDir); loadErr == nil {
-			controlsTotal = len(loaded)
+		loaded, loadErr := ctlLoader.LoadControls(ctx, opts.ControlsDir)
+		if loadErr != nil {
+			// The earlier shape silently dropped the error and left
+			// controlsTotal at 0, which produced a "0 controls" line
+			// in the report whenever the controls directory was
+			// unreadable. Operators couldn't tell whether the
+			// catalog was empty or the path was wrong. The user
+			// passed an explicit --controls path here, so the
+			// failure is a configuration/bug we surface as a hard
+			// error — silent zeros are worse than a clear stop.
+			return &ui.UserError{Err: fmt.Errorf("load controls from %q: %w", opts.ControlsDir, loadErr)}
 		}
+		controlsTotal = len(loaded)
 	}
 
 	// Teams. Same opt-in / explicit-failure split as --sla-profile-file:

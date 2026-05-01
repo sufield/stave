@@ -20,8 +20,8 @@ import (
 
 // runNewOnlyOutput loads assessment history, classifies the current findings,
 // and writes the filtered view showing only new, returned, and resolved findings.
-func runNewOnlyOutput(ctx context.Context, stdout, _ io.Writer, opts *Options, results EvaluateResult) error {
-	history, err := loadHistoryAssessments(ctx, opts.HistoryDir)
+func runNewOnlyOutput(ctx context.Context, stdout, stderr io.Writer, opts *Options, results EvaluateResult) error {
+	history, err := loadHistoryAssessments(ctx, stderr, opts.HistoryDir)
 	if err != nil {
 		return fmt.Errorf("load history: %w", err)
 	}
@@ -69,68 +69,95 @@ func runNewOnlyOutput(ctx context.Context, stdout, _ io.Writer, opts *Options, r
 	}
 }
 
+// stickyWriter wraps an io.Writer and remembers the first write
+// error so subsequent writes become no-ops. The earlier shape
+// ignored every fmt.Fprintf return and unconditionally returned
+// nil — a closed pipe or short write was silently swallowed and
+// the run reported success with truncated output.
+type stickyWriter struct {
+	w   io.Writer
+	err error
+}
+
+func (s *stickyWriter) Write(p []byte) (int, error) {
+	if s.err != nil {
+		return 0, s.err
+	}
+	n, err := s.w.Write(p)
+	if err != nil {
+		s.err = err
+	}
+	return n, err
+}
+
 func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
-	fmt.Fprintln(w, "ASSESSMENT — NEW FINDINGS ONLY")
-	fmt.Fprintf(w, "Filtered: %d chronic findings suppressed\n", r.SuppressedCount)
-	fmt.Fprintf(w, "          %d new findings shown\n",
+	sw := &stickyWriter{w: w}
+	fmt.Fprintln(sw, "ASSESSMENT — NEW FINDINGS ONLY")
+	fmt.Fprintf(sw, "Filtered: %d chronic findings suppressed\n", r.SuppressedCount)
+	fmt.Fprintf(sw, "          %d new findings shown\n",
 		len(r.NewFindings)+len(r.ReturnedFindings))
-	fmt.Fprintln(w)
+	fmt.Fprintln(sw)
 
 	if len(r.NewFindings) > 0 {
-		fmt.Fprintf(w, "NEW THIS ASSESSMENT (%d)\n", len(r.NewFindings))
+		fmt.Fprintf(sw, "NEW THIS ASSESSMENT (%d)\n", len(r.NewFindings))
 		for i := range r.NewFindings {
 			f := &r.NewFindings[i]
-			fmt.Fprintf(w, "  %-30s  %-8s  %s\n",
+			fmt.Fprintf(sw, "  %-30s  %-8s  %s\n",
 				f.Finding.ControlID,
 				strings.ToUpper(f.Finding.ControlSeverity.String()),
 				f.Finding.AssetID)
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintln(sw)
 	}
 
 	if len(r.ReturnedFindings) > 0 {
-		fmt.Fprintf(w, "RETURNED AFTER ABSENCE (%d)\n", len(r.ReturnedFindings))
+		fmt.Fprintf(sw, "RETURNED AFTER ABSENCE (%d)\n", len(r.ReturnedFindings))
 		for i := range r.ReturnedFindings {
 			f := &r.ReturnedFindings[i]
-			fmt.Fprintf(w, "  %-30s  %-8s  %s\n",
+			fmt.Fprintf(sw, "  %-30s  %-8s  %s\n",
 				f.Finding.ControlID,
 				strings.ToUpper(f.Finding.ControlSeverity.String()),
 				f.Finding.AssetID)
 			if f.LastSeen != nil {
-				fmt.Fprintf(w, "    Previously seen: %s\n", f.LastSeen.Format("2006-01-02"))
+				fmt.Fprintf(sw, "    Previously seen: %s\n", f.LastSeen.Format("2006-01-02"))
 			}
 			if f.Cycles > 0 {
-				fmt.Fprintf(w, "    Cycles: %d — investigate oscillation\n", f.Cycles)
+				fmt.Fprintf(sw, "    Cycles: %d — investigate oscillation\n", f.Cycles)
 			}
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintln(sw)
 	}
 
 	if len(r.ResolvedFindings) > 0 {
-		fmt.Fprintf(w, "RECENTLY RESOLVED (%d) — fixed since last assessment\n", len(r.ResolvedFindings))
+		fmt.Fprintf(sw, "RECENTLY RESOLVED (%d) — fixed since last assessment\n", len(r.ResolvedFindings))
 		for i := range r.ResolvedFindings {
 			f := &r.ResolvedFindings[i]
 			dwell := ""
 			if f.DwellDays > 0 {
 				dwell = fmt.Sprintf("  dwell: %dd", int(f.DwellDays))
 			}
-			fmt.Fprintf(w, "  %-30s  %-8s  resolved%s\n",
+			fmt.Fprintf(sw, "  %-30s  %-8s  resolved%s\n",
 				f.ControlID, strings.ToUpper(f.Severity), dwell)
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintln(sw)
 	}
 
 	if len(r.NewFindings) == 0 && len(r.ReturnedFindings) == 0 {
-		fmt.Fprintln(w, "No new findings since last assessment.")
-		fmt.Fprintln(w)
+		fmt.Fprintln(sw, "No new findings since last assessment.")
+		fmt.Fprintln(sw)
 	}
 
-	fmt.Fprintf(w, "Run without --new-only to see all %d findings.\n", r.TotalFindings)
-	return nil
+	fmt.Fprintf(sw, "Run without --new-only to see all %d findings.\n", r.TotalFindings)
+	return sw.err
 }
 
-// loadHistoryAssessments loads all assessment JSON files from a directory.
-func loadHistoryAssessments(ctx context.Context, dir string) ([]*report.Assessment, error) {
+// loadHistoryAssessments loads all assessment JSON files from a
+// directory. Skipped-file warnings go to the supplied stderr writer
+// rather than os.Stderr so tests can observe them and the function
+// respects its caller's I/O contract. The earlier shape wrote to
+// os.Stderr directly, which made the warnings invisible in unit
+// tests and ignored any stderr override the caller had passed.
+func loadHistoryAssessments(ctx context.Context, stderr io.Writer, dir string) ([]*report.Assessment, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("read history directory: %w", err)
@@ -145,7 +172,7 @@ func loadHistoryAssessments(ctx context.Context, dir string) ([]*report.Assessme
 		path := filepath.Join(dir, entry.Name())
 		a, loadErr := loader.Evaluation(ctx, path)
 		if loadErr != nil {
-			fmt.Fprintf(os.Stderr, "warning: skipping %s: %v\n", entry.Name(), loadErr)
+			fmt.Fprintf(stderr, "warning: skipping %s: %v\n", entry.Name(), loadErr)
 			continue
 		}
 		assessments = append(assessments, a)

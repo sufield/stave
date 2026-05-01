@@ -213,6 +213,14 @@ func resolveFrameworks(raw []string) ([]Framework, error) {
 			}
 		}
 	}
+	// Non-empty input that resolved to zero frameworks (e.g.
+	// `--frameworks=,, ,`) silently fell through to "all
+	// frameworks" semantics in the caller, which is the opposite of
+	// what the operator asked for. Surface the empty-after-trim case
+	// as an error so the typo is visible.
+	if len(out) == 0 {
+		return nil, fmt.Errorf("framework filter %v matched no known frameworks", raw)
+	}
 	slices.Sort(out)
 	return out, nil
 }

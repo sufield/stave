@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -202,7 +203,18 @@ func (s *Store) ResolveSelected() (string, *Context, bool, error) {
 	return name, &selected, true, nil
 }
 
-// AbsPath joins the provided path with the context's project root if the path is relative.
+// AbsPath joins the provided path with the context's project root if
+// the path is relative.
+//
+// Empty ProjectRoot with a relative input is a configuration gap:
+// the caller asked for "anchor this relative path against the
+// project root" but never provided a root. The earlier shape
+// silently fell back to filepath.Clean(p), which produced a path
+// resolved against whatever cwd happened to be — an inconsistent
+// answer depending on where the binary was launched. Log a warning
+// so operators see the gap; preserve the cwd-relative behavior so
+// existing scripts that rely on the implicit fallback don't break,
+// but flag the configuration drift in the logs.
 func (c Context) AbsPath(p string) string {
 	p = strings.TrimSpace(p)
 	if p == "" {
@@ -215,6 +227,8 @@ func (c Context) AbsPath(p string) string {
 
 	root := strings.TrimSpace(c.ProjectRoot)
 	if root == "" {
+		slog.Warn("config.Context.AbsPath: ProjectRoot empty for relative path; resolving against cwd",
+			"path", p)
 		return filepath.Clean(p)
 	}
 

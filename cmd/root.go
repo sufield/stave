@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sync"
 	"sync/atomic"
 
 	"github.com/spf13/cobra"
@@ -66,6 +67,15 @@ type App struct {
 	LogCloser *logging.LogCloser
 	ExitFunc  func(int)
 	Root      *cobra.Command
+	// bootstrapMu serializes the bootstrap-time field writes
+	// (Logger, LogCloser) against the pre-bootstrap signal
+	// goroutine's reads in cleanupBeforeExit. Without this lock,
+	// a SIGINT that lands while phaseLogging is mid-assignment
+	// could race the goroutine reading a torn pointer. The mutex
+	// covers only the bootstrap → cleanup boundary; mid-run reads
+	// after bootstrap completes are safe because the values
+	// don't change.
+	bootstrapMu sync.Mutex
 	// cpuProfileFile is the open profile file held while a CPU
 	// profile is recording. Stored atomically so the bootstrap-
 	// path startCPUProfile and the panic-recovery / signal-path

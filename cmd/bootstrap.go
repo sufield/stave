@@ -297,8 +297,10 @@ func (a *App) initLogger() error {
 		return fmt.Errorf("failed to initialize logger: %w", err)
 	}
 
+	a.bootstrapMu.Lock()
 	a.LogCloser = lc
 	a.Logger = lc.Logger
+	a.bootstrapMu.Unlock()
 	logging.SetDefaultLogger(lc.Logger)
 
 	return nil

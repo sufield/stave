@@ -299,11 +299,20 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 		}
 		return "SANITIZED_" + crypto.ShortToken(val)
 	case bool:
-		// Scrubbing a bool to `false` makes a redacted value
-		// indistinguishable from a legitimate `false`. Emit the
-		// canonical SANITIZED token so downstream consumers can tell
-		// the value was redacted rather than really off.
-		return SanitizedValue
+		// Scrub bools to their zero value (false) so the JSON output
+		// keeps its declared type. The earlier shape returned the
+		// SanitizedValue *string* here, which silently broke
+		// schema-typed JSON consumers — a field declared as a bool
+		// in out.v0.1.json suddenly contained `"[SANITIZED]"`,
+		// failing schema validation and downstream type assertions.
+		// The privacy concern that drove the string output ("a
+		// scrubbed false is indistinguishable from a legitimate
+		// false") is real but secondary to the type-safety break;
+		// callers that need to distinguish "redacted" vs "really
+		// false" should set the parent map key to a Sanitize-flagged
+		// path so the value is removed entirely, or wrap the bool
+		// in a typed sentinel struct.
+		return false
 	case int:
 		return 0
 	case int8:

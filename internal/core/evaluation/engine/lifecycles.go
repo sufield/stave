@@ -50,12 +50,19 @@ func BuildLifecyclesPerControl(
 // controls. Membership is computed via kernel.AppliesToVendor —
 // the single source of truth for the vendor-applicability
 // heuristic shared with the risk pipeline.
+//
+// Concurrency contract: NOT safe for concurrent use. The current
+// caller (BuildLifecyclesPerControl) iterates snapshots
+// sequentially. If a future caller wants to parallelize, add a
+// sync.Mutex around the cache map; do NOT remove it and rely on
+// "value receiver makes copies" — the cache map is a reference
+// type, so copies still share state.
 type controlVendorIndex struct {
 	stringTags [][]string                            // per-control pre-stringified scope tags
 	cache      map[string][]policy.ControlDefinition // vendor → cached result
 }
 
-func buildControlVendorIndex(controls []policy.ControlDefinition) controlVendorIndex {
+func buildControlVendorIndex(controls []policy.ControlDefinition) *controlVendorIndex {
 	stringTags := make([][]string, len(controls))
 	for i := range controls {
 		tags := controls[i].ScopeTags
@@ -68,13 +75,18 @@ func buildControlVendorIndex(controls []policy.ControlDefinition) controlVendorI
 		}
 		stringTags[i] = s
 	}
-	return controlVendorIndex{
+	return &controlVendorIndex{
 		stringTags: stringTags,
 		cache:      make(map[string][]policy.ControlDefinition),
 	}
 }
 
-func (idx controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.ControlDefinition) []policy.ControlDefinition {
+// Pointer receiver: the cache map mutation should be visible across
+// the index's lifetime, and a value receiver was misleading because
+// the underlying map field made the cache writes "work" even
+// though they read as a per-call mutation. Pointer makes the
+// shared-state contract explicit.
+func (idx *controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.ControlDefinition) []policy.ControlDefinition {
 	vendorStr := string(vendor)
 
 	// Return cached result if available — avoids per-asset

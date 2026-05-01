@@ -224,7 +224,10 @@ func TestReferenceTime_FromSnapshots(t *testing.T) {
 		{CapturedAt: base},
 		{CapturedAt: base.Add(time.Hour)},
 	}
-	now := a.referenceTime(sorted)
+	now, err := a.referenceTime(sorted)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if !now.Equal(base.Add(time.Hour)) {
 		t.Fatalf("expected last snapshot time, got %v", now)
 	}
@@ -233,9 +236,25 @@ func TestReferenceTime_FromSnapshots(t *testing.T) {
 func TestReferenceTime_Fallback(t *testing.T) {
 	fallback := time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)
 	a := &Assessor{Clock: stubClock{t: fallback}}
-	now := a.referenceTime(nil)
+	now, err := a.referenceTime(nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if !now.Equal(fallback) {
 		t.Fatalf("expected clock fallback, got %v", now)
+	}
+}
+
+// TestReferenceTime_NilClockReturnsError pins the new contract: a
+// nil Clock surfaces as ErrClockMissing instead of panicking.
+func TestReferenceTime_NilClockReturnsError(t *testing.T) {
+	a := &Assessor{}
+	_, err := a.referenceTime(nil)
+	if err == nil {
+		t.Fatal("expected ErrClockMissing, got nil")
+	}
+	if !errors.Is(err, ErrClockMissing) {
+		t.Errorf("expected ErrClockMissing, got %v", err)
 	}
 }
 

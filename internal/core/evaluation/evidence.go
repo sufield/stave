@@ -50,6 +50,18 @@ type Evidence struct {
 
 	// TemporalRisk is a human-readable summary of the current violation state.
 	TemporalRisk string `json:"temporal_risk,omitempty"`
+
+	// EvidenceInvalid is set when the strategy could not produce a
+	// faithful Evidence record but emitted a finding anyway —
+	// typically because duration math failed and the strategy
+	// fell back to a sentinel duration of -1.0. Consumers that
+	// surface evidence in reports should treat the row as
+	// "violation confirmed, evidence unreliable" and avoid
+	// performing arithmetic on UnsafeDurationHours when this is
+	// true. The earlier shape only logged the underlying error,
+	// so downstream rendering had no way to distinguish a real
+	// duration from the sentinel.
+	EvidenceInvalid bool `json:"evidence_invalid,omitempty"`
 }
 
 // RootCauseStrings converts typed causes to a raw string slice.
