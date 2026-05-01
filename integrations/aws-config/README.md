@@ -79,3 +79,40 @@ stave apply \
 Stave evaluates the S3 bucket configuration captured by AWS Config.
 AWS Config provides the historical state — stave evaluates the safety
 of that state against the built-in control pack.
+
+## Field Mapping: S3
+
+| AWS Config field | obs.v0.1 path |
+|---|---|
+| Resource ID (`$bucket`) | `id`, `properties.storage.name` |
+| `supplementaryConfiguration.TagSet` | `properties.storage.tags` |
+| `supplementaryConfiguration.BucketVersioningConfiguration.status` | `properties.storage.versioning.enabled` (map `Enabled` → `true`) |
+| `supplementaryConfiguration.ServerSideEncryptionConfiguration` | `properties.storage.encryption.algorithm` / `kms_key_id` |
+| `supplementaryConfiguration.PublicAccessBlockConfiguration` | `properties.storage.public_access_block.*` |
+
+The starter script above only maps the tag set; extend the jq pipeline
+with the rows above to evaluate encryption and public-access-block
+controls.
+
+## Other resource types
+
+`aws configservice get-resource-config-history` works for every
+`AWS::*::*` type AWS Config records — IAM roles, EC2 instances,
+security groups, RDS clusters. The shape of
+`supplementaryConfiguration` differs per type; use
+`stave forge paths --in observation.json` to discover the paths the
+built-in controls expect for a given asset.
+
+## CI/CD
+
+The Steampipe integration ships full GitHub Actions and GitLab CI
+examples that work the same way for the AWS Config extractor — only
+the extract step differs. See
+[`integrations/steampipe/README.md`](../steampipe/README.md#cicd-examples).
+
+## Mixing with other sources
+
+Drop AWS Config observations and Steampipe / Terraform observations
+into the same `observations/` directory; stave merges them in one
+pass. See
+[`integrations/README.md`](../README.md#multi-source-aggregation).

@@ -83,3 +83,39 @@ stave apply \
 Stave evaluates the S3 buckets from your Terraform state against the
 built-in control pack. Any bucket missing versioning, encryption, or
 public access block is flagged with remediation guidance.
+
+## Field Mapping: S3
+
+| Terraform attribute | obs.v0.1 path |
+|---|---|
+| `.values.bucket` | `id`, `properties.storage.name` |
+| `.values.tags` | `properties.storage.tags` |
+| `.values.versioning[0].enabled` | `properties.storage.versioning.enabled` |
+
+The starter script above covers versioning + tags; for encryption and
+public-access-block, extend the jq pipeline to read
+`aws_s3_bucket_server_side_encryption_configuration` and
+`aws_s3_bucket_public_access_block` resources from the same tfstate.
+
+## Other resource types
+
+The same `terraform show -json | jq` pattern works for any resource
+Terraform manages. Filter by `select(.type == "aws_iam_role")`,
+`select(.type == "aws_security_group")`, etc., and shape the
+`properties` object to match the path the relevant control reads.
+Use `stave forge paths --in observation.json` to discover the paths
+the built-in controls expect for a given asset type.
+
+## CI/CD
+
+The Steampipe integration ships full GitHub Actions and GitLab CI
+examples that work the same way for the Terraform extractor — only
+the extract step differs. See
+[`integrations/steampipe/README.md`](../steampipe/README.md#cicd-examples).
+
+## Mixing with other sources
+
+Drop tfstate-derived observations and Steampipe / AWS Config
+observations into the same `observations/` directory; stave merges
+them in one pass. See
+[`integrations/README.md`](../README.md#multi-source-aggregation).

@@ -1,0 +1,87 @@
+{
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "steampipe",
+    "tool": "steampipe",
+    "tool_version": "0.21.0"
+  },
+  "captured_at": "2026-05-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "example-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "example-bucket",
+          "region": "us-east-1",
+          "versioning": {
+            "enabled": true
+          },
+          "logging": {
+            "enabled": true,
+            "target_bucket": "example-bucket-logs"
+          },
+          "encryption": {
+            "algorithm": "aws:kms",
+            "kms_key_id": "arn:aws:kms:us-east-1:111111111111:key/abc-123"
+          },
+          "controls": {
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            },
+            "public_access_fully_blocked": true
+          },
+          "tags": {
+            "env": "prod",
+            "owner": "platform"
+          }
+        }
+      }
+    },
+    {
+      "id": "i-0abc1234def567890",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "network": {
+            "has_public_ip": false,
+            "imdsv2_required": true
+          },
+          "monitoring": {
+            "detailed_enabled": true
+          },
+          "iam_instance_profile": {
+            "attached": true
+          },
+          "tags": {
+            "env": "prod"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111111111111:role/AppRole",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "arn": "arn:aws:iam::111111111111:role/AppRole",
+          "assume_role_policy": {
+            "principals": ["arn:aws:iam::111111111111:root"],
+            "trusted_services": ["lambda.amazonaws.com"]
+          },
+          "attached_policies": ["arn:aws:iam::aws:policy/ReadOnlyAccess"],
+          "inline_policies": []
+        }
+      }
+    }
+  ]
+}
