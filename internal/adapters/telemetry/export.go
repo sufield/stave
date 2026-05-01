@@ -31,6 +31,15 @@ func WriteTraceFile(lt *trace.LogicTrace, path string) error {
 		_ = os.Remove(tmpName) //nolint:gosec // best-effort cleanup
 		return fmt.Errorf("write trace data: %w", writeErr)
 	}
+	// Sync before Close: matches fsutil.WriteFileAtomic. A close
+	// without a prior fsync can return success while the data sits
+	// in the page cache, so a crash after Close-then-Rename can
+	// produce a present-but-zero-byte trace file.
+	if syncErr := tmp.Sync(); syncErr != nil {
+		_ = tmp.Close()        //nolint:gosec // best-effort cleanup after sync failure
+		_ = os.Remove(tmpName) //nolint:gosec // best-effort cleanup
+		return fmt.Errorf("sync trace temp file: %w", syncErr)
+	}
 	if closeErr := tmp.Close(); closeErr != nil {
 		_ = os.Remove(tmpName) //nolint:gosec // best-effort cleanup after close failure
 		return fmt.Errorf("close trace temp file: %w", closeErr)

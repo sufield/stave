@@ -51,15 +51,24 @@ func (s *CEFFileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 }
 
 // Close closes the CEF file. Subsequent Emit calls return errSinkClosed.
+//
+// Sync is called before Close so a process exit immediately after
+// Close cannot lose buffered alert lines on filesystems where the
+// page cache hasn't yet flushed. Same discipline applied to FileSink
+// and fsutil.WriteFileAtomic.
 func (s *CEFFileSink) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.f == nil {
 		return nil
 	}
-	err := s.f.Close()
+	syncErr := s.f.Sync()
+	closeErr := s.f.Close()
 	s.f = nil
-	return err
+	if syncErr != nil {
+		return syncErr
+	}
+	return closeErr
 }
 
 // FormatCEF produces a CEF line from a WatchAlert.

@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"slices"
 	"time"
 
 	"github.com/sufield/stave/internal/core/ports"
@@ -38,12 +39,19 @@ func (s *fileSpan) SetFindingID(id string) {
 }
 
 func (s *fileSpan) End() {
+	// Clone steps before handing it to the tracer. The fileSpan
+	// owner could (incorrectly) call RecordStep after End and grow
+	// s.steps, which would mutate the slice the tracer kept a
+	// reference to — a silent corruption of the recorded trace
+	// for the previous assessment. Cloning here makes End the
+	// effective hand-off point; any mutation after this is
+	// confined to the caller's view.
 	s.tracer.append(trace.Assessment{
 		ResourceID: s.resourceID,
 		PolicyID:   s.policyID,
 		Verdict:    s.verdict,
 		Confidence: s.confidence,
-		Steps:      s.steps,
+		Steps:      slices.Clone(s.steps),
 		FindingID:  s.findingID,
 	})
 }

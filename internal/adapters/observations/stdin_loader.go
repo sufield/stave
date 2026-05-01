@@ -83,6 +83,24 @@ func NewStdinObservationLoader(loader appcontracts.SnapshotReader, r io.Reader) 
 func (s *StdinObservationLoader) LoadSnapshots(ctx context.Context, _ string) (appcontracts.LoadResult, error) {
 	// Read stdin with context cancellation support — if the upstream
 	// process hangs, the context deadline will unblock the caller.
+	//
+	// LEAK NOTE: this goroutine outlives the LoadSnapshots call when
+	// ctx is cancelled before the read completes. Go's runtime cannot
+	// interrupt a blocked read on a non-deadline-capable file
+	// descriptor (the os.Stdin path here), so the goroutine remains
+	// parked on the syscall until the OS returns control — typically
+	// at process exit, or when an upstream pipe peer closes. The
+	// channel send is buffered (capacity 1) so the goroutine's
+	// eventual write does not panic, but the goroutine itself is
+	// genuinely leaked for the remainder of the LoadSnapshots
+	// caller's lifetime.
+	//
+	// This is acceptable for a one-shot CLI invocation. Long-lived
+	// daemons reusing this loader should: (a) wrap the underlying
+	// reader in something that supports SetReadDeadline (a *net.Conn
+	// adapter, for example), (b) close the reader from a sibling
+	// goroutine on ctx cancellation, or (c) accept the leak as a
+	// known cost of stdin-style ingestion.
 	type readResult struct {
 		data []byte
 		err  error

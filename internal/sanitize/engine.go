@@ -6,9 +6,11 @@ package sanitize
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -348,6 +350,15 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 		// false" should set the parent map key to a Sanitize-flagged
 		// path so the value is removed entirely, or wrap the bool
 		// in a typed sentinel struct.
+		//
+		// IMPORTANT: this means a sanitized output of a bool field is
+		// not distinguishable from a legitimate `false`. Pipelines
+		// that *re-ingest* sanitized output (a sanitized snapshot
+		// becoming an input to another stave run, for example) MUST
+		// treat bool fields as untrusted: a sanitized `true` becomes
+		// `false` after the round trip, which can flip a control's
+		// verdict. Treat sanitization as a one-way operation toward
+		// human consumers, not an idempotent transform.
 		return false
 	case int:
 		return 0
@@ -375,6 +386,16 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 		return float64(0)
 	case json.Number:
 		return json.Number("0")
+	case time.Time:
+		// Zero time so the redacted JSON keeps its declared type.
+		// Scrubbing a timestamp to a string sentinel would fail
+		// schema validation on consumers expecting RFC3339.
+		return time.Time{}
+	case json.RawMessage:
+		// Raw JSON byte slice. Replace with a JSON null so consumers
+		// that re-encode get a structurally-valid placeholder, not
+		// a malformed payload.
+		return json.RawMessage("null")
 	case []any:
 		// scrubValueWithProfile fires when a Sanitize-flagged parent
 		// reached a list value, so propagate inSanitizedScope=true
@@ -414,18 +435,19 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 		}
 		return out
 	default:
-		// Non-string, non-container leaf values reach this branch
-		// (numbers, booleans, time stamps, custom struct types).
-		// Returning a sentinel string makes unknown types visible
-		// in the output rather than silently null-erasing them. The
-		// JSON-type cost (an int field becomes a string) is the
-		// trade-off accepted for triage visibility — a downstream
-		// parser that sees "SANITIZED_UNKNOWN_TYPE" knows the
-		// engine reached an un-classified Go type and can extend
-		// the type switch above. Numeric / boolean leaves with
-		// dedicated cases (above) still get their type-preserving
-		// zero-value scrub; this fallback only fires when the
-		// switch added a new type without updating the engine.
+		// Reached when a leaf value's Go type isn't covered by the
+		// switch above. Numbers, booleans, time stamps, and JSON
+		// raw messages have dedicated cases; arriving here means a
+		// new type leaked into the activation map (a custom struct
+		// from a producer, a typed alias, etc.). Log so the gap is
+		// visible — silently sentinelling an unknown type can hide
+		// a real schema drift between producer and engine.
+		slog.Warn("sanitize: unknown leaf type, emitting SANITIZED_UNKNOWN_TYPE sentinel",
+			"go_type", fmt.Sprintf("%T", v))
+		// Sentinel string lets a downstream parser distinguish
+		// "engine reached a type it didn't classify" from "the
+		// value was nil"; the JSON-type cost (an int field becomes
+		// a string) is accepted for triage visibility.
 		return "SANITIZED_UNKNOWN_TYPE"
 	}
 }

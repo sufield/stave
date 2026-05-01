@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -272,6 +273,16 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 		current = string(filepath.Separator)
 	}
 
+	// createdByUs tracks components this loop materially created
+	// (Mkdir succeeded). The post-Mkdir verification only re-Lstats
+	// these paths — pre-existing ancestors are trusted because the
+	// loop already validated them, and trusting them avoids the
+	// false positive on legitimate ancestor symlinks
+	// (/tmp -> /private/tmp on macOS, $HOME automounter mounts,
+	// container bind-mounts) that the earlier full-path
+	// filepath.EvalSymlinks comparison hit.
+	var createdByUs []string
+
 	for _, part := range components {
 		if part == "" {
 			continue
@@ -300,15 +311,27 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 		if mkErr := os.Mkdir(current, opts.Perm); mkErr != nil && !os.IsExist(mkErr) {
 			return mkErr
 		}
-		// Post-creation verification: resolve the real path and confirm
-		// no symlink was injected in any ancestor component. This closes
-		// the TOCTOU window between the Lstat check and the Mkdir call.
-		realPath, evalErr := filepath.EvalSymlinks(current)
-		if evalErr == nil && realPath != current {
-			// A symlink was injected — the real path differs from expected.
-			_ = os.Remove(current) // attempt cleanup
-			return fmt.Errorf("%w: %s resolved to %s (symlink injected during creation)",
-				ErrSymlinkForbidden, current, realPath)
+		createdByUs = append(createdByUs, current)
+
+		// Post-creation TOCTOU guard: re-Lstat every component we
+		// created on this run. An attacker swapping a component we
+		// created (for example unlinking it and replacing with a
+		// symlink right before we Mkdir'd a deeper child) flips
+		// the Mkdir target from "directory we expect" to "directory
+		// at the symlink target". Re-checking only loop-created
+		// components avoids the false positive on legitimate
+		// pre-existing ancestor symlinks that the earlier
+		// full-path EvalSymlinks compare hit.
+		for _, p := range createdByUs {
+			pfi, plstatErr := os.Lstat(p)
+			if plstatErr != nil {
+				return fmt.Errorf("post-mkdir verification failed for %q: %w", p, plstatErr)
+			}
+			if pfi.Mode()&os.ModeSymlink != 0 {
+				_ = os.Remove(current) // attempt cleanup of the deeper component just created
+				return fmt.Errorf("%w: %s became a symlink during creation",
+					ErrSymlinkForbidden, p)
+			}
 		}
 	}
 	return nil
@@ -533,18 +556,26 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 	// destination's directory entry unpersisted — on some filesystems that
 	// manifests as a zero-byte or missing destination after reboot.
 	//
-	// Errors from open / sync / close are propagated rather than
-	// swallowed: the rename has already succeeded, but a sync
-	// failure means we cannot promise the entry is durable, and a
-	// caller relying on the post-condition deserves to know.
+	// Treat sync failure as a warning, not a fatal error: by this
+	// point the rename has succeeded, the file is durably committed
+	// at the inode level, and the only outstanding question is
+	// whether the parent directory's metadata is flushed. Some
+	// filesystems (tmpfs, virtio-9p, certain network mounts) reject
+	// directory fsync with EINVAL or ENOTSUP; the earlier shape
+	// turned that into a hard failure for callers who had already
+	// successfully written and renamed.
 	d, openErr := os.Open(dir) //nolint:gosec // directory path from caller's dst
 	if openErr != nil {
-		return fmt.Errorf("sync parent dir: open %s: %w", dir, openErr)
+		slog.Warn("crossFSCopy: parent-dir open after rename failed; rename succeeded but durability not enforced",
+			"dir", dir, "error", openErr)
+		return nil
 	}
 	syncErr := d.Sync()
 	closeErr := d.Close()
 	if syncErr != nil {
-		return fmt.Errorf("sync parent dir: %w", syncErr)
+		slog.Warn("crossFSCopy: parent-dir sync after rename failed; rename succeeded but durability not enforced",
+			"dir", dir, "error", syncErr)
+		// Fall through — close error (if any) still surfaces below.
 	}
 	if closeErr != nil {
 		return fmt.Errorf("close parent dir: %w", closeErr)

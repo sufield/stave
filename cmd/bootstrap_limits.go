@@ -38,6 +38,16 @@ const (
 // conservative defaults stay in place rather than failing the entire
 // startup over a typo'd byte-size.
 func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
+	// Bootstrap can hand a nil resolver when project-config loading
+	// failed and the command is annotated as config-optional. Calling
+	// eval.MaxInputFileSize() / ConfidenceHighMultiplier() etc. on a
+	// nil resolver panics; the right behaviour is to leave the
+	// runtime's defaults in place. Mirrors the same nil guard in
+	// resolveGlobalFlagDefaults (bootstrap.go:118).
+	if eval == nil {
+		return
+	}
+
 	logger := a.Logger
 	if logger == nil {
 		logger = slog.Default()

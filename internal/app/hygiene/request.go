@@ -71,9 +71,11 @@ func (r *Request) Parse() (ParsedRequest, error) {
 	if r.KeepMin < 0 {
 		return ParsedRequest{}, fmt.Errorf("invalid keep-min %d: must be >= 0", r.KeepMin)
 	}
-	if err = validateStatuses(r.Statuses); err != nil {
+	normalizedStatuses, err := validateStatuses(r.Statuses)
+	if err != nil {
 		return ParsedRequest{}, err
 	}
+	r.Statuses = normalizedStatuses
 	nowFn := r.NowFunc
 	if nowFn == nil {
 		nowFn = func() time.Time { return time.Now().UTC() }
@@ -97,11 +99,20 @@ func (r *Request) Parse() (ParsedRequest, error) {
 	}, nil
 }
 
-func validateStatuses(statuses []risk.ThresholdStatus) error {
+// validateStatuses normalizes (uppercase / trim) and validates the
+// caller-supplied status strings, returning the normalized typed
+// list. The earlier shape discarded the normalized list and only
+// surfaced the error, which left downstream consumers comparing
+// against un-normalized values (case-sensitive lookups silently
+// missed `overdue` vs `OVERDUE`, etc.).
+func validateStatuses(statuses []risk.ThresholdStatus) ([]risk.ThresholdStatus, error) {
 	raw := make([]string, len(statuses))
 	for i, s := range statuses {
 		raw[i] = string(s)
 	}
-	_, err := risk.ValidateStatuses(raw)
-	return err
+	normalized, err := risk.ValidateStatuses(raw)
+	if err != nil {
+		return nil, err
+	}
+	return normalized, nil
 }

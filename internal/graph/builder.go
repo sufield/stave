@@ -161,6 +161,14 @@ func Build(input BuildInput) *GraphData {
 	// pass had to remove the duplicates. Inline dedup here matches
 	// the seenMapsTo pattern and avoids the post-pass entirely.
 	seenBelongsTo := sets.New[string]()
+	// seenViolates tracks (finding, requirement) pairs already
+	// emitted as VIOLATES_REQUIREMENT edges. The same finding can
+	// map to multiple compliance frameworks, but the inner loop
+	// iterates per (framework, requirement) pair — without this
+	// dedup, two frameworks naming the same requirement_id under
+	// different framework keys would both append the same edge.
+	// Mirrors seenMapsTo / seenBelongsTo.
+	seenViolates := sets.New[string]()
 
 	// emitOnce appends node to g.Nodes the first time id is seen and
 	// records the id in seenNodes. Replaces the eight-times-repeated
@@ -269,10 +277,14 @@ func Build(input BuildInput) *GraphData {
 					From: string(f.ControlID), To: reqNodeID, Type: EdgeTypeMapsTo,
 				})
 			}
-			g.Edges = append(g.Edges, Edge{
-				From: findingID, To: reqNodeID, Type: EdgeTypeViolatesRequirement,
-				Properties: map[string]any{"verdict": "fail"},
-			})
+			violatesKey := findingID + "->" + reqNodeID
+			if !seenViolates.Contains(violatesKey) {
+				seenViolates.Add(violatesKey)
+				g.Edges = append(g.Edges, Edge{
+					From: findingID, To: reqNodeID, Type: EdgeTypeViolatesRequirement,
+					Properties: map[string]any{"verdict": "fail"},
+				})
+			}
 		}
 
 		// TenantScope node + BELONGS_TO_SCOPE edge.

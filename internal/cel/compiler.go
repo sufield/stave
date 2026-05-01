@@ -3,6 +3,7 @@ package cel
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -189,9 +190,26 @@ func predicateToExpr(pred policy.UnsafePredicate, scopeVar string, depth int) (s
 // time; otherwise the value is encoded as a literal.
 func resolveValueExprFn(r *policy.PredicateRule, v any) (string, error) {
 	if r.ValueFromParam != "" {
-		return "params." + string(r.ValueFromParam), nil
+		name := string(r.ValueFromParam)
+		if !isSafeParamName(name) {
+			return "", fmt.Errorf("value_from_param %q contains characters outside [A-Za-z0-9_.] — would break out of params accessor", name)
+		}
+		return "params." + name, nil
 	}
 	return literal(v)
+}
+
+// paramNameRe matches the safe character set for value_from_param /
+// cross-field-ref names: ASCII letters, digits, underscore, dot. Any
+// other character could break out of the `params.<name>` accessor —
+// a parenthesis injects a function call, brackets index a different
+// scope, whitespace splits the token. Validating once at compile
+// time means the runtime evaluator never sees an attacker-controlled
+// CEL fragment from a control YAML.
+var paramNameRe = regexp.MustCompile(`^[A-Za-z0-9_.]+$`)
+
+func isSafeParamName(s string) bool {
+	return s != "" && paramNameRe.MatchString(s)
 }
 
 // ruleToExpr converts a single PredicateRule to a CEL expression.
@@ -384,7 +402,17 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string, depth int) (string, er
 // would be a control-load defect, not a data-shape question.
 func resolveCrossFieldRef(r *policy.PredicateRule, val any, scopeVar string) (access string, exists string) {
 	if r.ValueFromParam != "" {
-		return "params." + string(r.ValueFromParam), "true"
+		name := string(r.ValueFromParam)
+		if !isSafeParamName(name) {
+			// Compile-time fail-loud: emit an expression that
+			// evaluates to a clearly-broken false rather than
+			// concatenating an attacker-controlled string. The
+			// upstream Compile() returns an error from the literal
+			// CEL parse failure, which surfaces the bad control
+			// YAML at load time.
+			return "params.__INVALID_PARAM_NAME__", "false"
+		}
+		return "params." + name, "true"
 	}
 	other := fmt.Sprint(val)
 	return scopedFieldAccess(other, scopeVar), scopedHasField(other, scopeVar)

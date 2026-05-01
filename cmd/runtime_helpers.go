@@ -17,7 +17,12 @@ import (
 // single quotes, double quotes, and backslash escapes, so alias values like
 // 'apply --controls "path with spaces/controls"' expand correctly.
 func (a *App) expandAliasIfMatch() {
-	if len(os.Args) < 2 || os.Args[1][0] == '-' {
+	// Empty-string guard: os.Args[1] could be the empty string when
+	// the binary is invoked via exec with an explicit empty argv
+	// slot. Indexing [0] on an empty string panics; the existing
+	// `[0] == '-'` check assumed at least one byte. Equivalent to
+	// "treat empty as not-an-alias".
+	if len(os.Args) < 2 || os.Args[1] == "" || os.Args[1][0] == '-' {
 		return
 	}
 	aliases := projconfig.LoadUserAliases()

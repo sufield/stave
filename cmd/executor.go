@@ -254,10 +254,19 @@ func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMark
 	// underlying cause.
 	resolver, resolverErr := projctx.NewResolver()
 	if resolverErr != nil {
-		if a.Logger != nil {
-			a.Logger.Warn("project resolver init failed during finalize",
-				"error", resolverErr)
+		// Match handleExecutionError / recoverExecutePanic: a
+		// finalize-time failure that happens before the structured
+		// logger is wired (or after it has been torn down) used
+		// to drop the warning silently. Falling back to
+		// slog.Default ensures the reason still lands somewhere
+		// — silence here masks correlated downstream symptoms
+		// (missing session-state persistence, no workflow hint).
+		logger := a.Logger
+		if logger == nil {
+			logger = slog.Default()
 		}
+		logger.Warn("project resolver init failed during finalize",
+			"error", resolverErr)
 		// Skip both downstream calls when resolver init failed.
 		// persistSessionStateIfApplicable would have to nil-check
 		// resolver internally on every access, and printWorkflowHandoff

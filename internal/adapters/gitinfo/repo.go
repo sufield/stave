@@ -54,6 +54,16 @@ func IsDirty(ctx context.Context, repoRoot string, paths []string) (bool, []stri
 	if !hasGit() {
 		return false, nil, nil
 	}
+	// Reject paths containing newlines, null bytes, or other
+	// control characters before invoking git. The `--` separator
+	// already prevents flag-injection at the argv level, but a
+	// path with embedded \n could still confuse downstream
+	// scanner-based parsers (the porcelain output below is
+	// line-oriented). NUL is reserved as the field separator for
+	// machine-readable git output and must never appear in a path.
+	if err := validateGitPaths(paths); err != nil {
+		return false, nil, err
+	}
 	args := []string{"-C", repoRoot, "status", "--porcelain", "--"}
 	args = append(args, paths...)
 	// #nosec G204 -- exec.Command does not invoke a shell; args are passed directly to git.
@@ -91,4 +101,23 @@ func IsDirty(ctx context.Context, repoRoot string, paths []string) (bool, []stri
 	}
 	slices.Sort(list)
 	return len(list) > 0, list, nil
+}
+
+// validateGitPaths rejects paths that contain newlines, null bytes,
+// or other ASCII control characters. The git porcelain output below
+// is line-oriented; an embedded \n in a path argument would let a
+// hostile callsite split a single fake "modified" line into two
+// records (one observed, one synthesized) and corrupt the dirty
+// set returned to the caller. NUL is reserved as the field separator
+// for machine-readable git output and must never appear in a path.
+func validateGitPaths(paths []string) error {
+	for _, p := range paths {
+		for i := 0; i < len(p); i++ {
+			c := p[i]
+			if c == 0 || c == '\n' || c == '\r' || (c < 0x20 && c != '\t') {
+				return fmt.Errorf("path %q contains control character at offset %d", p, i)
+			}
+		}
+	}
+	return nil
 }
