@@ -78,7 +78,7 @@ func (a *Assessment) Warnings() []Finding {
 	return a.filter(SeverityWarn)
 }
 
-func (a *Assessment) filter(sev Severity) []Finding {
+func (a *Assessment) filter(sev DiagLevel) []Finding {
 	if a == nil {
 		return nil
 	}

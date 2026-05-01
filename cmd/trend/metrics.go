@@ -159,7 +159,7 @@ func computeRunMetrics(a *report.Assessment, prev *RunMetrics) RunMetrics {
 			}
 		}
 		if n > 0 {
-			byStage[stage] = n
+			byStage[string(stage)] = n
 		}
 	}
 

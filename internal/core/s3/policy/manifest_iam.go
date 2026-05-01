@@ -30,5 +30,5 @@ func S3IngestPermissions() []PermissionMapping {
 // MinimumS3IngestIAMActions returns the normalized action allow-list
 // from the kernel's default provider policy.
 func MinimumS3IngestIAMActions() []string {
-	return kernel.DefaultPolicy().ProviderPermissions("aws")
+	return kernel.DefaultPolicy().ProviderPermissions(kernel.Vendor("aws"))
 }

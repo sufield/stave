@@ -39,7 +39,7 @@ func fromIssues(is []evaluation.Issue) []IssueDTO {
 			members[j] = string(fid)
 		}
 		out[i] = IssueDTO{
-			IssueID:                 iss.IssueID,
+			IssueID:                 string(iss.IssueID),
 			AssetID:                 string(iss.AssetID),
 			SharedKeys:              iss.SharedKeys,
 			HeadlineFindingID:       string(iss.HeadlineFindingID),

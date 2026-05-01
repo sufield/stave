@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -190,8 +191,8 @@ func Suggest(in Input) *Result {
 	// Sort by severity (critical first) then by dwell time (longest first).
 	sortCandidates := func(s []Candidate) {
 		slices.SortFunc(s, func(a, b Candidate) int {
-			oa := kernel.SeverityOrder[a.Severity]
-			ob := kernel.SeverityOrder[b.Severity]
+			oa := policy.SeverityOrderOf(a.Severity)
+			ob := policy.SeverityOrderOf(b.Severity)
 			if oa != ob {
 				return oa - ob
 			}

@@ -6,6 +6,14 @@ import (
 	"time"
 )
 
+// ComplianceMapping projects a control's framework citations onto
+// the evidence record. Keys are framework identifiers (e.g.,
+// "hipaa", "soc2"); values are the citation strings the framework
+// uses. Defined locally so the evidence package stays decoupled from
+// the controldef package, which carries its own typed
+// ComplianceMapping with the same shape.
+type ComplianceMapping map[string]string
+
 // FindingInput is the builder's view of a single assessment verdict.
 // It is decoupled from the evaluation package to keep the evidence
 // package dependency-free within core.
@@ -15,7 +23,7 @@ type FindingInput struct {
 	ResourceARN       string
 	Verdict           string // "VIOLATION", "PASS", "INCONCLUSIVE", etc.
 	Severity          string
-	Compliance        map[string]string // framework → requirement
+	Compliance        ComplianceMapping
 	ObservationFields []string
 	AssetProperties   map[string]any
 	FindingMessage    string

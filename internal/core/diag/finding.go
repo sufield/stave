@@ -2,20 +2,23 @@ package diag
 
 import "github.com/sufield/stave/internal/core/kernel"
 
-// Severity defines the risk level of a security finding.
-type Severity string
+// DiagLevel defines the diagnostic risk level of a security finding.
+// Renamed from "Severity" to disambiguate from controldef.Severity,
+// which represents the criticality of a control (Low/Medium/High/
+// Critical) rather than a diagnostic level (Info/Warning/Error).
+type DiagLevel string
 
 const (
-	SeverityError Severity = "ERROR"
-	SeverityWarn  Severity = "WARNING"
-	SeverityInfo  Severity = "INFO"
+	SeverityError DiagLevel = "ERROR"
+	SeverityWarn  DiagLevel = "WARNING"
+	SeverityInfo  DiagLevel = "INFO"
 )
 
 // Finding is the industry-standard representation of a security violation.
 // It maps closely to formats like SARIF or AWS Security Finding Format (ASFF).
 type Finding struct {
 	RuleID      RuleID                `json:"rule_id"`
-	Severity    Severity              `json:"severity"`
+	Severity    DiagLevel             `json:"severity"`
 	Message     string                `json:"message,omitempty"`
 	Remediation string                `json:"remediation"`
 	Resource    kernel.SanitizableMap `json:"resource"`

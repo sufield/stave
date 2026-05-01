@@ -3,6 +3,7 @@ package evaluation
 import (
 	"testing"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -16,7 +17,7 @@ func TestCalculateReadiness_CitationsCountSatisfiedOnly(t *testing.T) {
 		},
 	}
 	allControlIDs := []kernel.ControlID{"CTL.A", "CTL.B"}
-	controlCompliance := map[kernel.ControlID]map[string]string{
+	controlCompliance := map[kernel.ControlID]map[policy.ComplianceFramework]string{
 		"CTL.A": {"soc2": "CC6.1"},
 		"CTL.B": {"soc2": "CC6.2"},
 	}

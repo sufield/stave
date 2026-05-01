@@ -47,7 +47,7 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 		fidToIssue := make(map[string]string, len(remFindings))
 		for _, iss := range enriched.Result.Issues {
 			for _, fid := range iss.MemberFindingIDs {
-				fidToIssue[string(fid)] = iss.IssueID
+				fidToIssue[string(fid)] = string(iss.IssueID)
 			}
 		}
 		for i := range results {
@@ -264,7 +264,7 @@ func buildMessage(f *remediation.Finding) string {
 	if len(f.ChainMembership) > 0 {
 		cm := f.ChainMembership[0]
 		prefix = fmt.Sprintf("[ATTACK PATH: %s] ", cm.ChainID)
-		suffix = ". This finding is part of a live attack path — chain severity: " + cm.ChainSeverity
+		suffix = ". This finding is part of a live attack path — chain severity: " + cm.ChainSeverity.String()
 	}
 	msg := fmt.Sprintf("%s%s: %s on %s (%s)",
 		prefix, f.ControlID, f.ControlName, f.AssetID, f.AssetType)

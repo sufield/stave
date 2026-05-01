@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	ctl "github.com/sufield/stave/internal/adapters/controls/builtin"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestRegistryPacksAreValid(t *testing.T) {
@@ -26,7 +27,7 @@ func TestRegistryPacksAreValid(t *testing.T) {
 				t.Fatalf("pack %q has no controls", pack.Name)
 			}
 			for _, id := range pack.Controls {
-				if _, ok := refs[string(id)]; !ok {
+				if _, ok := refs[id]; !ok {
 					t.Fatalf("pack %q references control %q missing from index controls map", pack.Name, id)
 				}
 			}
@@ -47,7 +48,7 @@ func TestRegistryEmbeddedFilesExist(t *testing.T) {
 	for id, ref := range reg.ControlRefs() {
 		ctlID := id
 		ctlRef := ref
-		t.Run(ctlID, func(t *testing.T) {
+		t.Run(string(ctlID), func(t *testing.T) {
 			if strings.TrimSpace(ctlRef.Path) == "" {
 				t.Fatalf("control %q has empty path", ctlID)
 			}
@@ -68,7 +69,7 @@ func TestRegistryEmbeddedFilesExist(t *testing.T) {
 			}
 
 			base := strings.TrimSuffix(filepath.Base(ctlRef.Path), filepath.Ext(ctlRef.Path))
-			if base != ctlID {
+			if base != string(ctlID) {
 				t.Fatalf("control %q path basename mismatch: got %q from %s", ctlID, base, ctlRef.Path)
 			}
 		})
@@ -94,7 +95,7 @@ func TestIndexCoversAllEmbeddedBuiltins(t *testing.T) {
 	var missing []string
 	for _, p := range paths {
 		id := strings.TrimSuffix(filepath.Base(p), filepath.Ext(p))
-		if _, ok := refs[id]; !ok {
+		if _, ok := refs[kernel.ControlID(id)]; !ok {
 			missing = append(missing, id)
 		}
 	}

@@ -141,16 +141,16 @@ func printReadinessIssue(w io.Writer, issue validation.ValidationFinding) error 
 // keeps the exit-code map's semantic split intact: 1 is reserved
 // for the dedicated `security-audit` command, 3 is "evaluation
 // completed with findings".
-func checkSLAPolicy(stderr io.Writer, policy string, res EvaluateResult, quiet bool) error {
+func checkSLAPolicy(stderr io.Writer, policy SLAPolicy, res EvaluateResult, quiet bool) error {
 	switch policy {
-	case "strict":
+	case SLAPolicyStrict:
 		if res.HasSLABreach {
 			if !quiet {
 				fmt.Fprintln(stderr, "SLA policy: strict — SLA breach detected, failing.")
 			}
 			return ui.ErrViolationsFound
 		}
-	case "critical-only":
+	case SLAPolicyCriticalOnly:
 		if res.HasCriticalSLABreach {
 			if !quiet {
 				fmt.Fprintln(stderr, "SLA policy: critical-only — critical SLA breach detected, failing.")

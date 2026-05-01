@@ -13,7 +13,7 @@ type AirgapPolicy struct {
 	bannedImports        []string
 	allowedImports       map[string]map[string]struct{}
 	bannedCredentialKeys []string
-	cloudPermissions     map[string][]string // keyed by provider (e.g., "aws", "azure")
+	cloudPermissions     map[Vendor][]string // keyed by provider (e.g., "aws", "azure")
 }
 
 // DefaultPolicy returns the standard air-gap restriction policy.
@@ -48,8 +48,8 @@ func DefaultPolicy() AirgapPolicy {
 			"GOOGLE_APPLICATION_CREDENTIALS",
 			"AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET", "AZURE_TENANT_ID",
 		},
-		cloudPermissions: map[string][]string{
-			"aws": {
+		cloudPermissions: map[Vendor][]string{
+			Vendor("aws"): {
 				"s3:GetBucketAcl",
 				"s3:GetBucketLogging",
 				"s3:GetBucketObjectLockConfiguration",
@@ -72,7 +72,7 @@ func (p AirgapPolicy) ProxyEnvVars() []string {
 
 // ProviderPermissions returns the required permissions for a specific
 // cloud provider (e.g., "aws"). This keeps vendor strings out of the struct fields.
-func (p AirgapPolicy) ProviderPermissions(provider string) []string {
+func (p AirgapPolicy) ProviderPermissions(provider Vendor) []string {
 	return slices.Clone(p.cloudPermissions[provider])
 }
 

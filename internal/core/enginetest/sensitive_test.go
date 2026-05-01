@@ -64,7 +64,7 @@ func TestIssue_MarshalJSON_NonSensitiveEvidence(t *testing.T) {
 	// Non-sensitive resource should serialize identically to a plain map
 	type plainIssue struct {
 		RuleID   string            `json:"rule_id"`
-		Severity diag.Severity     `json:"severity"`
+		Severity diag.DiagLevel     `json:"severity"`
 		Resource map[string]string `json:"resource"`
 		Action   string            `json:"action"`
 	}

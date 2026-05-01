@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	ctl "github.com/sufield/stave/internal/adapters/controls/builtin"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func testRegistry(t *testing.T) *Index {
@@ -188,7 +189,7 @@ func TestRegistry_ControlRefsReturnsClone(t *testing.T) {
 	if len(refs) == 0 {
 		t.Fatal("expected control refs")
 	}
-	var key string
+	var key kernel.ControlID
 	var original ControlRef
 	for k, v := range refs {
 		key = k

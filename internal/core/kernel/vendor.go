@@ -73,7 +73,7 @@ func (v Vendor) MarshalJSON() ([]byte, error) {
 // through to the universal-or-none branch — empty vendor against
 // no vendor tags returns true (universal); empty vendor against
 // any vendor tag returns false (no match).
-func AppliesToVendor(scopeTags []string, vendor string) bool {
+func AppliesToVendor(scopeTags []ScopeTag, vendor Vendor) bool {
 	if len(scopeTags) == 0 {
 		return true
 	}
@@ -87,7 +87,7 @@ func AppliesToVendor(scopeTags []string, vendor string) bool {
 			continue
 		}
 		hasVendorTag = true
-		if tag == vendor {
+		if Vendor(tag) == vendor {
 			return true
 		}
 	}

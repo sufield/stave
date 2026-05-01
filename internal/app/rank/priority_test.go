@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
-
-	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestBuildRoadmap_ChainMembersSortFirst(t *testing.T) {
@@ -42,8 +42,8 @@ func TestBuildRoadmap_ChainMembersSortFirst(t *testing.T) {
 				ChainMembership: []evaluation.ChainMembershipEntry{
 					{
 						ChainID:       "data_exfiltration_path",
-						ChainSeverity: "critical",
-						StageSpan:     []string{"initial_access", "exfiltration"},
+						ChainSeverity: policy.SeverityCritical,
+						StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"},
 						Narrative:     "test chain",
 					},
 				},

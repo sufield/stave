@@ -223,7 +223,7 @@ func buildWithNewPlan(b *Builder) (*appeval.ApplyDeps, error) {
 }
 
 func testBuilder(opts *Options, params applyParams) *Builder {
-	format, _ := ui.ParseOutputFormat(opts.Format)
+	format, _ := ui.ParseOutputFormat(string(opts.Format))
 	hasher := crypto.NewHasher()
 	f := compose.DefaultFactories()
 	return &Builder{

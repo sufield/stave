@@ -379,7 +379,7 @@ func writeFindingReasoning(d *drawer, f *remediation.Finding) {
 	for _, mc := range f.ReasoningTrace {
 		c := translation.Clause{
 			ObservationKey: mc.ObservationKey,
-			Operator:       mc.Operator,
+			Operator:       string(mc.Operator),
 			ExpectedValue:  mc.ExpectedValue,
 			ObservedValue:  mc.ObservedValue,
 		}
@@ -557,7 +557,7 @@ func (w *FindingWriter) writeChainFindings(d *drawer, result *evaluation.Complia
 		}
 		d.f("  Score:      %.1f\n", cf.CompoundScore)
 		if len(cf.AttackStages) > 0 {
-			d.f("  Stages:     %s\n", strings.Join(cf.AttackStages, ", "))
+			d.f("  Stages:     %s\n", strings.Join(attackStageStrings(cf.AttackStages), ", "))
 		}
 	}
 }
@@ -572,7 +572,7 @@ func (w *FindingWriter) writeAttackStageSummary(d *drawer, result *evaluation.Co
 		"initial_access", "execution", "credential_access", "persistence",
 		"collection", "exfiltration", "detection_evasion", "resilience",
 	} {
-		status, ok := result.AttackStageSummary[stage]
+		status, ok := result.AttackStageSummary[kernel.AttackStage(stage)]
 		if !ok {
 			continue
 		}
@@ -646,3 +646,13 @@ func controlIDStrings(ids []kernel.ControlID) []string {
 	}
 	return s
 }
+
+func attackStageStrings(stages []kernel.AttackStage) []string {
+	s := make([]string, len(stages))
+	for i, st := range stages {
+		s[i] = string(st)
+	}
+	return s
+}
+
+

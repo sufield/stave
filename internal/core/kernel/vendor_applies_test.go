@@ -90,7 +90,11 @@ func TestAppliesToVendor(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := AppliesToVendor(tc.scopeTags, tc.vendor); got != tc.want {
+			tags := make([]ScopeTag, len(tc.scopeTags))
+			for i, s := range tc.scopeTags {
+				tags[i] = ScopeTag(s)
+			}
+			if got := AppliesToVendor(tags, Vendor(tc.vendor)); got != tc.want {
 				t.Errorf("AppliesToVendor(%v, %q) = %v, want %v", tc.scopeTags, tc.vendor, got, tc.want)
 			}
 		})

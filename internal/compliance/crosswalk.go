@@ -14,15 +14,15 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// ControlRef is a reference to an external compliance control.
-type ControlRef struct {
-	Framework string `json:"framework" yaml:"framework"`
-	ControlID string `json:"control_id" yaml:"control_id"`
-	Rationale string `json:"rationale" yaml:"rationale"`
-}
-
 // Framework represents a normalized compliance standard (e.g., "nist_800_53").
 type Framework string
+
+// ControlRef is a reference to an external compliance control.
+type ControlRef struct {
+	Framework Framework `json:"framework" yaml:"framework"`
+	ControlID string    `json:"control_id" yaml:"control_id"`
+	Rationale string    `json:"rationale" yaml:"rationale"`
+}
 
 // Supported compliance framework identifiers.
 const (
@@ -93,8 +93,8 @@ func SupportedFrameworks() []Framework {
 
 // CrosswalkResolution captures the mapping between internal audit checks and external controls.
 type CrosswalkResolution struct {
-	ByCheck        map[string][]ControlRef
-	MissingChecks  []string
+	ByCheck        map[kernel.ControlID][]ControlRef
+	MissingChecks  []kernel.ControlID
 	ResolutionJSON []byte
 }
 
@@ -130,31 +130,41 @@ func ResolveControlCrosswalk(
 		allowedSet[f] = struct{}{}
 	}
 
-	byCheck := make(map[string][]ControlRef, len(expectedCheckIDs))
-	var missing []string
+	byCheck := make(map[kernel.ControlID][]ControlRef, len(expectedCheckIDs))
+	var missing []kernel.ControlID
 
 	for _, id := range expectedCheckIDs {
+		cid := kernel.ControlID(id)
 		refs, filterErr := filterAndNormalizeRefs(id, parsed.Checks[id], allowedSet)
 		if filterErr != nil {
 			return CrosswalkResolution{}, filterErr
 		}
 
 		if len(refs) == 0 {
-			missing = append(missing, id)
-			byCheck[id] = []ControlRef{}
+			missing = append(missing, cid)
+			byCheck[cid] = []ControlRef{}
 			continue
 		}
 
 		slices.SortFunc(refs, func(a, b ControlRef) int {
 			return cmp.Or(
-				cmp.Compare(a.Framework, b.Framework),
+				cmp.Compare(string(a.Framework), string(b.Framework)),
 				cmp.Compare(a.ControlID, b.ControlID),
 			)
 		})
-		byCheck[id] = refs
+		byCheck[cid] = refs
 	}
 
-	slices.Sort(missing)
+	slices.SortFunc(missing, cmp.Compare[kernel.ControlID])
+
+	checksOut := make(map[string][]ControlRef, len(byCheck))
+	for k, v := range byCheck {
+		checksOut[string(k)] = v
+	}
+	missingOut := make([]string, len(missing))
+	for i, m := range missing {
+		missingOut[i] = string(m)
+	}
 
 	output := struct {
 		SchemaVersion kernel.Schema           `json:"schema_version"`
@@ -165,8 +175,8 @@ func ResolveControlCrosswalk(
 	}{
 		SchemaVersion: kernel.SchemaCrosswalkResolution,
 		Frameworks:    FrameworkStrings(selected),
-		Checks:        byCheck,
-		Missing:       missing,
+		Checks:        checksOut,
+		Missing:       missingOut,
 		GeneratedAt:   now.UTC().Format(time.RFC3339),
 	}
 
@@ -228,7 +238,7 @@ func resolveFrameworks(raw []string) ([]Framework, error) {
 func filterAndNormalizeRefs(checkID string, refs []ControlRef, allowed map[Framework]struct{}) ([]ControlRef, error) {
 	out := make([]ControlRef, 0, len(refs))
 	for _, r := range refs {
-		f := Framework(normalize(r.Framework))
+		f := Framework(normalize(string(r.Framework)))
 		if alias, ok := frameworkAliases[f]; ok {
 			f = alias
 		}
@@ -254,7 +264,7 @@ func filterAndNormalizeRefs(checkID string, refs []ControlRef, allowed map[Frame
 		}
 
 		out = append(out, ControlRef{
-			Framework: string(f),
+			Framework: f,
 			ControlID: cID,
 			Rationale: rat,
 		})

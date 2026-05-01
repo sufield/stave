@@ -45,7 +45,7 @@ func Analyze(input Input) Report {
 	}
 
 	coveredTypes := make(map[kernel.AssetType]bool)
-	stagesSeen := make(map[string]bool)
+	stagesSeen := make(map[kernel.AttackStage]bool)
 
 	for i := range input.Controls {
 		ctl := &input.Controls[i]
@@ -112,14 +112,14 @@ func Analyze(input Input) Report {
 	}
 
 	// MITRE stage gaps.
-	allStages := []string{
+	allStages := []kernel.AttackStage{
 		"initial_access", "credential_access", "persistence",
 		"exfiltration", "detection_evasion", "resilience",
 	}
 	var mitreGaps []string
 	for _, stage := range allStages {
 		if !stagesSeen[stage] {
-			mitreGaps = append(mitreGaps, stage)
+			mitreGaps = append(mitreGaps, string(stage))
 		}
 	}
 

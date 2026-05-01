@@ -262,7 +262,7 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 			controlIDs: cidSet,
 			membership: evaluation.ChainMembershipEntry{
 				ChainID:       cf.ChainID,
-				ChainSeverity: cf.Severity.String(),
+				ChainSeverity: cf.Severity,
 				StageSpan:     risk.SortStagesByKillChain(cf.AttackStages),
 				Narrative:     cf.Description,
 			},

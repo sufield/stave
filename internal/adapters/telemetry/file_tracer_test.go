@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/trace"
 )
 
@@ -45,8 +46,10 @@ func TestLocalFileTracer_EndToEnd(t *testing.T) {
 	span2.End()
 
 	// Finalize
-	lt := tracer.Finalize("test-run-001", "0.9.0", map[string]string{
-		"overall": "abc123",
+	lt := tracer.Finalize(ports.FinalizeArgs{
+		RunID:        "test-run-001",
+		StaveVersion: "0.9.0",
+		Hashes:       map[string]string{"overall": "abc123"},
 	})
 
 	if lt.SchemaVersion != trace.SchemaVersion {
@@ -108,7 +111,7 @@ func TestLocalFileTracer_EndToEnd(t *testing.T) {
 
 func TestLocalFileTracer_NoAssessments(t *testing.T) {
 	tracer := NewLocalFileTracer()
-	lt := tracer.Finalize("empty-run", "0.9.0", nil)
+	lt := tracer.Finalize(ports.FinalizeArgs{RunID: "empty-run", StaveVersion: "0.9.0"})
 	if len(lt.Assessments) != 0 {
 		t.Fatalf("expected 0 assessments, got %d", len(lt.Assessments))
 	}

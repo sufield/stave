@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/app/teams"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // TeamPlan holds the remediation plan for a single team.
@@ -68,8 +68,10 @@ type GroupInput struct {
 // Group attributes findings to teams and produces a Plan.
 func Group(input GroupInput) *Plan {
 	minSev := 2 // default: medium
-	if v, ok := kernel.SeverityOrder[strings.ToLower(input.MinSeverity)]; ok {
-		minSev = v
+	if parsed, err := policy.ParseSeverity(input.MinSeverity); err == nil && parsed != policy.SeverityNone {
+		if v, ok := policy.SeverityOrder[parsed]; ok {
+			minSev = v
+		}
 	}
 
 	// Attribute findings to teams.
@@ -82,7 +84,7 @@ func Group(input GroupInput) *Plan {
 	var items []attributed
 	for i := range input.Findings {
 		f := &input.Findings[i]
-		sev := kernel.SeverityOrder[f.ControlSeverity.String()]
+		sev := policy.SeverityOrder[f.ControlSeverity]
 		if sev > minSev {
 			continue
 		}
@@ -100,8 +102,8 @@ func Group(input GroupInput) *Plan {
 
 	// Sort by severity DESC, dwell DESC.
 	sort.Slice(items, func(i, j int) bool {
-		si := kernel.SeverityOrder[items[i].finding.ControlSeverity.String()]
-		sj := kernel.SeverityOrder[items[j].finding.ControlSeverity.String()]
+		si := policy.SeverityOrder[items[i].finding.ControlSeverity]
+		sj := policy.SeverityOrder[items[j].finding.ControlSeverity]
 		if si != sj {
 			return si < sj
 		}

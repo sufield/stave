@@ -12,11 +12,28 @@ import (
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
+// CELExpression is a compiled CEL source string. Typed alias so the
+// compile/cache layer carries the meaning end-to-end and so the
+// expression string never accidentally mixes with arbitrary user
+// strings (predicate keys, parameter values, etc.).
+type CELExpression string
+
+// String returns the raw expression source.
+func (e CELExpression) String() string { return string(e) }
+
 // CompiledPredicate holds a compiled CEL program and its source expression.
 type CompiledPredicate struct {
 	Program    cel.Program
-	Expression string
+	Expression CELExpression
 }
+
+// scopeVar values for predicateToExpr / ruleToExpr. The empty string
+// is the top-level (no scope rebinding); ScopeVarItem is the bound
+// name inside any_match / all_match clauses.
+const (
+	scopeVarTopLevel = ""
+	ScopeVarItem     = "__id"
+)
 
 // IsValid reports whether the predicate has a non-nil compiled program.
 // Use to guard call sites that consume CompiledPredicate values built
@@ -49,7 +66,7 @@ func NewCompiler() (*Compiler, error) {
 // Compile translates an UnsafePredicate into a compiled CEL program.
 // Results are cached by the generated expression string.
 func (c *Compiler) Compile(pred policy.UnsafePredicate) (CompiledPredicate, error) {
-	expr, err := predicateToExpr(pred, "")
+	expr, err := predicateToExpr(pred, scopeVarTopLevel)
 	if err != nil {
 		return CompiledPredicate{}, fmt.Errorf("predicate to expression: %w", err)
 	}
@@ -75,7 +92,7 @@ func (c *Compiler) Compile(pred policy.UnsafePredicate) (CompiledPredicate, erro
 		return CompiledPredicate{}, fmt.Errorf("program CEL expression: %w", err)
 	}
 
-	result := CompiledPredicate{Program: prg, Expression: expr}
+	result := CompiledPredicate{Program: prg, Expression: CELExpression(expr)}
 
 	// Double-checked write: another goroutine may have populated the
 	// cache while we were compiling. Prefer the existing entry to keep
@@ -405,7 +422,7 @@ func ruleToExprAnyMatch(r *policy.PredicateRule, val any, outerScope string, ide
 
 	// Compile the nested predicate with "__id" scope — field references
 	// like "type", "id", "purpose" will resolve to __id["type"], etc.
-	innerExpr, err := predicateToExpr(*nested, "__id")
+	innerExpr, err := predicateToExpr(*nested, ScopeVarItem)
 	if err != nil {
 		return "", fmt.Errorf("any_match: %w", err)
 	}

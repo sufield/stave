@@ -37,7 +37,7 @@ func TestAnnotateFindingSLA_WithinDeadline(t *testing.T) {
 	if f.SLAOverdueHours != nil {
 		t.Error("overdue hours should be nil when not breached")
 	}
-	if f.SLAEscalatedSeverity != "" {
+	if f.SLAEscalatedSeverity != policy.SeverityNone {
 		t.Error("escalated severity should be empty when not breached")
 	}
 	if f.SLAPolicySource != "profile:default" {
@@ -60,7 +60,7 @@ func TestAnnotateFindingSLA_Breached_OneTier(t *testing.T) {
 	}
 	// 164h overdue / 336h deadline < 1 period → 1 tier escalation
 	// high → critical
-	if f.SLAEscalatedSeverity != "critical" {
+	if f.SLAEscalatedSeverity != policy.SeverityCritical {
 		t.Errorf("escalated = %q, want critical", f.SLAEscalatedSeverity)
 	}
 }
@@ -76,7 +76,7 @@ func TestAnnotateFindingSLA_Breached_ThreeTiers(t *testing.T) {
 		t.Fatal("should be breached")
 	}
 	// Capped at critical regardless of how many tiers.
-	if f.SLAEscalatedSeverity != "critical" {
+	if f.SLAEscalatedSeverity != policy.SeverityCritical {
 		t.Errorf("escalated = %q, want critical (capped)", f.SLAEscalatedSeverity)
 	}
 }
@@ -129,31 +129,31 @@ func TestAnnotateFindingSLA_NoEscalationWhenAlreadyCritical(t *testing.T) {
 		t.Fatal("should be breached")
 	}
 	// Already critical — no escalation possible.
-	if f.SLAEscalatedSeverity != "" {
+	if f.SLAEscalatedSeverity != policy.SeverityNone {
 		t.Errorf("escalated = %q, want empty (already critical)", f.SLAEscalatedSeverity)
 	}
 }
 
 func TestEscalateSeverity(t *testing.T) {
 	tests := []struct {
-		base  string
+		base  policy.Severity
 		tiers int
-		want  string
+		want  policy.Severity
 	}{
-		{"low", 1, "medium"},
-		{"low", 2, "high"},
-		{"low", 3, "critical"},
-		{"low", 10, "critical"}, // capped
-		{"medium", 1, "high"},
-		{"medium", 2, "critical"},
-		{"high", 1, "critical"},
-		{"critical", 1, "critical"}, // already max
-		{"unknown", 1, "unknown"},   // unrecognized
+		{policy.SeverityLow, 1, policy.SeverityMedium},
+		{policy.SeverityLow, 2, policy.SeverityHigh},
+		{policy.SeverityLow, 3, policy.SeverityCritical},
+		{policy.SeverityLow, 10, policy.SeverityCritical}, // capped
+		{policy.SeverityMedium, 1, policy.SeverityHigh},
+		{policy.SeverityMedium, 2, policy.SeverityCritical},
+		{policy.SeverityHigh, 1, policy.SeverityCritical},
+		{policy.SeverityCritical, 1, policy.SeverityCritical}, // already max
+		{policy.SeverityInfo, 1, policy.SeverityInfo},         // not in escalation table
 	}
 	for _, tt := range tests {
 		got := escalateSeverity(tt.base, tt.tiers)
 		if got != tt.want {
-			t.Errorf("escalateSeverity(%q, %d) = %q, want %q", tt.base, tt.tiers, got, tt.want)
+			t.Errorf("escalateSeverity(%v, %d) = %v, want %v", tt.base, tt.tiers, got, tt.want)
 		}
 	}
 }
@@ -179,7 +179,7 @@ func TestAnnotateFindingSLA_2xDwellEscalates_2Tiers(t *testing.T) {
 	}
 	// medium + 2 tiers should escalate to critical (low→medium→high→critical;
 	// medium + 2 = critical at index 3).
-	if f.SLAEscalatedSeverity != "critical" {
+	if f.SLAEscalatedSeverity != policy.SeverityCritical {
 		t.Errorf("2× dwell from medium: escalated = %q, want critical", f.SLAEscalatedSeverity)
 	}
 }
@@ -199,7 +199,7 @@ func TestAnnotateFindingSLA_3xDwellEscalates_3Tiers(t *testing.T) {
 		t.Fatal("3× dwell must be breached")
 	}
 	// low + 3 tiers = critical (index 0 + 3 = 3, which is critical).
-	if f.SLAEscalatedSeverity != "critical" {
+	if f.SLAEscalatedSeverity != policy.SeverityCritical {
 		t.Errorf("3× dwell from low: escalated = %q, want critical", f.SLAEscalatedSeverity)
 	}
 }
@@ -280,7 +280,7 @@ func TestAnnotateFindingSLA_FieldsPopulated(t *testing.T) {
 		t.Errorf("overdue = %f, want 560", *f.SLAOverdueHours)
 	}
 	// medium → high (1 tier at 560/1440 < 1 period)
-	if f.SLAEscalatedSeverity != "high" {
+	if f.SLAEscalatedSeverity != policy.SeverityHigh {
 		t.Errorf("escalated = %q, want high", f.SLAEscalatedSeverity)
 	}
 }

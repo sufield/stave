@@ -27,7 +27,7 @@ type CompoundFinding struct {
 	CompoundScore     float64            `json:"compound_score"`
 	Severity          policy.Severity    `json:"severity"`
 	Narrative         string             `json:"narrative"`
-	AttackStages      []string           `json:"attack_stages,omitempty"`
+	AttackStages      []kernel.AttackStage `json:"attack_stages,omitempty"`
 }
 
 // DetectChains checks each chain definition per asset: a chain fires only
@@ -73,7 +73,7 @@ func DetectChains(
 			}
 
 			// Collect attack stages and compute scope-aware blast multiplier.
-			stageSet := make(map[string]bool)
+			stageSet := make(map[kernel.AttackStage]bool)
 			maxBlast := 1.0
 			for _, cid := range failing {
 				if ctl, ok := controlLookup[cid]; ok {
@@ -87,11 +87,13 @@ func DetectChains(
 				}
 			}
 
-			var stages []string
+			stages := make([]kernel.AttackStage, 0, len(stageSet))
 			for s := range stageSet {
 				stages = append(stages, s)
 			}
-			slices.Sort(stages)
+			slices.SortFunc(stages, func(a, b kernel.AttackStage) int {
+				return strings.Compare(string(a), string(b))
+			})
 
 			escalation := ChainEscalation(len(failing))
 			// Derive base score from the highest severity among failing
@@ -198,13 +200,13 @@ func scopeAdjustedBlast(ctl *policy.ControlDefinition) float64 {
 
 	scope := ctl.BlastScope()
 	switch scope {
-	case "account":
+	case kernel.BlastScopeAccount:
 		return mult // Full multiplier — blinds everything
-	case "network":
+	case kernel.BlastScopeNetwork:
 		// Attenuate: network scope may not cover all chain resources.
 		// Apply 75% of the excess above 1.0.
 		return 1.0 + (mult-1.0)*0.75
-	case "resource":
+	case kernel.BlastScopeResource:
 		// Attenuate further: local detection gap.
 		// Apply 50% of the excess above 1.0.
 		return 1.0 + (mult-1.0)*0.50

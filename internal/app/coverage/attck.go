@@ -99,7 +99,7 @@ func Build(input BuildInput) *CoverageReport {
 			unannotated = append(unannotated, string(ctl.ID))
 			continue
 		}
-		byStage[stage] = append(byStage[stage], string(ctl.ID))
+		byStage[string(stage)] = append(byStage[string(stage)], string(ctl.ID))
 	}
 
 	// Group findings by control ID for posture overlay.
@@ -253,7 +253,7 @@ func NavigatorLayer(report *CoverageReport) map[string]any {
 func staveToNavigatorTactic(tacticID string) string {
 	for _, td := range AllTactics {
 		if td.ID == tacticID {
-			return graph.ToATTCKTacticID(td.StaveID) // returns same ID but validates
+			return graph.ToATTCKTacticID(kernel.AttackStage(td.StaveID)) // returns same ID but validates
 		}
 	}
 	return ""

@@ -11,6 +11,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 // Finding represents a detected control violation.
@@ -43,7 +44,7 @@ type Finding struct {
 	SLADeadlineHours     *float64 `json:"sla_deadline_hours,omitempty"`
 	SLABreached          bool     `json:"sla_breached,omitempty"`
 	SLAOverdueHours      *float64 `json:"sla_overdue_hours,omitempty"`
-	SLAEscalatedSeverity string   `json:"sla_escalated_severity,omitempty"`
+	SLAEscalatedSeverity policy.Severity `json:"sla_escalated_severity,omitempty"`
 	SLAPolicySource      string   `json:"sla_policy_source,omitempty"`
 
 	// Owner routing — populated when a team manifest is loaded.
@@ -113,11 +114,10 @@ func ReasoningTraceFromMisconfigurations(ms []policy.Misconfiguration) []Matched
 	for i, mc := range ms {
 		key := mc.DisplayProperty()
 		expected := mc.UnsafeValue
-		operator := string(mc.Operator)
 		out[i] = MatchedClause{
-			PredicateExpr:  formatClauseExpr(key, operator, expected),
+			PredicateExpr:  formatClauseExpr(key, mc.Operator, expected),
 			ObservationKey: key,
-			Operator:       operator,
+			Operator:       mc.Operator,
 			ExpectedValue:  expected,
 			ObservedValue:  mc.ActualValue,
 		}
@@ -126,12 +126,12 @@ func ReasoningTraceFromMisconfigurations(ms []policy.Misconfiguration) []Matched
 }
 
 // formatClauseExpr renders the clause in the authored form for display.
-func formatClauseExpr(key, op string, expected any) string {
+func formatClauseExpr(key string, op predicate.Operator, expected any) string {
 	switch expected.(type) {
 	case nil:
-		return key + " " + op
+		return key + " " + string(op)
 	default:
-		return key + " " + op + " " + stringifyExpected(expected)
+		return key + " " + string(op) + " " + stringifyExpected(expected)
 	}
 }
 
@@ -157,7 +157,7 @@ type MatchedClause struct {
 	// "properties." prefix stripped for readability.
 	ObservationKey string `json:"observation_key"`
 	// Operator is the clause's op, e.g. "eq", "any_in_field".
-	Operator string `json:"operator"`
+	Operator predicate.Operator `json:"operator"`
 	// ExpectedValue is the value the clause expected (or the param
 	// reference when the value was `params.<name>`).
 	ExpectedValue any `json:"expected_value,omitempty"`
@@ -182,11 +182,11 @@ type ChainMembershipEntry struct {
 	ChainID kernel.ChainID `json:"chain_id"`
 
 	// ChainSeverity is the compound severity of the chain.
-	ChainSeverity string `json:"chain_severity"`
+	ChainSeverity policy.Severity `json:"chain_severity"`
 
 	// StageSpan is the attack stage progression of the chain,
 	// sorted by kill chain order.
-	StageSpan []string `json:"stage_span"`
+	StageSpan []kernel.AttackStage `json:"stage_span"`
 
 	// Narrative is the chain's human-readable description.
 	Narrative string `json:"narrative"`

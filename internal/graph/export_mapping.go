@@ -40,7 +40,7 @@ import (
 // no programmatic way to know the export was lossy. The mapping
 // surface now collects these so a caller in strict mode can fail.
 type UnmappedEdge struct {
-	Type string
+	Type EdgeType
 	From string
 	To   string
 }
@@ -58,13 +58,13 @@ func (e *UnmappedEdgesError) Error() string {
 	if len(e.Edges) == 0 {
 		return "no unmapped edges"
 	}
-	types := make(map[string]struct{}, len(e.Edges))
+	types := make(map[EdgeType]struct{}, len(e.Edges))
 	for _, ue := range e.Edges {
 		types[ue.Type] = struct{}{}
 	}
 	out := make([]string, 0, len(types))
 	for t := range types {
-		out = append(out, t)
+		out = append(out, string(t))
 	}
 	return fmt.Sprintf("graph export dropped %d edges with unmapped type(s): %s",
 		len(e.Edges), strings.Join(out, ", "))
@@ -89,7 +89,7 @@ func mapToRDFGraph(g *GraphData) *RDFGraph {
 	// nodeKind tracks the original Stave node Type for each internal ID
 	// so the shortcut-edge materialization step can identify Resource,
 	// Finding, and Control nodes without a second scan.
-	nodeKind := make(map[string]string, len(g.Nodes))
+	nodeKind := make(map[string]NodeType, len(g.Nodes))
 	// findingsByControl indexes Resource → controls violated transitively
 	// via the Resource ← TARGETS ← Finding → Control chain. Built
 	// alongside the node pass.
@@ -293,7 +293,7 @@ func nodeIRI(n *Node) (instanceIRI, classIRI string) {
 	case "Identity":
 		return IdentityIRI(n.ID), ontologyBaseIRI + "Identity"
 	default:
-		return ResourceIRI(n.ID), ontologyBaseIRI + n.Type
+		return ResourceIRI(n.ID), ontologyBaseIRI + string(n.Type)
 	}
 }
 
@@ -353,7 +353,7 @@ func flattenNodeProperties(n *Node) map[string]any {
 // endpoints make weight meaningful (Finding-bearing edges, shortcut
 // edges) so a single algorithm can index by edge weight without
 // guarding on type.
-func edgeProperties(e *Edge, fromKind, toKind string, nodesByID map[string]*Node) map[string]any {
+func edgeProperties(e *Edge, fromKind, toKind NodeType, nodesByID map[string]*Node) map[string]any {
 	props := map[string]any{}
 	if e.Properties != nil {
 		maps.Copy(props, e.Properties)

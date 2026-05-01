@@ -10,7 +10,7 @@ import (
 )
 
 // stixRelTypeMap maps Stave edge types to STIX relationship types.
-var stixRelTypeMap = map[string]string{
+var stixRelTypeMap = map[EdgeType]string{
 	"TARGETS":              "targets",
 	"MEMBER_OF":            "indicates",
 	"PRODUCES":             "uses",
@@ -23,7 +23,7 @@ var stixRelTypeMap = map[string]string{
 }
 
 // stixObjectTypeMap maps Stave node types to STIX object type prefixes.
-var stixObjectTypeMap = map[string]string{
+var stixObjectTypeMap = map[NodeType]string{
 	"Finding":               "observed-data",
 	"Resource":              "infrastructure",
 	"Control":               "course-of-action",
@@ -62,7 +62,7 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 		n := &g.Nodes[i]
 		stixType := stixObjectTypeMap[n.Type]
 		if stixType == "" {
-			stixType = "x-stave-" + n.Type
+			stixType = "x-stave-" + string(n.Type)
 		}
 
 		sid := stixID(stixType, n.ID)
@@ -150,7 +150,7 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 
 		rel := map[string]any{
 			"type":              "relationship",
-			"id":                stixID("relationship", e.From+"|"+e.To+"|"+e.Type),
+			"id":                stixID("relationship", e.From+"|"+e.To+"|"+string(e.Type)),
 			"spec_version":      "2.1",
 			"relationship_type": relType,
 			"source_ref":        srcRef,

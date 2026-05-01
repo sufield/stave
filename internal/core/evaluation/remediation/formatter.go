@@ -107,13 +107,13 @@ func buildSubstitutions(a asset.Asset) map[string]string {
 	}
 
 	// ARN-derived account + region tokens.
-	if acct, region, ok := parseARNContext(assetID); ok {
-		if acct != "" {
-			subs["<account>"] = acct
-			subs["<account-id>"] = acct
+	if ctx, ok := parseARNContext(assetID); ok {
+		if ctx.Account != "" {
+			subs["<account>"] = ctx.Account
+			subs["<account-id>"] = ctx.Account
 		}
-		if region != "" {
-			subs["<region>"] = region
+		if ctx.Region != "" {
+			subs["<region>"] = ctx.Region
 		}
 	}
 
@@ -148,19 +148,29 @@ func extractShortIdentifier(assetID string) string {
 	return assetID
 }
 
-// parseARNContext extracts (account, region) from an ARN. Returns
-// (account, region, true) on success, ("", "", false) otherwise.
+// ARNContext carries the AWS account and region extracted from an
+// ARN. Named fields prevent the (account, region) callers from
+// swapping the two strings — both are short, both are opaque, and
+// the previous (string, string, bool) tuple shape made the swap
+// silently compile.
+type ARNContext struct {
+	Account string
+	Region  string
+}
+
+// parseARNContext extracts the account and region from an ARN.
+// ok=false when the input is not an ARN-shaped string.
 // ARN format: arn:partition:service:region:account:resource — six
 // colon-separated fields, any of which may be empty per AWS rules.
-func parseARNContext(assetID string) (string, string, bool) {
+func parseARNContext(assetID string) (ARNContext, bool) {
 	if !strings.HasPrefix(assetID, "arn:") {
-		return "", "", false
+		return ARNContext{}, false
 	}
 	parts := strings.SplitN(assetID, ":", 6)
 	if len(parts) < 6 {
-		return "", "", false
+		return ARNContext{}, false
 	}
 	// parts[0]=arn, parts[1]=partition, parts[2]=service,
 	// parts[3]=region, parts[4]=account, parts[5]=resource
-	return parts[4], parts[3], true
+	return ARNContext{Account: parts[4], Region: parts[3]}, true
 }

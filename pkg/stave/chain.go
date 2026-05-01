@@ -82,7 +82,7 @@ func convertCompoundFinding(cf *risk.CompoundFinding) ChainFinding {
 		CompoundScore:     cf.CompoundScore,
 		Severity:          Severity(cf.Severity.String()),
 		Narrative:         cf.Narrative,
-		AttackStages:      cloneStrings(cf.AttackStages),
+		AttackStages:      attackStagesToStrings(cf.AttackStages),
 	}
 }
 
@@ -96,8 +96,8 @@ func convertChainMembership(ms []evaluation.ChainMembershipEntry) []ChainMembers
 	for i, m := range ms {
 		out[i] = ChainMembershipEntry{
 			ChainID:       kernel.ChainID(m.ChainID),
-			ChainSeverity: Severity(m.ChainSeverity),
-			StageSpan:     cloneStrings(m.StageSpan),
+			ChainSeverity: Severity(m.ChainSeverity.String()),
+			StageSpan:     attackStagesToStrings(m.StageSpan),
 			Narrative:     m.Narrative,
 		}
 	}
@@ -113,11 +113,15 @@ func cloneControlIDs(in []ControlID) []ControlID {
 	return out
 }
 
-func cloneStrings(in []string) []string {
+// attackStagesToStrings projects internal kernel.AttackStage values
+// onto the library's plain []string surface.
+func attackStagesToStrings(in []kernel.AttackStage) []string {
 	if in == nil {
 		return nil
 	}
 	out := make([]string, len(in))
-	copy(out, in)
+	for i, s := range in {
+		out[i] = string(s)
+	}
 	return out
 }

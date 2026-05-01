@@ -33,16 +33,50 @@ type GraphSource struct {
 
 // GraphMetadata provides summary counts for validation.
 type GraphMetadata struct {
-	NodeCount int            `json:"node_count"`
-	EdgeCount int            `json:"edge_count"`
-	NodeTypes map[string]int `json:"node_types"`
-	EdgeTypes map[string]int `json:"edge_types"`
+	NodeCount int              `json:"node_count"`
+	EdgeCount int              `json:"edge_count"`
+	NodeTypes map[NodeType]int `json:"node_types"`
+	EdgeTypes map[EdgeType]int `json:"edge_types"`
 }
+
+// NodeType names the closed vocabulary of graph node kinds. Centralizing
+// the set makes the (n.Type == "Finding") string comparisons typed and
+// turns up typos at compile time. Values are the on-the-wire JSON
+// strings the graph emits.
+type NodeType string
+
+// Recognized node types. The graph builder constructs nodes only from
+// this list; readers (export_mapping.go, etc.) compare against these
+// constants instead of open-coded literals.
+const (
+	NodeTypeFinding               NodeType = "Finding"
+	NodeTypeResource              NodeType = "Resource"
+	NodeTypeControl               NodeType = "Control"
+	NodeTypeComplianceRequirement NodeType = "ComplianceRequirement"
+	NodeTypeTenantScope           NodeType = "TenantScope"
+	NodeTypeRemediationAction     NodeType = "RemediationAction"
+	NodeTypeThreatChain           NodeType = "ThreatChain"
+	NodeTypeAttackerCapability    NodeType = "AttackerCapability"
+)
+
+// EdgeType names the closed vocabulary of graph edge kinds. Same
+// rationale as NodeType.
+type EdgeType string
+
+const (
+	EdgeTypeTargets         EdgeType = "TARGETS"
+	EdgeTypeMapsTo          EdgeType = "MAPS_TO"
+	EdgeTypeViolates        EdgeType = "VIOLATES"
+	EdgeTypeBelongsToScope  EdgeType = "BELONGS_TO_SCOPE"
+	EdgeTypeHasRemediation  EdgeType = "HAS_REMEDIATION"
+	EdgeTypeMemberOf        EdgeType = "MEMBER_OF"
+	EdgeTypeProduces        EdgeType = "PRODUCES"
+)
 
 // Node is a graph node with typed properties.
 type Node struct {
 	ID           string         `json:"id"`
-	Type         string         `json:"type"`
+	Type         NodeType       `json:"type"`
 	Standard     string         `json:"standard"`
 	StandardType string         `json:"standard_type"`
 	Properties   map[string]any `json:"properties"`
@@ -52,7 +86,7 @@ type Node struct {
 type Edge struct {
 	From       string         `json:"from"`
 	To         string         `json:"to"`
-	Type       string         `json:"type"`
+	Type       EdgeType       `json:"type"`
 	Properties map[string]any `json:"properties,omitempty"`
 }
 
@@ -328,7 +362,8 @@ func Build(input BuildInput) *GraphData {
 // the separator character — ARNs and resource paths legitimately include
 // pipes, slashes, and colons.
 type edgeKey struct {
-	From, To, Type string
+	From, To string
+	Type     EdgeType
 }
 
 // multiValueEdgeProps lists property keys whose multi-edge values
@@ -468,11 +503,11 @@ func asAnySet(v any) map[string]struct{} {
 }
 
 func computeMetadata(nodes []Node, edges []Edge) GraphMetadata {
-	nodeTypes := make(map[string]int)
+	nodeTypes := make(map[NodeType]int)
 	for _, n := range nodes {
 		nodeTypes[n.Type]++
 	}
-	edgeTypes := make(map[string]int)
+	edgeTypes := make(map[EdgeType]int)
 	for _, e := range edges {
 		edgeTypes[e.Type]++
 	}

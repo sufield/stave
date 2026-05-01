@@ -112,7 +112,7 @@ type NearbyFramework struct {
 // CalculateReadiness computes per-framework readiness scores from
 // the evaluated controls and findings. Each framework is scored
 // independently: readiness = passing / total × 100.
-func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs []kernel.ControlID, controlCompliance map[kernel.ControlID]map[string]string) {
+func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs []kernel.ControlID, controlCompliance map[kernel.ControlID]map[policy.ComplianceFramework]string) {
 	if len(frameworks) == 0 {
 		return
 	}
@@ -133,7 +133,7 @@ func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs
 			if !ok {
 				continue
 			}
-			if _, hasFW := cc[fw]; !hasFW {
+			if _, hasFW := cc[policy.ComplianceFramework(fw)]; !hasFW {
 				continue
 			}
 			total++
@@ -165,7 +165,7 @@ func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs
 	r.Summary.NearbyFrameworks = computeNearbyFrameworks(failingIDs, allControlIDs, controlCompliance, requestedSet)
 }
 
-func computeSuperFix(failingIDs sets.Set[kernel.ControlID], controlCompliance map[kernel.ControlID]map[string]string, frameworks []string) *SuperFix {
+func computeSuperFix(failingIDs sets.Set[kernel.ControlID], controlCompliance map[kernel.ControlID]map[policy.ComplianceFramework]string, frameworks []string) *SuperFix {
 	fwSet := sets.New[string](frameworks...)
 
 	var best *SuperFix
@@ -176,8 +176,8 @@ func computeSuperFix(failingIDs sets.Set[kernel.ControlID], controlCompliance ma
 		}
 		var fws []string
 		for fw := range cc {
-			if fwSet.Contains(fw) {
-				fws = append(fws, fw)
+			if fwSet.Contains(string(fw)) {
+				fws = append(fws, string(fw))
 			}
 		}
 		if len(fws) > 0 && (best == nil || len(fws) > best.FrameworkCount) {
@@ -192,13 +192,13 @@ func computeSuperFix(failingIDs sets.Set[kernel.ControlID], controlCompliance ma
 	return best
 }
 
-func computeNearbyFrameworks(failingIDs sets.Set[kernel.ControlID], allControlIDs []kernel.ControlID, controlCompliance map[kernel.ControlID]map[string]string, requestedSet sets.Set[string]) []NearbyFramework {
+func computeNearbyFrameworks(failingIDs sets.Set[kernel.ControlID], allControlIDs []kernel.ControlID, controlCompliance map[kernel.ControlID]map[policy.ComplianceFramework]string, requestedSet sets.Set[string]) []NearbyFramework {
 	// Discover all frameworks across all controls.
 	allFWs := sets.New[string]()
 	for _, cc := range controlCompliance {
 		for fw := range cc {
-			if !requestedSet.Contains(fw) {
-				allFWs.Add(fw)
+			if !requestedSet.Contains(string(fw)) {
+				allFWs.Add(string(fw))
 			}
 		}
 	}
@@ -212,7 +212,7 @@ func computeNearbyFrameworks(failingIDs sets.Set[kernel.ControlID], allControlID
 			if !ok {
 				continue
 			}
-			if _, has := cc[fw]; !has {
+			if _, has := cc[policy.ComplianceFramework(fw)]; !has {
 				continue
 			}
 			total++
@@ -253,7 +253,7 @@ type ComplianceReport struct {
 	Findings             []Finding                    `json:"findings"`
 	Issues               []Issue                      `json:"issues,omitempty"`
 	ChainFindings        []risk.CompoundFinding       `json:"chain_findings,omitempty"`
-	AttackStageSummary   map[string]string            `json:"attack_stage_summary,omitempty"`
+	AttackStageSummary   map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
 	TopExposures         []risk.ExposureRank          `json:"top_exposures,omitempty"`
 	ExceptedFindings     []ExceptedFinding            `json:"excepted_findings,omitempty"`
 	AcknowledgedFindings []policy.AcknowledgedFinding `json:"acknowledged_findings,omitempty"`

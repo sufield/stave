@@ -271,8 +271,8 @@ func TestWriteFindings_ChainMemberProperties(t *testing.T) {
 				ChainMembership: []evaluation.ChainMembershipEntry{
 					{
 						ChainID:       "data_exfiltration_path",
-						ChainSeverity: "critical",
-						StageSpan:     []string{"initial_access", "exfiltration"},
+						ChainSeverity: policy.SeverityCritical,
+						StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"},
 						Narrative:     "Public S3 bucket enables data exfiltration",
 					},
 				},

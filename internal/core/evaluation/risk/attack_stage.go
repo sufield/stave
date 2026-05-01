@@ -9,7 +9,7 @@ import (
 )
 
 // AllAttackStages lists the MITRE ATT&CK-aligned stages that Stave recognizes.
-var AllAttackStages = []string{
+var AllAttackStages = []kernel.AttackStage{
 	"initial_access",
 	"execution",
 	"credential_access",
@@ -32,9 +32,9 @@ var AllAttackStages = []string{
 func BuildAttackStageSummary(
 	failures []FailingControl,
 	lookup map[kernel.ControlID]*policy.ControlDefinition,
-) map[string]string {
+) map[kernel.AttackStage]string {
 	// Track worst severity per stage.
-	worstPerStage := make(map[string]policy.Severity)
+	worstPerStage := make(map[kernel.AttackStage]policy.Severity)
 
 	for i := range failures {
 		cid := failures[i].ControlID
@@ -53,7 +53,7 @@ func BuildAttackStageSummary(
 	}
 
 	// Build summary with all known stages.
-	summary := make(map[string]string, len(AllAttackStages))
+	summary := make(map[kernel.AttackStage]string, len(AllAttackStages))
 	for _, stage := range AllAttackStages {
 		if sev, ok := worstPerStage[stage]; ok {
 			summary[stage] = severityLabel(sev)
@@ -67,25 +67,27 @@ func BuildAttackStageSummary(
 
 // AttackStagesFromFindings extracts the unique, sorted attack stages
 // from a set of compound findings.
-func AttackStagesFromFindings(findings []CompoundFinding) []string {
-	seen := make(map[string]bool)
+func AttackStagesFromFindings(findings []CompoundFinding) []kernel.AttackStage {
+	seen := make(map[kernel.AttackStage]bool)
 	for i := range findings {
 		for _, s := range findings[i].AttackStages {
 			seen[s] = true
 		}
 	}
-	var stages []string
+	stages := make([]kernel.AttackStage, 0, len(seen))
 	for s := range seen {
 		stages = append(stages, s)
 	}
-	slices.Sort(stages)
+	slices.SortFunc(stages, func(a, b kernel.AttackStage) int {
+		return cmp.Compare(string(a), string(b))
+	})
 	return stages
 }
 
 // killChainOrder defines the MITRE ATT&CK-aligned kill chain
 // ordering. Lower index = earlier in the chain. Unrecognized stages
 // sort after all known stages.
-var killChainOrder = map[string]int{
+var killChainOrder = map[kernel.AttackStage]int{
 	"initial_access":       0,
 	"execution":            1,
 	"credential_access":    2,
@@ -102,10 +104,9 @@ var killChainOrder = map[string]int{
 
 // SortStagesByKillChain returns a copy of stages sorted by kill chain
 // order (earliest stage first).
-func SortStagesByKillChain(stages []string) []string {
-	out := make([]string, len(stages))
-	copy(out, stages)
-	slices.SortFunc(out, func(a, b string) int {
+func SortStagesByKillChain(stages []kernel.AttackStage) []kernel.AttackStage {
+	out := slices.Clone(stages)
+	slices.SortFunc(out, func(a, b kernel.AttackStage) int {
 		oa, oka := killChainOrder[a]
 		ob, okb := killChainOrder[b]
 		if !oka {

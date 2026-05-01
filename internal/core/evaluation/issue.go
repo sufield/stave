@@ -25,7 +25,7 @@ type Issue struct {
 	// IssueID is a stable hash over (asset, sorted shared keys,
 	// headline control). The same Issue on the same asset across
 	// runs produces the same ID.
-	IssueID string `json:"issue_id"`
+	IssueID kernel.IssueID `json:"issue_id"`
 
 	// AssetID is the asset the Issue is rooted on. Issues are
 	// strictly per-asset.
@@ -285,7 +285,7 @@ func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue
 	slices.Sort(shared)
 
 	return Issue{
-		IssueID:                 stableIssueID(assetID, shared, findings[headlineIdx].ControlID.String()),
+		IssueID:                 stableIssueID(assetID, shared, findings[headlineIdx].ControlID),
 		AssetID:                 assetID,
 		SharedKeys:              shared,
 		HeadlineFindingID:       findings[headlineIdx].FindingID,
@@ -298,7 +298,7 @@ func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue
 // stableIssueID is a deterministic fingerprint for the Issue's
 // (asset, shared-keys, headline-control) triple. Same inputs on
 // different runs produce the same ID.
-func stableIssueID(assetID asset.ID, sharedKeys []string, headlineControlID string) string {
+func stableIssueID(assetID asset.ID, sharedKeys []string, headlineControlID kernel.ControlID) kernel.IssueID {
 	h := sha256.New()
 	h.Write([]byte("issue:"))
 	h.Write([]byte(assetID))
@@ -309,5 +309,5 @@ func stableIssueID(assetID asset.ID, sharedKeys []string, headlineControlID stri
 	}
 	h.Write([]byte(":"))
 	h.Write([]byte(headlineControlID))
-	return "sha256:" + hex.EncodeToString(h.Sum(nil))[:16]
+	return kernel.IssueID("sha256:" + hex.EncodeToString(h.Sum(nil))[:16])
 }

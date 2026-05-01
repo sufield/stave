@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/sufield/stave/internal/core/kernel"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,9 +24,9 @@ type controlHeader struct {
 // The path is derived from the filesystem walk path. This produces the same
 // data that was previously hand-maintained in the controls: section of
 // index.yaml.
-func DeriveControlRefs(fsys embed.FS, root string) (map[string]ControlRef, error) {
+func DeriveControlRefs(fsys embed.FS, root string) (map[kernel.ControlID]ControlRef, error) {
 	root = path.Clean(strings.TrimSpace(root))
-	refs := make(map[string]ControlRef)
+	refs := make(map[kernel.ControlID]ControlRef)
 
 	err := fs.WalkDir(fsys, root, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -60,7 +61,7 @@ func DeriveControlRefs(fsys embed.FS, root string) (map[string]ControlRef, error
 			return fmt.Errorf("control at %s has empty id field", p)
 		}
 
-		refs[hdr.ID] = ControlRef{
+		refs[kernel.ControlID(hdr.ID)] = ControlRef{
 			Path:    p,
 			Summary: hdr.Name,
 		}

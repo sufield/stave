@@ -35,12 +35,12 @@ func annotateOwners(result *evaluation.ComplianceReport, opts *Options) {
 	}
 
 	// Filter by --owner-filter if set.
-	if opts.OwnerFilter == "" {
+	if len(opts.OwnerFilter) == 0 {
 		return
 	}
 
-	allowed := make(map[string]bool)
-	for id := range strings.SplitSeq(opts.OwnerFilter, ",") {
+	allowed := make(map[string]bool, len(opts.OwnerFilter))
+	for _, id := range opts.OwnerFilter {
 		allowed[strings.TrimSpace(id)] = true
 	}
 

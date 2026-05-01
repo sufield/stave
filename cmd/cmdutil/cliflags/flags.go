@@ -154,8 +154,16 @@ func CollectVisibleFlags(cmd *cobra.Command) []string {
 
 // --- Parsing Helpers ---
 
+// FlagName identifies a CLI flag for error-wrapping. Typed so the
+// (value, flag-name) pair on parsers like ParseDurationFlag and
+// ParseRFC3339 cannot be transposed at the call site — both the
+// raw value and the flag name are short, opaque strings, and the
+// previous (val, flag string) signature made the swap silently
+// compile.
+type FlagName string
+
 // ParseDurationFlag parses a duration flag value and wraps errors with the flag name.
-func ParseDurationFlag(val, flag string) (time.Duration, error) {
+func ParseDurationFlag(val string, flag FlagName) (time.Duration, error) {
 	d, err := kernel.ParseDuration(val)
 	if err != nil {
 		return 0, fmt.Errorf("invalid %s %q (use format: 168h, 7d, or 1d12h)", flag, val)
@@ -164,7 +172,7 @@ func ParseDurationFlag(val, flag string) (time.Duration, error) {
 }
 
 // ParseRFC3339 parses an RFC3339 timestamp with a flag-name error message.
-func ParseRFC3339(raw, flag string) (time.Time, error) {
+func ParseRFC3339(raw string, flag FlagName) (time.Time, error) {
 	t, err := time.Parse(time.RFC3339, raw)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("invalid %s %q (use RFC3339: 2026-01-15T00:00:00Z)", flag, raw)

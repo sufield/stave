@@ -99,7 +99,7 @@ func BuildTrace(
 	tr := &TraceResult{
 		ControlID:  ctl.ID,
 		AssetID:    a.ID,
-		Expression: cp.Expression,
+		Expression: string(cp.Expression),
 		Result:     result,
 	}
 	if evalErr != nil {

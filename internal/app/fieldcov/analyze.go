@@ -11,7 +11,6 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 	"github.com/sufield/stave/internal/util/sets"
 )
@@ -304,12 +303,12 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	}
 
 	// Sort by severity (critical first).
-	sevOrder := kernel.SeverityOrder
+	sevOrder := policy.SeverityOrderOf
 	slices.SortFunc(silentRisk, func(a, b ControlResult) int {
-		return cmp.Compare(sevOrder[a.Severity], sevOrder[b.Severity])
+		return cmp.Compare(sevOrder(a.Severity), sevOrder(b.Severity))
 	})
 	slices.SortFunc(incomplete, func(a, b ControlResult) int {
-		return cmp.Compare(sevOrder[a.Severity], sevOrder[b.Severity])
+		return cmp.Compare(sevOrder(a.Severity), sevOrder(b.Severity))
 	})
 
 	report.SilentRisk = silentRisk
@@ -325,7 +324,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 		r := &combined[i]
 		for _, f := range r.MissingFields {
 			fieldToControls[f] = append(fieldToControls[f], r.ControlID)
-			if sevOrder[r.Severity] < sevOrder[fieldToSeverity[f]] || fieldToSeverity[f] == "" {
+			if sevOrder(r.Severity) < sevOrder(fieldToSeverity[f]) || fieldToSeverity[f] == "" {
 				fieldToSeverity[f] = r.Severity
 			}
 		}
@@ -345,7 +344,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	for at := range report.ShoppingList {
 		items := report.ShoppingList[at]
 		slices.SortFunc(items, func(a, b ShoppingItem) int {
-			return cmp.Compare(sevOrder[a.MaxSeverity], sevOrder[b.MaxSeverity])
+			return cmp.Compare(sevOrder(a.MaxSeverity), sevOrder(b.MaxSeverity))
 		})
 		report.ShoppingList[at] = items
 	}

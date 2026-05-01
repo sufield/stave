@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 )
@@ -29,7 +30,7 @@ func TestCalculateReadiness_EmptyFrameworks(t *testing.T) {
 
 func TestCalculateReadiness_AllPassing(t *testing.T) {
 	allControls := []kernel.ControlID{"CTL.A.001", "CTL.B.001"}
-	compliance := map[kernel.ControlID]map[string]string{
+	compliance := map[kernel.ControlID]map[policy.ComplianceFramework]string{
 		"CTL.A.001": {"hipaa": "164.312"},
 		"CTL.B.001": {"hipaa": "164.308"},
 	}
@@ -56,7 +57,7 @@ func TestCalculateReadiness_AllPassing(t *testing.T) {
 
 func TestCalculateReadiness_SomeFailing(t *testing.T) {
 	allControls := []kernel.ControlID{"CTL.A.001", "CTL.B.001", "CTL.C.001"}
-	compliance := map[kernel.ControlID]map[string]string{
+	compliance := map[kernel.ControlID]map[policy.ComplianceFramework]string{
 		"CTL.A.001": {"hipaa": "164.312"},
 		"CTL.B.001": {"hipaa": "164.308"},
 		"CTL.C.001": {"hipaa": "164.310"},
@@ -77,7 +78,7 @@ func TestCalculateReadiness_SomeFailing(t *testing.T) {
 func TestCalculateReadiness_ZeroControlsInFramework(t *testing.T) {
 	// Controls exist but none mapped to the requested framework.
 	allControls := []kernel.ControlID{"CTL.A.001"}
-	compliance := map[kernel.ControlID]map[string]string{
+	compliance := map[kernel.ControlID]map[policy.ComplianceFramework]string{
 		"CTL.A.001": {"soc2": "CC6.1"},
 	}
 	r := makeReportWithFindings()
@@ -97,7 +98,7 @@ func TestCalculateReadiness_ZeroControlsInFramework(t *testing.T) {
 
 func TestCalculateReadiness_SuperFix(t *testing.T) {
 	allControls := []kernel.ControlID{"CTL.A.001", "CTL.B.001"}
-	compliance := map[kernel.ControlID]map[string]string{
+	compliance := map[kernel.ControlID]map[policy.ComplianceFramework]string{
 		// CTL.A.001 covers both frameworks — should be the super fix.
 		"CTL.A.001": {"hipaa": "164.312", "soc2": "CC6.1"},
 		"CTL.B.001": {"hipaa": "164.308"},
@@ -119,7 +120,7 @@ func TestCalculateReadiness_SuperFix(t *testing.T) {
 
 func TestCalculateReadiness_SuperFix_NoFailingControls(t *testing.T) {
 	allControls := []kernel.ControlID{"CTL.A.001"}
-	compliance := map[kernel.ControlID]map[string]string{
+	compliance := map[kernel.ControlID]map[policy.ComplianceFramework]string{
 		"CTL.A.001": {"hipaa": "164.312"},
 	}
 	r := makeReportWithFindings() // All passing.
@@ -137,7 +138,7 @@ func TestCalculateReadiness_NearbyFrameworks(t *testing.T) {
 	// CTL.B covers only hipaa.
 	// Both are passing, so soc2 readiness would be 100% → it should appear as nearby.
 	allControls := []kernel.ControlID{"CTL.A.001", "CTL.B.001"}
-	compliance := map[kernel.ControlID]map[string]string{
+	compliance := map[kernel.ControlID]map[policy.ComplianceFramework]string{
 		"CTL.A.001": {"hipaa": "164.312", "soc2": "CC6.1"},
 		"CTL.B.001": {"hipaa": "164.308"},
 	}
@@ -164,7 +165,7 @@ func TestCalculateReadiness_NearbyFrameworks(t *testing.T) {
 func TestCalculateReadiness_NearbyFrameworks_LowReadinessExcluded(t *testing.T) {
 	// All controls failing → nearby framework with 0% should NOT appear.
 	allControls := []kernel.ControlID{"CTL.A.001", "CTL.B.001", "CTL.C.001", "CTL.D.001", "CTL.E.001"}
-	compliance := map[kernel.ControlID]map[string]string{
+	compliance := map[kernel.ControlID]map[policy.ComplianceFramework]string{
 		"CTL.A.001": {"hipaa": "1", "soc2": "A"},
 		"CTL.B.001": {"hipaa": "2", "soc2": "B"},
 		"CTL.C.001": {"soc2": "C"},

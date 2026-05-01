@@ -94,7 +94,7 @@ func gatherUpcomingConfig(in upcomingConfigInput) (resolvedConfig, error) {
 	}, nil
 }
 
-func parsePositiveDuration(raw, flag string) (time.Duration, error) {
+func parsePositiveDuration(raw string, flag cliflags.FlagName) (time.Duration, error) {
 	raw = strings.TrimSpace(raw)
 	dur, err := cliflags.ParseDurationFlag(raw, flag)
 	if err != nil {

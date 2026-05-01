@@ -31,7 +31,7 @@ func TestParseDurationFlag(t *testing.T) {
 	tests := []struct {
 		name    string
 		val     string
-		flag    string
+		flag    FlagName
 		want    time.Duration
 		wantErr string
 	}{

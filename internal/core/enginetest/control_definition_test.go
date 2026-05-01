@@ -234,7 +234,7 @@ func validControlForValidationTests() policy.ControlDefinition {
 	}
 }
 
-func assertIssueCodeAndSignal(t *testing.T, issue diag.Finding, wantCode diag.RuleID, wantSignal diag.Severity) {
+func assertIssueCodeAndSignal(t *testing.T, issue diag.Finding, wantCode diag.RuleID, wantSignal diag.DiagLevel) {
 	t.Helper()
 	if issue.RuleID != wantCode {
 		t.Fatalf("issue code = %q, want %q", issue.RuleID, wantCode)

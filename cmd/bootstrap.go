@@ -280,12 +280,12 @@ func (a *App) initLogger() error {
 
 	// Determine log level
 	if a.Flags.LogLevel != "" {
-		cfg.Level = logging.ParseLevel(a.Flags.LogLevel)
+		cfg.Level = logging.ParseLevel(string(a.Flags.LogLevel))
 	} else {
 		cfg.Level = logging.LevelFromVerbosity(a.Flags.Verbosity)
 	}
 
-	cfg.Format = logging.ParseFormat(a.Flags.LogFormat)
+	cfg.Format = logging.ParseFormat(string(a.Flags.LogFormat))
 	cfg.LogFile = fsutil.CleanUserPath(a.Flags.LogFile)
 	cfg.Timestamps = a.Flags.LogTimestamps
 	cfg.Timings = a.Flags.LogTimings

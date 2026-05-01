@@ -58,26 +58,18 @@ func BuildLifecyclesPerControl(
 // "value receiver makes copies" — the cache map is a reference
 // type, so copies still share state.
 type controlVendorIndex struct {
-	stringTags [][]string                            // per-control pre-stringified scope tags
-	cache      map[string][]policy.ControlDefinition // vendor → cached result
+	scopeTags [][]kernel.ScopeTag                          // per-control scope tags
+	cache     map[kernel.Vendor][]policy.ControlDefinition // vendor → cached result
 }
 
 func buildControlVendorIndex(controls []policy.ControlDefinition) *controlVendorIndex {
-	stringTags := make([][]string, len(controls))
+	tagsPerCtl := make([][]kernel.ScopeTag, len(controls))
 	for i := range controls {
-		tags := controls[i].ScopeTags
-		if len(tags) == 0 {
-			continue
-		}
-		s := make([]string, len(tags))
-		for j, t := range tags {
-			s[j] = string(t)
-		}
-		stringTags[i] = s
+		tagsPerCtl[i] = controls[i].ScopeTags
 	}
 	return &controlVendorIndex{
-		stringTags: stringTags,
-		cache:      make(map[string][]policy.ControlDefinition),
+		scopeTags: tagsPerCtl,
+		cache:     make(map[kernel.Vendor][]policy.ControlDefinition),
 	}
 }
 
@@ -87,23 +79,21 @@ func buildControlVendorIndex(controls []policy.ControlDefinition) *controlVendor
 // though they read as a per-call mutation. Pointer makes the
 // shared-state contract explicit.
 func (idx *controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.ControlDefinition) []policy.ControlDefinition {
-	vendorStr := string(vendor)
-
 	// Return cached result if available — avoids per-asset
 	// re-evaluation of the heuristic.
-	if cached, ok := idx.cache[vendorStr]; ok {
+	if cached, ok := idx.cache[vendor]; ok {
 		return cached
 	}
 
 	var result []policy.ControlDefinition
 	for i := range all {
-		if kernel.AppliesToVendor(idx.stringTags[i], vendorStr) {
+		if kernel.AppliesToVendor(idx.scopeTags[i], vendor) {
 			result = append(result, all[i])
 		}
 	}
 
 	if idx.cache != nil {
-		idx.cache[vendorStr] = result
+		idx.cache[vendor] = result
 	}
 	return result
 }

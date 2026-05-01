@@ -125,8 +125,8 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 				AssetType: "aws_s3_bucket", AssetVendor: "aws", ControlSeverity: policy.SeverityCritical,
 				ControlCompliance: policy.ComplianceMapping{"hipaa": "164.312(a)(1)"},
 				ChainMembership: []evaluation.ChainMembershipEntry{
-					{ChainID: "data_exfiltration_path", ChainSeverity: "critical",
-						StageSpan: []string{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
+					{ChainID: "data_exfiltration_path", ChainSeverity: policy.SeverityCritical,
+						StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
 				},
 			},
 		},
@@ -136,8 +136,8 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 				ControlName: "KMS Key Rotation", AssetID: "arn:aws:kms::111111111111:key/acme-phi-key",
 				AssetType: "aws_kms_key", AssetVendor: "aws", ControlSeverity: policy.SeverityHigh,
 				ChainMembership: []evaluation.ChainMembershipEntry{
-					{ChainID: "data_exfiltration_path", ChainSeverity: "critical",
-						StageSpan: []string{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
+					{ChainID: "data_exfiltration_path", ChainSeverity: policy.SeverityCritical,
+						StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
 				},
 			},
 		},
@@ -147,8 +147,8 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 				ControlName: "CloudTrail Enabled", AssetID: "arn:aws:cloudtrail:us-east-1:111111111111:trail/acme-main",
 				AssetType: "aws_cloudtrail_trail", AssetVendor: "aws", ControlSeverity: policy.SeverityHigh,
 				ChainMembership: []evaluation.ChainMembershipEntry{
-					{ChainID: "data_exfiltration_path", ChainSeverity: "critical",
-						StageSpan: []string{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
+					{ChainID: "data_exfiltration_path", ChainSeverity: policy.SeverityCritical,
+						StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
 				},
 			},
 		},
@@ -158,7 +158,7 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 		{
 			ChainID: "data_exfiltration_path", Description: "PHI data exfiltration path",
 			ControlsFailing: []kernel.ControlID{"CTL.S3.PUBLIC.001", "CTL.KMS.ROTATION.001", "CTL.CLOUDTRAIL.ENABLED.001"},
-			Severity:        policy.SeverityCritical, AttackStages: []string{"initial_access", "exfiltration"},
+			Severity:        policy.SeverityCritical, AttackStages: []kernel.AttackStage{"initial_access", "exfiltration"},
 		},
 	}
 
@@ -241,7 +241,7 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 	// No duplicate edges.
 	seen := make(map[string]bool)
 	for _, e := range g.Edges {
-		key := e.From + "|" + e.To + "|" + e.Type
+		key := e.From + "|" + e.To + "|" + string(e.Type)
 		if seen[key] {
 			t.Errorf("duplicate edge: %s -> %s (%s)", e.From, e.To, e.Type)
 		}
@@ -405,7 +405,7 @@ func TestExperiment09_JSONRoundTrip(t *testing.T) {
 
 // --- Helpers ---
 
-func findNode(nodes []Node, nodeType string) *Node {
+func findNode(nodes []Node, nodeType NodeType) *Node {
 	for i := range nodes {
 		if nodes[i].Type == nodeType {
 			return &nodes[i]
@@ -414,7 +414,7 @@ func findNode(nodes []Node, nodeType string) *Node {
 	return nil
 }
 
-func filterNodes(nodes []Node, nodeType string) []Node {
+func filterNodes(nodes []Node, nodeType NodeType) []Node {
 	var out []Node
 	for _, n := range nodes {
 		if n.Type == nodeType {
@@ -424,7 +424,7 @@ func filterNodes(nodes []Node, nodeType string) []Node {
 	return out
 }
 
-func filterEdges(edges []Edge, edgeType string) []Edge {
+func filterEdges(edges []Edge, edgeType EdgeType) []Edge {
 	var out []Edge
 	for _, e := range edges {
 		if e.Type == edgeType {

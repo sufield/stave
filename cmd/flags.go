@@ -22,8 +22,9 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 
 	// Logging
 	p.CountVarP(&flags.Verbosity, "verbose", "v", "Increase verbosity (-v=INFO, -vv=DEBUG)")
-	p.StringVar(&flags.LogLevel, "log-level", "", "Log level: debug|info|warn|error (overrides -v)")
-	p.StringVar(&flags.LogFormat, "log-format", "text", "Log format: text|json")
+	p.Var(&flags.LogLevel, "log-level", "Log level: debug|info|warn|error (overrides -v)")
+	flags.LogFormat = "text"
+	p.Var(&flags.LogFormat, "log-format", "Log format: text|json")
 	p.StringVar(&flags.LogFile, cliflags.FlagLogFile, "", "Write logs to file (default: stderr)")
 	p.BoolVar(&flags.LogTimestamps, "log-timestamps", false, "Include timestamps in logs (breaks determinism)")
 	p.BoolVar(&flags.LogTimings, "log-timings", false, "Include timing information (breaks determinism)")

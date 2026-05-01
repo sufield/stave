@@ -33,14 +33,14 @@ import (
 type options struct {
 	SnapshotPath string
 	ProfileID    string
-	Format       string
+	Format       appcontracts.OutputFormat
 	OutputPath   string
 }
 
 // NewCmd constructs the evaluate command.
 func NewCmd() *cobra.Command {
 	opts := &options{
-		Format: "text",
+		Format: appcontracts.FormatText,
 	}
 
 	cmd := &cobra.Command{
@@ -72,7 +72,7 @@ Exit Codes:
 
 	cmd.Flags().StringVar(&opts.SnapshotPath, "snapshot", "", "Path to observation snapshot JSON (required)")
 	cmd.Flags().StringVar(&opts.ProfileID, "profile", "", "Compliance profile ID (required)")
-	cmd.Flags().StringVarP(&opts.Format, "format", "f", opts.Format, "Output format: text or json")
+	cmd.Flags().VarP(&opts.Format, "format", "f", "Output format: text or json")
 	cmd.Flags().StringVarP(&opts.OutputPath, "output", "o", "", "Output file path (default: stdout)")
 
 	_ = cmd.MarkFlagRequired("snapshot")
@@ -210,7 +210,7 @@ func run(w io.Writer, opts *options) error {
 	}
 
 	// Select reporter.
-	format, fmtErr := ui.ParseOutputFormat(opts.Format)
+	format, fmtErr := ui.ParseOutputFormat(string(opts.Format))
 	if fmtErr != nil {
 		return fmtErr
 	}

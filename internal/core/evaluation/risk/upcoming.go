@@ -262,17 +262,14 @@ func computeAssetStates(
 	// per-asset loop. Vendor applicability flows through the
 	// shared helper kernel.AppliesToVendor — the single source
 	// of truth shared with engine/lifecycles.go.
-	ctlTags := make([]string, len(ctl.ScopeTags))
-	for i, t := range ctl.ScopeTags {
-		ctlTags[i] = string(t)
-	}
+	ctlTags := slices.Clone(ctl.ScopeTags)
 
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
 			// Vendor applicability filter — a control scoped to
 			// one vendor must not produce risk signals against
 			// assets of another vendor.
-			if !kernel.AppliesToVendor(ctlTags, string(a.Vendor)) {
+			if !kernel.AppliesToVendor(ctlTags, a.Vendor) {
 				continue
 			}
 

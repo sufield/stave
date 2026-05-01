@@ -13,6 +13,8 @@ import (
 	"github.com/sufield/stave/internal/app/exemptlapse"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // executeEvaluation builds dependencies, runs the evaluation, and writes output.
@@ -54,7 +56,7 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 
 	// Export logic trace if enabled.
 	if tracer != nil {
-		lt := tracer.Finalize("", deps.Config.BuildVersion, nil)
+		lt := tracer.Finalize(ports.FinalizeArgs{StaveVersion: deps.Config.BuildVersion})
 		if writeErr := telemetry.WriteTraceFile(lt, tracePath); writeErr != nil {
 			slog.Warn("failed to write logic trace", "path", tracePath, "error", writeErr)
 		}
@@ -104,7 +106,7 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 		f := &result.Findings[i]
 		if f.SLABreached {
 			evalResult.HasSLABreach = true
-			if f.ControlSeverity.String() == "critical" || f.SLAEscalatedSeverity == "critical" {
+			if f.ControlSeverity == policy.SeverityCritical || f.SLAEscalatedSeverity == policy.SeverityCritical {
 				evalResult.HasCriticalSLABreach = true
 			}
 		}

@@ -22,7 +22,7 @@ func TestAnnotateChainMembership_SingleChain(t *testing.T) {
 				Description:     "Test chain fires",
 				ControlsFailing: []kernel.ControlID{"CTL.A", "CTL.B"},
 				Severity:        policy.SeverityCritical,
-				AttackStages:    []string{"exfiltration", "initial_access"},
+				AttackStages: []kernel.AttackStage{"exfiltration", "initial_access"},
 			},
 		},
 	}
@@ -37,8 +37,8 @@ func TestAnnotateChainMembership_SingleChain(t *testing.T) {
 	if cm.ChainID != "test_chain" {
 		t.Errorf("ChainID = %q, want test_chain", cm.ChainID)
 	}
-	if cm.ChainSeverity != "critical" {
-		t.Errorf("ChainSeverity = %q, want critical", cm.ChainSeverity)
+	if cm.ChainSeverity != policy.SeverityCritical {
+		t.Errorf("ChainSeverity = %v, want critical", cm.ChainSeverity)
 	}
 	// StageSpan should be sorted by kill chain order.
 	if len(cm.StageSpan) != 2 || cm.StageSpan[0] != "initial_access" || cm.StageSpan[1] != "exfiltration" {
@@ -68,14 +68,14 @@ func TestAnnotateChainMembership_MultipleChains(t *testing.T) {
 				Description:     "Chain A",
 				ControlsFailing: []kernel.ControlID{"CTL.SHARED", "CTL.ONLY_A"},
 				Severity:        policy.SeverityCritical,
-				AttackStages:    []string{"initial_access"},
+				AttackStages: []kernel.AttackStage{"initial_access"},
 			},
 			{
 				ChainID:         "chain_b",
 				Description:     "Chain B",
 				ControlsFailing: []kernel.ControlID{"CTL.SHARED"},
 				Severity:        policy.SeverityHigh,
-				AttackStages:    []string{"exfiltration"},
+				AttackStages: []kernel.AttackStage{"exfiltration"},
 			},
 		},
 	}

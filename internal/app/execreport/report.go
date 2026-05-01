@@ -28,13 +28,24 @@ type Report struct {
 	ExecutiveSummary ExecutiveSummary      `json:"executive_summary"`
 }
 
+// Trajectory classifies the recent posture-score movement. The
+// closed vocabulary lets renderers and downstream alerting compare
+// against named constants instead of repeating string literals.
+type Trajectory string
+
+const (
+	TrajectoryStable     Trajectory = "STABLE"
+	TrajectoryImproving  Trajectory = "IMPROVING"
+	TrajectoryRegressing Trajectory = "REGRESSING"
+)
+
 // PostureSection holds posture score data.
 type PostureSection struct {
 	Score           float64            `json:"score"`
 	Band            string             `json:"band"`
 	BandDescription string             `json:"band_description"`
 	Delta30d        float64            `json:"delta_30d"`
-	Trajectory      string             `json:"trajectory"`
+	Trajectory      Trajectory         `json:"trajectory"`
 	Dimensions      map[string]float64 `json:"dimensions,omitempty"`
 	Sparkline       []float64          `json:"sparkline,omitempty"`
 }
@@ -122,7 +133,7 @@ type TeamSection struct {
 	ID           string  `json:"id"`
 	Name         string  `json:"name"`
 	Score        float64 `json:"posture_score"`
-	Trajectory   string  `json:"trajectory"`
+	Trajectory   Trajectory `json:"trajectory"`
 	OpenFindings int     `json:"open_findings"`
 	CriticalOpen int     `json:"critical_open"`
 	SLACompPct   float64 `json:"sla_compliance_pct"`

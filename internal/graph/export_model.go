@@ -2,6 +2,8 @@ package graph
 
 import (
 	"strings"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // ontologyBaseIRI is the namespace IRI all Stave-coined classes and
@@ -17,12 +19,17 @@ const resourceBaseIRI = "urn:stave:"
 // Severity → numeric weight. Used by GDS algorithms (centrality,
 // shortest path, influence propagation) that need a scalar edge
 // weight rather than a categorical label. Higher = more dangerous.
-var severityWeights = map[string]float64{
-	"critical": 10.0,
-	"high":     7.0,
-	"medium":   4.0,
-	"low":      1.0,
-	"none":     0.0,
+//
+// Independent from policy.SeverityWeight: graph algorithms want a
+// wider spread (10/7/4/1) than the risk-scoring weights (4/3/2/1)
+// so shortest-path differences between severities aren't lost in
+// integer rounding.
+var severityWeights = map[policy.Severity]float64{
+	policy.SeverityCritical: 10.0,
+	policy.SeverityHigh:     7.0,
+	policy.SeverityMedium:   4.0,
+	policy.SeverityLow:      1.0,
+	policy.SeverityNone:     0.0,
 }
 
 // SeverityWeight returns the GDS-friendly numeric weight for a
@@ -30,10 +37,11 @@ var severityWeights = map[string]float64{
 // algorithm running over the graph treats them as non-edges of the
 // weighted view rather than throwing.
 func SeverityWeight(severity string) float64 {
-	if w, ok := severityWeights[strings.ToLower(severity)]; ok {
-		return w
+	parsed, err := policy.ParseSeverity(strings.ToLower(severity))
+	if err != nil {
+		return 0.0
 	}
-	return 0.0
+	return severityWeights[parsed]
 }
 
 // RDFNode is the export-shaped representation of a graph node. The
@@ -204,7 +212,7 @@ const (
 // Single source of truth: changing the wire name on the internal
 // graph requires a one-line change here. Edges whose wire name is
 // not in this table are dropped from the RDF export and logged.
-var wireToPredicate = map[string]string{
+var wireToPredicate = map[EdgeType]string{
 	"TARGETS":  predTargets,
 	"VIOLATES": predViolatesRequirement,
 	// VIOLATES_INVARIANT names the edge from a finding to the

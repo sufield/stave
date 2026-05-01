@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -71,7 +72,7 @@ func AnalyzeParity(input ParityInput) *ParityResult {
 	var consistentFail, prodRegression, envHardening, mixed []ParityItem
 	consistentPassCount := 0
 
-	sevOrder := kernel.SeverityOrder
+	sevOrder := policy.SeverityOrderOf
 
 	for cid, sev := range allControls {
 		perEnv := make(map[string]string)
@@ -120,8 +121,8 @@ func AnalyzeParity(input ParityInput) *ParityResult {
 	// Sort by severity.
 	sortBySev := func(items []ParityItem) {
 		sort.Slice(items, func(i, j int) bool {
-			si := sevOrder[strings.ToLower(items[i].Severity)]
-			sj := sevOrder[strings.ToLower(items[j].Severity)]
+			si := sevOrder(strings.ToLower(items[i].Severity))
+			sj := sevOrder(strings.ToLower(items[j].Severity))
 			if si != sj {
 				return si < sj
 			}

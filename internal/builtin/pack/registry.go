@@ -58,10 +58,12 @@ type Index struct {
 	packs     map[string]Pack
 	packNames []string
 	// controls preserves the raw control metadata from the index.
-	controls map[string]ControlRef
+	controls map[kernel.ControlID]ControlRef
 }
 
 // testRegistryIndex is the legacy inline format used by unit tests.
+// YAML keys are still parsed as strings; conversion to kernel.ControlID
+// happens once after unmarshal.
 type testRegistryIndex struct {
 	Version  string                `yaml:"version"`
 	Packs    map[string]packSpec   `yaml:"packs"`
@@ -80,11 +82,11 @@ func NewIndex(data []byte) (*Index, error) {
 		version:   strings.TrimSpace(idx.Version),
 		hash:      crypto.HashBytes(data),
 		packs:     make(map[string]Pack, len(idx.Packs)),
-		controls:  idx.Controls,
+		controls:  make(map[kernel.ControlID]ControlRef, len(idx.Controls)),
 		packNames: make([]string, 0, len(idx.Packs)),
 	}
-	if r.controls == nil {
-		r.controls = map[string]ControlRef{}
+	for k, v := range idx.Controls {
+		r.controls[kernel.ControlID(k)] = v
 	}
 
 	specs := make(map[string]packSpec, len(idx.Packs))
@@ -125,7 +127,7 @@ func (r *Index) loadPacks(specs map[string]packSpec) error {
 		slices.Sort(ids)
 
 		for _, id := range ids {
-			if _, ok := r.controls[string(id)]; !ok {
+			if _, ok := r.controls[id]; !ok {
 				return fmt.Errorf("pack %q: undefined control %q", name, id)
 			}
 		}
@@ -208,7 +210,7 @@ func (r *Index) RegistryHash() (string, error) {
 }
 
 // ControlRefs returns the raw control metadata map.
-func (r *Index) ControlRefs() map[string]ControlRef {
+func (r *Index) ControlRefs() map[kernel.ControlID]ControlRef {
 	return maps.Clone(r.controls)
 }
 
@@ -268,7 +270,7 @@ func NewEmbeddedRegistry() (*Index, error) {
 	r := &Index{
 		version:   strings.TrimSpace(manifest.Version),
 		packs:     make(map[string]Pack, len(manifest.Packs)),
-		controls:  map[string]ControlRef{},
+		controls:  map[kernel.ControlID]ControlRef{},
 		packNames: make([]string, 0, len(manifest.Packs)),
 	}
 

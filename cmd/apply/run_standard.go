@@ -113,7 +113,7 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 		if err := gate.ReportApply(results, evaluation.EnforcementPolicy{}); err != nil {
 			return err
 		}
-		return checkSLAPolicy(sio.Stderr, opts.SLAPolicy, results, sio.Quiet)
+		return checkSLAPolicy(sio.Stderr, SLAPolicy(opts.SLAPolicy), results, sio.Quiet)
 	}
 
 	rep := &Reporter{Stdout: sio.Stdout, Stderr: sio.Stderr, Runtime: rt, Quiet: sio.Quiet}
@@ -122,5 +122,5 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 	}
 
 	// SLA policy exit code: check after normal evaluation reporting.
-	return checkSLAPolicy(sio.Stderr, opts.SLAPolicy, results, sio.Quiet)
+	return checkSLAPolicy(sio.Stderr, SLAPolicy(opts.SLAPolicy), results, sio.Quiet)
 }

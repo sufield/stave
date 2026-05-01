@@ -18,7 +18,7 @@ func ResolveDryRun(o *Options, cs cobraState) (ReadinessConfig, error) {
 		ObsChanged:                 o.obsSet || o.ObservationsDir == "-",
 		MaxUnsafeDuration:          o.MaxUnsafeDuration,
 		NowTime:                    o.NowTime,
-		Format:                     o.Format,
+		Format:                     string(o.Format),
 		FormatChanged:              o.formatSet,
 		SkipControlsValidation:     true,
 		SkipObservationsValidation: true,

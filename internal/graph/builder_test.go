@@ -53,7 +53,7 @@ func TestBuild_FindingsProduceCorrectNodes(t *testing.T) {
 	}
 
 	// Check node types.
-	wantTypes := map[string]int{
+	wantTypes := map[NodeType]int{
 		"Finding": 1, "Resource": 1, "Control": 1,
 		"ComplianceRequirement": 1, "TenantScope": 1, "RemediationAction": 1,
 	}
@@ -105,7 +105,7 @@ func TestBuild_ChainsProduceCorrectNodes(t *testing.T) {
 			Description:     "Multiple detection controls disabled",
 			ControlsFailing: []kernel.ControlID{"CTL.S3.PUBLIC.001", "CTL.CLOUDTRAIL.ENABLED.001"},
 			Severity:        policy.SeverityCritical,
-			AttackStages:    []string{"initial_access", "detection_evasion"},
+			AttackStages: []kernel.AttackStage{"initial_access", "detection_evasion"},
 		},
 	}
 

@@ -26,8 +26,8 @@ type globalFlagsType struct {
 	Quiet           bool   // suppress non-essential output
 	Yes             bool   // auto-confirm all interactive prompts
 	Verbosity       int    // -v count (0=WARN, 1=INFO, 2+=DEBUG)
-	LogLevel        string // explicit log level override
-	LogFormat       string // "text" or "json"
+	LogLevel        logging.LevelFlag // explicit log level override
+	LogFormat       logging.Format    // "text" or "json"
 	LogFile         string // optional log file path
 	LogTimestamps   bool   // enable timestamps (breaks determinism)
 	LogTimings      bool   // enable timing logs (breaks determinism)

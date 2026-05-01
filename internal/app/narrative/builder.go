@@ -90,7 +90,7 @@ func BuildPlaybook(input *Input) Playbook {
 
 	// Attack stage.
 	if input.Control != nil {
-		pb.Narrative.AttackStage = input.Control.AttackStage()
+		pb.Narrative.AttackStage = string(input.Control.AttackStage())
 	}
 
 	// Section 3: Current state from changes.
@@ -116,7 +116,7 @@ func buildWhySection(f *remediation.Finding, ctl *policy.ControlDefinition) stri
 
 	if ctl != nil {
 		if stage := ctl.AttackStage(); stage != "" {
-			parts = append(parts, "Attack stage: "+strings.ToUpper(stage))
+			parts = append(parts, "Attack stage: "+strings.ToUpper(string(stage)))
 		}
 	}
 

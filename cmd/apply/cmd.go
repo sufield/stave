@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
+	"github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -15,7 +16,7 @@ import (
 // variables when the user did not set them explicitly on the command line.
 // Precedence: CLI flag > env var > config file > default.
 func (o *Options) resolveEnvVarDefaults(cmd *cobra.Command) {
-	o.Format = cliflags.ResolveFormatEnv(cmd, o.Format)
+	o.Format = contracts.OutputFormat(cliflags.ResolveFormatEnv(cmd, string(o.Format)))
 	o.ControlsDir = cliflags.ResolveControlsEnv(cmd, o.ControlsDir)
 	o.ObservationsDir = cliflags.ResolveObservationsEnv(cmd, o.ObservationsDir)
 	o.NowTime = cliflags.ResolveNowEnv(cmd, o.NowTime)
@@ -40,7 +41,7 @@ type SharedOptions struct {
 	ObservationsDir   string
 	MaxUnsafeDuration string
 	NowTime           string
-	Format            string
+	Format            contracts.OutputFormat
 
 	// controlsSet / formatSet / obsSet track whether the respective
 	// flag was explicitly set by the user. All three are derived
@@ -51,14 +52,15 @@ type SharedOptions struct {
 	obsSet      bool
 }
 
-func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat string) {
+func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat contracts.OutputFormat) {
 	f := cmd.Flags()
 	cliflags.RegisterControlsFlag(cmd, &o.ControlsDir, cliflags.DefaultControlsDir, "Path to control definitions directory")
 
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
-	f.StringVarP(&o.Format, "format", "f", defaultFormat, "Output format (text, json, or sarif)")
+	o.Format = defaultFormat
+	f.VarP(&o.Format, "format", "f", "Output format (text, json, or sarif)")
 }
 
 func (o *SharedOptions) normalize() {
@@ -84,7 +86,7 @@ type Options struct {
 	SLAProfileFile     string
 	SLAPolicy          string
 	TeamManifest       string
-	OwnerFilter        string
+	OwnerFilter        []string
 	ProfileFiles       []string
 	OverlayPath        string
 	ShowSuppressed     bool
@@ -188,7 +190,7 @@ Remediation scope:
 	}
 
 	cmd.Flags().BoolVar(&opts.DryRun, "dry-run", false, "Run readiness checks only, without evaluating controls")
-	opts.bindCommon(cmd, "json")
+	opts.bindCommon(cmd, contracts.FormatJSON)
 	opts.bindApplySpecific(cmd)
 	opts.markMutuallyExclusive(cmd)
 	// Completion registration is best-effort — if it fails, help output
@@ -218,7 +220,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringVar(&o.SLAProfileFile, "sla-profile-file", "", "path to custom SLA policy YAML file")
 	f.StringVar(&o.SLAPolicy, "sla-policy", "warn", "SLA breach exit code behavior: warn, strict, critical-only")
 	f.StringVar(&o.TeamManifest, "team-manifest", "", "Path to stave-teams.yaml for owner routing")
-	f.StringVar(&o.OwnerFilter, "owner-filter", "", "Comma-separated team IDs to filter findings")
+	f.StringSliceVar(&o.OwnerFilter, "owner-filter", nil, "Team IDs to filter findings (repeatable or comma-separated)")
 	f.StringVar(&o.HistoryDir, "history", "", "Directory of historical assessment JSON files (for --new-only)")
 	f.BoolVar(&o.NewOnly, "new-only", false, "Show only findings not present in previous assessment")
 	f.StringVar(&o.NewSince, "new-since", "", "Show only findings not present in assessments within this window (e.g. 7d)")

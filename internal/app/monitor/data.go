@@ -7,8 +7,8 @@ import (
 	"slices"
 
 	appscore "github.com/sufield/stave/internal/app/score"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -191,11 +191,17 @@ func rankFindings(findings []remediation.Finding, n int) []TopFinding {
 		idx   int
 		score float64
 	}
-	sevWeight := kernel.SeverityWeight
 	var items []ranked
 	for i := range findings {
 		f := &findings[i]
-		w := sevWeight[f.ControlSeverity.String()]
+		w, ok := policy.SeverityWeight[f.ControlSeverity]
+		if !ok {
+			// Unrecognized severity (e.g. SeverityNone, SeverityInfo)
+			// drops to the lowest non-zero rank rather than 0,
+			// which would zero out burnRate's contribution and let
+			// SLA-overdue findings rank below scored ones.
+			w = 1.0
+		}
 		burnRate := 0.0
 		if f.SLADeadlineHours != nil && *f.SLADeadlineHours > 0 {
 			burnRate = f.Evidence.UnsafeDurationHours / *f.SLADeadlineHours

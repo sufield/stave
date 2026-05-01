@@ -9,7 +9,6 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Result holds the gap analysis output.
@@ -109,7 +108,7 @@ func Analyze(input Input) *Result {
 	// from framework metadata — approximate from what we can see.
 
 	var shared, targetOnly, baselineOnly []CompareItem
-	sevOrder := kernel.SeverityOrder
+	sevOrder := policy.SeverityOrderOf
 
 	for cid, c := range controlMap {
 		item := CompareItem{
@@ -137,8 +136,8 @@ func Analyze(input Input) *Result {
 	// Sort: shared by severity, target-only by severity.
 	sortBySeverity := func(items []CompareItem) {
 		sort.Slice(items, func(i, j int) bool {
-			si := sevOrder[strings.ToLower(items[i].Severity)]
-			sj := sevOrder[strings.ToLower(items[j].Severity)]
+			si := sevOrder(strings.ToLower(items[i].Severity))
+			sj := sevOrder(strings.ToLower(items[j].Severity))
 			if si != sj {
 				return si < sj
 			}

@@ -264,8 +264,8 @@ func (d *ControlDefinition) BaseImpact() int {
 // Read from params.attack_stage. Defaults to "".
 // Values: initial_access, credential_access, persistence, exfiltration,
 // detection_evasion, resilience.
-func (d *ControlDefinition) AttackStage() string {
-	return getParam[string](d.Params.m, "attack_stage")
+func (d *ControlDefinition) AttackStage() kernel.AttackStage {
+	return kernel.AttackStage(getParam[string](d.Params.m, "attack_stage"))
 }
 
 // ChainIDs returns the chain definition IDs this control participates in.
@@ -297,7 +297,7 @@ func (d *ControlDefinition) ChainIDs() []kernel.ChainID {
 
 // BlastRadiusType returns the blast radius category (detection, prevention, recovery).
 // Read from params.blast_radius.type. Defaults to "".
-func (d *ControlDefinition) BlastRadiusType() string {
+func (d *ControlDefinition) BlastRadiusType() kernel.BlastRadiusType {
 	raw, ok := d.Params.Get("blast_radius")
 	if !ok {
 		return ""
@@ -306,7 +306,7 @@ func (d *ControlDefinition) BlastRadiusType() string {
 	if !ok {
 		return ""
 	}
-	return getParam[string](m, "type")
+	return kernel.BlastRadiusType(getParam[string](m, "type"))
 }
 
 // BlastMultiplier returns the blast radius multiplier.
@@ -334,18 +334,18 @@ func (d *ControlDefinition) BlastMultiplier() float64 {
 // Account scope means disabling this control blinds the entire account.
 // Network scope means it affects resources in the same VPC.
 // Resource scope means it only affects this specific resource.
-func (d *ControlDefinition) BlastScope() string {
+func (d *ControlDefinition) BlastScope() kernel.BlastScope {
 	raw, ok := d.Params.Get("blast_radius")
 	if !ok {
-		return "resource"
+		return kernel.BlastScopeResource
 	}
 	m, ok := raw.(map[string]any)
 	if !ok {
-		return "resource"
+		return kernel.BlastScopeResource
 	}
-	s := getParam[string](m, "scope")
+	s := kernel.BlastScope(getParam[string](m, "scope"))
 	if s == "" {
-		return "resource"
+		return kernel.BlastScopeResource
 	}
 	return s
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/telemetry"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/testutil"
 )
 
@@ -79,7 +80,7 @@ func TestBuilder_WithTracer(t *testing.T) {
 	testutil.AssertViolationCount(t, &result, 1)
 
 	// Verify the tracer captured the assessment trace with reasoning steps.
-	lt := tracer.Finalize("test-run", "test", nil)
+	lt := tracer.Finalize(ports.FinalizeArgs{RunID: "test-run", StaveVersion: "test"})
 	testutil.AssertTraceHasAssessment(t, lt, "bucket-1", "CTL.A.001", "VIOLATION")
 
 	assessment := lt.Assessments[0]

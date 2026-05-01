@@ -34,7 +34,7 @@ type AssessmentRequest struct {
 	RiskSignals          risk.ThresholdItems
 	Findings             []remediation.Finding
 	ChainFindings        []risk.CompoundFinding
-	AttackStageSummary   map[string]string
+	AttackStageSummary   map[kernel.AttackStage]string
 	TopExposures         []risk.ExposureRank
 	Issues               []evaluation.Issue
 	SkippedControls      []evaluation.SkippedControl
@@ -53,7 +53,7 @@ type Assessment struct {
 	RiskSignals          risk.ThresholdItems          `json:"risk_signals,omitempty"`
 	Findings             []remediation.Finding        `json:"findings"`
 	ChainFindings        []risk.CompoundFinding       `json:"chain_findings,omitempty"`
-	AttackStageSummary   map[string]string            `json:"attack_stage_summary,omitempty"`
+	AttackStageSummary   map[kernel.AttackStage]string            `json:"attack_stage_summary,omitempty"`
 	TopExposures         []risk.ExposureRank          `json:"top_exposures,omitempty"`
 	Issues               []evaluation.Issue           `json:"issues,omitempty"`
 	ExceptedFindings     []evaluation.ExceptedFinding `json:"excepted_findings,omitempty"`

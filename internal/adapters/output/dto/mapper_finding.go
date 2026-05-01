@@ -62,7 +62,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	dto.SLADeadlineHours = f.SLADeadlineHours
 	dto.SLABreached = f.SLABreached
 	dto.SLAOverdueHours = f.SLAOverdueHours
-	dto.SLAEscalatedSeverity = f.SLAEscalatedSeverity
+	dto.SLAEscalatedSeverity = f.SLAEscalatedSeverity.String()
 	dto.SLAPolicySource = f.SLAPolicySource
 	dto.ExposureScore = f.ExposureScore
 	dto.ScoreBreakdown = f.ScoreBreakdown
@@ -72,7 +72,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 			dto.ReasoningTrace[i] = MatchedClauseDTO{
 				PredicateExpr:  mc.PredicateExpr,
 				ObservationKey: mc.ObservationKey,
-				Operator:       mc.Operator,
+				Operator:       string(mc.Operator),
 				ExpectedValue:  mc.ExpectedValue,
 				ObservedValue:  mc.ObservedValue,
 			}
@@ -143,7 +143,7 @@ func buildRemediationContext(f *remediation.Finding) *RemediationContextDTO {
 		ctx.Violation.Reasoning = append(ctx.Violation.Reasoning, RemediationReasoningDTO{
 			Clause: translation.RenderClause(translation.Clause{
 				ObservationKey: mc.ObservationKey,
-				Operator:       mc.Operator,
+				Operator:       string(mc.Operator),
 				ExpectedValue:  mc.ExpectedValue,
 				ObservedValue:  mc.ObservedValue,
 			}, translation.DefaultFieldRegistry),
@@ -275,10 +275,14 @@ func fromRemediationAction(a evaluation.RemediationAction) RemediationActionDTO 
 }
 
 func fromChainMembershipEntry(e evaluation.ChainMembershipEntry) ChainMembershipEntryDTO {
+	stages := make([]string, len(e.StageSpan))
+	for i, s := range e.StageSpan {
+		stages[i] = string(s)
+	}
 	return ChainMembershipEntryDTO{
 		ChainID:       string(e.ChainID),
-		ChainSeverity: e.ChainSeverity,
-		StageSpan:     e.StageSpan,
+		ChainSeverity: e.ChainSeverity.String(),
+		StageSpan:     stages,
 		Narrative:     e.Narrative,
 	}
 }

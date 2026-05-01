@@ -1,11 +1,15 @@
 package graph
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/sufield/stave/internal/core/kernel"
+)
 
 func TestToATTCKTacticID_AllStages(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		stage string
+		stage kernel.AttackStage
 		want  string
 	}{
 		{"initial_access", "TA0001"},
@@ -31,7 +35,7 @@ func TestToATTCKTacticID_AllStages(t *testing.T) {
 
 func TestToATTCKTacticID_Unknown(t *testing.T) {
 	t.Parallel()
-	got := ToATTCKTacticID("nonexistent")
+	got := ToATTCKTacticID(kernel.AttackStage("nonexistent"))
 	if got != "" {
 		t.Errorf("unknown stage should return empty, got %q", got)
 	}
@@ -39,7 +43,7 @@ func TestToATTCKTacticID_Unknown(t *testing.T) {
 
 func TestTranslateStages(t *testing.T) {
 	t.Parallel()
-	got := TranslateStages([]string{"initial_access", "exfiltration"})
+	got := TranslateStages([]kernel.AttackStage{"initial_access", "exfiltration"})
 	if len(got) != 2 || got[0] != "TA0001" || got[1] != "TA0010" {
 		t.Errorf("TranslateStages = %v, want [TA0001, TA0010]", got)
 	}
@@ -47,7 +51,7 @@ func TestTranslateStages(t *testing.T) {
 
 func TestToKillChainPhases(t *testing.T) {
 	t.Parallel()
-	got := ToKillChainPhases([]string{"initial_access", "exfiltration"})
+	got := ToKillChainPhases([]kernel.AttackStage{"initial_access", "exfiltration"})
 	if len(got) != 2 {
 		t.Fatalf("expected 2 phases, got %d", len(got))
 	}
@@ -62,7 +66,7 @@ func TestToKillChainPhases(t *testing.T) {
 func TestToKillChainPhases_Resilience(t *testing.T) {
 	t.Parallel()
 	// Resilience has no kill chain phase — should be excluded.
-	got := ToKillChainPhases([]string{"resilience"})
+	got := ToKillChainPhases([]kernel.AttackStage{"resilience"})
 	if len(got) != 0 {
 		t.Errorf("resilience should produce no kill chain phases, got %v", got)
 	}

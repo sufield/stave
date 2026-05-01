@@ -1,9 +1,11 @@
 // Package graph provides the graph-json export builder.
 package graph
 
+import "github.com/sufield/stave/internal/core/kernel"
+
 // attackStageToTactic maps Stave attack stage strings to ATT&CK tactic IDs.
 // Source: docs/ontology/attack-stages.json
-var attackStageToTactic = map[string]string{
+var attackStageToTactic = map[kernel.AttackStage]string{
 	"initial_access":       "TA0001",
 	"execution":            "TA0002",
 	"persistence":          "TA0003",
@@ -19,7 +21,7 @@ var attackStageToTactic = map[string]string{
 }
 
 // ToATTCKTacticID translates a Stave attack stage to an ATT&CK tactic ID.
-func ToATTCKTacticID(staveStage string) string {
+func ToATTCKTacticID(staveStage kernel.AttackStage) string {
 	if id, ok := attackStageToTactic[staveStage]; ok {
 		return id
 	}
@@ -27,7 +29,7 @@ func ToATTCKTacticID(staveStage string) string {
 }
 
 // TranslateStages converts a slice of Stave stages to ATT&CK tactic IDs.
-func TranslateStages(stages []string) []string {
+func TranslateStages(stages []kernel.AttackStage) []string {
 	out := make([]string, 0, len(stages))
 	for _, s := range stages {
 		if id := ToATTCKTacticID(s); id != "" {
@@ -38,7 +40,7 @@ func TranslateStages(stages []string) []string {
 }
 
 // ToKillChainPhases produces STIX 2.1 kill_chain_phases from Stave stages.
-func ToKillChainPhases(stages []string) []map[string]string {
+func ToKillChainPhases(stages []kernel.AttackStage) []map[string]string {
 	out := make([]map[string]string, 0, len(stages))
 	for _, s := range stages {
 		phase := staveToKillChainPhase(s)
@@ -57,7 +59,7 @@ func ToKillChainPhases(stages []string) []map[string]string {
 // to staveToKillChainPhase does not re-allocate the table — on a
 // large export with hundreds of chain findings this map was being
 // rebuilt thousands of times per call to ToKillChainPhases.
-var staveToKillChainPhases = map[string]string{ //nolint:gosec // G101: not credentials — ATT&CK tactic names
+var staveToKillChainPhases = map[kernel.AttackStage]string{ //nolint:gosec // G101: not credentials — ATT&CK tactic names
 	"initial_access":       "initial-access",
 	"execution":            "execution",
 	"persistence":          "persistence",
@@ -71,6 +73,6 @@ var staveToKillChainPhases = map[string]string{ //nolint:gosec // G101: not cred
 	"impact":               "impact",
 }
 
-func staveToKillChainPhase(stage string) string {
+func staveToKillChainPhase(stage kernel.AttackStage) string {
 	return staveToKillChainPhases[stage]
 }

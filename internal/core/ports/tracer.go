@@ -13,7 +13,21 @@ type Tracer interface {
 
 	// Finalize assembles the accumulated trace data into a LogicTrace.
 	// Called once after all assessments are complete.
-	Finalize(runID, staveVersion string, hashes map[string]string) *trace.LogicTrace
+	//
+	// The named-field FinalizeArgs prevents callers from accidentally
+	// swapping RunID and StaveVersion — both are short strings, both
+	// look interchangeable, and the previous (runID, staveVersion
+	// string, ...) tuple shape made the swap silently compile.
+	Finalize(args FinalizeArgs) *trace.LogicTrace
+}
+
+// FinalizeArgs carries the parameters to Tracer.Finalize. Named so
+// the run identity and the build version cannot be transposed at
+// the call site.
+type FinalizeArgs struct {
+	RunID        string
+	StaveVersion string
+	Hashes       map[string]string
 }
 
 // AssessmentSpan records steps within a single control×asset evaluation.

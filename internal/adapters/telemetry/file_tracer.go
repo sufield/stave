@@ -40,16 +40,16 @@ func (t *LocalFileTracer) BeginAssessment(resourceID, policyID string) ports.Ass
 }
 
 // Finalize assembles the accumulated trace data into a LogicTrace.
-func (t *LocalFileTracer) Finalize(runID, staveVersion string, hashes map[string]string) *trace.LogicTrace {
+func (t *LocalFileTracer) Finalize(args ports.FinalizeArgs) *trace.LogicTrace {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	return &trace.LogicTrace{
 		SchemaVersion: trace.SchemaVersion,
-		RunID:         runID,
+		RunID:         args.RunID,
 		GeneratedAt:   time.Now().UTC(),
-		StaveVersion:  staveVersion,
-		InputHashes:   hashes,
+		StaveVersion:  args.StaveVersion,
+		InputHashes:   args.Hashes,
 		Assessments:   t.assessments,
 		Summary:       trace.ComputeSummary(t.assessments),
 	}

@@ -69,15 +69,15 @@ func AnnotateFindingSLA(f *Finding, ctl *policy.ControlDefinition, cfg *SLAConfi
 	// preserves the "anything past deadline gets at least +1"
 	// behavior for the just-breached case (dwell ≈ 1.001×).
 	periodsOverdue := max(int(dwell/deadlineHours), 1)
-	escalated := escalateSeverity(f.ControlSeverity.String(), periodsOverdue)
-	if escalated != f.ControlSeverity.String() {
+	escalated := escalateSeverity(f.ControlSeverity, periodsOverdue)
+	if escalated != f.ControlSeverity {
 		f.SLAEscalatedSeverity = escalated
 	}
 }
 
 // escalateSeverity bumps severity by n tiers, capping at critical.
-func escalateSeverity(base string, tiers int) string {
-	order := []string{"low", "medium", "high", "critical"}
+func escalateSeverity(base policy.Severity, tiers int) policy.Severity {
+	order := []policy.Severity{policy.SeverityLow, policy.SeverityMedium, policy.SeverityHigh, policy.SeverityCritical}
 	idx := -1
 	for i, s := range order {
 		if s == base {

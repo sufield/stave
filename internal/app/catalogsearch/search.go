@@ -45,7 +45,7 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 		if f.Severity != "" && ctl.Severity.String() != strings.ToLower(f.Severity) {
 			continue
 		}
-		if f.AttackStage != "" && ctl.AttackStage() != f.AttackStage {
+		if f.AttackStage != "" && string(ctl.AttackStage()) != f.AttackStage {
 			continue
 		}
 		if f.Profile != "" && !hasFramework(ctl, f.Profile) {
@@ -57,7 +57,7 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 			Name:        ctl.Name,
 			Severity:    ctl.Severity.String(),
 			Domain:      extractDomain(string(ctl.ID)),
-			AttackStage: ctl.AttackStage(),
+			AttackStage: string(ctl.AttackStage()),
 		}
 		for fw := range ctl.Compliance {
 			sr.Frameworks = append(sr.Frameworks, string(fw))

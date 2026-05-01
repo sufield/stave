@@ -20,6 +20,7 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
 	infraSLA "github.com/sufield/stave/internal/adapters/sla"
+	"github.com/sufield/stave/internal/app/contracts"
 	appcoverage "github.com/sufield/stave/internal/app/coverage"
 	er "github.com/sufield/stave/internal/app/execreport"
 	appscore "github.com/sufield/stave/internal/app/score"
@@ -36,7 +37,7 @@ type options struct {
 	ChainsDir     string
 	SLAFile       string
 	TeamManifest  string
-	Format        string
+	Format        contracts.OutputFormat
 	OutFile       string
 	Title         string
 	Period        string
@@ -48,7 +49,7 @@ func NewCmd() *cobra.Command {
 	opts := &options{
 		ControlsDir: "controls",
 		ChainsDir:   "chains",
-		Format:      "json",
+		Format:      contracts.FormatJSON,
 		Title:       "Security Posture Report",
 	}
 
@@ -94,7 +95,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "chains directory")
 	cmd.Flags().StringVar(&opts.SLAFile, "sla-profile-file", "", "SLA policy file")
 	cmd.Flags().StringVar(&opts.TeamManifest, "team-manifest", "", "team manifest")
-	cmd.Flags().StringVarP(&opts.Format, "format", "f", "json", "output format: json | markdown")
+	cmd.Flags().VarP(&opts.Format, "format", "f", "output format: json | markdown")
 	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write to file")
 	cmd.Flags().StringVar(&opts.Title, "title", "Security Posture Report", "report title")
 	cmd.Flags().StringVar(&opts.Period, "period", "", "reporting period label")
@@ -156,11 +157,11 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 		delta = scoreResult.Score - earlierScore.Score
 	}
 
-	trajectory := "STABLE"
+	trajectory := er.TrajectoryStable
 	if delta >= 5 {
-		trajectory = "IMPROVING"
+		trajectory = er.TrajectoryImproving
 	} else if delta <= -5 {
-		trajectory = "REGRESSING"
+		trajectory = er.TrajectoryRegressing
 	}
 
 	// Sparkline from history.
@@ -284,7 +285,7 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 
 	var writeErr error
 	switch opts.Format {
-	case "markdown":
+	case contracts.FormatMarkdown:
 		writeErr = er.WriteMarkdown(w, report)
 	default:
 		enc := json.NewEncoder(w)
