@@ -4,25 +4,9 @@ import (
 	"log/slog"
 
 	covadapter "github.com/sufield/stave/internal/adapters/coverage"
-	appeval "github.com/sufield/stave/internal/app/eval"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	corecov "github.com/sufield/stave/internal/core/evaluation/coverage"
 )
-
-// activeControls returns the controls used by the most recent assessment.
-// Prefers the runner's recorded LoadedControls (populated for both
-// project-config-preloaded and runtime-loaded paths) over the static
-// ActivePolicies on Config (which is empty when controls are loaded
-// from disk inside the workflow).
-func activeControls(deps *appeval.ApplyDeps) []policy.ControlDefinition {
-	if deps == nil || deps.Runner == nil {
-		return nil
-	}
-	if loaded := deps.Runner.LoadedControls; len(loaded) > 0 {
-		return loaded
-	}
-	return deps.Config.ActivePolicies
-}
 
 // buildCoveragePosture loads the embedded alternative-tool inventories
 // and aggregates them with the active controls into a CoverageIndex.

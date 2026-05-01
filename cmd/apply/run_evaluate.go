@@ -15,6 +15,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/pkg/stave/cliapi"
 )
 
 // executeEvaluation builds dependencies, runs the evaluation, and writes output.
@@ -52,10 +53,24 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	}
 	defer deps.Close()
 
-	result, status, err := deps.Runner.PerformAssessment(ctx, deps.Config)
+	// Phase 2 cutover: route the evaluation core through pkg/stave/cliapi
+	// so library and CLI share one orchestration path. The marshaler /
+	// enricher / output pipeline below still come from deps so existing
+	// CLI-specific concerns (sanitizer-aware enrichment, format-specific
+	// marshaling, coverage posture) are preserved unchanged.
+	//
+	// stave.Config carries the same data deps.Config holds — exemption
+	// rules, acknowledgment rules, SLA config, git metadata, project
+	// config, and tracer all flow through stave's typed surface so the
+	// resulting *evaluation.ComplianceReport is byte-identical to what
+	// deps.Runner.PerformAssessment would have produced.
+	staveCfg := buildStaveConfig(ec, deps)
+	applyRes, err := cliapi.Apply(ctx, staveCfg)
 	if err != nil {
 		return EvaluateResult{}, fmt.Errorf("execute evaluation: %w", err)
 	}
+	result := *applyRes.ComplianceReport
+	status := result.SecurityState
 
 	// Export logic trace if enabled.
 	if tracer != nil {
@@ -79,9 +94,12 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	// one document per invocation.
 	if !ec.Opts.NewOnly && ec.Opts.NewSince == "" {
 		pipeline := &appeval.OutputPipeline{
-			Marshaler:       deps.Runner.ReportPublisher,
-			Enricher:        deps.Runner.ContextEnricher,
-			CoveragePosture: buildCoveragePosture(activeControls(deps), ec.Logger),
+			Marshaler: deps.Runner.ReportPublisher,
+			Enricher:  deps.Runner.ContextEnricher,
+			// applyRes.Controls is the workflow's loaded control set
+			// from the cliapi.Apply path; deps.Runner.LoadedControls
+			// is now empty because PerformAssessment isn't called.
+			CoveragePosture: buildCoveragePosture(applyRes.Controls, ec.Logger),
 			Logger:          ec.Logger,
 		}
 		if err := pipeline.Run(ctx, deps.Config.Output, &result); err != nil {

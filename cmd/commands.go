@@ -68,12 +68,8 @@ import (
 	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
 	infradoctor "github.com/sufield/stave/internal/adapters/doctor"
 	infrafix "github.com/sufield/stave/internal/adapters/fix"
-	infragate "github.com/sufield/stave/internal/adapters/gate"
 	infrareport "github.com/sufield/stave/internal/adapters/report"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/core/setup"
@@ -153,7 +149,7 @@ func WireCommands(app *App) error {
 		Args:  cobra.NoArgs,
 	}
 	root.AddCommand(ciCmd)
-	if err := wireCISubtree(ciCmd, f.NewCELEvaluator, f.NewCtlRepo, f.NewObsRepo, loadAssets); err != nil {
+	if err := wireCISubtree(ciCmd, f.NewCELEvaluator, f.NewCtlRepo, f.NewObsRepo); err != nil {
 		return err
 	}
 
@@ -320,10 +316,7 @@ func wireCISubtree(
 	newCELEvaluator compose.CELEvaluatorFactory,
 	newCtlRepo compose.CtlRepoFactory,
 	newObsRepo compose.ObsRepoFactory,
-	loadAssets compose.AssetLoaderFunc,
 ) error {
-	loader := artifact.NewLoader()
-
 	baselineFileOpts := fileout.FileOptions{}
 
 	baselineWriter, bwErr := infrabaseline.NewWriter(func(path string) (*os.File, error) {
@@ -344,49 +337,10 @@ func wireCISubtree(
 			Clock:          ports.RealClock{},
 		},
 	}))
-	findingsCounter, fcErr := infragate.NewFindingsCounter(loader.Evaluation)
-	if fcErr != nil {
-		return fmt.Errorf("wire findings counter: %w", fcErr)
-	}
-	baselineComparer, bcErr := infragate.NewBaselineComparer(
-		nil, // sanitizer wired downstream by gate.NewGateCmd
-		loader.Evaluation,
-		loader.Baseline,
-		func(san kernel.Sanitizer, baseEntries []evaluation.BaselineEntry, currentFindings []remediation.Finding) infragate.BaselineComparisonResult {
-			bc := artifact.CompareAgainstBaseline(san, baseEntries, currentFindings)
-			return infragate.BaselineComparisonResult{
-				Current:    bc.Current,
-				Comparison: bc.Comparison,
-			}
-		},
-	)
-	if bcErr != nil {
-		return fmt.Errorf("wire baseline comparer: %w", bcErr)
-	}
-	overdueCounter, ocErr := infragate.NewOverdueCounter(
-		func(ctx context.Context, obsDir, ctlDir string) (infragate.Assets, error) {
-			a, err := loadAssets(ctx, obsDir, ctlDir)
-			if err != nil {
-				return infragate.Assets{}, err
-			}
-			return infragate.Assets{
-				Snapshots: a.Snapshots,
-				Controls:  a.Controls,
-			}, nil
-		},
-		newCELEvaluator,
-	)
-	if ocErr != nil {
-		return fmt.Errorf("wire overdue counter: %w", ocErr)
-	}
-	ciCmd.AddCommand(enforce.NewGateCmd(gate.Deps{
-		UseCaseDeps: usecase.GateDeps{
-			FindingsCounter:  findingsCounter,
-			BaselineComparer: baselineComparer,
-			OverdueCounter:   overdueCounter,
-			Clock:            ports.RealClock{},
-		},
-	}))
+	// Gate adapters (FindingsCounter, BaselineComparer, OverdueCounter)
+	// are now wired internally by pkg/stave.Gate; the gate command
+	// no longer accepts dependency injection at this boundary.
+	ciCmd.AddCommand(enforce.NewGateCmd(gate.Deps{}))
 	ciCmd.AddCommand(enforce.NewFixLoopCmd(fix.LoopDeps{
 		NewCELEvaluator: newCELEvaluator,
 		NewCtlRepo:      newCtlRepo,

@@ -3,220 +3,112 @@ package stave
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
-	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
-	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	covadapter "github.com/sufield/stave/internal/adapters/coverage"
-	"github.com/sufield/stave/internal/adapters/observations"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/builtin/capabilities"
-	builtinpredicate "github.com/sufield/stave/internal/builtin/predicate"
-	stavecel "github.com/sufield/stave/internal/cel"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/coverage"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/core/usecase"
-	"github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/internal/version"
+	"github.com/sufield/stave/pkg/stave/internal/applycore"
 )
-
-// defaultMaxUnsafe is the library's fallback when Config.MaxUnsafe
-// is zero. Matches the conventional Stave project default (one week).
-const defaultMaxUnsafe = 168 * time.Hour
 
 // Apply runs Stave's control evaluation against the snapshots in
 // cfg.SnapshotsDir and returns the typed assessment. Equivalent to
 // `./stave apply` on the command line, minus CLI concerns
 // (formatting, team manifests, SLA overlays, output paths).
 //
-// Apply routes through [usecase.Apply] — the canonical application-
-// layer entry point — with a library-provided evaluation-runner
-// adapter. The CLI path remains untouched.
+// CLI callers that need the full *evaluation.ComplianceReport (for
+// rendering SARIF / JSON / text output) should use
+// pkg/stave/cliapi.Apply instead — that path returns both the
+// trimmed public Assessment and the raw internal report.
 func Apply(ctx context.Context, cfg Config) (*Assessment, error) {
 	if cfg.SnapshotsDir == "" {
 		return nil, errors.New("stave.Apply: Config.SnapshotsDir is required")
 	}
 
-	req := usecase.ApplyRequest{
-		ControlsDir:       cfg.ControlsDir,
-		ObservationsDir:   cfg.SnapshotsDir,
-		MaxUnsafeDuration: formatDuration(cfg.MaxUnsafe),
-		NowTime:           formatTime(cfg.Now),
-		AllowUnknownInput: cfg.AllowUnknownInput,
-	}
-	deps := usecase.ApplyDeps{Runner: &workflowRunner{chainsDir: cfg.ChainsDir}}
-
-	resp, err := usecase.Apply(ctx, req, deps)
+	r, err := applycore.Run(ctx, applyInputs(cfg))
 	if err != nil {
 		return nil, err
 	}
-
-	result, ok := resp.EvaluationData.(*evaluationResult)
-	if !ok {
-		return nil, fmt.Errorf("stave.Apply: unexpected evaluation data type %T", resp.EvaluationData)
-	}
-	return buildAssessment(result.Report, result.Controls), nil
+	return BuildAssessment(r.Report, r.Controls), nil
 }
 
-// evaluationResult is the typed payload the library's runner puts
-// into ApplyResponse.EvaluationData. Using a concrete type instead
-// of `any` lets the conversion back to Assessment be a single type
-// assertion rather than reflection.
-type evaluationResult struct {
-	Report   *evaluation.ComplianceReport
-	Controls []policy.ControlDefinition
-}
-
-// workflowRunner implements [usecase.EvaluationRunnerPort] against
-// the production [appeval.AuditWorkflow]. It is the first (and
-// currently only) production implementation of the port; the CLI
-// bypasses usecase.Apply and calls the workflow directly.
+// applyInputs maps the public Config to the applycore.Inputs shape.
+// SLAConfig conversion happens here so the internal pipeline only
+// sees the engine form (evaluation.SLAConfig); the public type
+// stays decoupled from the engine struct.
 //
-// chainsDir is a library-path-specific field not present on
-// ApplyRequest — the CLI path loads chains from a hardcoded "chains"
-// directory relative to the project root; the library requires an
-// explicit Config.ChainsDir so calls from any working directory work
-// correctly.
-type workflowRunner struct {
-	chainsDir string
+// GitMetadata, ProjectConfig, and Tracer are aliased types — they
+// pass through unchanged. Library callers leave them nil; CLI
+// callers populate them so the library run produces the same
+// output as the direct cmd/apply path.
+func applyInputs(cfg Config) applycore.Inputs {
+	return applycore.Inputs{
+		SnapshotsDir:        cfg.SnapshotsDir,
+		ControlsDir:         cfg.ControlsDir,
+		ChainsDir:           cfg.ChainsDir,
+		IntegrityManifest:   cfg.IntegrityManifest,
+		IntegrityPublicKey:  cfg.IntegrityPublicKey,
+		MaxUnsafe:           cfg.MaxUnsafe,
+		Now:                 cfg.Now,
+		AllowUnknownInput:   cfg.AllowUnknownInput,
+		ExemptionRules:      cfg.ExemptionRules,
+		AcknowledgmentRules: cfg.AcknowledgmentRules,
+		SLAConfig:           toEvalSLAConfig(cfg.SLAConfig),
+		GitMetadata:         cfg.GitMetadata,
+		ProjectConfig:       cfg.ProjectConfig,
+		Tracer:              cfg.Tracer,
+		ContextName:         cfg.ContextName,
+	}
 }
 
-func (r *workflowRunner) RunEvaluation(ctx context.Context, req usecase.ApplyRequest) (usecase.ApplyResponse, error) {
-	controls, ctlRepo, err := resolveControls(req.ControlsDir)
-	if err != nil {
-		return usecase.ApplyResponse{}, err
-	}
-
-	sla, err := parseDurationOrDefault(req.MaxUnsafeDuration, defaultMaxUnsafe)
-	if err != nil {
-		return usecase.ApplyResponse{}, fmt.Errorf("parse max-unsafe: %w", err)
-	}
-	clock, err := parseClock(req.NowTime)
-	if err != nil {
-		return usecase.ApplyResponse{}, fmt.Errorf("parse now: %w", err)
-	}
-
-	celEval, err := stavecel.NewPredicateEval()
-	if err != nil {
-		return usecase.ApplyResponse{}, fmt.Errorf("initialize CEL evaluator: %w", err)
-	}
-
-	wf := &appeval.AuditWorkflow{
-		ObservationRepo: observations.NewObservationLoader(),
-		PolicyRepo:      ctlRepo,
-	}
-
-	chainDefs, err := loadChainDefs(r.chainsDir)
-	if err != nil {
-		return usecase.ApplyResponse{}, fmt.Errorf("load chains: %w", err)
-	}
-
-	cfg := appeval.AssessmentConfig{
-		ObservationConfig: appeval.ObservationConfig{
-			PolicySource:      req.ControlsDir,
-			ObservationSource: req.ObservationsDir,
-			AcceptUnknownData: req.AllowUnknownInput,
-			ActivePolicies:    controls,
-		},
-		ChainDefs:       chainDefs,
-		SLAThreshold:    sla,
-		Clock:           clock,
-		Hasher:          crypto.NewHasher(),
-		PredicateParser: ctlyaml.ParsePredicate,
-		PredicateEval:   celEval,
-		BuildVersion:    version.String,
-	}
-
-	report, _, err := wf.PerformAssessment(ctx, cfg)
-	if err != nil {
-		return usecase.ApplyResponse{}, err
-	}
-	if len(wf.LoadedControls) > 0 {
-		controls = wf.LoadedControls
-	}
-
-	return usecase.ApplyResponse{
-		EvaluationData: &evaluationResult{Report: &report, Controls: controls},
-		HasViolations:  len(report.Findings) > 0,
-	}, nil
+// ApplyInputsFromConfig is the package-internal hook used by
+// pkg/stave/cliapi.Apply to build the same applycore.Inputs the
+// public Apply uses. Exported so cliapi (a sibling sub-package)
+// can call it without re-implementing the SLAConfig conversion.
+//
+// Not part of the public stable API — intended for cliapi only.
+// External callers should use [Apply] and the public [Config] /
+// [Assessment] surface.
+func ApplyInputsFromConfig(cfg Config) applycore.Inputs {
+	return applyInputs(cfg)
 }
 
-// loadChainDefs loads chain definitions from dir. Empty dir returns
-// nil (chain detection silently disabled). Missing dir returns nil
-// with no error — adopters who haven't opted into chain detection
-// shouldn't be blocked by the absence of a chains/ directory.
-func loadChainDefs(dir string) ([]policy.ChainDefinition, error) {
-	if dir == "" {
-		return nil, nil
+// toEvalSLAConfig converts the public SLAConfig into the internal
+// evaluation form expected by AssessmentConfig. nil maps to nil so
+// the engine's "no SLA evaluation" path activates correctly.
+func toEvalSLAConfig(c *SLAConfig) *evaluation.SLAConfig {
+	if c == nil {
+		return nil
 	}
-	return ctlyaml.LoadChains(dir, capabilities.Builtin())
+	deadlines := make(map[string]float64, len(c.DeadlineBySeverity))
+	for k, v := range c.DeadlineBySeverity {
+		deadlines[k] = v
+	}
+	return &evaluation.SLAConfig{
+		ProfileID:          c.ProfileID,
+		DeadlineBySeverity: deadlines,
+		EscalationFactor:   c.EscalationFactor,
+	}
 }
 
-// resolveControls loads the control set used by the evaluation.
-// When dir is empty the embedded builtin catalog is preloaded and
-// returned via ActivePolicies; no ControlRepository is needed. When
-// dir is set, the YAML loader is returned and the workflow loads
-// from disk.
-func resolveControls(dir string) ([]policy.ControlDefinition, appcontracts.ControlRepository, error) {
-	if dir != "" {
-		loader := ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc()))
-		return nil, loader, nil
+// BuildAssessment converts a *evaluation.ComplianceReport plus its
+// active controls into the public *Assessment shape. Exported
+// because pkg/stave/cliapi.Apply uses it after running its own
+// orchestration; library consumers building Assessments from
+// arbitrary reports may also call it directly.
+//
+// SLABreaches is computed by counting findings with SLABreached set.
+// FrameworkReadiness is mirrored from the report's summary.
+func BuildAssessment(report *evaluation.ComplianceReport, controls []policy.ControlDefinition) *Assessment {
+	slaBreaches := 0
+	for i := range report.Findings {
+		if report.Findings[i].SLABreached {
+			slaBreaches++
+		}
 	}
-	store := ctlbuiltin.NewControlStore(
-		ctlbuiltin.EmbeddedFS(),
-		"embedded",
-		ctlbuiltin.WithAliasResolver(builtinpredicate.ResolverFunc()),
-	)
-	controls, err := store.All()
-	if err != nil {
-		return nil, nil, fmt.Errorf("load builtin controls: %w", err)
-	}
-	return controls, nil, nil
-}
-
-func formatDuration(d time.Duration) string {
-	if d == 0 {
-		return ""
-	}
-	return d.String()
-}
-
-func formatTime(t time.Time) string {
-	if t.IsZero() {
-		return ""
-	}
-	return t.Format(time.RFC3339)
-}
-
-func parseDurationOrDefault(s string, def time.Duration) (time.Duration, error) {
-	if s == "" {
-		return def, nil
-	}
-	return time.ParseDuration(s)
-}
-
-func parseClock(nowRFC3339 string) (ports.Clock, error) {
-	if nowRFC3339 == "" {
-		return ports.RealClock{}, nil
-	}
-	t, err := time.Parse(time.RFC3339, nowRFC3339)
-	if err != nil {
-		return nil, err
-	}
-	return ports.FixedClock(t), nil
-}
-
-// buildAssessment converts the internal evaluation report into the
-// library's public [Assessment] shape. This is the single
-// conversion point that translates internal types into the
-// library's curated subset.
-func buildAssessment(report *evaluation.ComplianceReport, controls []policy.ControlDefinition) *Assessment {
 	return &Assessment{
 		SchemaVersion: string(kernel.SchemaOutput),
 		Status:        Status(report.SecurityState),
@@ -227,15 +119,35 @@ func buildAssessment(report *evaluation.ComplianceReport, controls []policy.Cont
 			Snapshots:    report.Run.Snapshots,
 		},
 		Summary: Summary{
-			TotalAssets:      report.Summary.TotalAssets,
-			ExposedResources: report.Summary.ExposedResources,
-			Violations:       report.Summary.Violations,
+			TotalAssets:        report.Summary.TotalAssets,
+			ExposedResources:   report.Summary.ExposedResources,
+			Violations:         report.Summary.Violations,
+			FrameworkReadiness: convertFrameworkReadiness(report.Summary.FrameworkReadiness),
 		},
 		Findings:      convertFindings(report.Findings),
 		Issues:        report.Issues,
 		Coverage:      buildCoverage(controls),
 		ChainFindings: convertChainFindings(report.ChainFindings),
+		SLABreaches:   slaBreaches,
 	}
+}
+
+// convertFrameworkReadiness mirrors evaluation.FrameworkReadiness
+// into the public [FrameworkReadiness] shape.
+func convertFrameworkReadiness(rs []evaluation.FrameworkReadiness) []FrameworkReadiness {
+	if len(rs) == 0 {
+		return nil
+	}
+	out := make([]FrameworkReadiness, len(rs))
+	for i := range rs {
+		out[i] = FrameworkReadiness{
+			Framework:        rs[i].Framework,
+			TotalControls:    rs[i].TotalControls,
+			PassingControls:  rs[i].PassingControls,
+			ReadinessPercent: rs[i].ReadinessPercent,
+		}
+	}
+	return out
 }
 
 // convertChainFindings copies compound-finding records from the
@@ -261,26 +173,40 @@ func convertFindings(fs []evaluation.Finding) []Finding {
 }
 
 func convertFinding(f *evaluation.Finding) Finding {
-	return Finding{
-		FindingID:         f.FindingID,
-		ControlID:         f.ControlID,
-		ControlName:       f.ControlName,
-		AssetID:           f.AssetID,
-		AssetType:         f.AssetType,
-		Severity:          Severity(f.ControlSeverity.String()),
-		Classification:    f.Classification,
-		ScopeTags:         f.ScopeTags,
-		ControlCompliance: convertCompliance(f.ControlCompliance),
-		Remediation:       convertRemediation(f),
-		ReasoningTrace:    f.ReasoningTrace,
-		ChainMembership:   convertChainMembership(f.ChainMembership),
-		ChainBonus:        chainBonusFromBreakdown(f),
-		ExposureScore:     f.ExposureScore,
-		Defect:            f.Defect,
-		Infection:         f.Infection,
-		Failure:           f.Failure,
-		Delta:             convertDelta(f.Delta),
+	out := Finding{
+		FindingID:            f.FindingID,
+		ControlID:            f.ControlID,
+		ControlName:          f.ControlName,
+		AssetID:              f.AssetID,
+		AssetType:            f.AssetType,
+		Severity:             Severity(f.ControlSeverity.String()),
+		Classification:       f.Classification,
+		ScopeTags:            f.ScopeTags,
+		ControlCompliance:    convertCompliance(f.ControlCompliance),
+		Remediation:          convertRemediation(f),
+		ReasoningTrace:       f.ReasoningTrace,
+		ChainMembership:      convertChainMembership(f.ChainMembership),
+		ChainBonus:           chainBonusFromBreakdown(f),
+		ExposureScore:        f.ExposureScore,
+		Defect:               f.Defect,
+		Infection:            f.Infection,
+		Failure:              f.Failure,
+		Delta:                convertDelta(f.Delta),
+		SLABreached:          f.SLABreached,
+		SLADeadlineHours:     f.SLADeadlineHours,
+		SLAOverdueHours:      f.SLAOverdueHours,
+		SLAEscalatedSeverity: Severity(f.SLAEscalatedSeverity.String()),
 	}
+	if f.Reachability != nil {
+		out.Reachability = &Reachability{
+			TotalReachablePrincipals:   f.Reachability.TotalReachablePrincipals,
+			PrivilegedPrincipalCount:   f.Reachability.PrivilegedPrincipalCount,
+			HighestPrivilegePrincipal:  f.Reachability.HighestPrivilegePrincipal,
+			ExternalPrincipalReachable: f.Reachability.ExternalPrincipalReachable,
+			BlastRadiusScore:           f.Reachability.BlastRadiusScore,
+		}
+	}
+	return out
 }
 
 // chainBonusFromBreakdown reads the chain-bonus multiplier off the

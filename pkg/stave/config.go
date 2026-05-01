@@ -1,6 +1,31 @@
 package stave
 
-import "time"
+import (
+	"time"
+
+	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/ports"
+)
+
+// GitMetadata captures git repository state at evaluation time.
+// Aliased from evaluation.GitInfo because the type is already part
+// of the persisted assessment wire format (under run.git_metadata)
+// and consumers re-using these structs against on-disk artifacts
+// benefit from type identity.
+type GitMetadata = evaluation.GitInfo
+
+// ProjectConfigInput holds project configuration that affects
+// evaluation. Aliased from internal/app/eval to avoid mirroring
+// PackRegistry and BuiltinLoader callbacks. CLI callers populate
+// this from stave.yaml before calling Apply.
+type ProjectConfigInput = appeval.ProjectConfigInput
+
+// Tracer is the optional logic-trace recorder. When non-nil, the
+// engine records every (control, asset) decision step into the
+// tracer for later export. The CLI's --trace flag wires this up;
+// library callers leave it nil unless they want trace output.
+type Tracer = ports.Tracer
 
 // Config selects the inputs and evaluation parameters for [Apply].
 // Zero values carry useful defaults; only SnapshotsDir is required.
@@ -54,4 +79,73 @@ type Config struct {
 	// embedded-chain auto-loading to parallel the ControlsDir empty
 	// behavior.
 	ChainsDir string
+
+	// ExemptionRules carries asset-level exemptions evaluated
+	// before the engine fires. Assets matching any rule are
+	// excluded from evaluation entirely and surfaced under
+	// Assessment.ExemptedAssets (subject to consumer-visible
+	// surface; see Assessment). Nil disables exemption matching.
+	// Build with [NewExemptionConfig].
+	ExemptionRules *ExemptionConfig
+
+	// AcknowledgmentRules suppresses findings for control/asset
+	// pairs explicitly accepted as residual risk. Acknowledged
+	// findings are not omitted from the assessment — they are
+	// retained on Assessment.AcknowledgedFindings (when surfaced)
+	// so audit posture is preserved. Build with
+	// [NewAcknowledgmentConfig].
+	AcknowledgmentRules *AcknowledgmentConfig
+
+	// SLAConfig parameterizes SLA breach detection. When non-nil,
+	// every finding whose dwell time exceeds the
+	// severity-specific deadline is flagged SLABreached on the
+	// finding and counted in Assessment.SLABreaches. The
+	// escalation factor bumps severity for chronic breaches.
+	// Nil disables SLA evaluation. Maps to the CLI's
+	// --sla-profile / --sla-profile-file flags after they have
+	// been resolved into the canonical config form.
+	SLAConfig *SLAConfig
+
+	// IntegrityManifest is the path to the manifest used to
+	// verify observation provenance. When set together with
+	// IntegrityPublicKey, the observation loader rejects any
+	// snapshot whose checksum doesn't match. Empty disables
+	// integrity verification. Maps to --integrity-manifest.
+	IntegrityManifest string
+
+	// IntegrityPublicKey is the path to the Ed25519 public key
+	// authorizing the manifest. Required when IntegrityManifest
+	// is set; ignored when manifest is empty. Maps to
+	// --integrity-public-key.
+	IntegrityPublicKey string
+
+	// GitMetadata, when non-nil, is stamped into the assessment
+	// output under run.git_metadata. CLI callers populate it via
+	// compose.AuditGitStatus(ctx, projectRoot, watchPaths) so the
+	// JSON output records the repository state at evaluation time.
+	// Library callers can leave this nil — the field is decorative
+	// from the engine's perspective; it doesn't change which
+	// findings fire.
+	GitMetadata *GitMetadata
+
+	// ProjectConfig, when non-nil, supplies project-scoped settings
+	// that affect evaluation: control-pack selection, exception
+	// policies, exclude lists, and an optional builtin-control
+	// loader override. CLI callers build this from stave.yaml.
+	// Library callers typically leave it nil and rely on the
+	// embedded built-in catalog plus explicit Config fields.
+	ProjectConfig *ProjectConfigInput
+
+	// Tracer, when non-nil, receives a (control, asset) decision
+	// span for every evaluation. CLI callers wire it from --trace
+	// so the exported JSON trace can be inspected. Library callers
+	// who don't need traces leave it nil and the engine's
+	// no-op tracer takes over.
+	Tracer Tracer
+
+	// ContextName is the project context label that lands on the
+	// assessment's run.context_name field. CLI callers populate from
+	// the resolved project context (typically "stave"). Library
+	// callers usually leave empty; the field is decorative.
+	ContextName string
 }

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -14,34 +15,62 @@ import (
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/usecase"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
-// renderGate writes the gate response in JSON (when isJSON) or
-// text. Text is suppressed when quiet is set. Takes an io.Writer
-// so the caller owns the cobra boundary.
-func renderGate(w io.Writer, resp usecase.GateResponse, isJSON, quiet bool) error {
+// renderGate writes the gate result in JSON (when isJSON) or text.
+// Text is suppressed when quiet is set. Takes an io.Writer so the
+// caller owns the cobra boundary.
+//
+// JSON is rendered through gateJSON so the wire format stays
+// compatible with the previous usecase.GateResponse shape — operators
+// running the JSON output through scripts or downstream gates rely
+// on those exact field names.
+func renderGate(w io.Writer, result *stave.GateResult, isJSON, quiet bool) error {
 	if isJSON {
-		return jsonutil.WriteIndented(w, resp)
+		return jsonutil.WriteIndented(w, gateJSON{
+			Policy:            string(result.Policy),
+			Pass:              result.Passed,
+			Reason:            result.Reason,
+			CheckedAt:         result.CheckedAt,
+			CurrentViolations: result.CurrentViolations,
+			NewViolations:     result.NewViolations,
+			OverdueUpcoming:   result.OverdueCount,
+		})
 	}
 	if quiet {
 		return nil
 	}
 	status := "FAIL"
-	if resp.Passed {
+	if result.Passed {
 		status = "PASS"
 	}
-	_, err := fmt.Fprintf(w, "Gate %s (%s): %s\n", status, resp.Policy, resp.Reason)
+	_, err := fmt.Fprintf(w, "Gate %s (%s): %s\n", status, result.Policy, result.Reason)
 	return err
 }
 
-// Deps groups the infrastructure implementations for the gate command.
-type Deps struct {
-	UseCaseDeps usecase.GateDeps
+// gateJSON is the wire-format envelope for the JSON output. Field
+// names and time-encoding match the prior usecase.GateResponse shape
+// (time.Time's default RFC3339Nano marshaling) so existing CI scripts
+// that grep `pass` or `current_violations` continue to work after
+// the migration.
+type gateJSON struct {
+	Policy            string    `json:"policy"`
+	Pass              bool      `json:"pass"`
+	Reason            string    `json:"reason"`
+	CheckedAt         time.Time `json:"checked_at"`
+	CurrentViolations int       `json:"current_violations,omitempty"`
+	NewViolations     int       `json:"new_violations,omitempty"`
+	OverdueUpcoming   int       `json:"overdue_upcoming,omitempty"`
 }
+
+// Deps is retained as an empty struct for ABI compatibility with
+// callers that pass it; the gate command now wires its own adapters
+// through pkg/stave.Gate. Future iterations may remove the parameter.
+type Deps struct{}
 
 // NewCmd constructs the CI gate command.
 func NewCmd(deps Deps) *cobra.Command {
@@ -94,16 +123,14 @@ Exit Codes:
 				return err
 			}
 
-			req := usecase.GateRequest{
-				Policy:            string(cfg.Policy),
-				EvaluationPath:    cfg.InPath,
-				BaselinePath:      cfg.BaselinePath,
-				ControlsDir:       cfg.ControlsDir,
-				ObservationsDir:   cfg.ObservationsDir,
-				MaxUnsafeDuration: cfg.MaxUnsafeDuration,
-			}
-
-			resp, err := usecase.Gate(cmd.Context(), req, deps.UseCaseDeps)
+			result, err := stave.Gate(cmd.Context(), stave.GateConfig{
+				Policy:          stave.GatePolicy(cfg.Policy),
+				EvaluationPath:  cfg.InPath,
+				BaselinePath:    cfg.BaselinePath,
+				ControlsDir:     cfg.ControlsDir,
+				ObservationsDir: cfg.ObservationsDir,
+				MaxUnsafe:       cfg.MaxUnsafeDuration,
+			})
 			if err != nil {
 				return err
 			}
@@ -140,17 +167,17 @@ Exit Codes:
 					TeamID:     opts.Team,
 					Thresholds: teamgate.DefaultThresholds(),
 				})
-				resp.Passed = teamResult.Passed
+				result.Passed = teamResult.Passed
 				if !teamResult.Passed {
-					resp.Reason = fmt.Sprintf("team %s: %s", teamResult.TeamID, teamResult.Reason)
+					result.Reason = fmt.Sprintf("team %s: %s", teamResult.TeamID, teamResult.Reason)
 				}
 			}
 
-			if renderErr := renderGate(cfg.Stdout, resp, cfg.Format.IsJSON(), cfg.Quiet); renderErr != nil {
+			if renderErr := renderGate(cfg.Stdout, result, cfg.Format.IsJSON(), cfg.Quiet); renderErr != nil {
 				return renderErr
 			}
 
-			if !resp.Passed {
+			if !result.Passed {
 				return ui.ErrViolationsFound
 			}
 			return nil

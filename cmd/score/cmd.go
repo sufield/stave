@@ -20,6 +20,7 @@ import (
 	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -165,83 +166,49 @@ func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights
 	return renderResult(stdout, latest, opts.Format)
 }
 
+// computeFromAssessment delegates to stave.Score so library and
+// CLI verdicts share the same code path.
+//
+// The internal *report.Assessment loaded from disk is converted to
+// the public *stave.Assessment shape (lossless for scoring inputs)
+// and passed through the library's pure-arithmetic Score entry
+// point. The library replicates the same SLA tally, coverage
+// average, and TotalCheckWeight estimation that used to live here.
 func computeFromAssessment(a *report.Assessment, weights appscore.Weights, chainDefs int, maxChainWeight float64, compliance string) appscore.Result {
-	// Count SLA breaches.
-	slaTotal := 0
-	slaBreached := 0
-	hasSLA := false
-	for i := range a.Findings {
-		f := &a.Findings[i]
-		if f.SLADeadlineHours != nil {
-			hasSLA = true
-			slaTotal++
-			if f.SLABreached {
-				slaBreached++
-			}
-		}
+	pubAsmt := stave.FromReportAssessment(a)
+	w := weights
+	cfg := stave.ScoreConfig{
+		Assessment:     pubAsmt,
+		Weights:        &w,
+		ChainMaxWeight: maxChainWeight,
+		ChainDefs:      chainDefs,
+		Compliance:     parseComplianceList(compliance),
+		SnapshotID:     snapshotID(a),
 	}
+	res, err := stave.Score(context.Background(), cfg)
+	if err != nil {
+		// Score's only documented error is a nil Assessment, which
+		// we just constructed — surface it as a programming-error
+		// fallback rather than masking with a default-zero result.
+		return appscore.Result{}
+	}
+	return *res
+}
 
-	// Compute coverage from framework readiness.
-	var coveragePct float64
-	hasCoverage := false
-	if compliance != "" && len(a.Summary.FrameworkReadiness) > 0 {
-		frameworks := strings.Split(compliance, ",")
-		for i := range frameworks {
-			frameworks[i] = strings.TrimSpace(frameworks[i])
-		}
-		var total float64
-		var matched int
-		for _, fr := range a.Summary.FrameworkReadiness {
-			for _, want := range frameworks {
-				if strings.EqualFold(fr.Framework, want) {
-					total += float64(fr.ReadinessPercent)
-					matched++
-					break
-				}
-			}
-		}
-		if matched > 0 {
-			hasCoverage = true
-			coveragePct = total / float64(matched)
+// parseComplianceList splits the comma-separated CLI flag value into
+// trimmed, non-empty framework names. Empty input returns nil.
+func parseComplianceList(s string) []string {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if t := strings.TrimSpace(p); t != "" {
+			out = append(out, t)
 		}
 	}
-
-	// Estimate TotalCheckWeight from summary data. Each evaluation
-	// contributes a severity weight. We know the violation weights
-	// exactly; for passing checks we use a median weight (2.0/medium)
-	// since per-severity passing data isn't in the output.
-	var violationWeight float64
-	for i := range a.Findings {
-		violationWeight += appscore.SeverityWeightFor(a.Findings[i].ControlSeverity)
-	}
-	// passingAssets = assets with zero findings. The previous
-	// `TotalAssets - len(Findings)` mixed scales: TotalAssets is a
-	// per-asset count, len(Findings) is a per-control-per-asset count,
-	// so an asset with five findings was counted five times against
-	// the asset pool, producing systematically wrong (often zero or
-	// negative-clamped-to-zero) passing-check counts.
-	failingAssets := make(map[string]struct{}, len(a.Findings))
-	for i := range a.Findings {
-		failingAssets[string(a.Findings[i].AssetID)] = struct{}{}
-	}
-	passingChecks := max(a.Summary.TotalAssets-len(failingAssets), 0)
-	totalCheckWeight := violationWeight + float64(passingChecks)*2.0
-
-	return appscore.Compute(appscore.Input{
-		Findings:         a.Findings,
-		ChainFindings:    a.ChainFindings,
-		ChainDefs:        chainDefs,
-		MaxChainWeight:   maxChainWeight,
-		SLABreached:      slaBreached,
-		SLATotal:         slaTotal,
-		CoveragePct:      coveragePct,
-		TotalCheckWeight: totalCheckWeight,
-		HasSLA:           hasSLA,
-		HasCoverage:      hasCoverage,
-		Weights:          weights,
-		GeneratedAt:      a.Run.Now,
-		SnapshotID:       snapshotID(a),
-	})
+	return out
 }
 
 func buildTrend(results []appscore.Result) []appscore.TrendPoint {

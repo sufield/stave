@@ -27,11 +27,15 @@ func AnnotateFindings(findings []remediation.Finding, idx *iam.ResourceAccessInd
 		if len(entries) == 0 {
 			continue
 		}
-		f.Reachability = buildContext(entries)
+		f.Reachability = BuildContext(entries)
 	}
 }
 
-func buildContext(entries []iam.ResourceAccessEntry) *evaluation.ReachabilityContext {
+// BuildContext computes the per-finding reachability context from the
+// IAM-graph entries that point at a single asset. Exported so callers
+// (notably pkg/stave) can annotate plain []evaluation.Finding slices
+// without round-tripping through []remediation.Finding.
+func BuildContext(entries []iam.ResourceAccessEntry) *evaluation.ReachabilityContext {
 	ctx := &evaluation.ReachabilityContext{
 		TotalReachablePrincipals: len(entries),
 	}

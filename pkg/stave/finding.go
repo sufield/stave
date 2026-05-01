@@ -97,6 +97,44 @@ type Finding struct {
 	// Incorporates ChainBonus; sort findings by ExposureScore
 	// descending to surface chain-member findings first.
 	ExposureScore float64
+
+	// Reachability carries IAM-graph context for this finding —
+	// populated when the snapshot includes identity data and the
+	// reachability annotator has run. Nil when no IAM context was
+	// available. Use [Reachability.BlastRadiusScore] to rank
+	// findings by their reachable-principal blast radius.
+	Reachability *Reachability
+
+	// SLABreached marks the finding as past its SLA deadline. Set
+	// only when [Config.SLAConfig] is provided. Use together with
+	// SLAOverdueHours to render breach context.
+	SLABreached bool
+
+	// SLADeadlineHours is the deadline in hours the engine applied
+	// for this finding's severity. Nil when no SLA config was set
+	// or no deadline was defined for the severity.
+	SLADeadlineHours *float64
+
+	// SLAOverdueHours is the dwell-time excess past the deadline.
+	// Nil unless SLABreached.
+	SLAOverdueHours *float64
+
+	// SLAEscalatedSeverity carries the post-escalation severity
+	// when the finding has been overdue for a multiple of its
+	// deadline. Empty when no escalation applied.
+	SLAEscalatedSeverity Severity
+}
+
+// Reachability is the IAM-graph context for a finding. Carries the
+// counts the blast-radius scorer used and the highest-privilege
+// principal that can reach this asset. Mirrored from the internal
+// shape so the public surface stays stable across engine refactors.
+type Reachability struct {
+	TotalReachablePrincipals   int
+	PrivilegedPrincipalCount   int
+	HighestPrivilegePrincipal  string
+	ExternalPrincipalReachable bool
+	BlastRadiusScore           float64
 }
 
 // MatchedClause is one predicate leaf clause evaluated against a

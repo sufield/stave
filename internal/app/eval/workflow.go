@@ -8,6 +8,7 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
@@ -57,6 +58,13 @@ type AuditWorkflow struct {
 	// callers consume it for post-assessment metadata such as coverage
 	// posture aggregation. Reset on each PerformAssessment.
 	LoadedControls []policy.ControlDefinition
+
+	// LoadedSnapshots holds the asset snapshots consumed by the most
+	// recent PerformAssessment call. Populated after assessment runs;
+	// callers consume it for reachability annotation, which requires
+	// the full snapshot graph rather than just the findings list.
+	// Reset on each PerformAssessment.
+	LoadedSnapshots []asset.Snapshot
 }
 
 // NewAuditWorkflow initializes the workflow with required security connectors.
@@ -93,6 +101,7 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 		return evaluation.ComplianceReport{}, "", auditData.FirstError()
 	}
 	w.LoadedControls = auditData.Controls
+	w.LoadedSnapshots = auditData.Snapshots
 
 	report, err := Evaluate(EvaluateInput{
 		Controls:             auditData.Controls,

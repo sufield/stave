@@ -51,6 +51,13 @@ type Assessment struct {
 	// catalog is bundled, OR when no chain's escalation threshold
 	// was met on the observation set.
 	ChainFindings []ChainFinding
+
+	// SLABreaches counts the findings whose dwell time exceeded
+	// their severity-specific SLA deadline. Always 0 when
+	// [Config.SLAConfig] is nil. Use this for high-level
+	// dashboards; per-finding breach context lives on
+	// [Finding.SLABreached] / SLAOverdueHours.
+	SLABreaches int
 }
 
 // RunInfo records execution metadata for the evaluation.
@@ -83,6 +90,22 @@ type Summary struct {
 	// Violations is the total finding count (per-control,
 	// per-asset). Equal to len(Assessment.Findings).
 	Violations int
+
+	// FrameworkReadiness reports per-framework compliance scoring.
+	// Populated when controls in the catalog declare framework
+	// citations; empty otherwise. Used by [Score] for the
+	// coverage component when a Compliance filter is supplied.
+	FrameworkReadiness []FrameworkReadiness
+}
+
+// FrameworkReadiness is the per-framework readiness summary.
+// Mirrored from the internal evaluation type so the public surface
+// stays stable across engine refactors.
+type FrameworkReadiness struct {
+	Framework        string
+	TotalControls    int
+	PassingControls  int
+	ReadinessPercent int
 }
 
 // CoveragePosture is the per-tool, per-domain coverage aggregation.
