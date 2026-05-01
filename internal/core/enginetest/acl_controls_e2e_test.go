@@ -218,8 +218,13 @@ func TestACL_FullControl_TrueNegative(t *testing.T) {
 func TestACL_Recon_TruePositive_PublicReadACP(t *testing.T) {
 	t.Parallel()
 	ev := aclEvaluator(t)
+	// CTL.S3.ACL.RECON.001 fires on ACL READ_ACP exposure, which is
+	// the acl_public_read field. The earlier shape used public_admin
+	// (which actually represents anonymous WRITE-ACP) — fixed in the
+	// security-critical Bug.S1 batch when the predicate alias was
+	// re-pointed at the correct field.
 	bucket := aclBucket("recon-bucket", map[string]any{
-		"public_admin": true,
+		"acl_public_read": true,
 	}, pabDisabled())
 
 	result := ev.Evaluate(aclSnapshot(bucket))
@@ -252,11 +257,16 @@ func TestACL_Recon_TrueNegative(t *testing.T) {
 func TestACL_MultipleViolations_SameBucket(t *testing.T) {
 	t.Parallel()
 	ev := aclEvaluator(t)
+	// The nightmare bucket exercises every ACL control: public WRITE-ACP
+	// (public_admin), authenticated WRITE-ACP, public FULL_CONTROL,
+	// authenticated FULL_CONTROL, AND public READ-ACP (acl_public_read,
+	// added so CTL.S3.ACL.RECON.001 fires with the corrected predicate).
 	bucket := aclBucket("nightmare-bucket", map[string]any{
 		"public_admin":                   true,
 		"authenticated_admin":            true,
 		"has_full_control_public":        true,
 		"has_full_control_authenticated": true,
+		"acl_public_read":                true,
 	}, pabDisabled())
 
 	result := ev.Evaluate(aclSnapshot(bucket))
