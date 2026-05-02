@@ -44,14 +44,18 @@ func fromIssues(is []evaluation.Issue) []IssueDTO {
 		for j, fid := range iss.MemberFindingIDs {
 			members[j] = string(fid)
 		}
+		shared := make([]string, len(iss.SharedKeys))
+		for j, k := range iss.SharedKeys {
+			shared[j] = k.String()
+		}
 		out[i] = IssueDTO{
 			IssueID:                 string(iss.IssueID),
 			AssetID:                 string(iss.AssetID),
-			SharedKeys:              iss.SharedKeys,
+			SharedKeys:              shared,
 			HeadlineFindingID:       string(iss.HeadlineFindingID),
 			MemberFindingIDs:        members,
-			ConsolidatedScore:       iss.ConsolidatedScore,
-			ConsolidatedBlastRadius: iss.ConsolidatedBlastRadius,
+			ConsolidatedScore:       iss.ConsolidatedScore.Value(),
+			ConsolidatedBlastRadius: iss.ConsolidatedBlastRadius.Value(),
 		}
 	}
 	return out

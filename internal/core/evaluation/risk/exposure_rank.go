@@ -13,21 +13,21 @@ import (
 // breakdown for traceability. The breakdown lets operators understand
 // WHY a finding ranks where it does — not just that it does.
 type ExposureRank struct {
-	FindingIndex  int              `json:"finding_index"`
-	ControlID     kernel.ControlID `json:"control_id"`
-	AssetID       asset.ID         `json:"asset_id"`
-	ExposureScore float64          `json:"exposure_score"`
-	Breakdown     ScoreBreakdown   `json:"breakdown"`
-	SilentKiller  bool             `json:"silent_killer"`
+	FindingIndex  int                  `json:"finding_index"`
+	ControlID     kernel.ControlID     `json:"control_id"`
+	AssetID       asset.ID             `json:"asset_id"`
+	ExposureScore kernel.ExposureScore `json:"exposure_score"`
+	Breakdown     ScoreBreakdown       `json:"breakdown"`
+	SilentKiller  bool                 `json:"silent_killer"`
 }
 
 // ScoreBreakdown provides the traceable factor decomposition.
 type ScoreBreakdown struct {
-	BaseScore          int     `json:"base_score"`
-	DurationFactor     float64 `json:"duration_factor"`
-	BlastMultiplier    float64 `json:"blast_multiplier"`
-	ExposureMultiplier float64 `json:"exposure_multiplier"`
-	ChainBonus         float64 `json:"chain_bonus"`
+	BaseScore          int                `json:"base_score"`
+	DurationFactor     float64            `json:"duration_factor"`
+	BlastMultiplier    kernel.BlastRadius `json:"blast_multiplier"`
+	ExposureMultiplier float64            `json:"exposure_multiplier"`
+	ChainBonus         float64            `json:"chain_bonus"`
 	// BlindMultiplier scales the score continuously with how long the
 	// finding has been unsafe. DurationFactor steps in coarse buckets
 	// (1.0/1.5/2.0/3.0/5.0) for traceability; BlindMultiplier breaks
@@ -170,12 +170,12 @@ func RankExposures(
 			FindingIndex:  i,
 			ControlID:     f.ControlID,
 			AssetID:       f.AssetID,
-			ExposureScore: score,
+			ExposureScore: kernel.ExposureScore(score),
 			SilentKiller:  daysBlind > silentKillerDaysThreshold,
 			Breakdown: ScoreBreakdown{
 				BaseScore:          base,
 				DurationFactor:     durFactor,
-				BlastMultiplier:    blast,
+				BlastMultiplier:    kernel.BlastRadius(blast),
 				ExposureMultiplier: expMult,
 				ChainBonus:         chainBonus,
 				BlindMultiplier:    blindMult,

@@ -32,7 +32,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		Defect:             f.Defect,
 		Infection:          f.Infection,
 		Failure:            f.Failure,
-		Archetype:          f.Archetype,
+		Archetype:          f.Archetype.String(),
 		Delta:              fromDeltaPaths(f.Delta),
 	}
 
@@ -63,15 +63,15 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	dto.SLABreached = f.SLABreached
 	dto.SLAOverdueHours = f.SLAOverdueHours
 	dto.SLAEscalatedSeverity = f.SLAEscalatedSeverity.String()
-	dto.SLAPolicySource = f.SLAPolicySource
-	dto.ExposureScore = f.ExposureScore
+	dto.SLAPolicySource = f.SLAPolicySource.String()
+	dto.ExposureScore = f.ExposureScore.Value()
 	dto.ScoreBreakdown = f.ScoreBreakdown
 	if len(f.ReasoningTrace) > 0 {
 		dto.ReasoningTrace = make([]MatchedClauseDTO, len(f.ReasoningTrace))
 		for i, mc := range f.ReasoningTrace {
 			dto.ReasoningTrace[i] = MatchedClauseDTO{
 				PredicateExpr:  mc.PredicateExpr,
-				ObservationKey: mc.ObservationKey,
+				ObservationKey: mc.ObservationKey.String(),
 				Operator:       string(mc.Operator),
 				ExpectedValue:  mc.ExpectedValue,
 				ObservedValue:  mc.ObservedValue,
@@ -140,14 +140,15 @@ func buildRemediationContext(f *remediation.Finding) *RemediationContextDTO {
 	// Reasoning: mirror each matched clause in a structured shape
 	// paired with its plain-English rendering.
 	for _, mc := range f.ReasoningTrace {
+		key := mc.ObservationKey.String()
 		ctx.Violation.Reasoning = append(ctx.Violation.Reasoning, RemediationReasoningDTO{
 			Clause: translation.RenderClause(translation.Clause{
-				ObservationKey: mc.ObservationKey,
+				ObservationKey: key,
 				Operator:       string(mc.Operator),
 				ExpectedValue:  mc.ExpectedValue,
 				ObservedValue:  mc.ObservedValue,
 			}, translation.GetDefaultFieldRegistry()),
-			ObservationKey: mc.ObservationKey,
+			ObservationKey: key,
 			ObservedValue:  mc.ObservedValue,
 		})
 	}

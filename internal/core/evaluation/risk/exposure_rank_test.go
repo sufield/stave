@@ -65,7 +65,7 @@ func TestRankExposures_SortOrder(t *testing.T) {
 	if ranks[0].ControlID != "CTL.CRIT.001" {
 		t.Errorf("rank 0 = %s, want CTL.CRIT.001", ranks[0].ControlID)
 	}
-	assertScoreClose(t, ranks[0].ExposureScore, float64(ScoreCatastrophic))
+	assertScoreClose(t, ranks[0].ExposureScore.Value(), float64(ScoreCatastrophic))
 	if !ranks[0].SilentKiller {
 		t.Error("rank 0 should be silent killer (400 days > 300)")
 	}
@@ -76,13 +76,13 @@ func TestRankExposures_SortOrder(t *testing.T) {
 	if ranks[1].ControlID != "CTL.MED.001" {
 		t.Errorf("rank 1 = %s, want CTL.MED.001", ranks[1].ControlID)
 	}
-	assertScoreClose(t, ranks[1].ExposureScore, float64(ScoreCatastrophic))
+	assertScoreClose(t, ranks[1].ExposureScore.Value(), float64(ScoreCatastrophic))
 
 	// Low + 10 days = 25 * 1.0 * (1 + 10/365) = 25.685...
 	if ranks[2].ControlID != "CTL.LOW.001" {
 		t.Errorf("rank 2 = %s, want CTL.LOW.001", ranks[2].ControlID)
 	}
-	assertScoreClose(t, ranks[2].ExposureScore, 25.0*1.0*BlindMultiplier(10))
+	assertScoreClose(t, ranks[2].ExposureScore.Value(), 25.0*1.0*BlindMultiplier(10))
 	if ranks[2].SilentKiller {
 		t.Error("rank 2 should not be silent killer (10 days < 300)")
 	}
@@ -139,7 +139,7 @@ func TestRankExposures_BlastMultiplier(t *testing.T) {
 	// Raw 100 * 2.5 * BlindMultiplier(1) ≈ 250 — capped at
 	// ScoreCatastrophic. Pre-cap behavior leaked a 250 score that
 	// dwarfed every other finding in the same report.
-	assertScoreClose(t, ranks[0].ExposureScore, float64(ScoreCatastrophic))
+	assertScoreClose(t, ranks[0].ExposureScore.Value(), float64(ScoreCatastrophic))
 }
 
 func TestRankExposures_PublicExposure(t *testing.T) {
@@ -151,7 +151,7 @@ func TestRankExposures_PublicExposure(t *testing.T) {
 	ranks := RankExposures(inputs, nil, 0)
 	// Raw 75 * 2.0 * BlindMultiplier(1) ≈ 150 — capped at
 	// ScoreCatastrophic.
-	assertScoreClose(t, ranks[0].ExposureScore, float64(ScoreCatastrophic))
+	assertScoreClose(t, ranks[0].ExposureScore.Value(), float64(ScoreCatastrophic))
 }
 
 // TestRankExposures_CappedAtCeiling pins the cap explicitly: any
@@ -161,7 +161,7 @@ func TestRankExposures_CappedAtCeiling(t *testing.T) {
 		{ControlID: "CTL.EXTREME", AssetID: "asset-1", ControlSeverity: policy.SeverityCritical, UnsafeDurationHours: 2000 * 24},
 	}
 	ranks := RankExposures(inputs, nil, 0)
-	if got := ranks[0].ExposureScore; got != float64(ScoreCatastrophic) {
+	if got := ranks[0].ExposureScore.Value(); got != float64(ScoreCatastrophic) {
 		t.Errorf("extreme score = %f, want %d", got, ScoreCatastrophic)
 	}
 }

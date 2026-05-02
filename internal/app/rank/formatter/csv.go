@@ -99,7 +99,7 @@ func buildFindingIndex(assessment *report.Assessment) map[string]*findingMeta {
 		m := &findingMeta{
 			severity:  f.ControlSeverity.String(),
 			assetType: string(f.AssetType),
-			owner:     f.OwnerTeamID,
+			owner:     f.OwnerTeamID.String(),
 		}
 		if f.SLADeadlineHours != nil {
 			m.slaHours = fmt.Sprintf("%.0f", *f.SLADeadlineHours)

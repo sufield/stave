@@ -334,8 +334,12 @@ func (w *FindingWriter) writeIssues(d *drawer, result *evaluation.ComplianceRepo
 	for i := range issues {
 		iss := &issues[i]
 		d.f("\n%d. %s  (%d %s)\n", i+1, iss.AssetID, len(iss.MemberFindingIDs), pluralize(len(iss.MemberFindingIDs), "finding", "findings"))
-		d.f("   Score: %.1f\n", iss.ConsolidatedScore)
-		d.f("   Root cause: %s\n", strings.Join(iss.SharedKeys, ", "))
+		d.f("   Score: %.1f\n", iss.ConsolidatedScore.Value())
+		sharedStrs := make([]string, len(iss.SharedKeys))
+		for j, k := range iss.SharedKeys {
+			sharedStrs[j] = k.String()
+		}
+		d.f("   Root cause: %s\n", strings.Join(sharedStrs, ", "))
 		d.f("   Members:\n")
 		for _, fid := range iss.MemberFindingIDs {
 			if cid, aid, ok := lookupControlForFindingID(result.Findings, string(fid)); ok {
@@ -385,13 +389,14 @@ func writeFindingReasoning(d *drawer, f *remediation.Finding) {
 	}
 	var scope, reasoning []translation.Clause
 	for _, mc := range f.ReasoningTrace {
+		key := mc.ObservationKey.String()
 		c := translation.Clause{
-			ObservationKey: mc.ObservationKey,
+			ObservationKey: key,
 			Operator:       string(mc.Operator),
 			ExpectedValue:  mc.ExpectedValue,
 			ObservedValue:  mc.ObservedValue,
 		}
-		if translation.ClassifyClause(mc.ObservationKey) == translation.RoleGate {
+		if translation.ClassifyClause(key) == translation.RoleGate {
 			scope = append(scope, c)
 		} else {
 			reasoning = append(reasoning, c)

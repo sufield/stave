@@ -45,22 +45,23 @@ type Finding struct {
 	SLABreached          bool            `json:"sla_breached,omitempty"`
 	SLAOverdueHours      *float64        `json:"sla_overdue_hours,omitempty"`
 	SLAEscalatedSeverity policy.Severity `json:"sla_escalated_severity,omitempty"`
-	SLAPolicySource      string          `json:"sla_policy_source,omitempty"`
+	SLAPolicySource      kernel.SLAPolicySource `json:"sla_policy_source,omitempty"`
 
 	// Owner routing — populated when a team manifest is loaded.
-	OwnerTeamID     string `json:"owner_team_id,omitempty"`
-	OwnerTeamName   string `json:"owner_team_name,omitempty"`
-	OwnerContact    string `json:"owner_contact,omitempty"`
-	OwnerResolution string `json:"owner_resolution_path,omitempty"`
+	OwnerTeamID     kernel.TeamID `json:"owner_team_id,omitempty"`
+	OwnerTeamName   string        `json:"owner_team_name,omitempty"`
+	OwnerContact    string        `json:"owner_contact,omitempty"`
+	OwnerResolution string        `json:"owner_resolution_path,omitempty"`
 
 	// Reachability — populated when IAM data is in the snapshot.
 	Reachability *ReachabilityContext `json:"reachability,omitempty"`
 
 	// ExposureScore is the priority score used to order findings. Populated
 	// by the enrichment pass (internal/app/eval/workflow.go) after chain
-	// membership is annotated. 0 on findings that have not been scored yet
-	// (e.g., during assessor.compileReport before enrichment runs).
-	ExposureScore float64 `json:"exposure_score,omitempty"`
+	// membership is annotated. The zero value (kernel.ExposureScore(0))
+	// means "not yet scored" — assessor.compileReport produces unscored
+	// findings before the enrichment pass populates real scores.
+	ExposureScore kernel.ExposureScore `json:"exposure_score,omitempty"`
 
 	// ScoreBreakdown decomposes ExposureScore into the factors that produced
 	// it. Populated alongside ExposureScore. Nil on unscored findings.
@@ -89,7 +90,7 @@ type Finding struct {
 
 	// Archetype is the structural defect classification copied from the
 	// control's archetype field. Empty when the control has no archetype.
-	Archetype string `json:"archetype,omitempty"`
+	Archetype kernel.ArchetypeID `json:"archetype,omitempty"`
 
 	// Delta is the mechanically-derived set of fix paths. Each
 	// DeltaPath is an independent change that eliminates this finding.
@@ -130,7 +131,7 @@ func ReasoningTraceFromMisconfigurations(ms []policy.Misconfiguration) []Matched
 		expected := mc.UnsafeValue
 		out[i] = MatchedClause{
 			PredicateExpr:  formatClauseExpr(key, mc.Operator, expected),
-			ObservationKey: key,
+			ObservationKey: kernel.FromFieldPath(key),
 			Operator:       mc.Operator,
 			ExpectedValue:  expected,
 			ObservedValue:  mc.ActualValue,
@@ -169,7 +170,7 @@ type MatchedClause struct {
 	PredicateExpr string `json:"predicate_expr"`
 	// ObservationKey is the field path the clause consumed, with the
 	// "properties." prefix stripped for readability.
-	ObservationKey string `json:"observation_key"`
+	ObservationKey kernel.ObservationKey `json:"observation_key"`
 	// Operator is the clause's op, e.g. "eq", "any_in_field".
 	Operator predicate.Operator `json:"operator"`
 	// ExpectedValue is the value the clause expected (or the param
@@ -183,11 +184,11 @@ type MatchedClause struct {
 
 // ReachabilityContext carries IAM reachability data for a finding.
 type ReachabilityContext struct {
-	TotalReachablePrincipals   int     `json:"total_reachable_principals"`
-	PrivilegedPrincipalCount   int     `json:"privileged_principal_count"`
-	HighestPrivilegePrincipal  string  `json:"highest_privilege_principal,omitempty"`
-	ExternalPrincipalReachable bool    `json:"external_principal_reachable,omitempty"`
-	BlastRadiusScore           float64 `json:"blast_radius_score"`
+	TotalReachablePrincipals   int                  `json:"total_reachable_principals"`
+	PrivilegedPrincipalCount   int                  `json:"privileged_principal_count"`
+	HighestPrivilegePrincipal  kernel.PrincipalRef  `json:"highest_privilege_principal,omitempty"`
+	ExternalPrincipalReachable bool                 `json:"external_principal_reachable,omitempty"`
+	BlastRadiusScore           kernel.BlastRadius   `json:"blast_radius_score"`
 }
 
 // ChainMembershipEntry records that a finding contributed to a fired chain.

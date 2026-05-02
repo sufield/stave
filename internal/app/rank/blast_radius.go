@@ -14,7 +14,7 @@ func BuildBlastIndex(a *report.Assessment) map[string]float64 {
 	for i := range a.Findings {
 		f := &a.Findings[i]
 		if f.Reachability != nil {
-			idx[string(f.ControlID)+"@"+string(f.AssetID)] = f.Reachability.BlastRadiusScore
+			idx[string(f.ControlID)+"@"+string(f.AssetID)] = f.Reachability.BlastRadiusScore.Value()
 		}
 	}
 	return idx

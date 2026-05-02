@@ -6,14 +6,26 @@
 // names the snapshots needed to find the rest.
 package archetype
 
+import "github.com/sufield/stave/internal/core/kernel"
+
 // Archetype is a structural defect classification shared by a family of
 // controls. The catalog is the authoritative list (see Catalog).
 type Archetype struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Services    []string `json:"services"`
-	Guidance    string   `json:"guidance"`
+	ID          kernel.ArchetypeID `json:"id"`
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	Services    []string           `json:"services"`
+	Guidance    string             `json:"guidance"`
+}
+
+// init registers the catalog vocabulary with the kernel so
+// kernel.ArchetypeID.Validate / IsValid can reject unknown IDs.
+func init() {
+	ids := make([]string, len(Catalog))
+	for i, a := range Catalog {
+		ids[i] = string(a.ID)
+	}
+	kernel.SetArchetypeIDVocabulary(ids)
 }
 
 // Catalog enumerates the 12 archetypes recognized by Stave. Order is the
@@ -200,8 +212,9 @@ var Catalog = []Archetype{
 // Lookup returns the archetype with the given ID, or false if no archetype
 // in the catalog has that ID.
 func Lookup(id string) (Archetype, bool) {
+	target := kernel.ArchetypeID(id)
 	for _, a := range Catalog {
-		if a.ID == id {
+		if a.ID == target {
 			return a, true
 		}
 	}
@@ -212,7 +225,7 @@ func Lookup(id string) (Archetype, bool) {
 func IDs() []string {
 	out := make([]string, len(Catalog))
 	for i, a := range Catalog {
-		out[i] = a.ID
+		out[i] = a.ID.String()
 	}
 	return out
 }

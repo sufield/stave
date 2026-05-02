@@ -14,10 +14,10 @@ func TestCatalog_HasThirteenArchetypes(t *testing.T) {
 func TestCatalog_NoDuplicateIDs(t *testing.T) {
 	seen := make(map[string]int, len(Catalog))
 	for i, a := range Catalog {
-		if prev, ok := seen[a.ID]; ok {
+		if prev, ok := seen[a.ID.String()]; ok {
 			t.Errorf("duplicate ID %q at indices %d and %d", a.ID, prev, i)
 		}
-		seen[a.ID] = i
+		seen[a.ID.String()] = i
 	}
 }
 
@@ -43,7 +43,7 @@ func TestCatalog_RequiredFields(t *testing.T) {
 
 func TestLookup_Roundtrip(t *testing.T) {
 	for _, a := range Catalog {
-		got, ok := Lookup(a.ID)
+		got, ok := Lookup(a.ID.String())
 		if !ok {
 			t.Errorf("Lookup(%q) returned ok=false; want true", a.ID)
 			continue
@@ -66,7 +66,7 @@ func TestIDs_MatchesCatalog(t *testing.T) {
 		t.Fatalf("IDs() length = %d, want %d", len(ids), len(Catalog))
 	}
 	for i, id := range ids {
-		if id != Catalog[i].ID {
+		if id != Catalog[i].ID.String() {
 			t.Errorf("IDs[%d] = %q, want %q", i, id, Catalog[i].ID)
 		}
 	}

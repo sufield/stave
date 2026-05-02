@@ -2,6 +2,7 @@ package yaml
 
 import (
 	"fmt"
+	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/exposure"
@@ -42,7 +43,7 @@ func controlDefinitionToDomain(y yamlControlDefinition) (policy.ControlDefinitio
 		Defect:               y.Defect,
 		Infection:            y.Infection,
 		Failure:              y.Failure,
-		Archetype:            y.Archetype,
+		Archetype:            kernel.ArchetypeID(strings.TrimSpace(y.Archetype)),
 	}, nil
 }
 

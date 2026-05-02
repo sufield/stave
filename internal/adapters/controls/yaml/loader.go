@@ -202,12 +202,11 @@ func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
 // outputs, depending on the consumer. Surface the error here so the
 // failing control file is named in the diagnostic.
 func validateArchetype(ctl *policy.ControlDefinition) error {
-	id := strings.TrimSpace(ctl.Archetype)
-	if id == "" {
+	if ctl.Archetype.IsEmpty() {
 		return nil
 	}
-	if _, ok := archetype.Lookup(id); !ok {
-		return fmt.Errorf("control %s: unknown archetype %q (run `stave expand --list` to see valid IDs)", ctl.ID, id)
+	if _, ok := archetype.Lookup(ctl.Archetype.String()); !ok {
+		return fmt.Errorf("control %s: unknown archetype %q (run `stave expand --list` to see valid IDs)", ctl.ID, ctl.Archetype)
 	}
 	return nil
 }

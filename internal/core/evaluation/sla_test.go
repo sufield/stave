@@ -40,7 +40,7 @@ func TestAnnotateFindingSLA_WithinDeadline(t *testing.T) {
 	if f.SLAEscalatedSeverity != policy.SeverityNone {
 		t.Error("escalated severity should be empty when not breached")
 	}
-	if f.SLAPolicySource != "profile:default" {
+	if f.SLAPolicySource != kernel.SLAPolicySourceProfile("default") {
 		t.Errorf("policy source = %q, want profile:default", f.SLAPolicySource)
 	}
 }
@@ -98,7 +98,7 @@ func TestAnnotateFindingSLA_ControlOverride(t *testing.T) {
 	if f.SLADeadlineHours == nil || *f.SLADeadlineHours != 4 {
 		t.Errorf("deadline = %v, want 4 (control override)", f.SLADeadlineHours)
 	}
-	if f.SLAPolicySource != "control_override" {
+	if f.SLAPolicySource != kernel.SLAPolicySourceControlOverride {
 		t.Errorf("policy source = %q, want control_override", f.SLAPolicySource)
 	}
 	if !f.SLABreached {

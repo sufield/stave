@@ -13,12 +13,12 @@ import (
 func mkFinding(findingID, assetIDStr string, score float64, keys ...string) Finding {
 	mcs := make([]MatchedClause, len(keys))
 	for i, k := range keys {
-		mcs[i] = MatchedClause{ObservationKey: k, Operator: "eq"}
+		mcs[i] = MatchedClause{ObservationKey: kernel.ObservationKey(k), Operator: "eq"}
 	}
 	return Finding{
 		FindingID:      kernel.FindingID(findingID),
 		AssetID:        asset.ID(assetIDStr),
-		ExposureScore:  score,
+		ExposureScore:  kernel.ExposureScore(score),
 		ReasoningTrace: mcs,
 	}
 }

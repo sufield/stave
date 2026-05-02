@@ -97,7 +97,7 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 		var silentKiller bool
 
 		if hasExposure {
-			score = er.ExposureScore
+			score = er.ExposureScore.Value()
 			breakdown = er.Breakdown
 			silentKiller = er.SilentKiller
 		} else {
@@ -213,7 +213,7 @@ func buildBundles(findings []remediation.Finding, exposureByKey map[string]risk.
 		key := string(f.ControlID) + ":" + string(f.AssetID)
 		var score float64
 		if er, ok := exposureByKey[key]; ok {
-			score = er.ExposureScore
+			score = er.ExposureScore.Value()
 		} else {
 			score = float64(f.ControlSeverity.Weight())
 		}

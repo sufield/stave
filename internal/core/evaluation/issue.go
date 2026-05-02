@@ -34,7 +34,7 @@ type Issue struct {
 	// SharedKeys lists the observation-field paths the member
 	// controls collectively consumed (post discriminator-exclusion
 	// and parent-namespace expansion), sorted lexicographically.
-	SharedKeys []string `json:"shared_keys"`
+	SharedKeys []kernel.ObservationKey `json:"shared_keys"`
 
 	// HeadlineFindingID is the FindingID of the highest-scored
 	// member — the finding that best represents the Issue in
@@ -51,11 +51,11 @@ type Issue struct {
 	// ConsolidatedScore is the maximum ExposureScore across members,
 	// not the sum — Issues should not inflate priority beyond what
 	// any individual member warrants.
-	ConsolidatedScore float64 `json:"consolidated_score"`
+	ConsolidatedScore kernel.ExposureScore `json:"consolidated_score"`
 
 	// ConsolidatedBlastRadius is the maximum blast multiplier across
 	// members, preserving the shape of the most impactful member.
-	ConsolidatedBlastRadius float64 `json:"consolidated_blast_radius"`
+	ConsolidatedBlastRadius kernel.BlastRadius `json:"consolidated_blast_radius"`
 }
 
 // IsConsolidated reports whether the Issue groups multiple findings.
@@ -95,7 +95,7 @@ var discriminatorKeys = map[string]struct{}{
 func rootCauseKeys(trace []MatchedClause) map[string]struct{} {
 	out := make(map[string]struct{})
 	for _, mc := range trace {
-		key := mc.ObservationKey
+		key := mc.ObservationKey.String()
 		if _, skip := discriminatorKeys[key]; skip {
 			continue
 		}
@@ -261,8 +261,8 @@ func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue
 	memberIDs := make([]kernel.FindingID, 0, len(indices))
 	sharedSet := make(map[string]struct{})
 	var headlineIdx int
-	var headlineScore float64
-	var maxBlast float64
+	var headlineScore kernel.ExposureScore
+	var maxBlast kernel.BlastRadius
 	for i, idx := range indices {
 		f := &findings[idx]
 		memberIDs = append(memberIDs, f.FindingID)
@@ -278,14 +278,18 @@ func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue
 		}
 	}
 	slices.Sort(memberIDs)
-	shared := make([]string, 0, len(sharedSet))
+	sharedStrings := make([]string, 0, len(sharedSet))
 	for k := range sharedSet {
-		shared = append(shared, k)
+		sharedStrings = append(sharedStrings, k)
 	}
-	slices.Sort(shared)
+	slices.Sort(sharedStrings)
+	shared := make([]kernel.ObservationKey, len(sharedStrings))
+	for i, s := range sharedStrings {
+		shared[i] = kernel.ObservationKey(s)
+	}
 
 	return Issue{
-		IssueID:                 stableIssueID(assetID, shared, findings[headlineIdx].ControlID),
+		IssueID:                 stableIssueID(assetID, sharedStrings, findings[headlineIdx].ControlID),
 		AssetID:                 assetID,
 		SharedKeys:              shared,
 		HeadlineFindingID:       findings[headlineIdx].FindingID,

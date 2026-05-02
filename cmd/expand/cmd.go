@@ -129,10 +129,10 @@ func runExpand(ctx context.Context, w io.Writer, opts *options, newCtlRepo compo
 		if finding == nil {
 			return inputErrorf("control %q not found in %s", opts.Finding, opts.ControlsDir)
 		}
-		if finding.Archetype == "" {
+		if finding.Archetype.IsEmpty() {
 			return inputErrorf("control %q has no archetype field", opts.Finding)
 		}
-		archID = finding.Archetype
+		archID = finding.Archetype.String()
 	}
 
 	arch, ok := archetype.Lookup(archID)
@@ -237,7 +237,7 @@ func renderJSON(w io.Writer, arch archetype.Archetype, matched []policy.ControlD
 
 	out := payload{
 		Archetype: archetypeEntry{
-			ID:          arch.ID,
+			ID:          arch.ID.String(),
 			Name:        arch.Name,
 			Description: arch.Description,
 			Guidance:    arch.Guidance,
@@ -292,8 +292,8 @@ type findingEntry struct {
 func renderList(w io.Writer, format string, controls []policy.ControlDefinition) error {
 	counts := make(map[string]int, len(archetype.Catalog))
 	for i := range controls {
-		if controls[i].Archetype != "" {
-			counts[controls[i].Archetype]++
+		if !controls[i].Archetype.IsEmpty() {
+			counts[controls[i].Archetype.String()]++
 		}
 	}
 
@@ -307,10 +307,10 @@ func renderList(w io.Writer, format string, controls []policy.ControlDefinition)
 		out := make([]entry, 0, len(archetype.Catalog))
 		for _, a := range archetype.Catalog {
 			out = append(out, entry{
-				ID:           a.ID,
+				ID:           a.ID.String(),
 				Name:         a.Name,
 				Description:  a.Description,
-				ControlCount: counts[a.ID],
+				ControlCount: counts[a.ID.String()],
 			})
 		}
 		enc := json.NewEncoder(w)
@@ -322,7 +322,7 @@ func renderList(w io.Writer, format string, controls []policy.ControlDefinition)
 	fmt.Fprintln(w)
 	for _, a := range archetype.Catalog {
 		short := firstSentence(a.Description)
-		fmt.Fprintf(w, "  %-23s %s — %s (%d controls)\n", a.ID, a.Name, short, counts[a.ID])
+		fmt.Fprintf(w, "  %-23s %s — %s (%d controls)\n", a.ID, a.Name, short, counts[a.ID.String()])
 	}
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Use: stave expand --archetype <id>")

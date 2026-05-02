@@ -24,9 +24,10 @@ import (
 // Archetype is case-sensitive — archetype IDs are lowercase by
 // convention but the comparison is exact, not normalized.
 func FilterByArchetype(controls []policy.ControlDefinition, id string) []policy.ControlDefinition {
+	target := kernel.ArchetypeID(id)
 	out := make([]policy.ControlDefinition, 0)
 	for i := range controls {
-		if controls[i].Archetype == id {
+		if controls[i].Archetype == target {
 			out = append(out, controls[i])
 		}
 	}

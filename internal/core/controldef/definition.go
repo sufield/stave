@@ -61,7 +61,7 @@ type ControlDefinition struct {
 	// Archetype is the structural defect classification (e.g.
 	// "ghost-reference"). Optional; controls without an archetype are
 	// excluded from `stave expand` results. See internal/archetype.
-	Archetype string
+	Archetype kernel.ArchetypeID
 
 	// prepared holds pre-calculated values to optimize the evaluation
 	// hot path. Read via PreparedParams(); only Prepare()
@@ -466,7 +466,7 @@ type ControlMetadata struct {
 	Defect         string
 	Infection      string
 	Failure        string
-	Archetype      string
+	Archetype      kernel.ArchetypeID
 }
 
 // Fingerprint computes a stable hash of the control's identity and logic

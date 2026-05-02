@@ -2,6 +2,7 @@ package evaluation
 
 import (
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // SLAConfig holds the resolved SLA policy for finding annotation.
@@ -25,14 +26,14 @@ func AnnotateFindingSLA(f *Finding, ctl *policy.ControlDefinition, cfg *SLAConfi
 
 	// Determine deadline: control override takes precedence.
 	var deadlineHours float64
-	var source string
+	var source kernel.SLAPolicySource
 	if ctl != nil && ctl.HasSLADeadline() {
 		deadlineHours = ctl.SLADeadline().Hours()
-		source = "control_override"
+		source = kernel.SLAPolicySourceControlOverride
 	} else {
 		sev := f.ControlSeverity.String()
 		deadlineHours = cfg.DeadlineBySeverity[sev]
-		source = "profile:" + cfg.ProfileID
+		source = kernel.SLAPolicySourceProfile(cfg.ProfileID)
 	}
 
 	if deadlineHours <= 0 {

@@ -265,7 +265,7 @@ func computeFindingScores(findings []remediation.Finding, topExposures []risk.Ex
 
 		var score float64
 		if er, ok := exposureByKey[key]; ok {
-			score = er.ExposureScore
+			score = er.ExposureScore.Value()
 		} else {
 			base := f.ControlSeverity.Weight()
 			durFactor := risk.DurationFactor(f.Evidence.UnsafeDurationHours)

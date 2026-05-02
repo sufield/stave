@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/iam"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/util/props"
 )
 
@@ -55,16 +56,16 @@ func BuildContext(entries []iam.ResourceAccessEntry) *evaluation.ReachabilityCon
 		score := principalScore(e)
 		if score > highestScore {
 			highestScore = score
-			ctx.HighestPrivilegePrincipal = e.PrincipalARN
+			ctx.HighestPrivilegePrincipal = kernel.PrincipalRef(e.PrincipalARN)
 		}
 	}
 
 	// BlastRadiusScore formula — simple and auditable.
-	ctx.BlastRadiusScore = math.Min(100, float64(
+	ctx.BlastRadiusScore = kernel.BlastRadius(math.Min(100, float64(
 		ctx.PrivilegedPrincipalCount*20+
 			ctx.TotalReachablePrincipals*2+
 			boolInt(ctx.ExternalPrincipalReachable)*30,
-	))
+	)))
 
 	return ctx
 }

@@ -123,7 +123,7 @@ func Suggest(in Input) *Result {
 					controlID:   f.ControlID,
 					assetID:     f.AssetID,
 					severity:    f.ControlSeverity.String(),
-					ownerTeamID: f.OwnerTeamID,
+					ownerTeamID: f.OwnerTeamID.String(),
 					firstSeen:   a.Run.Now,
 					appearances: make([]bool, assessmentCount),
 				}
@@ -131,8 +131,8 @@ func Suggest(in Input) *Result {
 			}
 			m.lastSeen = a.Run.Now
 			m.appearances[idx] = true
-			if f.OwnerTeamID != "" {
-				m.ownerTeamID = f.OwnerTeamID
+			if !f.OwnerTeamID.IsEmpty() {
+				m.ownerTeamID = f.OwnerTeamID.String()
 			}
 		}
 	}

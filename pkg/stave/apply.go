@@ -187,7 +187,7 @@ func convertFinding(f *evaluation.Finding) Finding {
 		ReasoningTrace:       f.ReasoningTrace,
 		ChainMembership:      convertChainMembership(f.ChainMembership),
 		ChainBonus:           chainBonusFromBreakdown(f),
-		ExposureScore:        f.ExposureScore,
+		ExposureScore:        f.ExposureScore.Value(),
 		Defect:               f.Defect,
 		Infection:            f.Infection,
 		Failure:              f.Failure,
@@ -201,9 +201,9 @@ func convertFinding(f *evaluation.Finding) Finding {
 		out.Reachability = &Reachability{
 			TotalReachablePrincipals:   f.Reachability.TotalReachablePrincipals,
 			PrivilegedPrincipalCount:   f.Reachability.PrivilegedPrincipalCount,
-			HighestPrivilegePrincipal:  f.Reachability.HighestPrivilegePrincipal,
+			HighestPrivilegePrincipal:  f.Reachability.HighestPrivilegePrincipal.String(),
 			ExternalPrincipalReachable: f.Reachability.ExternalPrincipalReachable,
-			BlastRadiusScore:           f.Reachability.BlastRadiusScore,
+			BlastRadiusScore:           f.Reachability.BlastRadiusScore.Value(),
 		}
 	}
 	return out

@@ -139,7 +139,7 @@ func TestRenderList_TextLists12Archetypes(t *testing.T) {
 	}
 	out := buf.String()
 	for _, a := range archetype.Catalog {
-		if !strings.Contains(out, a.ID) {
+		if !strings.Contains(out, a.ID.String()) {
 			t.Errorf("--list output missing archetype %q", a.ID)
 		}
 	}
@@ -217,10 +217,10 @@ func runWithFakeControls(_ context.Context, opts *options, controls []policy.Con
 		if finding == nil {
 			return inputErrorf("control %q not found in %s", opts.Finding, opts.ControlsDir)
 		}
-		if finding.Archetype == "" {
+		if finding.Archetype.IsEmpty() {
 			return inputErrorf("control %q has no archetype field", opts.Finding)
 		}
-		archID = finding.Archetype
+		archID = finding.Archetype.String()
 	}
 	if _, ok := archetype.Lookup(archID); !ok {
 		return inputErrorf("unknown archetype %q (use --list to see catalog)", archID)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // annotateOwners resolves team ownership for each finding when a team
@@ -42,7 +43,7 @@ func annotateOwners(result *evaluation.ComplianceReport, opts *Options) error {
 	for i := range result.Findings {
 		f := &result.Findings[i]
 		owner := manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
-		f.OwnerTeamID = owner.TeamID
+		f.OwnerTeamID = kernel.TeamID(owner.TeamID)
 		f.OwnerTeamName = owner.TeamName
 		f.OwnerContact = owner.Contact
 		f.OwnerResolution = owner.ResolutionPath
@@ -60,7 +61,7 @@ func annotateOwners(result *evaluation.ComplianceReport, opts *Options) error {
 
 	filtered := result.Findings[:0]
 	for i := range result.Findings {
-		if allowed[result.Findings[i].OwnerTeamID] {
+		if allowed[result.Findings[i].OwnerTeamID.String()] {
 			filtered = append(filtered, result.Findings[i])
 		}
 	}

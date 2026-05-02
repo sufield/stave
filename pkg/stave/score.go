@@ -9,6 +9,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Weights tunes the relative importance of each score dimension.
@@ -195,7 +196,7 @@ func scoreFindingsFromAssessment(a *Assessment) []remediation.Finding {
 				ControlID:        f.ControlID,
 				AssetID:          f.AssetID,
 				ControlSeverity:  sev,
-				ExposureScore:    f.ExposureScore,
+				ExposureScore:    kernel.ExposureScore(f.ExposureScore),
 				SLABreached:      f.SLABreached,
 				SLADeadlineHours: f.SLADeadlineHours,
 				SLAOverdueHours:  f.SLAOverdueHours,
