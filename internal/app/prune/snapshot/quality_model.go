@@ -60,6 +60,31 @@ type qualityReport struct {
 	Issues        []qualityIssue    `json:"issues"`
 }
 
+// HasErrors reports whether at least one issue is recorded at the
+// "error" severity. Replaces the open-coded scan in finalize() so
+// the pass/fail computation can ask the report directly.
+func (r qualityReport) HasErrors() bool {
+	for i := range r.Issues {
+		if r.Issues[i].Severity == severityError {
+			return true
+		}
+	}
+	return false
+}
+
+// HasWarnings reports whether at least one issue is recorded at the
+// "warning" severity. Sibling of HasErrors; together they let
+// finalize collapse to one boolean expression instead of a
+// per-issue switch.
+func (r qualityReport) HasWarnings() bool {
+	for i := range r.Issues {
+		if r.Issues[i].Severity == severityWarning {
+			return true
+		}
+	}
+	return false
+}
+
 // qualityParams defines inputs for snapshot quality assessment.
 type qualityParams struct {
 	Snapshots         []asset.Snapshot

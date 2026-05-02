@@ -78,29 +78,37 @@ func ParseEnforcementGate(raw string) (EnforcementGate, error) {
 // --- Governance Models ---
 
 // WorkspacePolicy represents the security requirements for a repository (stave.yaml).
+//
+// Fields tagged `governance:"include"` are exposed as settable /
+// inspectable governance settings via GovernanceSettings. The
+// opt-in tag replaces the previous reflect-on-Kind heuristic — that
+// shape silently inflated the settings surface every time a new
+// scalar field landed, and silently dropped fields that switched
+// from string to a typed wrapper. The tag makes governance
+// membership explicit at the field site.
 type WorkspacePolicy struct {
-	MaxUnsafe                string                    `yaml:"max_unsafe"`
-	SnapshotRetention        string                    `yaml:"snapshot_retention"`
-	RetentionTier            string                    `yaml:"default_retention_tier"`
+	MaxUnsafe                string                    `yaml:"max_unsafe"                   governance:"include"`
+	SnapshotRetention        string                    `yaml:"snapshot_retention"           governance:"include"`
+	RetentionTier            string                    `yaml:"default_retention_tier"       governance:"include"`
 	RetentionTiers           map[string]retention.Tier `yaml:"snapshot_retention_tiers"`
 	ObservationTierMapping   []retention.Rule          `yaml:"observation_tier_mapping"`
-	CIFailurePolicy          string                    `yaml:"ci_failure_policy"`
-	CaptureCadence           string                    `yaml:"capture_cadence"`
-	SnapshotFilenameTemplate string                    `yaml:"snapshot_filename_template"`
+	CIFailurePolicy          string                    `yaml:"ci_failure_policy"            governance:"include"`
+	CaptureCadence           string                    `yaml:"capture_cadence"              governance:"include"`
+	SnapshotFilenameTemplate string                    `yaml:"snapshot_filename_template"   governance:"include"`
 	Exceptions               []PolicyException         `yaml:"exceptions"`
 	EnabledControlPacks      []string                  `yaml:"enabled_control_packs"`
 	ExcludeControls          []kernel.ControlID        `yaml:"exclude_controls"`
-	MaxInputFileSize         string                    `yaml:"max_input_file_size"`
-	MaxGapThreshold          string                    `yaml:"max_gap_threshold"`
-	ConfidenceHighMultiplier int                       `yaml:"confidence_high_multiplier"`
-	ConfidenceMedMultiplier  int                       `yaml:"confidence_medium_multiplier"`
-	MaxSnapshotFiles         int                       `yaml:"max_snapshot_files"`
+	MaxInputFileSize         string                    `yaml:"max_input_file_size"          governance:"include"`
+	MaxGapThreshold          string                    `yaml:"max_gap_threshold"            governance:"include"`
+	ConfidenceHighMultiplier int                       `yaml:"confidence_high_multiplier"   governance:"include"`
+	ConfidenceMedMultiplier  int                       `yaml:"confidence_medium_multiplier" governance:"include"`
+	MaxSnapshotFiles         int                       `yaml:"max_snapshot_files"           governance:"include"`
 	BlockedCommands          []string                  `yaml:"blocked_commands"`
-	MaxValidationErrors      int                       `yaml:"max_validation_errors"`
-	TeamManifest             string                    `yaml:"team_manifest"`
-	OwnerTagKey              string                    `yaml:"owner_tag_key"`
-	BudgetPeriod             string                    `yaml:"budget_period"`
-	BudgetFailBurnRate       float64                   `yaml:"budget_fail_on_burn_rate"`
+	MaxValidationErrors      int                       `yaml:"max_validation_errors"        governance:"include"`
+	TeamManifest             string                    `yaml:"team_manifest"                governance:"include"`
+	OwnerTagKey              string                    `yaml:"owner_tag_key"                governance:"include"`
+	BudgetPeriod             string                    `yaml:"budget_period"                governance:"include"`
+	BudgetFailBurnRate       float64                   `yaml:"budget_fail_on_burn_rate"     governance:"include"`
 	BudgetFailSeverity       []string                  `yaml:"budget_fail_severity"`
 }
 

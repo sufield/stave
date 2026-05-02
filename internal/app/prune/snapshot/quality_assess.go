@@ -152,18 +152,7 @@ func (r *qualityReport) addIssue(code string, severity qualitySeverity, message 
 }
 
 func (r qualityReport) finalize() qualityReport {
-	hasErrors := false
-	hasWarnings := false
-	for _, issue := range r.Issues {
-		switch issue.Severity {
-		case severityError:
-			hasErrors = true
-		case severityWarning:
-			hasWarnings = true
-		}
-	}
-
-	r.Passed = !hasErrors && (!r.Strict || !hasWarnings)
+	r.Passed = !r.HasErrors() && (!r.Strict || !r.HasWarnings())
 	return r
 }
 

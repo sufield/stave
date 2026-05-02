@@ -109,9 +109,9 @@ func TestDiffProperties(t *testing.T) {
 func TestExposureWindowComputation(t *testing.T) {
 	events := []Event{
 		{Timestamp: "2025-11-01T00:00:00Z", EventType: "control_verdict_change",
-			ControlID: "CTL.A", To: "fail"},
+			ControlID: "CTL.A", To: VerdictStateFail},
 		{Timestamp: "2025-11-05T00:00:00Z", EventType: "control_verdict_change",
-			ControlID: "CTL.A", To: "pass"},
+			ControlID: "CTL.A", To: VerdictStatePass},
 	}
 
 	windows := computeExposureWindows(events)
@@ -129,9 +129,9 @@ func TestExposureWindowComputation(t *testing.T) {
 func TestExposureWindowMalformedTimestamp(t *testing.T) {
 	events := []Event{
 		{Timestamp: "not-a-timestamp", EventType: "control_verdict_change",
-			ControlID: "CTL.A", To: "fail"},
+			ControlID: "CTL.A", To: VerdictStateFail},
 		{Timestamp: "also-invalid", EventType: "control_verdict_change",
-			ControlID: "CTL.A", To: "pass"},
+			ControlID: "CTL.A", To: VerdictStatePass},
 	}
 
 	windows := computeExposureWindows(events)

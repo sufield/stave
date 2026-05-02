@@ -16,21 +16,14 @@ import (
 // The total includes every finding; the per-severity counts only
 // include the four named tiers.
 func countFindings(a *corereport.Assessment) FindingsSummary {
-	var fs FindingsSummary
-	fs.Total = len(a.Findings)
-	for i := range a.Findings {
-		switch a.Findings[i].ControlSeverity.BucketName() {
-		case "critical":
-			fs.Critical++
-		case "high":
-			fs.High++
-		case "medium":
-			fs.Medium++
-		case "low":
-			fs.Low++
-		}
+	c := a.CountBySeverity()
+	return FindingsSummary{
+		Total:    len(a.Findings),
+		Critical: c.Critical,
+		High:     c.High,
+		Medium:   c.Medium,
+		Low:      c.Low,
 	}
-	return fs
 }
 
 // buildSLASection summarizes SLA compliance for findings whose

@@ -44,6 +44,27 @@ type AssessmentRequest struct {
 	AcknowledgedFindings []policy.AcknowledgedFinding
 }
 
+// CountBySeverity tallies the assessment's findings into the four
+// named severity buckets (critical / high / medium / low). Replaces
+// the open-coded switch loops in
+// internal/app/execreport/builder_helpers.go and
+// internal/app/consolidate/consolidate.go so summary builders ask the
+// assessment for its counts instead of iterating Findings themselves.
+//
+// The total count callers used to track separately is available via
+// SeverityCounts.Total(), or len(a.Findings) when callers want every
+// finding regardless of severity tier.
+func (a *Assessment) CountBySeverity() SeverityCounts {
+	var c SeverityCounts
+	if a == nil {
+		return c
+	}
+	for i := range a.Findings {
+		c.Add(a.Findings[i].ControlSeverity)
+	}
+	return c
+}
+
 // ValidateKind reports an error if the assessment's Kind discriminator
 // does not match the expected value. Loaders previously did the
 // (a.Kind != expected) field probe themselves; centralising the check
@@ -61,6 +82,45 @@ func (a *Assessment) ValidateKind(expected Kind, source string) error {
 			source, a.Kind, expected)
 	}
 	return nil
+}
+
+// SeverityCounts groups per-severity finding counters used by
+// summary builders. Centralising the shape lets Assessment own the
+// canonical "tally findings by control severity" routine and keeps
+// downstream summaries (FindingsSummary in execreport,
+// AccountSummary in consolidate, TeamSummary in plan/grouper) from
+// each reproducing the same switch-on-BucketName loop.
+type SeverityCounts struct {
+	Critical int `json:"critical"`
+	High     int `json:"high"`
+	Medium   int `json:"medium"`
+	Low      int `json:"low"`
+}
+
+// Total returns the sum of the four named tiers. Convenient for
+// callers that already track a separate "total findings" count and
+// want to assert consistency.
+func (c SeverityCounts) Total() int {
+	return c.Critical + c.High + c.Medium + c.Low
+}
+
+// Add increments the bucket that matches the given severity by 1.
+// Severity values that don't map to one of the four named tiers
+// (None, Info) are dropped — the counters represent only the
+// reportable severity ladder. Used by Assessment.CountBySeverity
+// and exposed for callers that count from non-Assessment sources
+// (plan/grouper's PlanFinding tally).
+func (c *SeverityCounts) Add(s policy.Severity) {
+	switch s.BucketName() {
+	case "critical":
+		c.Critical++
+	case "high":
+		c.High++
+	case "medium":
+		c.Medium++
+	case "low":
+		c.Low++
+	}
 }
 
 // Assessment is the top-level schema for a security evaluation outcome.

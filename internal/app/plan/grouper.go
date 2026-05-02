@@ -3,11 +3,11 @@ package plan
 
 import (
 	"sort"
-	"strings"
 
 	"github.com/sufield/stave/internal/app/teams"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	corereport "github.com/sufield/stave/internal/core/report"
 )
 
 // TeamPlan holds the remediation plan for a single team.
@@ -30,12 +30,16 @@ type TeamSummary struct {
 	SLACompPct  float64 `json:"sla_compliance_pct"`
 }
 
-// PlanFinding is a finding formatted for a remediation plan.
+// PlanFinding is a finding formatted for a remediation plan. Severity
+// is the typed policy.Severity (rendered as the canonical lowercase
+// label via its MarshalJSON), so per-tier counters reuse the
+// SeverityCounts.Add path that the rest of the report builders use
+// instead of reparsing a stringly-typed field.
 type PlanFinding struct {
 	Rank              int               `json:"rank"`
 	ControlID         string            `json:"control_id"`
 	ControlName       string            `json:"control_name"`
-	Severity          string            `json:"severity"`
+	Severity          policy.Severity   `json:"severity"`
 	AssetID           string            `json:"asset_id"`
 	DwellHours        float64           `json:"dwell_hours"`
 	SLADeadlineHours  *float64          `json:"sla_deadline_hours,omitempty"`
@@ -167,7 +171,7 @@ func toPlanFinding(f *remediation.Finding) PlanFinding {
 	pf := PlanFinding{
 		ControlID:        string(f.ControlID),
 		ControlName:      f.ControlName,
-		Severity:         f.ControlSeverity.String(),
+		Severity:         f.ControlSeverity,
 		AssetID:          string(f.AssetID),
 		DwellHours:       f.Evidence.UnsafeDurationHours,
 		SLABreached:      f.SLABreached,
@@ -191,18 +195,10 @@ func computeSummary(findings []PlanFinding) TeamSummary {
 	s.Total = len(findings)
 	slaTotal := 0
 	slaWithin := 0
+	var counts corereport.SeverityCounts
 	for i := range findings {
 		f := &findings[i]
-		switch strings.ToLower(f.Severity) {
-		case "critical":
-			s.Critical++
-		case "high":
-			s.High++
-		case "medium":
-			s.Medium++
-		case "low":
-			s.Low++
-		}
+		counts.Add(f.Severity)
 		if f.SLADeadlineHours != nil {
 			slaTotal++
 			if !f.SLABreached {
@@ -212,6 +208,10 @@ func computeSummary(findings []PlanFinding) TeamSummary {
 			}
 		}
 	}
+	s.Critical = counts.Critical
+	s.High = counts.High
+	s.Medium = counts.Medium
+	s.Low = counts.Low
 	if slaTotal > 0 {
 		s.SLACompPct = float64(slaWithin) / float64(slaTotal) * 100
 	} else {

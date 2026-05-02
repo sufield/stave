@@ -14,7 +14,30 @@ import (
 	"github.com/sufield/stave/internal/core/ports"
 )
 
+// VerdictState is the typed wire-format value the timeline uses to
+// describe a control's pass/fail state at a point in time. Mirrors
+// the Verdict enum on asset.ExposureLifecycle in spirit; the
+// timeline stores it directly so reconstructed events stay
+// comparable across runs without a separate string-to-state lookup.
+//
+// Control-verdict-change events use this in the Event.From / .To
+// fields; property-change events still use arbitrary scalar values
+// (the field type stays `any` to span both cases).
+type VerdictState string
+
+// Verdict-state vocabulary for control_verdict_change events.
+const (
+	VerdictStatePass VerdictState = "pass"
+	VerdictStateFail VerdictState = "fail"
+)
+
 // Event represents a change detected between consecutive snapshots.
+//
+// From / To carry either a VerdictState (for control_verdict_change
+// events) or an arbitrary scalar (for property-change events). They
+// remain `any` because the two event families have intentionally
+// different value vocabularies; the IsFail / IsPass predicates
+// safely handle the verdict case without callers asserting types.
 type Event struct {
 	Timestamp string `json:"timestamp"`
 	EventType string `json:"event_type"`
@@ -24,6 +47,28 @@ type Event struct {
 	ControlID string `json:"control_id,omitempty"`
 	ChainID   string `json:"chain_id,omitempty"`
 	Severity  string `json:"severity,omitempty"`
+}
+
+// IsFail reports whether this event records a transition to the
+// failing state. Returns true only when To is a VerdictState equal
+// to VerdictStateFail; property-change events (whose To carries a
+// scalar) and unrelated event types both return false.
+func (e *Event) IsFail() bool {
+	if e == nil {
+		return false
+	}
+	v, ok := e.To.(VerdictState)
+	return ok && v == VerdictStateFail
+}
+
+// IsPass reports whether this event records a transition to the
+// passing state. Symmetric with IsFail.
+func (e *Event) IsPass() bool {
+	if e == nil {
+		return false
+	}
+	v, ok := e.To.(VerdictState)
+	return ok && v == VerdictStatePass
 }
 
 // ExposureWindow records how long a control has been failing.
@@ -160,13 +205,17 @@ func BuildTimeline(ctx context.Context, input Input) (*Timeline, error) {
 					if !wasFailing && nowFailing {
 						tl.Events = append(tl.Events, Event{
 							Timestamp: ts, EventType: "control_verdict_change",
-							ControlID: string(input.Controls[ci].ID), From: "pass", To: "fail",
-							Severity: input.Controls[ci].Severity.String(),
+							ControlID: string(input.Controls[ci].ID),
+							From:      VerdictStatePass,
+							To:        VerdictStateFail,
+							Severity:  input.Controls[ci].Severity.String(),
 						})
 					} else if wasFailing && !nowFailing {
 						tl.Events = append(tl.Events, Event{
 							Timestamp: ts, EventType: "control_verdict_change",
-							ControlID: string(input.Controls[ci].ID), From: "fail", To: "pass",
+							ControlID: string(input.Controls[ci].ID),
+							From:      VerdictStateFail,
+							To:        VerdictStatePass,
 						})
 					}
 				}
@@ -246,15 +295,15 @@ func computeExposureWindows(events []Event) []ExposureWindow {
 		if ev.EventType != "control_verdict_change" {
 			continue
 		}
-		switch ev.To {
-		case "fail":
+		switch {
+		case ev.IsFail():
 			if windows[ev.ControlID] == nil {
 				windows[ev.ControlID] = &windowState{
 					firstFailed: ev.Timestamp,
 				}
 			}
 			windows[ev.ControlID].lastFailing = ev.Timestamp
-		case "pass":
+		case ev.IsPass():
 			if w := windows[ev.ControlID]; w != nil {
 				ts := ev.Timestamp
 				w.remediated = &ts

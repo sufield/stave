@@ -152,7 +152,7 @@ func TestWriteText_ContainsTeamName(t *testing.T) {
 				TeamName: "Team Alpha",
 				Summary:  TeamSummary{Total: 1, Critical: 1},
 				Findings: []PlanFinding{
-					{Rank: 1, ControlID: "CTL.A.001", Severity: "critical", AssetID: "asset-1", DwellHours: 48},
+					{Rank: 1, ControlID: "CTL.A.001", Severity: policy.SeverityCritical, AssetID: "asset-1", DwellHours: 48},
 				},
 			},
 		},

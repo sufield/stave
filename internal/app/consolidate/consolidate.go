@@ -16,6 +16,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/iam"
 	"github.com/sufield/stave/internal/core/kernel"
+	corereport "github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/util/props"
 
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -39,6 +40,33 @@ type AccountInput struct {
 	Environment  string
 	BusinessUnit string
 	Snapshots    []asset.Snapshot
+}
+
+// ToSummaryHeader returns an AccountSummary pre-populated with the
+// account-owned fields (ID / name / environment / business unit /
+// SnapshotAt). Severity counts, SLA breaches, ActiveChains and
+// RiskScore are left zero — the caller fills them in after the
+// per-finding pass. Centralising the field copy here keeps the
+// caller from reaching into AccountInput's fields one by one when a
+// future addition (e.g. a region label) lands on the type.
+//
+// SnapshotAt is taken from the most recent snapshot's CapturedAt.
+// Returns the zero summary when Snapshots is empty so callers can
+// branch on a missing timestamp without panicking on the index.
+func (a *AccountInput) ToSummaryHeader() AccountSummary {
+	if a == nil {
+		return AccountSummary{}
+	}
+	s := AccountSummary{
+		AccountID:    a.AccountID,
+		AccountName:  a.AccountName,
+		Environment:  a.Environment,
+		BusinessUnit: a.BusinessUnit,
+	}
+	if len(a.Snapshots) > 0 {
+		s.SnapshotAt = a.Snapshots[len(a.Snapshots)-1].CapturedAt
+	}
+	return s
 }
 
 // Run performs multi-account consolidation: per-account assessment +
@@ -169,30 +197,18 @@ func assessAccount(
 		}
 	}
 
-	// Build summary.
-	summary := AccountSummary{
-		AccountID:    acct.AccountID,
-		AccountName:  acct.AccountName,
-		Environment:  acct.Environment,
-		BusinessUnit: acct.BusinessUnit,
-		SnapshotAt:   acct.Snapshots[len(acct.Snapshots)-1].CapturedAt,
-		ActiveChains: len(result.ChainFindings),
-	}
+	// Build summary. Account-owned header fields come from the
+	// account itself; computed fields (ActiveChains, severity counts,
+	// risk score) are filled in below.
+	summary := acct.ToSummaryHeader()
+	summary.ActiveChains = len(result.ChainFindings)
 
+	var counts corereport.SeverityCounts
 	var riskScore float64
 	for i := range result.Findings {
 		f := &result.Findings[i]
 		summary.TotalFindings++
-		switch f.ControlSeverity.BucketName() {
-		case "critical":
-			summary.CriticalCount++
-		case "high":
-			summary.HighCount++
-		case "medium":
-			summary.MediumCount++
-		case "low":
-			summary.LowCount++
-		}
+		counts.Add(f.ControlSeverity)
 		if f.SLABreached {
 			summary.SLABreached++
 		}
@@ -200,6 +216,10 @@ func assessAccount(
 		dur := risk.DurationFactor(f.Evidence.UnsafeDurationHours)
 		riskScore += base * dur
 	}
+	summary.CriticalCount = counts.Critical
+	summary.HighCount = counts.High
+	summary.MediumCount = counts.Medium
+	summary.LowCount = counts.Low
 	summary.RiskScore = math.Round(riskScore)
 
 	return summary, riskScore, nil

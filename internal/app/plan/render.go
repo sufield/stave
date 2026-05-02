@@ -29,7 +29,7 @@ func WriteMarkdown(w io.Writer, p *Plan) {
 		fmt.Fprintln(w, "|---------|-------|----------|")
 		for i := range p.Unattributed {
 			f := &p.Unattributed[i]
-			fmt.Fprintf(w, "| %s | %s | %s |\n", f.ControlID, truncate(f.AssetID, 40), strings.ToUpper(f.Severity))
+			fmt.Fprintf(w, "| %s | %s | %s |\n", f.ControlID, truncate(f.AssetID, 40), strings.ToUpper(f.Severity.String()))
 		}
 	}
 }
@@ -55,7 +55,7 @@ func writeTeamMarkdown(w io.Writer, tp *TeamPlan, p *Plan) {
 	// Group findings by severity.
 	sevGroups := map[string][]PlanFinding{}
 	for i := range tp.Findings {
-		sev := strings.ToLower(tp.Findings[i].Severity)
+		sev := tp.Findings[i].Severity.String()
 		sevGroups[sev] = append(sevGroups[sev], tp.Findings[i])
 	}
 
@@ -101,7 +101,7 @@ func writeFindingMarkdown(w io.Writer, f *PlanFinding) {
 
 	fmt.Fprintln(w, "| Field | Value |")
 	fmt.Fprintln(w, "|-------|-------|")
-	fmt.Fprintf(w, "| Severity | %s |\n", strings.ToUpper(f.Severity))
+	fmt.Fprintf(w, "| Severity | %s |\n", strings.ToUpper(f.Severity.String()))
 	fmt.Fprintf(w, "| Asset | %s |\n", f.AssetID)
 	fmt.Fprintf(w, "| Dwell time | %.0f hours |\n", f.DwellHours)
 	if f.SLADeadlineHours != nil {
@@ -143,7 +143,7 @@ func WriteText(w io.Writer, p *Plan) {
 				fmt.Fprintf(w, "    %s\n", f.ControlName)
 			}
 			fmt.Fprintf(w, "    Asset:    %s\n", f.AssetID)
-			fmt.Fprintf(w, "    Severity: %s\n", strings.ToUpper(f.Severity))
+			fmt.Fprintf(w, "    Severity: %s\n", strings.ToUpper(f.Severity.String()))
 			fmt.Fprintf(w, "    Dwell:    %.0f hours\n", f.DwellHours)
 			if f.IsOverdue() {
 				fmt.Fprintf(w, "    SLA:      BREACHED (%.0fh overdue)\n", *f.OverdueHours)
@@ -215,7 +215,7 @@ func WriteCSV(w io.Writer, p *Plan) error {
 				tp.TeamName,
 				f.ControlID,
 				f.ControlName,
-				strings.ToUpper(f.Severity),
+				strings.ToUpper(f.Severity.String()),
 				f.AssetID,
 				fmt.Sprintf("%.0f", f.DwellHours),
 				dlh,

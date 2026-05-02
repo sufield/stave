@@ -15,18 +15,26 @@ import (
 // GovernanceSettings is the set of top-level audit parameters exposed to the CLI.
 var GovernanceSettings = discoverGovernanceSettings()
 
+// discoverGovernanceSettings walks WorkspacePolicy and returns the
+// yaml-tag names of every field carrying `governance:"include"`. The
+// opt-in tag replaces a Kind-based heuristic that exposed every
+// scalar field automatically — that shape silently widened the
+// settings surface as new internal scalars landed and silently
+// dropped fields that switched from string to a typed wrapper. The
+// explicit tag makes governance membership a deliberate decision at
+// the field site.
 func discoverGovernanceSettings() []string {
 	t := reflect.TypeFor[WorkspacePolicy]()
 	var settings []string
 	for f := range t.Fields() {
+		if f.Tag.Get("governance") != "include" {
+			continue
+		}
 		tag := strings.Split(f.Tag.Get("yaml"), ",")[0]
 		if tag == "" || tag == "-" {
 			continue
 		}
-		switch f.Type.Kind() {
-		case reflect.String, reflect.Bool, reflect.Int, reflect.Float64:
-			settings = append(settings, tag)
-		}
+		settings = append(settings, tag)
 	}
 	return settings
 }
