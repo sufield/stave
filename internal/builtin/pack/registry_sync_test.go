@@ -17,7 +17,10 @@ func TestRegistryPacksAreValid(t *testing.T) {
 	t.Parallel()
 	reg := testRegistry(t)
 
-	packs := reg.ListPacks()
+	packs, err := reg.ListPacks()
+	if err != nil {
+		t.Fatalf("ListPacks: %v", err)
+	}
 	refs := reg.ControlRefs()
 
 	for _, p := range packs {

@@ -55,7 +55,7 @@ func buildSLASection(a *corereport.Assessment, cfg *evaluation.SLAConfig) *SLASe
 		s := bySev[sev]
 		s.Total++
 		totalAll++
-		if !f.SLABreached {
+		if !f.IsOverdue() {
 			s.Within++
 			totalWithin++
 		} else {

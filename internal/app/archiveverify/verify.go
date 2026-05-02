@@ -15,6 +15,13 @@ import (
 	"github.com/sufield/stave/internal/app/collect"
 )
 
+// Verdict constants for the archive-verify attestation. Centralised
+// so callers stop comparing the Verdict field against magic strings.
+const (
+	VerdictPass = "PASS"
+	VerdictFail = "FAIL"
+)
+
 // Attestation is the verification result.
 type Attestation struct {
 	GeneratedAt string       `json:"generated_at"`
@@ -28,6 +35,12 @@ type Attestation struct {
 	Gaps        []GapResult  `json:"gaps,omitempty"`
 	Runs        []RunResult  `json:"bundles,omitempty"`
 }
+
+// IsPass reports whether the attestation passed.
+func (a *Attestation) IsPass() bool { return a != nil && a.Verdict == VerdictPass }
+
+// IsFail reports whether the attestation failed.
+func (a *Attestation) IsFail() bool { return a != nil && a.Verdict == VerdictFail }
 
 // PeriodResult describes the verified period.
 type PeriodResult struct {
@@ -281,12 +294,12 @@ func computeCoveragePct(start, end time.Time, gaps []GapResult) float64 {
 // PASS/FAIL verdict and accompanying reason string.
 func computeVerdict(invalidRuns []InvalidRun, gapsExceeding int, maxGapHours float64) (verdict, reason string) {
 	if len(invalidRuns) > 0 {
-		return "FAIL", fmt.Sprintf("%d bundles failed integrity verification", len(invalidRuns))
+		return VerdictFail, fmt.Sprintf("%d bundles failed integrity verification", len(invalidRuns))
 	}
 	if gapsExceeding > 0 {
-		return "FAIL", fmt.Sprintf("%d gaps exceed maximum allowed gap of %.0fh", gapsExceeding, maxGapHours)
+		return VerdictFail, fmt.Sprintf("%d gaps exceed maximum allowed gap of %.0fh", gapsExceeding, maxGapHours)
 	}
-	return "PASS", ""
+	return VerdictPass, ""
 }
 
 func verifyManifestHash(archivePath string) bool {

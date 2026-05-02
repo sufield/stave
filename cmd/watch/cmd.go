@@ -24,6 +24,42 @@ import (
 	"github.com/sufield/stave/internal/core/ports"
 )
 
+// watchAssessment is the partial wire-shape of stave apply's JSON
+// output that the watch loop consumes. Promoted from the inline
+// anonymous struct so the per-signal IsOverdue predicate can live
+// on the type rather than as an open-coded string compare at the
+// call site.
+type watchAssessment struct {
+	Status  string `json:"status"`
+	Summary struct {
+		Violations int `json:"violations"`
+	} `json:"summary"`
+	RiskSignals  []watchRiskSignal `json:"risk_signals"`
+	TopExposures []struct {
+		ControlID string  `json:"control_id"`
+		DaysBlind float64 `json:"days_blind"`
+	} `json:"top_exposures"`
+	Findings []struct {
+		ControlID string `json:"control_id"`
+		AssetID   string `json:"asset_id"`
+	} `json:"findings"`
+}
+
+// watchRiskSignal is the partial wire-shape of a single risk_signals
+// entry. The Status field carries the same vocabulary as
+// risk.ThresholdStatus (OVERDUE / DUE_NOW / UPCOMING); the watch
+// JSON decode goes through a string for forwards-compatibility
+// with new statuses, but IsOverdue centralises the comparison so
+// callers stop checking against the magic literal.
+type watchRiskSignal struct {
+	Status string `json:"status"`
+}
+
+// IsOverdue reports whether the risk signal is in the OVERDUE bucket.
+func (rs *watchRiskSignal) IsOverdue() bool {
+	return rs != nil && rs.Status == "OVERDUE"
+}
+
 type options struct {
 	ControlsDir     string
 	ObservationsDir string
@@ -171,31 +207,15 @@ func buildAssessFunc(binary string, opts *options) watch.AssessFunc {
 			return "COMPLIANT", 0, 0, 0, nil, nil
 		}
 
-		var result struct {
-			Status  string `json:"status"`
-			Summary struct {
-				Violations int `json:"violations"`
-			} `json:"summary"`
-			RiskSignals []struct {
-				Status string `json:"status"`
-			} `json:"risk_signals"`
-			TopExposures []struct {
-				ControlID string  `json:"control_id"`
-				DaysBlind float64 `json:"days_blind"`
-			} `json:"top_exposures"`
-			Findings []struct {
-				ControlID string `json:"control_id"`
-				AssetID   string `json:"asset_id"`
-			} `json:"findings"`
-		}
+		var result watchAssessment
 
 		if jsonErr := json.Unmarshal(stdout.Bytes(), &result); jsonErr != nil {
 			return "", 0, 0, 0, nil, fmt.Errorf("parse assessment output: %w", jsonErr)
 		}
 
 		// Count SLA breaches.
-		for _, rs := range result.RiskSignals {
-			if rs.Status == "OVERDUE" {
+		for i := range result.RiskSignals {
+			if result.RiskSignals[i].IsOverdue() {
 				slaBreaches++
 			}
 		}

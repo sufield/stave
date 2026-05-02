@@ -42,7 +42,10 @@ func TestCapabilities_LibraryMatchesEmbeddedRegistry(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load embedded registry: %v", err)
 	}
-	want := reg.ListPacks()
+	want, err := reg.ListPacks()
+	if err != nil {
+		t.Fatalf("ListPacks: %v", err)
+	}
 
 	caps := capabilities.Summarize("test-v1")
 

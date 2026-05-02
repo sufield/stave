@@ -280,7 +280,7 @@ func buildFindingProperties(f *remediation.Finding) map[string]any {
 		"severity":     f.ControlSeverity.String(),
 		"message":      f.Evidence.TemporalRisk,
 	}
-	if f.SLABreached {
+	if f.IsOverdue() {
 		props["sla_breached"] = true
 	}
 	if len(f.ChainMembership) > 0 {

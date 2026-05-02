@@ -93,7 +93,7 @@ func BuildCompositeGaps(assessments []*ProfileAssessment) CompositeGapReport {
 				continue
 			}
 			for _, rec := range req.Evidence {
-				if rec.Verdict != VerdictFail {
+				if !rec.IsFail() {
 					continue
 				}
 				key := gapKey{controlID: rec.ControlID, resourceARN: rec.ResourceARN}

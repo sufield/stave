@@ -325,7 +325,7 @@ func computeSLATrend(assessments []*report.Assessment) []slaTrendMetric {
 				continue
 			}
 			totalWithSLA++
-			if f.SLABreached {
+			if f.IsOverdue() {
 				breachedCount++
 				sev := f.ControlSeverity.String()
 				breachedBySev[sev]++

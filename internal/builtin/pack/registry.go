@@ -170,20 +170,24 @@ func (r *Index) loadPacks(specs map[string]packSpec) error {
 
 // ListPacks returns all available packs in stable name order.
 //
-// Panics if a name in packNames is not present in the packs map —
-// the two-value lookup catches an internal invariant violation that
-// the earlier shape silently papered over by returning a zero-value
-// Pack struct (empty ID, empty controls list, etc.).
-func (r *Index) ListPacks() []Pack {
+// Returns an error if a name in packNames is not present in the packs
+// map — the two-value lookup catches an internal invariant violation
+// that the earlier shape silently papered over by returning a
+// zero-value Pack struct (empty ID, empty controls list, etc.). The
+// previous shape was a panic; that turned a recoverable
+// configuration / loader bug into a crash, which is too aggressive
+// for a CLI command path. Callers now surface the error through
+// their normal error-return chain.
+func (r *Index) ListPacks() ([]Pack, error) {
 	out := make([]Pack, len(r.packNames))
 	for i, name := range r.packNames {
 		p, ok := r.packs[name]
 		if !ok {
-			panic(fmt.Sprintf("pack registry invariant: name %q in packNames is missing from packs map", name))
+			return nil, fmt.Errorf("pack registry invariant: name %q in packNames is missing from packs map", name)
 		}
 		out[i] = clonePack(p)
 	}
-	return out
+	return out, nil
 }
 
 // PackNames returns all pack names in stable order.

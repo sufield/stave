@@ -65,9 +65,9 @@ func WriteTable(w io.Writer, a *Attestation) {
 
 // WriteMarkdown writes the attestation as a markdown document.
 func WriteMarkdown(w io.Writer, a *Attestation) {
-	verdict := "PASS"
-	if a.Verdict == "FAIL" {
-		verdict = "FAIL"
+	verdict := VerdictPass
+	if a.IsFail() {
+		verdict = VerdictFail
 	}
 
 	fmt.Fprintf(w, "# Evidence Archive Attestation — %s\n\n", a.Period.Label)
@@ -118,7 +118,7 @@ func WriteMarkdown(w io.Writer, a *Attestation) {
 
 	fmt.Fprintln(w, "## Attestation Statement")
 	fmt.Fprintln(w)
-	if a.Verdict == "PASS" {
+	if a.IsPass() {
 		fmt.Fprintf(w, "This archive demonstrates continuous, tamper-evident security monitoring for %s.\n", a.Period.Label)
 	} else {
 		fmt.Fprintf(w, "This archive **does not** demonstrate continuous monitoring for %s. %s\n", a.Period.Label, a.Reason)

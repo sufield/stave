@@ -17,6 +17,13 @@ type ValidationFinding struct {
 	FixCommand  string         `json:"fix_command,omitempty"`
 }
 
+// IsPassing reports whether the finding's status is outcome.Pass.
+// Centralised so readiness callers stop comparing the raw enum
+// at every site.
+func (v *ValidationFinding) IsPassing() bool {
+	return v != nil && v.Status == outcome.Pass
+}
+
 // AssessmentSummary aggregates metrics from the structural validation of the
 // security controls and configuration states.
 type AssessmentSummary struct {

@@ -45,6 +45,14 @@ type PlanFinding struct {
 	Compliance        map[string]string `json:"compliance,omitempty"`
 }
 
+// IsOverdue reports whether the plan finding has breached SLA AND
+// the overdue duration was recorded. Mirrors Finding.IsOverdue's
+// two-field check so the plan renderer branches on a single
+// predicate instead of repeating the compound check at every site.
+func (f *PlanFinding) IsOverdue() bool {
+	return f != nil && f.SLABreached && f.OverdueHours != nil
+}
+
 // Plan is the complete remediation plan output.
 type Plan struct {
 	GeneratedAt  string        `json:"generated_at"`

@@ -26,11 +26,11 @@ func AssessReadiness(in validation.AssessmentContext) (validation.ReadinessAsses
 }
 
 func recordPrereqIssues(report *validation.ReadinessAssessment, checks []validation.ValidationFinding) {
-	for _, check := range checks {
-		if check.Status == outcome.Pass {
+	for i := range checks {
+		if checks[i].IsPassing() {
 			continue
 		}
-		report.RecordFinding(check)
+		report.RecordFinding(checks[i])
 	}
 }
 

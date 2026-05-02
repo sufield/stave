@@ -26,6 +26,13 @@ type Input struct {
 }
 
 // SeverityBurnRate holds burn rate for a single severity tier.
+// Recognised SeverityBurnRate.Status values. Centralised so callers
+// stop comparing the field against magic strings.
+const (
+	StatusWithinBudget    = "within_budget"
+	StatusBudgetExhausted = "budget_exhausted"
+)
+
 type SeverityBurnRate struct {
 	Severity          string    `json:"severity"`
 	SLADeadlineHours  float64   `json:"sla_deadline_hours"`
@@ -37,6 +44,14 @@ type SeverityBurnRate struct {
 	Status            string    `json:"status"`
 	FindingCount      int       `json:"finding_count"`
 	WeeklyConsumption []float64 `json:"weekly_consumption"`
+}
+
+// IsExhausted reports whether the severity has consumed its full
+// SLA budget. Replaces the br.Status == "budget_exhausted"
+// comparison sites in cmd/budget so a future status-vocabulary
+// change is one edit on the type.
+func (br *SeverityBurnRate) IsExhausted() bool {
+	return br != nil && br.Status == StatusBudgetExhausted
 }
 
 // GateResult holds the deployment gate decision.

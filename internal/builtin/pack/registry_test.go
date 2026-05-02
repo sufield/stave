@@ -19,7 +19,10 @@ func testRegistry(t *testing.T) *Index {
 
 func TestListPacksStableOrder(t *testing.T) {
 	t.Parallel()
-	packs := testRegistry(t).ListPacks()
+	packs, err := testRegistry(t).ListPacks()
+	if err != nil {
+		t.Fatalf("ListPacks: %v", err)
+	}
 	if len(packs) < 2 {
 		t.Fatalf("pack count = %d, want >= 2", len(packs))
 	}
@@ -80,7 +83,11 @@ func TestNewRegistry_AcceptsEmptyPacks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("empty packs should succeed, got: %v", err)
 	}
-	if len(idx.ListPacks()) != 0 {
+	listed, err := idx.ListPacks()
+	if err != nil {
+		t.Fatalf("ListPacks: %v", err)
+	}
+	if len(listed) != 0 {
 		t.Fatal("expected zero packs")
 	}
 }
@@ -145,14 +152,20 @@ controls:
 func TestRegistry_ListPacksReturnsClones(t *testing.T) {
 	t.Parallel()
 	reg := testRegistry(t)
-	packs := reg.ListPacks()
+	packs, err := reg.ListPacks()
+	if err != nil {
+		t.Fatalf("ListPacks: %v", err)
+	}
 	if len(packs) == 0 || len(packs[0].Controls) == 0 {
 		t.Fatal("expected non-empty pack controls")
 	}
 	original := packs[0].Controls[0]
 	packs[0].Controls[0] = "MUTATED"
 
-	fresh := reg.ListPacks()
+	fresh, err := reg.ListPacks()
+	if err != nil {
+		t.Fatalf("ListPacks: %v", err)
+	}
 	if fresh[0].Controls[0] != original {
 		t.Fatalf("registry pack controls mutated via caller slice: got %q want %q", fresh[0].Controls[0], original)
 	}

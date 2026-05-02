@@ -98,6 +98,9 @@ func Gate(ctx context.Context, req GateRequest, deps GateDeps) (GateResponse, er
 }
 
 func gateAny(ctx context.Context, req GateRequest, deps GateDeps, now time.Time) (GateResponse, error) {
+	if deps.FindingsCounter == nil {
+		return GateResponse{}, fmt.Errorf("gate: %s policy requires %s dependency", req.Policy, "FindingsCounter")
+	}
 	count, err := deps.FindingsCounter.CountFindings(ctx, req.EvaluationPath)
 	if err != nil {
 		return GateResponse{}, fmt.Errorf("gate: load evaluation %s: %w", req.EvaluationPath, err)
@@ -120,6 +123,9 @@ func gateAny(ctx context.Context, req GateRequest, deps GateDeps, now time.Time)
 }
 
 func gateNew(ctx context.Context, req GateRequest, deps GateDeps, now time.Time) (GateResponse, error) {
+	if deps.BaselineComparer == nil {
+		return GateResponse{}, fmt.Errorf("gate: %s policy requires %s dependency", req.Policy, "BaselineComparer")
+	}
 	currentCount, newCount, err := deps.BaselineComparer.CompareAgainstBaseline(ctx, req.EvaluationPath, req.BaselinePath)
 	if err != nil {
 		return GateResponse{}, fmt.Errorf("gate: compare against baseline: %w", err)
@@ -144,6 +150,9 @@ func gateNew(ctx context.Context, req GateRequest, deps GateDeps, now time.Time)
 }
 
 func gateOverdue(ctx context.Context, req GateRequest, deps GateDeps, now time.Time) (GateResponse, error) {
+	if deps.OverdueCounter == nil {
+		return GateResponse{}, fmt.Errorf("gate: %s policy requires %s dependency", req.Policy, "OverdueCounter")
+	}
 	overdueCount, err := deps.OverdueCounter.CountOverdue(ctx, req.ControlsDir, req.ObservationsDir, req.MaxUnsafeDuration, now)
 	if err != nil {
 		return GateResponse{}, fmt.Errorf("gate: count overdue: %w", err)

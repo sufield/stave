@@ -11,7 +11,10 @@ func TestPolicyInspectorAvailablePacks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewInspector: %v", err)
 	}
-	items := inspector.AvailablePacks()
+	items, err := inspector.AvailablePacks()
+	if err != nil {
+		t.Fatalf("AvailablePacks: %v", err)
+	}
 
 	var buf bytes.Buffer
 	if err := RenderSummary(&buf, items); err != nil {

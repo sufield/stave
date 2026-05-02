@@ -115,7 +115,7 @@ func computeTeamTrends(
 			}
 			if f.SLADeadlineHours != nil {
 				slaTotal++
-				if !f.SLABreached {
+				if !f.IsOverdue() {
 					slaWithin++
 				}
 			}

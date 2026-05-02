@@ -17,6 +17,14 @@ const (
 	FormatSARIF OutputFormat = "sarif"
 	// FormatMarkdown selects Markdown output (headings + pipe tables).
 	FormatMarkdown OutputFormat = "markdown"
+	// FormatTable selects column-aligned table output. Distinct from
+	// FormatText: text is paragraph-style human prose; table is a
+	// dense grid for one-row-per-record rollups (rank, scorecard,
+	// trend). Some commands expose only one of the two.
+	FormatTable OutputFormat = "table"
+	// FormatCSV selects comma-separated-values output for spreadsheet
+	// or pipeline consumption.
+	FormatCSV OutputFormat = "csv"
 )
 
 // String implements fmt.Stringer (and pflag.Value.String).
@@ -28,11 +36,11 @@ func (f OutputFormat) String() string { return string(f) }
 // message; per-command parsers may still impose stricter subsets.
 func (f *OutputFormat) Set(value string) error {
 	switch OutputFormat(value) {
-	case FormatText, FormatJSON, FormatSARIF, FormatMarkdown:
+	case FormatText, FormatJSON, FormatSARIF, FormatMarkdown, FormatTable, FormatCSV:
 		*f = OutputFormat(value)
 		return nil
 	}
-	return fmt.Errorf("invalid output format %q (supported: text, json, sarif, markdown)", value)
+	return fmt.Errorf("invalid output format %q (supported: text, json, sarif, markdown, table, csv)", value)
 }
 
 // Type implements pflag.Value; used by Cobra to render flag help.
@@ -51,6 +59,12 @@ func (f OutputFormat) IsText() bool { return f == FormatText }
 
 // IsSARIF reports whether the format is SARIF v2.1.0.
 func (f OutputFormat) IsSARIF() bool { return f == FormatSARIF }
+
+// IsTable reports whether the format is column-aligned table output.
+func (f OutputFormat) IsTable() bool { return f == FormatTable }
+
+// IsCSV reports whether the format is CSV.
+func (f OutputFormat) IsCSV() bool { return f == FormatCSV }
 
 // IsMachineReadable reports whether the format is intended for machine
 // consumption (JSON or SARIF). When true, stdout output should be

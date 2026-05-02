@@ -51,6 +51,14 @@ type RunConfig struct {
 	projectConfigPath string
 }
 
+// IsProfileMode reports whether the run is in profile mode (the
+// Profile pointer is the meaningful one). Replaces direct
+// comparisons against runModeProfile so the dispatch test lives
+// on the type. Standard mode is the inverse.
+func (c *RunConfig) IsProfileMode() bool {
+	return c != nil && c.Mode == runModeProfile
+}
+
 // applyParams holds validated and parsed domain types.
 type applyParams struct {
 	maxUnsafeDuration time.Duration

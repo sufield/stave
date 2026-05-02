@@ -24,14 +24,47 @@ type LogicTrace struct {
 	Summary       Summary           `json:"summary"`
 }
 
+// Verdict is the typed outcome string an Assessment carries.
+// Closed at the type level so callers stop comparing raw strings.
+type Verdict string
+
+// Recognised assessment verdicts.
+const (
+	VerdictViolation     Verdict = "VIOLATION"
+	VerdictPass          Verdict = "PASS"
+	VerdictSkipped       Verdict = "SKIPPED"
+	VerdictInconclusive  Verdict = "INCONCLUSIVE"
+	VerdictNotApplicable Verdict = "NOT_APPLICABLE"
+)
+
 // Assessment records the reasoning chain for a single control×asset evaluation.
 type Assessment struct {
-	ResourceID string `json:"resource_id"`
-	PolicyID   string `json:"policy_id"`
-	Verdict    string `json:"verdict"`
-	Confidence string `json:"confidence"`
-	Steps      []Step `json:"steps"`
-	FindingID  string `json:"finding_id,omitempty"`
+	ResourceID string  `json:"resource_id"`
+	PolicyID   string  `json:"policy_id"`
+	Verdict    Verdict `json:"verdict"`
+	Confidence string  `json:"confidence"`
+	Steps      []Step  `json:"steps"`
+	FindingID  string  `json:"finding_id,omitempty"`
+}
+
+// IsViolation reports whether the assessment verdict is a violation.
+func (a *Assessment) IsViolation() bool { return a != nil && a.Verdict == VerdictViolation }
+
+// IsPass reports whether the assessment verdict is a pass.
+func (a *Assessment) IsPass() bool { return a != nil && a.Verdict == VerdictPass }
+
+// IsSkipped reports whether the assessment was skipped (not run).
+func (a *Assessment) IsSkipped() bool { return a != nil && a.Verdict == VerdictSkipped }
+
+// IsInconclusive reports whether the assessment is inconclusive,
+// covering both the explicit INCONCLUSIVE verdict and the
+// NOT_APPLICABLE verdict that ComputeSummary treats as the same
+// inconclusive bucket.
+func (a *Assessment) IsInconclusive() bool {
+	if a == nil {
+		return false
+	}
+	return a.Verdict == VerdictInconclusive || a.Verdict == VerdictNotApplicable
 }
 
 // Step records a single decision point in the evaluation reasoning chain.
@@ -53,18 +86,22 @@ type Summary struct {
 }
 
 // ComputeSummary derives summary counts from the assessment list.
+// Uses the typed-verdict predicates on each Assessment so a future
+// verdict-vocabulary change is one edit on the type, not a sweep
+// through every counter.
 func ComputeSummary(assessments []Assessment) Summary {
 	var s Summary
 	s.TotalAssessments = len(assessments)
 	for i := range assessments {
-		switch assessments[i].Verdict {
-		case "VIOLATION":
+		a := &assessments[i]
+		switch {
+		case a.IsViolation():
 			s.Violations++
-		case "PASS":
+		case a.IsPass():
 			s.Passes++
-		case "SKIPPED":
+		case a.IsSkipped():
 			s.Skipped++
-		case "INCONCLUSIVE", "NOT_APPLICABLE":
+		case a.IsInconclusive():
 			s.Inconclusive++
 		}
 	}

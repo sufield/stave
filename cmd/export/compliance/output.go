@@ -262,9 +262,9 @@ func computeRequirementSLA(ra *evidence.RequirementAssessment, findings []evalua
 		}
 		hasSLA = true
 		detected++
-		if f.SLABreached {
+		if f.IsOverdue() {
 			breached++
-			if f.SLAOverdueHours != nil && *f.SLAOverdueHours > longestOverdue {
+			if *f.SLAOverdueHours > longestOverdue {
 				longestOverdue = *f.SLAOverdueHours
 			}
 		} else {

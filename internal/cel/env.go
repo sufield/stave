@@ -3,6 +3,7 @@ package cel
 import (
 	"fmt"
 	"log/slog"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -344,6 +345,31 @@ func scopedHasField(dotPath, scopeVar string) string {
 	return strings.Join(checks, " && ")
 }
 
+// safeIntegerBound is the half-open range outside which a float
+// cannot be safely converted to int64. IEEE 754 doubles can
+// represent every integer up to 2^53 exactly; beyond that the
+// rounding mode of float→int conversion would silently change the
+// value. Reject values outside [-2^53, 2^53] so the literal step
+// surfaces the imprecision instead of emitting a misleading
+// integer literal.
+const safeIntegerBound = float64(1 << 53)
+
+// isWholeIntegerFloat reports whether a float64 value is exactly
+// representable as an int64 inside the safeIntegerBound range AND
+// has no fractional component. Used by the literal() float
+// branches to decide between integer and float CEL syntax. The
+// math.Trunc check guards against fractional values; the bound
+// check guards against precision loss outside ±2^53.
+func isWholeIntegerFloat(v float64) bool {
+	if math.IsNaN(v) || math.IsInf(v, 0) {
+		return false
+	}
+	if v < -safeIntegerBound || v > safeIntegerBound {
+		return false
+	}
+	return math.Trunc(v) == v
+}
+
 // literal converts a Go value to a CEL literal string.
 // String values "true"/"false" are emitted as boolean literals to match
 // the observation property normalizer's coercion behavior.
@@ -371,7 +397,7 @@ func literal(v any) (string, error) {
 		}
 		return fmt.Sprintf("%q", val), nil
 	case float64:
-		if val == float64(int64(val)) {
+		if isWholeIntegerFloat(val) {
 			return strconv.FormatInt(int64(val), 10), nil
 		}
 		return fmt.Sprintf("%g", val), nil
@@ -381,7 +407,7 @@ func literal(v any) (string, error) {
 		// same. The earlier shape only handled float64 and would
 		// reject float32 values from tests or non-JSON sources.
 		f := float64(val)
-		if f == float64(int64(f)) {
+		if isWholeIntegerFloat(f) {
 			return strconv.FormatInt(int64(f), 10), nil
 		}
 		return fmt.Sprintf("%g", f), nil

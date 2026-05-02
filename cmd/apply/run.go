@@ -43,7 +43,7 @@ func runApply(ctx context.Context, deps Deps, opts *Options, cs cobraState) erro
 		return decorateError(err)
 	}
 
-	if cfg.Mode == runModeProfile {
+	if cfg.IsProfileMode() {
 		rt := ui.NewRuntime(cs.Stdout, cs.Stderr)
 		rt.Quiet = cfg.Profile.Quiet
 		runner := NewRunner(

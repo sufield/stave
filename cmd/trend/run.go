@@ -161,7 +161,7 @@ func computePostureScore(a *report.Assessment, slaTrend []slaTrendMetric, chainD
 		if a.Findings[i].SLADeadlineHours != nil {
 			hasSLA = true
 			slaTotal++
-			if a.Findings[i].SLABreached {
+			if a.Findings[i].IsOverdue() {
 				slaBreached++
 			}
 		}

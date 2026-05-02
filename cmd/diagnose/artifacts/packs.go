@@ -42,7 +42,11 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			return artifacts.RenderSummary(cmd.OutOrStdout(), inspector.AvailablePacks())
+			packs, err := inspector.AvailablePacks()
+			if err != nil {
+				return err
+			}
+			return artifacts.RenderSummary(cmd.OutOrStdout(), packs)
 		},
 	}
 }

@@ -50,7 +50,7 @@ func evaluateRequirement(pkg *EvidencePackage, req *Requirement) RequirementAsse
 		}
 
 		verdict := aggregateControlVerdict(records)
-		if verdict == verdictNotEvaluated {
+		if verdict == VerdictNotApplicable {
 			// All records were NotApplicable — treat as not evaluated.
 			continue
 		}
@@ -59,11 +59,11 @@ func evaluateRequirement(pkg *EvidencePackage, req *Requirement) RequirementAsse
 		ra.Evidence = append(ra.Evidence, records...)
 
 		switch verdict {
-		case verdictPassed:
+		case VerdictPass:
 			ra.PassCount++
-		case verdictFailed:
+		case VerdictFail:
 			ra.FailCount++
-		case verdictIncomplete:
+		case VerdictIncomplete:
 			ra.IncompleteCount++
 		}
 	}
@@ -77,45 +77,25 @@ func evaluateRequirement(pkg *EvidencePackage, req *Requirement) RequirementAsse
 	return ra
 }
 
-// controlVerdict is the aggregated verdict for a single control across
-// all its resource records.
-type controlVerdict int
-
-const (
-	verdictPassed controlVerdict = iota
-	verdictFailed
-	verdictIncomplete
-	verdictNotEvaluated // all records were NotApplicable
-)
-
-// aggregateControlVerdict determines the worst-case verdict for a control
-// across all its evidence records. Fail > Incomplete > Pass > NotApplicable.
-func aggregateControlVerdict(records []*EvidenceRecord) controlVerdict {
-	hasFail := false
-	hasIncomplete := false
-	hasPass := false
-
+// aggregateControlVerdict determines the worst-case verdict for a
+// control across all its evidence records. Delegates to the same
+// counts-based precedence rule (aggregateFromCounts) used by
+// EvidencePackage.AggregateVerdict so the rule lives in one place.
+// Returns the typed EvidenceVerdict directly — VerdictNotApplicable
+// signals "no decisive record" so callers can skip the requirement.
+func aggregateControlVerdict(records []*EvidenceRecord) EvidenceVerdict {
+	var pass, fail, incomplete int
 	for _, r := range records {
-		switch r.Verdict {
-		case VerdictFail:
-			hasFail = true
-		case VerdictIncomplete:
-			hasIncomplete = true
-		case VerdictPass:
-			hasPass = true
+		switch {
+		case r.IsFail():
+			fail++
+		case r.IsIncomplete():
+			incomplete++
+		case r.IsPass():
+			pass++
 		}
 	}
-
-	switch {
-	case hasFail:
-		return verdictFailed
-	case hasIncomplete:
-		return verdictIncomplete
-	case hasPass:
-		return verdictPassed
-	default:
-		return verdictNotEvaluated
-	}
+	return aggregateFromCounts(pass, fail, incomplete)
 }
 
 func determineStatus(ra RequirementAssessment, threshold PassThreshold) RequirementStatus {

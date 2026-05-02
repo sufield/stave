@@ -98,7 +98,10 @@ func runListPacks(w io.Writer, cfg catalog.DiscoveryRequest) error {
 	if err != nil {
 		return err
 	}
-	items := reg.ListPacks()
+	items, err := reg.ListPacks()
+	if err != nil {
+		return err
+	}
 
 	if appcontracts.OutputFormat(cfg.OutputFormat) == appcontracts.FormatJSON {
 		return jsonutil.WriteIndented(w, items)

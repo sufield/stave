@@ -162,14 +162,27 @@ func (v *Validator) getSchema(kind schemas.Kind, version string) (*jsonschema.Sc
 
 // --- Utilities ---
 
-// normalizeYAML recursively converts map[any]any to map[string]any for JSON schema compatibility.
+// normalizeYAML recursively converts map[any]any to map[string]any
+// for JSON schema compatibility. Both map branches and the slice
+// branch return new collections rather than mutating their inputs;
+// the previous shape mutated map[string]any in place, which had two
+// failure modes:
+//   - Callers holding a reference to the input map saw their values
+//     change underneath them.
+//   - The map[any]any branch already returned a fresh map, so the
+//     two cases were asymmetric — a caller could not predict
+//     whether normalizeYAML would or would not mutate the input.
+//
+// Normalising both branches to "always return a copy" makes the
+// function pure with respect to its input.
 func normalizeYAML(v any) any {
 	switch x := v.(type) {
 	case map[string]any:
+		out := make(map[string]any, len(x))
 		for k, vv := range x {
-			x[k] = normalizeYAML(vv)
+			out[k] = normalizeYAML(vv)
 		}
-		return x
+		return out
 	case map[any]any:
 		out := make(map[string]any, len(x))
 		for k, vv := range x {
@@ -177,10 +190,11 @@ func normalizeYAML(v any) any {
 		}
 		return out
 	case []any:
+		out := make([]any, len(x))
 		for i := range x {
-			x[i] = normalizeYAML(x[i])
+			out[i] = normalizeYAML(x[i])
 		}
-		return x
+		return out
 	default:
 		return v
 	}

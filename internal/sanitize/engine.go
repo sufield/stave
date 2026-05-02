@@ -363,6 +363,16 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 		// `false` after the round trip, which can flip a control's
 		// verdict. Treat sanitization as a one-way operation toward
 		// human consumers, not an idempotent transform.
+		//
+		// Surface the sanitization at warn level when the original
+		// value was true — flipping true→false is the asymmetric case
+		// that matters for re-ingestion safety; an already-false bool
+		// rounds-trips harmlessly. Without this, sanitized→re-ingested
+		// pipelines could silently flip a control verdict and the
+		// operator would have no signal in the logs.
+		if val {
+			slog.Warn("sanitize: bool true scrubbed to false (one-way operation; do not re-ingest sanitized output)")
+		}
 		return false
 	case int:
 		return 0

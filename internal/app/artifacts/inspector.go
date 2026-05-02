@@ -26,7 +26,7 @@ func NewInspector() (*PolicyInspector, error) {
 }
 
 // AvailablePacks returns the full collection of embedded security control sets.
-func (i *PolicyInspector) AvailablePacks() []packs.Pack {
+func (i *PolicyInspector) AvailablePacks() ([]packs.Pack, error) {
 	return i.Library.ListPacks()
 }
 

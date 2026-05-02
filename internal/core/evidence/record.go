@@ -46,6 +46,25 @@ type EvidenceRecord struct {
 	EvaluatedAt    time.Time       `json:"evaluated_at"`
 }
 
+// IsPass reports whether the record's verdict is a pass.
+// Centralised so callers stop comparing e.Verdict against the
+// constant directly. Mirrors evaluation.ResourceCheck.IsPass.
+func (e *EvidenceRecord) IsPass() bool {
+	return e != nil && e.Verdict == VerdictPass
+}
+
+// IsFail reports whether the record's verdict is a fail.
+func (e *EvidenceRecord) IsFail() bool {
+	return e != nil && e.Verdict == VerdictFail
+}
+
+// IsIncomplete reports whether the record's verdict is incomplete —
+// usually missing data or a degraded predicate evaluation rather
+// than a definite pass/fail.
+func (e *EvidenceRecord) IsIncomplete() bool {
+	return e != nil && e.Verdict == VerdictIncomplete
+}
+
 // Citation is a single regulatory reference with structured fields.
 type Citation struct {
 	Framework   string `json:"framework" yaml:"framework"`

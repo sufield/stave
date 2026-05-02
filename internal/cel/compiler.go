@@ -313,25 +313,37 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string, depth int) (string, er
 		// comparison to be meaningful — a missing target is treated as
 		// "safe" (no violation by absence) so the negative operators
 		// share a single, predictable convention.
-		ofa, ohf := resolveCrossFieldRef(r, val, scopeVar)
+		ofa, ohf, refErr := resolveCrossFieldRef(r, val, scopeVar)
+		if refErr != nil {
+			return "", fmt.Errorf("op neq_field: %w", refErr)
+		}
 		return fmt.Sprintf("(%s && %s && %s != %s)", hf, ohf, fa, ofa), nil
 	case predicate.OpNotInField:
 		// "source not in target list". Both sides must exist; missing
 		// data does not produce a violation. Mirrors OpNeqField.
-		ofa, ohf := resolveCrossFieldRef(r, val, scopeVar)
+		ofa, ohf, refErr := resolveCrossFieldRef(r, val, scopeVar)
+		if refErr != nil {
+			return "", fmt.Errorf("op not_in_field: %w", refErr)
+		}
 		return fmt.Sprintf("(%s && %s && !(%s in %s))", hf, ohf, fa, ofa), nil
 	case predicate.OpNotSubsetOfField:
 		// "source list not subset of target list". Both sides must exist;
 		// missing data does not produce a violation. Mirrors the other
 		// negative cross-field operators.
-		ofa, ohf := resolveCrossFieldRef(r, val, scopeVar)
+		ofa, ohf, refErr := resolveCrossFieldRef(r, val, scopeVar)
+		if refErr != nil {
+			return "", fmt.Errorf("op not_subset_of_field: %w", refErr)
+		}
 		return fmt.Sprintf("(%s && %s && %s.exists(x, !(x in %s)))", hf, ohf, fa, ofa), nil
 	case predicate.OpAnyInField:
 		// field.exists(x, x in other) — true when the field (a list)
 		// has at least one element that also appears in another list.
 		// Both sides must be present; either missing → false.
 		// Complement of OpNotSubsetOfField.
-		ofa, ohf := resolveCrossFieldRef(r, val, scopeVar)
+		ofa, ohf, refErr := resolveCrossFieldRef(r, val, scopeVar)
+		if refErr != nil {
+			return "", fmt.Errorf("op any_in_field: %w", refErr)
+		}
 		return fmt.Sprintf("(%s && %s && %s.exists(x, x in %s))", hf, ohf, fa, ofa), nil
 	case predicate.OpAnyMatch:
 		return ruleToExprAnyMatch(r, val, scopeVar, false, depth)
@@ -434,22 +446,24 @@ func ruleToExprListEmpty(hf, fa string) string {
 // a param ref is the literal `true` — the param itself is required to be
 // declared in the control's `params:` block, so absence at evaluation time
 // would be a control-load defect, not a data-shape question.
-func resolveCrossFieldRef(r *policy.PredicateRule, val any, scopeVar string) (access string, exists string) {
+//
+// Returns an error when value_from_param fails the safe-name check.
+// The earlier shape emitted "params.__INVALID_PARAM_NAME__" plus the
+// literal "false" so the surrounding CEL would fail-open and the
+// upstream parser would later produce a generic syntax error far
+// from the offending control. Routing the failure through the
+// caller's error path means the failing rule and param are named in
+// the diagnostic.
+func resolveCrossFieldRef(r *policy.PredicateRule, val any, scopeVar string) (access, exists string, err error) {
 	if r.ValueFromParam != "" {
 		name := string(r.ValueFromParam)
 		if !isSafeParamName(name) {
-			// Compile-time fail-loud: emit an expression that
-			// evaluates to a clearly-broken false rather than
-			// concatenating an attacker-controlled string. The
-			// upstream Compile() returns an error from the literal
-			// CEL parse failure, which surfaces the bad control
-			// YAML at load time.
-			return "params.__INVALID_PARAM_NAME__", "false"
+			return "", "", fmt.Errorf("invalid value_from_param %q: must match [A-Za-z0-9_.]+", name)
 		}
-		return "params." + name, "true"
+		return "params." + name, "true", nil
 	}
 	other := fmt.Sprint(val)
-	return scopedFieldAccess(other, scopeVar), scopedHasField(other, scopeVar)
+	return scopedFieldAccess(other, scopeVar), scopedHasField(other, scopeVar), nil
 }
 
 // coerceBool returns val as a Go bool. It accepts native bool and the

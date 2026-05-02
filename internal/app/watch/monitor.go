@@ -73,6 +73,14 @@ func New(cfg Config) *Monitor {
 
 // Run starts the watch loop. Blocks until context is cancelled.
 func (m *Monitor) Run(ctx context.Context) error {
+	// Cleanup must run on every exit path — including the early
+	// returns from fsnotify.NewWatcher / watcher.Add — so the
+	// AlertSinks (which may hold open file handles, network
+	// connections, or background goroutines) are released. The
+	// previous shape only closed sinks in the ctx.Done() branch,
+	// which leaked them on failure paths.
+	defer m.closeSinks()
+
 	// Initial assessment.
 	m.runCycle(ctx)
 
@@ -95,10 +103,17 @@ func (m *Monitor) Run(ctx context.Context) error {
 	}
 
 	var debounce *time.Timer
+	defer func() {
+		// Stop the debounce timer on shutdown so its scheduled
+		// runCycle goroutine doesn't fire after the sinks are
+		// closed and the context is cancelled.
+		if debounce != nil {
+			debounce.Stop()
+		}
+	}()
 	for {
 		select {
 		case <-ctx.Done():
-			m.closeSinks()
 			return nil
 
 		case event := <-watcher.Events:

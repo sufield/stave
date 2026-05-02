@@ -92,7 +92,15 @@ func newFeatureManifest() *featureManifest {
 	if err != nil {
 		panic("capabilities: failed to load embedded policy library: " + err.Error())
 	}
-	discovered := packReg.ListPacks()
+	discovered, err := packReg.ListPacks()
+	if err != nil {
+		// newFeatureManifest is a constructor with no error return —
+		// the embedded registry is built at compile time, so a
+		// ListPacks invariant violation is a build-time bug that
+		// should crash startup loudly. Consistent with the
+		// NewEmbeddedRegistry panic above.
+		panic("capabilities: failed to enumerate embedded policy library: " + err.Error())
+	}
 	library := make([]PolicyPack, len(discovered))
 	for i, p := range discovered {
 		library[i] = PolicyPack{

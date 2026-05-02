@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/runid"
@@ -85,11 +84,9 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 	}
 
 	// Staleness check: --assert-recent.
-	if opts.AssertRecent != "" {
-		threshold, parseErr := time.ParseDuration(opts.AssertRecent)
-		if parseErr != nil {
-			return &ui.UserError{Err: fmt.Errorf("parse --assert-recent: %w", parseErr)}
-		}
+	if threshold, hasThreshold, parseErr := opts.StalenessThreshold(); parseErr != nil {
+		return &ui.UserError{Err: parseErr}
+	} else if hasThreshold {
 		now := params.clock.Now()
 		snapshots, snapErr := compose.LoadSnapshotsFrom(ctx, deps.NewObsRepo, cfg.ObservationsDir)
 		if snapErr != nil {
@@ -106,7 +103,7 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 	// summary, but the gating semantics — exit non-zero on
 	// violations / SLA breach — must still apply, otherwise CI runs
 	// with --new-only would pass on every active finding.
-	if opts.NewOnly || opts.NewSince != "" {
+	if opts.IsNewOnlyMode() {
 		if err := runNewOnlyOutput(ctx, sio.Stdout, sio.Stderr, opts, results); err != nil {
 			return err
 		}

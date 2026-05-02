@@ -2,6 +2,8 @@ package apply
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
@@ -27,6 +29,16 @@ func (o *Options) resolveEnvVarDefaults(cmd *cobra.Command) {
 // Called from PreRunE — the only place that touches *cobra.Command.
 func (o *Options) resolveApplyConfigDefaults(cmd *cobra.Command) {
 	eval := cmdctx.ResolverFromCmd(cmd)
+	// Defensive nil guard. ResolverFromCmd returns nil when the
+	// PreRunE chain ran without injecting a resolver (test
+	// harnesses that drive the command without bootstrap, future
+	// code paths that build cobra.Command directly). Mirrors the
+	// early-return pattern in resolveConfigurableLimits and
+	// resolveGlobalFlagDefaults so a nil resolver no longer
+	// panics on the first method call below.
+	if eval == nil {
+		return
+	}
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
@@ -96,6 +108,33 @@ type Options struct {
 	NewSince           string
 	SARIFBaseline      string
 	AssertRecent       string
+}
+
+// IsNewOnlyMode reports whether the run is in new-only mode —
+// either --new-only is set or --new-since carries a window. Used
+// by the standard-apply pipeline to gate the post-evaluation
+// classification step. Centralised so the OR pair stays in one
+// place; adding a future "new-X" flag is a single-line change on
+// this method.
+func (o *Options) IsNewOnlyMode() bool {
+	return o != nil && (o.NewOnly || o.NewSince != "")
+}
+
+// StalenessThreshold parses the --assert-recent flag. Returns
+// (threshold, true, nil) when the flag is set and parses cleanly,
+// (0, false, nil) when the flag is empty (no assertion requested),
+// and (0, false, err) when set but malformed. Encapsulates the
+// empty-check + ParseDuration pair the apply runner used to
+// open-code at the call site.
+func (o *Options) StalenessThreshold() (time.Duration, bool, error) {
+	if o == nil || o.AssertRecent == "" {
+		return 0, false, nil
+	}
+	d, err := time.ParseDuration(o.AssertRecent)
+	if err != nil {
+		return 0, false, fmt.Errorf("parse --assert-recent %q: %w", o.AssertRecent, err)
+	}
+	return d, true, nil
 }
 
 // normalize cleans all user-supplied paths in one pass.

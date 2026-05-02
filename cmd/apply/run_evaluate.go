@@ -93,7 +93,7 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	// pipeline here would produce a double-output stream — two JSON
 	// documents on stdout — which breaks any consumer that expects
 	// one document per invocation.
-	if !ec.Opts.NewOnly && ec.Opts.NewSince == "" {
+	if !ec.Opts.IsNewOnlyMode() {
 		pipeline := &appeval.OutputPipeline{
 			Marshaler: deps.Runner.ReportPublisher,
 			Enricher:  deps.Runner.ContextEnricher,

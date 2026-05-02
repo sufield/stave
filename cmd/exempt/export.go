@@ -143,7 +143,7 @@ func buildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment, syst
 	ackIDs := make(map[string]bool)
 	for i := range af.Acknowledgments {
 		a := &af.Acknowledgments[i]
-		if a.Status != "active" && a.Status != "expired" {
+		if !a.IsExportable() {
 			continue
 		}
 
@@ -151,10 +151,7 @@ func buildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment, syst
 		itemUUID := poamUUID("poam-item", a.ControlID, a.AssetID)
 		riskUUID := poamUUID("risk", a.ControlID, a.AssetID)
 
-		status := "accepted"
-		if a.Status == "expired" {
-			status = "open" // expired = no longer accepted
-		}
+		status := a.ExportStatus()
 
 		risk := map[string]any{
 			"uuid":   riskUUID,

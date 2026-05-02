@@ -58,11 +58,19 @@ func RunDaemon(ctx context.Context, opts DaemonOpts) error {
 				"period", opts.Period)
 		}
 
+		// time.After(d) leaks the underlying timer until d expires —
+		// each loop iteration on shutdown leaves a goroutine parked
+		// on the inner runtime timer. NewTimer + explicit Stop on
+		// ctx.Done collects the timer immediately so a long-running
+		// daemon with a long Period doesn't accumulate dangling
+		// timer goroutines on each cancel.
+		timer := time.NewTimer(opts.Period)
 		select {
 		case <-ctx.Done():
+			timer.Stop()
 			slog.Info("collect daemon stopping")
 			return nil
-		case <-time.After(opts.Period):
+		case <-timer.C:
 			// continue to next collection
 		}
 	}

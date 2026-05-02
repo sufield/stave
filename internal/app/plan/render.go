@@ -106,7 +106,7 @@ func writeFindingMarkdown(w io.Writer, f *PlanFinding) {
 	fmt.Fprintf(w, "| Dwell time | %.0f hours |\n", f.DwellHours)
 	if f.SLADeadlineHours != nil {
 		fmt.Fprintf(w, "| SLA deadline | %.0fh |\n", *f.SLADeadlineHours)
-		if f.SLABreached && f.OverdueHours != nil {
+		if f.IsOverdue() {
 			fmt.Fprintf(w, "| SLA status | BREACHED — %.0fh overdue |\n", *f.OverdueHours)
 		} else {
 			fmt.Fprintf(w, "| SLA status | Within SLA |\n")
@@ -145,7 +145,7 @@ func WriteText(w io.Writer, p *Plan) {
 			fmt.Fprintf(w, "    Asset:    %s\n", f.AssetID)
 			fmt.Fprintf(w, "    Severity: %s\n", strings.ToUpper(f.Severity))
 			fmt.Fprintf(w, "    Dwell:    %.0f hours\n", f.DwellHours)
-			if f.SLABreached && f.OverdueHours != nil {
+			if f.IsOverdue() {
 				fmt.Fprintf(w, "    SLA:      BREACHED (%.0fh overdue)\n", *f.OverdueHours)
 			}
 			if f.RemediationAction != "" {
@@ -204,7 +204,7 @@ func WriteCSV(w io.Writer, p *Plan) error {
 		for j := range tp.Findings {
 			f := &tp.Findings[j]
 			slaStatus := "within_sla"
-			if f.SLABreached {
+			if f.IsOverdue() {
 				slaStatus = "breached"
 			}
 			dlh := ""

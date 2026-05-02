@@ -49,7 +49,7 @@ func (s *fileSpan) End() {
 	s.tracer.append(trace.Assessment{
 		ResourceID: s.resourceID,
 		PolicyID:   s.policyID,
-		Verdict:    s.verdict,
+		Verdict:    trace.Verdict(s.verdict),
 		Confidence: s.confidence,
 		Steps:      slices.Clone(s.steps),
 		FindingID:  s.findingID,

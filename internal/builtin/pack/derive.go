@@ -46,7 +46,16 @@ func DeriveControlRefs(fsys embed.FS, root string) (map[kernel.ControlID]Control
 			return fmt.Errorf("control at %s has empty id field", p)
 		}
 
-		refs[kernel.ControlID(hdr.ID)] = ControlRef{
+		// Reject duplicate control IDs: two YAML files claiming the
+		// same id silently let the second registration win in the
+		// previous shape, which produced a "phantom" definition for
+		// whichever file the embed walk visited last. Fail loudly
+		// with both paths so the author can see the collision.
+		key := kernel.ControlID(hdr.ID)
+		if existing, dup := refs[key]; dup {
+			return fmt.Errorf("duplicate control ID %q: defined in %s and %s", hdr.ID, existing.Path, p)
+		}
+		refs[key] = ControlRef{
 			Path:    p,
 			Summary: hdr.Name,
 		}

@@ -38,6 +38,15 @@ type PriorityEntry struct {
 	SLAOverdue    string                  `json:"sla_overdue,omitempty"`
 }
 
+// IsOverdue reports whether the priority entry has breached SLA AND
+// the overdue duration was recorded. Mirrors Finding.IsOverdue's
+// two-field check so consumers branch on a single predicate
+// regardless of whether they're holding a Finding or a
+// roadmap-side PriorityEntry.
+func (e *PriorityEntry) IsOverdue() bool {
+	return e != nil && e.SLABreached && e.SLAOverdue != ""
+}
+
 // RemediationBundle groups findings by a shared fix action.
 type RemediationBundle struct {
 	Action           string             `json:"action"`

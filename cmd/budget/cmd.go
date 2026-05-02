@@ -261,7 +261,7 @@ func writeTable(w io.Writer, r appbudget.Report) {
 		br := &r.BurnRates[i]
 		bar := burnBar(br.BurnRatePercent)
 		status := "WITHIN BUDGET"
-		if br.Status == "budget_exhausted" {
+		if br.IsExhausted() {
 			status = "EXHAUSTED"
 		}
 		fmt.Fprintf(w, "%-10s %7.0fh %9.0fh %9.0fh %9.1f%%   %s  %s\n",
@@ -337,7 +337,7 @@ func writeMarkdown(w io.Writer, r appbudget.Report) {
 	for i := range r.BurnRates {
 		br := &r.BurnRates[i]
 		status := "Within budget"
-		if br.Status == "budget_exhausted" {
+		if br.IsExhausted() {
 			status = "EXHAUSTED"
 		}
 		fmt.Fprintf(w, "| %s | %.0fh | %.0fh | %.1f%% | %s |\n",

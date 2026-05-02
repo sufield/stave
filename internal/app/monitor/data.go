@@ -129,7 +129,7 @@ func computeScore(a *report.Assessment, chainDefs int, maxChainWeight float64) a
 	for i := range a.Findings {
 		if a.Findings[i].SLADeadlineHours != nil {
 			slaTotal++
-			if a.Findings[i].SLABreached {
+			if a.Findings[i].IsOverdue() {
 				slaBreached++
 			}
 		}

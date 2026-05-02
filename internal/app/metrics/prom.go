@@ -98,7 +98,7 @@ func computeSLAMetrics(findings []remediation.Finding) map[string]float64 {
 			agg[sev] = a
 		}
 		a.total++
-		if f.SLABreached {
+		if f.IsOverdue() {
 			a.breached++
 		}
 	}

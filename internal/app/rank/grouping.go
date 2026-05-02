@@ -40,7 +40,7 @@ func GroupByOwner(_ *report.Assessment, roadmap Roadmap, manifest *teams.Manifes
 		}
 		tr.FindingCount++
 		tr.TotalRisk += e.PriorityScore
-		if e.SLABreached {
+		if e.IsOverdue() {
 			tr.SLABreaches++
 		}
 		if e.IsChainMember {

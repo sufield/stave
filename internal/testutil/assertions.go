@@ -91,7 +91,7 @@ func AssertTraceHasAssessment(t *testing.T, lt *trace.LogicTrace, resourceID, po
 	for i := range lt.Assessments {
 		a := &lt.Assessments[i]
 		if a.ResourceID == resourceID && a.PolicyID == policyID {
-			if a.Verdict != expectedVerdict {
+			if string(a.Verdict) != expectedVerdict {
 				t.Errorf("trace assessment %s×%s: verdict=%s, want %s",
 					resourceID, policyID, a.Verdict, expectedVerdict)
 			}

@@ -153,9 +153,22 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 	start := time.Now().UTC()
 	runID := start.Format("2006-01-02T15-04-05Z")
 
-	frameworks := strings.Split(opts.Compliance, ",")
-	for i := range frameworks {
-		frameworks[i] = strings.TrimSpace(frameworks[i])
+	// Treat an empty / whitespace-only --compliance flag as "no
+	// frameworks" rather than producing a one-element slice with an
+	// empty string. The earlier shape passed [""] downstream, which
+	// the framework-profile loader silently treated as "use the
+	// default profile" — a misleading no-op when the operator
+	// genuinely intended to disable compliance reporting.
+	var frameworks []string
+	if trimmed := strings.TrimSpace(opts.Compliance); trimmed != "" {
+		for _, part := range strings.Split(trimmed, ",") {
+			if name := strings.TrimSpace(part); name != "" {
+				frameworks = append(frameworks, name)
+			}
+		}
+	}
+	if frameworks == nil {
+		frameworks = []string{}
 	}
 
 	// Load snapshot.
@@ -224,7 +237,7 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 		if result.Findings[i].SLADeadlineHours != nil {
 			hasSLA = true
 			slaTotal++
-			if result.Findings[i].SLABreached {
+			if result.Findings[i].IsOverdue() {
 				slaBreached++
 			}
 		}
@@ -246,6 +259,14 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 	}
 
 	elapsed := time.Since(start)
+	// Compute the assessment.json SHA-256 here so the caller-side
+	// meta carries the hash before AppendRun reads it. WriteRun
+	// receives RunMetadata by value and computes its own checksum
+	// table for the per-run sha256sums.txt artifact, but the local
+	// copy never propagated back to the caller's manifest entry —
+	// the previous shape passed an empty SHA into AppendRun, which
+	// produced a manifest with no integrity hash for the run.
+	assessmentHash := "sha256:" + string(crypto.HashBytes(assessmentData))
 	meta := appcollect.RunMetadata{
 		RunID:                runID,
 		CollectedAt:          start.Format(time.RFC3339),
@@ -257,6 +278,7 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 		PostureScore:         &scoreResult.Score,
 		PostureScoreRubric:   scoreResult.RubricBand,
 		CollectionDurationMs: elapsed.Milliseconds(),
+		SHA256Sums:           map[string]string{"assessment.json": assessmentHash},
 	}
 
 	if writeErr := archive.WriteRun(runID, files, meta); writeErr != nil {

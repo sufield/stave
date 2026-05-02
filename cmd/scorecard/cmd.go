@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/adapters/observations"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appsc "github.com/sufield/stave/internal/app/scorecard"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -21,12 +22,12 @@ import (
 type options struct {
 	Snapshot string
 	Profiles []string
-	Format   string
+	Format   appcontracts.OutputFormat
 }
 
 // NewCmd constructs the scorecard command.
 func NewCmd() *cobra.Command {
-	opts := &options{Format: "table"}
+	opts := &options{Format: appcontracts.FormatTable}
 
 	cmd := &cobra.Command{
 		Use:   "scorecard",
@@ -48,7 +49,7 @@ Exit Codes:
 
 	cmd.Flags().StringVar(&opts.Snapshot, "snapshot", "", "path to snapshot JSON (required)")
 	cmd.Flags().StringSliceVar(&opts.Profiles, "profile", nil, "framework profiles (repeatable; default: all built-in)")
-	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | markdown")
+	cmd.Flags().VarP(&opts.Format, "format", "f", "output format: table | json | markdown")
 	_ = cmd.MarkFlagRequired("snapshot")
 
 	return cmd
@@ -87,12 +88,12 @@ func runScorecard(stdout io.Writer, opts *options) error {
 
 	report := appsc.Compute(assessment.Findings, frameworks)
 
-	switch opts.Format {
-	case "json":
+	switch {
+	case opts.Format.IsJSON():
 		enc := json.NewEncoder(stdout)
 		enc.SetIndent("", "  ")
 		return enc.Encode(report)
-	case "markdown":
+	case opts.Format.IsMarkdown():
 		return writeMarkdown(stdout, report)
 	default:
 		return writeTable(stdout, report)

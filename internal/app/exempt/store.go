@@ -59,6 +59,34 @@ func (a *AcknowledgmentEntry) IsRevoked() bool { return a.Status == AckStatusRev
 // been moved to the "expired" status.
 func (a *AcknowledgmentEntry) IsExpired() bool { return a.Status == AckStatusExpired }
 
+// IsExportable reports whether the acknowledgment should appear in
+// POA&M / external compliance exports. Active and expired entries
+// both export — active becomes an "accepted" risk, expired becomes
+// an "open" risk so the auditor can see that the prior acceptance
+// has lapsed. Revoked entries never export.
+func (a *AcknowledgmentEntry) IsExportable() bool {
+	return a != nil && (a.IsActive() || a.IsExpired())
+}
+
+// ExportStatus returns the POA&M-side risk status string for an
+// exportable acknowledgment: "accepted" for active entries,
+// "open" for expired entries (the prior acceptance has lapsed and
+// the risk is back on the queue), and "" for non-exportable
+// entries. Mirrors the if-active/else-if-expired branch the
+// exempt export was open-coding.
+func (a *AcknowledgmentEntry) ExportStatus() string {
+	switch {
+	case a == nil:
+		return ""
+	case a.IsActive():
+		return "accepted"
+	case a.IsExpired():
+		return "open"
+	default:
+		return ""
+	}
+}
+
 // ExceptionEntry is an operational suppression.
 type ExceptionEntry struct {
 	ControlID  string `yaml:"control_id"`

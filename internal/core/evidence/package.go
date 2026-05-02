@@ -51,3 +51,35 @@ func (p *EvidencePackage) FindByControlID(controlID string) []*EvidenceRecord {
 	}
 	return matches
 }
+
+// AggregateVerdict returns the worst-case verdict across the
+// package's records, using the pre-computed counts (Add maintains
+// them in step with Records). Precedence: any Fail dominates, then
+// Incomplete, then Pass. A package with zero pass/fail/incomplete
+// records (e.g. only NotApplicable) returns VerdictNotApplicable.
+//
+// Mirrors the per-control aggregateFromCounts helper used by
+// profile_evaluator.go so the same precedence rule lives in one
+// place.
+func (p *EvidencePackage) AggregateVerdict() EvidenceVerdict {
+	if p == nil {
+		return VerdictNotApplicable
+	}
+	return aggregateFromCounts(p.PassCount, p.FailCount, p.IncompleteCount)
+}
+
+// aggregateFromCounts is the shared verdict-precedence rule. Used
+// by EvidencePackage.AggregateVerdict and the per-control
+// aggregator in profile_evaluator.go.
+func aggregateFromCounts(pass, fail, incomplete int) EvidenceVerdict {
+	switch {
+	case fail > 0:
+		return VerdictFail
+	case incomplete > 0:
+		return VerdictIncomplete
+	case pass > 0:
+		return VerdictPass
+	default:
+		return VerdictNotApplicable
+	}
+}
