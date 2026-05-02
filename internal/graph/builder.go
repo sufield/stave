@@ -321,7 +321,7 @@ func (b *builderState) emitControlNode(f *remediation.Finding) {
 // pair the control claims to satisfy.
 func (b *builderState) emitComplianceEdges(f *remediation.Finding, findingID string) {
 	for framework, reqID := range f.ControlCompliance {
-		reqNodeID := string(framework) + ":" + reqID
+		reqNodeID := string(framework) + ":" + string(reqID)
 		if !b.seenRequirements.Contains(reqNodeID) {
 			b.seenRequirements.Add(reqNodeID)
 			b.g.Nodes = append(b.g.Nodes, Node{
@@ -329,7 +329,7 @@ func (b *builderState) emitComplianceEdges(f *remediation.Finding, findingID str
 				Standard: "oscal", StandardType: "control",
 				Properties: map[string]any{
 					"framework":      string(framework),
-					"requirement_id": reqID,
+					"requirement_id": string(reqID),
 				},
 			})
 		}

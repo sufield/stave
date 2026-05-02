@@ -121,7 +121,7 @@ func loadConsolidationData(ctx context.Context, dir string) (*appconsolidate.Con
 		if latest != nil {
 			assessments[accountID] = *latest
 			accounts = append(accounts, appconsolidate.AccountSummary{
-				AccountID:   accountID,
+				AccountID:   appconsolidate.AccountID(accountID),
 				AccountName: accountID,
 			})
 		}

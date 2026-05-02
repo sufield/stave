@@ -17,7 +17,7 @@ import (
 
 // IdentityRiskEntry represents a single identity and its transitive risk.
 type IdentityRiskEntry struct {
-	IdentityARN    string `json:"identity_arn"`
+	IdentityARN    IdentityARN `json:"identity_arn"`
 	IdentityType   string `json:"identity_type"`
 	PrivilegeLevel string `json:"privilege_level"`
 
@@ -39,7 +39,7 @@ type IdentityRiskEntry struct {
 
 // ReachableResource represents a resource reachable by an identity.
 type ReachableResource struct {
-	ResourceARN  string   `json:"resource_arn"`
+	ResourceARN  ResourceARN `json:"resource_arn"`
 	ResourceType string   `json:"resource_type"`
 	FindingIDs   []string `json:"finding_ids"`
 	MaxSeverity  string   `json:"max_severity"`
@@ -159,7 +159,7 @@ func buildIdentityEntries(
 	entries := make([]IdentityRiskEntry, 0, len(identities))
 	for arn, info := range identities {
 		entry := IdentityRiskEntry{
-			IdentityARN:    arn,
+			IdentityARN:    IdentityARN(arn),
 			IdentityType:   info.identityType,
 			PrivilegeLevel: info.privilegeLevel,
 		}
@@ -184,7 +184,7 @@ func buildIdentityEntries(
 
 		for _, reach := range reachMap[arn] {
 			rr := ReachableResource{
-				ResourceARN:  reach.resourceARN,
+				ResourceARN:  ResourceARN(reach.resourceARN),
 				ResourceType: reach.resourceType,
 				AccessPath:   reach.accessPath,
 			}

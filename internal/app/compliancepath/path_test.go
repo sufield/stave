@@ -11,12 +11,16 @@ import (
 )
 
 func finding(ctl, action string, frameworks map[policy.ComplianceFramework]string) remediation.Finding {
+	mapping := make(policy.ComplianceMapping, len(frameworks))
+	for k, v := range frameworks {
+		mapping[k] = policy.RequirementID(v)
+	}
 	return remediation.Finding{
 		Finding: evaluation.Finding{
 			ControlID:         kernel.ControlID(ctl),
 			AssetID:           asset.ID("asset1"),
 			ControlSeverity:   policy.SeverityHigh,
-			ControlCompliance: policy.ComplianceMapping(frameworks),
+			ControlCompliance: mapping,
 		},
 		RemediationSpec: policy.RemediationSpec{Action: action},
 	}

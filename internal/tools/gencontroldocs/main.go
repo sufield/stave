@@ -126,7 +126,7 @@ func buildTemplateData(catalog *policy.Catalog, hasher ports.Digester) templateD
 		}
 
 		for k, v := range ctl.Compliance {
-			cd.Compliance = append(cd.Compliance, string(k)+": "+v)
+			cd.Compliance = append(cd.Compliance, string(k)+": "+string(v))
 		}
 		slices.Sort(cd.Compliance)
 

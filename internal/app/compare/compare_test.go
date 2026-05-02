@@ -11,12 +11,16 @@ import (
 )
 
 func finding(ctl string, sev policy.Severity, fws map[policy.ComplianceFramework]string) remediation.Finding {
+	mapping := make(policy.ComplianceMapping, len(fws))
+	for k, v := range fws {
+		mapping[k] = policy.RequirementID(v)
+	}
 	return remediation.Finding{
 		Finding: evaluation.Finding{
 			ControlID:         kernel.ControlID(ctl),
 			AssetID:           asset.ID("test-asset"),
 			ControlSeverity:   sev,
-			ControlCompliance: fws,
+			ControlCompliance: mapping,
 		},
 	}
 }

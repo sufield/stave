@@ -172,7 +172,7 @@ func toPlanFinding(f *remediation.Finding) PlanFinding {
 	if len(f.ControlCompliance) > 0 {
 		pf.Compliance = make(map[string]string, len(f.ControlCompliance))
 		for fw, cite := range f.ControlCompliance {
-			pf.Compliance[string(fw)] = cite
+			pf.Compliance[string(fw)] = string(cite)
 		}
 	}
 	return pf

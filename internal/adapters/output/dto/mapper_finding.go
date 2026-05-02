@@ -366,7 +366,7 @@ func complianceToStrings(m policy.ComplianceMapping) map[string]string {
 	}
 	out := make(map[string]string, len(m))
 	for k, v := range m {
-		out[string(k)] = v
+		out[string(k)] = string(v)
 	}
 	return out
 }

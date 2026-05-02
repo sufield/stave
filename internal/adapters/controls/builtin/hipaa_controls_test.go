@@ -70,7 +70,7 @@ func TestHIPAAControlsLoadAndParse(t *testing.T) {
 			if ctl.Severity != tt.severity {
 				t.Errorf("severity = %v, want %v", ctl.Severity, tt.severity)
 			}
-			if ctl.Compliance.Get("hipaa") != tt.hipaa {
+			if string(ctl.Compliance.Get("hipaa")) != tt.hipaa {
 				t.Errorf("hipaa compliance = %q, want %q", ctl.Compliance.Get("hipaa"), tt.hipaa)
 			}
 		})

@@ -282,8 +282,8 @@ func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag str
 			for i := range a.Findings {
 				f := &a.Findings[i]
 				req := f.ControlCompliance.Get(policy.ComplianceFramework(fw))
-				if req != "" {
-					violatedReqs[req] = true
+				if !req.IsEmpty() {
+					violatedReqs[string(req)] = true
 				}
 			}
 			satisfied := totalReqs - len(violatedReqs)

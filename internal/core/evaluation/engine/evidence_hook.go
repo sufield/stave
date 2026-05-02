@@ -109,7 +109,7 @@ func complianceToMap(cm policy.ComplianceMapping) map[string]string {
 	}
 	out := make(map[string]string, len(cm))
 	for k, v := range cm {
-		out[string(k)] = v
+		out[string(k)] = string(v)
 	}
 	return out
 }

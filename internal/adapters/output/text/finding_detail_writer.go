@@ -43,7 +43,7 @@ func writeMetadataLine(d *drawer, detail *evaluation.FindingDetail) {
 	if len(detail.Control.Compliance) > 0 {
 		var refs []string
 		for framework, ref := range detail.Control.Compliance {
-			refs = append(refs, string(framework)+" "+ref)
+			refs = append(refs, string(framework)+" "+string(ref))
 		}
 		parts = append(parts, "Compliance: "+strings.Join(refs, ", "))
 	}

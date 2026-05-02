@@ -39,7 +39,7 @@ func Analyze(input Input) OutlierReport {
 
 	for i := range input.Consolidated.Accounts {
 		acct := &input.Consolidated.Accounts[i]
-		assessment, ok := input.Assessments[acct.AccountID]
+		assessment, ok := input.Assessments[acct.AccountID.String()]
 		if !ok {
 			result.PassingCount++
 			continue
@@ -49,7 +49,7 @@ func Analyze(input Input) OutlierReport {
 		if failing {
 			result.FailingCount++
 			result.FailingAccounts = append(result.FailingAccounts, AccountStatus{
-				AccountID:   acct.AccountID,
+				AccountID:   acct.AccountID.String(),
 				AccountName: acct.AccountName,
 				DwellDays:   dwellDays,
 			})

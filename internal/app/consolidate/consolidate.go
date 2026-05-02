@@ -33,7 +33,7 @@ type Input struct {
 
 // AccountInput represents a single account to evaluate.
 type AccountInput struct {
-	AccountID    string
+	AccountID    AccountID
 	AccountName  string
 	Environment  string
 	BusinessUnit string
@@ -116,7 +116,7 @@ func Run(input Input) (*ConsolidatedReport, []string, error) {
 	}
 
 	if len(report.Accounts) > 0 {
-		report.OrgPosture.HighestRiskAccount = report.Accounts[0].AccountID
+		report.OrgPosture.HighestRiskAccount = report.Accounts[0].AccountID.String()
 	}
 
 	if totalRisk > 0 {
@@ -218,7 +218,7 @@ func detectCrossAccountFindings(accounts []AccountInput) ([]CrossAccountFinding,
 			for ai := range acct.Snapshots[si].Assets {
 				a := &acct.Snapshots[si].Assets[ai]
 				allAssets[string(a.ID)] = assetInfo{
-					accountID: acct.AccountID,
+					accountID: acct.AccountID.String(),
 					asset:     a,
 				}
 			}

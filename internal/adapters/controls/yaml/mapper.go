@@ -88,7 +88,7 @@ func splitComplianceBlock(raw map[string]any) (policy.ComplianceMapping, []strin
 			continue
 		}
 		if s, ok := v.(string); ok {
-			mapping[policy.ComplianceFramework(k)] = s
+			mapping[policy.ComplianceFramework(k)] = policy.RequirementID(s)
 		}
 	}
 	if len(mapping) == 0 {

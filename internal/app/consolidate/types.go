@@ -23,7 +23,7 @@ type SnapshotPeriod struct {
 
 // AccountSummary summarizes one account's posture within the org.
 type AccountSummary struct {
-	AccountID     string    `json:"account_id"`
+	AccountID     AccountID `json:"account_id"`
 	AccountName   string    `json:"account_name"`
 	Environment   string    `json:"environment"`
 	BusinessUnit  string    `json:"business_unit"`
@@ -72,7 +72,7 @@ type AccountManifest struct {
 
 // AccountEntry describes one account in the manifest.
 type AccountEntry struct {
-	AccountID    string `yaml:"account_id"`
+	AccountID    AccountID `yaml:"account_id"`
 	AccountName  string `yaml:"account_name"`
 	Environment  string `yaml:"environment"`
 	BusinessUnit string `yaml:"business_unit"`

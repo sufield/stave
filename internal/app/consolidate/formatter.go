@@ -28,7 +28,7 @@ func WriteTextReport(w io.Writer, r *ConsolidatedReport, focusAccount string) {
 
 	for i := range r.Accounts {
 		a := &r.Accounts[i]
-		if focusAccount != "" && a.AccountID != focusAccount {
+		if focusAccount != "" && a.AccountID.String() != focusAccount {
 			continue
 		}
 		name := a.AccountName

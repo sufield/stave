@@ -1,6 +1,8 @@
 package evaluation
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -95,6 +97,73 @@ const (
 	// DriftIntermittent indicates the asset has toggled between safe and unsafe multiple times.
 	DriftIntermittent DriftPattern = "intermittent"
 )
+
+// IsValid reports whether the value is one of the recognized drift
+// patterns. Used by callers that have a DriftPattern in hand and
+// need to confirm it before branching.
+func (d DriftPattern) IsValid() bool {
+	switch d {
+	case DriftPersistent, DriftDegraded, DriftIntermittent:
+		return true
+	}
+	return false
+}
+
+// String returns the canonical lowercase name.
+func (d DriftPattern) String() string { return string(d) }
+
+// ParseDriftPattern returns a validated DriftPattern. Empty input is
+// rejected; the caller can model "no drift recorded" by leaving the
+// PostureDrift.Pattern field at the zero value rather than passing
+// an empty string through ParseDriftPattern.
+func ParseDriftPattern(raw string) (DriftPattern, error) {
+	d := DriftPattern(raw)
+	if !d.IsValid() {
+		return "", fmt.Errorf("invalid drift pattern %q: must be one of persistent, degraded, intermittent", raw)
+	}
+	return d, nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler so JSON / YAML
+// unmarshal paths share a single validation gate.
+func (d *DriftPattern) UnmarshalText(text []byte) error {
+	parsed, err := ParseDriftPattern(string(text))
+	if err != nil {
+		return err
+	}
+	*d = parsed
+	return nil
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (d DriftPattern) MarshalText() ([]byte, error) {
+	return []byte(d.String()), nil
+}
+
+// MarshalJSON serializes the pattern as a JSON string.
+func (d DriftPattern) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.String())
+}
+
+// UnmarshalJSON delegates to UnmarshalText for boundary validation.
+func (d *DriftPattern) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	return d.UnmarshalText([]byte(s))
+}
+
+// UnmarshalYAML lets gopkg.in/yaml.v3 round-trip drift patterns
+// through the same validation as JSON. The yaml.v3 decoder hands us
+// a node-decode callback; treat the value as a string and delegate.
+func (d *DriftPattern) UnmarshalYAML(unmarshal func(any) error) error {
+	var s string
+	if err := unmarshal(&s); err != nil {
+		return err
+	}
+	return d.UnmarshalText([]byte(s))
+}
 
 // PostureDrift describes how a violation has evolved over time.
 type PostureDrift struct {

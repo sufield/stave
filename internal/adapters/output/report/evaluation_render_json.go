@@ -167,8 +167,9 @@ func updateComplianceData(complianceData map[string]*reportComplianceEntry, comp
 		entry := ensureComplianceEntry(complianceData, string(framework))
 		entry.TotalFindings++
 		entry.FindingsBySeverity[severity]++
-		if _, exists := entry.controlSet[control]; !exists {
-			entry.controlSet[control] = struct{}{}
+		key := string(control)
+		if _, exists := entry.controlSet[key]; !exists {
+			entry.controlSet[key] = struct{}{}
 		}
 	}
 }

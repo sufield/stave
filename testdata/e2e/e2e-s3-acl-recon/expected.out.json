@@ -9,12 +9,12 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-01T000000Z.json": "d59e41daec54115a699084421196e360c8264e4930165fe932f46e36d88ce033",
-        "2026-01-11T000000Z.json": "38fc23f74a8ca6203fcd0d5788c202c0fb609d67bb4e0997e77ad380405839bc"
+        "2026-01-01T000000Z.json": "98cfcb9f7eff41586642c24336136a87dc00f0219321aea4ccdc8b0dc695483f",
+        "2026-01-11T000000Z.json": "09f989da8f70e6d27ccddb0f600f92a7edce7674b73ad65d6eb0b520d83f146a"
       },
-      "overall": "e62f4eef1efbca24ed48f3db0cdb52d3d11ddc477297a569e976ff8c9b4d739a"
+      "overall": "2702998ee5b2fa5349c1c4cf6a7295f1adf8c2cb0fbd8ace09bcc290ab4bc52b"
     },
-    "policy_fingerprint": "cfd037b94fe42ee37b1cba2024cb22728803e5695a82127760a3bc4150c144ec",
+    "policy_fingerprint": "32da5c7c64df6804fa57915c03ada36a22f73b0c6f3664626dd2c6f4ef82e33b",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -50,7 +50,7 @@
         "unsafe_duration_hours": 240,
         "misconfigurations": [
           {
-            "property": "storage.access.public_admin",
+            "property": "storage.access.acl_public_read",
             "actual_value": true,
             "operator": "eq",
             "unsafe_value": true
@@ -99,8 +99,8 @@
       },
       "reasoning_trace": [
         {
-          "predicate_expr": "storage.access.public_admin eq true",
-          "observation_key": "storage.access.public_admin",
+          "predicate_expr": "storage.access.acl_public_read eq true",
+          "observation_key": "storage.access.acl_public_read",
           "operator": "eq",
           "expected_value": true,
           "observed_value": true
@@ -118,19 +118,19 @@
           "severity": "high",
           "reasoning": [
             {
-              "clause": "the bucket allows anonymous write-ACP = true",
-              "observation_key": "storage.access.public_admin",
+              "clause": "storage.access.acl_public_read = true",
+              "observation_key": "storage.access.acl_public_read",
               "observed_value": true
             }
           ]
         },
         "changes": [
           {
-            "path": "storage.access.public_admin",
+            "path": "storage.access.acl_public_read",
             "current_value": "true",
             "required_value": "false",
             "has_safe_default": true,
-            "description": "Set storage.access.public_admin to false"
+            "description": "Set storage.access.acl_public_read to false"
           }
         ],
         "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true."
@@ -142,8 +142,8 @@
       ],
       "delta": [
         {
-          "property_label": "access public admin",
-          "property_path": "storage.access.public_admin",
+          "property_label": "ACL public read grant",
+          "property_path": "storage.access.acl_public_read",
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
@@ -152,11 +152,11 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:b77c4c436c167a94",
+      "issue_id": "sha256:437a990264083f1d",
       "asset_id": "acl-readable-bucket",
       "shared_keys": [
         "storage.access",
-        "storage.access.public_admin"
+        "storage.access.acl_public_read"
       ],
       "headline_finding_id": "sha256:fe26f93edf61a8f9",
       "member_finding_ids": [
@@ -295,7 +295,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "e441f6e98a3c46faa0915633a435ad7c79e38e85",
       "dirty": false
     }
   }

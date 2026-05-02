@@ -5,7 +5,9 @@
 package profile
 
 import (
+	"errors"
 	"fmt"
+	"regexp"
 	"sort"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -14,6 +16,38 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
+
+// ProfileID identifies a compliance profile (e.g. "hipaa", "soc2").
+// The slug-case constraint (lowercase + digits + _-) prevents two
+// classes of bugs: filesystem-level mismatches (some operators ship
+// profiles as profile-id.yaml files; case-folding filesystems would
+// merge "Hipaa" and "hipaa" into the same name elsewhere), and
+// duplicate registry entries when an init() in one package
+// registers "Default" while another registers "default".
+type ProfileID string
+
+var profileIDPattern = regexp.MustCompile(`^[a-z0-9_-]+$`)
+
+// String returns the raw ID.
+func (p ProfileID) String() string { return string(p) }
+
+// IsEmpty reports whether the ID is unset.
+func (p ProfileID) IsEmpty() bool { return p == "" }
+
+// ParseProfileID validates and returns a ProfileID. The caller
+// constraints are: non-empty, lowercase, alphanumeric with -_. CLI
+// flags should run their string through ParseProfileID before
+// passing it to LoadProfile so a user typo or accidental capital
+// fails at boundary, not at "profile not found" later.
+func ParseProfileID(raw string) (ProfileID, error) {
+	if raw == "" {
+		return "", errors.New("profile ID must not be empty")
+	}
+	if !profileIDPattern.MatchString(raw) {
+		return "", fmt.Errorf("invalid profile ID %q: must be lowercase slug-case (a-z, 0-9, -, _)", raw)
+	}
+	return ProfileID(raw), nil
+}
 
 // Control binds an control to a profile with optional overrides.
 type Control struct {
@@ -32,7 +66,7 @@ type Control struct {
 
 // Profile is a named set of invariants configured for a compliance framework.
 type Profile struct {
-	ID          string
+	ID          ProfileID
 	Name        string
 	Description string
 	Controls    []Control
@@ -78,7 +112,7 @@ type AcknowledgedEntry struct {
 func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.ControlCatalog) (Report, error) {
 	controls := p.Controls
 	if len(controls) == 0 {
-		controls = discoverControls(p.ID, registries)
+		controls = discoverControls(p.ID.String(), registries)
 	}
 	// Zero-controls guard. A profile that resolves to no controls
 	// would silently produce a Report with allPass=true — making it
@@ -163,7 +197,7 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Contro
 	}
 
 	return Report{
-		ProfileID:        p.ID,
+		ProfileID:        p.ID.String(),
 		ProfileName:      p.Name,
 		Pass:             allPass,
 		CompoundFindings: compoundFindings,

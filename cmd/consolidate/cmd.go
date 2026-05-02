@@ -279,7 +279,7 @@ func loadFromDirectory(dir string) ([]appconsolidate.AccountInput, string, error
 		}
 
 		accounts = append(accounts, appconsolidate.AccountInput{
-			AccountID:   accountID,
+			AccountID:   appconsolidate.AccountID(accountID),
 			AccountName: accountID,
 			Snapshots:   snaps,
 		})

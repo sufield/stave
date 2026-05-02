@@ -43,10 +43,10 @@ type Assessment struct {
 	EnforcesHTTPS bool `json:"enforces_https"`
 
 	// Cross-account access
-	HasExternalAccess   bool                   `json:"has_external_access"`
-	HasExternalWrite    bool                   `json:"has_external_write"`
-	ExternalAccountARNs []kernel.AWSAccountARN `json:"external_account_arns"`
-	ExternalAccountIDs  []kernel.AWSAccountID  `json:"external_account_ids"`
+	HasExternalAccess   bool                 `json:"has_external_access"`
+	HasExternalWrite    bool                 `json:"has_external_write"`
+	ExternalAccountARNs []kernel.ResourceURI `json:"external_account_arns"`
+	ExternalAccountIDs  []kernel.AccountID   `json:"external_account_ids"`
 }
 
 // Document is the parsed bucket policy. Created once via Parse;
@@ -81,7 +81,7 @@ func Parse(policyJSON string) (*Document, error) {
 func (d *Document) Assess() Assessment {
 	policyAssessment := Assessment{
 		PublicStatements:   []kernel.StatementID{},
-		ExternalAccountIDs: []kernel.AWSAccountID{},
+		ExternalAccountIDs: []kernel.AccountID{},
 	}
 	state := &analysisState{
 		seenAccounts: make(map[string]struct{}),
@@ -161,7 +161,7 @@ func analyzeExternalAccess(res *Assessment, state *analysisState, stmt Statement
 		}
 		state.seenAccounts[string(id)] = struct{}{}
 		res.ExternalAccountIDs = append(res.ExternalAccountIDs, id)
-		res.ExternalAccountARNs = append(res.ExternalAccountARNs, kernel.AWSAccountARN(arn))
+		res.ExternalAccountARNs = append(res.ExternalAccountARNs, kernel.ResourceURI(arn))
 	}
 }
 
@@ -195,10 +195,10 @@ func (r *Assessment) applyMasks(state *analysisState) {
 	r.AllowsAuthenticatedACLRead = state.authPerms.has(actionACLRead)
 }
 
-func extractAccountID(arn string) (kernel.AWSAccountID, bool) {
+func extractAccountID(arn string) (kernel.AccountID, bool) {
 	matches := accountARNPattern.FindStringSubmatch(arn)
 	if len(matches) < 2 {
 		return "", false
 	}
-	return kernel.AWSAccountID(matches[1]), true
+	return kernel.AccountID(matches[1]), true
 }

@@ -160,7 +160,7 @@ func buildProductFields(f *remediation.Finding) map[string]string {
 	}
 	// Add all compliance citations as separate ProductFields.
 	for fw, req := range f.ControlCompliance {
-		fields["Compliance."+string(fw)] = req
+		fields["Compliance."+string(fw)] = string(req)
 	}
 	return fields
 }

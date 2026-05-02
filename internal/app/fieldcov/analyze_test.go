@@ -116,7 +116,7 @@ func TestAnalyze_FrameworkCoverage(t *testing.T) {
 		{
 			ID:       "CTL.A.001",
 			Severity: policy.SeverityHigh,
-			Compliance: map[policy.ComplianceFramework]string{
+			Compliance: policy.ComplianceMapping{
 				"hipaa": "164.312",
 			},
 			UnsafePredicate: policy.UnsafePredicate{
@@ -128,7 +128,7 @@ func TestAnalyze_FrameworkCoverage(t *testing.T) {
 		{
 			ID:       "CTL.B.001",
 			Severity: policy.SeverityMedium,
-			Compliance: map[policy.ComplianceFramework]string{
+			Compliance: policy.ComplianceMapping{
 				"hipaa": "164.308",
 			},
 			UnsafePredicate: policy.UnsafePredicate{

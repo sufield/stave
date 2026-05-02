@@ -13,7 +13,7 @@ import (
 // rather than rely on init-time happens-before.
 var (
 	profilesMu sync.RWMutex
-	profiles   = map[string]*Profile{}
+	profiles   = map[ProfileID]*Profile{}
 )
 
 // RegisterProfile adds a profile to the global registry. Panics on
@@ -42,10 +42,17 @@ func RegisterProfile(p *Profile) {
 }
 
 // LoadProfile returns a profile by ID or an error if not found.
+// Accepts a string for CLI ergonomics — runs ParseProfileID at the
+// boundary so a malformed ID surfaces as a "invalid profile ID"
+// error rather than a generic "unknown profile" miss.
 func LoadProfile(id string) (*Profile, error) {
+	parsed, err := ParseProfileID(id)
+	if err != nil {
+		return nil, err
+	}
 	profilesMu.RLock()
 	defer profilesMu.RUnlock()
-	p, ok := profiles[id]
+	p, ok := profiles[parsed]
 	if !ok {
 		return nil, fmt.Errorf("unknown profile %q", id)
 	}
@@ -62,7 +69,7 @@ func AllProfiles() []string {
 	defer profilesMu.RUnlock()
 	ids := make([]string, 0, len(profiles))
 	for id := range profiles {
-		ids = append(ids, id)
+		ids = append(ids, id.String())
 	}
 	slices.Sort(ids)
 	return ids

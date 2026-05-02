@@ -18,12 +18,16 @@ import (
 // conflicting settings (e.g. explicit --controls with enabled_control_packs).
 var ErrConfigConflict = errors.New("config conflict")
 
-// ExceptionInput holds raw exception rule data before parsing.
+// ExceptionInput holds exception rule data ready for promotion to a
+// policy.ExceptionRule. Expires is already a parsed policy.ExpiryDate
+// — config-loader paths run policy.ParseExpiryDate (or YAML
+// unmarshal, which delegates there) at the boundary so this struct
+// carries a validated date, not a raw string awaiting reparse.
 type ExceptionInput struct {
 	ControlID kernel.ControlID
 	AssetID   asset.ID
 	Reason    string
-	Expires   string
+	Expires   policy.ExpiryDate
 }
 
 // PackRegistry resolves built-in control packs from the embedded registry.
@@ -113,15 +117,11 @@ func ResolveProjectConfig(in ProjectConfigInput) (ResolvedProjectConfig, error) 
 func resolveExceptionRules(in []ExceptionInput) ([]policy.ExceptionRule, error) {
 	rules := make([]policy.ExceptionRule, len(in))
 	for i, s := range in {
-		expires, err := policy.ParseExpiryDate(s.Expires)
-		if err != nil {
-			return nil, fmt.Errorf("invalid exception expiry at index %d: %w", i, err)
-		}
 		rules[i] = policy.ExceptionRule{
 			ControlID: s.ControlID,
 			AssetID:   s.AssetID,
 			Reason:    s.Reason,
-			Expires:   expires,
+			Expires:   s.Expires,
 		}
 	}
 	return rules, nil

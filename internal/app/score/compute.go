@@ -2,6 +2,7 @@
 package score
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -13,7 +14,25 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
+// weightSumEpsilon is the floating-point tolerance for "weights sum
+// to 1.0". Using bare equality on float64 sums of four 0.x values
+// fails for distributions like {0.45, 0.25, 0.2, 0.1} because the
+// last decimal cannot be represented exactly in IEEE 754. 1e-9 is
+// well above the four-addend round-off floor (~1e-16) and well below
+// any meaningful difference an operator would intend.
+const weightSumEpsilon = 1e-9
+
 // Weights controls the relative importance of each score dimension.
+// All four values must be non-negative and sum to 1.0 within
+// weightSumEpsilon — see NewWeights / Validate / UnmarshalJSON.
+//
+// Why enforce 1.0 strictly: the score formula is
+// sev*Severity + sla*SLA + chain*Chain + cov*Coverage, where every
+// sub-score is in [0, 1]. A sum > 1.0 produces a "120% secure"
+// reading; a sum < 1.0 produces a permanently-capped score that
+// looks like the system can't reach a clean state. Either makes the
+// rubric bands meaningless, so the sum-to-1 invariant lives on the
+// type rather than as a per-call assertion.
 type Weights struct {
 	Severity float64 `json:"severity"`
 	SLA      float64 `json:"sla"`
@@ -21,9 +40,63 @@ type Weights struct {
 	Coverage float64 `json:"coverage"`
 }
 
-// DefaultWeights returns the standard weight distribution.
+// NewWeights returns a Weights value after enforcing the sum-to-1
+// invariant. Caller-provided weights must be non-negative and sum to
+// 1.0 within weightSumEpsilon — see the package doc on Weights for
+// why this matters.
+func NewWeights(severity, sla, chain, coverage float64) (Weights, error) {
+	w := Weights{Severity: severity, SLA: sla, Chain: chain, Coverage: coverage}
+	if err := w.Validate(); err != nil {
+		return Weights{}, err
+	}
+	return w, nil
+}
+
+// Validate enforces the sum-to-1 / non-negative invariants documented
+// on Weights.
+func (w Weights) Validate() error {
+	if w.Severity < 0 || w.SLA < 0 || w.Chain < 0 || w.Coverage < 0 {
+		return fmt.Errorf("weights must be non-negative: got severity=%v sla=%v chain=%v coverage=%v",
+			w.Severity, w.SLA, w.Chain, w.Coverage)
+	}
+	sum := w.Severity + w.SLA + w.Chain + w.Coverage
+	if math.Abs(sum-1.0) > weightSumEpsilon {
+		return fmt.Errorf("weights must sum to 1.0 (got %v: severity=%v sla=%v chain=%v coverage=%v)",
+			sum, w.Severity, w.SLA, w.Chain, w.Coverage)
+	}
+	return nil
+}
+
+// UnmarshalJSON decodes the weight set and runs Validate so an
+// external config cannot inject a sum > 1.0 ("120% secure" scores)
+// or a sum < 1.0 (permanently-capped scores).
+func (w *Weights) UnmarshalJSON(data []byte) error {
+	type alias Weights
+	var a alias
+	if err := json.Unmarshal(data, &a); err != nil {
+		return err
+	}
+	candidate := Weights(a)
+	if err := candidate.Validate(); err != nil {
+		return err
+	}
+	*w = candidate
+	return nil
+}
+
+// DefaultWeights returns the standard weight distribution. The values
+// are chosen so the sum is exactly 1.0 in IEEE 754 (severity=0.45 +
+// sla=0.25 + chain=0.20 + coverage=0.10) and the function uses
+// NewWeights so the invariants stay enforced even for the canonical
+// distribution. Panics on construction failure — DefaultWeights is
+// known-good at compile time and a runtime failure would mean a
+// regression in the constants above.
 func DefaultWeights() Weights {
-	return Weights{Severity: 0.45, SLA: 0.25, Chain: 0.20, Coverage: 0.10}
+	w, err := NewWeights(0.45, 0.25, 0.20, 0.10)
+	if err != nil {
+		panic(fmt.Sprintf("score: DefaultWeights invariant violated: %v", err))
+	}
+	return w
 }
 
 // SeverityDetail holds breakdown data for the severity component.

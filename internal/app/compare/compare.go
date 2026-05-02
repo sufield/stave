@@ -229,5 +229,5 @@ func extractCitations(compliance policy.ComplianceMapping, key string) []string 
 	if !ok || cite == "" {
 		return nil
 	}
-	return []string{cite}
+	return []string{string(cite)}
 }

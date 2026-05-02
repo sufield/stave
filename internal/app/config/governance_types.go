@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/retention"
 )
@@ -105,11 +106,15 @@ type WorkspacePolicy struct {
 
 // PolicyException allows a specific resource to bypass a security control.
 // ControlID is validated at YAML load time via kernel.ControlID.UnmarshalYAML.
+// Expires uses policy.ExpiryDate so YAML loaders parse the date once at the
+// boundary; downstream callers get an IsExpired predicate without
+// re-parsing strings or carrying time-zone ambiguity from a raw
+// string field.
 type PolicyException struct {
-	ControlID kernel.ControlID `yaml:"control_id"`
-	AssetID   asset.ID         `yaml:"asset_id"`
-	Reason    string           `yaml:"reason"`
-	Expires   string           `yaml:"expires"`
+	ControlID kernel.ControlID  `yaml:"control_id"`
+	AssetID   asset.ID          `yaml:"asset_id"`
+	Reason    string            `yaml:"reason"`
+	Expires   policy.ExpiryDate `yaml:"expires"`
 }
 
 // OperatorSettings represents the local preferences of the security operator.
