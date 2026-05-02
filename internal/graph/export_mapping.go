@@ -146,16 +146,14 @@ func mapTordfGraph(g *GraphData) *rdfGraph {
 func (m *rdfMapper) nodePass(g *GraphData) {
 	for i := range g.Nodes {
 		n := &g.Nodes[i]
-		iri, classIRI := nodeIRI(n)
+		iri, classIRI := iriPair(n)
 		m.idMap[n.ID] = iri
 		m.nodeKind[n.ID] = n.Type
 		m.nodesByID[n.ID] = n
 
 		props := flattenNodeProperties(n)
-		if n.Type == NodeTypeFinding {
-			if cid, ok := stringProp(n.Properties, "control_id"); ok {
-				m.findingControl[n.ID] = cid
-			}
+		if cid, ok := n.FindingControlID(); ok {
+			m.findingControl[n.ID] = cid
 		}
 		if n.Type == NodeTypeControl {
 			// Always map node-ID → node-ID so simple cases work even
@@ -202,7 +200,7 @@ func (m *rdfMapper) firstEdgePass(g *GraphData) {
 			continue
 		}
 
-		props := edgeProperties(e, m.nodeKind[e.From], m.nodeKind[e.To], m.nodesByID)
+		props := edgeProperties(e, m.nodesByID)
 		m.out.Edges = append(m.out.Edges, rdfEdge{
 			From:       fromIRI,
 			To:         toIRI,
@@ -211,10 +209,10 @@ func (m *rdfMapper) firstEdgePass(g *GraphData) {
 			Shortcut:   shortcutPredicates[pred],
 		})
 
-		if e.Type == EdgeTypeTargets {
+		if findingID, resourceID, ok := e.FindingResourcePair(); ok {
 			// Wire direction: Finding -[TARGETS]-> Resource. Stash so
 			// the shortcut step can pivot to Resource → Control.
-			m.findingResource[e.From] = e.To
+			m.findingResource[findingID] = resourceID
 		}
 	}
 }
@@ -279,12 +277,7 @@ func (m *rdfMapper) materializeShortcutEdges() {
 		// index built during the node pass — by-ID dedup means at
 		// most one Finding per ID, so a single lookup gives the
 		// weight without any scan.
-		var weight float64
-		if n, ok := m.nodesByID[findingID]; ok {
-			if sev, ok := stringProp(n.Properties, "severity"); ok {
-				weight = SeverityWeight(sev)
-			}
-		}
+		weight := m.nodesByID[findingID].SeverityWeight()
 
 		m.out.Edges = append(m.out.Edges, rdfEdge{
 			From:      fromIRI,
@@ -298,11 +291,18 @@ func (m *rdfMapper) materializeShortcutEdges() {
 	}
 }
 
-// nodeIRI maps an internal Node to its export IRI plus class IRI.
+// iriPair returns (instance IRI, class IRI) for a node. Exposed to
+// the package so Node.IRI / Node.ClassIRI can share one switch
+// without re-scanning Properties twice. Public callers go through
+// the Node methods.
+//
 // The user's URI scheme drives the choice — bucket-class storage
 // resources are stamped as stave:bucket/{account}/{name}; everything
 // else falls back to the generic resource/finding/invariant prefixes.
-func nodeIRI(n *Node) (instanceIRI, classIRI string) {
+func iriPair(n *Node) (instanceIRI, classIRI string) {
+	if n == nil {
+		return "", ""
+	}
 	switch n.Type {
 	case NodeTypeResource:
 		account, _ := stringProp(n.Properties, "account_id")
@@ -418,10 +418,9 @@ func flattenNodeProperties(n *Node) map[string]any {
 	if sev, ok := stringProp(n.Properties, "severity"); ok {
 		out["severity_weight"] = SeverityWeight(sev)
 	}
-	if n.Type == NodeTypeControl {
-		category, number := splitControlID(n.ID)
-		out["category"] = category
-		out["invariant_number"] = number
+	if cat, num := n.ControlCategory(); cat != "" {
+		out["category"] = cat
+		out["invariant_number"] = num
 	}
 	return out
 }
@@ -431,38 +430,27 @@ func flattenNodeProperties(n *Node) map[string]any {
 // endpoints make weight meaningful (Finding-bearing edges, shortcut
 // edges) so a single algorithm can index by edge weight without
 // guarding on type.
-func edgeProperties(e *Edge, fromKind, toKind NodeType, nodesByID map[string]*Node) map[string]any {
+//
+// The previous signature took (fromKind, toKind NodeType) parameters
+// duplicating what nodesByID already knows. Node.SeverityWeight() now
+// returns 0 for non-Finding nodes, so the type guards collapse to the
+// weight check itself.
+func edgeProperties(e *Edge, nodesByID map[string]*Node) map[string]any {
 	props := map[string]any{}
 	if e.Properties != nil {
 		maps.Copy(props, e.Properties)
 	}
 	// If either endpoint is a Finding, propagate its severity weight
 	// so edges incident on findings carry a numeric weight.
-	if w := findingSeverityWeight(e.From, nodesByID); w > 0 && fromKind == NodeTypeFinding {
+	if w := nodesByID[e.From].SeverityWeight(); w > 0 {
 		props["weight"] = w
-	} else if w := findingSeverityWeight(e.To, nodesByID); w > 0 && toKind == NodeTypeFinding {
+	} else if w := nodesByID[e.To].SeverityWeight(); w > 0 {
 		props["weight"] = w
 	}
 	if len(props) == 0 {
 		return nil
 	}
 	return props
-}
-
-// findingSeverityWeight returns the SeverityWeight of the Finding
-// node with the given ID, or 0 if the node isn't a Finding or has no
-// severity property. The previous signature accepted *GraphData and
-// scanned its Nodes slice on every call, making per-edge work O(N).
-// Switching to the prebuilt index keeps the hot path O(1).
-func findingSeverityWeight(nodeID string, nodesByID map[string]*Node) float64 {
-	n, ok := nodesByID[nodeID]
-	if !ok || n.Type != NodeTypeFinding {
-		return 0
-	}
-	if sev, ok := stringProp(n.Properties, "severity"); ok {
-		return SeverityWeight(sev)
-	}
-	return 0
 }
 
 // splitControlID splits a Stave control ID like "CTL.S3.PUBLIC.001"

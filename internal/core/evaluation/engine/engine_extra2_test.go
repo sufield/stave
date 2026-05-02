@@ -214,10 +214,13 @@ func TestAssessorFingerprintPolicy_WithControls(t *testing.T) {
 // Assessor.referenceTime
 // ---------------------------------------------------------------------------
 
-type stubClock struct{ t time.Time }
+type stubClock struct {
+	t            time.Time
+	userProvided bool
+}
 
-func (c stubClock) Now() time.Time         { return c.t }
-func (c stubClock) IsUserProvided() bool   { return true }
+func (c stubClock) Now() time.Time       { return c.t }
+func (c stubClock) IsUserProvided() bool { return c.userProvided }
 
 func TestReferenceTime_FromSnapshots(t *testing.T) {
 	base := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
@@ -232,6 +235,25 @@ func TestReferenceTime_FromSnapshots(t *testing.T) {
 	}
 	if !now.Equal(base.Add(time.Hour)) {
 		t.Fatalf("expected last snapshot time, got %v", now)
+	}
+}
+
+func TestReferenceTime_UserProvidedOverridesSnapshots(t *testing.T) {
+	// IsUserProvided() == true should win regardless of snapshots —
+	// honours --now overrides as the audit timestamp instead of
+	// silently preferring the latest CapturedAt.
+	userTime := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+	a := &Assessor{clock: stubClock{t: userTime, userProvided: true}}
+	sorted := []asset.Snapshot{
+		{CapturedAt: time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)},
+		{CapturedAt: time.Date(2026, 1, 16, 0, 0, 0, 0, time.UTC)},
+	}
+	now, err := a.referenceTime(sorted)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !now.Equal(userTime) {
+		t.Fatalf("expected user-provided clock time, got %v", now)
 	}
 }
 
