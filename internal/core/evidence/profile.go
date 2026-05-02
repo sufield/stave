@@ -1,6 +1,7 @@
 package evidence
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -35,6 +36,13 @@ type PassThreshold struct {
 	Percent float64 // only used when Mode == ThresholdPercent
 }
 
+// Sentinel errors for ParsePassThreshold so callers can errors.Is
+// against specific failure modes (range vs unknown form).
+var (
+	ErrThresholdOutOfRange = errors.New("evidence: percent threshold out of [0,100] range")
+	ErrThresholdUnknown    = errors.New("evidence: unknown threshold form (expected all, any, or percent:N)")
+)
+
 // ParsePassThreshold parses a threshold string: "all", "any", or "percent:N".
 func ParsePassThreshold(s string) (PassThreshold, error) {
 	s = strings.TrimSpace(s)
@@ -49,11 +57,11 @@ func ParsePassThreshold(s string) (PassThreshold, error) {
 			return PassThreshold{}, fmt.Errorf("invalid percent threshold %q: %w", s, err)
 		}
 		if pct < 0 || pct > 100 {
-			return PassThreshold{}, fmt.Errorf("percent threshold must be 0-100, got %v", pct)
+			return PassThreshold{}, fmt.Errorf("%w: got %v", ErrThresholdOutOfRange, pct)
 		}
 		return PassThreshold{Mode: ThresholdPercent, Percent: pct}, nil
 	default:
-		return PassThreshold{}, fmt.Errorf("unknown threshold %q: expected all, any, or percent:N", s)
+		return PassThreshold{}, fmt.Errorf("%w: %q", ErrThresholdUnknown, s)
 	}
 }
 

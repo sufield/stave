@@ -83,7 +83,7 @@ func parseAssetID(assetID string) (vendor, service, resourceID string) {
 		} else if len(parts) >= 6 {
 			resourceID = parts[5]
 		}
-		return
+		return vendor, service, resourceID
 	}
 	return "", "", assetID
 }

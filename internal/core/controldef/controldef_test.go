@@ -72,6 +72,44 @@ func TestSeverityGte(t *testing.T) {
 	}
 }
 
+func TestSeverityWeight(t *testing.T) {
+	tests := []struct {
+		sev  Severity
+		want int
+	}{
+		{SeverityCritical, 100},
+		{SeverityHigh, 75},
+		{SeverityMedium, 50},
+		{SeverityLow, 25},
+		{SeverityInfo, 10},
+		{SeverityNone, 10},
+	}
+	for _, tt := range tests {
+		if got := tt.sev.Weight(); got != tt.want {
+			t.Errorf("Severity(%v).Weight() = %d, want %d", tt.sev, got, tt.want)
+		}
+	}
+}
+
+func TestSeverityBucketName(t *testing.T) {
+	tests := []struct {
+		sev  Severity
+		want string
+	}{
+		{SeverityCritical, "critical"},
+		{SeverityHigh, "high"},
+		{SeverityMedium, "medium"},
+		{SeverityLow, "low"},
+		{SeverityInfo, "info"},
+		{SeverityNone, "info"},
+	}
+	for _, tt := range tests {
+		if got := tt.sev.BucketName(); got != tt.want {
+			t.Errorf("Severity(%v).BucketName() = %q, want %q", tt.sev, got, tt.want)
+		}
+	}
+}
+
 func TestParseSeverity(t *testing.T) {
 	tests := []struct {
 		input   string

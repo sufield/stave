@@ -18,7 +18,7 @@ import (
 )
 
 // runDiff performs cross-account outlier analysis for a specific control.
-func runDiff(stdout io.Writer, opts *options) error {
+func runDiff(ctx context.Context, stdout io.Writer, opts *options) error {
 	if opts.DiffControl == "" {
 		return errors.New("--diff-control is required")
 	}
@@ -28,7 +28,7 @@ func runDiff(stdout io.Writer, opts *options) error {
 		return errors.New("--history is required with --diff-control (directory of per-account assessment files)")
 	}
 
-	consolidated, assessments, err := loadConsolidationData(opts.HistoryDir)
+	consolidated, assessments, err := loadConsolidationData(ctx, opts.HistoryDir)
 	if err != nil {
 		return fmt.Errorf("load consolidation data: %w", err)
 	}
@@ -81,13 +81,12 @@ func writeDiffTable(w io.Writer, r outlieranalysis.OutlierReport) {
 
 // loadConsolidationData builds a ConsolidatedReport and per-account assessments
 // from a history directory containing per-account subdirectories.
-func loadConsolidationData(dir string) (*appconsolidate.ConsolidatedReport, map[string]report.Assessment, error) {
+func loadConsolidationData(ctx context.Context, dir string) (*appconsolidate.ConsolidatedReport, map[string]report.Assessment, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, nil, fmt.Errorf("read directory: %w", err)
 	}
 
-	ctx := context.Background()
 	loader := artifact.NewLoader()
 	assessments := make(map[string]report.Assessment)
 	var accounts []appconsolidate.AccountSummary

@@ -66,7 +66,7 @@ func Evaluate(in Input) GateResult {
 
 	var critical, high, medium int
 	for i := range teamFindings {
-		switch teamFindings[i].ControlSeverity.String() {
+		switch teamFindings[i].ControlSeverity.BucketName() {
 		case "critical":
 			critical++
 		case "high":

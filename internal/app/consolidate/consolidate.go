@@ -181,20 +181,20 @@ func assessAccount(
 	for i := range result.Findings {
 		f := &result.Findings[i]
 		summary.TotalFindings++
-		switch f.ControlSeverity {
-		case policy.SeverityCritical:
+		switch f.ControlSeverity.BucketName() {
+		case "critical":
 			summary.CriticalCount++
-		case policy.SeverityHigh:
+		case "high":
 			summary.HighCount++
-		case policy.SeverityMedium:
+		case "medium":
 			summary.MediumCount++
-		case policy.SeverityLow:
+		case "low":
 			summary.LowCount++
 		}
 		if f.SLABreached {
 			summary.SLABreached++
 		}
-		base := float64(risk.SeverityToWeight(f.ControlSeverity))
+		base := float64(f.ControlSeverity.Weight())
 		dur := risk.DurationFactor(f.Evidence.UnsafeDurationHours)
 		riskScore += base * dur
 	}

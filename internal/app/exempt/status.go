@@ -42,7 +42,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 
 	for i := range file.Acknowledgments {
 		ack := &file.Acknowledgments[i]
-		if ack.Status != "active" {
+		if !ack.IsActive() {
 			continue
 		}
 		report.TotalActive++

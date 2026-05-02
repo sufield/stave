@@ -105,23 +105,6 @@ func DurationFactor(unsafeHours float64) float64 {
 	}
 }
 
-// SeverityToWeight maps a severity level to a base score for controls
-// that do not define base_impact in their params.
-func SeverityToWeight(sev policy.Severity) int {
-	switch sev {
-	case policy.SeverityCritical:
-		return 100
-	case policy.SeverityHigh:
-		return 75
-	case policy.SeverityMedium:
-		return 50
-	case policy.SeverityLow:
-		return 25
-	default:
-		return 10
-	}
-}
-
 // exposureMultiplier derives the exposure vector multiplier from the
 // finding's exposure metadata.
 func exposureMultiplier(exp *policy.Exposure) float64 {
@@ -153,7 +136,7 @@ func RankExposures(
 	for i := range inputs {
 		f := &inputs[i]
 
-		base := SeverityToWeight(f.ControlSeverity)
+		base := f.ControlSeverity.Weight()
 		blast := 1.0
 		if controlLookup != nil {
 			if ctl, ok := controlLookup[f.ControlID]; ok {

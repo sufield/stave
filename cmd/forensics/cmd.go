@@ -49,7 +49,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runForensics(cmd.OutOrStdout(), opts)
+			return runForensics(cmd.Context(), cmd.OutOrStdout(), opts)
 		},
 	}
 
@@ -65,7 +65,7 @@ Exit Codes:
 	return cmd
 }
 
-func runForensics(stdout io.Writer, opts *options) error {
+func runForensics(ctx context.Context, stdout io.Writer, opts *options) error {
 	// Load snapshots.
 	logger := slog.Default()
 	snapshots, err := appbisect.LoadSnapshotDir(
@@ -86,7 +86,7 @@ func runForensics(stdout io.Writer, opts *options) error {
 	if err != nil {
 		return fmt.Errorf("create control loader: %w", err)
 	}
-	controls, err := ctlRepo.LoadControls(context.Background(), fsutil.CleanUserPath(opts.ControlsDir))
+	controls, err := ctlRepo.LoadControls(ctx, fsutil.CleanUserPath(opts.ControlsDir))
 	if err != nil {
 		return fmt.Errorf("load controls: %w", err)
 	}

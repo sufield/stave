@@ -3,6 +3,7 @@
 package consolidate
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -71,7 +72,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return run(cmd.OutOrStdout(), cmd.ErrOrStderr(), opts)
+			return run(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), opts)
 		},
 	}
 
@@ -92,15 +93,15 @@ Exit Codes:
 	return cmd
 }
 
-func run(stdout, stderr io.Writer, opts *options) error {
+func run(ctx context.Context, stdout, stderr io.Writer, opts *options) error {
 	// Diff mode: cross-account outlier analysis for a specific control.
 	if opts.DiffControl != "" {
-		return runDiff(stdout, opts)
+		return runDiff(ctx, stdout, opts)
 	}
 
 	// History mode: org-level trending across multiple accounts.
 	if opts.HistoryDir != "" {
-		return runHistory(stdout, opts)
+		return runHistory(ctx, stdout, opts)
 	}
 
 	if opts.SnapshotsDir == "" && opts.ManifestFile == "" {

@@ -27,6 +27,11 @@ func (l *ObservationLoader) LoadSnapshotFromReader(ctx context.Context, r io.Rea
 		return asset.Snapshot{}, fmt.Errorf("read from %s: %w", sourceName, err)
 	}
 
+	// Intentional discard: process() returns (snap, hash, err); the hash
+	// is recomputed by callers that need it (StdinObservationLoader hashes
+	// the raw bytes for InputHashes). Discarding here keeps the simple-
+	// reader path from forcing a hash-handling contract on every caller
+	// that only wants the snapshot.
 	snap, _, err := l.process(data, sourceName)
 	if err != nil {
 		return asset.Snapshot{}, err

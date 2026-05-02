@@ -96,6 +96,20 @@ type Finding struct {
 	Delta []policy.DeltaPath `json:"delta,omitempty"`
 }
 
+// IsCriticalSLABreach reports whether this finding is an SLA breach
+// where either the original control severity or the SLA-escalated
+// severity reaches Critical. Consumed by the apply runner to decide
+// whether to set HasCriticalSLABreach on the run summary; the
+// compound condition lives on the type so callers don't open-code
+// the (SLABreached && severity-check) pair at every site.
+func (f *Finding) IsCriticalSLABreach() bool {
+	if !f.SLABreached {
+		return false
+	}
+	return f.ControlSeverity == policy.SeverityCritical ||
+		f.SLAEscalatedSeverity == policy.SeverityCritical
+}
+
 // ReasoningTraceFromMisconfigurations converts a predicate-extracted
 // misconfiguration list into the reasoning-trace shape surfaced on a
 // finding. The two carry the same triggering state from slightly

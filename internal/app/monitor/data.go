@@ -151,7 +151,7 @@ func countFindings(findings []remediation.Finding) FindingSummary {
 	var fs FindingSummary
 	fs.Total = len(findings)
 	for i := range findings {
-		switch findings[i].ControlSeverity.String() {
+		switch findings[i].ControlSeverity.BucketName() {
 		case "critical":
 			fs.Critical++
 		case "high":

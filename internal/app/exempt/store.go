@@ -21,6 +21,16 @@ type AcceptanceFile struct {
 	Exemptions      []ExemptionEntry      `yaml:"exemptions,omitempty"`
 }
 
+// Acknowledgment status string literals. Centralised so the status
+// predicate methods and the writer-side constructors (Add / Remove /
+// Expire) can all reference the same canonical strings instead of
+// open-coding "active" / "revoked" / "expired" at every site.
+const (
+	AckStatusActive  = "active"
+	AckStatusRevoked = "revoked"
+	AckStatusExpired = "expired"
+)
+
 // AcknowledgmentEntry is a formal risk acceptance.
 // YAML tags match controldef.AcknowledgmentRule so the produced file
 // is consumable by stave apply --acknowledgment-file without modification.
@@ -36,6 +46,18 @@ type AcknowledgmentEntry struct {
 	Status               string       `yaml:"status"`
 	AuditTrail           []AuditEvent `yaml:"audit_trail"`
 }
+
+// IsActive reports whether the entry's status is the canonical
+// "active" value.
+func (a *AcknowledgmentEntry) IsActive() bool { return a.Status == AckStatusActive }
+
+// IsRevoked reports whether the entry has been administratively
+// revoked.
+func (a *AcknowledgmentEntry) IsRevoked() bool { return a.Status == AckStatusRevoked }
+
+// IsExpired reports whether the entry has passed its expiry date and
+// been moved to the "expired" status.
+func (a *AcknowledgmentEntry) IsExpired() bool { return a.Status == AckStatusExpired }
 
 // ExceptionEntry is an operational suppression.
 type ExceptionEntry struct {
@@ -123,7 +145,7 @@ func (f *AcceptanceFile) AddAcknowledgment(entry AcknowledgmentEntry, timestamp 
 		return fmt.Errorf("timestamp too short or empty: %q (expected RFC3339)", timestamp)
 	}
 	entry.AcknowledgedDate = timestamp[:10] // YYYY-MM-DD from RFC3339
-	entry.Status = "active"
+	entry.Status = AckStatusActive
 	entry.AuditTrail = []AuditEvent{
 		{
 			Event:     "created",
@@ -170,7 +192,7 @@ func (f *AcceptanceFile) AddExemption(entry ExemptionEntry) error {
 func (f *AcceptanceFile) Remove(id, timestamp string) error {
 	for i := range f.Acknowledgments {
 		if f.Acknowledgments[i].ID == id {
-			f.Acknowledgments[i].Status = "revoked"
+			f.Acknowledgments[i].Status = AckStatusRevoked
 			f.Acknowledgments[i].AuditTrail = append(f.Acknowledgments[i].AuditTrail, AuditEvent{
 				Event:     "revoked",
 				Timestamp: timestamp,
@@ -246,7 +268,7 @@ func (f *AcceptanceFile) Upcoming(days int, now time.Time) []AcknowledgmentEntry
 	var result []AcknowledgmentEntry
 	for i := range f.Acknowledgments {
 		a := &f.Acknowledgments[i]
-		if a.Status != "active" || a.ExpiryDate == "" {
+		if !a.IsActive() || a.ExpiryDate == "" {
 			continue
 		}
 		expiry, err := time.Parse("2006-01-02", a.ExpiryDate)
@@ -263,7 +285,7 @@ func (f *AcceptanceFile) Upcoming(days int, now time.Time) []AcknowledgmentEntry
 // ActiveCount returns counts by type (only active entries).
 func (f *AcceptanceFile) ActiveCount() (acks, exceptions, exemptions int) {
 	for i := range f.Acknowledgments {
-		if f.Acknowledgments[i].Status == "active" {
+		if f.Acknowledgments[i].IsActive() {
 			acks++
 		}
 	}

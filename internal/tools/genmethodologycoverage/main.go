@@ -181,7 +181,7 @@ func summarize(rows []row) (covered, partial, notCovered int) {
 			partial++
 		}
 	}
-	return
+	return covered, partial, notCovered
 }
 
 func formatRow(r row) (status, ids, notes string) {
@@ -211,7 +211,7 @@ func formatRow(r row) (status, ids, notes string) {
 			break
 		}
 	}
-	return
+	return status, ids, notes
 }
 
 func titleCase(s string) string {

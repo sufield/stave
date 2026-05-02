@@ -161,11 +161,7 @@ func run(ctx context.Context, stdout, _ io.Writer, opts *options, deps Deps) err
 		fmt.Fprintln(stdout, strings.Repeat("-", 50))
 		for i := range assessment.AcknowledgedFindings {
 			af := &assessment.AcknowledgedFindings[i]
-			status := "[ACK]"
-			if !af.Valid {
-				status = "[INVALID: " + af.InvalidReason + "]"
-			}
-			fmt.Fprintf(stdout, "  %s  %s on %s\n", status, af.ControlID, af.AssetID)
+			fmt.Fprintf(stdout, "  %s  %s on %s\n", af.StatusLabel(), af.ControlID, af.AssetID)
 			if af.Rationale != "" {
 				fmt.Fprintf(stdout, "         Rationale: %s\n", af.Rationale)
 			}

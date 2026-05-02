@@ -43,26 +43,6 @@ func TestDurationFactor(t *testing.T) {
 	}
 }
 
-func TestSeverityToWeight(t *testing.T) {
-	tests := []struct {
-		sev  policy.Severity
-		want int
-	}{
-		{policy.SeverityCritical, 100},
-		{policy.SeverityHigh, 75},
-		{policy.SeverityMedium, 50},
-		{policy.SeverityLow, 25},
-		{policy.SeverityInfo, 10},
-	}
-	for _, tt := range tests {
-		t.Run(tt.sev.String(), func(t *testing.T) {
-			if got := SeverityToWeight(tt.sev); got != tt.want {
-				t.Errorf("SeverityToWeight(%v) = %d, want %d", tt.sev, got, tt.want)
-			}
-		})
-	}
-}
-
 func TestRankExposures_SortOrder(t *testing.T) {
 	inputs := []RankInput{
 		{ControlID: "CTL.LOW.001", AssetID: "asset-1", ControlSeverity: policy.SeverityLow, UnsafeDurationHours: 10 * 24},

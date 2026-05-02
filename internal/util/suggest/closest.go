@@ -3,6 +3,21 @@ package suggest
 
 import "strings"
 
+// Distance thresholds bucket inputs by length: short inputs (typos in
+// flags / short subcommands) tolerate at most one edit, while longer
+// inputs (full command paths, identifiers) tolerate progressively
+// more edits. Bucketing prevents a 3-character typo from suggesting a
+// 12-character command that happens to share a few letters.
+const (
+	shortInputMaxLen        = 4
+	mediumInputMaxLen       = 8
+	longInputMaxLen         = 14
+	shortInputMaxDistance   = 1
+	mediumInputMaxDistance  = 3
+	longInputMaxDistance    = 5
+	xLongInputMaxDistance   = 6
+)
+
 // Closest returns the candidate most similar to input based on Levenshtein distance.
 // It returns an empty string if no candidate meets the distance threshold.
 func Closest(input string, candidates []string) string {
@@ -42,14 +57,14 @@ func normalize(s string) string {
 
 func threshold(inputLen int) int {
 	switch {
-	case inputLen <= 4:
-		return 1
-	case inputLen <= 8:
-		return 3
-	case inputLen <= 14:
-		return 5
+	case inputLen <= shortInputMaxLen:
+		return shortInputMaxDistance
+	case inputLen <= mediumInputMaxLen:
+		return mediumInputMaxDistance
+	case inputLen <= longInputMaxLen:
+		return longInputMaxDistance
 	default:
-		return 6
+		return xLongInputMaxDistance
 	}
 }
 

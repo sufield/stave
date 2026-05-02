@@ -24,7 +24,7 @@ import (
 //	    2026-01-02.json
 //	  account-789012/
 //	    2026-01-01.json
-func runHistory(w io.Writer, opts *options) error {
+func runHistory(ctx context.Context, w io.Writer, opts *options) error {
 	windowDur, err := parseWindowDuration(opts.Window)
 	if err != nil {
 		return fmt.Errorf("invalid --window: %w", err)
@@ -38,7 +38,7 @@ func runHistory(w io.Writer, opts *options) error {
 		}
 	}
 
-	accounts, err := loadAccountHistory(opts.HistoryDir)
+	accounts, err := loadAccountHistory(ctx, opts.HistoryDir)
 	if err != nil {
 		return fmt.Errorf("load history: %w", err)
 	}
@@ -79,13 +79,12 @@ func runHistory(w io.Writer, opts *options) error {
 
 // loadAccountHistory walks the history directory, treating each
 // subdirectory as an account with assessment JSON files.
-func loadAccountHistory(dir string) ([]orgtrend.AccountTimeSeries, error) {
+func loadAccountHistory(ctx context.Context, dir string) ([]orgtrend.AccountTimeSeries, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("read directory: %w", err)
 	}
 
-	ctx := context.Background()
 	loader := artifact.NewLoader()
 	var accounts []orgtrend.AccountTimeSeries
 

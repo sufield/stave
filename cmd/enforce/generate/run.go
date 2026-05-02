@@ -81,7 +81,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	p, err := r.BuildPlan(cfg)
+	p, err := r.BuildPlan(ctx, cfg)
 	if err != nil {
 		return err
 	}
@@ -96,11 +96,11 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 }
 
 // BuildPlan constructs the generation metadata and content without writing to disk.
-func (r *Runner) BuildPlan(cfg Config) (Plan, error) {
+func (r *Runner) BuildPlan(ctx context.Context, cfg Config) (Plan, error) {
 	if err := validateInputPath(cfg.InputPath); err != nil {
 		return Plan{}, err
 	}
-	refs, err := loadFindingRefs(cfg.InputPath)
+	refs, err := loadFindingRefs(ctx, cfg.InputPath)
 	if err != nil {
 		return Plan{}, err
 	}
@@ -132,7 +132,7 @@ func validateInputPath(inputPath string) error {
 	return nil
 }
 
-func loadFindingRefs(inputPath string) ([]outenforce.FindingRef, error) {
+func loadFindingRefs(ctx context.Context, inputPath string) ([]outenforce.FindingRef, error) {
 	// Load via the schema-validating envelope path. Enforcement
 	// generation drives gating decisions — the input must be a
 	// schema-valid out.v0.1 Assessment, not just any JSON file with
@@ -141,7 +141,7 @@ func loadFindingRefs(inputPath string) ([]outenforce.FindingRef, error) {
 	// could otherwise drive the gate into an empty-rules "clean"
 	// state.
 	loader := evaljson.NewLoader().WithStrictSchema()
-	assessment, err := loader.LoadEnvelopeFromFile(context.Background(), inputPath)
+	assessment, err := loader.LoadEnvelopeFromFile(ctx, inputPath)
 	if err != nil {
 		return nil, fmt.Errorf("load evaluation: %w", err)
 	}

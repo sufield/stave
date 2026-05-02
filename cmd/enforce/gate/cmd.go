@@ -44,11 +44,7 @@ func renderGate(w io.Writer, result *stave.GateResult, isJSON, quiet bool) error
 	if quiet {
 		return nil
 	}
-	status := "FAIL"
-	if result.Passed {
-		status = "PASS"
-	}
-	_, err := fmt.Fprintf(w, "Gate %s (%s): %s\n", status, result.Policy, result.Reason)
+	_, err := fmt.Fprintf(w, "Gate %s (%s): %s\n", result.PassLabel(), result.Policy, result.Reason)
 	return err
 }
 
@@ -187,10 +183,7 @@ Exit Codes:
 				return renderErr
 			}
 
-			if !result.Passed {
-				return ui.ErrViolationsFound
-			}
-			return nil
+			return result.ExitError()
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

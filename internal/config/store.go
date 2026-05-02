@@ -23,6 +23,15 @@ var (
 	ErrNoConfigDir = errors.New("could not resolve a config directory or user home")
 )
 
+// configDirName / contextsFileName name the on-disk locations Stave
+// uses for its user-level config. Centralised so tests, the
+// initcmd/contextcmd resolver, and store_test.go all reference the
+// same string instead of each open-coding "stave" / "contexts.yaml".
+const (
+	configDirName    = "stave"
+	contextsFileName = "contexts.yaml"
+)
+
 // Defaults holds the default directory paths for a context.
 type Defaults struct {
 	ControlsDir     string `yaml:"controls_dir,omitempty"`
@@ -478,12 +487,12 @@ func resolveStorePath() (string, error) {
 	}
 
 	if cfgDir, err := os.UserConfigDir(); err == nil && cfgDir != "" {
-		return filepath.Join(cfgDir, "stave", "contexts.yaml"), nil
+		return filepath.Join(cfgDir, configDirName, contextsFileName), nil
 	}
 
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
 		return "", ErrNoConfigDir
 	}
-	return filepath.Join(home, ".config", "stave", "contexts.yaml"), nil
+	return filepath.Join(home, ".config", configDirName, contextsFileName), nil
 }

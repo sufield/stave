@@ -88,6 +88,14 @@ type VerifyInput struct {
 	GeneratedAt string
 }
 
+// parsedRun pairs a manifest run with its parsed CollectedAt time so
+// the temporal-continuity passes don't reparse the timestamp on every
+// access.
+type parsedRun struct {
+	run  collect.ManifestRun
+	time time.Time
+}
+
 // Verify performs evidence archive continuity verification.
 func Verify(input VerifyInput) (*Attestation, error) {
 	archive := &collect.Archive{Path: input.ArchivePath}
@@ -97,64 +105,11 @@ func Verify(input VerifyInput) (*Attestation, error) {
 		return nil, fmt.Errorf("load manifest: %w", err)
 	}
 
-	// Verify manifest hash.
 	manifestValid := verifyManifestHash(input.ArchivePath)
+	allRuns := parseAndSortRuns(manifest.Runs)
+	inPeriod := filterRunsToPeriod(allRuns, input.PeriodStart, input.PeriodEnd)
 
-	// Filter and sort runs by collection time.
-	type parsedRun struct {
-		run  collect.ManifestRun
-		time time.Time
-	}
-	var allRuns []parsedRun
-	for _, r := range manifest.Runs {
-		t, parseErr := time.Parse(time.RFC3339, r.CollectedAt)
-		if parseErr != nil {
-			continue
-		}
-		allRuns = append(allRuns, parsedRun{run: r, time: t})
-	}
-	sort.Slice(allRuns, func(i, j int) bool {
-		return allRuns[i].time.Before(allRuns[j].time)
-	})
-
-	// Filter to period.
-	var inPeriod []parsedRun
-	for _, r := range allRuns {
-		if !r.time.Before(input.PeriodStart) && !r.time.After(input.PeriodEnd) {
-			inPeriod = append(inPeriod, r)
-		}
-	}
-
-	// Verify each run.
-	var runs []RunResult
-	var invalidRuns []InvalidRun
-	validCount := 0
-
-	for _, pr := range inPeriod {
-		rr := RunResult{
-			RunID:       pr.run.RunID,
-			CollectedAt: pr.run.CollectedAt,
-			ManifestOK:  manifestValid,
-		}
-
-		// Verify per-run checksums.
-		checksumOK, detail := verifyRunChecksums(input.ArchivePath, pr.run.RunID)
-		rr.ChecksumOK = checksumOK
-
-		if !checksumOK {
-			invalidRuns = append(invalidRuns, InvalidRun{
-				RunID:         pr.run.RunID,
-				CollectedAt:   pr.run.CollectedAt,
-				FailureReason: "checksum_mismatch",
-				Detail:        detail,
-			})
-		} else {
-			validCount++
-		}
-
-		runs = append(runs, rr)
-	}
-
+	runs, invalidRuns, validCount := verifyRunsInPeriod(input.ArchivePath, inPeriod, manifestValid)
 	if !manifestValid {
 		invalidRuns = append(invalidRuns, InvalidRun{
 			RunID:         "manifest",
@@ -163,79 +118,9 @@ func Verify(input VerifyInput) (*Attestation, error) {
 		})
 	}
 
-	// Temporal continuity.
-	var gaps []GapResult
-	gapsExceeding := 0
-
-	// Check coverage of period start.
-	if len(inPeriod) > 0 {
-		firstGap := inPeriod[0].time.Sub(input.PeriodStart).Hours()
-		if firstGap > input.MaxGapHours {
-			gaps = append(gaps, GapResult{
-				GapStart:      input.PeriodStart,
-				GapEnd:        inPeriod[0].time,
-				DurationHours: firstGap,
-				ExceedsMax:    true,
-			})
-			gapsExceeding++
-		}
-	}
-
-	// Check between consecutive runs.
-	for i := 1; i < len(inPeriod); i++ {
-		gap := inPeriod[i].time.Sub(inPeriod[i-1].time).Hours()
-		if exceedsGapThreshold(gap, input.MaxGapHours, input.Strict) {
-			exceeds := gap > input.MaxGapHours || input.Strict
-			gaps = append(gaps, GapResult{
-				GapStart:      inPeriod[i-1].time,
-				GapEnd:        inPeriod[i].time,
-				DurationHours: gap,
-				ExceedsMax:    exceeds,
-			})
-			if exceeds {
-				gapsExceeding++
-			}
-		}
-	}
-
-	// Check coverage of period end.
-	if len(inPeriod) > 0 {
-		lastGap := input.PeriodEnd.Sub(inPeriod[len(inPeriod)-1].time).Hours()
-		if lastGap > input.MaxGapHours {
-			gaps = append(gaps, GapResult{
-				GapStart:      inPeriod[len(inPeriod)-1].time,
-				GapEnd:        input.PeriodEnd,
-				DurationHours: lastGap,
-				ExceedsMax:    true,
-			})
-			gapsExceeding++
-		}
-	}
-
-	// Coverage percentage.
-	periodHours := input.PeriodEnd.Sub(input.PeriodStart).Hours()
-	var totalGapHours float64
-	for _, g := range gaps {
-		totalGapHours += g.DurationHours
-	}
-	coveragePct := 100.0
-	if periodHours > 0 {
-		coveragePct = (1.0 - totalGapHours/periodHours) * 100
-		if coveragePct < 0 {
-			coveragePct = 0
-		}
-	}
-
-	// Verdict.
-	verdict := "PASS"
-	reason := ""
-	if len(invalidRuns) > 0 {
-		verdict = "FAIL"
-		reason = fmt.Sprintf("%d bundles failed integrity verification", len(invalidRuns))
-	} else if gapsExceeding > 0 {
-		verdict = "FAIL"
-		reason = fmt.Sprintf("%d gaps exceed maximum allowed gap of %.0fh", gapsExceeding, input.MaxGapHours)
-	}
+	gaps, gapsExceeding := computeTemporalGaps(inPeriod, input)
+	coveragePct := computeCoveragePct(input.PeriodStart, input.PeriodEnd, gaps)
+	verdict, reason := computeVerdict(invalidRuns, gapsExceeding, input.MaxGapHours)
 
 	return &Attestation{
 		GeneratedAt: input.GeneratedAt,
@@ -257,6 +142,151 @@ func Verify(input VerifyInput) (*Attestation, error) {
 		Gaps:        gaps,
 		Runs:        runs,
 	}, nil
+}
+
+// parseAndSortRuns parses each ManifestRun's CollectedAt and returns
+// the parseable subset sorted ascending by collection time. Runs with
+// unparseable timestamps are silently dropped — they're already
+// invalid and the manifest-hash verification fails them anyway.
+func parseAndSortRuns(runs []collect.ManifestRun) []parsedRun {
+	out := make([]parsedRun, 0, len(runs))
+	for _, r := range runs {
+		t, parseErr := time.Parse(time.RFC3339, r.CollectedAt)
+		if parseErr != nil {
+			continue
+		}
+		out = append(out, parsedRun{run: r, time: t})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].time.Before(out[j].time)
+	})
+	return out
+}
+
+// filterRunsToPeriod returns the subset of runs whose CollectedAt
+// falls within [start, end] inclusive.
+func filterRunsToPeriod(runs []parsedRun, start, end time.Time) []parsedRun {
+	var out []parsedRun
+	for _, r := range runs {
+		if !r.time.Before(start) && !r.time.After(end) {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+// verifyRunsInPeriod runs per-bundle checksum verification for every
+// run in scope and returns the per-run result list, the invalid-run
+// detail list, and the count of bundles that passed.
+func verifyRunsInPeriod(archivePath string, inPeriod []parsedRun, manifestValid bool) ([]RunResult, []InvalidRun, int) {
+	var runs []RunResult
+	var invalid []InvalidRun
+	validCount := 0
+	for _, pr := range inPeriod {
+		rr := RunResult{
+			RunID:       pr.run.RunID,
+			CollectedAt: pr.run.CollectedAt,
+			ManifestOK:  manifestValid,
+		}
+		checksumOK, detail := verifyRunChecksums(archivePath, pr.run.RunID)
+		rr.ChecksumOK = checksumOK
+		if !checksumOK {
+			invalid = append(invalid, InvalidRun{
+				RunID:         pr.run.RunID,
+				CollectedAt:   pr.run.CollectedAt,
+				FailureReason: "checksum_mismatch",
+				Detail:        detail,
+			})
+		} else {
+			validCount++
+		}
+		runs = append(runs, rr)
+	}
+	return runs, invalid, validCount
+}
+
+// computeTemporalGaps walks the in-period runs and reports gaps that
+// exceed MaxGapHours (or any gap when Strict is set). Returns the gap
+// list and the count of gaps marked ExceedsMax.
+func computeTemporalGaps(inPeriod []parsedRun, input VerifyInput) ([]GapResult, int) {
+	var gaps []GapResult
+	gapsExceeding := 0
+
+	if len(inPeriod) > 0 {
+		firstGap := inPeriod[0].time.Sub(input.PeriodStart).Hours()
+		if firstGap > input.MaxGapHours {
+			gaps = append(gaps, GapResult{
+				GapStart:      input.PeriodStart,
+				GapEnd:        inPeriod[0].time,
+				DurationHours: firstGap,
+				ExceedsMax:    true,
+			})
+			gapsExceeding++
+		}
+	}
+
+	for i := 1; i < len(inPeriod); i++ {
+		gap := inPeriod[i].time.Sub(inPeriod[i-1].time).Hours()
+		if exceedsGapThreshold(gap, input.MaxGapHours, input.Strict) {
+			exceeds := gap > input.MaxGapHours || input.Strict
+			gaps = append(gaps, GapResult{
+				GapStart:      inPeriod[i-1].time,
+				GapEnd:        inPeriod[i].time,
+				DurationHours: gap,
+				ExceedsMax:    exceeds,
+			})
+			if exceeds {
+				gapsExceeding++
+			}
+		}
+	}
+
+	if len(inPeriod) > 0 {
+		lastGap := input.PeriodEnd.Sub(inPeriod[len(inPeriod)-1].time).Hours()
+		if lastGap > input.MaxGapHours {
+			gaps = append(gaps, GapResult{
+				GapStart:      inPeriod[len(inPeriod)-1].time,
+				GapEnd:        input.PeriodEnd,
+				DurationHours: lastGap,
+				ExceedsMax:    true,
+			})
+			gapsExceeding++
+		}
+	}
+
+	return gaps, gapsExceeding
+}
+
+// computeCoveragePct returns the fraction of the verification window
+// covered by collected runs, expressed as a percentage clamped to
+// [0,100]. A zero-length window is reported as 100% (degenerate but
+// not failed).
+func computeCoveragePct(start, end time.Time, gaps []GapResult) float64 {
+	periodHours := end.Sub(start).Hours()
+	var totalGapHours float64
+	for _, g := range gaps {
+		totalGapHours += g.DurationHours
+	}
+	if periodHours <= 0 {
+		return 100.0
+	}
+	coveragePct := (1.0 - totalGapHours/periodHours) * 100
+	if coveragePct < 0 {
+		return 0
+	}
+	return coveragePct
+}
+
+// computeVerdict reduces the per-run / per-gap counts into the
+// PASS/FAIL verdict and accompanying reason string.
+func computeVerdict(invalidRuns []InvalidRun, gapsExceeding int, maxGapHours float64) (verdict, reason string) {
+	if len(invalidRuns) > 0 {
+		return "FAIL", fmt.Sprintf("%d bundles failed integrity verification", len(invalidRuns))
+	}
+	if gapsExceeding > 0 {
+		return "FAIL", fmt.Sprintf("%d gaps exceed maximum allowed gap of %.0fh", gapsExceeding, maxGapHours)
+	}
+	return "PASS", ""
 }
 
 func verifyManifestHash(archivePath string) bool {

@@ -68,7 +68,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runCompare(cmd.OutOrStdout(), opts)
+			return runCompare(cmd.Context(), cmd.OutOrStdout(), opts)
 		},
 	}
 
@@ -85,10 +85,10 @@ Exit Codes:
 	return cmd
 }
 
-func runCompare(stdout io.Writer, opts *options) error {
+func runCompare(ctx context.Context, stdout io.Writer, opts *options) error {
 	// Remediation impact mode.
 	if opts.Mode == "remediation" {
-		return runRemediationImpact(stdout, opts)
+		return runRemediationImpact(ctx, stdout, opts)
 	}
 
 	data, err := fsutil.ReadFileLimited(opts.Assessment)
@@ -134,19 +134,19 @@ func runCompare(stdout io.Writer, opts *options) error {
 	return nil
 }
 
-func runRemediationImpact(stdout io.Writer, opts *options) error {
+func runRemediationImpact(ctx context.Context, stdout io.Writer, opts *options) error {
 	if opts.Before == "" || opts.After == "" {
 		return &ui.UserError{Err: errors.New("--before and --after are required for remediation mode")}
 	}
 
 	loader := artifact.NewLoader()
 
-	before, err := loader.Evaluation(context.Background(), opts.Before)
+	before, err := loader.Evaluation(ctx, opts.Before)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("load before assessment: %w", err)}
 	}
 
-	after, err := loader.Evaluation(context.Background(), opts.After)
+	after, err := loader.Evaluation(ctx, opts.After)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("load after assessment: %w", err)}
 	}

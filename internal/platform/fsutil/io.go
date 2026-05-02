@@ -20,10 +20,16 @@ import (
 	"sync/atomic"
 )
 
+// bytesPerMB is the bit-shift used to convert bytes ↔ megabytes
+// (2^20 = 1,048,576). Centralised so error messages and limit
+// calculations both refer to the same constant rather than each
+// open-coding ">> 20" or "<< 20".
+const bytesPerMB = 20
+
 // DefaultMaxInputFileBytes is the conservative default safety limit for input
 // files (256 MB). Override via SetMaxInputFileBytes for environments that
 // process larger snapshots (e.g., enterprise CI with thousands of assets).
-const DefaultMaxInputFileBytes int64 = 256 << 20
+const DefaultMaxInputFileBytes int64 = 256 << bytesPerMB
 
 // maxInputFileBytes is the active safety limit. Stored atomically so
 // the bootstrap-time SetMaxInputFileBytes write does not race with
@@ -92,7 +98,7 @@ func ReadFileLimited(path string) ([]byte, error) {
 				"to prevent resource exhaustion, Stave does not process files larger than this — "+
 				"please check if this file was generated correctly",
 			ErrFileTooLarge,
-			filepath.Base(path), limit>>20)
+			filepath.Base(path), limit>>bytesPerMB)
 	}
 	if probeErr != nil && !errors.Is(probeErr, io.EOF) {
 		return nil, probeErr
@@ -141,7 +147,7 @@ func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {
 				"to prevent resource exhaustion, Stave does not process input larger than this — "+
 				"please check if this input was generated correctly",
 			ErrFileTooLarge,
-			sourceName, maxInputFileBytes.Load()>>20)
+			sourceName, maxInputFileBytes.Load()>>bytesPerMB)
 	}
 	if probeErr != nil && !errors.Is(probeErr, io.EOF) {
 		return nil, fmt.Errorf("read %s: %w", sourceName, probeErr)
@@ -566,6 +572,13 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 	// successfully written and renamed.
 	d, openErr := os.Open(dir) //nolint:gosec // directory path from caller's dst
 	if openErr != nil {
+		// Intentional discard: rename already succeeded, so the data is
+		// durably committed at the inode level. Failing to open the
+		// parent directory only means we cannot fsync its metadata —
+		// some filesystems (tmpfs, virtio-9p, certain network mounts)
+		// reject directory open/sync. Surface the warning via slog so
+		// operators can see the degraded durability mode without
+		// turning a successful write into a failure.
 		slog.Warn("crossFSCopy: parent-dir open after rename failed; rename succeeded but durability not enforced",
 			"dir", dir, "error", openErr)
 		return nil

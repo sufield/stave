@@ -9,6 +9,7 @@ import (
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	infragate "github.com/sufield/stave/internal/adapters/gate"
 	"github.com/sufield/stave/internal/adapters/observations"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -85,6 +86,28 @@ type GateResult struct {
 	// OverdueCount is the number of upcoming actions whose deadline
 	// has passed. Only set under GateFailOnOverdueUpcoming.
 	OverdueCount int
+}
+
+// PassLabel returns the canonical "PASS" / "FAIL" string used by CLI
+// renderers. Centralised so cmd/enforce/gate doesn't open-code the
+// ternary at every render site.
+func (r *GateResult) PassLabel() string {
+	if r.Passed {
+		return "PASS"
+	}
+	return "FAIL"
+}
+
+// ExitError translates the gate result into the error sentinel CI
+// gates expect: nil on pass, appcontracts.ErrViolationsFound on fail.
+// The cmd/enforce/gate runner returns this directly so the
+// pkg/stave consumer and the CLI runner share one source of truth
+// for exit-code mapping.
+func (r *GateResult) ExitError() error {
+	if r.Passed {
+		return nil
+	}
+	return appcontracts.ErrViolationsFound
 }
 
 // Gate enforces a CI failure policy and returns the gate result.

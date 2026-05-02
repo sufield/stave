@@ -52,6 +52,50 @@ func (s Severity) Gte(other Severity) bool {
 	return s >= other
 }
 
+// Weight returns the integer base score used by exposure ranking and
+// risk-priority calculations when a control does not define
+// base_impact in its params.
+//
+// Centralised on the Severity type so risk and rank packages do not
+// each open-code the same Critical=100/High=75/Medium=50/Low=25
+// switch — see exposure_rank.go, app/rank/identity.go,
+// app/rank/priority.go, app/consolidate/consolidate.go.
+func (s Severity) Weight() int {
+	switch s {
+	case SeverityCritical:
+		return 100
+	case SeverityHigh:
+		return 75
+	case SeverityMedium:
+		return 50
+	case SeverityLow:
+		return 25
+	default:
+		return 10
+	}
+}
+
+// BucketName returns the canonical lowercase bucket name used by
+// severity-rollup callers (severity_counts, monitor data, exec
+// reports, team-gate, consolidate). For the recognized severity
+// levels it matches String(); SeverityNone falls back to "info" so
+// every callable bucket has a name and the call sites do not need a
+// "default" branch.
+func (s Severity) BucketName() string {
+	switch s {
+	case SeverityCritical:
+		return "critical"
+	case SeverityHigh:
+		return "high"
+	case SeverityMedium:
+		return "medium"
+	case SeverityLow:
+		return "low"
+	default:
+		return "info"
+	}
+}
+
 // ParseSeverity converts a string into a Severity level.
 // It is case-insensitive and returns an error for unrecognized strings.
 func ParseSeverity(s string) (Severity, error) {

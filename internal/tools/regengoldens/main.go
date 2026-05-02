@@ -265,7 +265,13 @@ func affectedDomains(baseRef string) (map[string]struct{}, error) {
 	// `git ls-files --others` reports paths relative to cwd, while
 	// `git diff` reports paths relative to repo root — prefix the
 	// untracked entries so the prefix-strip logic below sees them
-	// consistently. Errors here are non-fatal.
+	// consistently.
+	//
+	// Intentional discard: a failed `git ls-files` (e.g. running outside
+	// a repo, or an outdated git binary) just means we treat untracked
+	// files as absent. The diff-based path still works; this is a
+	// best-effort enrichment of the changed-files set, not a
+	// correctness-critical step.
 	untrackedOut, _ := exec.Command("git", "ls-files", "--others", "--exclude-standard").Output()
 	if prefix != "" && len(untrackedOut) > 0 {
 		var b strings.Builder
@@ -562,7 +568,7 @@ func runCmd(args []string) ([]byte, int, error) {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return nil, 0, fmt.Errorf("timeout after %s\nstderr: %s", fixtureTimeout, stderr.String())
+		return nil, 0, fmt.Errorf("timeout after %s: %w\nstderr: %s", fixtureTimeout, ctx.Err(), stderr.String())
 	}
 	exitCode := 0
 	if exitErr, ok := err.(*exec.ExitError); ok {

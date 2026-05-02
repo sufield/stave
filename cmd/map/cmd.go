@@ -44,7 +44,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runMap(cmd.OutOrStdout(), opts)
+			return runMap(cmd.Context(), cmd.OutOrStdout(), opts)
 		},
 	}
 
@@ -57,13 +57,13 @@ Exit Codes:
 	return cmd
 }
 
-func runMap(stdout io.Writer, opts *options) error {
+func runMap(ctx context.Context, stdout io.Writer, opts *options) error {
 	f := compose.DefaultFactories()
 	ctlRepo, err := f.NewCtlRepo()
 	if err != nil {
 		return fmt.Errorf("create control loader: %w", err)
 	}
-	controls, err := ctlRepo.LoadControls(context.Background(), fsutil.CleanUserPath(opts.ControlsDir))
+	controls, err := ctlRepo.LoadControls(ctx, fsutil.CleanUserPath(opts.ControlsDir))
 	if err != nil {
 		return fmt.Errorf("load controls: %w", err)
 	}

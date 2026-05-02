@@ -131,6 +131,53 @@ type BuildInput struct {
 	SourcePath    string
 }
 
+// builderState carries the dedup sets and graph reference threaded
+// through Build's per-finding and per-chain helpers. Holding these on
+// a single value lets the helpers read like ordinary methods instead
+// of accepting a long parameter list, while keeping all dedup state
+// scoped to one Build() invocation.
+type builderState struct {
+	g                *GraphData
+	seenNodes        sets.Set[string]
+	seenControls     sets.Set[kernel.ControlID]
+	seenRequirements sets.Set[string]
+	seenAccounts     sets.Set[string]
+	seenMapsTo       sets.Set[string]
+	seenBelongsTo    sets.Set[string]
+	seenViolates     sets.Set[string]
+}
+
+func newBuilderState(g *GraphData) *builderState {
+	return &builderState{
+		g:                g,
+		seenNodes:        sets.New[string](),
+		seenControls:     sets.New[kernel.ControlID](),
+		seenRequirements: sets.New[string](),
+		seenAccounts:     sets.New[string](),
+		// seenMapsTo / seenBelongsTo / seenViolates: inline edge-dedup
+		// sets so the post-pass deduplicateEdges doesn't have to walk a
+		// duplicate-laden slice on the hot path. Each tracks
+		// (from→to) pairs for the corresponding edge type — see Build()
+		// for the rationale of each.
+		seenMapsTo:    sets.New[string](),
+		seenBelongsTo: sets.New[string](),
+		seenViolates:  sets.New[string](),
+	}
+}
+
+// emitOnce appends node to g.Nodes the first time id is seen and
+// records the id in seenNodes. Replaces the eight-times-repeated
+// `if !seen.Contains(id) { seen.Add(id); append(...) }` block — the
+// node-emission pattern needs a single source of truth so the dedup
+// invariant is impossible to forget at a new call site.
+func (b *builderState) emitOnce(id string, node Node) {
+	if b.seenNodes.Contains(id) {
+		return
+	}
+	b.seenNodes.Add(id)
+	b.g.Nodes = append(b.g.Nodes, node)
+}
+
 // Build constructs a GraphData from assessment output.
 func Build(input BuildInput) *GraphData {
 	g := &GraphData{
@@ -141,194 +188,12 @@ func Build(input BuildInput) *GraphData {
 			AssessmentOutput: input.SourcePath,
 		},
 	}
-
-	seenNodes := sets.New[string]()
-	seenControls := sets.New[kernel.ControlID]()
-	seenRequirements := sets.New[string]()
-	seenAccounts := sets.New[string]()
-	// seenMapsTo tracks (control, requirement) pairs already emitted
-	// as MAPS_TO edges so the findings loop doesn't generate
-	// duplicates when the same control violates the same requirement
-	// across multiple findings. The earlier shape relied on
-	// deduplicateEdges to clean up the duplicates after the fact —
-	// O(N) wasted work in the hot path and a latent correctness
-	// dependency on the post-pass dedup actually running.
-	seenMapsTo := sets.New[string]()
-	// seenBelongsTo tracks (resource, scope) pairs already emitted as
-	// BELONGS_TO_SCOPE edges. Multiple findings on the same asset
-	// share the same TenantScope, so without this dedup the same
-	// edge was emitted once per finding and a downstream cleanup
-	// pass had to remove the duplicates. Inline dedup here matches
-	// the seenMapsTo pattern and avoids the post-pass entirely.
-	seenBelongsTo := sets.New[string]()
-	// seenViolates tracks (finding, requirement) pairs already
-	// emitted as VIOLATES_REQUIREMENT edges. The same finding can
-	// map to multiple compliance frameworks, but the inner loop
-	// iterates per (framework, requirement) pair — without this
-	// dedup, two frameworks naming the same requirement_id under
-	// different framework keys would both append the same edge.
-	// Mirrors seenMapsTo / seenBelongsTo.
-	seenViolates := sets.New[string]()
-
-	// emitOnce appends node to g.Nodes the first time id is seen and
-	// records the id in seenNodes. Replaces the eight-times-repeated
-	// `if !seen.Contains(id) { seen.Add(id); append(...) }` block —
-	// the node-emission pattern needed a single source of truth so
-	// the dedup invariant is impossible to forget at a new call site.
-	emitOnce := func(id string, node Node) {
-		if seenNodes.Contains(id) {
-			return
-		}
-		seenNodes.Add(id)
-		g.Nodes = append(g.Nodes, node)
-	}
+	b := newBuilderState(g)
 
 	// Findings → Finding nodes, Resource nodes, Control nodes,
 	// ComplianceRequirement nodes, TenantScope nodes, and edges.
 	for i := range input.Findings {
-		f := &input.Findings[i]
-
-		// Finding node. The graph layer uses untyped string IDs
-		// (Node.ID, Edge.From/To) since they mix finding, asset,
-		// chain, and control IDs in the same field. Cast at the
-		// boundary so the rest of this builder stays string-only.
-		findingID := string(f.FindingID)
-		findingProps := map[string]any{
-			"finding_id":   f.FindingID,
-			"control_id":   string(f.ControlID),
-			"control_name": f.ControlName,
-			"verdict":      "fail",
-			"severity":     f.ControlSeverity.String(),
-			"message":      f.Evidence.TemporalRisk,
-		}
-		if f.SLABreached {
-			findingProps["sla_breached"] = true
-		}
-		if len(f.ChainMembership) > 0 {
-			membership := make([]map[string]any, len(f.ChainMembership))
-			for ci, cm := range f.ChainMembership {
-				membership[ci] = map[string]any{
-					"chain_id":       cm.ChainID,
-					"chain_severity": cm.ChainSeverity,
-					"stage_span":     TranslateStages(cm.StageSpan),
-					"narrative":      cm.Narrative,
-				}
-			}
-			findingProps["x_stave_chain_membership"] = membership
-		}
-		emitOnce(findingID, Node{
-			ID: findingID, Type: NodeTypeFinding,
-			Standard: "ocsf", StandardType: "Security Finding (2001)",
-			Properties: findingProps,
-		})
-
-		// Resource node.
-		resourceID := string(f.AssetID)
-		providerType := string(f.AssetType)
-		emitOnce(resourceID, Node{
-			ID: resourceID, Type: NodeTypeResource,
-			Standard: "ocsf", StandardType: "Infrastructure",
-			Properties: map[string]any{
-				"resource_arn":   resourceID,
-				"resource_class": ToResourceClass(providerType),
-				"provider":       string(f.AssetVendor),
-				"provider_type":  providerType,
-				"account_id":     extractAccountID(resourceID),
-			},
-		})
-
-		// TARGETS edge.
-		g.Edges = append(g.Edges, Edge{
-			From: findingID, To: resourceID, Type: EdgeTypeTargets,
-		})
-
-		// Control node.
-		if !seenControls.Contains(f.ControlID) {
-			seenControls.Add(f.ControlID)
-			g.Nodes = append(g.Nodes, Node{
-				ID: string(f.ControlID), Type: NodeTypeControl,
-				Standard: "oscal", StandardType: "control",
-				Properties: map[string]any{
-					"control_id":   string(f.ControlID),
-					"control_name": f.ControlName,
-					"severity":     f.ControlSeverity.String(),
-				},
-			})
-		}
-
-		// ComplianceRequirement nodes + MAPS_TO + VIOLATES edges.
-		for framework, reqID := range f.ControlCompliance {
-			reqNodeID := string(framework) + ":" + reqID
-			if !seenRequirements.Contains(reqNodeID) {
-				seenRequirements.Add(reqNodeID)
-				g.Nodes = append(g.Nodes, Node{
-					ID: reqNodeID, Type: NodeTypeComplianceRequirement,
-					Standard: "oscal", StandardType: "control",
-					Properties: map[string]any{
-						"framework":      string(framework),
-						"requirement_id": reqID,
-					},
-				})
-			}
-			mapsKey := string(f.ControlID) + "->" + reqNodeID
-			if !seenMapsTo.Contains(mapsKey) {
-				seenMapsTo.Add(mapsKey)
-				g.Edges = append(g.Edges, Edge{
-					From: string(f.ControlID), To: reqNodeID, Type: EdgeTypeMapsTo,
-				})
-			}
-			violatesKey := findingID + "->" + reqNodeID
-			if !seenViolates.Contains(violatesKey) {
-				seenViolates.Add(violatesKey)
-				g.Edges = append(g.Edges, Edge{
-					From: findingID, To: reqNodeID, Type: EdgeTypeViolatesRequirement,
-					Properties: map[string]any{"verdict": "fail"},
-				})
-			}
-		}
-
-		// TenantScope node + BELONGS_TO_SCOPE edge.
-		acctID := extractAccountID(resourceID)
-		if acctID != "" {
-			scopeID := "account:" + acctID
-			if !seenAccounts.Contains(acctID) {
-				seenAccounts.Add(acctID)
-				g.Nodes = append(g.Nodes, Node{
-					ID: scopeID, Type: NodeTypeTenantScope,
-					Standard: "ocsf", StandardType: "cloud.account",
-					Properties: map[string]any{
-						"account_id": acctID,
-						"provider":   string(f.AssetVendor),
-					},
-				})
-			}
-			belongsKey := resourceID + "->" + scopeID
-			if !seenBelongsTo.Contains(belongsKey) {
-				seenBelongsTo.Add(belongsKey)
-				g.Edges = append(g.Edges, Edge{
-					From: resourceID, To: scopeID, Type: EdgeTypeBelongsToScope,
-				})
-			}
-		}
-
-		// RemediationAction node + HAS_REMEDIATION edge from the parent
-		// Finding. The edge is appended for every Finding that names a
-		// RemediationAction (even if the node itself was already
-		// recorded for a sibling finding) so dedup runs after.
-		if f.RemediationSpec.Action != "" {
-			remID := "remediation_" + findingID
-			emitOnce(remID, Node{
-				ID: remID, Type: NodeTypeRemediationAction,
-				Standard: "ocsf", StandardType: "Remediation Activity (9001)",
-				Properties: map[string]any{
-					"finding_id": findingID,
-					"action":     f.RemediationSpec.Action,
-				},
-			})
-			g.Edges = append(g.Edges, Edge{
-				From: findingID, To: remID, Type: EdgeTypeHasRemediation,
-			})
-		}
+		b.processFinding(&input.Findings[i])
 	}
 
 	// Build a single index of findings keyed by control ID before
@@ -337,67 +202,11 @@ func Build(input BuildInput) *GraphData {
 	// findings; on a 200-finding bundle with 20 chains that's ~4k
 	// inner iterations per outer pass, all of which fed
 	// deduplicateEdges with redundant copies anyway.
-	findingsByControl := make(map[kernel.ControlID][]int, len(input.Findings))
-	for j := range input.Findings {
-		ff := &input.Findings[j]
-		findingsByControl[ff.ControlID] = append(findingsByControl[ff.ControlID], j)
-	}
+	findingsByControl := buildFindingsByControlIndex(input.Findings)
 
 	// ChainFindings → ThreatChain + AttackerCapability nodes and edges.
 	for i := range input.ChainFindings {
-		cf := &input.ChainFindings[i]
-		chainID := string(cf.ChainID)
-
-		memberControls := make([]string, len(cf.ControlsFailing))
-		for j, cid := range cf.ControlsFailing {
-			memberControls[j] = string(cid)
-		}
-		emitOnce(chainID, Node{
-			ID: chainID, Type: NodeTypeThreatChain,
-			Standard: "stix", StandardType: "Attack Pattern",
-			Properties: map[string]any{
-				"chain_id":          chainID,
-				"narrative":         cf.Description,
-				"compound_severity": cf.Severity.String(),
-				"active":            true,
-				"member_controls":   memberControls,
-				"stage_span_stave":  cf.AttackStages,
-				"stage_span_attck":  TranslateStages(cf.AttackStages),
-				"kill_chain_phases": ToKillChainPhases(cf.AttackStages),
-			},
-		})
-
-		// AttackerCapability node.
-		capID := "capability_" + chainID
-		emitOnce(capID, Node{
-			ID: capID, Type: NodeTypeAttackerCapability,
-			Standard: "stix", StandardType: "Attack Pattern",
-			Properties: map[string]any{
-				"chain_id":          chainID,
-				"compound_severity": cf.Severity.String(),
-				"stage_span_attck":  TranslateStages(cf.AttackStages),
-			},
-		})
-
-		// PRODUCES edge.
-		g.Edges = append(g.Edges, Edge{
-			From: chainID, To: capID, Type: EdgeTypeProduces,
-		})
-
-		// MEMBER_OF edges from findings to chain. O(1) lookup via the
-		// pre-built control→[]findingIdx index.
-		for _, ctlID := range cf.ControlsFailing {
-			for _, j := range findingsByControl[ctlID] {
-				ff := &input.Findings[j]
-				g.Edges = append(g.Edges, Edge{
-					From: string(ff.FindingID), To: chainID, Type: EdgeTypeMemberOf,
-					Properties: map[string]any{
-						"chain_severity":   cf.Severity.String(),
-						"stage_span_attck": TranslateStages(cf.AttackStages),
-					},
-				})
-			}
-		}
+		b.processChainFinding(&input.ChainFindings[i], findingsByControl, input.Findings)
 	}
 
 	// Deduplicate edges.
@@ -407,6 +216,251 @@ func Build(input BuildInput) *GraphData {
 	g.Metadata = computeMetadata(g.Nodes, g.Edges)
 
 	return g
+}
+
+// buildFindingsByControlIndex groups finding indexes by ControlID for
+// O(1) lookup during the chain-finding loop.
+func buildFindingsByControlIndex(findings []remediation.Finding) map[kernel.ControlID][]int {
+	idx := make(map[kernel.ControlID][]int, len(findings))
+	for j := range findings {
+		ff := &findings[j]
+		idx[ff.ControlID] = append(idx[ff.ControlID], j)
+	}
+	return idx
+}
+
+// processFinding emits the Finding/Resource/Control/Compliance/
+// TenantScope/Remediation nodes and edges for a single finding.
+func (b *builderState) processFinding(f *remediation.Finding) {
+	// Finding node. The graph layer uses untyped string IDs
+	// (Node.ID, Edge.From/To) since they mix finding, asset,
+	// chain, and control IDs in the same field. Cast at the
+	// boundary so the rest of this builder stays string-only.
+	findingID := string(f.FindingID)
+	b.emitOnce(findingID, Node{
+		ID: findingID, Type: NodeTypeFinding,
+		Standard: "ocsf", StandardType: "Security Finding (2001)",
+		Properties: buildFindingProperties(f),
+	})
+
+	// Resource node.
+	resourceID := string(f.AssetID)
+	providerType := string(f.AssetType)
+	b.emitOnce(resourceID, Node{
+		ID: resourceID, Type: NodeTypeResource,
+		Standard: "ocsf", StandardType: "Infrastructure",
+		Properties: map[string]any{
+			"resource_arn":   resourceID,
+			"resource_class": ToResourceClass(providerType),
+			"provider":       string(f.AssetVendor),
+			"provider_type":  providerType,
+			"account_id":     extractAccountID(resourceID),
+		},
+	})
+
+	// TARGETS edge.
+	b.g.Edges = append(b.g.Edges, Edge{
+		From: findingID, To: resourceID, Type: EdgeTypeTargets,
+	})
+
+	b.emitControlNode(f)
+	b.emitComplianceEdges(f, findingID)
+	b.emitTenantScope(f, resourceID)
+	b.emitRemediation(f, findingID)
+}
+
+// buildFindingProperties returns the property map for a Finding node,
+// including SLA-breach and chain-membership extensions when present.
+func buildFindingProperties(f *remediation.Finding) map[string]any {
+	props := map[string]any{
+		"finding_id":   f.FindingID,
+		"control_id":   string(f.ControlID),
+		"control_name": f.ControlName,
+		"verdict":      "fail",
+		"severity":     f.ControlSeverity.String(),
+		"message":      f.Evidence.TemporalRisk,
+	}
+	if f.SLABreached {
+		props["sla_breached"] = true
+	}
+	if len(f.ChainMembership) > 0 {
+		membership := make([]map[string]any, len(f.ChainMembership))
+		for ci, cm := range f.ChainMembership {
+			membership[ci] = map[string]any{
+				"chain_id":       cm.ChainID,
+				"chain_severity": cm.ChainSeverity,
+				"stage_span":     TranslateStages(cm.StageSpan),
+				"narrative":      cm.Narrative,
+			}
+		}
+		props["x_stave_chain_membership"] = membership
+	}
+	return props
+}
+
+// emitControlNode emits the Control node for the finding's ControlID
+// the first time that control is seen.
+func (b *builderState) emitControlNode(f *remediation.Finding) {
+	if b.seenControls.Contains(f.ControlID) {
+		return
+	}
+	b.seenControls.Add(f.ControlID)
+	b.g.Nodes = append(b.g.Nodes, Node{
+		ID: string(f.ControlID), Type: NodeTypeControl,
+		Standard: "oscal", StandardType: "control",
+		Properties: map[string]any{
+			"control_id":   string(f.ControlID),
+			"control_name": f.ControlName,
+			"severity":     f.ControlSeverity.String(),
+		},
+	})
+}
+
+// emitComplianceEdges emits ComplianceRequirement nodes plus MAPS_TO
+// and VIOLATES_REQUIREMENT edges for each (framework, requirement)
+// pair the control claims to satisfy.
+func (b *builderState) emitComplianceEdges(f *remediation.Finding, findingID string) {
+	for framework, reqID := range f.ControlCompliance {
+		reqNodeID := string(framework) + ":" + reqID
+		if !b.seenRequirements.Contains(reqNodeID) {
+			b.seenRequirements.Add(reqNodeID)
+			b.g.Nodes = append(b.g.Nodes, Node{
+				ID: reqNodeID, Type: NodeTypeComplianceRequirement,
+				Standard: "oscal", StandardType: "control",
+				Properties: map[string]any{
+					"framework":      string(framework),
+					"requirement_id": reqID,
+				},
+			})
+		}
+		mapsKey := string(f.ControlID) + "->" + reqNodeID
+		if !b.seenMapsTo.Contains(mapsKey) {
+			b.seenMapsTo.Add(mapsKey)
+			b.g.Edges = append(b.g.Edges, Edge{
+				From: string(f.ControlID), To: reqNodeID, Type: EdgeTypeMapsTo,
+			})
+		}
+		violatesKey := findingID + "->" + reqNodeID
+		if !b.seenViolates.Contains(violatesKey) {
+			b.seenViolates.Add(violatesKey)
+			b.g.Edges = append(b.g.Edges, Edge{
+				From: findingID, To: reqNodeID, Type: EdgeTypeViolatesRequirement,
+				Properties: map[string]any{"verdict": "fail"},
+			})
+		}
+	}
+}
+
+// emitTenantScope emits the account-level TenantScope node and the
+// BELONGS_TO_SCOPE edge from the finding's resource to that scope.
+func (b *builderState) emitTenantScope(f *remediation.Finding, resourceID string) {
+	acctID := extractAccountID(resourceID)
+	if acctID == "" {
+		return
+	}
+	scopeID := "account:" + acctID
+	if !b.seenAccounts.Contains(acctID) {
+		b.seenAccounts.Add(acctID)
+		b.g.Nodes = append(b.g.Nodes, Node{
+			ID: scopeID, Type: NodeTypeTenantScope,
+			Standard: "ocsf", StandardType: "cloud.account",
+			Properties: map[string]any{
+				"account_id": acctID,
+				"provider":   string(f.AssetVendor),
+			},
+		})
+	}
+	belongsKey := resourceID + "->" + scopeID
+	if !b.seenBelongsTo.Contains(belongsKey) {
+		b.seenBelongsTo.Add(belongsKey)
+		b.g.Edges = append(b.g.Edges, Edge{
+			From: resourceID, To: scopeID, Type: EdgeTypeBelongsToScope,
+		})
+	}
+}
+
+// emitRemediation emits the RemediationAction node and its
+// HAS_REMEDIATION edge from the parent Finding. The edge is appended
+// unconditionally for every Finding that names a RemediationAction so
+// the post-pass dedup can merge identical edges from sibling findings.
+func (b *builderState) emitRemediation(f *remediation.Finding, findingID string) {
+	if f.RemediationSpec.Action == "" {
+		return
+	}
+	remID := "remediation_" + findingID
+	b.emitOnce(remID, Node{
+		ID: remID, Type: NodeTypeRemediationAction,
+		Standard: "ocsf", StandardType: "Remediation Activity (9001)",
+		Properties: map[string]any{
+			"finding_id": findingID,
+			"action":     f.RemediationSpec.Action,
+		},
+	})
+	b.g.Edges = append(b.g.Edges, Edge{
+		From: findingID, To: remID, Type: EdgeTypeHasRemediation,
+	})
+}
+
+// processChainFinding emits the ThreatChain and AttackerCapability
+// nodes for a chain finding, the PRODUCES edge between them, and the
+// MEMBER_OF edges from each member finding back to the chain.
+func (b *builderState) processChainFinding(
+	cf *risk.CompoundFinding,
+	findingsByControl map[kernel.ControlID][]int,
+	findings []remediation.Finding,
+) {
+	chainID := string(cf.ChainID)
+
+	memberControls := make([]string, len(cf.ControlsFailing))
+	for j, cid := range cf.ControlsFailing {
+		memberControls[j] = string(cid)
+	}
+	b.emitOnce(chainID, Node{
+		ID: chainID, Type: NodeTypeThreatChain,
+		Standard: "stix", StandardType: "Attack Pattern",
+		Properties: map[string]any{
+			"chain_id":          chainID,
+			"narrative":         cf.Description,
+			"compound_severity": cf.Severity.String(),
+			"active":            true,
+			"member_controls":   memberControls,
+			"stage_span_stave":  cf.AttackStages,
+			"stage_span_attck":  TranslateStages(cf.AttackStages),
+			"kill_chain_phases": ToKillChainPhases(cf.AttackStages),
+		},
+	})
+
+	// AttackerCapability node.
+	capID := "capability_" + chainID
+	b.emitOnce(capID, Node{
+		ID: capID, Type: NodeTypeAttackerCapability,
+		Standard: "stix", StandardType: "Attack Pattern",
+		Properties: map[string]any{
+			"chain_id":          chainID,
+			"compound_severity": cf.Severity.String(),
+			"stage_span_attck":  TranslateStages(cf.AttackStages),
+		},
+	})
+
+	// PRODUCES edge.
+	b.g.Edges = append(b.g.Edges, Edge{
+		From: chainID, To: capID, Type: EdgeTypeProduces,
+	})
+
+	// MEMBER_OF edges from findings to chain. O(1) lookup via the
+	// pre-built control→[]findingIdx index.
+	for _, ctlID := range cf.ControlsFailing {
+		for _, j := range findingsByControl[ctlID] {
+			ff := &findings[j]
+			b.g.Edges = append(b.g.Edges, Edge{
+				From: string(ff.FindingID), To: chainID, Type: EdgeTypeMemberOf,
+				Properties: map[string]any{
+					"chain_severity":   cf.Severity.String(),
+					"stage_span_attck": TranslateStages(cf.AttackStages),
+				},
+			})
+		}
+	}
 }
 
 // edgeKey is the deduplication key for graph edges. Using a struct (rather

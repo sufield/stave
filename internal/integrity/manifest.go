@@ -2,6 +2,7 @@ package integrity
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -11,6 +12,12 @@ import (
 	"github.com/sufield/stave/internal/core/ports"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 )
+
+// ErrOverallHashMismatch is returned by Manifest.ValidateOverall when the
+// recomputed aggregate hash does not match the stored Overall digest.
+// Exposed so callers can distinguish a tamper / drift signal from
+// generic IO failures via errors.Is.
+var ErrOverallHashMismatch = errors.New("integrity: overall hash mismatch")
 
 // Manifest defines expected per-file and aggregate hashes for integrity verification.
 type Manifest struct {
@@ -46,7 +53,7 @@ func ComputeOverall(files map[evaluation.FilePath]kernel.Digest) kernel.Digest {
 func (m Manifest) ValidateOverall() error {
 	recomputed := ComputeOverall(m.Files)
 	if m.Overall != recomputed {
-		return fmt.Errorf("overall hash mismatch (expected %s, got %s)", m.Overall, recomputed)
+		return fmt.Errorf("%w (expected %s, got %s)", ErrOverallHashMismatch, m.Overall, recomputed)
 	}
 	return nil
 }

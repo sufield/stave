@@ -1,9 +1,5 @@
 package evaluation
 
-import (
-	policy "github.com/sufield/stave/internal/core/controldef"
-)
-
 // SeverityCounts tallies findings by their control severity tier.
 // Convenient for status summaries, dashboards, and exit-code gating
 // without rolling the same loop in every command.
@@ -25,18 +21,18 @@ func (c SeverityCounts) Total() int {
 // total always matches len(findings) — silently dropping unknown
 // severities would hide enum drift between catalog and engine.
 func CountBySeverity(findings []Finding) SeverityCounts {
+	buckets := map[string]*int{}
 	var c SeverityCounts
+	buckets["critical"] = &c.Critical
+	buckets["high"] = &c.High
+	buckets["medium"] = &c.Medium
+	buckets["low"] = &c.Low
+	buckets["info"] = &c.Info
 	for i := range findings {
-		switch findings[i].ControlSeverity {
-		case policy.SeverityCritical:
-			c.Critical++
-		case policy.SeverityHigh:
-			c.High++
-		case policy.SeverityMedium:
-			c.Medium++
-		case policy.SeverityLow:
-			c.Low++
-		default:
+		bucket := findings[i].ControlSeverity.BucketName()
+		if ptr, ok := buckets[bucket]; ok {
+			*ptr++
+		} else {
 			c.Info++
 		}
 	}

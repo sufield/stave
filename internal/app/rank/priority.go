@@ -101,7 +101,7 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			breakdown = er.Breakdown
 			silentKiller = er.SilentKiller
 		} else {
-			base := risk.SeverityToWeight(f.ControlSeverity)
+			base := f.ControlSeverity.Weight()
 			daysBlind := f.Evidence.UnsafeDurationHours / 24.0
 			durFactor := risk.DurationFactor(f.Evidence.UnsafeDurationHours)
 			blindMult := risk.BlindMultiplier(daysBlind)
@@ -215,7 +215,7 @@ func buildBundles(findings []remediation.Finding, exposureByKey map[string]risk.
 		if er, ok := exposureByKey[key]; ok {
 			score = er.ExposureScore
 		} else {
-			score = float64(risk.SeverityToWeight(f.ControlSeverity))
+			score = float64(f.ControlSeverity.Weight())
 		}
 
 		ba, ok := accum[action]

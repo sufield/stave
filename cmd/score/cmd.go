@@ -135,7 +135,7 @@ func runScoreSingle(ctx context.Context, stdout io.Writer, opts *options, weight
 			opts.OutputFile)
 	}
 
-	result := computeFromAssessment(assessment, weights, chainDefs, maxChainWeight, opts.Compliance)
+	result := computeFromAssessment(ctx, assessment, weights, chainDefs, maxChainWeight, opts.Compliance)
 	return renderResult(stdout, result, opts.Format)
 }
 
@@ -156,7 +156,7 @@ func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights
 	// Compute score for each run.
 	results := make([]appscore.Result, len(assessments))
 	for i, a := range assessments {
-		results[i] = computeFromAssessment(a, weights, chainDefs, maxChainWeight, opts.Compliance)
+		results[i] = computeFromAssessment(ctx, a, weights, chainDefs, maxChainWeight, opts.Compliance)
 	}
 
 	// Single-assessment output uses latest result with trend data.
@@ -174,7 +174,7 @@ func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights
 // and passed through the library's pure-arithmetic Score entry
 // point. The library replicates the same SLA tally, coverage
 // average, and TotalCheckWeight estimation that used to live here.
-func computeFromAssessment(a *report.Assessment, weights appscore.Weights, chainDefs int, maxChainWeight float64, compliance string) appscore.Result {
+func computeFromAssessment(ctx context.Context, a *report.Assessment, weights appscore.Weights, chainDefs int, maxChainWeight float64, compliance string) appscore.Result {
 	pubAsmt := stave.FromReportAssessment(a)
 	w := weights
 	cfg := stave.ScoreConfig{
@@ -185,7 +185,7 @@ func computeFromAssessment(a *report.Assessment, weights appscore.Weights, chain
 		Compliance:     parseComplianceList(compliance),
 		SnapshotID:     snapshotID(a),
 	}
-	res, err := stave.Score(context.Background(), cfg)
+	res, err := stave.Score(ctx, cfg)
 	if err != nil {
 		// Score's only documented error is a nil Assessment, which
 		// we just constructed — surface it as a programming-error

@@ -74,70 +74,91 @@ type Input struct {
 	Now time.Time
 }
 
+// appearance tracks which historical assessments a finding key
+// appeared in. Centralised so buildTimeline and the classification
+// loop both refer to the same shape.
+type appearance struct {
+	firstSeen time.Time
+	lastSeen  time.Time
+	count     int
+	inLatest  bool
+}
+
 // Classify compares current findings against historical assessments and
 // classifies each finding as new, chronic, or returned.
 func Classify(in Input) *Result {
-	history := in.History
-	if len(history) == 0 {
-		// No history: everything is new.
-		classified := make([]ClassifiedFinding, len(in.CurrentFindings))
-		for i := range in.CurrentFindings {
-			classified[i] = ClassifiedFinding{
-				Finding: in.CurrentFindings[i],
-				Class:   ClassNew,
-			}
-		}
-		return &Result{
-			NewFindings:   classified,
-			TotalFindings: len(in.CurrentFindings),
-			SnapshotTime:  in.Now,
-		}
+	if len(in.History) == 0 {
+		return classifyAllNew(in)
 	}
 
-	// Sort history by time.
+	sorted := sortAndFilterHistory(in.History, in.NewSince, in.Now)
+	if len(sorted) == 0 {
+		// All history is outside the NewSince window: everything is new.
+		return classifyAllNew(in)
+	}
+
+	latest := sorted[len(sorted)-1]
+	timeline := buildTimeline(sorted, latest)
+	gapCount := computeGapCounts(sorted)
+
+	newFindings, returnedFindings, suppressedCount := classifyCurrent(in, timeline, gapCount)
+	resolved := buildResolved(in, latest, timeline)
+
+	return &Result{
+		NewFindings:      newFindings,
+		ReturnedFindings: returnedFindings,
+		ResolvedFindings: resolved,
+		SuppressedCount:  suppressedCount,
+		TotalFindings:    len(in.CurrentFindings),
+		SnapshotTime:     in.Now,
+	}
+}
+
+// classifyAllNew is the trivial-history path: every current finding
+// is classified as NEW because there's no prior assessment to compare
+// against (or the NewSince window excluded all history).
+func classifyAllNew(in Input) *Result {
+	classified := make([]ClassifiedFinding, len(in.CurrentFindings))
+	for i := range in.CurrentFindings {
+		classified[i] = ClassifiedFinding{
+			Finding: in.CurrentFindings[i],
+			Class:   ClassNew,
+		}
+	}
+	return &Result{
+		NewFindings:   classified,
+		TotalFindings: len(in.CurrentFindings),
+		SnapshotTime:  in.Now,
+	}
+}
+
+// sortAndFilterHistory returns a new slice of assessments sorted by
+// Run.Now ascending, optionally clipped to those within `newSince` of
+// `now`. A newSince of zero retains the full history.
+func sortAndFilterHistory(history []*report.Assessment, newSince time.Duration, now time.Time) []*report.Assessment {
 	sorted := make([]*report.Assessment, len(history))
 	copy(sorted, history)
 	slices.SortFunc(sorted, func(a, b *report.Assessment) int {
 		return a.Run.Now.Compare(b.Run.Now)
 	})
-
-	// Apply NewSince window filter.
-	if in.NewSince > 0 {
-		cutoff := in.Now.Add(-in.NewSince)
-		filtered := make([]*report.Assessment, 0, len(sorted))
-		for _, a := range sorted {
-			if !a.Run.Now.Before(cutoff) {
-				filtered = append(filtered, a)
-			}
-		}
-		sorted = filtered
-		if len(sorted) == 0 {
-			// All history is outside the window: everything is new.
-			classified := make([]ClassifiedFinding, len(in.CurrentFindings))
-			for i := range in.CurrentFindings {
-				classified[i] = ClassifiedFinding{
-					Finding: in.CurrentFindings[i],
-					Class:   ClassNew,
-				}
-			}
-			return &Result{
-				NewFindings:   classified,
-				TotalFindings: len(in.CurrentFindings),
-				SnapshotTime:  in.Now,
-			}
+	if newSince <= 0 {
+		return sorted
+	}
+	cutoff := now.Add(-newSince)
+	filtered := make([]*report.Assessment, 0, len(sorted))
+	for _, a := range sorted {
+		if !a.Run.Now.Before(cutoff) {
+			filtered = append(filtered, a)
 		}
 	}
+	return filtered
+}
 
-	// Build timeline: for each finding key, track which assessments it appeared in.
-	type appearance struct {
-		firstSeen time.Time
-		lastSeen  time.Time
-		count     int
-		inLatest  bool
-	}
+// buildTimeline records, for each finding key, the first and last
+// times it appeared across the sorted history plus a flag for
+// whether the latest historical assessment contained it.
+func buildTimeline(sorted []*report.Assessment, latest *report.Assessment) map[findingKey]*appearance {
 	timeline := make(map[findingKey]*appearance)
-	latest := sorted[len(sorted)-1]
-
 	for _, a := range sorted {
 		isLatest := a == latest
 		for i := range a.Findings {
@@ -157,50 +178,49 @@ func Classify(in Input) *Result {
 			}
 		}
 	}
+	return timeline
+}
 
-	// Detect oscillation: count gaps in the timeline for each finding.
-	gapCount := computeGapCounts(sorted)
-
-	// Classify current findings.
-	var newFindings, returnedFindings []ClassifiedFinding
-	suppressedCount := 0
-
+// classifyCurrent walks the current findings and returns
+// (new, returned, suppressedCount). A finding is NEW if absent from
+// every historical assessment, CHRONIC (suppressed) if present in the
+// latest historical assessment, and RETURNED if it appeared in the
+// past but not in the latest.
+func classifyCurrent(in Input, timeline map[findingKey]*appearance, gapCount map[findingKey]int) (newFindings, returnedFindings []ClassifiedFinding, suppressedCount int) {
 	for i := range in.CurrentFindings {
 		f := &in.CurrentFindings[i]
 		k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID}
 		ap := timeline[k]
 
 		if ap == nil {
-			// Not in any historical assessment: NEW.
 			newFindings = append(newFindings, ClassifiedFinding{
 				Finding: *f,
 				Class:   ClassNew,
 			})
 			continue
 		}
-
 		if ap.inLatest {
-			// Present in the most recent historical assessment: CHRONIC.
 			suppressedCount++
 			continue
 		}
-
-		// Was in history but not in the latest: RETURNED after absence.
 		firstSeen := ap.firstSeen
 		lastSeen := ap.lastSeen
-		cf := ClassifiedFinding{
+		returnedFindings = append(returnedFindings, ClassifiedFinding{
 			Finding:   *f,
 			Class:     ClassReturned,
 			FirstSeen: &firstSeen,
 			LastSeen:  &lastSeen,
 			DwellDays: in.Now.Sub(ap.firstSeen).Hours() / 24,
 			Cycles:    gapCount[k] + 1,
-		}
-		returnedFindings = append(returnedFindings, cf)
+		})
 	}
+	return newFindings, returnedFindings, suppressedCount
+}
 
-	// Build resolved: findings in the latest historical assessment but
-	// not in current findings.
+// buildResolved returns findings present in the latest historical
+// assessment but absent from the current set — i.e. fixed since last
+// run.
+func buildResolved(in Input, latest *report.Assessment, timeline map[findingKey]*appearance) []ResolvedFinding {
 	currentKeys := make(map[findingKey]bool, len(in.CurrentFindings))
 	for i := range in.CurrentFindings {
 		currentKeys[findingKey{
@@ -230,15 +250,7 @@ func Classify(in Input) *Result {
 			DwellDays: dwell,
 		})
 	}
-
-	return &Result{
-		NewFindings:      newFindings,
-		ReturnedFindings: returnedFindings,
-		ResolvedFindings: resolved,
-		SuppressedCount:  suppressedCount,
-		TotalFindings:    len(in.CurrentFindings),
-		SnapshotTime:     in.Now,
-	}
+	return resolved
 }
 
 // computeGapCounts counts the number of times each finding disappeared

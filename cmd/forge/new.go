@@ -168,8 +168,15 @@ func runWizard(in io.Reader, out io.Writer, cmd *cobra.Command, snapshotPath str
 	var selectedField string
 	if snap != nil {
 		var pathsBuf bytes.Buffer
-		_ = runPaths(&pathsBuf, snapshotPath, selectedType, "")
-		fmt.Fprintln(out, pathsBuf.String())
+		if pathsErr := runPaths(&pathsBuf, snapshotPath, selectedType, ""); pathsErr != nil {
+			// runPaths is informational here — surface the failure as a
+			// hint instead of aborting the wizard. Without this, an
+			// unreadable snapshot silently produced an empty path
+			// suggestion list and the operator typed paths blind.
+			fmt.Fprintf(out, "(could not enumerate paths: %v)\n", pathsErr)
+		} else {
+			fmt.Fprintln(out, pathsBuf.String())
+		}
 		fmt.Fprintln(out, "")
 		selectedField = w.readLine("Enter the property path to evaluate:")
 	} else {

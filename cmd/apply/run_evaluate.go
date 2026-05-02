@@ -13,7 +13,6 @@ import (
 	"github.com/sufield/stave/internal/app/exemptlapse"
 	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/pkg/stave/cliapi"
 )
@@ -129,9 +128,9 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 		f := &result.Findings[i]
 		if f.SLABreached {
 			evalResult.HasSLABreach = true
-			if f.ControlSeverity == policy.SeverityCritical || f.SLAEscalatedSeverity == policy.SeverityCritical {
-				evalResult.HasCriticalSLABreach = true
-			}
+		}
+		if f.IsCriticalSLABreach() {
+			evalResult.HasCriticalSLABreach = true
 		}
 		if evalResult.HasSLABreach && evalResult.HasCriticalSLABreach {
 			break

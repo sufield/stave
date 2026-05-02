@@ -4,6 +4,7 @@
 package pathinfer
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"log/slog"
@@ -13,6 +14,14 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/env"
+)
+
+// Sentinel errors so callers can use errors.Is to react to specific
+// resolution outcomes (e.g. show a setup hint when no candidate exists,
+// or prompt the user to disambiguate when multiple candidates exist).
+var (
+	ErrNoCandidate         = errors.New("pathinfer: no matching directory found")
+	ErrAmbiguousCandidates = errors.New("pathinfer: multiple matching directories found")
 )
 
 // BaseDir returns the base directory for path inference.
@@ -226,16 +235,16 @@ func resolveCandidates(req resolutionRequest) (string, []string, error) {
 	switch len(req.Candidates) {
 	case 0:
 		return "", nil, fmt.Errorf(
-			"no %q directory found under %s (expected %s or a nested %s/ within %d levels)",
-			req.Name, req.Base, req.DirectPath, req.Name, req.MaxDepth,
+			"%w: %q under %s (expected %s or a nested %s/ within %d levels)",
+			ErrNoCandidate, req.Name, req.Base, req.DirectPath, req.Name, req.MaxDepth,
 		)
 	case 1:
 		return req.Candidates[0], nil, nil
 	default:
 		relCandidates := relativePaths(req.Base, req.Candidates)
 		return "", relCandidates, fmt.Errorf(
-			"ambiguous: found %d %q directories under %s: %s",
-			len(req.Candidates), req.Name, req.Base, strings.Join(relCandidates, ", "),
+			"%w: found %d %q directories under %s: %s",
+			ErrAmbiguousCandidates, len(req.Candidates), req.Name, req.Base, strings.Join(relCandidates, ", "),
 		)
 	}
 }

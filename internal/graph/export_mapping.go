@@ -76,104 +76,134 @@ func (e *UnmappedEdgesError) Error() string {
 		len(e.Edges), strings.Join(out, ", "))
 }
 
-func mapTordfGraph(g *GraphData) *rdfGraph {
-	if g == nil {
-		return &rdfGraph{OntologyIRI: strings.TrimSuffix(ontologyBaseIRI, "#")}
-	}
-
-	out := &rdfGraph{
-		OntologyIRI: strings.TrimSuffix(ontologyBaseIRI, "#"),
-		GeneratedAt: g.GeneratedAt.UTC().Format("2006-01-02T15:04:05Z"),
-		Nodes:       make([]rdfNode, 0, len(g.Nodes)),
-		Edges:       make([]rdfEdge, 0, len(g.Edges)+len(g.Nodes)),
-	}
-
+// rdfMapper carries the indexes built during mapTordfGraph's node
+// pass and consumed by the edge passes. Holding these on a struct
+// lets nodePass / firstEdgePass / materializeShortcutEdges read like
+// methods instead of taking 5+ parallel maps as arguments.
+type rdfMapper struct {
+	out *rdfGraph
 	// idMap maps internal node IDs (ARNs, finding hashes, control IDs,
-	// account scope names) to their export IRIs. Built before edges
-	// are translated so each edge's From/To can be rewritten in one pass.
-	idMap := make(map[string]string, len(g.Nodes))
+	// account scope names) to their export IRIs.
+	idMap map[string]string
 	// nodeKind tracks the original Stave node Type for each internal ID
 	// so the shortcut-edge materialization step can identify Resource,
 	// Finding, and Control nodes without a second scan.
-	nodeKind := make(map[string]NodeType, len(g.Nodes))
-	// findingsByControl indexes Resource → controls violated transitively
-	// via the Resource ← TARGETS ← Finding → Control chain. Built
-	// alongside the node pass.
-	findingControl := make(map[string]string, len(g.Nodes))
+	nodeKind map[string]NodeType
+	// findingControl maps each Finding's internal ID to its
+	// control_id property string.
+	findingControl map[string]string
 	// controlIDToNodeID maps a Finding's control_id property value to
 	// the internal node ID of the Control node that should be the
 	// shortcut-edge target. The two are usually identical, but the
 	// previous direct idMap[controlID] lookup silently dropped the
 	// shortcut edge whenever the Control node's internal ID didn't
 	// match the property string verbatim.
-	controlIDToNodeID := make(map[string]string, len(g.Nodes))
+	controlIDToNodeID map[string]string
 	// findingResource maps each Finding's internal ID to the Resource's
 	// internal ID it targets, populated as TARGETS edges are seen.
-	findingResource := make(map[string]string, len(g.Nodes))
+	findingResource map[string]string
 	// nodesByID indexes nodes by their internal ID so per-edge severity
 	// lookups stay O(1). The previous shape did a linear scan of g.Nodes
 	// for every shortcut edge AND for every edge with a Finding endpoint,
 	// turning a graph with N nodes and F findings into an O(N×F)
 	// pipeline. Build the index once during the node pass.
-	nodesByID := make(map[string]*Node, len(g.Nodes))
+	nodesByID map[string]*Node
+}
 
+func newRDFMapper(g *GraphData) *rdfMapper {
+	return &rdfMapper{
+		out: &rdfGraph{
+			OntologyIRI: strings.TrimSuffix(ontologyBaseIRI, "#"),
+			GeneratedAt: g.GeneratedAt.UTC().Format("2006-01-02T15:04:05Z"),
+			Nodes:       make([]rdfNode, 0, len(g.Nodes)),
+			Edges:       make([]rdfEdge, 0, len(g.Edges)+len(g.Nodes)),
+		},
+		idMap:             make(map[string]string, len(g.Nodes)),
+		nodeKind:          make(map[string]NodeType, len(g.Nodes)),
+		findingControl:    make(map[string]string, len(g.Nodes)),
+		controlIDToNodeID: make(map[string]string, len(g.Nodes)),
+		findingResource:   make(map[string]string, len(g.Nodes)),
+		nodesByID:         make(map[string]*Node, len(g.Nodes)),
+	}
+}
+
+func mapTordfGraph(g *GraphData) *rdfGraph {
+	if g == nil {
+		return &rdfGraph{OntologyIRI: strings.TrimSuffix(ontologyBaseIRI, "#")}
+	}
+
+	m := newRDFMapper(g)
+	m.nodePass(g)
+	m.firstEdgePass(g)
+	m.materializeShortcutEdges()
+
+	sortRDF(m.out)
+	return m.out
+}
+
+// nodePass walks every node, emits the rdfNode, and populates
+// idMap / nodeKind / nodesByID / findingControl / controlIDToNodeID.
+func (m *rdfMapper) nodePass(g *GraphData) {
 	for i := range g.Nodes {
 		n := &g.Nodes[i]
 		iri, classIRI := nodeIRI(n)
-		idMap[n.ID] = iri
-		nodeKind[n.ID] = n.Type
-		nodesByID[n.ID] = n
+		m.idMap[n.ID] = iri
+		m.nodeKind[n.ID] = n.Type
+		m.nodesByID[n.ID] = n
 
 		props := flattenNodeProperties(n)
 		if n.Type == NodeTypeFinding {
 			if cid, ok := stringProp(n.Properties, "control_id"); ok {
-				findingControl[n.ID] = cid
+				m.findingControl[n.ID] = cid
 			}
 		}
 		if n.Type == NodeTypeControl {
 			// Always map node-ID → node-ID so simple cases work even
 			// when control_id isn't set as a separate property.
-			controlIDToNodeID[n.ID] = n.ID
+			m.controlIDToNodeID[n.ID] = n.ID
 			if cid, ok := stringProp(n.Properties, "control_id"); ok && cid != "" {
-				controlIDToNodeID[cid] = n.ID
+				m.controlIDToNodeID[cid] = n.ID
 			}
 		}
 
-		out.Nodes = append(out.Nodes, rdfNode{
+		m.out.Nodes = append(m.out.Nodes, rdfNode{
 			ID:         iri,
 			Type:       classIRI,
 			Properties: props,
 		})
 	}
+}
 
-	// First edge pass: rewrite to predicate IRIs, drop unmapped, build
-	// the TARGETS index used by the shortcut materializer.
+// firstEdgePass rewrites every wire edge to its predicate IRI, drops
+// edges with unmapped types or unknown endpoints, and records each
+// TARGETS edge into findingResource for the shortcut materializer.
+func (m *rdfMapper) firstEdgePass(g *GraphData) {
 	for i := range g.Edges {
 		e := &g.Edges[i]
 		pred, ok := wireToPredicate[e.Type]
 		if !ok {
 			slog.Warn("graph export: dropping edge with unmapped type",
 				"type", e.Type, "from", e.From, "to", e.To)
-			out.UnmappedEdges = append(out.UnmappedEdges, UnmappedEdge{
+			m.out.UnmappedEdges = append(m.out.UnmappedEdges, UnmappedEdge{
 				Type: e.Type, From: e.From, To: e.To,
 			})
 			continue
 		}
-		fromIRI, ok := idMap[e.From]
+		fromIRI, ok := m.idMap[e.From]
 		if !ok {
 			slog.Warn("graph export: dropping edge with unknown source node",
 				"type", e.Type, "from", e.From, "to", e.To)
 			continue
 		}
-		toIRI, ok := idMap[e.To]
+		toIRI, ok := m.idMap[e.To]
 		if !ok {
 			slog.Warn("graph export: dropping edge with unknown target node",
 				"type", e.Type, "from", e.From, "to", e.To)
 			continue
 		}
 
-		props := edgeProperties(e, nodeKind[e.From], nodeKind[e.To], nodesByID)
-		out.Edges = append(out.Edges, rdfEdge{
+		props := edgeProperties(e, m.nodeKind[e.From], m.nodeKind[e.To], m.nodesByID)
+		m.out.Edges = append(m.out.Edges, rdfEdge{
 			From:       fromIRI,
 			To:         toIRI,
 			Predicate:  pred,
@@ -184,18 +214,19 @@ func mapTordfGraph(g *GraphData) *rdfGraph {
 		if e.Type == EdgeTypeTargets {
 			// Wire direction: Finding -[TARGETS]-> Resource. Stash so
 			// the shortcut step can pivot to Resource → Control.
-			findingResource[e.From] = e.To
+			m.findingResource[e.From] = e.To
 		}
 	}
+}
 
-	// Materialize shortcut edges:
-	//   Resource --stave:violates--> Control
-	// One per (resource, control) pair. Severity weight is carried on
-	// the edge so GDS algorithms can use it directly.
+// materializeShortcutEdges adds Resource --stave:violates--> Control
+// edges, one per (resource, control) pair. Severity weight is carried
+// on the edge so GDS algorithms can use it directly.
+func (m *rdfMapper) materializeShortcutEdges() {
 	type rcKey struct{ resource, control string }
-	seen := make(map[rcKey]struct{}, len(findingResource))
-	for findingID, controlID := range findingControl {
-		resourceID, ok := findingResource[findingID]
+	seen := make(map[rcKey]struct{}, len(m.findingResource))
+	for findingID, controlID := range m.findingControl {
+		resourceID, ok := m.findingResource[findingID]
 		if !ok {
 			// Finding has a control_id but no TARGETS edge to a
 			// Resource. The shortcut edge requires both endpoints,
@@ -215,17 +246,17 @@ func mapTordfGraph(g *GraphData) *rdfGraph {
 		}
 		seen[k] = struct{}{}
 
-		fromIRI, fromOK := idMap[resourceID]
+		fromIRI, fromOK := m.idMap[resourceID]
 		// Resolve control_id through the dedicated lookup before
 		// hitting idMap. The previous `idMap[controlID]` lookup
 		// keyed on the raw property value, which silently dropped
 		// shortcut edges whenever the Control node's internal ID
 		// differed from the property string.
-		controlNodeID, hasControlNode := controlIDToNodeID[controlID]
+		controlNodeID, hasControlNode := m.controlIDToNodeID[controlID]
 		var toIRI string
 		var toOK bool
 		if hasControlNode {
-			toIRI, toOK = idMap[controlNodeID]
+			toIRI, toOK = m.idMap[controlNodeID]
 		}
 		if !fromOK || !toOK {
 			slog.Warn("graph export: dropping shortcut edge",
@@ -249,13 +280,13 @@ func mapTordfGraph(g *GraphData) *rdfGraph {
 		// most one Finding per ID, so a single lookup gives the
 		// weight without any scan.
 		var weight float64
-		if n, ok := nodesByID[findingID]; ok {
+		if n, ok := m.nodesByID[findingID]; ok {
 			if sev, ok := stringProp(n.Properties, "severity"); ok {
 				weight = SeverityWeight(sev)
 			}
 		}
 
-		out.Edges = append(out.Edges, rdfEdge{
+		m.out.Edges = append(m.out.Edges, rdfEdge{
 			From:      fromIRI,
 			To:        toIRI,
 			Predicate: predViolates,
@@ -265,9 +296,6 @@ func mapTordfGraph(g *GraphData) *rdfGraph {
 			},
 		})
 	}
-
-	sortRDF(out)
-	return out
 }
 
 // nodeIRI maps an internal Node to its export IRI plus class IRI.

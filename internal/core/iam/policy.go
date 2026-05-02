@@ -123,7 +123,7 @@ func normalizeStringOrList(raw json.RawMessage) ([]string, error) {
 	// Try array.
 	var list []string
 	if err := json.Unmarshal(raw, &list); err != nil {
-		return nil, fmt.Errorf("expected string or []string: %s", raw)
+		return nil, fmt.Errorf("expected string or []string from %s: %w", raw, err)
 	}
 	return list, nil
 }

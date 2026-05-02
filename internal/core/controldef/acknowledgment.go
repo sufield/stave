@@ -94,4 +94,27 @@ type AcknowledgedFinding struct {
 	CompensatingControls []CompensatingControlStatus `json:"compensating_controls,omitempty"`
 	Valid                bool                        `json:"valid"`
 	InvalidReason        string                      `json:"invalid_reason,omitempty"`
+	InvalidDetail        string                      `json:"invalid_detail,omitempty"`
+}
+
+// StatusLabel returns the bracketed status string used by rank /
+// inspect output: "[ACK]" when the acknowledgment is valid, or
+// "[INVALID: <reason>]" when it has been rejected.
+func (a *AcknowledgedFinding) StatusLabel() string {
+	if a.Valid {
+		return "[ACK]"
+	}
+	return "[INVALID: " + a.ReasonDetail() + "]"
+}
+
+// ReasonDetail returns the most-specific available reason text for an
+// invalid acknowledgment: InvalidDetail when populated (carries the
+// human-readable explanation), otherwise the shorter InvalidReason
+// classifier. Empty string when the finding is valid or no reason
+// was recorded.
+func (a *AcknowledgedFinding) ReasonDetail() string {
+	if a.InvalidDetail != "" {
+		return a.InvalidDetail
+	}
+	return a.InvalidReason
 }

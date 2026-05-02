@@ -102,7 +102,7 @@ func (s Snapshots) FindFirstUnsortedPair() (UnsortedPair, bool) {
 // TemporalBounds returns the earliest and latest CapturedAt timestamps.
 func (s Snapshots) TemporalBounds() (earliest, latest time.Time) {
 	if len(s) == 0 {
-		return
+		return earliest, latest
 	}
 	earliest, latest = s[0].CapturedAt, s[0].CapturedAt
 	for _, snap := range s {
@@ -113,7 +113,7 @@ func (s Snapshots) TemporalBounds() (earliest, latest time.Time) {
 			latest = snap.CapturedAt
 		}
 	}
-	return
+	return earliest, latest
 }
 
 // UniqueAssetCount returns the number of distinct asset IDs across all snapshots.

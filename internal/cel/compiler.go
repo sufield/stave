@@ -274,11 +274,7 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string, depth int) (string, er
 		// "we don't know" state and produces no false-positive
 		// violation. Pair with OpPresent if you need to also fail
 		// on the absence itself.
-		ve, err := resolveValueExpr(val)
-		if err != nil {
-			return "", fmt.Errorf("op eq: %w", err)
-		}
-		return fmt.Sprintf("(%s && %s == %s)", hf, fa, ve), nil
+		return resolveAndFormatBinary("op eq", "(%s && %s == %s)", val, hf, fa, resolveValueExpr)
 	case predicate.OpNe:
 		// Fail-CLOSED semantics for OpNe (asymmetric vs OpEq): a
 		// missing field is itself the violation
@@ -293,91 +289,25 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string, depth int) (string, er
 		// specific value" (absent field = no match), OpNe says
 		// "this value must not be set" (absent field is suspicious
 		// because the producer should have emitted it).
-		ve, err := resolveValueExpr(val)
-		if err != nil {
-			return "", fmt.Errorf("op ne: %w", err)
-		}
-		return fmt.Sprintf("(!(%s) || %s != %s)", hf, fa, ve), nil
+		return resolveAndFormatBinary("op ne", "(!(%s) || %s != %s)", val, hf, fa, resolveValueExpr)
 	case predicate.OpGt:
-		ve, err := resolveValueExpr(val)
-		if err != nil {
-			return "", fmt.Errorf("op gt: %w", err)
-		}
-		return fmt.Sprintf("(%s && %s > %s)", hf, fa, ve), nil
+		return resolveAndFormatBinary("op gt", "(%s && %s > %s)", val, hf, fa, resolveValueExpr)
 	case predicate.OpLt:
-		ve, err := resolveValueExpr(val)
-		if err != nil {
-			return "", fmt.Errorf("op lt: %w", err)
-		}
-		return fmt.Sprintf("(%s && %s < %s)", hf, fa, ve), nil
+		return resolveAndFormatBinary("op lt", "(%s && %s < %s)", val, hf, fa, resolveValueExpr)
 	case predicate.OpGte:
-		ve, err := resolveValueExpr(val)
-		if err != nil {
-			return "", fmt.Errorf("op gte: %w", err)
-		}
-		return fmt.Sprintf("(%s && %s >= %s)", hf, fa, ve), nil
+		return resolveAndFormatBinary("op gte", "(%s && %s >= %s)", val, hf, fa, resolveValueExpr)
 	case predicate.OpLte:
-		ve, err := resolveValueExpr(val)
-		if err != nil {
-			return "", fmt.Errorf("op lte: %w", err)
-		}
-		return fmt.Sprintf("(%s && %s <= %s)", hf, fa, ve), nil
+		return resolveAndFormatBinary("op lte", "(%s && %s <= %s)", val, hf, fa, resolveValueExpr)
 	case predicate.OpIn:
-		ve, err := resolveValueExpr(val)
-		if err != nil {
-			return "", fmt.Errorf("op in: %w", err)
-		}
-		return fmt.Sprintf("(%s && %s in %s)", hf, fa, ve), nil
+		return resolveAndFormatBinary("op in", "(%s && %s in %s)", val, hf, fa, resolveValueExpr)
 	case predicate.OpContains:
-		ve, err := resolveValueExpr(val)
-		if err != nil {
-			return "", fmt.Errorf("op contains: %w", err)
-		}
-		return fmt.Sprintf("(%s && string(%s).contains(%s))", hf, fa, ve), nil
+		return resolveAndFormatBinary("op contains", "(%s && string(%s).contains(%s))", val, hf, fa, resolveValueExpr)
 	case predicate.OpMissing:
-		wantMissing, err := coerceBool(val, true)
-		if err != nil {
-			return "", fmt.Errorf("op missing: %w", err)
-		}
-		isMissing := fmt.Sprintf("(!(%s) || missing(%s))", hf, fa)
-		if !wantMissing {
-			return fmt.Sprintf("!(%s)", isMissing), nil
-		}
-		return isMissing, nil
+		return ruleToExprMissing(val, hf, fa)
 	case predicate.OpPresent:
-		wantPresent, err := coerceBool(val, true)
-		if err != nil {
-			return "", fmt.Errorf("op present: %w", err)
-		}
-		isPresent := fmt.Sprintf("(%s && !missing(%s))", hf, fa)
-		if !wantPresent {
-			return fmt.Sprintf("!(%s)", isPresent), nil
-		}
-		return isPresent, nil
+		return ruleToExprPresent(val, hf, fa)
 	case predicate.OpListEmpty:
-		// "empty" semantics:
-		//   field absent          → true  (nothing there to be non-empty)
-		//   collection size == 0  → true  (list/map/string with no elements)
-		//   not a collection type → true  (an int / bool / number can't
-		//                                  hold a list-shaped value, so
-		//                                  it's logically empty for the
-		//                                  purpose of this operator)
-		//
-		// size() errors on non-collection types, so the type guard
-		// must short-circuit before size() runs. CEL does not allow
-		// `string(type(x))` for a dyn-typed value, so the test is
-		// expressed as direct type-token equality. Each `type(literal)`
-		// resolves to a singleton type value at compile time, so the
-		// per-evaluation cost is just three pointer comparisons. The
-		// short-circuit chain is:
-		//   1. field absent              → true
-		//   2. type not list/map/string  → true
-		//   3. size() == 0               → true
-		// Non-empty collections fall through to false (= violation).
-		return fmt.Sprintf(
-			"(!(%s) || !(type(%s) == type([]) || type(%s) == type({}) || type(%s) == type(\"\")) || size(%s) == 0)",
-			hf, fa, fa, fa, fa,
-		), nil
+		return ruleToExprListEmpty(hf, fa), nil
 	case predicate.OpNeqField:
 		// Cross-field inequality. Both sides must exist for the
 		// comparison to be meaningful — a missing target is treated as
@@ -415,6 +345,83 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string, depth int) (string, er
 	default:
 		return "", fmt.Errorf("unsupported operator: %s", op)
 	}
+}
+
+// resolveAndFormatBinary is the shared shape for the value-comparison
+// operators (OpEq/OpNe/OpGt/OpLt/OpGte/OpLte/OpIn/OpContains): resolve
+// the RHS via resolveValueExpr, then format with hf/fa/ve. The
+// per-operator template captures both the existence guard and the
+// comparison; OpEq/OpNe carry different fail-open / fail-closed
+// semantics through their respective templates.
+func resolveAndFormatBinary(
+	opName, template string,
+	val any,
+	hf, fa string,
+	resolveValueExpr func(any) (string, error),
+) (string, error) {
+	ve, err := resolveValueExpr(val)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", opName, err)
+	}
+	return fmt.Sprintf(template, hf, fa, ve), nil
+}
+
+// ruleToExprMissing handles op:missing. When val is true (the default),
+// the rule fires when the field is absent; with val=false, the rule
+// fires when the field is present (logical complement).
+func ruleToExprMissing(val any, hf, fa string) (string, error) {
+	wantMissing, err := coerceBool(val, true)
+	if err != nil {
+		return "", fmt.Errorf("op missing: %w", err)
+	}
+	isMissing := fmt.Sprintf("(!(%s) || missing(%s))", hf, fa)
+	if !wantMissing {
+		return fmt.Sprintf("!(%s)", isMissing), nil
+	}
+	return isMissing, nil
+}
+
+// ruleToExprPresent handles op:present. Mirror of ruleToExprMissing —
+// fires on presence by default, complement when val=false.
+func ruleToExprPresent(val any, hf, fa string) (string, error) {
+	wantPresent, err := coerceBool(val, true)
+	if err != nil {
+		return "", fmt.Errorf("op present: %w", err)
+	}
+	isPresent := fmt.Sprintf("(%s && !missing(%s))", hf, fa)
+	if !wantPresent {
+		return fmt.Sprintf("!(%s)", isPresent), nil
+	}
+	return isPresent, nil
+}
+
+// ruleToExprListEmpty handles op:list_empty.
+//
+// "empty" semantics:
+//
+//	field absent          → true  (nothing there to be non-empty)
+//	collection size == 0  → true  (list/map/string with no elements)
+//	not a collection type → true  (an int / bool / number can't
+//	                               hold a list-shaped value, so
+//	                               it's logically empty for the
+//	                               purpose of this operator)
+//
+// size() errors on non-collection types, so the type guard must
+// short-circuit before size() runs. CEL does not allow
+// `string(type(x))` for a dyn-typed value, so the test is expressed
+// as direct type-token equality. Each `type(literal)` resolves to a
+// singleton type value at compile time, so the per-evaluation cost
+// is just three pointer comparisons. The short-circuit chain is:
+//  1. field absent              → true
+//  2. type not list/map/string  → true
+//  3. size() == 0               → true
+//
+// Non-empty collections fall through to false (= violation).
+func ruleToExprListEmpty(hf, fa string) string {
+	return fmt.Sprintf(
+		"(!(%s) || !(type(%s) == type([]) || type(%s) == type({}) || type(%s) == type(\"\")) || size(%s) == 0)",
+		hf, fa, fa, fa, fa,
+	)
 }
 
 // resolveCrossFieldRef returns (accessExpr, existsExpr) for the right-hand

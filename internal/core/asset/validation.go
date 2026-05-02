@@ -205,7 +205,7 @@ func (s Snapshots) checkStructural() (issues []diag.Finding) {
 		}
 	}
 
-	return
+	return issues
 }
 
 // checkTagSanity validates case-insensitive key conflicts in asset tags.
@@ -230,7 +230,7 @@ func (s Snapshots) checkTagSanity() (issues []diag.Finding) {
 			}
 		}
 	}
-	return
+	return issues
 }
 
 // checkTimeSanity validates time ordering and uniqueness.
@@ -244,7 +244,7 @@ func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []
 	}
 
 	if ctx == nil || ctx.lifecycle == nil {
-		return
+		return issues
 	}
 
 	if ctx.lifecycle.HasDuplicates() {
@@ -263,7 +263,7 @@ func (s Snapshots) checkTimeSanity(ctx *validationCtx, now time.Time) (issues []
 		issues = append(issues, s.createNowPrecedenceError(now, ctx.lifecycle))
 	}
 
-	return
+	return issues
 }
 
 func (s Snapshots) createNowPrecedenceError(now time.Time, lifecycle *snapshotLifecycle) diag.Finding {
@@ -324,13 +324,13 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.F
 		}
 	}
 
-	return
+	return issues
 }
 
 // checkDurationFeasibility checks if the snapshot span covers the threshold.
 func (s Snapshots) checkDurationFeasibility(ctx *validationCtx, maxUnsafe time.Duration) (issues []diag.Finding) {
 	if !s.IsMultiSnapshot() || maxUnsafe <= 0 || ctx == nil || ctx.lifecycle == nil {
-		return
+		return issues
 	}
 
 	if ctx.lifecycle.hasInsufficientSpan(maxUnsafe) {
@@ -346,5 +346,5 @@ func (s Snapshots) checkDurationFeasibility(ctx *validationCtx, maxUnsafe time.D
 		issues = append(issues, issue)
 	}
 
-	return
+	return issues
 }

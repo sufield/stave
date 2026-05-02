@@ -12,6 +12,12 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// ErrNilCELEvaluator is returned when checkUnsafe is called without a
+// configured CEL evaluator. Exposed as a sentinel so callers can use
+// errors.Is to distinguish "evaluator missing" from genuine evaluation
+// failures inside the CEL runtime.
+var ErrNilCELEvaluator = errors.New("engine: CEL evaluator is nil")
+
 // BuildLifecyclesPerControl constructs chronological lifecycles for each asset
 // across all controls. The outer loop iterates snapshots (time), the middle
 // loop iterates assets, and the inner loop evaluates each control's predicate
@@ -189,7 +195,7 @@ func checkUnsafe(
 	celEval policy.PredicateEval,
 ) (bool, error) {
 	if celEval == nil {
-		return false, fmt.Errorf("CEL evaluator is nil for control %s on asset %s", ctl.ID, a.ID)
+		return false, fmt.Errorf("%w: control %s on asset %s", ErrNilCELEvaluator, ctl.ID, a.ID)
 	}
 	result, err := celEval(ctl, a, snap.Identities)
 	if err != nil {

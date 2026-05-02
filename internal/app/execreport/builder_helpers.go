@@ -19,7 +19,7 @@ func countFindings(a *corereport.Assessment) FindingsSummary {
 	var fs FindingsSummary
 	fs.Total = len(a.Findings)
 	for i := range a.Findings {
-		switch strings.ToLower(a.Findings[i].ControlSeverity.String()) {
+		switch a.Findings[i].ControlSeverity.BucketName() {
 		case "critical":
 			fs.Critical++
 		case "high":
