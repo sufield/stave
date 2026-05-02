@@ -7,8 +7,8 @@ follows the same structure: prerequisites, install, run.
 
 | Integration | Demo |
 |---|---|
-| [Terraform State](terraform-state/) | Scan S3 resources from tfstate |
-| [AWS Config](aws-config/) | Scan from AWS Config snapshots |
+| [Terraform State](terraform-state/) | Evaluate S3 resources from tfstate |
+| [AWS Config](aws-config/) | Evaluate from AWS Config snapshots |
 | [Steampipe](steampipe/) | SQL query to observation snapshot |
 
 #### Choosing between input integrations

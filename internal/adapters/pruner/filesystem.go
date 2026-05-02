@@ -27,8 +27,8 @@ var (
 )
 
 // SnapshotFileMetadata is the per-file metadata extracted by the
-// scanner's snapshot loader. Populated by ScannerOptions's optional
-// SnapshotMetadataLoader callback when the caller wants the
+// discovery pass's snapshot loader. Populated by DiscoveryOptions's
+// optional SnapshotMetadataLoader callback when the caller wants the
 // asset-identifying fields populated on appcontracts.SnapshotFile.
 type SnapshotFileMetadata struct {
 	CapturedAt time.Time
@@ -36,8 +36,8 @@ type SnapshotFileMetadata struct {
 	AssetType  string
 }
 
-// ScannerOptions configures snapshot file discovery.
-type ScannerOptions struct {
+// DiscoveryOptions configures snapshot file discovery.
+type DiscoveryOptions struct {
 	// MetadataLoader resolves captured_at for each discovered file.
 	// Used when SnapshotMetadataLoader is not set; the resulting
 	// SnapshotFile carries empty AssetID / AssetType.
@@ -50,10 +50,10 @@ type ScannerOptions struct {
 	// can carry asset identifiers downstream.
 	SnapshotMetadataLoader func(path, name string) (SnapshotFileMetadata, error)
 
-	// ExcludeDirs are absolute paths that the recursive scanner should skip.
+	// ExcludeDirs are absolute paths the recursive walk should skip.
 	ExcludeDirs []string
 
-	// MaxFiles limits the number of files scanned to prevent memory
+	// MaxFiles limits the number of files enumerated to prevent memory
 	// exhaustion. A directory with exactly MaxFiles snapshot files is
 	// accepted; adding one more (MaxFiles+1) returns ErrTooManySnapshots.
 	// Zero uses the default (100,000).
@@ -63,8 +63,8 @@ type ScannerOptions struct {
 // loadFileMetadata resolves the per-file metadata using the richer
 // SnapshotMetadataLoader when set, falling back to the simple
 // captured-at loader otherwise. Centralised so the flat and
-// recursive scanners share the same selection rule.
-func (o ScannerOptions) loadFileMetadata(path, name string) (SnapshotFileMetadata, error) {
+// recursive discovery paths share the same selection rule.
+func (o DiscoveryOptions) loadFileMetadata(path, name string) (SnapshotFileMetadata, error) {
 	if o.SnapshotMetadataLoader != nil {
 		return o.SnapshotMetadataLoader(path, name)
 	}
@@ -89,15 +89,15 @@ func init() {
 	defaultMaxFiles.Store(int64(DefaultMaxFiles))
 }
 
-// SetDefaultMaxFiles overrides the default file scan cap used when
-// ScannerOptions.MaxFiles is zero. Values <= 0 are ignored.
+// SetDefaultMaxFiles overrides the default file enumeration cap used
+// when DiscoveryOptions.MaxFiles is zero. Values <= 0 are ignored.
 func SetDefaultMaxFiles(n int) {
 	if n > 0 {
 		defaultMaxFiles.Store(int64(n))
 	}
 }
 
-func (o ScannerOptions) maxFiles() int {
+func (o DiscoveryOptions) maxFiles() int {
 	if o.MaxFiles > 0 {
 		return o.MaxFiles
 	}
@@ -105,7 +105,7 @@ func (o ScannerOptions) maxFiles() int {
 }
 
 // ListSnapshotFilesFlat lists JSON snapshot files directly under observationsDir.
-func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts ScannerOptions) ([]appcontracts.SnapshotFile, error) {
+func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts DiscoveryOptions) ([]appcontracts.SnapshotFile, error) {
 	if opts.MetadataLoader == nil && opts.SnapshotMetadataLoader == nil {
 		// Default: use file modification time as captured_at. AssetID
 		// and AssetType remain empty since no snapshot loader is
@@ -198,7 +198,7 @@ func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts Sca
 // ListSnapshotFilesRecursive walks observationsDir recursively using WalkDir.
 // Directories starting with "_" are skipped. Symlinks are skipped.
 // RelPath uses forward slashes and is relative to observationsDir.
-func ListSnapshotFilesRecursive(ctx context.Context, observationsDir string, opts ScannerOptions) ([]appcontracts.SnapshotFile, error) {
+func ListSnapshotFilesRecursive(ctx context.Context, observationsDir string, opts DiscoveryOptions) ([]appcontracts.SnapshotFile, error) {
 	if opts.MetadataLoader == nil && opts.SnapshotMetadataLoader == nil {
 		return nil, errMetadataLoaderRequired
 	}

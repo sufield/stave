@@ -385,7 +385,7 @@ func TestExposureLifecycleExceedsUnsafeThreshold(t *testing.T) {
 }
 
 // TestExposureLifecycleZeroDurationWindowFlagsClamped pins that a
-// resolveAt equal to openedAt is treated as unreliable. Same-scan
+// resolveAt equal to openedAt is treated as unreliable. Same-observation
 // resolution usually means flapping state or extractor ordering
 // noise, not a genuine zero-second exposure; the clamped flag tells
 // downstream coverage analysis to mark the verdict inconclusive
@@ -418,24 +418,24 @@ func TestExposureLifecycleSecureObservationAdvancesLastObservedAt(t *testing.T) 
 		t.Fatal(err)
 	}
 	if got := tl.LastObservedAt(); !got.Equal(t1) {
-		t.Fatalf("after exposed scan: LastObservedAt = %s, want %s", got, t1)
+		t.Fatalf("after exposed observation: LastObservedAt = %s, want %s", got, t1)
 	}
 
-	// Secure scan must advance lastObservedAt — earlier behavior
+	// Secure observation must advance lastObservedAt — earlier behavior
 	// preserved the old timestamp, making the asset look stale.
 	if err := tl.RecordCheck(t2, false); err != nil {
 		t.Fatal(err)
 	}
 	if got := tl.LastObservedAt(); !got.Equal(t2) {
-		t.Fatalf("after first secure scan: LastObservedAt = %s, want %s", got, t2)
+		t.Fatalf("after first secure observation: LastObservedAt = %s, want %s", got, t2)
 	}
 
-	// Subsequent secure scans keep advancing it.
+	// Subsequent secure observations keep advancing it.
 	if err := tl.RecordCheck(t3, false); err != nil {
 		t.Fatal(err)
 	}
 	if got := tl.LastObservedAt(); !got.Equal(t3) {
-		t.Fatalf("after second secure scan: LastObservedAt = %s, want %s", got, t3)
+		t.Fatalf("after second secure observation: LastObservedAt = %s, want %s", got, t3)
 	}
 }
 

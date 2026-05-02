@@ -773,7 +773,7 @@ func (a *Assessor) FingerprintPolicy() kernel.Digest {
 	return a.hasher.Digest(fingerprints, '\n')
 }
 
-// DefaultContinuityLimit defines the maximum gap allowed between scans
+// DefaultContinuityLimit defines the maximum gap allowed between observations
 // before results are considered INCONCLUSIVE.
 const DefaultContinuityLimit = 12 * time.Hour
 

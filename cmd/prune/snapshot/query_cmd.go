@@ -5,7 +5,7 @@ import (
 )
 
 // NewQueryCmd constructs the `stave snapshot query` command. It
-// scans an observation directory and returns metadata about each
+// inspects an observation directory and returns metadata about each
 // snapshot file, or a health summary with --health.
 func NewQueryCmd() *cobra.Command {
 	opts := defaultQueryOptions()
@@ -13,7 +13,7 @@ func NewQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query",
 		Short: "Query snapshot archive metadata",
-		Long: `Query scans an observation directory and returns metadata about each
+		Long: `Query inspects an observation directory and returns metadata about each
 snapshot file including captured_at timestamp, age, size, and schema validity.
 
 Use --health to produce a summary health report of the archive.

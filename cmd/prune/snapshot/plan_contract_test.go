@@ -105,7 +105,7 @@ func repoRootFor(t *testing.T) string {
 	root := string(bytes.TrimSpace(out))
 	// Inside the bizacademy monorepo, the CI runs from the stave/
 	// subdirectory. git rev-parse may surface the parent repo, so
-	// fall back to scanning upward for a go.mod.
+	// fall back to walking upward for a go.mod.
 	if _, err := exec.LookPath("go"); err != nil {
 		return root
 	}

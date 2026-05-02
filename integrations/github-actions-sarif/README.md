@@ -15,13 +15,13 @@ Add this workflow file to your repository:
 ```bash
 mkdir -p .github/workflows
 cat > .github/workflows/stave.yml << 'EOF'
-name: Stave Security Scan
+name: Stave Security Evaluation
 on: [push, pull_request]
 permissions:
   security-events: write
   contents: read
 jobs:
-  scan:
+  evaluate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +59,7 @@ EOF
 
 ```bash
 git add .github/workflows/stave.yml controls/ observations/
-git commit -m "Add stave security scan"
+git commit -m "Add stave security evaluation"
 git push
 ```
 

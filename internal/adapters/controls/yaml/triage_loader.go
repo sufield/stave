@@ -16,8 +16,8 @@ import (
 )
 
 // TriageDir is the directory name for triage metadata within a
-// control catalog root. It is _-prefixed so the control scanner
-// skips it during recursive YAML discovery.
+// control catalog root. It is _-prefixed so the control discovery
+// pass skips it during recursive YAML enumeration.
 const TriageDir = "_triage"
 
 type yamlTriageOverride struct {

@@ -10,15 +10,15 @@ import (
 	"time"
 )
 
-func TestScannerOptions_MaxFiles_Default(t *testing.T) {
-	opts := ScannerOptions{}
+func TestDiscoveryOptions_MaxFiles_Default(t *testing.T) {
+	opts := DiscoveryOptions{}
 	if got := opts.maxFiles(); got != DefaultMaxFiles {
 		t.Fatalf("maxFiles()=%d, want %d", got, DefaultMaxFiles)
 	}
 }
 
-func TestScannerOptions_MaxFiles_Custom(t *testing.T) {
-	opts := ScannerOptions{MaxFiles: 50}
+func TestDiscoveryOptions_MaxFiles_Custom(t *testing.T) {
+	opts := DiscoveryOptions{MaxFiles: 50}
 	if got := opts.maxFiles(); got != 50 {
 		t.Fatalf("maxFiles()=%d, want 50", got)
 	}
@@ -27,14 +27,14 @@ func TestScannerOptions_MaxFiles_Custom(t *testing.T) {
 func TestListSnapshotFilesFlat_NilMetadataLoaderUsesDefault(t *testing.T) {
 	dir := t.TempDir()
 	// Nil loader falls back to file modification time — should succeed.
-	_, err := ListSnapshotFilesFlat(context.Background(), dir, ScannerOptions{})
+	_, err := ListSnapshotFilesFlat(context.Background(), dir, DiscoveryOptions{})
 	if err != nil {
 		t.Fatalf("nil MetadataLoader should use default, got: %v", err)
 	}
 }
 
 func TestListSnapshotFilesFlat_NonexistentDir(t *testing.T) {
-	_, err := ListSnapshotFilesFlat(context.Background(), "/nonexistent", ScannerOptions{
+	_, err := ListSnapshotFilesFlat(context.Background(), "/nonexistent", DiscoveryOptions{
 		MetadataLoader: func(_, _ string) (time.Time, error) { return time.Time{}, nil },
 	})
 	if err == nil {
@@ -54,7 +54,7 @@ func TestListSnapshotFilesFlat_SortsByCapturedAt(t *testing.T) {
 		_ = i
 	}
 
-	files, err := ListSnapshotFilesFlat(context.Background(), dir, ScannerOptions{
+	files, err := ListSnapshotFilesFlat(context.Background(), dir, DiscoveryOptions{
 		MetadataLoader: func(_, name string) (time.Time, error) {
 			switch name {
 			case "obs-a.json":
@@ -100,7 +100,7 @@ func TestListSnapshotFilesFlat_SkipsDirectoriesAndNonJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := ListSnapshotFilesFlat(context.Background(), dir, ScannerOptions{
+	files, err := ListSnapshotFilesFlat(context.Background(), dir, DiscoveryOptions{
 		MetadataLoader: func(_, _ string) (time.Time, error) { return base, nil },
 	})
 	if err != nil {
@@ -117,7 +117,7 @@ func TestListSnapshotFilesFlat_MetadataLoaderError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := ListSnapshotFilesFlat(context.Background(), dir, ScannerOptions{
+	_, err := ListSnapshotFilesFlat(context.Background(), dir, DiscoveryOptions{
 		MetadataLoader: func(_, name string) (time.Time, error) {
 			return time.Time{}, errors.New("parse error")
 		},
@@ -140,7 +140,7 @@ func TestListSnapshotFilesFlat_CancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately.
 
-	_, err := ListSnapshotFilesFlat(ctx, dir, ScannerOptions{
+	_, err := ListSnapshotFilesFlat(ctx, dir, DiscoveryOptions{
 		MetadataLoader: func(_, name string) (time.Time, error) { return base, nil },
 	})
 	if err == nil {
@@ -150,7 +150,7 @@ func TestListSnapshotFilesFlat_CancelledContext(t *testing.T) {
 
 func TestListSnapshotFilesRecursive_NilMetadataLoader(t *testing.T) {
 	dir := t.TempDir()
-	_, err := ListSnapshotFilesRecursive(context.Background(), dir, ScannerOptions{})
+	_, err := ListSnapshotFilesRecursive(context.Background(), dir, DiscoveryOptions{})
 	if err == nil {
 		t.Fatal("expected error for nil MetadataLoader")
 	}
@@ -176,7 +176,7 @@ func TestListSnapshotFilesRecursive_SkipsUnderscoreDirs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := ListSnapshotFilesRecursive(context.Background(), dir, ScannerOptions{
+	files, err := ListSnapshotFilesRecursive(context.Background(), dir, DiscoveryOptions{
 		MetadataLoader: func(_, name string) (time.Time, error) { return base, nil },
 	})
 	if err != nil {
@@ -202,7 +202,7 @@ func TestListSnapshotFilesRecursive_ExcludeDirs(t *testing.T) {
 		}
 	}
 
-	files, err := ListSnapshotFilesRecursive(context.Background(), dir, ScannerOptions{
+	files, err := ListSnapshotFilesRecursive(context.Background(), dir, DiscoveryOptions{
 		MetadataLoader: func(path, name string) (time.Time, error) { return base, nil },
 		ExcludeDirs:    []string{subB},
 	})
@@ -226,7 +226,7 @@ func TestListSnapshotFilesRecursive_RelPathUsesForwardSlashes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := ListSnapshotFilesRecursive(context.Background(), dir, ScannerOptions{
+	files, err := ListSnapshotFilesRecursive(context.Background(), dir, DiscoveryOptions{
 		MetadataLoader: func(path, name string) (time.Time, error) { return base, nil },
 	})
 	if err != nil {
@@ -255,7 +255,7 @@ func TestListSnapshotFilesRecursive_CancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := ListSnapshotFilesRecursive(ctx, dir, ScannerOptions{
+	_, err := ListSnapshotFilesRecursive(ctx, dir, DiscoveryOptions{
 		MetadataLoader: func(path, name string) (time.Time, error) { return base, nil },
 	})
 	if err == nil {

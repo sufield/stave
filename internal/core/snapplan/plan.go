@@ -22,8 +22,8 @@ import (
 
 // File represents one snapshot file discovered on disk.
 //
-// AssetID and AssetType are populated as best-effort by the scanner
-// when a SnapshotReader is available. They flow through to the
+// AssetID and AssetType are populated as best-effort by the discovery
+// pass when a SnapshotReader is available. They flow through to the
 // emitted PlanFile so external integration tools can correlate the
 // recommendation with the asset the snapshot describes without
 // re-parsing the file.
@@ -77,7 +77,7 @@ const (
 //   - rel_path: same path relative to observations_root, useful
 //     for logs and per-tier rollups.
 //   - asset_id / asset_type: best-effort population, may be empty
-//     when the scanner ran without a snapshot loader.
+//     when the discovery pass ran without a snapshot loader.
 //   - age / age_seconds: human-friendly + machine-friendly views of
 //     (generated_at - captured_at).
 type PlanFile struct {

@@ -5,11 +5,11 @@ import (
 	"time"
 )
 
-// TestExposureLifecycle_SecureClosesWindowAtSecureScan verifies that
+// TestExposureLifecycle_SecureClosesWindowAtSecureObservation verifies that
 // when the asset is observed secure at time t, the resolved exposure
-// window closes at t (not at the last unsafe scan). Closing at the
-// last unsafe scan would undercount dwell time by one scan interval.
-func TestExposureLifecycle_SecureClosesWindowAtSecureScan(t *testing.T) {
+// window closes at t (not at the last unsafe observation). Closing at the
+// last unsafe observation would undercount dwell time by one observation interval.
+func TestExposureLifecycle_SecureClosesWindowAtSecureObservation(t *testing.T) {
 	l, _ := NewExposureLifecycle(Asset{ID: "x"})
 
 	t0 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -29,7 +29,7 @@ func TestExposureLifecycle_SecureClosesWindowAtSecureScan(t *testing.T) {
 		t.Errorf("OpenedAt = %s, want %s", resolved.OpenedAt(), t0)
 	}
 	if !resolved.ResolvedAt().Equal(t2) {
-		t.Errorf("ResolvedAt = %s, want %s (the secure observation, NOT the last unsafe scan at %s)",
+		t.Errorf("ResolvedAt = %s, want %s (the secure observation, NOT the last unsafe observation at %s)",
 			resolved.ResolvedAt(), t2, t1)
 	}
 }

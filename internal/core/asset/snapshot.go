@@ -10,7 +10,7 @@ import (
 type SnapshotSource string
 
 const (
-	SourceDeployed SnapshotSource = "deployed" // CI/CD or scheduled scan against production/staging
+	SourceDeployed SnapshotSource = "deployed" // CI/CD or scheduled capture against production/staging
 	SourcePlanned  SnapshotSource = "planned"  // IaC plan snapshot pre-deployment
 	SourceLocal    SnapshotSource = "local"    // ad-hoc run from developer workstation
 )

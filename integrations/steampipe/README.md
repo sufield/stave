@@ -162,7 +162,7 @@ permissions:
   security-events: write  # required for SARIF upload
 
 jobs:
-  scan:
+  evaluate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -214,10 +214,10 @@ populates the GitHub **Security** tab with one entry per finding.
 
 ```yaml
 # .gitlab-ci.yml
-stages: [scan]
+stages: [evaluate]
 
 stave:
-  stage: scan
+  stage: evaluate
   image: ubuntu:24.04
   before_script:
     - apt-get update && apt-get install -y curl jq awscli

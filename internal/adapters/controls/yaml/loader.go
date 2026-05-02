@@ -70,7 +70,7 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 	}
 	// Empty dir means the caller forgot to set --controls or
 	// passed through a zero string. resolveControlPaths would
-	// scan cwd and return whatever YAML happened to be sitting
+	// walk cwd and return whatever YAML happened to be sitting
 	// there — a silent surprise that produced phantom controls
 	// without a clear cause. Reject up-front.
 	if strings.TrimSpace(dir) == "" {

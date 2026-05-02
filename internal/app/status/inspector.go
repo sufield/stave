@@ -9,43 +9,43 @@ import (
 	"time"
 )
 
-// Scanner collects project artifact metadata from the filesystem.
-type Scanner struct {
+// Inspector collects project artifact metadata from the filesystem.
+type Inspector struct {
 	// StatFn abstracts os.Stat for testing. Defaults to os.Stat.
 	StatFn func(string) (os.FileInfo, error)
 }
 
-// NewScanner creates a scanner with default OS filesystem access.
-func NewScanner() *Scanner {
-	return &Scanner{StatFn: os.Stat}
+// NewInspector creates an inspector with default OS filesystem access.
+func NewInspector() *Inspector {
+	return &Inspector{StatFn: os.Stat}
 }
 
-func (sc *Scanner) stat(path string) (os.FileInfo, error) {
-	if sc.StatFn != nil {
-		return sc.StatFn(path)
+func (in *Inspector) stat(path string) (os.FileInfo, error) {
+	if in.StatFn != nil {
+		return in.StatFn(path)
 	}
 	return os.Stat(path)
 }
 
-// Scan inspects a project root and returns the aggregate artifact state.
-// Session info (LastCommand, LastCommandTime) is not set by Scan — the
+// Inspect inspects a project root and returns the aggregate artifact state.
+// Session info (LastCommand, LastCommandTime) is not set by Inspect — the
 // caller is responsible for populating those fields from the CLI layer.
-func (sc *Scanner) Scan(root string) (ProjectState, error) {
-	controls, err := sc.summarize(filepath.Join(root, "controls"), ".yaml", ".yml")
+func (in *Inspector) Inspect(root string) (ProjectState, error) {
+	controls, err := in.summarize(filepath.Join(root, "controls"), ".yaml", ".yml")
 	if err != nil && !os.IsNotExist(err) {
-		return ProjectState{}, fmt.Errorf("scan controls: %w", err)
+		return ProjectState{}, fmt.Errorf("inspect controls: %w", err)
 	}
-	raw, err := sc.summarizeRecursive(filepath.Join(root, "snapshots", "raw"), ".json")
+	raw, err := in.summarizeRecursive(filepath.Join(root, "snapshots", "raw"), ".json")
 	if err != nil && !os.IsNotExist(err) {
-		return ProjectState{}, fmt.Errorf("scan raw snapshots: %w", err)
+		return ProjectState{}, fmt.Errorf("inspect raw snapshots: %w", err)
 	}
-	obs, err := sc.summarize(filepath.Join(root, "observations"), ".json")
+	obs, err := in.summarize(filepath.Join(root, "observations"), ".json")
 	if err != nil && !os.IsNotExist(err) {
-		return ProjectState{}, fmt.Errorf("scan observations: %w", err)
+		return ProjectState{}, fmt.Errorf("inspect observations: %w", err)
 	}
 
 	evalPath := filepath.Join(root, "output", "evaluation.json")
-	evalTime, hasEval := sc.fileModTime(evalPath)
+	evalTime, hasEval := in.fileModTime(evalPath)
 
 	return ProjectState{
 		Root:         root,
@@ -57,7 +57,7 @@ func (sc *Scanner) Scan(root string) (ProjectState, error) {
 	}, nil
 }
 
-func (sc *Scanner) summarize(dir string, exts ...string) (Summary, error) {
+func (in *Inspector) summarize(dir string, exts ...string) (Summary, error) {
 	var s Summary
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -83,7 +83,7 @@ func (sc *Scanner) summarize(dir string, exts ...string) (Summary, error) {
 	return s, nil
 }
 
-func (sc *Scanner) summarizeRecursive(dir string, exts ...string) (Summary, error) {
+func (in *Inspector) summarizeRecursive(dir string, exts ...string) (Summary, error) {
 	var s Summary
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -121,8 +121,8 @@ func matchesExtension(name string, exts []string) bool {
 	return false
 }
 
-func (sc *Scanner) fileModTime(path string) (time.Time, bool) {
-	fi, err := sc.stat(path)
+func (in *Inspector) fileModTime(path string) (time.Time, bool) {
+	fi, err := in.stat(path)
 	if err != nil || fi.IsDir() {
 		return time.Time{}, false
 	}

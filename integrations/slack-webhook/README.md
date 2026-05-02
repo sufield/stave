@@ -22,7 +22,7 @@ cat > .github/workflows/stave-slack.yml << 'EOF'
 name: Stave + Slack
 on: [push]
 jobs:
-  scan:
+  evaluate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,7 +55,7 @@ jobs:
                   \"type\": \"section\",
                   \"text\": {
                     \"type\": \"mrkdwn\",
-                    \"text\": \"*Stave Security Scan*\nCommit: \`$COMMIT\`\nViolations: *$VIOLATIONS*\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
+                    \"text\": \"*Stave Security Evaluation*\nCommit: \`$COMMIT\`\nViolations: *$VIOLATIONS*\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
                   }
                 }]
               }"

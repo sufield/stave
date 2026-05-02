@@ -45,12 +45,12 @@ func (m *mockDoctorRunner) RunChecks(_ context.Context, _ DoctorRequest) (Doctor
 	return m.resp, m.err
 }
 
-type mockStatusScanner struct {
+type mockStatusInspector struct {
 	resp StatusResponse
 	err  error
 }
 
-func (m *mockStatusScanner) ScanStatus(_ context.Context, _ StatusRequest) (StatusResponse, error) {
+func (m *mockStatusInspector) InspectStatus(_ context.Context, _ StatusRequest) (StatusResponse, error) {
 	return m.resp, m.err
 }
 
@@ -162,7 +162,7 @@ func TestDoctor(t *testing.T) {
 
 func TestStatus(t *testing.T) {
 	t.Run("happy", func(t *testing.T) {
-		resp, err := Status(context.Background(), StatusRequest{}, StatusDeps{Scanner: &mockStatusScanner{resp: StatusResponse{NextCommand: "apply"}}})
+		resp, err := Status(context.Background(), StatusRequest{}, StatusDeps{Inspector: &mockStatusInspector{resp: StatusResponse{NextCommand: "apply"}}})
 		assertNoErr(t, err)
 		assertEqual(t, "NextCommand", resp.NextCommand, "apply")
 	})
@@ -410,11 +410,11 @@ func callDoctorCtx() error {
 	return err
 }
 func callStatus(e error) error {
-	_, err := Status(context.Background(), StatusRequest{}, StatusDeps{Scanner: &mockStatusScanner{err: e}})
+	_, err := Status(context.Background(), StatusRequest{}, StatusDeps{Inspector: &mockStatusInspector{err: e}})
 	return err
 }
 func callStatusCtx() error {
-	_, err := Status(canceled(), StatusRequest{}, StatusDeps{Scanner: &mockStatusScanner{}})
+	_, err := Status(canceled(), StatusRequest{}, StatusDeps{Inspector: &mockStatusInspector{}})
 	return err
 }
 func callInit(req InitRequest) error {

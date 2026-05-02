@@ -29,7 +29,7 @@ func NewRunner(r *projctx.Resolver) *Runner {
 	return &Runner{Resolver: r}
 }
 
-// Run detects the project root, delegates scanning to the app layer,
+// Run detects the project root, delegates inspection to the app layer,
 // loads session info, and formats the output.
 func (r *Runner) Run(cfg config) error {
 	root, err := r.Resolver.DetectProjectRoot(cfg.Dir)
@@ -40,10 +40,10 @@ func (r *Runner) Run(cfg config) error {
 		)
 	}
 
-	scanner := appstatus.NewScanner()
-	state, err := scanner.Scan(root)
+	inspector := appstatus.NewInspector()
+	state, err := inspector.Inspect(root)
 	if err != nil {
-		return fmt.Errorf("scan project state at %s: %w", root, err)
+		return fmt.Errorf("inspect project state at %s: %w", root, err)
 	}
 
 	// Load CLI session info and attach to domain state.

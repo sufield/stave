@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// ExposureLifecycle tracks the security state transitions of an asset across scans.
+// ExposureLifecycle tracks the security state transitions of an asset across observations.
 // It records when an asset first became non-compliant, when it was last observed
 // in that state, and maintains a history of resolved windows for dwell-time analysis.
 type ExposureLifecycle struct {
@@ -94,7 +94,7 @@ func (l *ExposureLifecycle) History() ExposureHistory {
 	return l.history
 }
 
-// RecordCheck updates the lifecycle based on a new scan result.
+// RecordCheck updates the lifecycle based on a new observation result.
 // It handles the transitions between compliant and non-compliant states.
 func (l *ExposureLifecycle) RecordCheck(t time.Time, isExposed bool) error {
 	if t.IsZero() {
@@ -113,11 +113,11 @@ func (l *ExposureLifecycle) RecordCheck(t time.Time, isExposed bool) error {
 	return nil
 }
 
-// RecordInconclusive records that a scan was attempted but the result
-// was inconclusive (e.g., CEL evaluation error). Updates lastObservedAt
-// so the lifecycle knows the asset was observed, but does NOT modify
-// the exposure state — UnsafeSince and activeWindow are preserved.
-// This prevents an inconclusive check from resetting the SLA clock.
+// RecordInconclusive records that an evaluation was attempted but the
+// result was inconclusive (e.g., CEL evaluation error). Updates
+// lastObservedAt so the lifecycle knows the asset was observed, but
+// does NOT modify the exposure state — UnsafeSince and activeWindow are
+// preserved. This prevents an inconclusive check from resetting the SLA clock.
 func (l *ExposureLifecycle) RecordInconclusive(t time.Time) error {
 	if t.IsZero() {
 		return ErrZeroTimestamp
@@ -149,7 +149,7 @@ func (l *ExposureLifecycle) FirstExposedAt() time.Time {
 	return l.activeWindow.OpenedAt()
 }
 
-// LastObservedAt returns the most recent timestamp where the asset was scanned.
+// LastObservedAt returns the most recent timestamp where the asset was observed.
 func (l *ExposureLifecycle) LastObservedAt() time.Time {
 	return l.lastObservedAt
 }
@@ -184,9 +184,9 @@ func (l *ExposureLifecycle) handleSecure(at time.Time) {
 	// lastObservedAt records when the asset was last seen, regardless
 	// of compliance state. The previous shape only advanced it on
 	// exposed observations, so a long secure run made LastObservedAt
-	// look stale (frozen at the last unsafe scan), and downstream
+	// look stale (frozen at the last unsafe observation), and downstream
 	// freshness/staleness checks misread the asset as not-recently-
-	// scanned. Update unconditionally before any early return.
+	// observed. Update unconditionally before any early return.
 	if !at.IsZero() && (at.After(l.lastObservedAt) || l.lastObservedAt.IsZero()) {
 		l.lastObservedAt = at
 	}
@@ -213,12 +213,12 @@ func (l *ExposureLifecycle) handleSecure(at time.Time) {
 		l.hasClampedWindow = true
 	}
 	// A non-clamped zero-duration window (resolveAt == openedAt) is
-	// also unreliable for dwell-time math: same scan caught the
-	// asset both unsafe and safe, which usually means flapping
-	// state mid-scan or extractor-side ordering noise, not a
+	// also unreliable for dwell-time math: same observation caught
+	// the asset both unsafe and safe, which usually means flapping
+	// state mid-observation or extractor-side ordering noise, not a
 	// genuine "exposure for zero seconds." Mark it so coverage
 	// validators can tell apart "exposure was real but resolved
-	// instantly" (questionable) from the typical multi-scan
+	// instantly" (questionable) from the typical multi-observation
 	// resolution where dwell time is meaningful.
 	if resolved.OpenedAt().Equal(resolved.ResolvedAt()) {
 		l.hasClampedWindow = true
@@ -230,9 +230,9 @@ func (l *ExposureLifecycle) handleSecure(at time.Time) {
 func (l *ExposureLifecycle) resolveTimestamp(at time.Time) time.Time {
 	// Prefer the secure-observation time itself: that is when the
 	// asset returned to a compliant state, per ExposureWindow.ResolvedAt
-	// docs. Falling back to lastObservedAt (the previous unsafe scan)
-	// would close the window at the last unsafe scan instead of the
-	// secure scan, undercounting dwell time by one scan interval.
+	// docs. Falling back to lastObservedAt (the previous unsafe observation)
+	// would close the window at the last unsafe observation instead of the
+	// secure observation, undercounting dwell time by one observation interval.
 	if !at.IsZero() {
 		return at
 	}

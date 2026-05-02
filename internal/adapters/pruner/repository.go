@@ -12,7 +12,7 @@ import (
 // CapturedAt timestamp plus the first asset's ID and type. The
 // asset fields are populated as best-effort; a snapshot with no
 // assets (rare but possible for placeholder fixtures) returns empty
-// strings rather than failing the scan.
+// strings rather than failing the discovery pass.
 func loadSnapshotMetadata(ctx context.Context, loader appcontracts.SnapshotReader, path, name string) (meta SnapshotFileMetadata, err error) {
 	if ctxErr := ctx.Err(); ctxErr != nil {
 		return SnapshotFileMetadata{}, ctxErr
@@ -48,9 +48,9 @@ func ListSnapshotFilesFlatWithLoader(ctx context.Context, observationsDir string
 	if loader == nil {
 		// No loader: fall through to ListSnapshotFilesFlat which uses
 		// file modification time as the default metadata source.
-		return ListSnapshotFilesFlat(ctx, observationsDir, ScannerOptions{})
+		return ListSnapshotFilesFlat(ctx, observationsDir, DiscoveryOptions{})
 	}
-	return ListSnapshotFilesFlat(ctx, observationsDir, ScannerOptions{
+	return ListSnapshotFilesFlat(ctx, observationsDir, DiscoveryOptions{
 		SnapshotMetadataLoader: func(path, name string) (SnapshotFileMetadata, error) {
 			return loadSnapshotMetadata(ctx, loader, path, name)
 		},
@@ -68,7 +68,7 @@ func ListSnapshotFilesRecursiveWithLoader(
 	if loader == nil {
 		return nil, errSnapshotLoaderRequired
 	}
-	return ListSnapshotFilesRecursive(ctx, observationsDir, ScannerOptions{
+	return ListSnapshotFilesRecursive(ctx, observationsDir, DiscoveryOptions{
 		SnapshotMetadataLoader: func(path, name string) (SnapshotFileMetadata, error) {
 			return loadSnapshotMetadata(ctx, loader, path, name)
 		},

@@ -24,7 +24,7 @@ type ProjectState struct {
 	EvalTime     time.Time `json:"eval_time"`
 	HasEval      bool      `json:"has_eval"`
 
-	// Session info — populated by the caller after Scan, not by the scanner.
+	// Session info — populated by the caller after Inspect, not by the inspector.
 	LastCommand     string    `json:"last_command,omitempty"`
 	LastCommandTime time.Time `json:"last_command_time"`
 }

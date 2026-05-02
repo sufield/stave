@@ -13,7 +13,7 @@ import (
 
 // MaxConfigurable* upper-bound the values an operator can set via
 // stave.yaml. Beyond these caps the underlying subsystems either
-// allocate dangerously large buffers (snapshot scanning at 10M
+// allocate dangerously large buffers (snapshot enumeration at 10M
 // files) or amplify a single bad input file into millions of
 // validation-error rows that no consumer can render. Capping is
 // done in the bootstrap path with a warning so operators see what
@@ -79,7 +79,7 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 		}
 	}
 
-	// Max snapshot files for directory scanning (default 100,000)
+	// Max snapshot files for directory enumeration (default 100,000)
 	if n := eval.MaxSnapshotFiles(); n > 0 {
 		if n > MaxConfigurableSnapshotFiles {
 			logger.Warn("config: clamping max_snapshot_files to configured maximum",

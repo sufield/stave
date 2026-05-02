@@ -305,8 +305,8 @@ controls/
 ```
 
 The `_triage/` directory is `_`-prefixed so the
-control scanner skips it during YAML discovery. The
-engine loads both trees and joins them at runtime.
+control discovery pass skips it during YAML enumeration.
+The engine loads both trees and joins them at runtime.
 
 **Inheritance (per-field):**
 1. Per-control override field → use override

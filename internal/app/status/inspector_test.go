@@ -7,19 +7,19 @@ import (
 	"time"
 )
 
-func TestNewScanner(t *testing.T) {
-	sc := NewScanner()
-	if sc == nil {
-		t.Fatal("NewScanner returned nil")
+func TestNewInspector(t *testing.T) {
+	in := NewInspector()
+	if in == nil {
+		t.Fatal("NewInspector returned nil")
 	}
 }
 
-func TestScanner_Scan_EmptyDir(t *testing.T) {
+func TestInspector_Inspect_EmptyDir(t *testing.T) {
 	root := t.TempDir()
-	sc := NewScanner()
-	state, err := sc.Scan(root)
+	in := NewInspector()
+	state, err := in.Inspect(root)
 	if err != nil {
-		t.Fatalf("Scan empty dir: %v", err)
+		t.Fatalf("Inspect empty dir: %v", err)
 	}
 	if state.Root != root {
 		t.Fatalf("Root=%q, want %q", state.Root, root)
@@ -38,7 +38,7 @@ func TestScanner_Scan_EmptyDir(t *testing.T) {
 	}
 }
 
-func TestScanner_Scan_WithControls(t *testing.T) {
+func TestInspector_Inspect_WithControls(t *testing.T) {
 	root := t.TempDir()
 	ctlDir := filepath.Join(root, "controls")
 	if err := os.MkdirAll(ctlDir, 0o755); err != nil {
@@ -49,10 +49,10 @@ func TestScanner_Scan_WithControls(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	sc := NewScanner()
-	state, err := sc.Scan(root)
+	in := NewInspector()
+	state, err := in.Inspect(root)
 	if err != nil {
-		t.Fatalf("Scan: %v", err)
+		t.Fatalf("Inspect: %v", err)
 	}
 	// Only .yaml and .yml should be counted.
 	if state.Controls.Count != 2 {
@@ -63,7 +63,7 @@ func TestScanner_Scan_WithControls(t *testing.T) {
 	}
 }
 
-func TestScanner_Scan_WithObservations(t *testing.T) {
+func TestInspector_Inspect_WithObservations(t *testing.T) {
 	root := t.TempDir()
 	obsDir := filepath.Join(root, "observations")
 	if err := os.MkdirAll(obsDir, 0o755); err != nil {
@@ -74,17 +74,17 @@ func TestScanner_Scan_WithObservations(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	sc := NewScanner()
-	state, err := sc.Scan(root)
+	in := NewInspector()
+	state, err := in.Inspect(root)
 	if err != nil {
-		t.Fatalf("Scan: %v", err)
+		t.Fatalf("Inspect: %v", err)
 	}
 	if state.Observations.Count != 2 {
 		t.Fatalf("Observations.Count=%d, want 2", state.Observations.Count)
 	}
 }
 
-func TestScanner_Scan_WithRawSnapshots(t *testing.T) {
+func TestInspector_Inspect_WithRawSnapshots(t *testing.T) {
 	root := t.TempDir()
 	rawDir := filepath.Join(root, "snapshots", "raw", "subdir")
 	if err := os.MkdirAll(rawDir, 0o755); err != nil {
@@ -100,17 +100,17 @@ func TestScanner_Scan_WithRawSnapshots(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sc := NewScanner()
-	state, err := sc.Scan(root)
+	in := NewInspector()
+	state, err := in.Inspect(root)
 	if err != nil {
-		t.Fatalf("Scan: %v", err)
+		t.Fatalf("Inspect: %v", err)
 	}
 	if state.RawSnapshots.Count != 3 {
 		t.Fatalf("RawSnapshots.Count=%d, want 3", state.RawSnapshots.Count)
 	}
 }
 
-func TestScanner_Scan_WithEval(t *testing.T) {
+func TestInspector_Inspect_WithEval(t *testing.T) {
 	root := t.TempDir()
 	outDir := filepath.Join(root, "output")
 	if err := os.MkdirAll(outDir, 0o755); err != nil {
@@ -121,10 +121,10 @@ func TestScanner_Scan_WithEval(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sc := NewScanner()
-	state, err := sc.Scan(root)
+	in := NewInspector()
+	state, err := in.Inspect(root)
 	if err != nil {
-		t.Fatalf("Scan: %v", err)
+		t.Fatalf("Inspect: %v", err)
 	}
 	if !state.HasEval {
 		t.Fatal("HasEval should be true")
@@ -134,7 +134,7 @@ func TestScanner_Scan_WithEval(t *testing.T) {
 	}
 }
 
-func TestScanner_Scan_SkipsDirs(t *testing.T) {
+func TestInspector_Inspect_SkipsDirs(t *testing.T) {
 	root := t.TempDir()
 	ctlDir := filepath.Join(root, "controls")
 	if err := os.MkdirAll(ctlDir, 0o755); err != nil {
@@ -152,10 +152,10 @@ func TestScanner_Scan_SkipsDirs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sc := NewScanner()
-	state, err := sc.Scan(root)
+	in := NewInspector()
+	state, err := in.Inspect(root)
 	if err != nil {
-		t.Fatalf("Scan: %v", err)
+		t.Fatalf("Inspect: %v", err)
 	}
 	// Only the top-level .yaml should be counted.
 	if state.Controls.Count != 1 {

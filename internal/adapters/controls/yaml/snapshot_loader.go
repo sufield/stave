@@ -25,7 +25,7 @@ type registryIndex struct {
 }
 
 // resolveControlPaths identifies control YAML files. It prioritizes a manifest
-// file if present in the _registry folder, falling back to a recursive scan.
+// file if present in the _registry folder, falling back to a recursive walk.
 //
 // If the registry exists but is malformed, an error is returned immediately
 // rather than silently falling back to a walk (which could produce inconsistent
@@ -38,13 +38,13 @@ func resolveControlPaths(ctx context.Context, dir string) ([]string, error) {
 		return paths, nil
 	}
 
-	// If the registry simply doesn't exist, fall back to a manual scan.
+	// If the registry simply doesn't exist, fall back to a manual walk.
 	// Any other error (permissions, malformed JSON) should stop execution.
 	if !errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("registry error: %w", err)
 	}
 
-	return scanForControlFiles(ctx, dir)
+	return walkForControlFiles(ctx, dir)
 }
 
 // loadPathsFromRegistry attempts to read and parse the controls.index.json file.
@@ -74,8 +74,8 @@ func loadPathsFromRegistry(ctx context.Context, root, indexPath string) ([]strin
 	return paths, nil
 }
 
-// scanForControlFiles manually crawls the directory tree to find YAML files.
-func scanForControlFiles(ctx context.Context, root string) ([]string, error) {
+// walkForControlFiles manually crawls the directory tree to find YAML files.
+func walkForControlFiles(ctx context.Context, root string) ([]string, error) {
 	var paths []string
 
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, walkErr error) error {
@@ -104,7 +104,7 @@ func scanForControlFiles(ctx context.Context, root string) ([]string, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("scanning for controls in %q: %w", root, err)
+		return nil, fmt.Errorf("walking for controls in %q: %w", root, err)
 	}
 
 	return paths, nil

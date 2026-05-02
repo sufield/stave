@@ -43,14 +43,14 @@ type StatusResponse struct {
 	NextCommand string `json:"next_command,omitempty"`
 }
 
-// StatusScannerPort scans project state and recommends a next action.
-type StatusScannerPort interface {
-	ScanStatus(ctx context.Context, req StatusRequest) (StatusResponse, error)
+// StatusInspectorPort inspects project state and recommends a next action.
+type StatusInspectorPort interface {
+	InspectStatus(ctx context.Context, req StatusRequest) (StatusResponse, error)
 }
 
 // StatusDeps groups the port interfaces for the status use case.
 type StatusDeps struct {
-	Scanner StatusScannerPort
+	Inspector StatusInspectorPort
 }
 
 // Status checks project status and returns the recommended next command.
@@ -59,7 +59,7 @@ func Status(ctx context.Context, req StatusRequest, deps StatusDeps) (StatusResp
 		return StatusResponse{}, fmt.Errorf("status: %w", err)
 	}
 
-	resp, err := deps.Scanner.ScanStatus(ctx, req)
+	resp, err := deps.Inspector.InspectStatus(ctx, req)
 	if err != nil {
 		return StatusResponse{}, fmt.Errorf("status: %w", err)
 	}

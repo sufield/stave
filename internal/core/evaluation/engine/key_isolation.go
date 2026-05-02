@@ -53,7 +53,7 @@ func (e KeyUsageEntry) IsExclusive() bool {
 // that use it across the snapshot.
 type KeyUsageIndex map[string]*KeyUsageEntry
 
-// buildKeyUsageIndexForSnapshot scans all assets in a single snapshot and
+// buildKeyUsageIndexForSnapshot iterates all assets in a single snapshot and
 // builds a mapping from KMS key ARN to the set of sensitivity domains.
 func buildKeyUsageIndexForSnapshot(snap asset.Snapshot) KeyUsageIndex {
 	idx := make(KeyUsageIndex)

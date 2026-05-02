@@ -6,7 +6,7 @@ import (
 )
 
 // Assessment groups security findings and provides aggregate analysis helpers.
-// It represents the final collection of security issues identified during a scan.
+// It represents the final collection of security issues identified during evaluation.
 type Assessment struct { //nolint:errname // Assessment is a findings collection, not inherently an error — implements error for CI pipeline gating
 	Findings []Finding `json:"findings"`
 }

@@ -54,10 +54,10 @@ func NewGraphCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.Snapsh
 }
 
 // NextCommandForProject provides a high-level recommendation for the next
-// action to take in a project. It delegates to the app-layer scanner.
+// action to take in a project. It delegates to the app-layer inspector.
 func NextCommandForProject(projectRoot string) (string, error) {
-	scanner := appstatus.NewScanner()
-	state, err := scanner.Scan(projectRoot)
+	inspector := appstatus.NewInspector()
+	state, err := inspector.Inspect(projectRoot)
 	if err != nil {
 		return "", err
 	}
