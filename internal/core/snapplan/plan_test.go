@@ -80,88 +80,26 @@ func TestBuildPlan_BasicPrune(t *testing.T) {
 	}
 }
 
-func TestBuildPlan_ArchiveMode(t *testing.T) {
-	files := makeFiles(72*time.Hour, 1*time.Hour)
-
-	plan, err := BuildPlan(BuildPlanParams{
-		Now:              baseTime,
-		ObsRoot:          "/obs",
-		ArchiveDir:       "/archive",
-		DefaultTier:      "default",
-		Files:            files,
-		Apply:            true,
-		Force:            true,
-		DefaultOlderThan: 36 * time.Hour,
-		DefaultKeepMin:   0,
-	})
-	if err != nil {
-		t.Fatalf("BuildPlan() error: %v", err)
-	}
-
-	if plan.Mode != ModeArchive {
-		t.Errorf("Mode = %q, want ARCHIVE", plan.Mode)
-	}
-	if !plan.Applied {
-		t.Error("Applied should be true")
-	}
-	if plan.ArchiveDir != "/archive" {
-		t.Errorf("ArchiveDir = %q, want /archive", plan.ArchiveDir)
-	}
-
-	archiveCount := 0
-	for _, f := range plan.Files {
-		if f.Action == ActionArchive {
-			archiveCount++
-		}
-	}
-	if archiveCount != 1 {
-		t.Errorf("archive count = %d, want 1", archiveCount)
-	}
-}
-
-func TestBuildPlan_PruneMode(t *testing.T) {
-	files := makeFiles(72*time.Hour, 1*time.Hour)
-
-	plan, err := BuildPlan(BuildPlanParams{
-		Now:              baseTime,
-		ObsRoot:          "/obs",
-		DefaultTier:      "default",
-		Files:            files,
-		Apply:            true,
-		Force:            true,
-		DefaultOlderThan: 36 * time.Hour,
-		DefaultKeepMin:   0,
-	})
-	if err != nil {
-		t.Fatalf("BuildPlan() error: %v", err)
-	}
-
-	if plan.Mode != ModePrune {
-		t.Errorf("Mode = %q, want PRUNE", plan.Mode)
-	}
-	if !plan.Applied {
-		t.Error("Applied should be true")
-	}
-}
-
-func TestBuildPlan_PreviewWhenNotForced(t *testing.T) {
+func TestBuildPlan_AlwaysPreview(t *testing.T) {
+	// The plan command is read-only. Mode is always ModePreview and
+	// Applied is always false; the previously-supported ModeArchive /
+	// ModePrune values were tied to the removed --apply / --force /
+	// --archive-dir execution path.
 	plan, err := BuildPlan(BuildPlanParams{
 		Now:              baseTime,
 		ObsRoot:          "/obs",
 		DefaultTier:      "default",
 		Files:            makeFiles(72 * time.Hour),
-		Apply:            true,
-		Force:            false,
 		DefaultOlderThan: 36 * time.Hour,
 	})
 	if err != nil {
 		t.Fatalf("BuildPlan() error: %v", err)
 	}
 	if plan.Mode != ModePreview {
-		t.Errorf("Mode = %q, want PREVIEW (apply without force)", plan.Mode)
+		t.Errorf("Mode = %q, want PREVIEW", plan.Mode)
 	}
 	if plan.Applied {
-		t.Error("Applied should be false when force is not set")
+		t.Error("Applied should be false")
 	}
 }
 
@@ -340,37 +278,6 @@ func TestBuildPlan_WithinRetentionReason(t *testing.T) {
 	}
 }
 
-// --- resolveMode tests ---
-
-func TestResolveMode(t *testing.T) {
-	tests := []struct {
-		name       string
-		apply      bool
-		force      bool
-		archiveDir string
-		wantMode   Mode
-		wantApply  bool
-	}{
-		{"preview default", false, false, "", ModePreview, false},
-		{"apply without force", true, false, "", ModePreview, false},
-		{"force without apply", false, true, "", ModePreview, false},
-		{"prune", true, true, "", ModePrune, true},
-		{"archive", true, true, "/archive", ModeArchive, true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mode, applied := resolveMode(tt.apply, tt.force, tt.archiveDir)
-			if mode != tt.wantMode {
-				t.Errorf("mode = %q, want %q", mode, tt.wantMode)
-			}
-			if applied != tt.wantApply {
-				t.Errorf("applied = %v, want %v", applied, tt.wantApply)
-			}
-		})
-	}
-}
-
 // --- groupFilesByTier tests ---
 
 func TestGroupFilesByTier(t *testing.T) {
@@ -478,8 +385,8 @@ func TestRenderPlanText_Preview(t *testing.T) {
 	if !strings.Contains(out, "PREVIEW") {
 		t.Error("missing PREVIEW mode")
 	}
-	if !strings.Contains(out, "--apply --force") {
-		t.Error("missing apply hint")
+	if !strings.Contains(out, "read-only") {
+		t.Error("missing read-only hint")
 	}
 	if !strings.Contains(out, "PRUNE") {
 		t.Error("missing PRUNE action")
@@ -509,43 +416,12 @@ func TestRenderPlanText_EmptyPlan(t *testing.T) {
 	}
 }
 
-func TestRenderPlanText_ArchiveMode(t *testing.T) {
+func TestRenderPlanText_AlwaysPreviewMode(t *testing.T) {
 	plan := &PlanOutput{
 		GeneratedAt:      baseTime,
 		ObservationsRoot: "/obs",
-		ArchiveDir:       "/archive",
-		Mode:             ModeArchive,
-		Applied:          true,
-		TotalFiles:       1,
-		TotalActions:     1,
-		TierSummaries: []PlanTierSummary{
-			{Tier: "default", OlderThan: "36h0m0s", KeepMin: 0, Total: 1, KeepCount: 0, ActionCount: 1},
-		},
-		Files: []PlanFile{
-			{RelPath: "old.json", CapturedAt: baseTime.Add(-72 * time.Hour), Tier: "default", Action: ActionArchive, Reason: "older than 36h0m0s"},
-		},
-	}
-
-	var buf bytes.Buffer
-	if err := RenderPlanText(&buf, plan); err != nil {
-		t.Fatalf("RenderPlanText() error: %v", err)
-	}
-
-	out := buf.String()
-	if !strings.Contains(out, "Archive:   /archive") {
-		t.Error("missing archive dir")
-	}
-	if !strings.Contains(out, "archived") {
-		t.Error("missing 'archived' verb")
-	}
-}
-
-func TestRenderPlanText_PruneMode(t *testing.T) {
-	plan := &PlanOutput{
-		GeneratedAt:      baseTime,
-		ObservationsRoot: "/obs",
-		Mode:             ModePrune,
-		Applied:          true,
+		Mode:             ModePreview,
+		Applied:          false,
 		TotalFiles:       1,
 		TotalActions:     1,
 		TierSummaries: []PlanTierSummary{
@@ -561,7 +437,11 @@ func TestRenderPlanText_PruneMode(t *testing.T) {
 		t.Fatalf("RenderPlanText() error: %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "pruned") {
-		t.Error("missing 'pruned' verb in prune mode")
+	out := buf.String()
+	if !strings.Contains(out, "PREVIEW") {
+		t.Error("missing PREVIEW mode label")
+	}
+	if !strings.Contains(out, "eligible for action") {
+		t.Error("missing 'eligible for action' verb")
 	}
 }

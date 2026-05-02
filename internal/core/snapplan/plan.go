@@ -28,24 +28,27 @@ type File struct {
 	CapturedAt time.Time
 }
 
-// Action represents the fate of a snapshot file in a retention plan.
+// Action represents the recommended fate of a snapshot file in a
+// retention plan. Stave never executes the action — external tools
+// consume the plan output and decide whether to delete, move into an
+// archive directory, or otherwise act on each entry.
 type Action string
 
 // Snapshot retention plan action constants.
 const (
-	ActionKeep    Action = "KEEP"
-	ActionPrune   Action = "PRUNE"
-	ActionArchive Action = "ARCHIVE"
+	ActionKeep  Action = "KEEP"
+	ActionPrune Action = "PRUNE"
 )
 
-// Mode represents the execution mode of a retention plan.
+// Mode is retained for wire-format stability. The plan command is
+// read-only; the only legitimate value is ModePreview.
 type Mode string
 
-// Snapshot plan execution mode constants.
+// ModePreview is the only mode the plan command emits. The
+// previously-supported ModePrune and ModeArchive were tied to the
+// removed --apply / --force / --archive-dir execution path.
 const (
 	ModePreview Mode = "PREVIEW"
-	ModePrune   Mode = "PRUNE"
-	ModeArchive Mode = "ARCHIVE"
 )
 
 // PlanFile is one file row in the generated snapshot plan.
@@ -68,12 +71,16 @@ type PlanTierSummary struct {
 }
 
 // PlanOutput is the materialized retention plan.
+//
+// The Mode field is always ModePreview. The Applied field is always
+// false. Both are kept on the JSON wire format for stability across
+// the read-only-plan transition; callers that consume the JSON
+// should treat them as legacy informational fields.
 type PlanOutput struct {
 	SchemaVersion    kernel.Schema     `json:"schema_version"`
 	Kind             kernel.OutputKind `json:"kind"`
 	GeneratedAt      time.Time         `json:"generated_at"`
 	ObservationsRoot string            `json:"observations_root"`
-	ArchiveDir       string            `json:"archive_dir,omitempty"`
 	Mode             Mode              `json:"mode"`
 	Applied          bool              `json:"applied"`
 	DefaultTier      string            `json:"default_tier"`
@@ -81,12 +88,6 @@ type PlanOutput struct {
 	TotalFiles       int               `json:"total_files"`
 	TotalActions     int               `json:"total_actions"`
 	Files            []PlanFile        `json:"files"`
-}
-
-// PlanEntry is a single snapshot plan row for execution.
-type PlanEntry struct {
-	RelPath string
-	Action  Action
 }
 
 // TierResolver maps a relative file path to a retention tier name.
@@ -106,12 +107,9 @@ func (f TierResolverFunc) Resolve(path string) string { return f(path) }
 type BuildPlanParams struct {
 	Now              time.Time
 	ObsRoot          string
-	ArchiveDir       string
 	DefaultTier      string
 	Tiers            map[string]retention.Tier
 	Files            []File
-	Apply            bool
-	Force            bool
 	DefaultOlderThan time.Duration
 	DefaultKeepMin   int
 	TierResolver     TierResolver
@@ -125,7 +123,6 @@ func BuildPlan(params BuildPlanParams) (*PlanOutput, error) {
 		return nil, errors.New("buildPlan requires non-zero now (resolve from --now flag or clock)")
 	}
 
-	mode, applied := resolveMode(params.Apply, params.Force, params.ArchiveDir)
 	byTier := groupFilesByTier(params.Files, params.DefaultTier, params.TierResolver)
 	tierNames := sortedTierNames(byTier)
 
@@ -148,9 +145,8 @@ func BuildPlan(params BuildPlanParams) (*PlanOutput, error) {
 		Kind:             kernel.KindSnapshotPlan,
 		GeneratedAt:      params.Now.UTC(),
 		ObservationsRoot: params.ObsRoot,
-		ArchiveDir:       params.ArchiveDir,
-		Mode:             mode,
-		Applied:          applied,
+		Mode:             ModePreview,
+		Applied:          false,
 		DefaultTier:      params.DefaultTier,
 		TierSummaries:    summaries,
 		TotalFiles:       len(params.Files),
@@ -163,16 +159,6 @@ type tierPlanResult struct {
 	entries     []PlanFile
 	summary     PlanTierSummary
 	actionCount int
-}
-
-func resolveMode(apply, force bool, archiveDir string) (Mode, bool) {
-	if !apply || !force {
-		return ModePreview, false
-	}
-	if archiveDir != "" {
-		return ModeArchive, true
-	}
-	return ModePrune, true
 }
 
 func groupFilesByTier(files []File, defaultTier string, resolver TierResolver) map[string][]File {
@@ -238,9 +224,6 @@ func buildTierPlan(params BuildPlanParams, tierName string, files []File) (tierP
 	}
 
 	targetAction := ActionPrune
-	if params.ArchiveDir != "" {
-		targetAction = ActionArchive
-	}
 
 	entries := make([]PlanFile, 0, len(files))
 	actionCount := 0

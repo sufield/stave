@@ -6,40 +6,46 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/adapters/pruner/plan"
 	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // NewPlanCmd constructs the plan command.
+//
+// The command is read-only: it inspects the observations root,
+// classifies each snapshot under the configured retention tiers,
+// and emits a plan describing what would be kept and what is
+// eligible for action. Stave does not execute deletes, moves, or
+// archive operations — that is an external tool's responsibility.
+// The plan output is the integration contract: external tools
+// (cron scripts, Terraform null_resource, CI cleanup jobs) parse
+// the JSON form and decide how to act on each entry.
 func NewPlanCmd(newSnapshotRepo compose.SnapshotRepoFactory) *cobra.Command {
 	var (
 		obsRoot    string
-		archiveDir string
 		nowRaw     string
 		formatFlag string
-		apply      bool
 	)
 
 	cmd := &cobra.Command{
 		Use:   "plan",
-		Short: "Preview or execute multi-tier snapshot retention across directories",
+		Short: "Plan multi-tier snapshot retention across directories",
 		Long: `Plan inspects an observations root recursively, assigns each snapshot to a retention
 tier based on observation_tier_mapping rules, and generates a unified retention plan.
 
-The plan shows which files will be kept, pruned, or archived based on per-tier
-older_than and keep_min settings.
-
-Execution requires --apply --force.
+The plan shows which files fall under each tier's older_than / keep_min policy and
+which are eligible for action (delete or archive). Stave does not execute the
+plan: external tools consume the JSON output and run the actions themselves.
 
 Exit Codes:
   0   - Success
   2   - Invalid input or configuration error
   4   - Internal error
   130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
-		Example: `  stave snapshot plan --observations-root ./observations --now 2026-02-23T00:00:00Z`,
-		Args:    cobra.NoArgs,
+		Example: `  stave snapshot plan --observations-root ./observations --now 2026-02-23T00:00:00Z
+  stave snapshot plan --observations-root ./observations --format json`,
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			gf := cliflags.GetGlobalFlags(cmd)
 			now, err := compose.ResolveNow(nowRaw)
@@ -53,22 +59,18 @@ Exit Codes:
 
 			ctx := cmd.Context()
 			cleanObsRoot := fsutil.CleanUserPath(obsRoot)
-			cleanArchiveDir := fsutil.CleanUserPath(archiveDir)
 
-			// Load files via factory
-			files, err := listPlanFiles(ctx, newSnapshotRepo, cleanObsRoot, cleanArchiveDir)
+			files, err := listPlanFiles(ctx, newSnapshotRepo, cleanObsRoot)
 			if err != nil {
 				return err
 			}
 
-			// Load retention config
 			tiers, tierRules, defaultTier, err := resolvePlanRetentionConfig(cmdctx.ResolverFromCmd(cmd))
 			if err != nil {
 				return err
 			}
 
-			// Delegate to internal runner
-			runner := appsnapshot.NewPlanRunner(adaptPlanApply)
+			runner := appsnapshot.NewPlanRunner()
 			return runner.Run(appsnapshot.PlanConfig{
 				Files:            files,
 				Tiers:            tiers,
@@ -76,10 +78,6 @@ Exit Codes:
 				DefaultTier:      defaultTier,
 				Now:              now,
 				ObservationsRoot: cleanObsRoot,
-				ArchiveDir:       cleanArchiveDir,
-				Apply:            apply,
-				Force:            gf.Force,
-				AllowSymlink:     gf.AllowSymlinkOut,
 				Format:           format,
 				Quiet:            gf.Quiet,
 				Stdout:           cmd.OutOrStdout(),
@@ -91,23 +89,9 @@ Exit Codes:
 
 	f := cmd.Flags()
 	f.StringVarP(&obsRoot, "observations-root", "o", "observations", "Root directory (inspected recursively)")
-	f.StringVar(&archiveDir, "archive-dir", "", "Archive directory (empty = prune mode)")
 	f.StringVar(&nowRaw, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
 	f.StringVarP(&formatFlag, "format", "f", "text", "Output format: text or json")
-	f.BoolVar(&apply, "apply", false, "Execute the plan (requires --force)")
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 
 	return cmd
-}
-
-// adaptPlanApply bridges the domain PlanEntry type to the adapter's
-// ApplySnapshotPlan function, keeping the app layer adapter-free.
-func adaptPlanApply(params appsnapshot.ApplyParams) error {
-	_, err := plan.ApplySnapshotPlan(plan.SnapshotPlanApplyInput{
-		Entries:          params.Entries,
-		ObservationsRoot: params.ObservationsDir,
-		ArchiveDir:       params.ArchiveDir,
-		AllowSymlink:     params.AllowSymlink,
-	})
-	return err
 }

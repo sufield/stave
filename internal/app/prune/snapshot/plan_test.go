@@ -179,48 +179,6 @@ func TestBuildSnapshotPlan_PerTierKeepMin(t *testing.T) {
 	}
 }
 
-func TestBuildSnapshotPlan_ArchiveMode(t *testing.T) {
-	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
-	files := []appcontracts.SnapshotFile{
-		{RelPath: "new.json", CapturedAt: now.AddDate(0, 0, -1)},
-		{RelPath: "old1.json", CapturedAt: now.AddDate(0, 0, -40)},
-		{RelPath: "old2.json", CapturedAt: now.AddDate(0, 0, -50)},
-	}
-
-	plan, err := buildPlan(planBuildParams{
-		Now:         now,
-		ObsRoot:     "./observations",
-		ArchiveDir:  "./observations/archive",
-		DefaultTier: "critical",
-		Tiers: map[string]retention.Tier{
-			"critical": {OlderThan: "14d", KeepMin: 1},
-		},
-		Files: files,
-		Apply: true,
-		Force: true,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if plan.Mode != snapshotdomain.ModeArchive {
-		t.Fatalf("Mode=%q, want ARCHIVE", plan.Mode)
-	}
-	if !plan.Applied {
-		t.Fatal("Applied=false, want true")
-	}
-
-	archiveCount := 0
-	for _, f := range plan.Files {
-		if f.Action == snapshotdomain.ActionArchive {
-			archiveCount++
-		}
-	}
-	if archiveCount != 2 {
-		t.Fatalf("ARCHIVE count=%d, want 2", archiveCount)
-	}
-}
-
 func TestBuildSnapshotPlan_DefaultTierForUnmappedFiles(t *testing.T) {
 	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
 	files := []appcontracts.SnapshotFile{
@@ -281,33 +239,11 @@ func TestBuildSnapshotPlan_NoFiles(t *testing.T) {
 	}
 }
 
-func TestBuildSnapshotPlan_ApplyWithoutForceIsPreview(t *testing.T) {
-	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
-
-	plan, err := buildPlan(planBuildParams{
-		Now:         now,
-		ObsRoot:     "./observations",
-		DefaultTier: "critical",
-		Tiers: map[string]retention.Tier{
-			"critical": {OlderThan: "30d", KeepMin: 2},
-		},
-		Files: nil,
-		Apply: true,
-		Force: false,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if plan.Mode != snapshotdomain.ModePreview {
-		t.Fatalf("Mode=%q, want PREVIEW (--apply without --force)", plan.Mode)
-	}
-	if plan.Applied {
-		t.Fatal("Applied=true, want false")
-	}
-}
-
-func TestBuildSnapshotPlan_PruneMode(t *testing.T) {
+func TestBuildSnapshotPlan_AlwaysPreviewMode(t *testing.T) {
+	// The plan command is read-only — Mode is always ModePreview and
+	// Applied is always false. The previously-supported ArchiveMode
+	// and PruneMode tests covered the destructive path that has been
+	// removed.
 	now := time.Date(2026, 2, 23, 0, 0, 0, 0, time.UTC)
 	files := []appcontracts.SnapshotFile{
 		{RelPath: "new.json", CapturedAt: now.AddDate(0, 0, -1)},
@@ -322,15 +258,16 @@ func TestBuildSnapshotPlan_PruneMode(t *testing.T) {
 			"critical": {OlderThan: "14d", KeepMin: 1},
 		},
 		Files: files,
-		Apply: true,
-		Force: true,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if plan.Mode != snapshotdomain.ModePrune {
-		t.Fatalf("Mode=%q, want PRUNE", plan.Mode)
+	if plan.Mode != snapshotdomain.ModePreview {
+		t.Fatalf("Mode=%q, want PREVIEW", plan.Mode)
+	}
+	if plan.Applied {
+		t.Fatal("Applied=true, want false")
 	}
 
 	pruneCount := 0

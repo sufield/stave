@@ -11,31 +11,14 @@ import (
 	snapshotdomain "github.com/sufield/stave/internal/core/snapplan"
 )
 
-// ApplyParams bundles the execution details for applying a snapshot plan,
-// preventing accidental swaps of the two path strings and eliminating the
-// opaque trailing boolean.
-type ApplyParams struct {
-	Entries         []snapshotdomain.PlanEntry
-	ObservationsDir string
-	ArchiveDir      string
-	AllowSymlink    bool
-}
-
-// PlanApplyFunc applies a computed plan against the filesystem.
-// Injected by the cmd layer to keep the app free of adapter imports.
-type PlanApplyFunc func(params ApplyParams) error
-
 // planBuildParams holds all inputs for buildPlan (pure, testable).
 type planBuildParams struct {
 	Now         time.Time
 	ObsRoot     string
-	ArchiveDir  string
 	DefaultTier string
 	TierRules   []retention.Rule
 	Tiers       map[string]retention.Tier
 	Files       []appcontracts.SnapshotFile
-	Apply       bool
-	Force       bool
 }
 
 func buildPlan(params planBuildParams) (*snapshotdomain.PlanOutput, error) {
@@ -51,12 +34,9 @@ func buildPlan(params planBuildParams) (*snapshotdomain.PlanOutput, error) {
 	return snapshotdomain.BuildPlan(snapshotdomain.BuildPlanParams{
 		Now:              params.Now,
 		ObsRoot:          params.ObsRoot,
-		ArchiveDir:       params.ArchiveDir,
 		DefaultTier:      params.DefaultTier,
 		Tiers:            params.Tiers,
 		Files:            toSnapshotFiles(params.Files),
-		Apply:            params.Apply,
-		Force:            params.Force,
 		DefaultOlderThan: defaultOlderThan,
 		DefaultKeepMin:   appconfig.DefaultTierKeepMin,
 		TierResolver:     resolver,
@@ -71,17 +51,6 @@ func toSnapshotFiles(files []appcontracts.SnapshotFile) []snapshotdomain.File {
 			RelPath:    f.RelPath,
 			Name:       f.Name,
 			CapturedAt: f.CapturedAt,
-		}
-	}
-	return out
-}
-
-func toPlanEntries(files []snapshotdomain.PlanFile) []snapshotdomain.PlanEntry {
-	out := make([]snapshotdomain.PlanEntry, len(files))
-	for i, f := range files {
-		out[i] = snapshotdomain.PlanEntry{
-			RelPath: f.RelPath,
-			Action:  f.Action,
 		}
 	}
 	return out

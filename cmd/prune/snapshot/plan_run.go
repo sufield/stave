@@ -3,7 +3,6 @@ package snapshot
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
@@ -13,18 +12,16 @@ import (
 	"github.com/sufield/stave/internal/core/retention"
 )
 
-func listPlanFiles(ctx context.Context, newSnapshotRepo compose.SnapshotRepoFactory, observationsRoot, archiveDir string) ([]appcontracts.SnapshotFile, error) {
+// listPlanFiles enumerates every snapshot file under observationsRoot.
+// No exclude-dir handling is required: the plan command is read-only
+// and never moves files into a sibling archive directory the walk
+// would need to skip.
+func listPlanFiles(ctx context.Context, newSnapshotRepo compose.SnapshotRepoFactory, observationsRoot string) ([]appcontracts.SnapshotFile, error) {
 	loader, err := newSnapshotRepo()
 	if err != nil {
 		return nil, fmt.Errorf("create observation loader: %w", err)
 	}
-	excludeDirs := make([]string, 0, 1)
-	if archiveDir != "" {
-		if abs, err := filepath.Abs(archiveDir); err == nil {
-			excludeDirs = append(excludeDirs, abs)
-		}
-	}
-	return listSnapshotFilesRecursive(ctx, loader, observationsRoot, excludeDirs)
+	return listSnapshotFilesRecursive(ctx, loader, observationsRoot, nil)
 }
 
 // listSnapshotFilesRecursive identifies snapshot files by traversing the directory tree.

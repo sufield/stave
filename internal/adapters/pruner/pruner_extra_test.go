@@ -10,28 +10,6 @@ import (
 	"time"
 )
 
-func TestCleanupAction_ModeString(t *testing.T) {
-	tests := []struct {
-		action CleanupAction
-		dryRun bool
-		want   string
-	}{
-		{ActionDelete, false, "DELETE"},
-		{ActionMove, false, "MOVE"},
-		{ActionDelete, true, "DRY_RUN"},
-		{ActionMove, true, "DRY_RUN"},
-	}
-	for _, tt := range tests {
-		name := fmt.Sprintf("%s/dryRun=%v", tt.action, tt.dryRun)
-		t.Run(name, func(t *testing.T) {
-			got := tt.action.ModeString(tt.dryRun)
-			if got != tt.want {
-				t.Fatalf("ModeString()=%q, want %q", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestScannerOptions_MaxFiles_Default(t *testing.T) {
 	opts := ScannerOptions{}
 	if got := opts.maxFiles(); got != DefaultMaxFiles {

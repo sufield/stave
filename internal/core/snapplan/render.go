@@ -26,15 +26,7 @@ func writeHeader(ew *errWriter, plan *PlanOutput) {
 	ew.printf("Generated: %s\n", plan.GeneratedAt.Format(humanTime))
 	ew.printf("Root:      %s\n", plan.ObservationsRoot)
 
-	modeHint := ""
-	if plan.Mode == ModePreview {
-		modeHint = " (use --apply --force to execute)"
-	}
-	ew.printf("Mode:      %s%s\n", plan.Mode, modeHint)
-
-	if plan.ArchiveDir != "" {
-		ew.printf("Archive:   %s\n", plan.ArchiveDir)
-	}
+	ew.printf("Mode:      %s (read-only — pass plan output to an external tool to act on it)\n", plan.Mode)
 }
 
 func writeTiers(ew *errWriter, plan *PlanOutput) {
@@ -68,13 +60,11 @@ func writeTiers(ew *errWriter, plan *PlanOutput) {
 }
 
 func writeSummary(ew *errWriter, plan *PlanOutput) {
-	actionVerb := "processed"
-	switch plan.Mode {
-	case ModeArchive:
-		actionVerb = "archived"
-	case ModePrune:
-		actionVerb = "pruned"
-	}
+	// "eligible" rather than "pruned" / "archived": Stave never
+	// executes the action, so the past-tense verbs that the previous
+	// shape used (driven by ModePrune / ModeArchive) misrepresented
+	// the read-only mode.
+	actionVerb := "eligible for action"
 
 	keepCount := 0
 	for _, ts := range plan.TierSummaries {

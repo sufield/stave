@@ -16,34 +16,6 @@ import (
 	"github.com/sufield/stave/internal/core/retention"
 )
 
-// CleanupPlan holds the fields shared by delete and archive execution plans.
-type CleanupPlan struct {
-	Now             time.Time
-	Action          pruner.CleanupAction
-	DryRun          bool
-	Quiet           bool
-	Format          appcontracts.OutputFormat
-	ObservationsDir string
-	Tier            string
-	OlderThan       time.Duration
-	KeepMin         int
-	AllFiles        []appcontracts.SnapshotFile
-	CandidateFiles  []appcontracts.SnapshotFile
-}
-
-// CleanupRunInput holds the fields shared by delete and archive resolved inputs.
-type CleanupRunInput struct {
-	ObsDir    string
-	Tier      string
-	OlderThan time.Duration
-	Now       time.Time
-	Format    appcontracts.OutputFormat
-	KeepMin   int
-	DryRun    bool
-	Quiet     bool
-	Action    pruner.CleanupAction
-}
-
 // ListObservationSnapshotFiles lists snapshot files from a flat observations directory.
 func ListObservationSnapshotFiles(ctx context.Context, loader appcontracts.SnapshotReader, observationsDir string) ([]appcontracts.SnapshotFile, error) {
 	files, err := pruner.ListSnapshotFilesFlatWithLoader(ctx, observationsDir, loader)

@@ -12,6 +12,11 @@ import (
 )
 
 // PlanConfig defines the resolved parameters for multi-tier snapshot retention.
+//
+// The config carries no "apply", "force", or archive-destination
+// fields: the plan command is read-only by design. External tools
+// consume the rendered output and execute the recommended actions
+// themselves.
 type PlanConfig struct {
 	// Pre-loaded data.
 	Files       []appcontracts.SnapshotFile
@@ -22,23 +27,18 @@ type PlanConfig struct {
 	// Resolved parameters.
 	Now              time.Time
 	ObservationsRoot string
-	ArchiveDir       string
-	Apply            bool
-	Force            bool
-	AllowSymlink     bool
 	Format           appcontracts.OutputFormat
 	Quiet            bool
 	Stdout           io.Writer
 }
 
-// PlanRunner orchestrates the recursive inspection and lifecycle execution.
-type PlanRunner struct {
-	ApplyFn PlanApplyFunc
-}
+// PlanRunner orchestrates the recursive inspection and renders the
+// resulting plan. It performs no filesystem mutation.
+type PlanRunner struct{}
 
-// NewPlanRunner creates a new plan runner with the given apply function.
-func NewPlanRunner(applyFn PlanApplyFunc) *PlanRunner {
-	return &PlanRunner{ApplyFn: applyFn}
+// NewPlanRunner creates a new plan runner.
+func NewPlanRunner() *PlanRunner {
+	return &PlanRunner{}
 }
 
 // Run executes the multi-tier planning workflow.
@@ -46,32 +46,16 @@ func (r *PlanRunner) Run(cfg PlanConfig) error {
 	p, err := buildPlan(planBuildParams{
 		Now:         cfg.Now,
 		ObsRoot:     cfg.ObservationsRoot,
-		ArchiveDir:  cfg.ArchiveDir,
 		DefaultTier: cfg.DefaultTier,
 		TierRules:   cfg.TierRules,
 		Tiers:       cfg.Tiers,
 		Files:       cfg.Files,
-		Apply:       cfg.Apply,
-		Force:       cfg.Force,
 	})
 	if err != nil {
 		return err
 	}
 
-	if err := writePlanOutput(cfg, p); err != nil {
-		return err
-	}
-	if p.Applied {
-		if err := r.ApplyFn(ApplyParams{
-			Entries:         toPlanEntries(p.Files),
-			ObservationsDir: cfg.ObservationsRoot,
-			ArchiveDir:      cfg.ArchiveDir,
-			AllowSymlink:    cfg.AllowSymlink,
-		}); err != nil {
-			return fmt.Errorf("applying snapshot lifecycle plan: %w", err)
-		}
-	}
-	return nil
+	return writePlanOutput(cfg, p)
 }
 
 func writePlanOutput(cfg PlanConfig, p *snapshotdomain.PlanOutput) error {
