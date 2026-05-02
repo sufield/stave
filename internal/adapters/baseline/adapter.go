@@ -27,8 +27,16 @@ type FileOpener func(path string) (*os.File, error)
 type EvaluationLoader struct{}
 
 // LoadFindings loads an evaluation artifact and extracts baseline-level findings.
+//
+// Constructed via NewLoader().WithStrictSchema() so the loader runs
+// JSON-schema validation on the artifact before unmarshal — baseline
+// drift detection is a trust-boundary read (a tampered or malformed
+// envelope must fail loud, not produce a "clean" empty diff). The
+// earlier shape used &evaljson.Loader{} which left strictSchema=false
+// and silently accepted hand-crafted envelopes that could drive
+// false-pass verdicts in CI gates.
 func (l *EvaluationLoader) LoadFindings(ctx context.Context, path string) ([]reporting.BaselineFinding, error) {
-	loader := &evaljson.Loader{}
+	loader := evaljson.NewLoader().WithStrictSchema()
 	eval, err := loader.LoadEnvelopeFromFile(ctx, fsutil.CleanUserPath(path))
 	if err != nil {
 		return nil, err
@@ -41,8 +49,13 @@ func (l *EvaluationLoader) LoadFindings(ctx context.Context, path string) ([]rep
 type Loader struct{}
 
 // LoadBaseline loads a saved baseline artifact.
+//
+// Strict-schema for the same reason as LoadFindings: the baseline is
+// the reference state that drift detection compares against; silently
+// accepting a malformed file lets a hand-crafted "empty baseline"
+// pass every diff and report no drift even when assets violate.
 func (l *Loader) LoadBaseline(ctx context.Context, path string) ([]reporting.BaselineFinding, error) {
-	loader := &evaljson.Loader{}
+	loader := evaljson.NewLoader().WithStrictSchema()
 	base, err := loader.LoadBaselineFromFile(ctx, fsutil.CleanUserPath(path), kernel.KindBaseline)
 	if err != nil {
 		return nil, err

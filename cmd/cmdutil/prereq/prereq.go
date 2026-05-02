@@ -7,6 +7,17 @@ import (
 
 // DoctorPrereqChecks runs system health checks and transforms them into domain-level
 // prerequisite checks.
+//
+// doctor.Run returns ([]Diagnostic, bool) where the bool is an
+// aggregate "all probes passed" flag — NOT an error. The
+// per-probe Status field on each Diagnostic carries the same
+// information at finer granularity (FAIL / WARN / PASS / SKIP),
+// and the caller's downstream pipeline routes off the per-finding
+// status, not the aggregate. Treating doctor.Run's bool as an
+// error to propagate would conflate "subsystem broke" (it can't
+// — Run never returns one) with "individual probe reported FAIL"
+// — they would be the same signal here. The blank-identifier
+// assignment is deliberate, documented to forestall a re-audit.
 func DoctorPrereqChecks(cwd, binaryPath string) []validation.ValidationFinding {
 	doctorChecks, _ := doctor.Run(&doctor.SystemEnvironment{
 		Cwd:        cwd,

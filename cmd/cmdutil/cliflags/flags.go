@@ -103,12 +103,26 @@ func (g GlobalFlags) GetSanitizer() *sanitize.Sanitizer {
 	return policy.NewSanitizer()
 }
 
-// ParsePathMode parses a CLI flag string to a sanitize.PathMode, defaulting to PathBase.
+// ParsePathMode parses a CLI flag string to a sanitize.PathMode,
+// defaulting to PathBase. Unrecognised values log a warning and fall
+// back to PathBase so the operator sees the misuse instead of
+// silently getting a different mode than they asked for.
+//
+// sanitize.PathBase is the empty string by design (it's the
+// "default" mode), so the "" case is part of the legitimate input
+// set rather than a synthetic alias — it does not warn.
 func ParsePathMode(s string) sanitize.PathMode {
-	switch strings.ToLower(strings.TrimSpace(s)) {
+	normalized := strings.ToLower(strings.TrimSpace(s))
+	switch normalized {
+	case string(sanitize.PathBase): // "" — default
+		return sanitize.PathBase
 	case string(sanitize.PathFull):
 		return sanitize.PathFull
+	case "base": // explicit alias for the default
+		return sanitize.PathBase
 	default:
+		slog.Warn("cliflags: unrecognised PathMode value, defaulting to base",
+			"value", s, "expected", []string{string(sanitize.PathBase), string(sanitize.PathFull)})
 		return sanitize.PathBase
 	}
 }
@@ -182,13 +196,25 @@ func ParseRFC3339(raw string, flag FlagName) (time.Time, error) {
 
 // --- Internal Utilities ---
 
+// getStr / getBool fetch a flag's typed value when it is known to
+// exist. Lookup-then-Get is split because the calling pattern is
+// "tolerate flag absence" (Lookup nil → empty default) but treat a
+// type mismatch as a programming-time invariant violation: the flag
+// was registered with a different type than the caller is asking
+// for, which is a developer mistake that pflag cannot recover from.
+//
+// Earlier shape logged the type-mismatch error at slog.Error and
+// returned the zero value, which silently produced incorrect
+// behaviour at every downstream call site (e.g. a bool flag that
+// looked like "false" because it was registered as a string).
+// Panic surfaces the bug at the exact call site instead.
 func getStr(fs *pflag.FlagSet, name string) string {
 	if fs.Lookup(name) == nil {
 		return ""
 	}
 	val, err := fs.GetString(name)
 	if err != nil {
-		slog.Error("flag access failed", "flag", name, "error", err)
+		panic(fmt.Sprintf("cliflags: flag %q is registered but not a string: %v", name, err))
 	}
 	return val
 }
@@ -199,7 +225,7 @@ func getBool(fs *pflag.FlagSet, name string) bool {
 	}
 	val, err := fs.GetBool(name)
 	if err != nil {
-		slog.Error("flag access failed", "flag", name, "error", err)
+		panic(fmt.Sprintf("cliflags: flag %q is registered but not a bool: %v", name, err))
 	}
 	return val
 }

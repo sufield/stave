@@ -3,6 +3,7 @@ package teams
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -198,7 +199,19 @@ func globMatch(pattern, value string) bool {
 		prefix := before
 		return strings.HasPrefix(value, prefix)
 	}
-	// filepath.Match for more complex patterns.
-	matched, _ := filepath.Match(pattern, value)
+	// filepath.Match for more complex patterns. A bad pattern
+	// (filepath.ErrBadPattern) returns false here so the resolver
+	// falls through to the next rule rather than crashing the
+	// owner-resolution path; the gap is logged so a malformed
+	// glob in a team manifest surfaces during triage rather than
+	// silently producing "no owner" verdicts. Manifest authoring
+	// is the right place to validate patterns up-front; this is
+	// the runtime safety net.
+	matched, err := filepath.Match(pattern, value)
+	if err != nil {
+		slog.Warn("teams: bad glob pattern in rule, treating as no-match",
+			"pattern", pattern, "value", value, "error", err)
+		return false
+	}
 	return matched
 }

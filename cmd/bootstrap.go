@@ -74,6 +74,19 @@ func (a *App) phaseContext(cmd *cobra.Command) error {
 // because a.Logger was still nil. Moved into phaseLogging below.
 func (a *App) phaseConfig(cmd *cobra.Command) error {
 	a.configResult = projconfig.BuildResolver()
+	// Surface a config-load failure immediately for commands that
+	// require config. The earlier shape stored the error on
+	// configResult.Err and deferred the check to phaseValidate via
+	// checkConfigHealth — meaning phaseLogging (and any work
+	// scheduled before phaseValidate) ran against a broken config
+	// state. Surfacing here aborts the pipeline at the first
+	// reasonable boundary; phaseValidate's checkConfigHealth call
+	// is now redundant but is retained as a defence-in-depth
+	// catch in case a future refactor reintroduces a path that
+	// skips phaseConfig.
+	if err := a.checkConfigHealth(cmd, a.configResult.Err); err != nil {
+		return err
+	}
 	a.resolveGlobalFlagDefaults(cmd, a.configResult.Resolver)
 	a.resolveEnvVarDefaults(cmd)
 	return nil
@@ -211,7 +224,14 @@ func (a *App) postRun(cmd *cobra.Command, _ []string) {
 	closer := a.LogCloser
 	a.bootstrapMu.Unlock()
 	if closer != nil {
-		_ = closer.Close()
+		if err := closer.Close(); err != nil {
+			// LogCloser.Close failure means the log file's
+			// final flush didn't reach disk. Surface via stderr
+			// so an operator running with --log-file knows the
+			// captured run may be truncated. Mirrors the
+			// writeMemProfileTo fallback pattern.
+			fmt.Fprintf(os.Stderr, "Warning: close log file: %v\n", err)
+		}
 	}
 }
 

@@ -106,7 +106,16 @@ func ExtractBucketTargets(findings []FindingRef) []BucketTarget {
 			continue
 		}
 		seen[assetID] = struct{}{}
-		targets = append(targets, BucketTarget{AssetID: assetID, BucketName: s3.ParseS3Reference(assetID)})
+		bucketRef, parseErr := s3.ParseS3Reference(assetID)
+		if parseErr != nil {
+			// Skip malformed asset IDs rather than emit a target
+			// with an empty bucket — downstream enforcement
+			// templates would silently apply to nothing. The
+			// upstream pipeline guards asset IDs at ingestion;
+			// reaching here means a producer drift we want to see.
+			continue
+		}
+		targets = append(targets, BucketTarget{AssetID: assetID, BucketName: bucketRef})
 	}
 	SortTargets(targets)
 	return targets

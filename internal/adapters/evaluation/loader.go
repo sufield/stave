@@ -129,6 +129,19 @@ func (l *Loader) parseResult(data []byte, source string) (*evaluation.Compliance
 	if err := json.Unmarshal(data, &result); err != nil {
 		return nil, fmt.Errorf("failed to load output file %s: invalid JSON: %w", source, err)
 	}
+	// Post-unmarshal sanity check — strict mode only.
+	// ComplianceReport doesn't carry an explicit Kind field (that's
+	// on report.Assessment, validated in LoadEnvelopeFromFile), but
+	// a zero Run block — empty StaveVersion AND zero Now timestamp —
+	// indicates the JSON was well-formed but did not match the
+	// expected ComplianceReport shape. Strict callers (gating,
+	// enforcement-config generation) reject the partial form;
+	// non-strict callers (test fixtures, partial diffs) accept it
+	// because legitimate use cases construct minimal reports
+	// (Summary-only, etc.).
+	if l.strictSchema.Load() && result.Run.StaveVersion == "" && result.Run.Now.IsZero() {
+		return nil, fmt.Errorf("failed to load output file %s: missing required Run fields (stave_version, now); is this a ComplianceReport envelope?", source)
+	}
 	return &result, nil
 }
 

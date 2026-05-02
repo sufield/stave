@@ -3,7 +3,6 @@ package projconfig
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -215,15 +214,21 @@ func FindUserConfigWithPath() (*appconfig.OperatorSettings, string, bool, error)
 	return cfg, path, true, nil
 }
 
-// LoadUserAliases returns the alias map from user config, or nil if none.
-// Logs a warning if the user config fails to load (rather than silently ignoring).
-func LoadUserAliases() map[string]string {
+// LoadUserAliases returns the alias map from user config.
+//
+// The two-value return distinguishes "no aliases present" (nil map,
+// nil error) from "load failed" (nil map, non-nil error). The
+// earlier shape collapsed both cases into a nil-map-with-warning,
+// which let alias-expansion silently treat config corruption as
+// "no aliases match" — exactly the case where the operator most
+// needs to see the underlying load failure.
+func LoadUserAliases() (map[string]string, error) {
 	cfg, _, ok, err := FindUserConfigWithPath()
 	if err != nil {
-		slog.Warn("failed to load user config for aliases", "error", err)
+		return nil, err
 	}
 	if !ok || cfg == nil || cfg.Aliases == nil {
-		return nil
+		return nil, nil
 	}
-	return cfg.Aliases
+	return cfg.Aliases, nil
 }

@@ -34,7 +34,15 @@ func (a *App) expandAliasIfMatch() []string {
 	if len(os.Args) < 2 || os.Args[1] == "" || os.Args[1][0] == '-' {
 		return os.Args
 	}
-	aliases := projconfig.LoadUserAliases()
+	aliases, err := projconfig.LoadUserAliases()
+	if err != nil {
+		// Surface user-config load failure rather than silently
+		// treating it as "no aliases" — a corrupted user config
+		// would otherwise hide every alias miss behind the
+		// "command not found" message Cobra produces below.
+		fmt.Fprintf(a.Root.ErrOrStderr(), "stave: load user aliases: %v\n", err)
+		return os.Args
+	}
 	if len(aliases) == 0 {
 		return os.Args
 	}

@@ -1,6 +1,9 @@
 package s3
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestParseS3Reference(t *testing.T) {
 	tests := []struct {
@@ -15,22 +18,39 @@ func TestParseS3Reference(t *testing.T) {
 		{"my-bucket", "my-bucket"},
 		{"  my-bucket  ", "my-bucket"},
 		{"MY-BUCKET", "my-bucket"},
-		{"", ""},
 	}
 	for _, tc := range tests {
-		got := ParseS3Reference(tc.input).Name()
-		if got != tc.want {
+		ref, err := ParseS3Reference(tc.input)
+		if err != nil {
+			t.Errorf("ParseS3Reference(%q) error = %v", tc.input, err)
+			continue
+		}
+		if got := ref.Name(); got != tc.want {
 			t.Errorf("ParseS3Reference(%q).Name() = %q, want %q", tc.input, got, tc.want)
 		}
 	}
 }
 
+func TestParseS3Reference_EmptyInputReturnsError(t *testing.T) {
+	if _, err := ParseS3Reference(""); !errors.Is(err, ErrEmptyS3Reference) {
+		t.Errorf("ParseS3Reference(\"\") expected ErrEmptyS3Reference, got %v", err)
+	}
+	if _, err := ParseS3Reference("arn:aws:s3:::"); !errors.Is(err, ErrEmptyS3Reference) {
+		t.Errorf("ParseS3Reference(\"arn:aws:s3:::\") expected ErrEmptyS3Reference, got %v", err)
+	}
+}
+
 func TestParseS3ReferenceRoundTrip(t *testing.T) {
-	ref := ParseS3Reference("my-bucket")
-	if ParseS3Reference(ARN(ref)).Name() != "my-bucket" {
+	ref, err := ParseS3Reference("my-bucket")
+	if err != nil {
+		t.Fatalf("ParseS3Reference: %v", err)
+	}
+	round, err := ParseS3Reference(ARN(ref))
+	if err != nil || round.Name() != "my-bucket" {
 		t.Error("round-trip through ARN failed")
 	}
-	if ParseS3Reference("aws:s3:::my-bucket").Name() != "my-bucket" {
+	round2, err := ParseS3Reference("aws:s3:::my-bucket")
+	if err != nil || round2.Name() != "my-bucket" {
 		t.Error("round-trip through model ID prefix failed")
 	}
 }

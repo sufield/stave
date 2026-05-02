@@ -256,7 +256,9 @@ func (a *App) cleanupBeforeExit() {
 	closer := a.LogCloser
 	a.bootstrapMu.Unlock()
 	if closer != nil {
-		_ = closer.Close()
+		if err := closer.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: close log file: %v\n", err)
+		}
 	}
 }
 

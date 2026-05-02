@@ -69,7 +69,18 @@ func (a *App) printNoProjectHintIfNeeded(args []string) {
 		return
 	}
 	_, found, err := projconfig.FindNearestFile(appconfig.AuditPolicyFile)
-	if err != nil || !found {
+	switch {
+	case err != nil:
+		// Real lookup failure (cwd/home unavailable, permission
+		// denied on a parent directory). Don't print the
+		// "no project" hint — that would mislead the operator
+		// into thinking the working tree is empty when the actual
+		// issue is access. Surface the real cause via slog so it
+		// shows up in -v / log-file mode.
+		slog.Warn("project-file lookup failed; suppressing no-project hint",
+			"file", appconfig.AuditPolicyFile, "error", err)
+	case !found:
+		// Legitimate no-project state — emit the suggestion.
 		fmt.Fprintf(a.Root.ErrOrStderr(), "No Stave project found in this directory tree. Run `%s` to create one.\n", cliCommand("init"))
 	}
 }

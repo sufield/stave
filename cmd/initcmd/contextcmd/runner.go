@@ -49,7 +49,16 @@ func (r *Runner) List(st *contexts.Store, format appcontracts.OutputFormat) erro
 
 	items := make([]ListItem, 0, len(names))
 	for _, name := range names {
-		c, _ := st.GetContext(name)
+		c, ok := st.GetContext(name)
+		if !ok {
+			// names came from st.Names() and the contexts map is
+			// the same store; a miss here means concurrent
+			// modification or store corruption. Skip the row
+			// rather than silently rendering an empty one — the
+			// list output otherwise looked normal but pointed at
+			// nothing.
+			continue
+		}
 		items = append(items, ListItem{
 			Name:          name,
 			ProjectRoot:   strings.TrimSpace(c.ProjectRoot),

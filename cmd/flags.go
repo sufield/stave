@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -37,9 +40,21 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 	p.BoolVar(&flags.RequireOffline, cliflags.FlagOffline, false, "Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set")
 	p.BoolVar(&flags.Strict, "strict", false, "Enable strict integrity checks for embedded registries and references")
 
-	// Developer (hidden)
+	// Developer (hidden). MarkHidden returns an error only when the
+	// named flag does not exist on the FlagSet — a programming-time
+	// invariant under our control, not a runtime condition. The
+	// blank-identifier discards papered over a bug where a typo in
+	// the flag name silently failed to hide the flag from --help;
+	// mustHide panics with the offending name so the developer sees
+	// the typo at startup.
 	p.StringVar(&flags.CPUProfile, "cpu-profile", "", "Write CPU profile to file")
 	p.StringVar(&flags.MemProfile, "mem-profile", "", "Write heap profile to file")
-	_ = p.MarkHidden("cpu-profile")
-	_ = p.MarkHidden("mem-profile")
+	mustHide(p, "cpu-profile")
+	mustHide(p, "mem-profile")
+}
+
+func mustHide(fs *pflag.FlagSet, name string) {
+	if err := fs.MarkHidden(name); err != nil {
+		panic(fmt.Sprintf("cmd.mustHide: flag %q: %v", name, err))
+	}
 }

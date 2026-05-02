@@ -9,7 +9,10 @@ func TestExemptionConfigToDomain_Empty(t *testing.T) {
 		Version: "v1",
 		Assets:  nil,
 	}
-	cfg := exemptionConfigToDomain(y)
+	cfg, err := exemptionConfigToDomain(y)
+	if err != nil {
+		t.Fatalf("exemptionConfigToDomain: %v", err)
+	}
 	if cfg == nil {
 		t.Fatal("expected non-nil config")
 	}
@@ -23,7 +26,10 @@ func TestExemptionConfigToDomain_WithRules(t *testing.T) {
 			{Pattern: "logs-*", Reason: "log buckets"},
 		},
 	}
-	cfg := exemptionConfigToDomain(y)
+	cfg, err := exemptionConfigToDomain(y)
+	if err != nil {
+		t.Fatalf("exemptionConfigToDomain: %v", err)
+	}
 	if cfg == nil {
 		t.Fatal("expected non-nil config")
 	}
