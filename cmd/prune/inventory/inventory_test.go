@@ -32,10 +32,10 @@ func TestRecommendAction_ReviewWithinRetentionQualityFail(t *testing.T) {
 
 func TestComputeSummary(t *testing.T) {
 	snapshots := []snapshotEntry{
-		{RecommendedAction: "keep", FileSizeBytes: 100},
-		{RecommendedAction: "keep", FileSizeBytes: 200},
-		{RecommendedAction: "archive", FileSizeBytes: 50},
-		{RecommendedAction: "delete", FileSizeBytes: 10},
+		{Action: "keep", FileSizeBytes: 100},
+		{Action: "keep", FileSizeBytes: 200},
+		{Action: "archive", FileSizeBytes: 50},
+		{Action: "delete", FileSizeBytes: 10},
 	}
 	s := computeSummary(snapshots)
 	if s.TotalFiles != 4 {

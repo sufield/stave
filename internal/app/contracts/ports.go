@@ -98,11 +98,19 @@ type ContentHasher = ports.ContentHasher
 // SnapshotFile represents a discovered snapshot file with its metadata.
 // This type is defined in contracts (not in the adapter) so that both the app
 // layer and the adapter layer can reference it without creating a dependency cycle.
+//
+// AssetID and AssetType are populated as best-effort: when the
+// scanner runs with a SnapshotReader that successfully loads the
+// observation, the first asset's ID and type are recorded for use
+// in the plan / inventory contracts. When no loader is available
+// (default modification-time scan) the fields are empty strings.
 type SnapshotFile struct {
 	Path       string
 	RelPath    string
 	Name       string
 	CapturedAt time.Time
+	AssetID    string
+	AssetType  string
 }
 
 // SnapshotBundleLoader loads a multi-snapshot observation bundle from a single file.

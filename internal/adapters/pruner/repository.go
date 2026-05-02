@@ -4,20 +4,23 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
-// loadSnapshotCapturedAt opens a snapshot file and returns its CapturedAt timestamp.
-func loadSnapshotCapturedAt(ctx context.Context, loader appcontracts.SnapshotReader, path, name string) (capturedAt time.Time, err error) {
+// loadSnapshotMetadata opens a snapshot file and returns its
+// CapturedAt timestamp plus the first asset's ID and type. The
+// asset fields are populated as best-effort; a snapshot with no
+// assets (rare but possible for placeholder fixtures) returns empty
+// strings rather than failing the scan.
+func loadSnapshotMetadata(ctx context.Context, loader appcontracts.SnapshotReader, path, name string) (meta SnapshotFileMetadata, err error) {
 	if ctxErr := ctx.Err(); ctxErr != nil {
-		return time.Time{}, ctxErr
+		return SnapshotFileMetadata{}, ctxErr
 	}
 	// #nosec G304 -- path is discovered from directory entries.
 	f, openErr := os.Open(path)
 	if openErr != nil {
-		return time.Time{}, fmt.Errorf("open %s: %w", path, openErr)
+		return SnapshotFileMetadata{}, fmt.Errorf("open %s: %w", path, openErr)
 	}
 	defer func() {
 		// Surface late-flush failures from networked filesystems instead
@@ -28,9 +31,15 @@ func loadSnapshotCapturedAt(ctx context.Context, loader appcontracts.SnapshotRea
 	}()
 	snapshot, loadErr := loader.LoadSnapshotFromReader(ctx, f, name)
 	if loadErr != nil {
-		return time.Time{}, fmt.Errorf("failed to load snapshot %s: %w", path, loadErr)
+		return SnapshotFileMetadata{}, fmt.Errorf("failed to load snapshot %s: %w", path, loadErr)
 	}
-	return snapshot.CapturedAt.UTC(), nil
+	out := SnapshotFileMetadata{CapturedAt: snapshot.CapturedAt.UTC()}
+	if len(snapshot.Assets) > 0 {
+		first := snapshot.Assets[0]
+		out.AssetID = first.ID.String()
+		out.AssetType = string(first.Type)
+	}
+	return out, nil
 }
 
 // ListSnapshotFilesFlatWithLoader lists snapshot files directly under observationsDir
@@ -42,8 +51,8 @@ func ListSnapshotFilesFlatWithLoader(ctx context.Context, observationsDir string
 		return ListSnapshotFilesFlat(ctx, observationsDir, ScannerOptions{})
 	}
 	return ListSnapshotFilesFlat(ctx, observationsDir, ScannerOptions{
-		MetadataLoader: func(path, name string) (time.Time, error) {
-			return loadSnapshotCapturedAt(ctx, loader, path, name)
+		SnapshotMetadataLoader: func(path, name string) (SnapshotFileMetadata, error) {
+			return loadSnapshotMetadata(ctx, loader, path, name)
 		},
 	})
 }
@@ -60,8 +69,8 @@ func ListSnapshotFilesRecursiveWithLoader(
 		return nil, errSnapshotLoaderRequired
 	}
 	return ListSnapshotFilesRecursive(ctx, observationsDir, ScannerOptions{
-		MetadataLoader: func(path, name string) (time.Time, error) {
-			return loadSnapshotCapturedAt(ctx, loader, path, name)
+		SnapshotMetadataLoader: func(path, name string) (SnapshotFileMetadata, error) {
+			return loadSnapshotMetadata(ctx, loader, path, name)
 		},
 		ExcludeDirs: excludeDirs,
 	})

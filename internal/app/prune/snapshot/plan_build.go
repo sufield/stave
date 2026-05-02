@@ -51,6 +51,8 @@ func toSnapshotFiles(files []appcontracts.SnapshotFile) []snapshotdomain.File {
 			RelPath:    f.RelPath,
 			Name:       f.Name,
 			CapturedAt: f.CapturedAt,
+			AssetID:    f.AssetID,
+			AssetType:  f.AssetType,
 		}
 	}
 	return out

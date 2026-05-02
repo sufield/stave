@@ -71,7 +71,7 @@ func TestBuildPlan_BasicPrune(t *testing.T) {
 
 	pruneCount := 0
 	for _, f := range plan.Files {
-		if f.Action == ActionPrune {
+		if f.Action == ActionDelete {
 			pruneCount++
 		}
 	}
@@ -247,7 +247,7 @@ func TestBuildPlan_KeepMinFloorReason(t *testing.T) {
 
 	keepFloorFound := false
 	for _, f := range plan.Files {
-		if f.Action == ActionKeep && f.Reason == "keep-min floor" {
+		if f.Action == ActionKeep && f.Reason == "within keep_min floor" {
 			keepFloorFound = true
 		}
 	}
@@ -273,8 +273,8 @@ func TestBuildPlan_WithinRetentionReason(t *testing.T) {
 	if len(plan.Files) != 1 {
 		t.Fatalf("files len = %d, want 1", len(plan.Files))
 	}
-	if plan.Files[0].Reason != "within retention" {
-		t.Errorf("reason = %q, want 'within retention'", plan.Files[0].Reason)
+	if plan.Files[0].Reason != "within retention window" {
+		t.Errorf("reason = %q, want 'within retention window'", plan.Files[0].Reason)
 	}
 }
 
@@ -368,7 +368,7 @@ func TestRenderPlanText_Preview(t *testing.T) {
 			{Tier: "default", OlderThan: "36h0m0s", KeepMin: 1, Total: 2, KeepCount: 1, ActionCount: 1},
 		},
 		Files: []PlanFile{
-			{RelPath: "old.json", CapturedAt: baseTime.Add(-72 * time.Hour), Tier: "default", Action: ActionPrune, Reason: "older than 36h0m0s"},
+			{RelPath: "old.json", CapturedAt: baseTime.Add(-72 * time.Hour), Tier: "default", Action: ActionDelete, Reason: "older than 36h0m0s"},
 			{RelPath: "new.json", CapturedAt: baseTime.Add(-1 * time.Hour), Tier: "default", Action: ActionKeep, Reason: "within retention"},
 		},
 	}
@@ -388,11 +388,11 @@ func TestRenderPlanText_Preview(t *testing.T) {
 	if !strings.Contains(out, "read-only") {
 		t.Error("missing read-only hint")
 	}
-	if !strings.Contains(out, "PRUNE") {
-		t.Error("missing PRUNE action")
+	if !strings.Contains(out, "delete") {
+		t.Error("missing delete action label")
 	}
-	if !strings.Contains(out, "KEEP") {
-		t.Error("missing KEEP action")
+	if !strings.Contains(out, "keep") {
+		t.Error("missing keep action label")
 	}
 	if !strings.Contains(out, "Total Files:   2") {
 		t.Error("missing total files")
@@ -428,7 +428,7 @@ func TestRenderPlanText_AlwaysPreviewMode(t *testing.T) {
 			{Tier: "default", OlderThan: "36h0m0s", KeepMin: 0, Total: 1, KeepCount: 0, ActionCount: 1},
 		},
 		Files: []PlanFile{
-			{RelPath: "old.json", CapturedAt: baseTime.Add(-72 * time.Hour), Tier: "default", Action: ActionPrune, Reason: "older than 36h0m0s"},
+			{RelPath: "old.json", CapturedAt: baseTime.Add(-72 * time.Hour), Tier: "default", Action: ActionDelete, Reason: "older than 36h0m0s"},
 		},
 	}
 

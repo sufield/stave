@@ -38,12 +38,12 @@ func TestLoadSnapshotCapturedAt_Success(t *testing.T) {
 	ts := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	loader := &stubSnapshotReader{capturedAt: ts}
 
-	got, err := loadSnapshotCapturedAt(context.Background(), loader, path, "obs.json")
+	got, err := loadSnapshotMetadata(context.Background(), loader, path, "obs.json")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !got.Equal(ts) {
-		t.Fatalf("got %v, want %v", got, ts)
+	if !got.CapturedAt.Equal(ts) {
+		t.Fatalf("got %v, want %v", got.CapturedAt, ts)
 	}
 }
 
@@ -55,7 +55,7 @@ func TestLoadSnapshotCapturedAt_LoaderError(t *testing.T) {
 	}
 
 	loader := &stubSnapshotReader{err: errors.New("parse failure")}
-	_, err := loadSnapshotCapturedAt(context.Background(), loader, path, "obs.json")
+	_, err := loadSnapshotMetadata(context.Background(), loader, path, "obs.json")
 	if err == nil {
 		t.Fatal("expected error from loader")
 	}
@@ -63,7 +63,7 @@ func TestLoadSnapshotCapturedAt_LoaderError(t *testing.T) {
 
 func TestLoadSnapshotCapturedAt_FileNotFound(t *testing.T) {
 	loader := &stubSnapshotReader{}
-	_, err := loadSnapshotCapturedAt(context.Background(), loader, "/nonexistent/obs.json", "obs.json")
+	_, err := loadSnapshotMetadata(context.Background(), loader, "/nonexistent/obs.json", "obs.json")
 	if err == nil {
 		t.Fatal("expected error for missing file")
 	}
@@ -73,7 +73,7 @@ func TestLoadSnapshotCapturedAt_CancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	loader := &stubSnapshotReader{}
-	_, err := loadSnapshotCapturedAt(ctx, loader, "/whatever", "obs.json")
+	_, err := loadSnapshotMetadata(ctx, loader, "/whatever", "obs.json")
 	if err == nil {
 		t.Fatal("expected context cancellation error")
 	}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stave.dev/contracts/snapshot-plan.schema.json",
+  "title": "Stave snapshot plan entry",
+  "description": "Per-file row in the JSON output of `stave snapshot plan --format json`. Stave produces this plan as a recommendation; external tools (cron scripts, Terraform null_resource, CI cleanup jobs) parse the JSON and execute the actions. Stave never deletes, moves, or archives files itself.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "file_path",
+    "rel_path",
+    "asset_id",
+    "asset_type",
+    "captured_at",
+    "age",
+    "age_seconds",
+    "tier",
+    "action",
+    "reason"
+  ],
+  "properties": {
+    "file_path": {
+      "type": "string",
+      "description": "Absolute path to the snapshot file on the host that produced the plan. Authoritative target for any external delete/archive command."
+    },
+    "rel_path": {
+      "type": "string",
+      "description": "Path relative to the observations_root field on the parent envelope. Useful for logs and per-tier rollups; may not be unique when observations span multiple roots."
+    },
+    "asset_id": {
+      "type": "string",
+      "description": "Stave's asset identifier extracted from the snapshot's first asset, on a best-effort basis. Empty string when the snapshot loader could not parse the file."
+    },
+    "asset_type": {
+      "type": "string",
+      "description": "Stave's asset-type identifier (e.g. `aws_s3_bucket`) extracted from the snapshot's first asset. Empty when no asset metadata is available."
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 / RFC 3339 timestamp recorded inside the observation file."
+    },
+    "age": {
+      "type": "string",
+      "description": "Compact human-readable age relative to the plan's generated_at — e.g. `34d`, `5h`, `2m`. For arithmetic use age_seconds."
+    },
+    "age_seconds": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Age in seconds since captured_at, rounded toward zero."
+    },
+    "tier": {
+      "type": "string",
+      "description": "Retention tier name resolved from project config (observation_tier_mapping rules)."
+    },
+    "action": {
+      "type": "string",
+      "enum": ["keep", "delete", "archive", "review"],
+      "description": "Recommended fate of the snapshot. Plan emits `keep` or `delete`; the inventory command produces the full vocabulary."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Human-readable justification for the action — e.g. `older than 720h0m0s threshold`, `within keep_min floor`."
+    }
+  }
+}

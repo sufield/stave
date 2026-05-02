@@ -41,7 +41,8 @@ func writeTiers(ew *errWriter, plan *PlanOutput) {
 
 		tw := tabwriter.NewWriter(ew.w, 0, 0, 2, ' ', 0)
 
-		for _, f := range plan.Files {
+		for i := range plan.Files {
+			f := &plan.Files[i]
 			if f.Tier != summary.Tier {
 				continue
 			}

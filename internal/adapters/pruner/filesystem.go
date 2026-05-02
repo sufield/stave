@@ -26,10 +26,29 @@ var (
 	errSnapshotLoaderRequired = errors.New("snapshot loader is required")
 )
 
+// SnapshotFileMetadata is the per-file metadata extracted by the
+// scanner's snapshot loader. Populated by ScannerOptions's optional
+// SnapshotMetadataLoader callback when the caller wants the
+// asset-identifying fields populated on appcontracts.SnapshotFile.
+type SnapshotFileMetadata struct {
+	CapturedAt time.Time
+	AssetID    string
+	AssetType  string
+}
+
 // ScannerOptions configures snapshot file discovery.
 type ScannerOptions struct {
 	// MetadataLoader resolves captured_at for each discovered file.
+	// Used when SnapshotMetadataLoader is not set; the resulting
+	// SnapshotFile carries empty AssetID / AssetType.
 	MetadataLoader func(path, name string) (time.Time, error)
+
+	// SnapshotMetadataLoader is the richer per-file metadata
+	// loader. When set, takes precedence over MetadataLoader and
+	// populates AssetID / AssetType on the produced SnapshotFile.
+	// The plan / inventory commands set this so the JSON contract
+	// can carry asset identifiers downstream.
+	SnapshotMetadataLoader func(path, name string) (SnapshotFileMetadata, error)
 
 	// ExcludeDirs are absolute paths that the recursive scanner should skip.
 	ExcludeDirs []string
@@ -39,6 +58,24 @@ type ScannerOptions struct {
 	// accepted; adding one more (MaxFiles+1) returns ErrTooManySnapshots.
 	// Zero uses the default (100,000).
 	MaxFiles int
+}
+
+// loadFileMetadata resolves the per-file metadata using the richer
+// SnapshotMetadataLoader when set, falling back to the simple
+// captured-at loader otherwise. Centralised so the flat and
+// recursive scanners share the same selection rule.
+func (o ScannerOptions) loadFileMetadata(path, name string) (SnapshotFileMetadata, error) {
+	if o.SnapshotMetadataLoader != nil {
+		return o.SnapshotMetadataLoader(path, name)
+	}
+	if o.MetadataLoader == nil {
+		return SnapshotFileMetadata{}, errMetadataLoaderRequired
+	}
+	capturedAt, err := o.MetadataLoader(path, name)
+	if err != nil {
+		return SnapshotFileMetadata{}, err
+	}
+	return SnapshotFileMetadata{CapturedAt: capturedAt}, nil
 }
 
 // DefaultMaxFiles is the conservative default safety cap on snapshot
@@ -69,8 +106,10 @@ func (o ScannerOptions) maxFiles() int {
 
 // ListSnapshotFilesFlat lists JSON snapshot files directly under observationsDir.
 func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts ScannerOptions) ([]appcontracts.SnapshotFile, error) {
-	if opts.MetadataLoader == nil {
-		// Default: use file modification time as captured_at.
+	if opts.MetadataLoader == nil && opts.SnapshotMetadataLoader == nil {
+		// Default: use file modification time as captured_at. AssetID
+		// and AssetType remain empty since no snapshot loader is
+		// available to inspect each file's contents.
 		opts.MetadataLoader = func(filePath, _ string) (time.Time, error) {
 			fi, statErr := os.Stat(filePath)
 			if statErr != nil {
@@ -126,7 +165,7 @@ func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts Sca
 			if gctxErr := gctx.Err(); gctxErr != nil {
 				return gctxErr
 			}
-			capturedAt, loadErr := opts.MetadataLoader(c.path, c.name)
+			meta, loadErr := opts.loadFileMetadata(c.path, c.name)
 			if loadErr != nil {
 				return fmt.Errorf("load metadata for %s: %w", c.name, loadErr)
 			}
@@ -135,7 +174,9 @@ func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts Sca
 				Path:       c.path,
 				RelPath:    c.name,
 				Name:       c.name,
-				CapturedAt: capturedAt.UTC(),
+				CapturedAt: meta.CapturedAt.UTC(),
+				AssetID:    meta.AssetID,
+				AssetType:  meta.AssetType,
 			})
 			mu.Unlock()
 			return nil
@@ -158,7 +199,7 @@ func ListSnapshotFilesFlat(ctx context.Context, observationsDir string, opts Sca
 // Directories starting with "_" are skipped. Symlinks are skipped.
 // RelPath uses forward slashes and is relative to observationsDir.
 func ListSnapshotFilesRecursive(ctx context.Context, observationsDir string, opts ScannerOptions) ([]appcontracts.SnapshotFile, error) {
-	if opts.MetadataLoader == nil {
+	if opts.MetadataLoader == nil && opts.SnapshotMetadataLoader == nil {
 		return nil, errMetadataLoaderRequired
 	}
 
@@ -196,7 +237,7 @@ func ListSnapshotFilesRecursive(ctx context.Context, observationsDir string, opt
 			return snapshotLimitError(observationsDir, limit)
 		}
 
-		capturedAt, loadErr := opts.MetadataLoader(path, d.Name())
+		meta, loadErr := opts.loadFileMetadata(path, d.Name())
 		if loadErr != nil {
 			return loadErr
 		}
@@ -210,7 +251,9 @@ func ListSnapshotFilesRecursive(ctx context.Context, observationsDir string, opt
 			Path:       path,
 			RelPath:    filepath.ToSlash(relPath),
 			Name:       d.Name(),
-			CapturedAt: capturedAt.UTC(),
+			CapturedAt: meta.CapturedAt.UTC(),
+			AssetID:    meta.AssetID,
+			AssetType:  meta.AssetType,
 		})
 		return nil
 	})

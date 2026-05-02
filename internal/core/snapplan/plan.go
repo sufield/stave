@@ -21,23 +21,39 @@ import (
 )
 
 // File represents one snapshot file discovered on disk.
+//
+// AssetID and AssetType are populated as best-effort by the scanner
+// when a SnapshotReader is available. They flow through to the
+// emitted PlanFile so external integration tools can correlate the
+// recommendation with the asset the snapshot describes without
+// re-parsing the file.
 type File struct {
 	Path       string
 	RelPath    string
 	Name       string
 	CapturedAt time.Time
+	AssetID    string
+	AssetType  string
 }
 
 // Action represents the recommended fate of a snapshot file in a
 // retention plan. Stave never executes the action — external tools
 // consume the plan output and decide whether to delete, move into an
 // archive directory, or otherwise act on each entry.
+//
+// The wire vocabulary is the lowercase set documented in
+// docs/contracts/snapshot-plan.schema.json:
+// "keep" | "delete" | "archive" | "review". Plan emits "keep" or
+// "delete"; the inventory command produces the full vocabulary
+// using quality + retention signals.
 type Action string
 
 // Snapshot retention plan action constants.
 const (
-	ActionKeep  Action = "KEEP"
-	ActionPrune Action = "PRUNE"
+	ActionKeep    Action = "keep"
+	ActionDelete  Action = "delete"
+	ActionArchive Action = "archive"
+	ActionReview  Action = "review"
 )
 
 // Mode is retained for wire-format stability. The plan command is
@@ -52,9 +68,26 @@ const (
 )
 
 // PlanFile is one file row in the generated snapshot plan.
+//
+// The full set of fields makes up the per-entry stable contract
+// (see docs/contracts/snapshot-plan.schema.json). External tools
+// integrate against this shape:
+//   - file_path: absolute path on the host running stave; the
+//     authoritative target for any external delete/archive command.
+//   - rel_path: same path relative to observations_root, useful
+//     for logs and per-tier rollups.
+//   - asset_id / asset_type: best-effort population, may be empty
+//     when the scanner ran without a snapshot loader.
+//   - age / age_seconds: human-friendly + machine-friendly views of
+//     (generated_at - captured_at).
 type PlanFile struct {
+	FilePath   string    `json:"file_path"`
 	RelPath    string    `json:"rel_path"`
+	AssetID    string    `json:"asset_id"`
+	AssetType  string    `json:"asset_type"`
 	CapturedAt time.Time `json:"captured_at"`
+	Age        string    `json:"age"`
+	AgeSeconds int64     `json:"age_seconds"`
 	Tier       string    `json:"tier"`
 	Action     Action    `json:"action"`
 	Reason     string    `json:"reason"`
@@ -161,6 +194,27 @@ type tierPlanResult struct {
 	actionCount int
 }
 
+// formatAge renders a non-negative age in seconds as a compact
+// human-readable string used by the snapshot-plan / snapshot-inventory
+// JSON contract's `age` field. Buckets: ">=1d → Nd", ">=1h → Nh",
+// otherwise "Nm" / "Ns". External tools should prefer the
+// numeric `age_seconds` field for arithmetic.
+func formatAge(seconds int64) string {
+	const day = 24 * 60 * 60
+	const hour = 60 * 60
+	const minute = 60
+	switch {
+	case seconds >= day:
+		return fmt.Sprintf("%dd", seconds/day)
+	case seconds >= hour:
+		return fmt.Sprintf("%dh", seconds/hour)
+	case seconds >= minute:
+		return fmt.Sprintf("%dm", seconds/minute)
+	default:
+		return fmt.Sprintf("%ds", seconds)
+	}
+}
+
 func groupFilesByTier(files []File, defaultTier string, resolver TierResolver) map[string][]File {
 	groups := make(map[string][]File)
 	defaultTier = strings.TrimSpace(defaultTier)
@@ -223,7 +277,7 @@ func buildTierPlan(params BuildPlanParams, tierName string, files []File) (tierP
 		processedIdx[c.Index] = struct{}{}
 	}
 
-	targetAction := ActionPrune
+	targetAction := ActionDelete
 
 	entries := make([]PlanFile, 0, len(files))
 	actionCount := 0
@@ -231,22 +285,31 @@ func buildTierPlan(params BuildPlanParams, tierName string, files []File) (tierP
 	olderThanStr := olderThan.String()
 
 	for i, f := range files {
+		ageSeconds := int64(params.Now.UTC().Sub(f.CapturedAt.UTC()).Seconds())
+		if ageSeconds < 0 {
+			ageSeconds = 0
+		}
 		entry := PlanFile{
+			FilePath:   f.Path,
 			RelPath:    f.RelPath,
+			AssetID:    f.AssetID,
+			AssetType:  f.AssetType,
 			CapturedAt: f.CapturedAt.UTC(),
+			Age:        formatAge(ageSeconds),
+			AgeSeconds: ageSeconds,
 			Tier:       tierName,
 		}
 
 		if _, ok := processedIdx[i]; ok {
 			entry.Action = targetAction
-			entry.Reason = "older than " + olderThanStr
+			entry.Reason = "older than " + olderThanStr + " threshold"
 			actionCount++
 		} else {
 			entry.Action = ActionKeep
 			if f.CapturedAt.UTC().Before(cutoff) {
-				entry.Reason = "keep-min floor"
+				entry.Reason = "within keep_min floor"
 			} else {
-				entry.Reason = "within retention"
+				entry.Reason = "within retention window"
 			}
 		}
 		entries = append(entries, entry)

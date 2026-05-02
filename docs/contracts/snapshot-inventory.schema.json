@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stave.dev/contracts/snapshot-inventory.schema.json",
+  "title": "Stave snapshot inventory entry",
+  "description": "Per-file row in the `snapshots[]` array of `stave snapshot inventory --format json`. Inventory produces a richer view than `stave snapshot plan` — it loads each observation, runs lightweight quality checks, and recommends one of keep/archive/delete/review. External tools consume this output and execute the action; Stave never modifies the filesystem itself.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "file_path",
+    "asset_id",
+    "asset_type",
+    "captured_at",
+    "age",
+    "age_seconds",
+    "tier",
+    "file_size_bytes",
+    "schema_valid",
+    "assessment_status",
+    "quality_warnings",
+    "action",
+    "reason"
+  ],
+  "properties": {
+    "file_path": {
+      "type": "string",
+      "description": "Absolute path to the snapshot file on the host that produced the inventory."
+    },
+    "asset_id": {
+      "type": "string",
+      "description": "Stave's asset identifier extracted from the snapshot's first asset. Empty when the file could not be parsed."
+    },
+    "asset_type": {
+      "type": "string",
+      "description": "Stave's asset-type identifier (e.g. `aws_s3_bucket`)."
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 / RFC 3339 timestamp recorded inside the observation. Falls back to file modification time when the snapshot has no captured_at."
+    },
+    "age": {
+      "type": "string",
+      "description": "Compact human-readable age relative to generated_at — e.g. `34d`, `5h`, `2m`."
+    },
+    "age_seconds": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Age in seconds since captured_at. Use this rather than parsing `age`."
+    },
+    "tier": {
+      "type": "string",
+      "description": "Retention tier name. Currently always empty in inventory output — tier resolution lives in `stave snapshot plan`. The field is reserved on the contract so a future inventory pass can populate it."
+    },
+    "file_size_bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Size of the observation file on disk."
+    },
+    "asset_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of assets recorded inside the observation."
+    },
+    "schema_valid": {
+      "type": "boolean",
+      "description": "True when the file parsed and carries a recognised obs.v0.1 / obs.v1 schema_version. False entries are forced to action=review so the operator inspects them before any external delete/archive command runs."
+    },
+    "assessment_status": {
+      "type": "string",
+      "enum": ["evaluated", "pending", "unknown"],
+      "description": "Whether this snapshot has been through a `stave apply` evaluation. `evaluated` when a corresponding output file is found, `pending` when no evaluation is on disk, `unknown` when the file itself could not be parsed."
+    },
+    "quality_pass": {
+      "type": "boolean",
+      "description": "True when the inventory's lightweight quality heuristics (asset count vs --min-asset-count) pass."
+    },
+    "quality_warnings": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Human-readable warnings produced by the inventory quality heuristics. Always an array (never null); empty when no warnings fire."
+    },
+    "retention_eligible": {
+      "type": "boolean",
+      "description": "True when the snapshot's age exceeds the inventory's --retention-days threshold."
+    },
+    "action": {
+      "type": "string",
+      "enum": ["keep", "delete", "archive", "review"],
+      "description": "Recommended action — derived from retention_eligible × quality_pass × assessment_status. `keep` for in-window pass, `archive` for past-window pass, `delete` for past-window fail, `review` for ambiguous or unrecognised entries."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Human-readable justification for the recommended action."
+    }
+  }
+}

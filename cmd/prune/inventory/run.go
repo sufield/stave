@@ -34,18 +34,27 @@ type inventorySummary struct {
 	RecommendedReview  int   `json:"recommended_review"`
 }
 
-// snapshotEntry is per-file inventory data.
+// snapshotEntry is per-file inventory data. The JSON shape is the
+// stable contract documented in
+// docs/contracts/snapshot-inventory.schema.json — additive
+// changes only.
 type snapshotEntry struct {
-	Path                    string    `json:"path"`
-	CapturedAt              time.Time `json:"captured_at"`
-	FileSizeBytes           int64     `json:"file_size_bytes"`
-	AssetCount              int       `json:"asset_count"`
-	AgeHours                float64   `json:"age_hours"`
-	Assessed                bool      `json:"assessed"`
-	QualityPass             bool      `json:"quality_pass"`
-	RetentionEligible       bool      `json:"retention_eligible"`
-	RecommendedAction       string    `json:"recommended_action"`
-	RecommendedActionReason string    `json:"recommended_action_reason"`
+	FilePath          string    `json:"file_path"`
+	AssetID           string    `json:"asset_id"`
+	AssetType         string    `json:"asset_type"`
+	CapturedAt        time.Time `json:"captured_at"`
+	Age               string    `json:"age"`
+	AgeSeconds        int64     `json:"age_seconds"`
+	Tier              string    `json:"tier"`
+	FileSizeBytes     int64     `json:"file_size_bytes"`
+	AssetCount        int       `json:"asset_count"`
+	SchemaValid       bool      `json:"schema_valid"`
+	AssessmentStatus  string    `json:"assessment_status"`
+	QualityPass       bool      `json:"quality_pass"`
+	QualityWarnings   []string  `json:"quality_warnings"`
+	RetentionEligible bool      `json:"retention_eligible"`
+	Action            string    `json:"action"`
+	Reason            string    `json:"reason"`
 }
 
 func runInventory(w io.Writer, opts *inventoryOptions) error {
@@ -106,6 +115,10 @@ func buildSnapshotEntry(path string, now time.Time, retentionThreshold time.Dura
 	if err != nil {
 		return nil
 	}
+	absPath, absErr := filepath.Abs(path)
+	if absErr != nil {
+		absPath = path
+	}
 
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
@@ -113,12 +126,25 @@ func buildSnapshotEntry(path string, now time.Time, retentionThreshold time.Dura
 	}
 
 	var snap asset.Snapshot
+	schemaValid := true
 	if jsonErr := json.Unmarshal(data, &snap); jsonErr != nil {
-		return nil
+		// Malformed JSON: keep the entry but flag schema_valid=false
+		// so external tools see the file rather than silently dropping
+		// it. The contract requires schema_valid; returning nil hid the
+		// problem.
+		return &snapshotEntry{
+			FilePath:         absPath,
+			FileSizeBytes:    info.Size(),
+			SchemaValid:      false,
+			AssessmentStatus: "unknown",
+			QualityWarnings:  []string{"malformed JSON: " + jsonErr.Error()},
+			Action:           "review",
+			Reason:           "malformed JSON — investigate before integrating",
+		}
 	}
 
 	if snap.SchemaVersion != kernel.SchemaObservation && snap.SchemaVersion != "obs.v1" {
-		return nil
+		schemaValid = false
 	}
 
 	capturedAt := snap.CapturedAt
@@ -126,25 +152,85 @@ func buildSnapshotEntry(path string, now time.Time, retentionThreshold time.Dura
 		capturedAt = info.ModTime()
 	}
 
-	ageHours := now.Sub(capturedAt).Hours()
+	ageDur := now.Sub(capturedAt)
+	if ageDur < 0 {
+		ageDur = 0
+	}
+	ageSeconds := int64(ageDur.Seconds())
 	assetCount := len(snap.Assets)
 	retentionEligible := now.Sub(capturedAt) > retentionThreshold
 	qualityPass := assetCount >= minAssets
 	assessed := checkAssessed(path)
 
 	action, reason := recommendAction(retentionEligible, qualityPass, assessed)
+	if !schemaValid {
+		// Force "review" for unknown-schema observations so the operator
+		// inspects them before the external tool acts.
+		action, reason = "review", "unrecognised schema_version — verify before integrating"
+	}
+
+	var assetID, assetType string
+	if assetCount > 0 {
+		assetID = snap.Assets[0].ID.String()
+		assetType = string(snap.Assets[0].Type)
+	}
 
 	return &snapshotEntry{
-		Path:                    path,
-		CapturedAt:              capturedAt,
-		FileSizeBytes:           info.Size(),
-		AssetCount:              assetCount,
-		AgeHours:                ageHours,
-		Assessed:                assessed,
-		QualityPass:             qualityPass,
-		RetentionEligible:       retentionEligible,
-		RecommendedAction:       action,
-		RecommendedActionReason: reason,
+		FilePath:          absPath,
+		AssetID:           assetID,
+		AssetType:         assetType,
+		CapturedAt:        capturedAt,
+		Age:               formatAge(ageSeconds),
+		AgeSeconds:        ageSeconds,
+		Tier:              "", // tier resolution belongs to plan; inventory's per-file tier is unset.
+		FileSizeBytes:     info.Size(),
+		AssetCount:        assetCount,
+		SchemaValid:       schemaValid,
+		AssessmentStatus:  assessmentStatus(assessed),
+		QualityPass:       qualityPass,
+		QualityWarnings:   buildQualityWarnings(qualityPass, minAssets, assetCount),
+		RetentionEligible: retentionEligible,
+		Action:            action,
+		Reason:            reason,
+	}
+}
+
+// assessmentStatus maps the boolean assessed signal to the closed
+// vocabulary the contract advertises.
+func assessmentStatus(assessed bool) string {
+	if assessed {
+		return "evaluated"
+	}
+	return "pending"
+}
+
+// buildQualityWarnings produces the per-snapshot quality_warnings
+// list. Returns an empty slice (never nil) so consumers don't need
+// to handle null vs []string.
+func buildQualityWarnings(qualityPass bool, minAssets, assetCount int) []string {
+	out := make([]string, 0)
+	if !qualityPass {
+		out = append(out, fmt.Sprintf("low asset count: %d < %d minimum", assetCount, minAssets))
+	}
+	return out
+}
+
+// formatAge renders a non-negative age in seconds as the contract's
+// human-readable `age` field. Mirrors snapplan.formatAge so the two
+// commands emit the same vocabulary.
+func formatAge(seconds int64) string {
+	const day = 24 * 60 * 60
+	const hour = 60 * 60
+	const minute = 60
+	switch {
+	case seconds >= day:
+		return fmt.Sprintf("%dd", seconds/day)
+	case seconds >= hour:
+		return fmt.Sprintf("%dh", seconds/hour)
+	case seconds >= minute:
+		return fmt.Sprintf("%dm", seconds/minute)
+	default:
+		return fmt.Sprintf("%ds", seconds)
 	}
 }
 
@@ -187,7 +273,7 @@ func computeSummary(snapshots []snapshotEntry) inventorySummary {
 	s.TotalFiles = len(snapshots)
 	for i := range snapshots {
 		s.TotalSizeBytes += snapshots[i].FileSizeBytes
-		switch snapshots[i].RecommendedAction {
+		switch snapshots[i].Action {
 		case "keep":
 			s.RecommendedKeep++
 		case "archive":
@@ -225,9 +311,8 @@ func renderInventoryTable(w io.Writer, r *inventoryReport) error { //nolint:unpa
 
 	for i := range r.Snapshots {
 		s := &r.Snapshots[i]
-		age := fmt.Sprintf("%.0fd", s.AgeHours/24)
 		assessed := "NO"
-		if s.Assessed {
+		if s.AssessmentStatus == "evaluated" {
 			assessed = "YES"
 		}
 		quality := "FAIL"
@@ -235,7 +320,7 @@ func renderInventoryTable(w io.Writer, r *inventoryReport) error { //nolint:unpa
 			quality = "PASS"
 		}
 		fmt.Fprintf(w, "%-35s %-8s %-7d %-9s %-8s %s\n",
-			filepath.Base(s.Path), age, s.AssetCount, assessed, quality, s.RecommendedAction)
+			filepath.Base(s.FilePath), s.Age, s.AssetCount, assessed, quality, s.Action)
 	}
 	return nil
 }
@@ -248,7 +333,7 @@ func renderInventoryOpenMetrics(w io.Writer, r *inventoryReport) error { //nolin
 	for _, action := range []string{"keep", "archive", "delete", "review"} {
 		count := 0
 		for i := range r.Snapshots {
-			if r.Snapshots[i].RecommendedAction == action {
+			if r.Snapshots[i].Action == action {
 				count++
 			}
 		}
@@ -263,7 +348,7 @@ func renderInventoryOpenMetrics(w io.Writer, r *inventoryReport) error { //nolin
 	for _, action := range []string{"keep", "archive", "delete", "review"} {
 		var size int64
 		for i := range r.Snapshots {
-			if r.Snapshots[i].RecommendedAction == action {
+			if r.Snapshots[i].Action == action {
 				size += r.Snapshots[i].FileSizeBytes
 			}
 		}

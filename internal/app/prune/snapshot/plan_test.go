@@ -71,7 +71,7 @@ func TestBuildSnapshotPlan_SingleTierPrunesOld(t *testing.T) {
 
 	var pruned []snapshotdomain.PlanFile
 	for _, f := range plan.Files {
-		if f.Action == snapshotdomain.ActionPrune {
+		if f.Action == snapshotdomain.ActionDelete {
 			pruned = append(pruned, f)
 		}
 	}
@@ -272,7 +272,7 @@ func TestBuildSnapshotPlan_AlwaysPreviewMode(t *testing.T) {
 
 	pruneCount := 0
 	for _, f := range plan.Files {
-		if f.Action == snapshotdomain.ActionPrune {
+		if f.Action == snapshotdomain.ActionDelete {
 			pruneCount++
 		}
 	}
