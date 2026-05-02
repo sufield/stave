@@ -112,18 +112,18 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 		// every other apply path. The earlier hardcoded Quiet:
 		// true ignored the user's choice and silenced gate
 		// reporting even when -v was set.
-		gate := &Reporter{Stdout: sio.Stdout, Stderr: sio.Stderr, Runtime: rt, Quiet: sio.Quiet}
+		gate := NewReporter(sio, rt)
 		if err := gate.ReportApply(results, evaluation.EnforcementPolicy{}); err != nil {
 			return err
 		}
-		return checkSLAPolicy(sio.Stderr, SLAPolicy(opts.SLAPolicy), results, sio.Quiet)
+		return gate.CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), results)
 	}
 
-	rep := &Reporter{Stdout: sio.Stdout, Stderr: sio.Stderr, Runtime: rt, Quiet: sio.Quiet}
+	rep := NewReporter(sio, rt)
 	if err := rep.ReportApply(results, evaluation.EnforcementPolicy{}); err != nil {
 		return err
 	}
 
 	// SLA policy exit code: check after normal evaluation reporting.
-	return checkSLAPolicy(sio.Stderr, SLAPolicy(opts.SLAPolicy), results, sio.Quiet)
+	return rep.CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), results)
 }

@@ -146,11 +146,7 @@ func writeTableTimeline(w io.Writer, tl *appforensics.Timeline) {
 		case "property_change":
 			fmt.Fprintf(w, "%s  PROPERTY  %s  %v → %v\n", ev.Timestamp, ev.Property, ev.From, ev.To)
 		case "control_verdict_change":
-			sev := ""
-			if ev.Severity != "" {
-				sev = " (" + strings.ToUpper(ev.Severity) + ")"
-			}
-			fmt.Fprintf(w, "%s  CONTROL   %s  %s → %s%s\n", ev.Timestamp, ev.ControlID, ev.From, ev.To, sev)
+			fmt.Fprintf(w, "%s  CONTROL   %s  %s → %s%s\n", ev.Timestamp, ev.ControlID, ev.From, ev.To, ev.FormattedSeverity())
 		case "chain_activation":
 			fmt.Fprintf(w, "%s  CHAIN ACTIVE  %s\n", ev.Timestamp, ev.ChainID)
 		case "chain_deactivation":

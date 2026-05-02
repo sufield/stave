@@ -23,6 +23,48 @@ type Reporter struct {
 	Quiet   bool
 }
 
+// NewReporter constructs a Reporter from the standard CLI IO bundle.
+// Centralises the (Stdout / Stderr / Runtime / Quiet) wiring so the
+// run-mode dispatch sites stop carrying the four-field literal —
+// they pass StandardIO + Runtime and let the constructor extract the
+// quiet flag from the bundle.
+func NewReporter(sio StandardIO, rt *ui.Runtime) *Reporter {
+	return &Reporter{
+		Stdout:  sio.Stdout,
+		Stderr:  sio.Stderr,
+		Runtime: rt,
+		Quiet:   sio.Quiet,
+	}
+}
+
+// Emit writes a single line to w when the reporter is not in quiet
+// mode. Centralises the (!r.Quiet) guard that ReportApply /
+// ReportPlan / CheckSLAPolicy used to repeat at every Fprintln site.
+// nil receiver and quiet receivers swallow output silently so callers
+// can stop nil-checking.
+func (r *Reporter) Emit(w io.Writer, msg string) {
+	if r == nil || r.Quiet {
+		return
+	}
+	_, _ = fmt.Fprintln(w, msg)
+}
+
+// Emitf wraps Emit for the printf-style call sites; same quiet
+// guard, same swallow-on-nil semantics.
+func (r *Reporter) Emitf(w io.Writer, format string, args ...any) {
+	if r == nil || r.Quiet {
+		return
+	}
+	_, _ = fmt.Fprintf(w, format, args...)
+}
+
+// ShouldEmit reports whether the reporter is currently emitting
+// output. Used by call sites that wrap multiple prints in a single
+// branch (the LevelBlock case below).
+func (r *Reporter) ShouldEmit() bool {
+	return r != nil && !r.Quiet
+}
+
 // ReportApply prints the outcome of an evaluation and returns an error
 // when the response policy indicates failure.
 func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.EnforcementPolicy) error {
@@ -30,26 +72,18 @@ func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.Enforcement
 
 	switch outcome.Signal {
 	case evaluation.LevelAllow:
-		if !r.Quiet {
-			if _, err := fmt.Fprintln(r.Stderr, "Evaluation complete. No violations found."); err != nil {
-				return err
-			}
-		}
+		r.Emit(r.Stderr, "Evaluation complete. No violations found.")
 		return nil
 
 	case evaluation.LevelAdvisory:
-		if !r.Quiet {
-			if _, err := fmt.Fprintln(r.Stderr, "Evaluation complete. No violations, but at-risk assets detected."); err != nil {
-				return err
-			}
-			if res.DiagnoseCommand != "" {
-				ui.WriteHint(r.Stderr, res.DiagnoseCommand)
-			}
+		r.Emit(r.Stderr, "Evaluation complete. No violations, but at-risk assets detected.")
+		if r.ShouldEmit() && res.DiagnoseCommand != "" {
+			ui.WriteHint(r.Stderr, res.DiagnoseCommand)
 		}
 		return nil
 
 	default: // LevelBlock
-		if !r.Quiet {
+		if r.ShouldEmit() {
 			ui.WriteHint(r.Stderr, res.DiagnoseCommand)
 			r.Runtime.PrintNextSteps(res.NextSteps...)
 		}
@@ -59,7 +93,7 @@ func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.Enforcement
 
 // ReportPlan prints the readiness report (used by apply --dry-run).
 func (r *Reporter) ReportPlan(report validation.ReadinessAssessment) error {
-	if r.Quiet {
+	if !r.ShouldEmit() {
 		return nil
 	}
 
@@ -130,8 +164,11 @@ func printReadinessIssue(w io.Writer, issue validation.ValidationFinding) error 
 	return nil
 }
 
-// checkSLAPolicy returns an error (exit code 3) when SLA breaches violate
-// the configured policy. Default "warn" never triggers a non-zero exit.
+// CheckSLAPolicy returns an error (exit code 3) when SLA breaches
+// violate the configured policy. Default "warn" never triggers a
+// non-zero exit. The reporter owns both the destination writer and
+// the quiet-mode gate, so callers stop passing those as raw
+// arguments.
 //
 // SLA breaches are findings, not security-audit gating events. The
 // earlier shape returned ErrSecurityAuditFindings, which the global
@@ -141,20 +178,16 @@ func printReadinessIssue(w io.Writer, issue validation.ValidationFinding) error 
 // keeps the exit-code map's semantic split intact: 1 is reserved
 // for the dedicated `security-audit` command, 3 is "evaluation
 // completed with findings".
-func checkSLAPolicy(stderr io.Writer, policy SLAPolicy, res EvaluateResult, quiet bool) error {
+func (r *Reporter) CheckSLAPolicy(policy SLAPolicy, res EvaluateResult) error {
 	switch policy {
 	case SLAPolicyStrict:
 		if res.HasSLABreach {
-			if !quiet {
-				fmt.Fprintln(stderr, "SLA policy: strict — SLA breach detected, failing.")
-			}
+			r.Emit(r.Stderr, "SLA policy: strict — SLA breach detected, failing.")
 			return ui.ErrViolationsFound
 		}
 	case SLAPolicyCriticalOnly:
 		if res.HasCriticalSLABreach {
-			if !quiet {
-				fmt.Fprintln(stderr, "SLA policy: critical-only — critical SLA breach detected, failing.")
-			}
+			r.Emit(r.Stderr, "SLA policy: critical-only — critical SLA breach detected, failing.")
 			return ui.ErrViolationsFound
 		}
 	}

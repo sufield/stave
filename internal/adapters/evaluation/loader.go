@@ -93,6 +93,38 @@ func (l *Loader) LoadFromReader(r io.Reader, sourceName string) (*evaluation.Com
 	return l.parseResult(data, sourceName)
 }
 
+// validateIfStrict runs the out.v0.1 schema check against data when
+// strict mode is enabled, and returns nil otherwise. Centralises the
+// (l.strictSchema.Load() ? Validate : skip) gate so parseResult and
+// any future loader entry point share the same validation contract.
+func (l *Loader) validateIfStrict(data []byte, source string) error {
+	if !l.strictSchema.Load() {
+		return nil
+	}
+	diags, valErr := l.schemaValidator().Validate(validator.Request{
+		Kind: schema.KindOutput,
+		Data: data,
+	})
+	if valErr != nil {
+		return fmt.Errorf("validating evaluation %q: %w", source, valErr)
+	}
+	if len(diags) > 0 {
+		var b strings.Builder
+		b.WriteString("evaluation schema violations in ")
+		b.WriteString(source)
+		b.WriteString(":")
+		for i, d := range diags {
+			if i >= 5 {
+				fmt.Fprintf(&b, "\n  ... (+%d more)", len(diags)-5)
+				break
+			}
+			fmt.Fprintf(&b, "\n  %s: %s", d.Path, d.Message)
+		}
+		return fmt.Errorf("%s: %w", b.String(), validator.ErrSchemaValidationFailed)
+	}
+	return nil
+}
+
 // parseResult is the shared unmarshaling path for both file and reader loading.
 //
 // Honours WithStrictSchema by validating the bytes against the
@@ -102,28 +134,8 @@ func (l *Loader) LoadFromReader(r io.Reader, sourceName string) (*evaluation.Com
 // got the laxness of the non-strict path silently. Mirrors the
 // validation logic in LoadEnvelopeFromFile.
 func (l *Loader) parseResult(data []byte, source string) (*evaluation.ComplianceReport, error) {
-	if l.strictSchema.Load() {
-		diags, valErr := l.schemaValidator().Validate(validator.Request{
-			Kind: schema.KindOutput,
-			Data: data,
-		})
-		if valErr != nil {
-			return nil, fmt.Errorf("validating evaluation %q: %w", source, valErr)
-		}
-		if len(diags) > 0 {
-			var b strings.Builder
-			b.WriteString("evaluation schema violations in ")
-			b.WriteString(source)
-			b.WriteString(":")
-			for i, d := range diags {
-				if i >= 5 {
-					fmt.Fprintf(&b, "\n  ... (+%d more)", len(diags)-5)
-					break
-				}
-				fmt.Fprintf(&b, "\n  %s: %s", d.Path, d.Message)
-			}
-			return nil, fmt.Errorf("%s: %w", b.String(), validator.ErrSchemaValidationFailed)
-		}
+	if err := l.validateIfStrict(data, source); err != nil {
+		return nil, err
 	}
 	var result evaluation.ComplianceReport
 	if err := json.Unmarshal(data, &result); err != nil {
@@ -171,28 +183,8 @@ func (l *Loader) LoadEnvelopeFromFile(ctx context.Context, path string) (*report
 	// rather than a silent zero-valued Assessment. Opt-in (strict
 	// callers must use WithStrictSchema) — this preserves backward
 	// compatibility for callers feeding stub envelopes.
-	if l.strictSchema.Load() {
-		diags, valErr := l.schemaValidator().Validate(validator.Request{
-			Kind: schema.KindOutput,
-			Data: data,
-		})
-		if valErr != nil {
-			return nil, fmt.Errorf("validating evaluation %q: %w", path, valErr)
-		}
-		if len(diags) > 0 {
-			var b strings.Builder
-			b.WriteString("evaluation schema violations in ")
-			b.WriteString(path)
-			b.WriteString(":")
-			for i, d := range diags {
-				if i >= 5 {
-					fmt.Fprintf(&b, "\n  ... (+%d more)", len(diags)-5)
-					break
-				}
-				fmt.Fprintf(&b, "\n  %s: %s", d.Path, d.Message)
-			}
-			return nil, fmt.Errorf("%s: %w", b.String(), validator.ErrSchemaValidationFailed)
-		}
+	if err := l.validateIfStrict(data, path); err != nil {
+		return nil, err
 	}
 
 	var eval report.Assessment
@@ -306,13 +298,11 @@ func parseFindings(raw []byte, depth int) ([]remediation.Finding, error) {
 		if err := json.Unmarshal(raw, &env); err != nil {
 			lastUnmarshalErr = err
 		} else {
-			// Normalize nil to empty slice so callers can iterate
-			// without nil-checking. PrepareBaseline and
-			// BuildAssessmentFromEnriched apply the same shape.
-			if env.Findings == nil {
-				env.Findings = []remediation.Finding{}
-			}
-			return env.Findings, nil
+			// EnsureFindings centralises the nil → []Finding{}
+			// normalisation on the type so this branch matches the
+			// shape PrepareBaseline / BuildAssessmentFromEnriched
+			// already produce.
+			return env.EnsureFindings(), nil
 		}
 	} else if rawFindings, hasFindings := probe["findings"]; hasFindings {
 		var list []remediation.Finding

@@ -278,10 +278,10 @@ func runContextShow(in ShowInput) error {
 		StoreFile:     path,
 		SelectedBy:    selectedBy,
 		Name:          name,
-		ProjectRoot:   strings.TrimSpace(ctx.ProjectRoot),
-		ProjectConfig: strings.TrimSpace(ctx.ProjectConfig),
-		ControlsDir:   strings.TrimSpace(ctx.Defaults.ControlsDir),
-		ObserveDir:    strings.TrimSpace(ctx.Defaults.ObservationsDir),
+		ProjectRoot:   ctx.CanonicalProjectRoot(),
+		ProjectConfig: ctx.CanonicalProjectConfig(),
+		ControlsDir:   ctx.EffectiveControlsDir(),
+		ObserveDir:    ctx.EffectiveObservationsDir(),
 	})
 }
 

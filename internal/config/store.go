@@ -132,6 +132,35 @@ func isPathSafe(path string) bool {
 // added at the read site if needed.
 func (c Context) IsProduction() bool { return c.Production }
 
+// CanonicalProjectRoot returns ProjectRoot with surrounding
+// whitespace trimmed. Wraps the strings.TrimSpace pattern that
+// init/contextcmd applies inline so callers stop reaching for the
+// raw field plus a per-call trim.
+func (c Context) CanonicalProjectRoot() string {
+	return strings.TrimSpace(c.ProjectRoot)
+}
+
+// CanonicalProjectConfig returns ProjectConfig with surrounding
+// whitespace trimmed. Sibling of CanonicalProjectRoot.
+func (c Context) CanonicalProjectConfig() string {
+	return strings.TrimSpace(c.ProjectConfig)
+}
+
+// EffectiveControlsDir returns the trimmed Defaults.ControlsDir.
+// "Effective" rather than "Canonical" because callers reach for
+// this when resolving the actual directory to use; future logic
+// (env-var override, fallback to a built-in default) can land here
+// without touching call sites.
+func (c Context) EffectiveControlsDir() string {
+	return strings.TrimSpace(c.Defaults.ControlsDir)
+}
+
+// EffectiveObservationsDir returns the trimmed Defaults.ObservationsDir.
+// Sibling of EffectiveControlsDir.
+func (c Context) EffectiveObservationsDir() string {
+	return strings.TrimSpace(c.Defaults.ObservationsDir)
+}
+
 // Clone returns a deep copy of the context. Context contains only
 // value-typed fields (strings, struct of strings, bool) so a plain
 // struct copy IS the deep copy; the explicit method exists so

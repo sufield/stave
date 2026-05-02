@@ -61,10 +61,10 @@ func (r *Runner) List(st *contexts.Store, format appcontracts.OutputFormat) erro
 		}
 		items = append(items, ListItem{
 			Name:          name,
-			ProjectRoot:   strings.TrimSpace(c.ProjectRoot),
-			ProjectConfig: strings.TrimSpace(c.ProjectConfig),
-			ControlsDir:   strings.TrimSpace(c.Defaults.ControlsDir),
-			ObserveDir:    strings.TrimSpace(c.Defaults.ObservationsDir),
+			ProjectRoot:   c.CanonicalProjectRoot(),
+			ProjectConfig: c.CanonicalProjectConfig(),
+			ControlsDir:   c.EffectiveControlsDir(),
+			ObserveDir:    c.EffectiveObservationsDir(),
 			Active:        name == active,
 		})
 	}

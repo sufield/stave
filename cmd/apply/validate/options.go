@@ -15,6 +15,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
+	appvalidation "github.com/sufield/stave/internal/app/validation"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/config"
 	"github.com/sufield/stave/internal/core/diag"
@@ -93,6 +94,28 @@ func (o *options) Prepare(cmd *cobra.Command) error {
 		cmd.Flags().Changed("controls"),
 		cmd.Flags().Changed("observations"),
 	)
+}
+
+// BuildRequest constructs the appropriate ContentValidator request
+// for these options. When Kind is unset the input is auto-detected;
+// when set it must normalise to a recognised schemas.Kind alias.
+// Replaces the package-level buildValidationRequest function so the
+// Kind/SchemaVersion/Strict triple lives on the type that owns the
+// fields, and runValidateSingleFile drops the inline branching.
+func (o *options) BuildRequest(data []byte) (appvalidation.ContentValidator, error) {
+	if o.Kind == "" {
+		return appvalidation.AutoRequest{Data: data}, nil
+	}
+	normalizedKind, err := normalizeKind(o.Kind)
+	if err != nil {
+		return nil, err
+	}
+	return appvalidation.ExplicitRequest{
+		Data:          data,
+		Kind:          normalizedKind,
+		SchemaVersion: o.SchemaVersion,
+		Strict:        o.Strict,
+	}, nil
 }
 
 // normalizeAndValidate cleans user input, applies project-root inference,

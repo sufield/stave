@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -47,6 +48,18 @@ type Event struct {
 	ControlID string `json:"control_id,omitempty"`
 	ChainID   string `json:"chain_id,omitempty"`
 	Severity  string `json:"severity,omitempty"`
+}
+
+// FormattedSeverity returns the parenthesised, uppercased severity
+// suffix the forensics text renderer appends to control_verdict_change
+// rows. Returns "" when no severity is set, or " (CRITICAL)" /
+// " (HIGH)" / etc. otherwise. Centralises the "" → "(SEV)" decoration
+// rule so cmd/forensics drops the inline conditional + concatenation.
+func (e *Event) FormattedSeverity() string {
+	if e == nil || e.Severity == "" {
+		return ""
+	}
+	return " (" + strings.ToUpper(e.Severity) + ")"
 }
 
 // IsFail reports whether this event records a transition to the

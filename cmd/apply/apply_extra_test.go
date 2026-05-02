@@ -766,8 +766,9 @@ func TestFilterByComplianceUnion_EmptyFrameworks(t *testing.T) {
 
 func TestCheckSLAPolicy_WarnNeverFails(t *testing.T) {
 	var stderr bytes.Buffer
+	r := &Reporter{Stderr: &stderr}
 	res := EvaluateResult{HasSLABreach: true, HasCriticalSLABreach: true}
-	err := checkSLAPolicy(&stderr, "warn", res, false)
+	err := r.CheckSLAPolicy("warn", res)
 	if err != nil {
 		t.Fatalf("warn should never fail, got: %v", err)
 	}
@@ -775,8 +776,9 @@ func TestCheckSLAPolicy_WarnNeverFails(t *testing.T) {
 
 func TestCheckSLAPolicy_StrictFailsOnAnyBreach(t *testing.T) {
 	var stderr bytes.Buffer
+	r := &Reporter{Stderr: &stderr}
 	res := EvaluateResult{HasSLABreach: true}
-	err := checkSLAPolicy(&stderr, "strict", res, false)
+	err := r.CheckSLAPolicy("strict", res)
 	if !errors.Is(err, ui.ErrViolationsFound) {
 		t.Fatalf("strict should fail on SLA breach, got: %v", err)
 	}
@@ -784,8 +786,9 @@ func TestCheckSLAPolicy_StrictFailsOnAnyBreach(t *testing.T) {
 
 func TestCheckSLAPolicy_StrictPassesWhenNoBreach(t *testing.T) {
 	var stderr bytes.Buffer
+	r := &Reporter{Stderr: &stderr}
 	res := EvaluateResult{HasSLABreach: false}
-	err := checkSLAPolicy(&stderr, "strict", res, false)
+	err := r.CheckSLAPolicy("strict", res)
 	if err != nil {
 		t.Fatalf("strict should pass when no breach, got: %v", err)
 	}
@@ -793,8 +796,9 @@ func TestCheckSLAPolicy_StrictPassesWhenNoBreach(t *testing.T) {
 
 func TestCheckSLAPolicy_CriticalOnlyFailsOnCritical(t *testing.T) {
 	var stderr bytes.Buffer
+	r := &Reporter{Stderr: &stderr}
 	res := EvaluateResult{HasSLABreach: true, HasCriticalSLABreach: true}
-	err := checkSLAPolicy(&stderr, "critical-only", res, false)
+	err := r.CheckSLAPolicy("critical-only", res)
 	if !errors.Is(err, ui.ErrViolationsFound) {
 		t.Fatalf("critical-only should fail on critical breach, got: %v", err)
 	}
@@ -802,8 +806,9 @@ func TestCheckSLAPolicy_CriticalOnlyFailsOnCritical(t *testing.T) {
 
 func TestCheckSLAPolicy_CriticalOnlyPassesOnNonCritical(t *testing.T) {
 	var stderr bytes.Buffer
+	r := &Reporter{Stderr: &stderr}
 	res := EvaluateResult{HasSLABreach: true, HasCriticalSLABreach: false}
-	err := checkSLAPolicy(&stderr, "critical-only", res, false)
+	err := r.CheckSLAPolicy("critical-only", res)
 	if err != nil {
 		t.Fatalf("critical-only should pass on non-critical breach, got: %v", err)
 	}

@@ -53,6 +53,22 @@ func (r Asset) IsType(t string) bool {
 	return string(r.Type) == t
 }
 
+// NormalizeProperties applies fn to the asset's Properties map when
+// non-nil, and is a no-op otherwise. Callers (the observation
+// loader's normalize pass) pass an adapter-specific value-coercion
+// function as fn — keeping the actual normalization logic in the
+// adapter where it belongs while letting the loader call sites stop
+// repeating the (Properties != nil) guard.
+//
+// Pointer receiver: fn may mutate Properties in place, and the
+// receiver carries the addressable map.
+func (r *Asset) NormalizeProperties(fn func(map[string]any)) {
+	if r == nil || r.Properties == nil || fn == nil {
+		return
+	}
+	fn(r.Properties)
+}
+
 // identityAssetTypes lists asset types that represent IAM identities
 // for ranking and reporting purposes. Centralised here (rather than
 // in internal/app/rank where it used to live) so producers and

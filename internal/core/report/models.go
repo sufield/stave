@@ -51,6 +51,26 @@ func (a *Assessment) HasFindings() bool {
 	return a != nil && len(a.Findings) > 0
 }
 
+// EnsureFindings normalises the Findings slice in-place: a nil
+// slice is replaced with an empty slice. Returns the (now non-nil)
+// slice for fluent use. Replaces the (env.Findings == nil →
+// []remediation.Finding{}) coercion that loader.ParseFindings
+// applied inline so the "JSON output always carries findings: []"
+// contract lives on the type that owns the slice.
+//
+// Named EnsureFindings rather than the plan's suggested Findings()
+// because Go does not permit a method to share a name with the
+// existing Findings struct field.
+func (a *Assessment) EnsureFindings() []remediation.Finding {
+	if a == nil {
+		return []remediation.Finding{}
+	}
+	if a.Findings == nil {
+		a.Findings = []remediation.Finding{}
+	}
+	return a.Findings
+}
+
 // HasTimestamp reports whether the assessment's Run carries a
 // non-zero capture time. Replaces (a.Run.Now.IsZero()) probes at
 // snapshotID / sort sites so callers ask the type directly.

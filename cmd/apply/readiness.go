@@ -69,10 +69,8 @@ func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
 		return err
 	}
 
-	if !cfg.Quiet {
-		if err := r.writeReport(cfg, report); err != nil {
-			return err
-		}
+	if err := r.writeReport(cfg, report); err != nil {
+		return err
 	}
 
 	if !report.IsSafe {
@@ -81,7 +79,15 @@ func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
 	return nil
 }
 
+// writeReport renders the readiness report in the requested format.
+// The cfg.Quiet gate lives here (rather than at the caller) so the
+// "stay silent in quiet mode" rule is bound to the writer rather
+// than to the call site — the report renderer itself decides
+// whether the configuration permits emitting output.
 func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.ReadinessAssessment) error {
+	if cfg.Quiet {
+		return nil
+	}
 	if cfg.Format.IsJSON() {
 		return jsonutil.WriteIndented(cfg.Stdout, readinessJSONReport{
 			ReadinessAssessment: report,

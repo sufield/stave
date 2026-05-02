@@ -24,7 +24,7 @@ func runValidateSingleFile(stdin io.Reader, reporter *Reporter, opts *options) e
 		return fmt.Errorf("read input %q: %w", source, err)
 	}
 
-	req, err := buildValidationRequest(data, opts)
+	req, err := opts.BuildRequest(data)
 	if err != nil {
 		return err
 	}
@@ -39,25 +39,6 @@ func runValidateSingleFile(stdin io.Reader, reporter *Reporter, opts *options) e
 		return err
 	}
 	return reporter.ExitStatus(result)
-}
-
-// buildValidationRequest creates the appropriate request based on options.
-func buildValidationRequest(data []byte, opts *options) (appvalidation.ContentValidator, error) {
-	if opts.Kind == "" {
-		return appvalidation.AutoRequest{Data: data}, nil
-	}
-
-	normalizedKind, err := normalizeKind(opts.Kind)
-	if err != nil {
-		return nil, err
-	}
-
-	return appvalidation.ExplicitRequest{
-		Data:          data,
-		Kind:          normalizedKind,
-		SchemaVersion: opts.SchemaVersion,
-		Strict:        opts.Strict,
-	}, nil
 }
 
 // kindAliases maps CLI input to canonical schema kinds.

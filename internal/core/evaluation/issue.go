@@ -58,6 +58,30 @@ type Issue struct {
 	ConsolidatedBlastRadius kernel.BlastRadius `json:"consolidated_blast_radius"`
 }
 
+// MemberFindingIDStrings projects MemberFindingIDs to a []string —
+// the shape DTO mappers consume when emitting JSON. Centralises the
+// per-element string cast so adapters/output/dto/mapper.go drops
+// the inline conversion loop.
+func (i Issue) MemberFindingIDStrings() []string {
+	out := make([]string, len(i.MemberFindingIDs))
+	for j, fid := range i.MemberFindingIDs {
+		out[j] = string(fid)
+	}
+	return out
+}
+
+// SharedKeyStrings projects SharedKeys to a []string via the
+// ObservationKey.String() method. Same rationale as
+// MemberFindingIDStrings — keeps the per-element conversion on the
+// type that owns the field.
+func (i Issue) SharedKeyStrings() []string {
+	out := make([]string, len(i.SharedKeys))
+	for j, k := range i.SharedKeys {
+		out[j] = k.String()
+	}
+	return out
+}
+
 // IsConsolidated reports whether the Issue groups multiple findings.
 // Domain question: does this Issue consolidate more than one finding?
 func (i Issue) IsConsolidated() bool {

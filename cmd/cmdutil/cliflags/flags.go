@@ -4,6 +4,7 @@ package cliflags
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 	"time"
@@ -86,6 +87,28 @@ func GetGlobalFlags(cmd *cobra.Command) GlobalFlags {
 // TextOutputEnabled returns true if human-readable text should be printed.
 func (g GlobalFlags) TextOutputEnabled() bool {
 	return !g.Quiet
+}
+
+// ShouldEmit reports whether the operator wants human-readable output
+// from this command. Mirrors TextOutputEnabled with a name that reads
+// naturally at the call site (`if g.ShouldEmit() { ... }`); kept as a
+// distinct accessor so future logic beyond the simple !Quiet test
+// (e.g. format-aware suppression) can land here without rewriting
+// every caller.
+func (g GlobalFlags) ShouldEmit() bool {
+	return !g.Quiet
+}
+
+// ResolveStdout returns w when the operator allows text output and
+// io.Discard when --quiet is set. Lets call sites construct a single
+// writer once and skip the per-print (!Quiet) guard. nil w returns
+// io.Discard so callers can pass through a writer that may itself
+// be nil during early bootstrap.
+func (g GlobalFlags) ResolveStdout(w io.Writer) io.Writer {
+	if !g.ShouldEmit() || w == nil {
+		return io.Discard
+	}
+	return w
 }
 
 // AutoConfirm returns true when interactive prompts should be auto-confirmed.

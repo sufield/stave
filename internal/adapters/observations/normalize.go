@@ -29,9 +29,7 @@ func normalizeSnapshotTypes(snapshot *asset.Snapshot) error {
 		return ErrMissingTimestamp
 	}
 	for i := range snapshot.Assets {
-		if snapshot.Assets[i].Properties != nil {
-			normalizeProperties(snapshot.Assets[i].Properties)
-		}
+		snapshot.Assets[i].NormalizeProperties(normalizeProperties)
 	}
 	return nil
 }

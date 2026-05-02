@@ -30,6 +30,45 @@ type nonInteractiveOpts struct {
 	Out         string
 }
 
+// Args returns the gencontrol invocation argv built from these opts.
+// Encapsulates the per-field "skip when default / skip when empty"
+// rules so runNonInteractive doesn't reproduce twelve inline checks
+// on every call. Field defaults are listed inline next to their
+// flag so a future default change is one edit on the type.
+func (o nonInteractiveOpts) Args() []string {
+	args := []string{
+		"run", "./internal/tools/gencontrol",
+		"--id", o.ID,
+		"--name", o.Name,
+		"--field", o.Field,
+		"--remediation", o.Remediation,
+	}
+	type optional struct {
+		flag, value, defaultValue string
+		appendOnEmpty             bool // true = emit even when default
+	}
+	for _, f := range []optional{
+		{"--domain", o.Domain, "exposure", false},
+		{"--severity", o.Severity, "high", false},
+		{"--scope-tags", o.ScopeTags, "aws", false},
+		{"--asset-type", o.AssetType, "aws_s3_bucket", false},
+		{"--kind", o.Kind, "", true},
+		{"--op", o.Op, "eq", false},
+		{"--value", o.Value, "true", false},
+		{"--compliance", o.Compliance, "", true},
+		{"--out", o.Out, "testdata/e2e", false},
+	} {
+		if f.value == "" {
+			continue
+		}
+		if !f.appendOnEmpty && f.value == f.defaultValue {
+			continue
+		}
+		args = append(args, f.flag, f.value)
+	}
+	return args
+}
+
 func runNonInteractive(ctx context.Context, w io.Writer, opts nonInteractiveOpts) error {
 	if opts.ID == "" || opts.Name == "" || opts.Field == "" || opts.Remediation == "" {
 		return errors.New("--id, --name, --field, and --remediation are required in non-interactive mode")
@@ -47,41 +86,7 @@ func runNonInteractive(ctx context.Context, w io.Writer, opts nonInteractiveOpts
 		}
 	}
 
-	args := []string{
-		"run", "./internal/tools/gencontrol",
-		"--id", opts.ID,
-		"--name", opts.Name,
-		"--field", opts.Field,
-		"--remediation", opts.Remediation,
-	}
-
-	if opts.Domain != "" && opts.Domain != "exposure" {
-		args = append(args, "--domain", opts.Domain)
-	}
-	if opts.Severity != "" && opts.Severity != "high" {
-		args = append(args, "--severity", opts.Severity)
-	}
-	if opts.ScopeTags != "" && opts.ScopeTags != "aws" {
-		args = append(args, "--scope-tags", opts.ScopeTags)
-	}
-	if opts.AssetType != "" && opts.AssetType != "aws_s3_bucket" {
-		args = append(args, "--asset-type", opts.AssetType)
-	}
-	if opts.Kind != "" {
-		args = append(args, "--kind", opts.Kind)
-	}
-	if opts.Op != "" && opts.Op != "eq" {
-		args = append(args, "--op", opts.Op)
-	}
-	if opts.Value != "" && opts.Value != "true" {
-		args = append(args, "--value", opts.Value)
-	}
-	if opts.Compliance != "" {
-		args = append(args, "--compliance", opts.Compliance)
-	}
-	if opts.Out != "" && opts.Out != "testdata/e2e" {
-		args = append(args, "--out", opts.Out)
-	}
+	args := opts.Args()
 
 	fmt.Fprintf(w, "Generating control %s...\n", opts.ID)
 

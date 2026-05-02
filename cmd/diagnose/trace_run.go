@@ -93,10 +93,7 @@ Exit Codes:
 				return err
 			}
 
-			if cliflags.GetGlobalFlags(cmd).Quiet {
-				return nil
-			}
-			w := cmd.OutOrStdout()
+			w := cliflags.GetGlobalFlags(cmd).ResolveStdout(cmd.OutOrStdout())
 			if fmtValue.IsJSON() {
 				return result.RenderJSON(w)
 			}

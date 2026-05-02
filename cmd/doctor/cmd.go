@@ -86,10 +86,7 @@ Exit Codes:
 				return ucErr
 			}
 
-			stdout := cmd.OutOrStdout()
-			if cliflags.GetGlobalFlags(cmd).Quiet {
-				stdout = io.Discard
-			}
+			stdout := cliflags.GetGlobalFlags(cmd).ResolveStdout(cmd.OutOrStdout())
 
 			if fmtValue.IsJSON() {
 				if renderErr := reportJSON(stdout, resp); renderErr != nil {

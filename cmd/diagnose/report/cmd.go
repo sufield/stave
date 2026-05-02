@@ -3,7 +3,6 @@ package report
 import (
 	_ "embed"
 	"log/slog"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -84,7 +83,7 @@ Examples:
 			}
 			if res != nil {
 				gitInfo := compose.AuditGitStatus(cmd.Context(), res.ProjectRoot(), resolveAuditPaths(res))
-				if !flags.Quiet {
+				if flags.ShouldEmit() {
 					compose.WarnGitDirty(cmd.ErrOrStderr(), gitInfo, "report")
 				}
 			}
@@ -138,7 +137,7 @@ func resolveAuditPaths(res *projctx.Resolver) []string {
 
 	sc, err := res.ResolveSelected()
 	if err == nil && sc.Active && sc.Context != nil {
-		if p := strings.TrimSpace(sc.Context.Defaults.ControlsDir); p != "" {
+		if p := sc.Context.EffectiveControlsDir(); p != "" {
 			paths = append(paths, sc.Context.AbsPath(p))
 		}
 	} else {
