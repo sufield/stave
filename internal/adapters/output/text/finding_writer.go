@@ -384,7 +384,7 @@ func lookupControlForFindingID(findings []evaluation.Finding, fid string) (strin
 // chain findings with no extractable clauses). JSON and SARIF output
 // retain the raw DSL shape; prose is a text-writer concern.
 func writeFindingReasoning(d *drawer, f *remediation.Finding) {
-	if len(f.ReasoningTrace) == 0 {
+	if !f.HasReasoningTrace() {
 		return
 	}
 	var scope, reasoning []translation.Clause
@@ -422,7 +422,7 @@ func writeFindingReasoning(d *drawer, f *remediation.Finding) {
 // nothing at all when all three are empty (controls not yet authored
 // for the triage chain render identically to pre-iteration output).
 func writeFindingTriage(d *drawer, f *remediation.Finding) {
-	if f.Defect == "" && f.Infection == "" && f.Failure == "" {
+	if !f.HasDiagnosis() {
 		return
 	}
 	if f.Defect != "" {
@@ -444,10 +444,10 @@ func writeFindingTriage(d *drawer, f *remediation.Finding) {
 // emits only when the control carries authored Defect/Infection/Failure,
 // preserving byte-identical output for unauthored controls.
 func writeFindingObserved(d *drawer, f *remediation.Finding) {
-	if f.Defect == "" && f.Infection == "" && f.Failure == "" {
+	if !f.HasDiagnosis() {
 		return
 	}
-	if len(f.ReasoningTrace) == 0 {
+	if !f.HasReasoningTrace() {
 		return
 	}
 	d.f("   Observed:\n")
@@ -460,10 +460,10 @@ func writeFindingObserved(d *drawer, f *remediation.Finding) {
 // paths from the predicate and observed values. Gated on triage presence
 // (same as OBSERVED).
 func writeFindingDelta(d *drawer, f *remediation.Finding) {
-	if f.Defect == "" && f.Infection == "" && f.Failure == "" {
+	if !f.HasDiagnosis() {
 		return
 	}
-	if len(f.Delta) == 0 {
+	if !f.HasDelta() {
 		return
 	}
 	if len(f.Delta) == 1 {
@@ -505,7 +505,7 @@ func formatObservedValue(v any) string {
 }
 
 func writeFindingRemediation(d *drawer, f *remediation.Finding) {
-	if f.RemediationSpec.Description == "" && f.RemediationSpec.Action == "" {
+	if f.RemediationSpec.IsEmpty() {
 		return
 	}
 	d.f("   Remediation:\n")

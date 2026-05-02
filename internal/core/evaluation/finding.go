@@ -121,6 +121,30 @@ func (f *Finding) IsAnyBreach() bool {
 	return f != nil && f.SLABreached
 }
 
+// HasDiagnosis reports whether the finding carries any of the
+// authored triage prose (Defect / Infection / Failure). Renderers
+// used to ask `f.Defect == "" && f.Infection == "" && f.Failure == ""`
+// directly; centralising the check here means a future fourth field
+// in the chain (or a rename) is one edit on the type.
+func (f *Finding) HasDiagnosis() bool {
+	return f != nil && (f.Defect != "" || f.Infection != "" || f.Failure != "")
+}
+
+// HasReasoningTrace reports whether the finding carries the
+// predicate-clause reasoning trace the engine emits when a control
+// matches. Replaces the `len(f.ReasoningTrace) == 0` probe in text
+// renderers.
+func (f *Finding) HasReasoningTrace() bool {
+	return f != nil && len(f.ReasoningTrace) > 0
+}
+
+// HasDelta reports whether the finding carries any mechanically-
+// derived fix paths. Replaces the `len(f.Delta) == 0` probe so the
+// renderer stops asking the slice and asks the finding.
+func (f *Finding) HasDelta() bool {
+	return f != nil && len(f.Delta) > 0
+}
+
 // ToFailingControl projects the finding to the (control, asset) pair
 // the chain / attack-stage analysis consumes. Centralising the field
 // extraction here means a future addition to FailingControl (e.g. a

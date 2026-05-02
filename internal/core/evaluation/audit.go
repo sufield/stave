@@ -314,3 +314,35 @@ func (r *ComplianceReport) GetFindingByResource(ctlID kernel.ControlID, astID as
 	}
 	return nil
 }
+
+// HasAnySLABreach reports whether any finding has breached its SLA,
+// regardless of severity. Encapsulates the "scan findings to set a
+// caller-side flag" loop the apply runner used to do so callers ask
+// the report directly instead of iterating Findings themselves.
+func (r *ComplianceReport) HasAnySLABreach() bool {
+	if r == nil {
+		return false
+	}
+	for i := range r.Findings {
+		if r.Findings[i].IsAnyBreach() {
+			return true
+		}
+	}
+	return false
+}
+
+// HasCriticalSLABreach reports whether any finding has breached its
+// SLA AND is (or escalated to) Critical severity. Used by the apply
+// runner's exit-code gate; mirrors HasAnySLABreach so the gating logic
+// stays one method call wide.
+func (r *ComplianceReport) HasCriticalSLABreach() bool {
+	if r == nil {
+		return false
+	}
+	for i := range r.Findings {
+		if r.Findings[i].IsCriticalSLABreach() {
+			return true
+		}
+	}
+	return false
+}

@@ -54,6 +54,18 @@ func (br *SeverityBurnRate) IsExhausted() bool {
 	return br != nil && br.Status == StatusBudgetExhausted
 }
 
+// StatusLabel returns the human-readable label renderers (text,
+// markdown) display for this severity's burn-rate state. Centralises
+// the (IsExhausted ? "EXHAUSTED" : "WITHIN BUDGET") branch the
+// budget command used to repeat in writeText and writeMarkdown so a
+// future label change is one edit on the type.
+func (br *SeverityBurnRate) StatusLabel() string {
+	if br.IsExhausted() {
+		return "EXHAUSTED"
+	}
+	return "WITHIN BUDGET"
+}
+
 // GateResult holds the deployment gate decision.
 type GateResult struct {
 	ThresholdPercent float64  `json:"threshold_percent"`

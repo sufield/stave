@@ -42,6 +42,14 @@ func (s Severity) IsValid() bool {
 	return s >= SeverityInfo && s <= SeverityCritical
 }
 
+// IsSet reports whether s carries a non-zero (i.e. non-SeverityNone)
+// rank. Used by selectors and filters that treat the zero value as
+// "no severity requested" — replaces (s > SeverityNone) probes at
+// the call site with an intent-named check.
+func (s Severity) IsSet() bool {
+	return s > SeverityNone
+}
+
 // Compare returns -1, 0, or +1 comparing severity rank.
 func (s Severity) Compare(other Severity) int {
 	return cmp.Compare(int(s), int(other))

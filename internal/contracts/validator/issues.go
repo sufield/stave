@@ -51,7 +51,7 @@ func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...O
 
 	externalErrors := make([]diag.RawIssue, 0, len(diags))
 	for _, d := range diags {
-		cat := classify(d)
+		cat := d.Category()
 		if !strict && cat == CatAdditionalProperties {
 			continue
 		}
@@ -157,7 +157,11 @@ func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) 
 	return DiagnosticsResult(diags, cfg.DefaultAction, true, WithPrefix(o.pathPrefix)), nil
 }
 
-func classify(d Diagnostic) DiagnosticCategory {
+// Category returns the high-level schema-failure class for this
+// diagnostic, derived from the structured jsonschema Kind. Replaces
+// the package-level classify free function so callers can ask the
+// diagnostic about itself instead of routing through a helper.
+func (d Diagnostic) Category() DiagnosticCategory {
 	if d.Kind == nil {
 		return CatViolation
 	}
@@ -175,21 +179,22 @@ func classify(d Diagnostic) DiagnosticCategory {
 	}
 }
 
-// IsUnknownFieldDiagnostic reports whether a diagnostic represents an
+// IsUnknownField reports whether the diagnostic represents an
 // "unknown / extra field" failure from JSON-Schema validation.
 //
 // Two cases qualify, and both must be covered:
 //
-//   - The structured `Kind` is `*kind.AdditionalProperties` (preferred,
+//   - The structured Kind is *kind.AdditionalProperties (preferred,
 //     when the validator preserved the typed kind).
-//   - The text message contains "additionalProperties" (fallback, when
-//     the validator only carried the human-readable description).
+//   - The text message contains "additionalProperties" (fallback,
+//     when the validator only carried the human-readable
+//     description).
 //
-// Callers — primarily the `--allow-unknown-input` filter and lint
+// Callers — primarily the --allow-unknown-input filter and lint
 // strict-mode toggles — branch on this to decide whether an extra
 // field is allowed to slip through or must fail the validation.
-func IsUnknownFieldDiagnostic(d Diagnostic) bool {
-	if classify(d) == CatAdditionalProperties {
+func (d Diagnostic) IsUnknownField() bool {
+	if d.Category() == CatAdditionalProperties {
 		return true
 	}
 	return strings.Contains(d.Message, "additionalProperties")

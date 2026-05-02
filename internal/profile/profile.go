@@ -79,6 +79,53 @@ type Result struct {
 	Rationale     string `json:"rationale,omitempty"`
 }
 
+// MarkExempt records that a valid acknowledged exception applies to
+// this result: the underlying check stays a fail, but the policy
+// outcome is treated as a pass at the configured downgraded severity.
+// Replaces the external `r.Pass = true; r.Severity = severity` pair
+// in profile/exception so the caller (the exception applier) tells
+// the Result what happened rather than reaching into its fields.
+//
+// nil receiver is a no-op so a defensive caller can call this without
+// nil-checking when the exception path may have skipped construction.
+func (r *Result) MarkExempt(severity policy.Severity) {
+	if r == nil {
+		return
+	}
+	r.Pass = true
+	r.Severity = severity
+}
+
+// StatusLabel returns the canonical label a text reporter should
+// display for this result's pass/fail state. Centralises the
+// (r.Pass ? "PASS" : "FAIL") branch so renderers stop reproducing
+// it at every section heading.
+func (r Result) StatusLabel() string {
+	if r.Pass {
+		return "PASS"
+	}
+	return "FAIL"
+}
+
+// MatchesSeverity reports whether this result's severity equals sev.
+// Used by per-severity grouping in text reporters; centralising the
+// equality check on the Result lets a future severity-aliasing or
+// case-folding rule live in one place.
+func (r Result) MatchesSeverity(sev policy.Severity) bool {
+	return r.Severity == sev
+}
+
+// Less reports whether r should sort before other in the standard
+// profile-report display order: failing results first, then by
+// descending severity. Replaces the inline sort.SliceStable comparator
+// in Profile.Evaluate so the ordering policy lives on the type.
+func (r Result) Less(other Result) bool {
+	if r.Pass != other.Pass {
+		return !r.Pass // failures first
+	}
+	return r.Severity > other.Severity
+}
+
 // Report is the output of evaluating a profile against a snapshot.
 type Report struct {
 	ProfileID        string                  `json:"profile_id"`
@@ -130,6 +177,17 @@ type AcknowledgedEntry struct {
 	Valid          bool             `json:"valid"`
 	InvalidReason  string           `json:"invalid_reason,omitempty"`
 	InvalidDetail  string           `json:"invalid_detail,omitempty"`
+}
+
+// StatusLabel returns the canonical label a text reporter should
+// display for this acknowledged entry: "VALID" when the exception
+// holds, "INVALID" otherwise. Renderers stop reproducing the
+// (ack.Valid ? "VALID" : "INVALID") branch.
+func (a AcknowledgedEntry) StatusLabel() string {
+	if a.Valid {
+		return "VALID"
+	}
+	return "INVALID"
 }
 
 // Evaluate runs all profile invariants against the snapshot.
@@ -202,12 +260,9 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Contro
 
 	// Sort: failures first, then by severity descending. This is
 	// for display only; compound detection ran above against the
-	// stable pre-sort input.
+	// stable pre-sort input. Comparator lives on Result.Less.
 	sort.SliceStable(results, func(i, j int) bool {
-		if results[i].Pass != results[j].Pass {
-			return !results[i].Pass // failures first
-		}
-		return results[i].Severity > results[j].Severity
+		return results[i].Less(results[j])
 	})
 
 	compoundFindings := compound.Detect(compound.DefaultRules(), preSortOutcomes)

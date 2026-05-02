@@ -2,6 +2,7 @@ package report
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -41,6 +42,25 @@ type AssessmentRequest struct {
 	ExemptedAssets       []asset.ExemptedAsset
 	ExceptedFindings     []evaluation.ExceptedFinding
 	AcknowledgedFindings []policy.AcknowledgedFinding
+}
+
+// ValidateKind reports an error if the assessment's Kind discriminator
+// does not match the expected value. Loaders previously did the
+// (a.Kind != expected) field probe themselves; centralising the check
+// keeps the discriminator-protection rule on the type that owns the
+// field, so a future Kind rename or alias-handling tweak is one edit.
+//
+// Returns a context-rich error including both kinds so the caller can
+// pass through directly without re-formatting.
+func (a *Assessment) ValidateKind(expected Kind, source string) error {
+	if a == nil {
+		return fmt.Errorf("invalid artifact in %q: assessment is nil", source)
+	}
+	if a.Kind != expected {
+		return fmt.Errorf("invalid artifact kind in %q: got %q, expected %q",
+			source, a.Kind, expected)
+	}
+	return nil
 }
 
 // Assessment is the top-level schema for a security evaluation outcome.

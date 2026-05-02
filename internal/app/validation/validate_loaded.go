@@ -3,6 +3,7 @@ package validation
 import (
 	"time"
 
+	"github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/diag"
@@ -40,6 +41,28 @@ func (r *Report) Valid() bool {
 // HasWarnings returns true if there are warning diagnostics.
 func (r *Report) HasWarnings() bool {
 	return r.ensureDiagnostics().HasWarnings()
+}
+
+// ExitError returns the sentinel error a CLI handler should bubble
+// up given this report and the strict flag. Encapsulates the
+// "errors → fail; warnings + strict → fail; warnings → soft fail"
+// policy that used to live inline in handler_output.go's
+// Reporter.ExitStatus. Returns nil for a clean report.
+//
+// nil receiver is treated as "no report yet" → ErrValidationFailed
+// so a degenerate caller surfaces the misuse instead of silently
+// reporting success.
+func (r *Report) ExitError(strict bool) error {
+	if r == nil || !r.Valid() {
+		return contracts.ErrValidationFailed
+	}
+	if r.HasWarnings() {
+		if strict {
+			return contracts.ErrValidationFailed
+		}
+		return contracts.ErrValidationWarnings
+	}
+	return nil
 }
 
 func (r *Report) ensureDiagnostics() *diag.Assessment {

@@ -292,8 +292,7 @@ func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucke
 			r.Finding = fmt.Sprintf("ACKNOWLEDGED: %s (exception by %s on %s)",
 				exc.Rationale, exc.AcknowledgedBy, exc.AcknowledgedDate)
 			r.Remediation = ""
-			r.Pass = true
-			r.Severity = policy.SeverityLow
+			r.MarkExempt(policy.SeverityLow)
 		} else {
 			// Exception invalid: keep FAIL, set a specific reason.
 			// Two distinct cases produce !allPassing here:

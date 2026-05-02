@@ -312,7 +312,7 @@ func (a *App) writeMemProfileTo(stderr io.Writer) {
 // It checks that no proxy environment variables are set, which would indicate the
 // environment expects network connectivity that Stave does not use.
 func (a *App) checkRequireOffline() error {
-	if !a.Flags.RequireOffline {
+	if a.Flags.AllowsNetworkAccess() {
 		return nil
 	}
 	for _, env := range kernel.DefaultPolicy().ProxyEnvVars() {

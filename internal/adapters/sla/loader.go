@@ -3,6 +3,7 @@ package sla
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"log/slog"
@@ -76,33 +77,56 @@ func LoadFromFile(path string) (*Policy, error) {
 }
 
 // Validate checks that all required fields are present and valid.
+// Tier-level checks live on DeadlineTiers itself; Policy.Validate
+// only owns the Policy-scoped invariants (escalation_factor range).
 func (p *Policy) Validate() error {
 	var errs []string
-	if p.Deadlines.Critical == "" {
-		errs = append(errs, "deadlines.critical is required")
-	} else if _, err := kernel.ParseDuration(p.Deadlines.Critical); err != nil {
-		errs = append(errs, "deadlines.critical: "+err.Error())
-	}
-	if p.Deadlines.High == "" {
-		errs = append(errs, "deadlines.high is required")
-	} else if _, err := kernel.ParseDuration(p.Deadlines.High); err != nil {
-		errs = append(errs, "deadlines.high: "+err.Error())
-	}
-	if p.Deadlines.Medium == "" {
-		errs = append(errs, "deadlines.medium is required")
-	} else if _, err := kernel.ParseDuration(p.Deadlines.Medium); err != nil {
-		errs = append(errs, "deadlines.medium: "+err.Error())
-	}
-	if p.Deadlines.Low == "" {
-		errs = append(errs, "deadlines.low is required")
-	} else if _, err := kernel.ParseDuration(p.Deadlines.Low); err != nil {
-		errs = append(errs, "deadlines.low: "+err.Error())
+	if err := p.Deadlines.Validate(); err != nil {
+		errs = append(errs, err.Error())
 	}
 	if p.EscalationFactor < 1.0 || p.EscalationFactor > 3.0 {
 		errs = append(errs, fmt.Sprintf("escalation_factor %.1f must be between 1.0 and 3.0", p.EscalationFactor))
 	}
 	if len(errs) > 0 {
 		return fmt.Errorf("%s", strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+// Validate checks that all four severity tiers carry a non-empty,
+// kernel.ParseDuration-parseable string. Returns a single
+// semicolon-joined error so the caller can surface every missing /
+// malformed tier in one pass instead of failing on the first.
+//
+// Owns the per-tier "required and parseable" rule so Policy.Validate
+// stops reproducing the same four-field walk; future additions to the
+// tier set are one edit on DeadlineTiers.
+func (d *DeadlineTiers) Validate() error {
+	if d == nil {
+		return errors.New("deadlines: tier set is nil")
+	}
+	tiers := []struct {
+		name  string
+		value string
+	}{
+		{"critical", d.Critical},
+		{"high", d.High},
+		{"medium", d.Medium},
+		{"low", d.Low},
+	}
+	var errs []string
+	for _, t := range tiers {
+		switch {
+		case t.value == "":
+			errs = append(errs, "deadlines."+t.name+" is required")
+		default:
+			if _, err := kernel.ParseDuration(t.value); err != nil {
+				errs = append(errs, "deadlines."+t.name+": "+err.Error())
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, "; "))
 	}
 	return nil
 }

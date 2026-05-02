@@ -61,6 +61,17 @@ func (g *globalFlagsType) SetPathMode(v string) {
 	g.PathMode = cliflags.PathModeFlag(v)
 }
 
+// AllowsNetworkAccess reports whether the operator has NOT asserted
+// the offline-only guarantee via --require-offline. Renames the
+// inverse of the technical RequireOffline flag into a behaviour-
+// oriented permission so callers in cmd/bootstrap stop reading
+// !RequireOffline directly. Stave never makes network calls in
+// normal operation; the flag exists to surface mis-configured proxy
+// envs to operators who rely on the airgap guarantee.
+func (g *globalFlagsType) AllowsNetworkAccess() bool {
+	return g != nil && !g.RequireOffline
+}
+
 // globalFlagsType groups all persistent CLI flags into a single struct,
 // following the same pattern as applyFlagsType in cmd/apply/command.go.
 type globalFlagsType struct {

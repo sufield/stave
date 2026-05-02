@@ -34,6 +34,32 @@ type Request struct {
 	IsYAML        bool
 }
 
+// ParsedPayload deserialises Data using the format the request
+// declares (YAML when IsYAML, JSON otherwise) and returns the result
+// the schema engine can validate. Centralises the parser switch so
+// Validator.Validate stops branching on IsYAML; future formats land
+// as a single case here instead of a multi-site update.
+//
+// A parse error is returned as a single-element diagnostic slice in
+// the second return so callers can surface the parser failure as a
+// validation finding without needing a separate error path. Both
+// returns are non-nil simultaneously only on parse failure; on
+// success diags is nil.
+func (r Request) ParsedPayload() (payload any, parseDiags []Diagnostic) {
+	if r.IsYAML {
+		var rawYAML any
+		if err := yaml.Unmarshal(r.Data, &rawYAML); err != nil {
+			return nil, []Diagnostic{{Path: "/", Message: "invalid YAML: " + err.Error()}}
+		}
+		return normalizeYAML(rawYAML), nil
+	}
+	var p any
+	if err := json.Unmarshal(r.Data, &p); err != nil {
+		return nil, []Diagnostic{{Path: "/", Message: "invalid JSON: " + err.Error()}}
+	}
+	return p, nil
+}
+
 // RequestValidator runs schema validation against a typed Request.
 // The Request.Kind discriminator selects which schema is applied. Used by
 // callers that already have a Request value (e.g. JSON output writers).
@@ -87,18 +113,9 @@ func (v *Validator) Validate(req Request) ([]Diagnostic, error) {
 		return nil, err
 	}
 
-	// Prepare JSON payload (converting from YAML if necessary)
-	var payload any
-	if req.IsYAML {
-		var rawYAML any
-		if err := yaml.Unmarshal(req.Data, &rawYAML); err != nil {
-			return []Diagnostic{{Path: "/", Message: "invalid YAML: " + err.Error()}}, nil //nolint:nilerr // parse error converted to diagnostic, not propagated
-		}
-		payload = normalizeYAML(rawYAML)
-	} else {
-		if err := json.Unmarshal(req.Data, &payload); err != nil {
-			return []Diagnostic{{Path: "/", Message: "invalid JSON: " + err.Error()}}, nil //nolint:nilerr // parse error converted to diagnostic, not propagated
-		}
+	payload, parseDiags := req.ParsedPayload()
+	if parseDiags != nil {
+		return parseDiags, nil
 	}
 
 	// Execute validation

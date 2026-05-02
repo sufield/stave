@@ -51,11 +51,7 @@ func writeFindingsBySeverity(w io.Writer, results []profile.Result) {
 		}
 		fmt.Fprintf(w, "── %s ──\n\n", sev)
 		for _, r := range group {
-			status := "FAIL"
-			if r.Pass {
-				status = "PASS"
-			}
-			fmt.Fprintf(w, "  [%s] %s — %s\n", status, r.ControlID, r.Severity)
+			fmt.Fprintf(w, "  [%s] %s — %s\n", r.StatusLabel(), r.ControlID, r.Severity)
 			if r.ComplianceRef != "" {
 				fmt.Fprintf(w, "  Compliance: %s", r.ComplianceRef)
 				if r.Rationale != "" {
@@ -81,11 +77,7 @@ func writeAcknowledged(w io.Writer, acknowledged []profile.AcknowledgedEntry) {
 	fmt.Fprintln(w, "── Acknowledged Exceptions ──")
 	fmt.Fprintln(w)
 	for _, ack := range acknowledged {
-		status := "INVALID"
-		if ack.Valid {
-			status = "VALID"
-		}
-		fmt.Fprintf(w, "  [%s] %s — %s\n", status, ack.ControlID, ack.Bucket)
+		fmt.Fprintf(w, "  [%s] %s — %s\n", ack.StatusLabel(), ack.ControlID, ack.Bucket)
 		fmt.Fprintf(w, "  Rationale: %s\n", ack.Rationale)
 		fmt.Fprintf(w, "  Acknowledged by: %s\n", ack.AcknowledgedBy)
 		if !ack.Valid {
@@ -125,7 +117,7 @@ func passLabel(pass bool) string {
 func filterBySeverity(results []profile.Result, sev policy.Severity) []profile.Result {
 	var out []profile.Result
 	for _, r := range results {
-		if r.Severity == sev {
+		if r.MatchesSeverity(sev) {
 			out = append(out, r)
 		}
 	}

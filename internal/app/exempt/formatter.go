@@ -31,7 +31,7 @@ func WriteList(w io.Writer, f *AcceptanceFile, format, listType string, showExpi
 	if listType == "all" || listType == "acknowledgment" {
 		for i := range f.Acknowledgments {
 			a := &f.Acknowledgments[i]
-			if !showExpired && (a.IsRevoked() || a.IsExpired()) {
+			if !showExpired && a.IsInactive() {
 				continue
 			}
 			fmt.Fprintf(w, "  [ACK]  %-40s  expires %s  %s  %s\n",

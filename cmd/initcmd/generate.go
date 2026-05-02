@@ -25,6 +25,21 @@ type GenerateRunner struct {
 	AllowSymlink bool
 }
 
+// RefusesOverwrite reports whether writeFile should refuse to clobber
+// an existing target. The previous shape inverted Force at the call
+// site (`if !r.Force`); the named accessor keeps the policy intent
+// (--force flips refusal off) on the type that owns the flag.
+func (r *GenerateRunner) RefusesOverwrite() bool {
+	return r != nil && !r.Force
+}
+
+// ShouldEmitText reports whether the runner should write its
+// human-readable "Generated <path>" line. Mirrors Runtime.ShouldOutput
+// for the subset of state this runner carries.
+func (r *GenerateRunner) ShouldEmitText() bool {
+	return r != nil && !r.Quiet
+}
+
 // RunObservation generates an observation JSON template.
 func (r *GenerateRunner) RunObservation(req GenerateRequest) error {
 	name := strings.TrimSpace(req.Name)
@@ -45,7 +60,7 @@ func (r *GenerateRunner) writeFile(path string, content []byte) error {
 	if strings.TrimSpace(path) == "" {
 		return errors.New("output path cannot be empty")
 	}
-	if !r.Force {
+	if r.RefusesOverwrite() {
 		if _, err := os.Stat(path); err == nil {
 			return fmt.Errorf("file already exists: %s (use --force to overwrite)", path)
 		}
@@ -59,7 +74,7 @@ func (r *GenerateRunner) writeFile(path string, content []byte) error {
 	if err := fsutil.SafeWriteFile(path, content, opts); err != nil {
 		return err
 	}
-	if !r.Quiet {
+	if r.ShouldEmitText() {
 		fmt.Fprintf(r.Out, "Generated %s\n", path)
 	}
 	return nil

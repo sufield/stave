@@ -43,6 +43,13 @@ type RenderTextOptions struct {
 	Quiet           bool
 }
 
+// ShouldRender reports whether RenderText should produce output.
+// Wraps the Quiet flag in a behaviour-named accessor so the caller
+// reads as "render when allowed" rather than "skip when quiet".
+func (o RenderTextOptions) ShouldRender() bool {
+	return !o.Quiet
+}
+
 // RenderText writes report text to opts.Writer unless opts.Quiet is true.
 // When TemplatePath is set, it overrides DefaultTemplate.
 func RenderText(eval corereport.Assessment, opts RenderTextOptions) error {
@@ -61,7 +68,7 @@ func RenderText(eval corereport.Assessment, opts RenderTextOptions) error {
 		return fmt.Errorf("render report template: %w", err)
 	}
 
-	if opts.Quiet {
+	if !opts.ShouldRender() {
 		return nil
 	}
 	if _, err := io.WriteString(opts.Writer, buf.String()); err != nil {

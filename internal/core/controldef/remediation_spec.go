@@ -85,3 +85,12 @@ func NewRemediationSpec(desc, action, example string) *RemediationSpec {
 func (s *RemediationSpec) Actionable() bool {
 	return s != nil && s.Action != ""
 }
+
+// IsEmpty reports whether the spec carries neither a Description nor
+// an Action — i.e. the catalog author left both prose fields blank,
+// so a renderer has nothing to print. Distinct from Actionable, which
+// asks specifically about Action; IsEmpty is the "should we render
+// this block at all?" question. Safe on nil receivers.
+func (s *RemediationSpec) IsEmpty() bool {
+	return s == nil || (s.Description == "" && s.Action == "")
+}

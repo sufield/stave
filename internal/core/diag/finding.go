@@ -25,6 +25,24 @@ type Finding struct {
 	FixCommand  string                `json:"fix_command,omitempty"`
 }
 
+// SeverityLabel returns the human-readable label a text renderer
+// should display for this finding's severity. Centralises the
+// (severity == SeverityError ? "ERROR" : "WARNING") branch so
+// renderers stop reproducing the comparison and a future
+// SeverityInfo / SeverityWarn split touches one place.
+func (f Finding) SeverityLabel() string {
+	switch f.Severity {
+	case SeverityError:
+		return "ERROR"
+	case SeverityWarn:
+		return "WARNING"
+	case SeverityInfo:
+		return "INFO"
+	default:
+		return string(f.Severity)
+	}
+}
+
 // Builder provides a fluent API for constructing security findings.
 type Builder struct {
 	finding Finding

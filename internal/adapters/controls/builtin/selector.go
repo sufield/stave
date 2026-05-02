@@ -53,7 +53,7 @@ func ParseSelector(s string) (Selector, error) {
 // If MinSeverity is set, the control's severity must meet or exceed it.
 func (sel Selector) Matches(ctl policy.ControlDefinition) bool {
 	// Check severity first for a fast fail path.
-	if sel.MinSeverity > policy.SeverityNone && !ctl.Severity.Gte(sel.MinSeverity) {
+	if sel.MinSeverity.IsSet() && !ctl.Severity.Gte(sel.MinSeverity) {
 		return false
 	}
 

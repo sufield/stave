@@ -84,8 +84,18 @@ func (m *Editor[T]) Delete(key string) (MutationResult, error) {
 	return MutationResult{Key: key, Path: cfgPath, Applied: true}, nil
 }
 
+// ShouldPrompt reports whether the editor should ask the user to
+// confirm a mutation. Returns false when --force is set OR the
+// process is running headless (no TTY) — both branches mean the
+// caller should proceed without a prompt. Centralises the
+// (m.Force || !m.IsTTY()) check that confirmSetChange and
+// confirmDeleteChange both used to repeat.
+func (m *Editor[T]) ShouldPrompt() bool {
+	return !m.Force && m.IsTTY()
+}
+
 func (m *Editor[T]) confirmSetChange(key, oldValue, newValue, path string) bool {
-	if m.Force || !m.IsTTY() {
+	if !m.ShouldPrompt() {
 		return true
 	}
 	errOut := m.stderr()
@@ -98,7 +108,7 @@ func (m *Editor[T]) confirmSetChange(key, oldValue, newValue, path string) bool 
 }
 
 func (m *Editor[T]) confirmDeleteChange(key, path string) bool {
-	if m.Force || !m.IsTTY() {
+	if !m.ShouldPrompt() {
 		return true
 	}
 	errOut := m.stderr()

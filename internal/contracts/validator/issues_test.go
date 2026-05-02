@@ -30,8 +30,8 @@ func TestIsUnknownFieldDiagnostic(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := IsUnknownFieldDiagnostic(tc.diag); got != tc.want {
-				t.Fatalf("IsUnknownFieldDiagnostic()=%v want %v", got, tc.want)
+			if got := tc.diag.IsUnknownField(); got != tc.want {
+				t.Fatalf("Diagnostic.IsUnknownField()=%v want %v", got, tc.want)
 			}
 		})
 	}

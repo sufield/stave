@@ -2,6 +2,7 @@ package evaluation
 
 import (
 	"cmp"
+	"fmt"
 	"slices"
 	"time"
 
@@ -35,6 +36,22 @@ type Baseline struct {
 	CreatedAt        time.Time         `json:"created_at"`
 	SourceEvaluation string            `json:"source_evaluation"`
 	Findings         []BaselineEntry   `json:"findings"`
+}
+
+// ValidateKind reports an error if the baseline's Kind discriminator
+// does not match the expected value. Same rationale as
+// Assessment.ValidateKind: keep the discriminator-protection rule on
+// the type that owns the field so loaders stop reproducing the
+// (Kind != expected) probe.
+func (b *Baseline) ValidateKind(expected kernel.OutputKind, source string) error {
+	if b == nil {
+		return fmt.Errorf("invalid baseline in %q: baseline is nil", source)
+	}
+	if b.Kind != expected {
+		return fmt.Errorf("invalid baseline kind in %q: got %q, expected %q",
+			source, b.Kind, expected)
+	}
+	return nil
 }
 
 // BaselineComparisonSummary provides aggregate counts for a baseline check.

@@ -43,21 +43,14 @@ func (r *Reporter) Write(result *appvalidation.Report, hc hintContext) error {
 }
 
 // ExitStatus determines if the validation should result in a CLI error.
-// Returns an error if result is nil.
+// Returns an error if result is nil. The policy decision lives on
+// Report.ExitError; this method is a thin wrapper that surfaces the
+// nil-result error path.
 func (r *Reporter) ExitStatus(result *appvalidation.Report) error {
 	if result == nil {
 		return errNilResult
 	}
-	if !result.Valid() {
-		return ui.ErrValidationFailed
-	}
-	if result.HasWarnings() && r.Strict {
-		return ui.ErrValidationFailed
-	}
-	if result.HasWarnings() {
-		return ui.ErrValidationWarnings
-	}
-	return nil
+	return result.ExitError(r.Strict)
 }
 
 // --- Internal Presentation Logic ---
@@ -125,12 +118,7 @@ func printHeader(w io.Writer, valid bool, eCount, wCount int) error {
 }
 
 func printIssue(w io.Writer, issue diag.Finding) error {
-	level := "WARNING"
-	if issue.Severity == diag.SeverityError {
-		level = "ERROR"
-	}
-
-	if _, err := fmt.Fprintln(w, ui.SeverityLabel(level, string(issue.RuleID), w)); err != nil {
+	if _, err := fmt.Fprintln(w, ui.SeverityLabel(issue.SeverityLabel(), string(issue.RuleID), w)); err != nil {
 		return err
 	}
 

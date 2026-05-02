@@ -37,11 +37,15 @@ const (
 	CodeSecurityAuditFindings ErrorCode = "SECURITY_AUDIT_FINDINGS"
 )
 
-// Sentinel errors used for logic-based exit code mapping.
+// Sentinel errors used for logic-based exit code mapping. The
+// validation-related sentinels are aliased from app/contracts so
+// the validation package can return them from Report.ExitError
+// without importing cli/ui (a hex-arch violation); errors.Is checks
+// against either name continue to work.
 var (
 	ErrViolationsFound       = appcontracts.ErrViolationsFound
-	ErrValidationWarnings    = errors.New("validation warnings")
-	ErrValidationFailed      = errors.New("validation failed")
+	ErrValidationWarnings    = appcontracts.ErrValidationWarnings
+	ErrValidationFailed      = appcontracts.ErrValidationFailed
 	ErrDiagnosticsFound      = errors.New("diagnostics found")
 	ErrSecurityAuditFindings = errors.New("security audit findings")
 	ErrInterrupted           = errors.New("interrupted")

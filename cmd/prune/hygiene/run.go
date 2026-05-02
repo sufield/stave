@@ -42,6 +42,13 @@ type config struct {
 	Filter UpcomingFilter
 }
 
+// ShouldEmit reports whether RunHygiene / RunRisk should produce
+// formatted output. Centralises the cfg.Quiet probe so the
+// run-mode functions stop asking the field directly.
+func (c config) ShouldEmit() bool {
+	return !c.Quiet
+}
+
 // UpcomingFilter holds criteria to narrow down the risk assessment section.
 type UpcomingFilter struct {
 	ControlIDs   []kernel.ControlID
@@ -96,7 +103,7 @@ func (r *runner) RunStatus(ctx context.Context, cfg config) error {
 
 	stats := buildSnapshotStats(cfg, activeSnapshots, archiveSnapshots, files)
 
-	if cfg.Quiet {
+	if !cfg.ShouldEmit() {
 		return nil
 	}
 
@@ -124,7 +131,7 @@ func (r *runner) RunRisk(ctx context.Context, cfg config) error {
 		return err
 	}
 
-	if cfg.Quiet {
+	if !cfg.ShouldEmit() {
 		return nil
 	}
 

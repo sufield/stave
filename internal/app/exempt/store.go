@@ -59,6 +59,14 @@ func (a *AcknowledgmentEntry) IsRevoked() bool { return a.Status == AckStatusRev
 // been moved to the "expired" status.
 func (a *AcknowledgmentEntry) IsExpired() bool { return a.Status == AckStatusExpired }
 
+// IsInactive reports whether the entry is no longer in force —
+// either revoked or expired. Replaces the (IsRevoked() || IsExpired())
+// disjunction in the formatter so callers stop joining the two
+// status questions at every site.
+func (a *AcknowledgmentEntry) IsInactive() bool {
+	return a != nil && (a.IsRevoked() || a.IsExpired())
+}
+
 // IsExportable reports whether the acknowledgment should appear in
 // POA&M / external compliance exports. Active and expired entries
 // both export — active becomes an "accepted" risk, expired becomes

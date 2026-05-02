@@ -51,6 +51,15 @@ func DefaultRuntime() *Runtime {
 	}
 }
 
+// ShouldOutput reports whether this Runtime should produce
+// progress / hint / next-steps output. Centralises the
+// (r == nil || r.Quiet) check that BeginProgress, PrintNextSteps
+// and PrintWorkflowHandoff used to repeat. nil receiver returns
+// false so a missing-runtime caller is silent rather than panicking.
+func (r *Runtime) ShouldOutput() bool {
+	return r != nil && !r.Quiet
+}
+
 // IsTerminal reports whether w points to a terminal device.
 func IsTerminal(w io.Writer) bool {
 	f, ok := w.(*os.File)
@@ -80,7 +89,7 @@ func (r *Runtime) isTerminal(w io.Writer) bool {
 
 // BeginProgress prints a start and done message on stderr for long-running steps.
 func (r *Runtime) BeginProgress(label string) func() {
-	if r == nil || r.Quiet {
+	if !r.ShouldOutput() {
 		return func() {}
 	}
 
@@ -143,7 +152,7 @@ func WriteHint(w io.Writer, command string) {
 // PrintNextSteps writes a formatted "Next steps:" block to stderr.
 // Hints are always written to stderr so they never contaminate JSON stdout.
 func (r *Runtime) PrintNextSteps(steps ...string) {
-	if r == nil || r.Quiet || len(steps) == 0 || env.Demo.IsTrue() {
+	if !r.ShouldOutput() || len(steps) == 0 || env.Demo.IsTrue() {
 		return
 	}
 
@@ -183,7 +192,7 @@ type WorkflowHandoffRequest struct {
 
 // PrintWorkflowHandoff prints the next workflow command guidance to stderr.
 func (r *Runtime) PrintWorkflowHandoff(req WorkflowHandoffRequest) {
-	if r == nil || r.Quiet || !ShouldShowWorkflowHandoff(req.Args) || strings.TrimSpace(req.ProjectRoot) == "" {
+	if !r.ShouldOutput() || !ShouldShowWorkflowHandoff(req.Args) || strings.TrimSpace(req.ProjectRoot) == "" {
 		return
 	}
 

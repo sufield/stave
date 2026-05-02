@@ -118,25 +118,11 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 		Now:                  deps.Config.Clock.Now(),
 	})
 
-	// Scan findings for SLA breaches. The loop short-circuits only
-	// when both HasSLABreach and HasCriticalSLABreach are set, since
-	// once that pair is true no later finding can elevate either
-	// flag. A bare `break` on the first breach (or first critical
-	// breach) would leave HasCriticalSLABreach=false on the case
-	// where the first SLA-breached finding is non-critical and a
-	// later one IS critical.
-	for i := range result.Findings {
-		f := &result.Findings[i]
-		if f.IsAnyBreach() {
-			evalResult.HasSLABreach = true
-		}
-		if f.IsCriticalSLABreach() {
-			evalResult.HasCriticalSLABreach = true
-		}
-		if evalResult.HasSLABreach && evalResult.HasCriticalSLABreach {
-			break
-		}
-	}
+	// Aggregation lives on ComplianceReport so the apply runner asks
+	// the report whether any/critical breaches occurred instead of
+	// reproducing the per-finding scan that used to live here.
+	evalResult.HasSLABreach = result.HasAnySLABreach()
+	evalResult.HasCriticalSLABreach = result.HasCriticalSLABreach()
 
 	return evalResult, nil
 }

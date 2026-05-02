@@ -200,9 +200,8 @@ func (l *Loader) LoadEnvelopeFromFile(ctx context.Context, path string) (*report
 		return nil, fmt.Errorf("parsing evaluation JSON from %q: %w", path, err)
 	}
 
-	if eval.Kind != report.KindAssessment {
-		return nil, fmt.Errorf("invalid artifact kind in %q: got %q, expected %q",
-			path, eval.Kind, report.KindAssessment)
+	if err := eval.ValidateKind(report.KindAssessment, path); err != nil {
+		return nil, err
 	}
 
 	return &eval, nil
@@ -237,9 +236,8 @@ func (l *Loader) LoadBaselineFromFile(ctx context.Context, path string, expected
 // PrepareBaseline validates and normalizes a deserialized baseline for use.
 // It checks the kind field, initializes nil slices, and sorts findings deterministically.
 func PrepareBaseline(base *evaluation.Baseline, expectedKind kernel.OutputKind, source string) error {
-	if base.Kind != expectedKind {
-		return fmt.Errorf("invalid baseline kind in %q: got %q, expected %q",
-			source, base.Kind, expectedKind)
+	if err := base.ValidateKind(expectedKind, source); err != nil {
+		return err
 	}
 	if base.Findings == nil {
 		base.Findings = []evaluation.BaselineEntry{}

@@ -54,7 +54,7 @@ func (d *EnvironmentDetector) Detect() Environment {
 		return Environment{}
 	}
 	name, ctx, ok, resolveErr := st.ResolveSelected()
-	if resolveErr == nil && ok && ctx != nil && ctx.Production {
+	if resolveErr == nil && ok && ctx != nil && ctx.IsProduction() {
 		return Environment{
 			IsProduction: true,
 			Source:       fmt.Sprintf("context %q has production: true", name),

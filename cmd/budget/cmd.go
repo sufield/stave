@@ -260,13 +260,9 @@ func writeTable(w io.Writer, r appbudget.Report) {
 	for i := range r.BurnRates {
 		br := &r.BurnRates[i]
 		bar := burnBar(br.BurnRatePercent)
-		status := "WITHIN BUDGET"
-		if br.IsExhausted() {
-			status = "EXHAUSTED"
-		}
 		fmt.Fprintf(w, "%-10s %7.0fh %9.0fh %9.0fh %9.1f%%   %s  %s\n",
 			strings.ToUpper(br.Severity), br.AllowedHours, br.ConsumedHours,
-			br.RemainingHours, br.BurnRatePercent, bar, status)
+			br.RemainingHours, br.BurnRatePercent, bar, br.StatusLabel())
 	}
 
 	// Velocity section.
@@ -336,13 +332,9 @@ func writeMarkdown(w io.Writer, r appbudget.Report) {
 	fmt.Fprintln(w, "|---|---|---|---|---|")
 	for i := range r.BurnRates {
 		br := &r.BurnRates[i]
-		status := "Within budget"
-		if br.IsExhausted() {
-			status = "EXHAUSTED"
-		}
 		fmt.Fprintf(w, "| %s | %.0fh | %.0fh | %.1f%% | %s |\n",
 			strings.ToUpper(br.Severity[:1])+br.Severity[1:], br.AllowedHours, br.ConsumedHours,
-			br.BurnRatePercent, status)
+			br.BurnRatePercent, br.StatusLabel())
 	}
 
 	if r.Gate != nil {
