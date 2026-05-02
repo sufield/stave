@@ -116,13 +116,10 @@ func (d *DeadlineTiers) Validate() error {
 	}
 	var errs []string
 	for _, t := range tiers {
-		switch {
-		case t.value == "":
+		if t.value == "" {
 			errs = append(errs, "deadlines."+t.name+" is required")
-		default:
-			if _, err := kernel.ParseDuration(t.value); err != nil {
-				errs = append(errs, "deadlines."+t.name+": "+err.Error())
-			}
+		} else if _, err := kernel.ParseDuration(t.value); err != nil {
+			errs = append(errs, "deadlines."+t.name+": "+err.Error())
 		}
 	}
 	if len(errs) > 0 {

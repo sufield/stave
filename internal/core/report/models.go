@@ -99,8 +99,9 @@ type SeverityCounts struct {
 
 // Total returns the sum of the four named tiers. Convenient for
 // callers that already track a separate "total findings" count and
-// want to assert consistency.
-func (c SeverityCounts) Total() int {
+// want to assert consistency. Pointer receiver matches Add — keeps
+// the SeverityCounts method set on a single receiver kind.
+func (c *SeverityCounts) Total() int {
 	return c.Critical + c.High + c.Medium + c.Low
 }
 

@@ -254,7 +254,6 @@ type AssessmentOptions struct {
 // per-asset CEL evaluation that dominates the runtime.
 type assessmentSession struct {
 	assessor          *Assessor
-	ctx               context.Context // cancellation channel for the run; consulted in applyControl
 	snapshots         []asset.Snapshot
 	auditTime         time.Time
 	collector         *AssessmentCollector
@@ -332,7 +331,6 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 	}
 	sess := &assessmentSession{
 		assessor:  a,
-		ctx:       ctx,
 		snapshots: sequenced,
 		auditTime: auditTime,
 		collector: NewCollector(assetHint),
@@ -353,7 +351,7 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 			)
 			continue
 		}
-		if err := sess.applyControl(ctl, lifecycles[ctl.ID]); err != nil {
+		if err := sess.applyControl(ctx, ctl, lifecycles[ctl.ID]); err != nil {
 			return evaluation.ComplianceReport{}, err
 		}
 	}
@@ -372,6 +370,7 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 // mutex around the field assignment, because that only serializes the
 // write and the strategy still reads the wrong span.
 func (s *assessmentSession) applyControl(
+	ctx context.Context,
 	ctl *policy.ControlDefinition,
 	lifecycles map[asset.ID]*asset.ExposureLifecycle,
 ) error {
@@ -399,10 +398,8 @@ func (s *assessmentSession) applyControl(
 		// completion after the user hit Ctrl-C. Checked here rather
 		// than only in Assess() because a single control with a large
 		// asset set can dominate runtime.
-		if s.ctx != nil {
-			if err := s.ctx.Err(); err != nil {
-				return err
-			}
+		if err := ctx.Err(); err != nil {
+			return err
 		}
 		lifecycle := lifecycles[id]
 		span := s.beginTrace(string(id), ctl.ID.String())

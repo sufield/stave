@@ -99,8 +99,10 @@ func (r *Result) MarkExempt(severity policy.Severity) {
 // StatusLabel returns the canonical label a text reporter should
 // display for this result's pass/fail state. Centralises the
 // (r.Pass ? "PASS" : "FAIL") branch so renderers stop reproducing
-// it at every section heading.
-func (r Result) StatusLabel() string {
+// it at every section heading. Pointer receiver for consistency
+// with the mutating MarkExempt — keeps the Result method set on a
+// single receiver kind (recvcheck-clean).
+func (r *Result) StatusLabel() string {
 	if r.Pass {
 		return "PASS"
 	}
@@ -111,7 +113,7 @@ func (r Result) StatusLabel() string {
 // Used by per-severity grouping in text reporters; centralising the
 // equality check on the Result lets a future severity-aliasing or
 // case-folding rule live in one place.
-func (r Result) MatchesSeverity(sev policy.Severity) bool {
+func (r *Result) MatchesSeverity(sev policy.Severity) bool {
 	return r.Severity == sev
 }
 
@@ -119,7 +121,7 @@ func (r Result) MatchesSeverity(sev policy.Severity) bool {
 // profile-report display order: failing results first, then by
 // descending severity. Replaces the inline sort.SliceStable comparator
 // in Profile.Evaluate so the ordering policy lives on the type.
-func (r Result) Less(other Result) bool {
+func (r *Result) Less(other *Result) bool {
 	if r.Pass != other.Pass {
 		return !r.Pass // failures first
 	}
@@ -262,7 +264,7 @@ func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.Contro
 	// for display only; compound detection ran above against the
 	// stable pre-sort input. Comparator lives on Result.Less.
 	sort.SliceStable(results, func(i, j int) bool {
-		return results[i].Less(results[j])
+		return results[i].Less(&results[j])
 	})
 
 	compoundFindings := compound.Detect(compound.DefaultRules(), preSortOutcomes)

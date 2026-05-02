@@ -75,23 +75,23 @@ func (g *globalFlagsType) AllowsNetworkAccess() bool {
 // globalFlagsType groups all persistent CLI flags into a single struct,
 // following the same pattern as applyFlagsType in cmd/apply/command.go.
 type globalFlagsType struct {
-	Quiet           bool              // suppress non-essential output
-	Yes             bool              // auto-confirm all interactive prompts
-	Verbosity       int               // -v count (0=WARN, 1=INFO, 2+=DEBUG)
-	LogLevel        logging.LevelFlag // explicit log level override
-	LogFormat       logging.Format    // "text" or "json"
-	LogFile         string            // optional log file path
-	LogTimestamps   bool              // enable timestamps (breaks determinism)
-	LogTimings      bool              // enable timing logs (breaks determinism)
-	Sanitize        bool              // sanitize infrastructure identifiers from output
+	Quiet           bool                  // suppress non-essential output
+	Yes             bool                  // auto-confirm all interactive prompts
+	Verbosity       int                   // -v count (0=WARN, 1=INFO, 2+=DEBUG)
+	LogLevel        logging.LevelFlag     // explicit log level override
+	LogFormat       logging.Format        // "text" or "json"
+	LogFile         string                // optional log file path
+	LogTimestamps   bool                  // enable timestamps (breaks determinism)
+	LogTimings      bool                  // enable timing logs (breaks determinism)
+	Sanitize        bool                  // sanitize infrastructure identifiers from output
 	PathMode        cliflags.PathModeFlag // "base" (default) or "full" — controls path rendering; validated at parse time
-	Force           bool              // allow overwriting existing output files
-	AllowSymlinkOut bool              // allow writing through symlinks
-	RequireOffline  bool              // runtime self-check for offline operation
-	Strict          bool              // enable strict runtime integrity checks
-	NoColor         bool              // disable colored output even on TTY
-	CPUProfile      string            // write CPU profile to file
-	MemProfile      string            // write heap profile to file
+	Force           bool                  // allow overwriting existing output files
+	AllowSymlinkOut bool                  // allow writing through symlinks
+	RequireOffline  bool                  // runtime self-check for offline operation
+	Strict          bool                  // enable strict runtime integrity checks
+	NoColor         bool                  // disable colored output even on TTY
+	CPUProfile      string                // write CPU profile to file
+	MemProfile      string                // write heap profile to file
 }
 
 // AppOption configures optional behaviour on an App before it is returned
