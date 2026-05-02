@@ -2,6 +2,7 @@ package engine
 
 import (
 	"cmp"
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -253,6 +254,7 @@ type AssessmentOptions struct {
 // per-asset CEL evaluation that dominates the runtime.
 type assessmentSession struct {
 	assessor          *Assessor
+	ctx               context.Context // cancellation channel for the run; consulted in applyControl
 	snapshots         []asset.Snapshot
 	auditTime         time.Time
 	collector         *AssessmentCollector
@@ -272,7 +274,18 @@ func (s *assessmentSession) beginTrace(resourceID, policyID string) ports.Assess
 }
 
 // Assess processes the observation snapshots and returns a comprehensive ComplianceReport.
-func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions) (evaluation.ComplianceReport, error) {
+//
+// ctx is consulted between control iterations in applyControl so a
+// cancelled or deadline-expired context aborts long-running evaluations
+// (Ctrl-C, server timeouts) at the next control boundary instead of
+// running the catalog to completion.
+func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts ...AssessmentOptions) (evaluation.ComplianceReport, error) {
+	if ctx == nil {
+		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor.Assess requires a non-nil context")
+	}
+	if err := ctx.Err(); err != nil {
+		return evaluation.ComplianceReport{}, err
+	}
 	if a.clock == nil {
 		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a Clock")
 	}
@@ -319,6 +332,7 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 	}
 	sess := &assessmentSession{
 		assessor:  a,
+		ctx:       ctx,
 		snapshots: sequenced,
 		auditTime: auditTime,
 		collector: NewCollector(assetHint),
@@ -327,6 +341,9 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 	}
 
 	for i := range a.controls {
+		if err := ctx.Err(); err != nil {
+			return evaluation.ComplianceReport{}, err
+		}
 		ctl := &a.controls[i]
 		if !ctl.IsEvaluatable() {
 			sess.collector.RecordSkippedControl(
@@ -336,7 +353,9 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 			)
 			continue
 		}
-		sess.applyControl(ctl, lifecycles[ctl.ID])
+		if err := sess.applyControl(ctl, lifecycles[ctl.ID]); err != nil {
+			return evaluation.ComplianceReport{}, err
+		}
 	}
 
 	return sess.compileReport(), nil
@@ -355,7 +374,7 @@ func (a *Assessor) Assess(snapshots []asset.Snapshot, opts ...AssessmentOptions)
 func (s *assessmentSession) applyControl(
 	ctl *policy.ControlDefinition,
 	lifecycles map[asset.ID]*asset.ExposureLifecycle,
-) {
+) error {
 	// Detect any future caller that violates the sequential
 	// contract. CompareAndSwap returns false when the flag is
 	// already set, which means another goroutine is in
@@ -375,6 +394,16 @@ func (s *assessmentSession) applyControl(
 	slices.Sort(assetIDs)
 
 	for _, id := range assetIDs {
+		// Per-asset cancellation check: bail out at the next iteration
+		// boundary so a long catalog × asset matrix does not run to
+		// completion after the user hit Ctrl-C. Checked here rather
+		// than only in Assess() because a single control with a large
+		// asset set can dominate runtime.
+		if s.ctx != nil {
+			if err := s.ctx.Err(); err != nil {
+				return err
+			}
+		}
 		lifecycle := lifecycles[id]
 		span := s.beginTrace(string(id), ctl.ID.String())
 
@@ -472,6 +501,7 @@ func (s *assessmentSession) applyControl(
 			s.collector.RecordNonCompliantAsset(id)
 		}
 	}
+	return nil
 }
 
 func (s *assessmentSession) compileReport() evaluation.ComplianceReport {

@@ -98,7 +98,7 @@ func runForensics(ctx context.Context, stdout io.Writer, opts *options) error {
 	}
 
 	// Build timeline.
-	tl, tlErr := appforensics.BuildTimeline(appforensics.Input{
+	tl, tlErr := appforensics.BuildTimeline(ctx, appforensics.Input{
 		AssetID:   opts.AssetID,
 		Snapshots: snapshots,
 		Controls:  controls,

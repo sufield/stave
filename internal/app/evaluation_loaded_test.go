@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func TestEvaluateLoaded_DefaultsClockWhenNil(t *testing.T) {
-	result, err := appeval.EvaluateLoaded(appeval.EvaluationRequest{
+	result, err := appeval.EvaluateLoaded(context.Background(), appeval.EvaluationRequest{
 		Controls:          nil,
 		Snapshots:         nil,
 		MaxUnsafeDuration: 24 * time.Hour,

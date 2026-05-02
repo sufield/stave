@@ -103,6 +103,36 @@ func (g GlobalFlags) GetSanitizer() *sanitize.Sanitizer {
 	return policy.NewSanitizer()
 }
 
+// PathModeFlag is the string the user types on the --path-mode CLI
+// flag. Implementing pflag.Value lets the parser reject unknown values
+// at the boundary (with a precise error pointing at the bad input)
+// instead of silently coercing them to "base" and emitting a runtime
+// warning long after the operator could have spotted the typo. The
+// allowed values match ParsePathMode's accepted inputs.
+type PathModeFlag string
+
+// String / Set / Type satisfy pflag.Value so a PathModeFlag-typed CLI
+// field can bind via cobra's PersistentFlags().Var().
+func (p PathModeFlag) String() string { return string(p) }
+
+// Set validates v against the allowed --path-mode inputs and stores
+// the normalised lowercase form. The empty string (the "default"
+// alias for "base") is accepted; any other unrecognised value is
+// rejected with an error listing the legal choices.
+func (p *PathModeFlag) Set(v string) error {
+	normalized := strings.ToLower(strings.TrimSpace(v))
+	switch normalized {
+	case "", "base", string(sanitize.PathFull):
+		*p = PathModeFlag(normalized)
+		return nil
+	default:
+		return fmt.Errorf("invalid --%s value %q (allowed: base, full)", FlagPathMode, v)
+	}
+}
+
+// Type returns the pflag type label shown in --help.
+func (p PathModeFlag) Type() string { return "string" }
+
 // ParsePathMode parses a CLI flag string to a sanitize.PathMode,
 // defaulting to PathBase. Unrecognised values log a warning and fall
 // back to PathBase so the operator sees the misuse instead of
@@ -111,6 +141,11 @@ func (g GlobalFlags) GetSanitizer() *sanitize.Sanitizer {
 // sanitize.PathBase is the empty string by design (it's the
 // "default" mode), so the "" case is part of the legitimate input
 // set rather than a synthetic alias — it does not warn.
+//
+// As of the PathModeFlag wiring, the CLI parse path rejects unknown
+// values up-front so this fallback only fires for non-CLI inputs
+// (env vars, config files) — the warn-and-default behaviour stays so
+// those paths remain forgiving while the CLI stays strict.
 func ParsePathMode(s string) sanitize.PathMode {
 	normalized := strings.ToLower(strings.TrimSpace(s))
 	switch normalized {

@@ -32,7 +32,7 @@ type globalFlagsType struct {
 	LogTimestamps   bool              // enable timestamps (breaks determinism)
 	LogTimings      bool              // enable timing logs (breaks determinism)
 	Sanitize        bool              // sanitize infrastructure identifiers from output
-	PathMode        string            // "base" (default) or "full" — controls path rendering
+	PathMode        cliflags.PathModeFlag // "base" (default) or "full" — controls path rendering; validated at parse time
 	Force           bool              // allow overwriting existing output files
 	AllowSymlinkOut bool              // allow writing through symlinks
 	RequireOffline  bool              // runtime self-check for offline operation
@@ -170,7 +170,7 @@ func ExitCode(err error) int {
 func (a *App) initSanitizer() {
 	a.sanitizer = sanitize.Policy{
 		SanitizeIDs: a.Flags.Sanitize,
-		PathMode:    cliflags.ParsePathMode(a.Flags.PathMode),
+		PathMode:    cliflags.ParsePathMode(string(a.Flags.PathMode)),
 	}.NewSanitizer()
 }
 

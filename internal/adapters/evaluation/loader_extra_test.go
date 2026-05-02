@@ -136,6 +136,50 @@ func TestLoader_LoadEnvelopeFromFile_WrongKind(t *testing.T) {
 	}
 }
 
+// strictPartialEnvelope returns a JSON envelope that passes the out.v0.1
+// schema (all required top-level keys present, valid types) but has a
+// partial Run block — exactly the corner the post-unmarshal check is for.
+// The previous AND guard let any half-populated Run through silently.
+func strictPartialEnvelope(toolVersion string, now string) string {
+	return `{
+        "schema_version": "out.v0.1",
+        "kind": "ASSESSMENT",
+        "run": {
+            "tool_version": "` + toolVersion + `",
+            "offline": false,
+            "now": "` + now + `",
+            "sla_threshold": "24h",
+            "snapshots": 0
+        },
+        "summary": {"total_assets": 0, "exposed_resources": 0, "violations": 0},
+        "findings": []
+    }`
+}
+
+func TestLoader_Strict_PartialRun_VersionMissing(t *testing.T) {
+	loader := NewLoader().WithStrictSchema()
+	data := []byte(strictPartialEnvelope("", "2026-01-15T00:00:00Z"))
+	_, err := loader.parseResult(data, "stdin")
+	if err == nil {
+		t.Fatal("expected error for missing stave_version")
+	}
+	if !strings.Contains(err.Error(), "missing required Run fields") {
+		t.Fatalf("expected missing-required-fields error, got: %v", err)
+	}
+}
+
+func TestLoader_Strict_PartialRun_TimestampMissing(t *testing.T) {
+	loader := NewLoader().WithStrictSchema()
+	data := []byte(strictPartialEnvelope("test", "0001-01-01T00:00:00Z"))
+	_, err := loader.parseResult(data, "stdin")
+	if err == nil {
+		t.Fatal("expected error for missing now timestamp")
+	}
+	if !strings.Contains(err.Error(), "missing required Run fields") {
+		t.Fatalf("expected missing-required-fields error, got: %v", err)
+	}
+}
+
 func TestPrepareBaseline_InvalidKind(t *testing.T) {
 	base := &evaluation.Baseline{Kind: "wrong"}
 	err := PrepareBaseline(base, "evaluation", "test.json")

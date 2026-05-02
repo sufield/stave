@@ -1,6 +1,7 @@
 package consolidate
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -82,7 +83,7 @@ func TestRun_TwoAccounts(t *testing.T) {
 		Now:          time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 	}
 
-	report, warnings, err := Run(input)
+	report, warnings, err := Run(context.Background(), input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +129,7 @@ func TestRun_SnapshotStalenessWarning(t *testing.T) {
 		Now:          time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 	}
 
-	_, warnings, err := Run(input)
+	_, warnings, err := Run(context.Background(), input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -170,7 +171,7 @@ func TestRun_SingleAccount(t *testing.T) {
 		Now:          time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 	}
 
-	report, _, err := Run(input)
+	report, _, err := Run(context.Background(), input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -184,7 +185,7 @@ func TestRun_SingleAccount(t *testing.T) {
 }
 
 func TestRun_EmptyAccounts(t *testing.T) {
-	_, _, err := Run(Input{})
+	_, _, err := Run(context.Background(), Input{})
 	if err == nil {
 		t.Error("expected error for empty input")
 	}
@@ -241,7 +242,7 @@ func TestRun_CrossAccountExecutionRole(t *testing.T) {
 		Now:          time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 	}
 
-	report, _, err := Run(input)
+	report, _, err := Run(context.Background(), input)
 	if err != nil {
 		t.Fatal(err)
 	}

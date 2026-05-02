@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -264,7 +265,7 @@ func TestReferenceTime_NilClockReturnsError(t *testing.T) {
 
 func TestAssessorAssess_NilClock(t *testing.T) {
 	a := &Assessor{}
-	_, err := a.Assess(nil)
+	_, err := a.Assess(context.Background(), nil)
 	if err == nil {
 		t.Fatal("expected error for nil clock")
 	}
@@ -282,7 +283,7 @@ func TestAssessorAssess_EmptySnapshots(t *testing.T) {
 			return &policy.UnsafePredicate{}, nil
 		},
 	}
-	result, err := a.Assess(nil)
+	result, err := a.Assess(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("Assess: %v", err)
 	}
@@ -325,7 +326,7 @@ func TestAssessorAssess_BasicViolation(t *testing.T) {
 		},
 	}
 
-	result, err := a.Assess(snapshots)
+	result, err := a.Assess(context.Background(), snapshots)
 	if err != nil {
 		t.Fatalf("Assess: %v", err)
 	}

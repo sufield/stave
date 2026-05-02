@@ -134,9 +134,14 @@ func PredicateToExpr(pred policy.UnsafePredicate) (string, error) {
 // ruleToExpr. A pathological YAML (or a future bug that re-enters via
 // rule.Any/rule.All cycles) would otherwise blow the stack at compile
 // time and surface as a process crash rather than a control-load error.
-// 100 is well above any legitimate nesting any human-authored control
-// catalog would produce.
-const maxPredicateDepth = 100
+//
+// The effective cap is roughly maxPredicateDepth/2 logical nesting
+// levels (~100): predicateToExpr → ruleToExpr → predicateToExpr forms
+// a two-step recursion where each side increments depth+1, so one
+// user-visible nest costs two depth steps. 200 keeps the safety net at
+// the same ~100 logical-level guarantee as before while making the
+// constant honest about the raw recursion-counter ceiling.
+const maxPredicateDepth = 200
 
 // predicateToExpr converts an UnsafePredicate to a CEL expression string.
 // scopeVar controls field resolution:

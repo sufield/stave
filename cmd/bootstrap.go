@@ -160,7 +160,7 @@ func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command, eval *appconfig.Gove
 		a.Flags.Sanitize = eval.Sanitize()
 	}
 	if !p.Changed(cliflags.FlagPathMode) {
-		a.Flags.PathMode = eval.PathMode()
+		a.Flags.PathMode = cliflags.PathModeFlag(eval.PathMode())
 	}
 }
 

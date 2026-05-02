@@ -51,21 +51,32 @@ func TestSentinelTemplate_Interrupted_RenderingFields(t *testing.T) {
 // for every sentinel error variant so a future template field rename
 // or rendering-pipeline change is caught at build time, not at the
 // next operator-visible error.
+//
+// ErrDiagnosticsFound shares the ExitViolations exit code (and template)
+// with ErrViolationsFound — see ui.ExitCode. Both are listed so a
+// future split that gives diagnostics its own template/exit code shows
+// up here as a test failure rather than silently changing operator
+// behaviour.
 func TestSentinelErrorRendering(t *testing.T) {
 	cases := []struct {
-		name      string
-		err       error
-		wantTitle string
+		name         string
+		err          error
+		wantTitle    string
+		wantExitCode int
 	}{
-		{"violations", ui.ErrViolationsFound, "Violations detected"},
-		{"security audit", ui.ErrSecurityAuditFindings, "Security audit gate failed"},
-		{"interrupted", ui.ErrInterrupted, "Interrupted"},
-		{"internal", ui.ErrInternal, "Internal error"},
+		{"violations", ui.ErrViolationsFound, "Violations detected", ui.ExitViolations},
+		{"diagnostics", ui.ErrDiagnosticsFound, "Violations detected", ui.ExitViolations},
+		{"security audit", ui.ErrSecurityAuditFindings, "Security audit gate failed", ui.ExitSecurity},
+		{"interrupted", ui.ErrInterrupted, "Interrupted", ui.ExitInterrupted},
+		{"internal", ui.ErrInternal, "Internal error", ui.ExitInternal},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			if !ui.IsSentinel(tc.err) {
 				t.Fatalf("test setup: %q is not a sentinel error", tc.err)
+			}
+			if got := ui.ExitCode(tc.err); got != tc.wantExitCode {
+				t.Errorf("ExitCode = %d, want %d", got, tc.wantExitCode)
 			}
 			info := errorInfoFromError(tc.err, tc.err.Error())
 			if info == nil {

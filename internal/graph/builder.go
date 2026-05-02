@@ -571,6 +571,9 @@ func mergeEdgeProperties(dst, src map[string]any) {
 			}
 		case []any:
 			for _, s := range existing {
+				if s == nil {
+					continue
+				}
 				newSet[fmt.Sprint(s)] = struct{}{}
 			}
 		case string:
@@ -578,8 +581,16 @@ func mergeEdgeProperties(dst, src map[string]any) {
 				newSet[existing] = struct{}{}
 			}
 		}
-		newSet[fmt.Sprint(pv)] = struct{}{}
-		newSet[fmt.Sprint(dst[pk])] = struct{}{}
+		// Skip nil values rather than letting fmt.Sprint inject the
+		// literal "<nil>" into the accumulator set. A nil slipping in
+		// pollutes downstream consumers with a sentinel string that
+		// looks like a real value but corresponds to no observed data.
+		if pv != nil {
+			newSet[fmt.Sprint(pv)] = struct{}{}
+		}
+		if existing, ok := dst[pk]; ok && existing != nil {
+			newSet[fmt.Sprint(existing)] = struct{}{}
+		}
 		dst[pluralKey] = newSet
 	}
 }

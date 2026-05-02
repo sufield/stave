@@ -172,7 +172,7 @@ func run(ctx context.Context, stdout, stderr io.Writer, opts *options) error {
 	}
 
 	// Run consolidation.
-	report, warnings, consolidateErr := appconsolidate.Run(appconsolidate.Input{
+	report, warnings, consolidateErr := appconsolidate.Run(ctx, appconsolidate.Input{
 		Accounts:     accounts,
 		Controls:     controls,
 		ChainDefs:    chains,

@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 )
 
 func TestEvaluate_NoSnapshots(t *testing.T) {
-	result, err := Evaluate(EvaluateInput{
+	result, err := Evaluate(context.Background(), EvaluateInput{
 		Clock: ports.FixedClock(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)),
 	})
 	if err != nil {
@@ -52,7 +53,7 @@ func TestEvaluate_WithControls(t *testing.T) {
 		Assets:     []asset.Asset{res},
 	}
 
-	result, err := Evaluate(EvaluateInput{
+	result, err := Evaluate(context.Background(), EvaluateInput{
 		Controls:          []policy.ControlDefinition{ctl},
 		Snapshots:         []asset.Snapshot{snap1, snap2},
 		MaxUnsafeDuration: 12 * time.Hour,
@@ -70,7 +71,7 @@ func TestEvaluate_WithControls(t *testing.T) {
 }
 
 func TestEvaluateLoaded_UsesDefaultClock(t *testing.T) {
-	result, err := EvaluateLoaded(EvaluationRequest{})
+	result, err := EvaluateLoaded(context.Background(), EvaluationRequest{})
 	if err != nil {
 		t.Fatalf("EvaluateLoaded() error = %v", err)
 	}

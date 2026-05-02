@@ -2,6 +2,7 @@
 package forensics
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -67,7 +68,10 @@ type Input struct {
 
 // BuildTimeline reconstructs the forensic timeline for a single asset
 // across multiple snapshots.
-func BuildTimeline(input Input) (*Timeline, error) {
+func BuildTimeline(ctx context.Context, input Input) (*Timeline, error) {
+	if ctx == nil {
+		return nil, errors.New("BuildTimeline requires a non-nil context")
+	}
 	if len(input.Snapshots) == 0 {
 		return nil, errors.New("no snapshots provided")
 	}
@@ -141,7 +145,7 @@ func BuildTimeline(input Input) (*Timeline, error) {
 					return &policy.UnsafePredicate{}, nil
 				}),
 			)
-			report, err := a.Assess([]asset.Snapshot{snap})
+			report, err := a.Assess(ctx, []asset.Snapshot{snap})
 			if err == nil {
 				currentVerdicts := make(map[kernel.ControlID]bool)
 				for fi := range report.Findings {

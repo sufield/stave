@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -55,7 +56,7 @@ func BenchmarkEvaluate(b *testing.B) {
 
 	b.ResetTimer()
 	for b.Loop() {
-		_, _ = assessor.Assess(snapshots)
+		_, _ = assessor.Assess(context.Background(), snapshots)
 	}
 }
 
@@ -139,7 +140,7 @@ func BenchmarkEvaluate10kAssets(b *testing.B) {
 
 	b.ResetTimer()
 	for b.Loop() {
-		_, _ = assessor.Assess(snapshots)
+		_, _ = assessor.Assess(context.Background(), snapshots)
 	}
 }
 
@@ -176,7 +177,7 @@ func BenchmarkEvaluateMultiControlScaling(b *testing.B) {
 
 		b.Run(fmt.Sprintf("controls=%d", ctlCount), func(b *testing.B) {
 			for b.Loop() {
-				_, _ = assessor.Assess(snapshots)
+				_, _ = assessor.Assess(context.Background(), snapshots)
 			}
 		})
 	}

@@ -119,7 +119,7 @@ func (r *runner) RunRisk(ctx context.Context, cfg config) error {
 	}
 
 	previousNow := cfg.Now.Add(-cfg.Lookback)
-	currentRisk, trend, err := computeRiskTrend(cfg, previousNow, loaded.Controls, loaded.Snapshots)
+	currentRisk, trend, err := computeRiskTrend(ctx, cfg, previousNow, loaded.Controls, loaded.Snapshots)
 	if err != nil {
 		return err
 	}
@@ -179,6 +179,7 @@ func buildSnapshotStats(
 }
 
 func computeRiskTrend(
+	ctx context.Context,
 	cfg config,
 	previousNow time.Time,
 	controls []policy.ControlDefinition,
@@ -187,14 +188,14 @@ func computeRiskTrend(
 	riskOpts := buildRiskOptions(cfg)
 
 	svc := hygieneapp.NewService(ports.FixedClock(cfg.Now))
-	currentRisk, err := svc.ComputeRisk(controls, activeSnapshots, riskOpts)
+	currentRisk, err := svc.ComputeRisk(ctx, controls, activeSnapshots, riskOpts)
 	if err != nil {
 		return appcontracts.SLAPosture{}, nil, fmt.Errorf("compute current risk: %w", err)
 	}
 
 	previousSnapshots := filterSnapshotsBefore(activeSnapshots, previousNow)
 	prevSvc := hygieneapp.NewService(ports.FixedClock(previousNow))
-	previousRisk, err := prevSvc.ComputeRisk(controls, previousSnapshots, riskOpts)
+	previousRisk, err := prevSvc.ComputeRisk(ctx, controls, previousSnapshots, riskOpts)
 	if err != nil {
 		return appcontracts.SLAPosture{}, nil, fmt.Errorf("compute previous risk: %w", err)
 	}

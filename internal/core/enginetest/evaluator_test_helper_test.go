@@ -1,6 +1,7 @@
 package enginetest
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -84,7 +85,7 @@ func (e *testEvaluator) Controls() []policy.ControlDefinition {
 }
 
 func (e *testEvaluator) Evaluate(snapshots []asset.Snapshot) evaluation.ComplianceReport {
-	result, err := e.runner.Assess(snapshots, engine.AssessmentOptions{
+	result, err := e.runner.Assess(context.Background(), snapshots, engine.AssessmentOptions{
 		InputHashes: e.InputHashes,
 	})
 	if err != nil {

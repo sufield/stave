@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -43,7 +44,11 @@ type EvaluateInput struct {
 }
 
 // Evaluate runs domain evaluation over already-loaded inputs.
-func Evaluate(input EvaluateInput) (evaluation.ComplianceReport, error) {
+//
+// ctx flows down to engine.Assessor.Assess so a long-running assessment
+// (large catalog × asset matrix) honours operator cancellation and
+// upstream deadlines instead of running to completion silently.
+func Evaluate(ctx context.Context, input EvaluateInput) (evaluation.ComplianceReport, error) {
 	catalog := policy.NewCatalog(input.Controls)
 	parser := input.PredicateParser
 	if parser == nil {
@@ -74,7 +79,7 @@ func Evaluate(input EvaluateInput) (evaluation.ComplianceReport, error) {
 		opts = append(opts, engine.WithConfidence(input.Confidence))
 	}
 	runner := engine.NewAssessor(opts...)
-	result, err := runner.Assess(derive.Pipeline(input.Snapshots), engine.AssessmentOptions{
+	result, err := runner.Assess(ctx, derive.Pipeline(input.Snapshots), engine.AssessmentOptions{
 		StaveVersion:     input.StaveVersion,
 		InputHashes:      input.InputHashes,
 		GenerateEvidence: input.GenerateEvidence,
@@ -123,7 +128,7 @@ func inconclusiveCELEvaluator(ctl policy.ControlDefinition, a asset.Asset, _ []a
 
 // EvaluateLoaded evaluates already-loaded controls and snapshots.
 // This keeps command adapters from directly constructing domain evaluators.
-func EvaluateLoaded(req EvaluationRequest) (evaluation.ComplianceReport, error) {
+func EvaluateLoaded(ctx context.Context, req EvaluationRequest) (evaluation.ComplianceReport, error) {
 	if req.Clock == nil {
 		req.Clock = ports.RealClock{}
 	}
@@ -134,7 +139,7 @@ func EvaluateLoaded(req EvaluationRequest) (evaluation.ComplianceReport, error) 
 		req.CELEvaluator = inconclusiveCELEvaluator
 	}
 
-	return Evaluate(EvaluateInput{
+	return Evaluate(ctx, EvaluateInput{
 		Controls:          req.Controls,
 		Snapshots:         req.Snapshots,
 		MaxUnsafeDuration: req.MaxUnsafeDuration,

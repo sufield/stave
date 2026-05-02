@@ -1,6 +1,7 @@
 package hygiene
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -49,7 +50,7 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 	}
 
 	svc := NewService(ports.FixedClock(now))
-	stats, err := svc.ComputeRisk(controls, snapshots, RiskOptions{
+	stats, err := svc.ComputeRisk(context.Background(), controls, snapshots, RiskOptions{
 		GlobalMaxUnsafeDuration: 30 * time.Minute,
 		DueSoonThreshold:        2 * time.Hour,
 		StaveVersion:            "test",
@@ -68,7 +69,7 @@ func TestComputeRisk_WithViolations(t *testing.T) {
 
 func TestComputeRisk_EmptyInput(t *testing.T) {
 	svc := NewService(ports.FixedClock(time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)))
-	stats, err := svc.ComputeRisk(nil, nil, RiskOptions{
+	stats, err := svc.ComputeRisk(context.Background(), nil, nil, RiskOptions{
 		GlobalMaxUnsafeDuration: 24 * time.Hour,
 		DueSoonThreshold:        time.Hour,
 	})

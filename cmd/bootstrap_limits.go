@@ -30,6 +30,19 @@ const (
 	// in particular OOMs on a single document with millions of
 	// findings.
 	MaxConfigurableValidationErrors = 10_000
+	// MaxConfigurableConfidenceMultiplier bounds the HIGH/MEDIUM
+	// confidence multipliers at 1000x. Defaults are 4x (HIGH) and
+	// 2x (MEDIUM); anything above 1000 is almost certainly a typo
+	// (e.g., a misplaced decimal) that would cause downstream
+	// classification thresholds to overflow into nonsense values.
+	MaxConfigurableConfidenceMultiplier = 1000
+	// MaxConfigurableInputFileBytes bounds the largest single input
+	// file Stave will read at 4 GiB. The default is 256 MB. Beyond
+	// this cap a single observation file would exhaust process
+	// memory before parsing — and on 32-bit hosts would overflow
+	// int conversions in fsutil. Operators staging genuinely large
+	// inputs should split them rather than raise this limit.
+	MaxConfigurableInputFileBytes = 4 * 1024 * 1024 * 1024
 )
 
 // resolveConfigurableLimits applies user-configurable runtime limits
@@ -56,6 +69,11 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 	// Max input file size (default 256 MB)
 	if raw := eval.MaxInputFileSize(); raw != "" {
 		if n, err := kernel.ParseByteSize(raw); err == nil {
+			if n > MaxConfigurableInputFileBytes {
+				logger.Warn("config: clamping max_input_file_size to configured maximum",
+					"requested", n, "max", MaxConfigurableInputFileBytes)
+				n = MaxConfigurableInputFileBytes
+			}
 			fsutil.SetMaxInputFileBytes(n)
 		} else {
 			logger.Warn("config: ignoring invalid max_input_file_size",
@@ -72,9 +90,19 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 	a.Confidence = evaluation.DefaultConfidenceCalculator()
 	if h, m := eval.ConfidenceHighMultiplier(), eval.ConfidenceMedMultiplier(); h > 0 || m > 0 {
 		if h > 0 {
+			if h > MaxConfigurableConfidenceMultiplier {
+				logger.Warn("config: clamping confidence_high_multiplier to configured maximum",
+					"requested", h, "max", MaxConfigurableConfidenceMultiplier)
+				h = MaxConfigurableConfidenceMultiplier
+			}
 			a.Confidence.HighMultiplier = h
 		}
 		if m > 0 {
+			if m > MaxConfigurableConfidenceMultiplier {
+				logger.Warn("config: clamping confidence_med_multiplier to configured maximum",
+					"requested", m, "max", MaxConfigurableConfidenceMultiplier)
+				m = MaxConfigurableConfidenceMultiplier
+			}
 			a.Confidence.MedMultiplier = m
 		}
 	}

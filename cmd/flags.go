@@ -34,7 +34,7 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 
 	// Safety — zero defaults; project config resolved in PersistentPreRunE via resolveGlobalFlagDefaults.
 	p.BoolVar(&flags.Sanitize, cliflags.FlagSanitize, false, cliflags.WithDynamicDefaultHelp("Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output"))
-	p.StringVar(&flags.PathMode, cliflags.FlagPathMode, "", cliflags.WithDynamicDefaultHelp("Path rendering in errors/logs: base (basename only) or full (absolute paths)"))
+	p.Var(&flags.PathMode, cliflags.FlagPathMode, cliflags.WithDynamicDefaultHelp("Path rendering in errors/logs: base (basename only) or full (absolute paths)"))
 	p.BoolVar(&flags.Force, cliflags.FlagForce, false, "Allow overwriting existing output files")
 	p.BoolVar(&flags.AllowSymlinkOut, cliflags.FlagSymlink, false, "Allow writing output through symlinks (default: refuse)")
 	p.BoolVar(&flags.RequireOffline, cliflags.FlagOffline, false, "Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set")

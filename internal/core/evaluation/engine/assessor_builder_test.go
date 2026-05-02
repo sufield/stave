@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -30,7 +31,7 @@ func TestBuilder_BasicViolation(t *testing.T) {
 		at(48*time.Hour, "bucket-1").
 		build()
 
-	result, err := a.Assess(snaps)
+	result, err := a.Assess(context.Background(), snaps)
 	testutil.AssertNoError(t, err)
 	testutil.AssertViolationCount(t, &result, 1)
 	testutil.AssertSecurityState(t, &result, evaluation.StateNonCompliant)
@@ -51,7 +52,7 @@ func TestBuilder_CompliantResult(t *testing.T) {
 		at(48*time.Hour, "bucket-1").
 		build()
 
-	result, err := a.Assess(snaps)
+	result, err := a.Assess(context.Background(), snaps)
 	testutil.AssertNoError(t, err)
 	testutil.AssertSecurityState(t, &result, evaluation.StateCompliant)
 	testutil.AssertViolationCount(t, &result, 0)
@@ -75,7 +76,7 @@ func TestBuilder_WithTracer(t *testing.T) {
 		at(48*time.Hour, "bucket-1").
 		build()
 
-	result, err := a.Assess(snaps)
+	result, err := a.Assess(context.Background(), snaps)
 	testutil.AssertNoError(t, err)
 	testutil.AssertViolationCount(t, &result, 1)
 

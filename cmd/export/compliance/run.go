@@ -106,7 +106,7 @@ func runCompliance(
 	}
 
 	// Run assessment with evidence generation.
-	result, err := appeval.Evaluate(appeval.EvaluateInput{
+	result, err := appeval.Evaluate(ctx, appeval.EvaluateInput{
 		Controls:         controls,
 		Snapshots:        snapshots,
 		Clock:            ports.RealClock{},

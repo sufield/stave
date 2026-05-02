@@ -124,7 +124,7 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	w.loadedControls = auditData.Controls
 	w.loadedSnapshots = auditData.Snapshots
 
-	report, err := Evaluate(EvaluateInput{
+	report, err := Evaluate(ctx, EvaluateInput{
 		Controls:             auditData.Controls,
 		Snapshots:            auditData.Snapshots,
 		MaxUnsafeDuration:    cfg.SLAThreshold,

@@ -91,7 +91,7 @@ func runBisect(ctx context.Context, in Input) error {
 					return &policy.UnsafePredicate{}, nil
 				}),
 			)
-			return a.Assess(snaps)
+			return a.Assess(ctx, snaps)
 		},
 		targetID,
 		opts.ResourceARN,

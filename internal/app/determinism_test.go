@@ -2,6 +2,7 @@ package app_test
 
 import (
 	"bytes"
+	"context"
 	"testing"
 	"time"
 
@@ -110,7 +111,7 @@ func TestEvaluateOutput_ByteIdentical(t *testing.T) {
 	// Run evaluation and serialize to JSON — twice
 	var outputs [2][]byte
 	for i := range 2 {
-		result, evalErr := appeval.Evaluate(appeval.EvaluateInput{
+		result, evalErr := appeval.Evaluate(context.Background(), appeval.EvaluateInput{
 			Controls:          controls,
 			Snapshots:         snapshots,
 			MaxUnsafeDuration: maxUnsafe,
@@ -195,7 +196,7 @@ func TestEvaluateOutput_ByteIdentical_MultipleControls(t *testing.T) {
 
 	var outputs [10][]byte
 	for i := range 10 {
-		result, evalErr := appeval.Evaluate(appeval.EvaluateInput{
+		result, evalErr := appeval.Evaluate(context.Background(), appeval.EvaluateInput{
 			Controls:          controls,
 			Snapshots:         snapshots,
 			MaxUnsafeDuration: maxUnsafe,

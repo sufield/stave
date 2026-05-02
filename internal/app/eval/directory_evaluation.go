@@ -44,7 +44,7 @@ func RunDirectoryEvaluation(ctx context.Context, req DirectoryEvaluationRequest)
 		return nil, 0, fmt.Errorf("source_type compatibility in %s: %w", req.ObservationsDir, err)
 	}
 
-	result, err := EvaluateLoaded(EvaluationRequest{
+	result, err := EvaluateLoaded(ctx, EvaluationRequest{
 		Controls:          req.Controls,
 		Snapshots:         snapshots,
 		MaxUnsafeDuration: req.MaxUnsafeDuration,

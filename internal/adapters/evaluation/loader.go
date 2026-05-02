@@ -131,16 +131,16 @@ func (l *Loader) parseResult(data []byte, source string) (*evaluation.Compliance
 	}
 	// Post-unmarshal sanity check — strict mode only.
 	// ComplianceReport doesn't carry an explicit Kind field (that's
-	// on report.Assessment, validated in LoadEnvelopeFromFile), but
-	// a zero Run block — empty StaveVersion AND zero Now timestamp —
-	// indicates the JSON was well-formed but did not match the
-	// expected ComplianceReport shape. Strict callers (gating,
-	// enforcement-config generation) reject the partial form;
-	// non-strict callers (test fixtures, partial diffs) accept it
-	// because legitimate use cases construct minimal reports
-	// (Summary-only, etc.).
-	if l.strictSchema.Load() && result.Run.StaveVersion == "" && result.Run.Now.IsZero() {
-		return nil, fmt.Errorf("failed to load output file %s: missing required Run fields (stave_version, now); is this a ComplianceReport envelope?", source)
+	// on report.Assessment, validated in LoadEnvelopeFromFile), so
+	// strict callers (gating, enforcement-config generation) require
+	// both Run.StaveVersion and Run.Now to be set — either alone is
+	// insufficient provenance to drive a trust-boundary decision.
+	// The previous AND check accepted a half-populated Run block
+	// (e.g. version present but timestamp missing) as valid, which
+	// silently weakened the strict-mode contract. Non-strict callers
+	// (test fixtures, partial diffs) still accept partial reports.
+	if l.strictSchema.Load() && (result.Run.StaveVersion == "" || result.Run.Now.IsZero()) {
+		return nil, fmt.Errorf("failed to load output file %s: missing required Run fields (stave_version and now are both required); is this a ComplianceReport envelope?", source)
 	}
 	return &result, nil
 }

@@ -368,7 +368,17 @@ func wireCISubtree(
 
 func assignCommandGroup(root *cobra.Command, use, groupID string) {
 	cmd, _, err := root.Find([]string{use})
-	if err != nil || cmd == nil {
+	if err != nil {
+		// Find errors here are unexpected at the registration boundary
+		// — they indicate a corrupt command tree, not user input. Log
+		// at warn so a regression that breaks the wiring is traceable
+		// rather than silently swallowed; the caller still bails out
+		// because there is no command to stamp.
+		slog.Warn("assignCommandGroup: root.Find returned error, skipping group assignment",
+			"use", use, "group_id", groupID, "error", err)
+		return
+	}
+	if cmd == nil {
 		return
 	}
 	// Cobra's Find returns the root command (with no error) when no

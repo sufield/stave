@@ -2,6 +2,7 @@
 package hygiene
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -44,13 +45,14 @@ func NewService(clock ports.Clock) *Service {
 // ComputeRisk calculates snapshot risk metrics for the given controls and
 // snapshots under the provided options.
 func (s *Service) ComputeRisk(
+	ctx context.Context,
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	opts RiskOptions,
 ) (appcontracts.SLAPosture, error) {
 	violations := 0
 	if len(controls) > 0 && len(snapshots) > 0 {
-		result, err := appeval.Evaluate(appeval.EvaluateInput{
+		result, err := appeval.Evaluate(ctx, appeval.EvaluateInput{
 			Controls:          controls,
 			Snapshots:         snapshots,
 			MaxUnsafeDuration: opts.GlobalMaxUnsafeDuration,

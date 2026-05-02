@@ -69,7 +69,7 @@ Exit Codes:
 			if opts.Daemon {
 				return runDaemon(cmd.Context(), cmd.ErrOrStderr(), opts)
 			}
-			return runCollect(cmd.OutOrStdout(), cmd.ErrOrStderr(), opts)
+			return runCollect(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), opts)
 		},
 	}
 
@@ -131,12 +131,12 @@ func runDaemon(ctx context.Context, stderr io.Writer, opts *options) error {
 		PIDFile:    opts.PIDFile,
 		AuditLabel: opts.AuditLabel,
 		RunOnce: func(innerCtx context.Context) error {
-			return runCollect(io.Discard, stderr, opts)
+			return runCollect(innerCtx, io.Discard, stderr, opts)
 		},
 	})
 }
 
-func runCollect(stdout, stderr io.Writer, opts *options) error {
+func runCollect(ctx context.Context, stdout, stderr io.Writer, opts *options) error {
 	archive, err := appcollect.NewArchive(opts.Archive)
 	if err != nil {
 		return err
@@ -200,7 +200,7 @@ func runCollect(stdout, stderr io.Writer, opts *options) error {
 	}
 
 	// Run assessment.
-	result, evalErr := appeval.EvaluateLoaded(appeval.EvaluationRequest{
+	result, evalErr := appeval.EvaluateLoaded(ctx, appeval.EvaluationRequest{
 		Controls:        controls,
 		Snapshots:       snapshots,
 		Clock:           ports.RealClock{},

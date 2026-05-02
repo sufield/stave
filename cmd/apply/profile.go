@@ -190,7 +190,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	done := r.UI.BeginProgress("apply profile observations")
 	defer done()
 
-	result, err := appeval.EvaluateLoaded(appeval.EvaluationRequest{
+	result, err := appeval.EvaluateLoaded(ctx, appeval.EvaluationRequest{
 		Controls:          controls,
 		Snapshots:         filtered,
 		MaxUnsafeDuration: cfg.MaxUnsafeDuration,

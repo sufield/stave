@@ -1,6 +1,7 @@
 package consolidate
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -42,7 +43,7 @@ type AccountInput struct {
 
 // Run performs multi-account consolidation: per-account assessment +
 // org-level synthesis + cross-account analysis.
-func Run(input Input) (*ConsolidatedReport, []string, error) {
+func Run(ctx context.Context, input Input) (*ConsolidatedReport, []string, error) {
 	if len(input.Accounts) == 0 {
 		return nil, nil, errors.New("no accounts to consolidate")
 	}
@@ -67,7 +68,7 @@ func Run(input Input) (*ConsolidatedReport, []string, error) {
 	// Per-account assessment.
 	for i := range input.Accounts {
 		acct := &input.Accounts[i]
-		summary, acctRisk, err := assessAccount(acct, input.Controls, input.ChainDefs, input.SLAConfig, input.CELEvaluator)
+		summary, acctRisk, err := assessAccount(ctx, acct, input.Controls, input.ChainDefs, input.SLAConfig, input.CELEvaluator)
 		if err != nil {
 			warnings = append(warnings, fmt.Sprintf("account %s: assessment failed: %v", acct.AccountID, err))
 			continue
@@ -133,6 +134,7 @@ func Run(input Input) (*ConsolidatedReport, []string, error) {
 }
 
 func assessAccount(
+	ctx context.Context,
 	acct *AccountInput,
 	controls []policy.ControlDefinition,
 	chainDefs []policy.ChainDefinition,
@@ -143,7 +145,7 @@ func assessAccount(
 		return AccountSummary{}, 0, errors.New("no snapshots")
 	}
 
-	result, err := appeval.EvaluateLoaded(appeval.EvaluationRequest{
+	result, err := appeval.EvaluateLoaded(ctx, appeval.EvaluationRequest{
 		Controls:     controls,
 		Snapshots:    acct.Snapshots,
 		CELEvaluator: celEval,

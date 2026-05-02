@@ -62,7 +62,7 @@ func (e *DiagnosticEngine) Analyze(ctx context.Context, req AuditRequest) (*diag
 		return nil, fmt.Errorf("load audit context: %w", err)
 	}
 
-	assessment, err := e.resolveAssessment(req, data)
+	assessment, err := e.resolveAssessment(ctx, req, data)
 	if err != nil {
 		return nil, fmt.Errorf("resolve compliance assessment: %w", err)
 	}
@@ -98,7 +98,7 @@ func (e *DiagnosticEngine) InspectViolation(ctx context.Context, req InspectionR
 		return nil, fmt.Errorf("load audit context: %w", err)
 	}
 
-	assessment, err := e.resolveAssessment(req.AuditReq, data)
+	assessment, err := e.resolveAssessment(ctx, req.AuditReq, data)
 	if err != nil {
 		return nil, fmt.Errorf("resolve compliance assessment: %w", err)
 	}
@@ -136,6 +136,7 @@ func (e *DiagnosticEngine) loadAuditData(
 }
 
 func (e *DiagnosticEngine) resolveAssessment(
+	ctx context.Context,
 	req AuditRequest,
 	data auditContext,
 ) (*evaluation.ComplianceReport, error) {
@@ -143,7 +144,7 @@ func (e *DiagnosticEngine) resolveAssessment(
 		return req.BaselineReport, nil
 	}
 
-	assessment, err := appeval.Evaluate(appeval.EvaluateInput{
+	assessment, err := appeval.Evaluate(ctx, appeval.EvaluateInput{
 		Controls:          data.policies,
 		Snapshots:         data.snapshots,
 		MaxUnsafeDuration: req.SLAThreshold,

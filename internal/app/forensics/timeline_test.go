@@ -1,6 +1,7 @@
 package forensics
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -25,7 +26,7 @@ func TestBuildTimeline_PropertyChange(t *testing.T) {
 		},
 	}
 
-	tl, err := BuildTimeline(Input{
+	tl, err := BuildTimeline(context.Background(), Input{
 		AssetID:   "arn:aws:s3:::bucket",
 		Snapshots: []asset.Snapshot{snap1, snap2},
 	})
@@ -64,7 +65,7 @@ func TestBuildTimeline_AssetDisappears(t *testing.T) {
 		Assets:     []asset.Asset{}, // asset gone
 	}
 
-	tl, err := BuildTimeline(Input{
+	tl, err := BuildTimeline(context.Background(), Input{
 		AssetID:   "arn:aws:s3:::bucket",
 		Snapshots: []asset.Snapshot{snap1, snap2},
 	})
@@ -84,7 +85,7 @@ func TestBuildTimeline_AssetDisappears(t *testing.T) {
 }
 
 func TestBuildTimeline_EmptySnapshots(t *testing.T) {
-	_, err := BuildTimeline(Input{AssetID: "arn:test"})
+	_, err := BuildTimeline(context.Background(), Input{AssetID: "arn:test"})
 	if err == nil {
 		t.Error("expected error for no snapshots")
 	}
