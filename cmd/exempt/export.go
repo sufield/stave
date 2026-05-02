@@ -235,7 +235,7 @@ func buildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment, syst
 
 			props := []map[string]string{
 				{"name": "stave-finding-id", "value": string(f.FindingID)},
-				{"name": "stave-severity", "value": f.ControlSeverity.String()},
+				{"name": "stave-severity", "value": f.SeverityLabel()},
 			}
 
 			poamItems = append(poamItems, map[string]any{

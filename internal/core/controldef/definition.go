@@ -74,6 +74,23 @@ func (ctl *ControlDefinition) HasCompliance(key ComplianceFramework) bool {
 	return ctl.Compliance.Has(key)
 }
 
+// OneLineSummary returns the first human-readable label that callers
+// should display for the control: the authored Defect prose when
+// present (it carries the most diagnostic-friendly summary), falling
+// back to Name when Defect is empty. Replaces the
+// (Defect != "" ? Defect : Name) ternary at cmd/expand/cmd.go:354-355
+// so a future addition of a Title or Headline field is one edit on
+// the type instead of a scan across every renderer.
+func (ctl *ControlDefinition) OneLineSummary() string {
+	if ctl == nil {
+		return ""
+	}
+	if ctl.Defect != "" {
+		return ctl.Defect
+	}
+	return ctl.Name
+}
+
 // AppliesToAssetType reports whether this control should evaluate against
 // the given asset type. Returns true when the control declares no
 // applicable types (legacy default — fire on all) or when the asset type

@@ -234,7 +234,7 @@ func runCollect(ctx context.Context, stdout, stderr io.Writer, opts *options) er
 	remFindings := make([]remediation.Finding, len(result.Findings))
 	for i := range result.Findings {
 		remFindings[i] = remediation.Finding{Finding: result.Findings[i]}
-		if result.Findings[i].SLADeadlineHours != nil {
+		if result.Findings[i].HasSLA() {
 			hasSLA = true
 			slaTotal++
 			if result.Findings[i].IsOverdue() {

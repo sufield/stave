@@ -2,7 +2,6 @@ package trend
 
 import (
 	"sort"
-	"strings"
 
 	"fmt"
 	"io"
@@ -110,10 +109,10 @@ func computeTeamTrends(
 		var totalDwell float64
 		for j := range findings {
 			f := &findings[j]
-			if strings.EqualFold(f.ControlSeverity.String(), "critical") {
+			if f.IsCritical() {
 				critical++
 			}
-			if f.SLADeadlineHours != nil {
+			if f.HasSLA() {
 				slaTotal++
 				if !f.IsOverdue() {
 					slaWithin++

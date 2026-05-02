@@ -61,7 +61,7 @@ func annotateOwners(result *evaluation.ComplianceReport, opts *Options) error {
 
 	filtered := result.Findings[:0]
 	for i := range result.Findings {
-		if allowed[result.Findings[i].OwnerTeamID.String()] {
+		if result.Findings[i].MatchesOwner(allowed) {
 			filtered = append(filtered, result.Findings[i])
 		}
 	}

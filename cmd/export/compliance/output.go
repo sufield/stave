@@ -257,15 +257,15 @@ func computeRequirementSLA(ra *evidence.RequirementAssessment, findings []evalua
 		if _, ok := f.ControlCompliance[policy.ComplianceFramework(framework)]; !ok {
 			continue
 		}
-		if f.SLADeadlineHours == nil {
+		if !f.HasSLA() {
 			continue
 		}
 		hasSLA = true
 		detected++
 		if f.IsOverdue() {
 			breached++
-			if *f.SLAOverdueHours > longestOverdue {
-				longestOverdue = *f.SLAOverdueHours
+			if hours, ok := f.OverdueHours(); ok && hours > longestOverdue {
+				longestOverdue = hours
 			}
 		} else {
 			withinSLA++

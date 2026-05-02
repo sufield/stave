@@ -53,13 +53,6 @@ type IdentityRanking struct {
 	Entries             []IdentityRiskEntry `json:"identity_ranking"`
 }
 
-// identityAssetTypes identifies asset types that represent IAM identities.
-var identityAssetTypes = map[kernel.AssetType]string{
-	"aws_iam_role":       "role",
-	"aws_iam_user":       "user",
-	"aws_iam_access_key": "access_key",
-}
-
 // BuildIdentityRanking produces an identity-centric risk ranking from
 // assessment findings and snapshot data. Each identity is ranked by its
 // risk reduction potential — the fraction of total portfolio risk that
@@ -102,14 +95,15 @@ func buildIdentityIndex(
 
 	for i := range findings {
 		f := &findings[i]
-		if itype, ok := identityAssetTypes[f.AssetType]; ok {
-			arn := string(f.AssetID)
-			if identities[arn] == nil {
-				identities[arn] = &identityInfo{
-					arn:          arn,
-					assetType:    string(f.AssetType),
-					identityType: itype,
-				}
+		if !asset.IsIdentityAssetType(f.AssetType) {
+			continue
+		}
+		arn := string(f.AssetID)
+		if identities[arn] == nil {
+			identities[arn] = &identityInfo{
+				arn:          arn,
+				assetType:    string(f.AssetType),
+				identityType: asset.IdentityClassificationFor(f.AssetType),
 			}
 		}
 	}
@@ -118,17 +112,18 @@ func buildIdentityIndex(
 		snap := &snapshots[si]
 		for ai := range snap.Assets {
 			a := &snap.Assets[ai]
-			if itype, ok := identityAssetTypes[a.Type]; ok {
-				arn := string(a.ID)
-				if identities[arn] == nil {
-					identities[arn] = &identityInfo{
-						arn:          arn,
-						assetType:    string(a.Type),
-						identityType: itype,
-					}
-				}
-				identities[arn].privilegeLevel = resolvePrivilegeLevel(a.Properties)
+			if !a.IsIdentityAsset() {
+				continue
 			}
+			arn := string(a.ID)
+			if identities[arn] == nil {
+				identities[arn] = &identityInfo{
+					arn:          arn,
+					assetType:    string(a.Type),
+					identityType: a.IdentityClassification(),
+				}
+			}
+			identities[arn].privilegeLevel = resolvePrivilegeLevel(a.Properties)
 		}
 	}
 

@@ -192,17 +192,13 @@ func buildATTCKSection(ctx context.Context, repo appcontracts.ControlRepository,
 	covered := 0
 	for i := range report.Tactics {
 		tc := &report.Tactics[i]
-		status := tc.Status
-		if status == "no_coverage" {
-			status = "not_covered"
-		}
-		if tc.Status == "covered" || tc.Status == "thin" {
+		if tc.IsCovered() {
 			covered++
 		}
 		tacticItems = append(tacticItems, TacticItem{
 			ID:     tc.TacticID,
 			Name:   tc.TacticName,
-			Status: status,
+			Status: tc.StatusLabel(),
 		})
 	}
 	pct := 0.0

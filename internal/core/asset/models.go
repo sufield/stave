@@ -44,6 +44,66 @@ func (r Asset) IsProvablySafe() bool {
 	return ok && provable
 }
 
+// IsType reports whether the asset's type matches the given string.
+// Replaces (string(a.Type) != in.AssetType) probes — see
+// internal/app/celeval/eval.go:51 — with a typed comparison that
+// keeps the kernel.AssetType-string boundary inside the asset
+// package.
+func (r Asset) IsType(t string) bool {
+	return string(r.Type) == t
+}
+
+// identityAssetTypes lists asset types that represent IAM identities
+// for ranking and reporting purposes. Centralised here (rather than
+// in internal/app/rank where it used to live) so producers and
+// consumers cannot drift on the type set; consumers ask the asset
+// directly via IsIdentityAsset.
+//
+// Wire values match the kernel.AssetType strings emitted by the
+// snapshot extractors. The mapped string is the short identity
+// classification surfaced in identity-rank reports — kept in this
+// table so adding a new identity type is one edit.
+var identityAssetTypes = map[kernel.AssetType]string{
+	"aws_iam_role":       "role",
+	"aws_iam_user":       "user",
+	"aws_iam_access_key": "access_key",
+}
+
+// IsIdentityAsset reports whether the asset's Type identifies an
+// IAM principal (role, user, access key). Replaces the external
+// (identityAssetTypes[a.Type]) map probe at
+// internal/app/rank/identity.go:121 so consumers stop reaching for
+// a package-level lookup table to ask a question about the asset.
+func (r Asset) IsIdentityAsset() bool {
+	_, ok := identityAssetTypes[r.Type]
+	return ok
+}
+
+// IdentityClassification returns the short identity-type label
+// ("role", "user", "access_key") for an identity asset, or "" for
+// non-identity assets. Pairs with IsIdentityAsset so rank/identity
+// can drop the per-call map dereference.
+func (r Asset) IdentityClassification() string {
+	return identityAssetTypes[r.Type]
+}
+
+// IsIdentityAssetType reports whether the supplied asset type maps
+// to an IAM principal. Useful for callers that have an
+// kernel.AssetType in hand without an enclosing Asset (e.g.
+// Finding.AssetType in rank/identity.go).
+func IsIdentityAssetType(t kernel.AssetType) bool {
+	_, ok := identityAssetTypes[t]
+	return ok
+}
+
+// IdentityClassificationFor returns the short identity-type label
+// for a kernel.AssetType, or "" when the type is not an identity.
+// Companion to IdentityClassification for callers without an
+// enclosing Asset value.
+func IdentityClassificationFor(t kernel.AssetType) string {
+	return identityAssetTypes[t]
+}
+
 // CloudIdentity represents an IAM identity such as a user, role, or service account.
 // Identity attributes are stored in a flexible properties map so predicate evaluation
 // can use a unified model across both assets and identities.

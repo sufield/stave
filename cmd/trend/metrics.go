@@ -142,7 +142,7 @@ func computeRunMetrics(a *report.Assessment, prev *runMetrics) runMetrics {
 	currentKeys := make(map[string]bool)
 	for i := range a.Findings {
 		f := &a.Findings[i]
-		sev := f.ControlSeverity.String()
+		sev := f.SeverityLabel()
 		if sev == "" {
 			sev = "unknown"
 		}
@@ -321,14 +321,13 @@ func computeSLATrend(assessments []*report.Assessment) []slaTrendMetric {
 		breachedBySev := make(map[string]int)
 		for i := range a.Findings {
 			f := &a.Findings[i]
-			if f.SLADeadlineHours == nil {
+			if !f.HasSLA() {
 				continue
 			}
 			totalWithSLA++
 			if f.IsOverdue() {
 				breachedCount++
-				sev := f.ControlSeverity.String()
-				breachedBySev[sev]++
+				breachedBySev[f.SeverityLabel()]++
 			}
 		}
 		if totalWithSLA == 0 {

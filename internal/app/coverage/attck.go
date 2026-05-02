@@ -33,6 +33,16 @@ type TacticDef struct {
 	StaveID string
 }
 
+// Tactic-coverage status vocabulary. Centralised here so producers
+// (the Build pipeline) and consumers (execreport, exporters) cannot
+// drift on the literal strings — a future rename or addition is one
+// edit. Values are the on-the-wire JSON strings.
+const (
+	StatusCovered    = "covered"
+	StatusThin       = "thin"
+	StatusNoCoverage = "no_coverage"
+)
+
 // TacticCoverage holds coverage data for a single tactic.
 type TacticCoverage struct {
 	TacticID        string   `json:"tactic_id"`
@@ -43,6 +53,32 @@ type TacticCoverage struct {
 	FailingCount    *int     `json:"failing_count"`    // nil when no assessment overlay
 	CoveragePercent *float64 `json:"coverage_percent"` // nil when no controls
 	Status          string   `json:"status"`           // covered | thin | no_coverage
+}
+
+// IsCovered reports whether this tactic has at least the "thin"
+// level of control coverage — the gate the execreport summary uses
+// to count tactics towards the coverage percentage. Replaces the
+// (Status == "covered" || Status == "thin") OR-pair at
+// internal/app/execreport/builder_helpers.go:199 so the producer
+// owns the threshold definition.
+func (tc *TacticCoverage) IsCovered() bool {
+	return tc != nil && (tc.Status == StatusCovered || tc.Status == StatusThin)
+}
+
+// StatusLabel returns the user-facing label for this tactic's
+// status. The wire-level "no_coverage" is normalised to
+// "not_covered" for the execreport rendering to match operator
+// expectations; everything else passes through unchanged.
+// Replaces the inline normalisation in
+// internal/app/execreport/builder_helpers.go:194-197.
+func (tc *TacticCoverage) StatusLabel() string {
+	if tc == nil {
+		return ""
+	}
+	if tc.Status == StatusNoCoverage {
+		return "not_covered"
+	}
+	return tc.Status
 }
 
 // StaveOnlyTactic is for Stave-specific tactics not in ATT&CK.
@@ -130,14 +166,14 @@ func Build(input BuildInput) *CoverageReport {
 		}
 
 		if len(ctls) == 0 {
-			tc.Status = "no_coverage"
+			tc.Status = StatusNoCoverage
 			noCoverageCount++
 		} else if len(ctls) < input.MinControls {
-			tc.Status = "thin"
+			tc.Status = StatusThin
 			thinCount++
 			coveredCount++
 		} else {
-			tc.Status = "covered"
+			tc.Status = StatusCovered
 			coveredCount++
 		}
 

@@ -80,9 +80,8 @@ func run(ctx context.Context, stdout io.Writer, opts *options) error {
 	teamFindings := make(map[string][]remediation.Finding)
 	for i := range latest.Findings {
 		f := &latest.Findings[i]
-		if !f.OwnerTeamID.IsEmpty() {
-			tid := f.OwnerTeamID.String()
-			teamFindings[tid] = append(teamFindings[tid], *f)
+		if f.HasOwner() {
+			teamFindings[f.OwnerKey()] = append(teamFindings[f.OwnerKey()], *f)
 		}
 	}
 	if len(teamFindings) == 0 {

@@ -33,7 +33,7 @@ func computeMTTR(assessments []*report.Assessment) map[string]mttrEntry {
 			key := string(f.ControlID) + ":" + string(f.AssetID)
 			currentKeys[key] = true
 
-			sev := f.ControlSeverity.String()
+			sev := f.SeverityLabel()
 			if sev == "" {
 				sev = "unknown"
 			}

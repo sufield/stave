@@ -48,7 +48,7 @@ func Eval(in Input) (*EvalResult, error) {
 
 	for i := range in.Assets {
 		a := &in.Assets[i]
-		if in.AssetType != "" && string(a.Type) != in.AssetType {
+		if in.AssetType != "" && !a.IsType(in.AssetType) {
 			continue
 		}
 

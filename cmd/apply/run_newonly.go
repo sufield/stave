@@ -104,7 +104,7 @@ func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
 			f := &r.NewFindings[i]
 			fmt.Fprintf(sw, "  %-30s  %-8s  %s\n",
 				f.Finding.ControlID,
-				strings.ToUpper(f.Finding.ControlSeverity.String()),
+				strings.ToUpper(f.Finding.SeverityLabel()),
 				f.Finding.AssetID)
 		}
 		fmt.Fprintln(sw)
@@ -116,7 +116,7 @@ func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
 			f := &r.ReturnedFindings[i]
 			fmt.Fprintf(sw, "  %-30s  %-8s  %s\n",
 				f.Finding.ControlID,
-				strings.ToUpper(f.Finding.ControlSeverity.String()),
+				strings.ToUpper(f.Finding.SeverityLabel()),
 				f.Finding.AssetID)
 			if f.LastSeen != nil {
 				fmt.Fprintf(sw, "    Previously seen: %s\n", f.LastSeen.Format("2006-01-02"))

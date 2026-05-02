@@ -138,7 +138,7 @@ func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
 			currentKeys[k] = true
 			if _, exists := open[k]; !exists {
 				open[k] = &window{
-					sev:    a.Findings[i].ControlSeverity.String(),
+					sev:    a.Findings[i].SeverityLabel(),
 					openAt: a.Run.Now,
 				}
 			}

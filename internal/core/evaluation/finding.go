@@ -240,11 +240,102 @@ func (f *Finding) IsOverdue() bool {
 	return f.SLABreached && f.SLAOverdueHours != nil
 }
 
+// HasSLA reports whether an SLA deadline applies to this finding.
+// Replaces the (f.SLADeadlineHours != nil) nil-check that recurred
+// across cmd/trend/team_trend.go, cmd/trend/run.go,
+// cmd/trend/metrics.go, cmd/collect/cmd.go, and
+// cmd/export/compliance/output.go. Centralising the presence check
+// keeps the SLA-state surface on the type that owns the pointer.
+func (f *Finding) HasSLA() bool {
+	return f != nil && f.SLADeadlineHours != nil
+}
+
+// SLADeadlineValue returns the SLA deadline in hours together with
+// a presence indicator. Replaces patterns that dereferenced
+// f.SLADeadlineHours after a separate nil check; callers can pass
+// the (value, ok) pair through their formatters without touching
+// the underlying pointer.
+func (f *Finding) SLADeadlineValue() (float64, bool) {
+	if f == nil || f.SLADeadlineHours == nil {
+		return 0, false
+	}
+	return *f.SLADeadlineHours, true
+}
+
+// OverdueHours returns the number of hours past SLA, with a presence
+// indicator. Returns (0, false) when the finding is not overdue or
+// has no recorded overdue duration. Replaces the raw
+// (*f.SLAOverdueHours) dereference in cmd/export/compliance/output.go
+// and callers that need the value without re-checking the nil.
+func (f *Finding) OverdueHours() (float64, bool) {
+	if f == nil || f.SLAOverdueHours == nil {
+		return 0, false
+	}
+	return *f.SLAOverdueHours, true
+}
+
+// IsCritical reports whether this finding's control severity is
+// Critical. Replaces the
+// strings.EqualFold(f.ControlSeverity.String(), "critical") pattern
+// at cmd/trend/team_trend.go:113 with a typed comparison that does
+// not depend on string-rendering of the severity enum.
+func (f *Finding) IsCritical() bool {
+	return f != nil && f.ControlSeverity == policy.SeverityCritical
+}
+
+// IsHighOrAbove reports whether this finding's control severity is
+// High or Critical. Used by ranking / prioritisation code that
+// needs the "important enough to surface" threshold.
+func (f *Finding) IsHighOrAbove() bool {
+	return f != nil && f.ControlSeverity >= policy.SeverityHigh
+}
+
+// SeverityLabel returns the canonical lowercase severity string for
+// this finding. Centralises the .ControlSeverity.String() calls
+// scattered across cmd/trend/{metrics,forecast,mttr},
+// cmd/apply/run_newonly, and cmd/exempt/export so a future enum
+// rename or label-format change is one edit. Mirrors
+// diag.Finding.SeverityLabel for the diagnostic side.
+func (f *Finding) SeverityLabel() string {
+	if f == nil {
+		return ""
+	}
+	return f.ControlSeverity.String()
+}
+
 // HasOwner reports whether ownership routing has populated a team
 // for this finding. Used by trend / metrics / watch to skip the
-// per-team rollup when no owner manifest is loaded.
+// per-team rollup when no owner manifest is loaded. Bypassing this
+// accessor (e.g. cmd/metrics/cmd.go, cmd/apply/run_owners.go) is
+// the legacy pattern OwnerKey + MatchesOwner replace.
 func (f *Finding) HasOwner() bool {
 	return !f.OwnerTeamID.IsEmpty()
+}
+
+// OwnerKey returns the owning team's ID rendered as a string, the
+// shape every owner-aware caller needs for map keys and CLI filters.
+// Replaces the string(f.OwnerTeamID) conversions at
+// cmd/metrics/cmd.go:84 and cmd/apply/run_owners.go:64. Returns ""
+// when no owner is set so callers can branch on a single string
+// value instead of mixing nil / empty checks.
+func (f *Finding) OwnerKey() string {
+	if f == nil || !f.HasOwner() {
+		return ""
+	}
+	return f.OwnerTeamID.String()
+}
+
+// MatchesOwner reports whether this finding's owner key is present
+// in the supplied allow-set. Encapsulates the
+// (allowed[string(f.OwnerTeamID)]) lookup pattern in
+// cmd/apply/run_owners.go so the filter site stops doing the type
+// conversion and map probe inline. nil receiver returns false; nil
+// allowed-map returns false (no allow-set means nothing matches).
+func (f *Finding) MatchesOwner(allowed map[string]bool) bool {
+	if f == nil || allowed == nil {
+		return false
+	}
+	return allowed[f.OwnerKey()]
 }
 
 // IsChainMember reports whether the finding contributed to one or
