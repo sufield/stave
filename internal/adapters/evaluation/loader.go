@@ -139,7 +139,7 @@ func (l *Loader) parseResult(data []byte, source string) (*evaluation.Compliance
 	// (e.g. version present but timestamp missing) as valid, which
 	// silently weakened the strict-mode contract. Non-strict callers
 	// (test fixtures, partial diffs) still accept partial reports.
-	if l.strictSchema.Load() && (result.Run.StaveVersion == "" || result.Run.Now.IsZero()) {
+	if l.strictSchema.Load() && !result.Run.IsValid() {
 		return nil, fmt.Errorf("failed to load output file %s: missing required Run fields (stave_version and now are both required); is this a ComplianceReport envelope?", source)
 	}
 	return &result, nil

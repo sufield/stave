@@ -111,6 +111,98 @@ func (f *Finding) IsCriticalSLABreach() bool {
 		f.SLAEscalatedSeverity == policy.SeverityCritical
 }
 
+// IsAnyBreach reports whether this finding has breached its SLA
+// regardless of severity. Complements IsCriticalSLABreach by giving
+// callers (the apply runner, gating logic) a named accessor for the
+// "any breach happened" signal so they stop reading SLABreached
+// directly — keeping the SLA state surface inside the type that
+// owns the underlying fields.
+func (f *Finding) IsAnyBreach() bool {
+	return f != nil && f.SLABreached
+}
+
+// ToFailingControl projects the finding to the (control, asset) pair
+// the chain / attack-stage analysis consumes. Centralising the field
+// extraction here means a future addition to FailingControl (e.g. a
+// region or scope_tags hint) lands once on the producer side instead
+// of being threaded through every enrichment caller.
+func (f *Finding) ToFailingControl() risk.FailingControl {
+	if f == nil {
+		return risk.FailingControl{}
+	}
+	return risk.FailingControl{
+		ControlID: f.ControlID,
+		AssetID:   f.AssetID,
+	}
+}
+
+// ToRankInput projects the finding to the input shape the exposure
+// ranking consumes. The 6-field copy used to live inline in
+// internal/app/eval/workflow.go; moving it here keeps the
+// finding-to-rank-input contract on the type that owns the source
+// fields so a future Evidence-field rename only edits one site.
+func (f *Finding) ToRankInput() risk.RankInput {
+	if f == nil {
+		return risk.RankInput{}
+	}
+	return risk.RankInput{
+		ControlID:            f.ControlID,
+		AssetID:              f.AssetID,
+		ControlSeverity:      f.ControlSeverity,
+		Exposure:             f.Exposure,
+		UnsafeDurationHours:  f.Evidence.UnsafeDurationHours,
+		ChainMembershipCount: len(f.ChainMembership),
+	}
+}
+
+// PrimaryChainSeverity returns the severity of the first chain this
+// finding participates in, or "" if the finding is not a chain
+// member. The "primary" chain is the first entry in ChainMembership;
+// chain detection appends in deterministic order so this is stable
+// across runs.
+func (f *Finding) PrimaryChainSeverity() string {
+	if f == nil || len(f.ChainMembership) == 0 {
+		return ""
+	}
+	return f.ChainMembership[0].ChainSeverity.String()
+}
+
+// PrimaryChainID returns the ID of the first chain this finding
+// participates in, or "" if the finding is not a chain member.
+func (f *Finding) PrimaryChainID() string {
+	if f == nil || len(f.ChainMembership) == 0 {
+		return ""
+	}
+	return string(f.ChainMembership[0].ChainID)
+}
+
+// ComputeBaseScore returns the per-finding base exposure score the
+// remediation roadmap uses when the chain-aware top-N ranker has not
+// produced a precomputed score for this finding (e.g. assets that
+// did not enter the top-N batch). The math mirrors the formula in
+// risk.RankExposures: severity weight × duration factor × blind
+// multiplier. Callers receive the score and the breakdown together
+// so the roadmap entry can populate ScoreBreakdown without a second
+// pass over the same fields.
+func (f *Finding) ComputeBaseScore() (float64, risk.ScoreBreakdown) {
+	if f == nil {
+		return 0, risk.ScoreBreakdown{}
+	}
+	base := f.ControlSeverity.Weight()
+	daysBlind := f.Evidence.UnsafeDurationHours / 24.0
+	durFactor := risk.DurationFactor(f.Evidence.UnsafeDurationHours)
+	blindMult := risk.BlindMultiplier(daysBlind)
+	score := float64(base) * durFactor * blindMult
+	return score, risk.ScoreBreakdown{
+		BaseScore:          base,
+		DurationFactor:     durFactor,
+		BlastMultiplier:    1.0,
+		ExposureMultiplier: 1.0,
+		BlindMultiplier:    blindMult,
+		DaysBlind:          daysBlind,
+	}
+}
+
 // IsOverdue reports whether the finding has breached SLA AND the
 // overdue duration is recorded. Replaces the
 // `f.SLABreached && f.SLAOverdueHours != nil` pair that recurs

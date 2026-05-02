@@ -210,10 +210,7 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	// Build per-asset failure list for asset-aware chain and attack-stage analysis.
 	failures := make([]risk.FailingControl, len(report.Findings))
 	for i := range report.Findings {
-		failures[i] = risk.FailingControl{
-			ControlID: report.Findings[i].ControlID,
-			AssetID:   report.Findings[i].AssetID,
-		}
+		failures[i] = report.Findings[i].ToFailingControl()
 	}
 
 	controlLookup := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
@@ -235,15 +232,7 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	// chain-bonus factor feeds into per-finding scores.
 	rankInputs := make([]risk.RankInput, len(report.Findings))
 	for i := range report.Findings {
-		f := &report.Findings[i]
-		rankInputs[i] = risk.RankInput{
-			ControlID:            f.ControlID,
-			AssetID:              f.AssetID,
-			ControlSeverity:      f.ControlSeverity,
-			Exposure:             f.Exposure,
-			UnsafeDurationHours:  f.Evidence.UnsafeDurationHours,
-			ChainMembershipCount: len(f.ChainMembership),
-		}
+		rankInputs[i] = report.Findings[i].ToRankInput()
 	}
 	report.TopExposures = risk.RankExposures(rankInputs, controlLookup, 0)
 

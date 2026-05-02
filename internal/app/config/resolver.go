@@ -38,6 +38,55 @@ func (r *GovernanceResolver) WithPolicy(p *WorkspacePolicy, pPath string) *Gover
 	}
 }
 
+// FlagDefaultsTarget is the contract a CLI flag struct (e.g.
+// cmd.globalFlagsType) satisfies so the resolver can write
+// project-config defaults onto persistent flags without importing the
+// CLI-side type. Each setter is invoked only when the matching flag
+// was NOT changed on the command line — see ApplyUnsetDefaultsTo for
+// the full precedence rule.
+type FlagDefaultsTarget interface {
+	SetQuiet(bool)
+	SetSanitize(bool)
+	SetPathMode(string)
+}
+
+// Flag-key constants. The strings match the CLI flag names defined in
+// cmd/cmdutil/cliflags so the cmd-side caller can pass `p.Changed`
+// (which keys by CLI flag name) directly as the changed callback.
+const (
+	FlagKeyQuiet    = "quiet"
+	FlagKeySanitize = "sanitize"
+	FlagKeyPathMode = "path-mode"
+)
+
+// ApplyUnsetDefaultsTo writes project-config / user-config defaults
+// onto target for every flag the operator did NOT set on the command
+// line (changed(name) == false). Centralising the
+// "is-flag-changed?-then-set-default" triple-check on the resolver
+// removes the open-coded `if !p.Changed(...)` walk from the CLI
+// bootstrap so every new resolver-driven default is one edit:
+// add the setter to FlagDefaultsTarget and the entry below.
+//
+// A nil resolver is a no-op (matches the optional-config path's
+// existing semantics — early-return rather than panic on nil).
+func (r *GovernanceResolver) ApplyUnsetDefaultsTo(target FlagDefaultsTarget, changed func(string) bool) {
+	if r == nil || target == nil {
+		return
+	}
+	if changed == nil {
+		changed = func(string) bool { return false }
+	}
+	if !changed(FlagKeyQuiet) {
+		target.SetQuiet(r.Quiet())
+	}
+	if !changed(FlagKeySanitize) {
+		target.SetSanitize(r.Sanitize())
+	}
+	if !changed(FlagKeyPathMode) {
+		target.SetPathMode(r.PathMode())
+	}
+}
+
 func (r *GovernanceResolver) mergeLayers(
 	entry env.Entry,
 	configKey string,

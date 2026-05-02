@@ -150,9 +150,16 @@ jobs:
           name: goldens
           path: .
       - name: Run tests with race detector
+        # Exclude ./e2e/ — that suite drives the compiled stave binary
+        # as a black box, so race instrumentation on the test process
+        # itself adds no signal but inflates runtime past the 30m
+        # package timeout (the e2e job runs without -race for the same
+        # reason). Mirrors the /e2e exclusion in the regular `test` job.
         run: |
+          set -euo pipefail
+          pkgs=$(go list ./... | grep -vE '/e2e$')
           GORACE="halt_on_error=1 history_size=4" \
-          go test -tags stavedev -race -count=1 -parallel=2 -timeout 30m ./...
+          go test -tags stavedev -race -count=1 -parallel=2 -timeout 30m $pkgs
 
   lint:
     name: Lint

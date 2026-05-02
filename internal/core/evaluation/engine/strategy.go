@@ -190,43 +190,60 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 		"matched": !t.IsSecure(),
 	})
 
-	if t.IsSecure() {
+	verdict := t.Verdict(now, maxUnsafe)
+	switch verdict {
+	case asset.VerdictSecure:
+		if !t.IsExposed() {
+			span.RecordStep("verdict_decision", nil, map[string]any{
+				"verdict": "PASS",
+				"reason":  "predicate not matched — resource is compliant",
+			})
+			return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
+		}
+		span.RecordStep("threshold_check", map[string]any{
+			"threshold_hours":  maxUnsafe.Hours(),
+			"last_seen_unsafe": t.LastObservedAt(),
+		}, map[string]any{
+			"exceeds_threshold": false,
+		})
 		span.RecordStep("verdict_decision", nil, map[string]any{
 			"verdict": "PASS",
-			"reason":  "predicate not matched — resource is compliant",
+			"reason":  "predicate matched but exposure within SLA threshold",
 		})
-		return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
-	}
+		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
+		return finalizeRow(observation, evaluation.VerdictPass, confidence), nil
 
-	if t.MissingExposureTimestamps() {
-		observation.MarkInconclusive("missing timestamps")
+	case asset.VerdictInconclusive:
+		// Distinguish the two inconclusive sub-cases so the operator
+		// gets the same diagnostic the previous open-coded shape
+		// produced. Verdict() collapses them into one outcome but the
+		// reason text still carries the diagnostic value.
+		switch {
+		case t.MissingExposureTimestamps():
+			observation.MarkInconclusive("missing timestamps")
+		case t.HasClampedWindow():
+			observation.MarkInconclusive("clamped exposure window — duration math unreliable")
+		default:
+			s.deps.Logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID)
+			observation.MarkInconclusive("threshold check error")
+		}
 		return observation, nil
-	}
 
-	exceeds, threshErr := t.ExceedsSLA(now, maxUnsafe)
-	if threshErr != nil {
-		s.deps.Logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
-		observation.MarkInconclusive("threshold check error")
-		return observation, nil
-	}
-
-	span.RecordStep("threshold_check", map[string]any{
-		"threshold_hours":  maxUnsafe.Hours(),
-		"last_seen_unsafe": t.LastObservedAt(),
-	}, map[string]any{
-		"exceeds_threshold": exceeds,
-	})
-
-	if exceeds {
+	case asset.VerdictExposed:
+		span.RecordStep("threshold_check", map[string]any{
+			"threshold_hours":  maxUnsafe.Hours(),
+			"last_seen_unsafe": t.LastObservedAt(),
+		}, map[string]any{
+			"exceeds_threshold": true,
+		})
 		return emitViolationFinding(s.deps, s.ctl, t, maxUnsafe, now, ids, observation)
 	}
 
-	span.RecordStep("verdict_decision", nil, map[string]any{
-		"verdict": "PASS",
-		"reason":  "predicate matched but exposure within SLA threshold",
-	})
-	confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
-	return finalizeRow(observation, evaluation.VerdictPass, confidence), nil
+	// Unreachable: Verdict returns one of the three constants above.
+	// A future enum addition without a matching case would fall through
+	// here; mark inconclusive rather than silently returning a zero row.
+	observation.MarkInconclusive("unhandled lifecycle verdict")
+	return observation, nil
 }
 
 type unsafeDurationStrategy struct {

@@ -41,9 +41,9 @@ func TestE2E(t *testing.T) {
 	// cases — predictable and well-bounded by the package timeout.
 	// CI also passes -parallel 1 as a belt-and-braces override.
 	//
-	// The package-level go test timeout in CI is 45m to absorb the
-	// serial cost over ~5800 fixtures (the prior 30m budget was
-	// tight; the buffer prevents a transient slow build from
+	// The package-level go test timeout in CI is 60m to absorb the
+	// serial cost over ~5800 fixtures (the prior 30m / 45m budgets
+	// were tight; the buffer prevents a transient slow build from
 	// flipping the suite red). Each case still has its own 90s
 	// e2eCaseTimeout enforced via context.WithTimeout in
 	// runE2ECase.
@@ -169,9 +169,18 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 	cmd.Stderr = &stderr
 	cmd.Dir = repoRoot
 
+	// Run stave in its own process group so a context-deadline kill
+	// also reaches any helpers it might fork. Without this, exec.Cmd's
+	// SIGKILL hits only the immediate child; a grandchild that inherits
+	// stdout keeps the pipe open and hangs cmd.Run() past ctx
+	// cancellation, surfacing as a package-level timeout (the os/exec
+	// watchCtx stack frame) rather than the per-case t.Fatalf below.
+	setProcessGroup(cmd)
+
 	exitCode := 0
 	runErr := cmd.Run()
 	if ctx.Err() == context.DeadlineExceeded {
+		killProcessGroup(cmd)
 		t.Fatalf(
 			"e2e case timed out after %s\ncase: %s\nstdout:\n%s\nstderr:\n%s",
 			e2eCaseTimeout, caseDir, stdout.String(), stderr.String(),

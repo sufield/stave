@@ -153,15 +153,7 @@ func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command, eval *appconfig.Gove
 	cmd.SetContext(ctx)
 
 	p := cmd.Root().PersistentFlags()
-	if !p.Changed(cliflags.FlagQuiet) {
-		a.Flags.Quiet = eval.Quiet()
-	}
-	if !p.Changed(cliflags.FlagSanitize) {
-		a.Flags.Sanitize = eval.Sanitize()
-	}
-	if !p.Changed(cliflags.FlagPathMode) {
-		a.Flags.PathMode = cliflags.PathModeFlag(eval.PathMode())
-	}
+	eval.ApplyUnsetDefaultsTo(&a.Flags, p.Changed)
 }
 
 // resolveEnvVarDefaults fills global persistent flags from STAVE_* environment
@@ -236,13 +228,14 @@ func (a *App) postRun(cmd *cobra.Command, _ []string) {
 }
 
 func (a *App) startCPUProfile() error {
-	if a.Flags.CPUProfile == "" {
+	cpuPath, _ := a.Flags.ProfilerConfig()
+	if cpuPath == "" {
 		return nil
 	}
 	opts := fsutil.DefaultWriteOpts()
 	opts.Overwrite = true
 	opts.AllowSymlink = a.Flags.AllowSymlinkOut
-	f, err := fsutil.SafeCreateFile(fsutil.CleanUserPath(a.Flags.CPUProfile), opts)
+	f, err := fsutil.SafeCreateFile(cpuPath, opts)
 	if err != nil {
 		return fmt.Errorf("create CPU profile: %w", err)
 	}
@@ -283,7 +276,8 @@ func (a *App) writeMemProfile(cmd *cobra.Command) {
 // finalizeExecute ran. stderr may be nil; it is used only as the
 // fallback when a.Logger is also nil.
 func (a *App) writeMemProfileTo(stderr io.Writer) {
-	if a.Flags.MemProfile == "" {
+	_, memPath := a.Flags.ProfilerConfig()
+	if memPath == "" {
 		return
 	}
 	warnf := func(msg string, err error) {
@@ -298,7 +292,7 @@ func (a *App) writeMemProfileTo(stderr io.Writer) {
 	opts := fsutil.DefaultWriteOpts()
 	opts.Overwrite = true
 	opts.AllowSymlink = a.Flags.AllowSymlinkOut
-	f, err := fsutil.SafeCreateFile(fsutil.CleanUserPath(a.Flags.MemProfile), opts)
+	f, err := fsutil.SafeCreateFile(memPath, opts)
 	if err != nil {
 		warnf("create memory profile", err)
 		return
@@ -343,23 +337,7 @@ func (a *App) validateBuiltins() error {
 
 // initLogger initializes the App logger based on flags.
 func (a *App) initLogger() error {
-	cfg := logging.DefaultConfig()
-
-	// Determine log level
-	if a.Flags.LogLevel != "" {
-		cfg.Level = logging.ParseLevel(string(a.Flags.LogLevel))
-	} else {
-		cfg.Level = logging.LevelFromVerbosity(a.Flags.Verbosity)
-	}
-
-	cfg.Format = logging.ParseFormat(string(a.Flags.LogFormat))
-	cfg.LogFile = fsutil.CleanUserPath(a.Flags.LogFile)
-	cfg.Timestamps = a.Flags.LogTimestamps
-	cfg.Timings = a.Flags.LogTimings
-	cfg.AllowSymlink = a.Flags.AllowSymlinkOut
-	cfg.SanitizeInfraKeys = a.Flags.Sanitize
-
-	lc, err := logging.NewLogger(cfg)
+	lc, err := logging.NewLogger(a.Flags.LoggingConfig())
 	if err != nil {
 		return fmt.Errorf("failed to initialize logger: %w", err)
 	}

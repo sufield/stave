@@ -36,3 +36,14 @@ type RunInfo struct {
 	// "deployed" (CI/CD), "planned" (IaC plan), or "local" (developer workstation).
 	EvaluatedState string `json:"evaluated_state"`
 }
+
+// IsValid reports whether the run carries the minimum provenance
+// fields the strict-mode loader requires: a non-empty stave_version
+// and a non-zero now timestamp. Strict callers (gating, enforcement
+// generation) need both to make a trust-boundary decision; either
+// alone is insufficient. Centralising the check on the type keeps
+// the strict-mode contract definition out of the loader and prevents
+// future field probing from drifting away from it.
+func (r RunInfo) IsValid() bool {
+	return r.StaveVersion != "" && !r.Now.IsZero()
+}

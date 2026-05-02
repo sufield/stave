@@ -159,14 +159,7 @@ func run(w io.Writer, opts *options) error {
 		filteredCompound := make([]compound.Finding, 0, len(report.CompoundFindings))
 		for i := range report.CompoundFindings {
 			cf := &report.CompoundFindings[i]
-			allAcked := len(cf.TriggerIDs) > 0
-			for _, tid := range cf.TriggerIDs {
-				if _, ok := validAcks[tid]; !ok {
-					allAcked = false
-					break
-				}
-			}
-			if !allAcked {
+			if !cf.IsFullyAcknowledged(validAcks) {
 				filteredCompound = append(filteredCompound, *cf)
 			}
 		}
@@ -182,25 +175,7 @@ func run(w io.Writer, opts *options) error {
 	// folded in. The exit-code check downstream then read the
 	// stale count and could pass a run that had compound findings
 	// at higher severity than any single control's verdict.
-	//
-	// Compound findings carry their own severity (often higher
-	// than any single contributing control's severity, which is
-	// the entire point of "compound risk"); fold those into
-	// FailCounts so the exit-code check reflects chain criticality.
-	report.FailCounts = make(map[policy.Severity]int)
-	report.Pass = true
-	for _, r := range report.Results {
-		if !r.Pass {
-			report.FailCounts[r.Severity]++
-			report.Pass = false
-		}
-	}
-	for i := range report.CompoundFindings {
-		report.FailCounts[report.CompoundFindings[i].Severity]++
-	}
-	if len(report.CompoundFindings) > 0 {
-		report.Pass = false
-	}
+	report.Recount()
 
 	// Build metadata. A zero CapturedAt would render as
 	// "0001-01-01T00:00:00Z" — Go's zero-time is a valid wall-clock

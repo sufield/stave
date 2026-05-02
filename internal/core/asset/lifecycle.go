@@ -256,6 +256,73 @@ func (l *ExposureLifecycle) ExposureDuration(now time.Time) (time.Duration, erro
 	return now.Sub(l.activeWindow.OpenedAt()), nil
 }
 
+// Verdict is the asset-level exposure outcome derived purely from
+// lifecycle state. Engine strategies map this to evaluation.Verdict
+// when no control-type-specific logic intervenes (the unsafe_state
+// strategy in particular is a direct mapping). Keeping the decision
+// on the type that owns the lifecycle facts avoids the four-way
+// boolean stitching that callers used to do (IsExposed +
+// HasClampedWindow + MissingExposureTimestamps + HasActiveWindow).
+type Verdict int
+
+// VerdictSecure / VerdictExposed / VerdictInconclusive enumerate the
+// possible outcomes of ExposureLifecycle.Verdict.
+const (
+	VerdictSecure Verdict = iota
+	VerdictExposed
+	VerdictInconclusive
+)
+
+// String implements fmt.Stringer so the Verdict shows up legibly in
+// log fields and trace step output.
+func (v Verdict) String() string {
+	switch v {
+	case VerdictSecure:
+		return "Secure"
+	case VerdictExposed:
+		return "Exposed"
+	case VerdictInconclusive:
+		return "Inconclusive"
+	default:
+		return "Unknown"
+	}
+}
+
+// Verdict returns the asset's exposure verdict at `now` against
+// `threshold`. The evaluation order is:
+//
+//  1. A clamped window in the lifecycle history makes duration math
+//     unreliable — Inconclusive.
+//  2. A non-exposed asset is Secure.
+//  3. Exposed assets without timestamps are Inconclusive (the strategy
+//     cannot say how long the asset has been unsafe).
+//  4. ExceedsSLA(now, threshold) errors are Inconclusive.
+//  5. ExceedsSLA == true is Exposed; anything else is Secure (within
+//     threshold or no active window).
+//
+// This is a lifecycle-only decision; control-type-specific behaviour
+// (recurrence, coverage validity, exempted assets, exception filtering)
+// still layers on top in the engine.
+func (l *ExposureLifecycle) Verdict(now time.Time, threshold time.Duration) Verdict {
+	if l.HasClampedWindow() {
+		return VerdictInconclusive
+	}
+	if !l.IsExposed() {
+		return VerdictSecure
+	}
+	if l.MissingExposureTimestamps() {
+		return VerdictInconclusive
+	}
+	exceeds, err := l.ExceedsSLA(now, threshold)
+	if err != nil {
+		return VerdictInconclusive
+	}
+	if exceeds {
+		return VerdictExposed
+	}
+	return VerdictSecure
+}
+
 // ExceedsSLA reports whether the asset has been exposed long enough to
 // breach the configured threshold. Comparison rules:
 //

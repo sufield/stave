@@ -15,10 +15,51 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
 	"github.com/sufield/stave/internal/sanitize"
 	staveversion "github.com/sufield/stave/internal/version"
 )
+
+// LoggingConfig builds a logging.Config from the global flags. The
+// caller-side seven-field walk used to live in initLogger; pulling the
+// transformation onto the type that owns the source fields means a
+// new logging knob is one edit (struct field + this method) instead
+// of an add-and-thread across every initLogger-like wiring point.
+func (g *globalFlagsType) LoggingConfig() logging.Config {
+	cfg := logging.DefaultConfig()
+	if g.LogLevel != "" {
+		cfg.Level = logging.ParseLevel(string(g.LogLevel))
+	} else {
+		cfg.Level = logging.LevelFromVerbosity(g.Verbosity)
+	}
+	cfg.Format = logging.ParseFormat(string(g.LogFormat))
+	cfg.LogFile = fsutil.CleanUserPath(g.LogFile)
+	cfg.Timestamps = g.LogTimestamps
+	cfg.Timings = g.LogTimings
+	cfg.AllowSymlink = g.AllowSymlinkOut
+	cfg.SanitizeInfraKeys = g.Sanitize
+	return cfg
+}
+
+// ProfilerConfig returns the cleaned CPU and memory pprof file paths.
+// Empty strings mean "no profile requested for that profiler"; both
+// callers (startCPUProfile, writeMemProfileTo) already short-circuit
+// on the empty case so callers don't need to repeat the ""-check.
+func (g *globalFlagsType) ProfilerConfig() (cpuPath, memPath string) {
+	return fsutil.CleanUserPath(g.CPUProfile), fsutil.CleanUserPath(g.MemProfile)
+}
+
+// SetQuiet / SetSanitize / SetPathMode satisfy
+// appconfig.FlagDefaultsTarget so the resolver can write
+// project-config defaults onto these fields without importing
+// globalFlagsType. PathMode round-trips through cliflags.PathModeFlag
+// so the typed-value contract on the field is preserved.
+func (g *globalFlagsType) SetQuiet(v bool)    { g.Quiet = v }
+func (g *globalFlagsType) SetSanitize(v bool) { g.Sanitize = v }
+func (g *globalFlagsType) SetPathMode(v string) {
+	g.PathMode = cliflags.PathModeFlag(v)
+}
 
 // globalFlagsType groups all persistent CLI flags into a single struct,
 // following the same pattern as applyFlagsType in cmd/apply/command.go.

@@ -127,7 +127,7 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	// later one IS critical.
 	for i := range result.Findings {
 		f := &result.Findings[i]
-		if f.SLABreached {
+		if f.IsAnyBreach() {
 			evalResult.HasSLABreach = true
 		}
 		if f.IsCriticalSLABreach() {

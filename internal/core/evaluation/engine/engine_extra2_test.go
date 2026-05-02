@@ -216,7 +216,8 @@ func TestAssessorFingerprintPolicy_WithControls(t *testing.T) {
 
 type stubClock struct{ t time.Time }
 
-func (c stubClock) Now() time.Time { return c.t }
+func (c stubClock) Now() time.Time         { return c.t }
+func (c stubClock) IsUserProvided() bool   { return true }
 
 func TestReferenceTime_FromSnapshots(t *testing.T) {
 	base := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)

@@ -91,6 +91,36 @@ type Report struct {
 	FailCounts       map[policy.Severity]int `json:"fail_counts"`
 }
 
+// Recount rebuilds FailCounts and Pass from the current Results and
+// CompoundFindings slices. The previous shape ran this only inside the
+// "exceptions applied" branch in cmd/evaluate, so a profile evaluation
+// without exceptions silently used the stale FailCounts that
+// Profile.Evaluate computed before any post-processing — including
+// before compound findings were folded in. Centralising the recount
+// on the type means every mutation site (filter compound findings,
+// drop excepted controls, append a synthetic result) can call one
+// method and trust that derived counts stay consistent.
+//
+// Compound findings carry their own severity (often higher than any
+// single contributing control's severity, which is the entire point
+// of "compound risk"); they fold into FailCounts and force Pass=false.
+func (r *Report) Recount() {
+	r.FailCounts = make(map[policy.Severity]int)
+	r.Pass = true
+	for i := range r.Results {
+		if !r.Results[i].Pass {
+			r.FailCounts[r.Results[i].Severity]++
+			r.Pass = false
+		}
+	}
+	for i := range r.CompoundFindings {
+		r.FailCounts[r.CompoundFindings[i].Severity]++
+	}
+	if len(r.CompoundFindings) > 0 {
+		r.Pass = false
+	}
+}
+
 // AcknowledgedEntry surfaces an exception in the report.
 type AcknowledgedEntry struct {
 	ControlID      kernel.ControlID `json:"control_id"`

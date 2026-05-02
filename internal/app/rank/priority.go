@@ -110,20 +110,8 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			breakdown = er.Breakdown
 			silentKiller = er.SilentKiller
 		} else {
-			base := f.ControlSeverity.Weight()
-			daysBlind := f.Evidence.UnsafeDurationHours / 24.0
-			durFactor := risk.DurationFactor(f.Evidence.UnsafeDurationHours)
-			blindMult := risk.BlindMultiplier(daysBlind)
-			score = float64(base) * durFactor * blindMult
-			breakdown = risk.ScoreBreakdown{
-				BaseScore:          base,
-				DurationFactor:     durFactor,
-				BlastMultiplier:    1.0,
-				ExposureMultiplier: 1.0,
-				BlindMultiplier:    blindMult,
-				DaysBlind:          daysBlind,
-			}
-			silentKiller = daysBlind > 300
+			score, breakdown = f.ComputeBaseScore()
+			silentKiller = breakdown.DaysBlind > 300
 		}
 
 		slaUrgency := 1.0
@@ -158,8 +146,8 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 		}
 		if f.IsChainMember() {
 			entry.IsChainMember = true
-			entry.ChainSeverity = f.ChainMembership[0].ChainSeverity.String()
-			entry.ChainID = string(f.ChainMembership[0].ChainID)
+			entry.ChainSeverity = f.PrimaryChainSeverity()
+			entry.ChainID = f.PrimaryChainID()
 		}
 		if f.IsOverdue() {
 			entry.SLABreached = true

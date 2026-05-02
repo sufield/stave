@@ -211,7 +211,7 @@ func (a *Assessor) referenceTime(snapshots []asset.Snapshot) (time.Time, error) 
 	if a.clock == nil {
 		return time.Time{}, ErrClockMissing
 	}
-	if _, isFixed := a.clock.(ports.FixedClock); isFixed {
+	if a.clock.IsUserProvided() {
 		return a.clock.Now(), nil
 	}
 	if len(snapshots) > 0 {

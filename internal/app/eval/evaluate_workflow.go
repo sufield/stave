@@ -43,6 +43,46 @@ type EvaluateInput struct {
 	GenerateEvidence bool
 }
 
+// BuildAssessorOptions returns the engine option list derived from the
+// inputs on this EvaluateInput. The catalog, parser, and CEL evaluator
+// are passed in so the caller can supply already-resolved fallbacks
+// (noopPredicateParser, inconclusiveCELEvaluator) without
+// BuildAssessorOptions reaching back into package-level helpers — the
+// fallback policy stays in Evaluate where it is documented.
+//
+// Centralising the option list on EvaluateInput keeps the
+// "which fields drive which engine option" mapping in one place, so
+// adding a new EvaluateInput field is a single-site edit instead of a
+// scan-and-update across every caller that constructs an Assessor.
+func (i EvaluateInput) BuildAssessorOptions(
+	catalog *policy.Catalog,
+	parser policy.PredicateParser,
+	celEval policy.PredicateEval,
+	tracer ports.Tracer,
+) []engine.AssessorOption {
+	opts := []engine.AssessorOption{
+		engine.WithControls(catalog.List()),
+		engine.WithSLAThreshold(i.MaxUnsafeDuration),
+		engine.WithClock(i.Clock),
+		// Hasher must be injected from the cmd/ composition root —
+		// neither core/ nor app/ can import internal/platform/crypto
+		// under the hexagonal-architecture rules. FingerprintPolicy()
+		// returns "" when Hasher is nil, so omitting it is a soft
+		// degradation.
+		engine.WithHasher(i.Hasher),
+		engine.WithExemptions(i.ExemptionConfig),
+		engine.WithExceptions(i.ExceptionConfig),
+		engine.WithAcknowledgments(i.AcknowledgmentConfig),
+		engine.WithPredicateParser(parser),
+		engine.WithPredicateEval(celEval),
+		engine.WithTracer(tracer),
+	}
+	if i.Confidence.HighMultiplier > 0 {
+		opts = append(opts, engine.WithConfidence(i.Confidence))
+	}
+	return opts
+}
+
 // Evaluate runs domain evaluation over already-loaded inputs.
 //
 // ctx flows down to engine.Assessor.Assess so a long-running assessment
@@ -58,26 +98,7 @@ func Evaluate(ctx context.Context, input EvaluateInput) (evaluation.ComplianceRe
 	if celEval == nil {
 		celEval = inconclusiveCELEvaluator
 	}
-	opts := []engine.AssessorOption{
-		engine.WithControls(catalog.List()),
-		engine.WithSLAThreshold(input.MaxUnsafeDuration),
-		engine.WithClock(input.Clock),
-		// Hasher must be injected from the cmd/ composition root —
-		// neither core/ nor app/ can import internal/platform/crypto
-		// under the hexagonal-architecture rules. FingerprintPolicy()
-		// returns "" when Hasher is nil, so omitting it is a soft
-		// degradation.
-		engine.WithHasher(input.Hasher),
-		engine.WithExemptions(input.ExemptionConfig),
-		engine.WithExceptions(input.ExceptionConfig),
-		engine.WithAcknowledgments(input.AcknowledgmentConfig),
-		engine.WithPredicateParser(parser),
-		engine.WithPredicateEval(celEval),
-		engine.WithTracer(input.Tracer),
-	}
-	if input.Confidence.HighMultiplier > 0 {
-		opts = append(opts, engine.WithConfidence(input.Confidence))
-	}
+	opts := input.BuildAssessorOptions(catalog, parser, celEval, input.Tracer)
 	runner := engine.NewAssessor(opts...)
 	result, err := runner.Assess(ctx, derive.Pipeline(input.Snapshots), engine.AssessmentOptions{
 		StaveVersion:     input.StaveVersion,
