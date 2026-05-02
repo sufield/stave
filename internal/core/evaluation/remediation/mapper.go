@@ -17,6 +17,16 @@ type Finding struct {
 	RemediationPlan *evaluation.RemediationPlan `json:"fix_plan,omitempty"`
 }
 
+// IsActionable reports whether the finding carries a populated
+// remediation action — the catalog author wrote a fix instruction
+// for this control. Distinct from "has a remediation block": a
+// stub block with no Action string is not actionable. Centralised
+// here so consumers (priority ranking, plan grouping) stop
+// open-coding the RemediationSpec.Action != "" check.
+func (f *Finding) IsActionable() bool {
+	return f.RemediationSpec.Action != ""
+}
+
 // resolveSpec returns remediation guidance for a finding.
 // Prioritizes YAML-defined remediation from control metadata,
 // falling back to class-based defaults from the control definition layer.

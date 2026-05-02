@@ -22,8 +22,8 @@ func (l *Loader) Load(path string) (*policy.ExemptionConfig, error) {
 	}
 
 	var dto yamlExemptionConfig
-	if err := yaml.Unmarshal(data, &dto); err != nil {
-		return nil, fmt.Errorf("malformed YAML in exemption file %q: %w", cleanPath, err)
+	if unmarshalErr := yaml.Unmarshal(data, &dto); unmarshalErr != nil {
+		return nil, fmt.Errorf("malformed YAML in exemption file %q: %w", cleanPath, unmarshalErr)
 	}
 
 	cfg, err := exemptionConfigToDomain(dto)

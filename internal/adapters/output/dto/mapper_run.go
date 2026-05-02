@@ -5,7 +5,12 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-func fromRunInfo(r evaluation.RunInfo) RunInfoDTO {
+// NewRunInfoDTO is the DTO-side constructor for evaluation.RunInfo.
+// The DTO owns the wire format and the conversion from the domain
+// shape so callers don't need a separate "mapper" intermediary —
+// the wire-side type knows how to build itself from a domain
+// value. Mirrored on the other DTOs in this file.
+func NewRunInfoDTO(r evaluation.RunInfo) RunInfoDTO {
 	dto := RunInfoDTO{
 		StaveVersion:      r.StaveVersion,
 		Offline:           r.Offline,
@@ -16,12 +21,15 @@ func fromRunInfo(r evaluation.RunInfo) RunInfoDTO {
 		EvaluatedState:    r.EvaluatedState,
 	}
 	if r.InputHashes != nil {
-		dto.InputHashes = fromInputHashes(r.InputHashes)
+		dto.InputHashes = NewInputHashesDTO(r.InputHashes)
 	}
 	return dto
 }
 
-func fromInputHashes(h *evaluation.InputHashes) *InputHashesDTO {
+// NewInputHashesDTO is the DTO-side constructor for the input-hash
+// envelope. Returns nil when the source is nil so callers stop
+// open-coding the nil-check at every site.
+func NewInputHashesDTO(h *evaluation.InputHashes) *InputHashesDTO {
 	if h == nil {
 		return nil
 	}
@@ -35,7 +43,9 @@ func fromInputHashes(h *evaluation.InputHashes) *InputHashesDTO {
 	}
 }
 
-func fromSummary(s evaluation.ComplianceSummary) SummaryDTO {
+// NewSummaryDTO is the DTO-side constructor for the compliance
+// summary's wire shape.
+func NewSummaryDTO(s evaluation.ComplianceSummary) SummaryDTO {
 	return SummaryDTO{
 		TotalAssets:      s.TotalAssets,
 		ExposedResources: s.ExposedResources,
@@ -54,7 +64,9 @@ func packNamesToStrings(packs []kernel.PackName) []string {
 	return out
 }
 
-func fromExtensions(e *evaluation.Extensions) *ExtensionsDTO {
+// NewExtensionsDTO is the DTO-side constructor for the extensions
+// metadata envelope.
+func NewExtensionsDTO(e *evaluation.Extensions) *ExtensionsDTO {
 	if e == nil {
 		return nil
 	}

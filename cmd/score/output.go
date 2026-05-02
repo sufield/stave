@@ -81,41 +81,34 @@ func writeTable(w io.Writer, r appscore.Result) {
 }
 
 func scoreMovers(r appscore.Result) []string {
-	var movers []string
-
-	// Severity impact.
-	if r.Severity.Detail.FailingFindings > 0 {
-		lost := r.Severity.MaxContribution - r.Severity.Contribution
-		movers = append(movers,
-			fmt.Sprintf("\u2193 %d findings currently failing        (\u2212%.1f pts)",
-				r.Severity.Detail.FailingFindings, lost))
+	moversData := r.Movers()
+	if len(moversData) == 0 {
+		return nil
 	}
-
-	// SLA impact.
-	if r.SLA.Detail.FindingsBreached > 0 {
-		lost := r.SLA.MaxContribution - r.SLA.Contribution
-		movers = append(movers,
-			fmt.Sprintf("\u2193 %d SLA breach(es)                     (\u2212%.1f pts)",
-				r.SLA.Detail.FindingsBreached, lost))
+	out := make([]string, 0, len(moversData))
+	for _, m := range moversData {
+		out = append(out, formatMover(m))
 	}
+	return out
+}
 
-	// Chain impact.
-	if r.Chain.Detail.ActiveChains > 0 {
-		lost := r.Chain.MaxContribution - r.Chain.Contribution
-		movers = append(movers,
-			fmt.Sprintf("\u2193 %d active compound chain(s)           (\u2212%.1f pts)",
-				r.Chain.Detail.ActiveChains, lost))
+// formatMover converts the structured ScoreMover into the
+// human-readable arrow-prefixed line used by the score CLI render.
+// Display formatting lives in the CLI layer; the domain owns
+// "which components are movers".
+func formatMover(m appscore.ScoreMover) string {
+	switch m.Component {
+	case "severity":
+		return fmt.Sprintf("\u2193 %d findings currently failing        (\u2212%.1f pts)", m.Count, m.PointsLost)
+	case "sla":
+		return fmt.Sprintf("\u2193 %d SLA breach(es)                     (\u2212%.1f pts)", m.Count, m.PointsLost)
+	case "chain":
+		return fmt.Sprintf("\u2193 %d active compound chain(s)           (\u2212%.1f pts)", m.Count, m.PointsLost)
+	case "coverage":
+		return fmt.Sprintf("\u2193 Framework coverage %d%%                (\u2212%.1f pts)", m.Count, m.PointsLost)
+	default:
+		return fmt.Sprintf("\u2193 %s impact                            (\u2212%.1f pts)", m.Component, m.PointsLost)
 	}
-
-	// Coverage impact.
-	if r.Coverage.SubScore < 1.0 && r.Coverage.Detail.CoveragePct > 0 {
-		lost := r.Coverage.MaxContribution - r.Coverage.Contribution
-		movers = append(movers,
-			fmt.Sprintf("\u2193 Framework coverage %.0f%%                (\u2212%.1f pts)",
-				r.Coverage.Detail.CoveragePct, lost))
-	}
-
-	return movers
 }
 
 func scoreBar(score float64) string {
@@ -152,25 +145,9 @@ func writeOpenMetrics(w io.Writer, r appscore.Result) {
 	fmt.Fprintf(w, "stave_posture_score_coverage_component %.2f %d\n", r.Coverage.SubScore, tsMs)
 
 	// Rubric band as numeric gauge.
-	bandNum := rubricBandNum(r.RubricBand)
 	fmt.Fprintln(w, "# HELP stave_posture_score_rubric_band Rubric band (0=critical,1=at_risk,2=needs_attention,3=adequate,4=strong)")
 	fmt.Fprintln(w, "# TYPE stave_posture_score_rubric_band gauge")
-	fmt.Fprintf(w, "stave_posture_score_rubric_band %d %d\n", bandNum, tsMs)
+	fmt.Fprintf(w, "stave_posture_score_rubric_band %d %d\n", r.RubricBandNumeric(), tsMs)
 
 	fmt.Fprintln(w, "# EOF")
-}
-
-func rubricBandNum(band string) int {
-	switch band {
-	case "strong":
-		return 4
-	case "adequate":
-		return 3
-	case "needs_attention":
-		return 2
-	case "at_risk":
-		return 1
-	default: // critical
-		return 0
-	}
 }

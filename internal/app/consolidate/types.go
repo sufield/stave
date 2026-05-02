@@ -73,8 +73,8 @@ type AccountManifest struct {
 // AccountEntry describes one account in the manifest.
 type AccountEntry struct {
 	AccountID    AccountID `yaml:"account_id"`
-	AccountName  string `yaml:"account_name"`
-	Environment  string `yaml:"environment"`
-	BusinessUnit string `yaml:"business_unit"`
-	Snapshot     string `yaml:"snapshot"`
+	AccountName  string    `yaml:"account_name"`
+	Environment  string    `yaml:"environment"`
+	BusinessUnit string    `yaml:"business_unit"`
+	Snapshot     string    `yaml:"snapshot"`
 }

@@ -28,15 +28,35 @@ const (
 	StateNonCompliant SecurityState = "NON_COMPLIANT"
 )
 
-// DeriveSecurityState determines the overall health based on violation counts and drift risks.
-func DeriveSecurityState(violations int, upcoming risk.ThresholdItems) SecurityState {
-	if violations > 0 {
+// SecurityState derives the overall posture from the summary's
+// violation count plus the supplied risk-signal set.
+// NON_COMPLIANT when any active violations exist, AT_RISK when no
+// violations but at least one upcoming-risk signal fires,
+// COMPLIANT otherwise.
+//
+// Methodised so callers stop open-coding the (violations > 0) /
+// (HasAnyRisk) precedence and so a future precedence change is one
+// edit on the type. The signature still takes upcoming as an
+// argument because risk-signal computation lives outside the
+// summary's own state — the summary owns counts, not the timeline
+// data that produces signals.
+func (s ComplianceSummary) SecurityState(upcoming risk.ThresholdItems) SecurityState {
+	if s.Violations > 0 {
 		return StateNonCompliant
 	}
 	if upcoming.HasAnyRisk() {
 		return StateAtRisk
 	}
 	return StateCompliant
+}
+
+// DeriveSecurityState is a thin wrapper around
+// ComplianceSummary.SecurityState for callers that have a violation
+// count in hand without a full summary value yet (assessor at the
+// moment it constructs the report). New code should prefer the
+// method when a summary already exists.
+func DeriveSecurityState(violations int, upcoming risk.ThresholdItems) SecurityState {
+	return ComplianceSummary{Violations: violations}.SecurityState(upcoming)
 }
 
 // Verdict represents the final outcome of a security control check against a resource.
@@ -71,6 +91,27 @@ func (c *ResourceCheck) MarkInconclusive(reason string) {
 	c.Verdict = VerdictInconclusive
 	c.Confidence = ConfidenceInconclusive
 	c.Reason = reason
+}
+
+// IsViolation reports whether the check produced a violation
+// verdict. Replaces the c.Verdict == VerdictViolation comparisons
+// at the assessor / evidence-hook / domain-summary / verify / export
+// call sites so a future verdict-vocabulary change is a single-line
+// edit on the type rather than a sweep.
+func (c *ResourceCheck) IsViolation() bool {
+	return c != nil && c.Verdict == VerdictViolation
+}
+
+// IsPass reports whether the check produced a pass verdict.
+func (c *ResourceCheck) IsPass() bool {
+	return c != nil && c.Verdict == VerdictPass
+}
+
+// IsInconclusive reports whether the check produced an inconclusive
+// verdict — usually missing data or a degraded predicate evaluation
+// rather than a definite pass/fail.
+func (c *ResourceCheck) IsInconclusive() bool {
+	return c != nil && c.Verdict == VerdictInconclusive
 }
 
 // ComplianceSummary provides high-level metrics for an evaluation run.

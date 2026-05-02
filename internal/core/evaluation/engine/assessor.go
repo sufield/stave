@@ -468,7 +468,7 @@ func (s *assessmentSession) applyControl(
 		// pre-evaluation on lifecycle.IsExposed inflated the
 		// counter past the violation total because it included
 		// snapshots that no control matched.
-		if check.Verdict == evaluation.VerdictViolation {
+		if check.IsViolation() {
 			s.collector.RecordNonCompliantAsset(id)
 		}
 	}

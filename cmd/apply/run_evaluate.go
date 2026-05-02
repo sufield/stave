@@ -98,8 +98,9 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 			Marshaler: deps.Runner.ReportPublisher,
 			Enricher:  deps.Runner.ContextEnricher,
 			// applyRes.Controls is the workflow's loaded control set
-			// from the cliapi.Apply path; deps.Runner.LoadedControls
-			// is now empty because PerformAssessment isn't called.
+			// from the cliapi.Apply path; deps.Runner.Controls() is
+			// empty here because PerformAssessment isn't called on
+			// this side of the dispatch.
 			CoveragePosture: buildCoveragePosture(applyRes.Controls, ec.Logger),
 			Logger:          ec.Logger,
 		}

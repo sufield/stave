@@ -1,6 +1,9 @@
 package contracts
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 // OutputFormat represents a CLI output format.
 type OutputFormat string
@@ -38,7 +41,54 @@ func (f OutputFormat) Type() string { return "string" }
 // IsJSON reports whether the format is JSON.
 func (f OutputFormat) IsJSON() bool { return f == FormatJSON }
 
+// IsMarkdown reports whether the format is Markdown.
+func (f OutputFormat) IsMarkdown() bool { return f == FormatMarkdown }
+
+// IsText reports whether the format is the human-readable text
+// default. Used by commands that branch on "human render or
+// machine render".
+func (f OutputFormat) IsText() bool { return f == FormatText }
+
+// IsSARIF reports whether the format is SARIF v2.1.0.
+func (f OutputFormat) IsSARIF() bool { return f == FormatSARIF }
+
 // IsMachineReadable reports whether the format is intended for machine
 // consumption (JSON or SARIF). When true, stdout output should be
 // preserved even in quiet mode.
 func (f OutputFormat) IsMachineReadable() bool { return f == FormatJSON || f == FormatSARIF }
+
+// RenderFunc renders a value into w in a specific output format.
+// Used by Dispatch as the per-format adapter so commands can
+// register a small table of renderers and let the format type
+// drive the selection.
+type RenderFunc func(w io.Writer) error
+
+// Dispatch picks the renderer matching f from table and runs it,
+// falling back to defaultRenderer when no exact match exists. This
+// collapses the per-command `switch opts.Format` blocks to a
+// single call and keeps the format → renderer wiring close to the
+// command's own types.
+//
+// Pattern:
+//
+//	return cfg.Format.Dispatch(stdout, contracts.RenderFuncs{
+//	    contracts.FormatJSON:     renderJSON,
+//	    contracts.FormatMarkdown: renderMarkdown,
+//	}, renderText)
+//
+// defaultRenderer must be non-nil when the table is incomplete;
+// passing nil with no matching entry returns an error rather than
+// silently writing nothing.
+func (f OutputFormat) Dispatch(w io.Writer, table RenderFuncs, defaultRenderer RenderFunc) error {
+	if r, ok := table[f]; ok {
+		return r(w)
+	}
+	if defaultRenderer != nil {
+		return defaultRenderer(w)
+	}
+	return fmt.Errorf("no renderer for format %q", string(f))
+}
+
+// RenderFuncs is the per-format renderer table consumed by
+// OutputFormat.Dispatch.
+type RenderFuncs map[OutputFormat]RenderFunc

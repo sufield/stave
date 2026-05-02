@@ -38,7 +38,7 @@ func (a IdentityARN) Validate() error {
 		return errors.New("identity ARN must not be empty")
 	}
 	if !strings.HasPrefix(string(a), "arn:") {
-		return fmt.Errorf("invalid identity ARN %q: must start with arn:", string(a))
+		return fmt.Errorf("invalid identity ARN %q: missing arn: scheme prefix", string(a))
 	}
 	return nil
 }
@@ -94,7 +94,7 @@ func (a ResourceARN) Validate() error {
 		return errors.New("resource ARN must not be empty")
 	}
 	if !strings.HasPrefix(string(a), "arn:") {
-		return fmt.Errorf("invalid resource ARN %q: must start with arn:", string(a))
+		return fmt.Errorf("invalid resource ARN %q: missing arn: scheme prefix", string(a))
 	}
 	return nil
 }

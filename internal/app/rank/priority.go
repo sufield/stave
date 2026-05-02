@@ -147,12 +147,12 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			Changes:       changes,
 			Confidence:    confidence,
 		}
-		if len(f.ChainMembership) > 0 {
+		if f.IsChainMember() {
 			entry.IsChainMember = true
 			entry.ChainSeverity = f.ChainMembership[0].ChainSeverity.String()
 			entry.ChainID = string(f.ChainMembership[0].ChainID)
 		}
-		if f.SLABreached && f.SLAOverdueHours != nil {
+		if f.IsOverdue() {
 			entry.SLABreached = true
 			entry.SLAOverdue = formatOverdue(*f.SLAOverdueHours)
 		}

@@ -192,6 +192,81 @@ type Result struct {
 	Trend       []TrendPoint      `json:"trend,omitempty"`
 }
 
+// ScoreMover names a sub-score component that is currently
+// dragging the posture score below its maximum, with the count of
+// findings driving the impact and the points lost. Centralised on
+// Result so the CLI display layer doesn't reach 3 levels deep into
+// component / detail fields per render.
+type ScoreMover struct {
+	// Component identifies which sub-score this mover comes from
+	// — "severity", "sla", "chain", or "coverage".
+	Component string
+	// Count is the impactful unit (failing findings, breaches,
+	// active chains). For coverage it is the percentage rounded to
+	// the nearest integer.
+	Count int
+	// PointsLost is the contribution gap (max - actual) in score
+	// points.
+	PointsLost float64
+}
+
+// Movers returns the sub-score components that have lost points
+// for this Result, in the canonical (severity, SLA, chain,
+// coverage) order. Each entry carries the structured numbers the
+// renderer needs so display layers can format them without
+// reaching into Severity.Detail / SLA.Detail / etc. directly.
+func (r Result) Movers() []ScoreMover {
+	movers := make([]ScoreMover, 0, 4)
+	if r.Severity.Detail.FailingFindings > 0 {
+		movers = append(movers, ScoreMover{
+			Component:  "severity",
+			Count:      r.Severity.Detail.FailingFindings,
+			PointsLost: r.Severity.MaxContribution - r.Severity.Contribution,
+		})
+	}
+	if r.SLA.Detail.FindingsBreached > 0 {
+		movers = append(movers, ScoreMover{
+			Component:  "sla",
+			Count:      r.SLA.Detail.FindingsBreached,
+			PointsLost: r.SLA.MaxContribution - r.SLA.Contribution,
+		})
+	}
+	if r.Chain.Detail.ActiveChains > 0 {
+		movers = append(movers, ScoreMover{
+			Component:  "chain",
+			Count:      r.Chain.Detail.ActiveChains,
+			PointsLost: r.Chain.MaxContribution - r.Chain.Contribution,
+		})
+	}
+	if r.Coverage.SubScore < 1.0 && r.Coverage.Detail.CoveragePct > 0 {
+		movers = append(movers, ScoreMover{
+			Component:  "coverage",
+			Count:      int(r.Coverage.Detail.CoveragePct),
+			PointsLost: r.Coverage.MaxContribution - r.Coverage.Contribution,
+		})
+	}
+	return movers
+}
+
+// RubricBandNumeric maps the textual RubricBand to its numeric
+// gauge representation used by the OpenMetrics exporter:
+// strong=4, adequate=3, needs_attention=2, at_risk=1, critical=0.
+// Centralised so consumers stop switching on the raw string.
+func (r Result) RubricBandNumeric() int {
+	switch r.RubricBand {
+	case "strong":
+		return 4
+	case "adequate":
+		return 3
+	case "needs_attention":
+		return 2
+	case "at_risk":
+		return 1
+	default:
+		return 0
+	}
+}
+
 // Input holds data for score computation.
 type Input struct {
 	Findings         []remediation.Finding

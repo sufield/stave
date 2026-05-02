@@ -174,11 +174,11 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(wf.LoadedControls) > 0 {
-		controls = wf.LoadedControls
+	if loaded := wf.Controls(); len(loaded) > 0 {
+		controls = loaded
 	}
 
-	annotateReachability(report.Findings, wf.LoadedSnapshots)
+	annotateReachability(report.Findings, wf.Snapshots())
 
 	return &Result{Report: &report, Controls: controls}, nil
 }

@@ -41,10 +41,10 @@ type Finding struct {
 	ChainMembership []ChainMembershipEntry `json:"chain_membership,omitempty"`
 
 	// SLA fields — populated when an SLA deadline applies to this finding.
-	SLADeadlineHours     *float64        `json:"sla_deadline_hours,omitempty"`
-	SLABreached          bool            `json:"sla_breached,omitempty"`
-	SLAOverdueHours      *float64        `json:"sla_overdue_hours,omitempty"`
-	SLAEscalatedSeverity policy.Severity `json:"sla_escalated_severity,omitempty"`
+	SLADeadlineHours     *float64               `json:"sla_deadline_hours,omitempty"`
+	SLABreached          bool                   `json:"sla_breached,omitempty"`
+	SLAOverdueHours      *float64               `json:"sla_overdue_hours,omitempty"`
+	SLAEscalatedSeverity policy.Severity        `json:"sla_escalated_severity,omitempty"`
 	SLAPolicySource      kernel.SLAPolicySource `json:"sla_policy_source,omitempty"`
 
 	// Owner routing — populated when a team manifest is loaded.
@@ -109,6 +109,33 @@ func (f *Finding) IsCriticalSLABreach() bool {
 	}
 	return f.ControlSeverity == policy.SeverityCritical ||
 		f.SLAEscalatedSeverity == policy.SeverityCritical
+}
+
+// IsOverdue reports whether the finding has breached SLA AND the
+// overdue duration is recorded. Replaces the
+// `f.SLABreached && f.SLAOverdueHours != nil` pair that recurs
+// across rank/priority, rank/formatter/csv, and graph/builder.
+//
+// The two-field check matters: a finding can be SLABreached without
+// an SLAOverdueHours when the SLA evaluator runs in a degraded
+// mode (no deadline configured). Treating SLABreached alone as
+// "overdue" inflated counters in those cases.
+func (f *Finding) IsOverdue() bool {
+	return f.SLABreached && f.SLAOverdueHours != nil
+}
+
+// HasOwner reports whether ownership routing has populated a team
+// for this finding. Used by trend / metrics / watch to skip the
+// per-team rollup when no owner manifest is loaded.
+func (f *Finding) HasOwner() bool {
+	return !f.OwnerTeamID.IsEmpty()
+}
+
+// IsChainMember reports whether the finding contributed to one or
+// more fired chains. Sorting and rendering paths use this to push
+// chain participants ahead of single-control violations.
+func (f *Finding) IsChainMember() bool {
+	return len(f.ChainMembership) > 0
 }
 
 // ReasoningTraceFromMisconfigurations converts a predicate-extracted
@@ -184,11 +211,11 @@ type MatchedClause struct {
 
 // ReachabilityContext carries IAM reachability data for a finding.
 type ReachabilityContext struct {
-	TotalReachablePrincipals   int                  `json:"total_reachable_principals"`
-	PrivilegedPrincipalCount   int                  `json:"privileged_principal_count"`
-	HighestPrivilegePrincipal  kernel.PrincipalRef  `json:"highest_privilege_principal,omitempty"`
-	ExternalPrincipalReachable bool                 `json:"external_principal_reachable,omitempty"`
-	BlastRadiusScore           kernel.BlastRadius   `json:"blast_radius_score"`
+	TotalReachablePrincipals   int                 `json:"total_reachable_principals"`
+	PrivilegedPrincipalCount   int                 `json:"privileged_principal_count"`
+	HighestPrivilegePrincipal  kernel.PrincipalRef `json:"highest_privilege_principal,omitempty"`
+	ExternalPrincipalReachable bool                `json:"external_principal_reachable,omitempty"`
+	BlastRadiusScore           kernel.BlastRadius  `json:"blast_radius_score"`
 }
 
 // ChainMembershipEntry records that a finding contributed to a fired chain.

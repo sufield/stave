@@ -53,18 +53,39 @@ type AuditWorkflow struct {
 	ContextEnricher appcontracts.EnrichFunc
 	Logger          *slog.Logger
 
-	// LoadedControls holds the control definitions used by the most
-	// recent PerformAssessment call. Populated after assessment runs;
-	// callers consume it for post-assessment metadata such as coverage
-	// posture aggregation. Reset on each PerformAssessment.
-	LoadedControls []policy.ControlDefinition
+	// loadedControls and loadedSnapshots cache the inputs used by the
+	// most recent PerformAssessment call. Populated as a side effect
+	// of running an assessment so callers can do post-assessment work
+	// (coverage posture aggregation, reachability annotation that
+	// needs the full snapshot graph) without re-loading from the
+	// repos. Private now — the read-only Controls() / Snapshots()
+	// accessors prevent external mutation between assessment runs.
+	loadedControls  []policy.ControlDefinition
+	loadedSnapshots []asset.Snapshot
+}
 
-	// LoadedSnapshots holds the asset snapshots consumed by the most
-	// recent PerformAssessment call. Populated after assessment runs;
-	// callers consume it for reachability annotation, which requires
-	// the full snapshot graph rather than just the findings list.
-	// Reset on each PerformAssessment.
-	LoadedSnapshots []asset.Snapshot
+// Controls returns the control definitions loaded by the most
+// recent PerformAssessment call. Returns a copy so callers cannot
+// mutate the workflow's cached slice in place.
+func (w *AuditWorkflow) Controls() []policy.ControlDefinition {
+	if len(w.loadedControls) == 0 {
+		return nil
+	}
+	out := make([]policy.ControlDefinition, len(w.loadedControls))
+	copy(out, w.loadedControls)
+	return out
+}
+
+// Snapshots returns the asset snapshots loaded by the most recent
+// PerformAssessment call. Returns a copy so callers cannot mutate
+// the workflow's cached slice in place.
+func (w *AuditWorkflow) Snapshots() []asset.Snapshot {
+	if len(w.loadedSnapshots) == 0 {
+		return nil
+	}
+	out := make([]asset.Snapshot, len(w.loadedSnapshots))
+	copy(out, w.loadedSnapshots)
+	return out
 }
 
 // NewAuditWorkflow initializes the workflow with required security connectors.
@@ -100,8 +121,8 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	if auditData.HasErrors() {
 		return evaluation.ComplianceReport{}, "", auditData.FirstError()
 	}
-	w.LoadedControls = auditData.Controls
-	w.LoadedSnapshots = auditData.Snapshots
+	w.loadedControls = auditData.Controls
+	w.loadedSnapshots = auditData.Snapshots
 
 	report, err := Evaluate(EvaluateInput{
 		Controls:             auditData.Controls,

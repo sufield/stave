@@ -226,6 +226,12 @@ jobs:
   e2e:
     name: E2E
     runs-on: ubuntu-latest
+    # Job-level timeout sits 10m above the go test -timeout so a
+    # genuine package-level deadline-exceeded surfaces as a Go
+    # panic-with-stack (and per-case heartbeat logs) rather than a
+    # generic GitHub-Actions "job killed at the time limit" with
+    # no test output.
+    timeout-minutes: 70
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -241,11 +247,19 @@ jobs:
         # serialised inside the suite (see e2e/e2e_test.go) and
         # -parallel 1 is the belt-and-braces override at the
         # command level — enforces the no-concurrency contract
-        # even if a future test forgets the convention. Suite
-        # timeout is 45m (raised from 30m) to absorb the serial
-        # cost over ~5800 fixtures with comfortable headroom for
-        # transient slow builds.
-        run: make build && go test -v -parallel 1 -count=1 -timeout 45m -run E2E ./e2e/
+        # even if a future test forgets the convention.
+        #
+        # -timeout 60m: raised from 45m. With ~5800 fixtures
+        # serialised, the prior 45m budget left no headroom for a
+        # transient slow runner. The job-level timeout-minutes
+        # (above) is 70m so the Go runtime fires its own deadline
+        # first and prints the stack instead of the runner killing
+        # the job blind.
+        #
+        # No -race: the e2e suite drives the compiled stave binary
+        # as a black box, so race detection on the test process
+        # itself adds no signal and would 2–10× the runtime.
+        run: make build && go test -v -parallel 1 -count=1 -timeout 60m -run E2E ./e2e/
 
   release-check:
     name: GoReleaser config check

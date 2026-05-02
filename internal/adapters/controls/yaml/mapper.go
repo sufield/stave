@@ -13,7 +13,12 @@ import (
 
 // --- YAML DTO → Domain ---
 
-func controlDefinitionToDomain(y yamlControlDefinition) (policy.ControlDefinition, error) {
+// ToDomain promotes the YAML wire shape into the
+// policy.ControlDefinition the engine consumes. Lives on the YAML
+// DTO so the wire→domain conversion sits next to the type that
+// owns the wire format — a future YAML schema change can be made
+// in one place rather than hunting for a free-floating "mapper".
+func (y yamlControlDefinition) ToDomain() (policy.ControlDefinition, error) {
 	mapping, ccmV4 := splitComplianceBlock(y.Compliance)
 	exp, err := exposureToDomain(y.Exposure)
 	if err != nil {
@@ -45,6 +50,13 @@ func controlDefinitionToDomain(y yamlControlDefinition) (policy.ControlDefinitio
 		Failure:              y.Failure,
 		Archetype:            kernel.ArchetypeID(strings.TrimSpace(y.Archetype)),
 	}, nil
+}
+
+// controlDefinitionToDomain is retained as a thin wrapper around
+// yamlControlDefinition.ToDomain for the loader's existing call
+// shape. New code should prefer the method.
+func controlDefinitionToDomain(y yamlControlDefinition) (policy.ControlDefinition, error) {
+	return y.ToDomain()
 }
 
 // alternativesToDomain translates the YAML wire entries to domain values.

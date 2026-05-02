@@ -9,13 +9,13 @@ import "strings"
 // more edits. Bucketing prevents a 3-character typo from suggesting a
 // 12-character command that happens to share a few letters.
 const (
-	shortInputMaxLen        = 4
-	mediumInputMaxLen       = 8
-	longInputMaxLen         = 14
-	shortInputMaxDistance   = 1
-	mediumInputMaxDistance  = 3
-	longInputMaxDistance    = 5
-	xLongInputMaxDistance   = 6
+	shortInputMaxLen       = 4
+	mediumInputMaxLen      = 8
+	longInputMaxLen        = 14
+	shortInputMaxDistance  = 1
+	mediumInputMaxDistance = 3
+	longInputMaxDistance   = 5
+	xLongInputMaxDistance  = 6
 )
 
 // Closest returns the candidate most similar to input based on Levenshtein distance.

@@ -64,7 +64,15 @@ func TestE2E(t *testing.T) {
 		}
 		name := entry.Name()
 		t.Run(name, func(t *testing.T) {
+			// Heartbeat logs frame each subtest so a CI timeout points
+			// at exactly the case that hung. Without these, the
+			// package-level timeout fires after the cumulative budget
+			// expires and the log shows the *next* unstarted case
+			// rather than the one actually wedged. Visible only with
+			// -v (CI sets it; local runs without -v stay quiet).
+			t.Logf(">>> STARTING E2E CASE: %s", name)
 			runE2ECase(t, bin, filepath.Join(root, name))
+			t.Logf(">>> COMPLETED E2E CASE: %s", name)
 		})
 	}
 }

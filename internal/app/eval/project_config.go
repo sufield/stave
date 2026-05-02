@@ -63,11 +63,7 @@ func ResolveProjectConfig(in ProjectConfigInput) (ResolvedProjectConfig, error) 
 	var result ResolvedProjectConfig
 
 	if len(in.Exceptions) > 0 {
-		rules, err := resolveExceptionRules(in.Exceptions)
-		if err != nil {
-			return ResolvedProjectConfig{}, err
-		}
-		result.ExceptionConfig = policy.NewExceptionConfig(rules)
+		result.ExceptionConfig = policy.NewExceptionConfig(resolveExceptionRules(in.Exceptions))
 	}
 
 	if len(in.EnabledControlPacks) == 0 {
@@ -114,7 +110,11 @@ func ResolveProjectConfig(in ProjectConfigInput) (ResolvedProjectConfig, error) 
 	return result, nil
 }
 
-func resolveExceptionRules(in []ExceptionInput) ([]policy.ExceptionRule, error) {
+// resolveExceptionRules promotes the parsed ExceptionInput shape
+// into the engine's policy.ExceptionRule layout. Total — every
+// component is already validated at YAML unmarshal time, so the
+// function cannot fail and returns a plain slice.
+func resolveExceptionRules(in []ExceptionInput) []policy.ExceptionRule {
 	rules := make([]policy.ExceptionRule, len(in))
 	for i, s := range in {
 		rules[i] = policy.ExceptionRule{
@@ -124,7 +124,7 @@ func resolveExceptionRules(in []ExceptionInput) ([]policy.ExceptionRule, error) 
 			Expires:   s.Expires,
 		}
 	}
-	return rules, nil
+	return rules
 }
 
 func loadBuiltInControlsByID(

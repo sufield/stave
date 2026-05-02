@@ -74,7 +74,7 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 	// there — a silent surprise that produced phantom controls
 	// without a clear cause. Reject up-front.
 	if strings.TrimSpace(dir) == "" {
-		return nil, fmt.Errorf("controls/yaml.LoadControls: dir is empty (set --controls or pass an explicit path)")
+		return nil, errors.New("controls/yaml.LoadControls: dir is empty (set --controls or pass an explicit path)")
 	}
 
 	paths, err := resolveControlPaths(ctx, dir)

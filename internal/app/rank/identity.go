@@ -18,8 +18,8 @@ import (
 // IdentityRiskEntry represents a single identity and its transitive risk.
 type IdentityRiskEntry struct {
 	IdentityARN    IdentityARN `json:"identity_arn"`
-	IdentityType   string `json:"identity_type"`
-	PrivilegeLevel string `json:"privilege_level"`
+	IdentityType   string      `json:"identity_type"`
+	PrivilegeLevel string      `json:"privilege_level"`
 
 	DirectFindingIDs []string `json:"direct_finding_ids"`
 	DirectSeverity   string   `json:"direct_severity"`
@@ -40,10 +40,10 @@ type IdentityRiskEntry struct {
 // ReachableResource represents a resource reachable by an identity.
 type ReachableResource struct {
 	ResourceARN  ResourceARN `json:"resource_arn"`
-	ResourceType string   `json:"resource_type"`
-	FindingIDs   []string `json:"finding_ids"`
-	MaxSeverity  string   `json:"max_severity"`
-	AccessPath   string   `json:"access_path"`
+	ResourceType string      `json:"resource_type"`
+	FindingIDs   []string    `json:"finding_ids"`
+	MaxSeverity  string      `json:"max_severity"`
+	AccessPath   string      `json:"access_path"`
 }
 
 // IdentityRanking is the output of BuildIdentityRanking.

@@ -53,7 +53,7 @@ func buildEvidencePackage(
 	// Pass checks.
 	for i := range checks {
 		c := &checks[i]
-		if c.Verdict != evaluation.VerdictPass {
+		if !c.IsPass() {
 			continue
 		}
 		ctl := ctlIndex[c.ControlID]

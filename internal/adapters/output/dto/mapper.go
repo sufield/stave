@@ -16,8 +16,8 @@ func FromEvaluation(e *report.Assessment) ResultDTO {
 	return ResultDTO{
 		SchemaVersion:     e.SchemaVersion,
 		Kind:              string(e.Kind),
-		Run:               fromRunInfo(e.Run),
-		Summary:           fromSummary(e.Summary),
+		Run:               NewRunInfoDTO(e.Run),
+		Summary:           NewSummaryDTO(e.Summary),
 		SecurityState:     e.Status,
 		RiskSignals:       fromAtRiskItems(e.RiskSignals),
 		Findings:          fromFindings(e.Findings),
@@ -29,7 +29,7 @@ func FromEvaluation(e *report.Assessment) ResultDTO {
 		ExemptedAssets:    fromExemptedAssets(e.ExemptedAssets),
 		TopExposures:      e.TopExposures,
 		CoveragePosture:   FromCoverageIndex(e.CoveragePosture),
-		Extensions:        fromExtensions(e.Extensions),
+		Extensions:        NewExtensionsDTO(e.Extensions),
 	}
 }
 

@@ -113,7 +113,7 @@ func (a *App) sanitizeExecuteMessage(message string) string {
 // redact in this rare path than to leak through it.
 var fallbackScrubPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`arn:aws:[a-z0-9-]+:[a-z0-9-]*:\d{12}:[^\s"'<>]+`),
-	regexp.MustCompile(`\b\d{12}\b`),                         // account IDs
+	regexp.MustCompile(`\b\d{12}\b`), // account IDs
 	// Absolute paths: at least one `/segment/` followed by a non-slash
 	// terminal segment. The earlier `{2,}` minimum required two
 	// intermediate components, so single-deep paths like `/etc/passwd`

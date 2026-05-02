@@ -406,7 +406,7 @@ func TestFromRunInfo_WithInputHashes(t *testing.T) {
 		},
 		EvaluatedState: "deployed",
 	}
-	dto := fromRunInfo(ri)
+	dto := NewRunInfoDTO(ri)
 	if dto.InputHashes == nil {
 		t.Fatal("InputHashes is nil")
 	}
@@ -420,23 +420,23 @@ func TestFromRunInfo_WithInputHashes(t *testing.T) {
 
 func TestFromRunInfo_NilInputHashes(t *testing.T) {
 	ri := evaluation.RunInfo{StaveVersion: "v1", EvaluatedState: "deployed"}
-	dto := fromRunInfo(ri)
+	dto := NewRunInfoDTO(ri)
 	if dto.InputHashes != nil {
 		t.Error("InputHashes should be nil")
 	}
 }
 
 func TestFromInputHashes_Nil(t *testing.T) {
-	result := fromInputHashes(nil)
+	result := NewInputHashesDTO(nil)
 	if result != nil {
-		t.Error("fromInputHashes(nil) should be nil")
+		t.Error("NewInputHashesDTO(nil) should be nil")
 	}
 }
 
 func TestFromExtensions_Nil(t *testing.T) {
-	result := fromExtensions(nil)
+	result := NewExtensionsDTO(nil)
 	if result != nil {
-		t.Error("fromExtensions(nil) should be nil")
+		t.Error("NewExtensionsDTO(nil) should be nil")
 	}
 }
 
@@ -453,7 +453,7 @@ func TestFromExtensions_WithGit(t *testing.T) {
 			Modified: []string{"main.tf"},
 		},
 	}
-	dto := fromExtensions(ext)
+	dto := NewExtensionsDTO(ext)
 	if dto == nil {
 		t.Fatal("fromExtensions returned nil")
 	}
@@ -482,7 +482,7 @@ func TestFromExtensions_WithoutGit(t *testing.T) {
 		SelectedSource: "packs",
 		EnabledPacks:   []kernel.PackName{"s3/all"},
 	}
-	dto := fromExtensions(ext)
+	dto := NewExtensionsDTO(ext)
 	if dto == nil {
 		t.Fatal("fromExtensions returned nil")
 	}
@@ -496,7 +496,7 @@ func TestFromExtensions_WithoutGit(t *testing.T) {
 
 func TestFromSummary(t *testing.T) {
 	s := evaluation.ComplianceSummary{TotalAssets: 5, ExposedResources: 2, Violations: 1}
-	dto := fromSummary(s)
+	dto := NewSummaryDTO(s)
 	if dto.TotalAssets != 5 || dto.ExposedResources != 2 || dto.Violations != 1 {
 		t.Errorf("Summary = %+v", dto)
 	}
