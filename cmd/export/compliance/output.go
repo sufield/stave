@@ -67,6 +67,24 @@ type ControlSummary struct {
 	IncompleteCount int    `json:"incomplete_count"`
 }
 
+// Add increments the appropriate counter on this summary based on
+// rec's verdict. Centralises the (verdict → counter) mapping so the
+// buildExport loop stops switching on rec.Verdict at the call site.
+// nil rec is a no-op.
+func (cs *ControlSummary) Add(rec *evidence.EvidenceRecord) {
+	if cs == nil || rec == nil {
+		return
+	}
+	switch {
+	case rec.IsPass():
+		cs.PassCount++
+	case rec.IsFail():
+		cs.FailCount++
+	case rec.IsIncomplete():
+		cs.IncompleteCount++
+	}
+}
+
 // GapExport identifies a specific compliance gap.
 type GapExport struct {
 	ControlID   string `json:"control_id"`
@@ -158,14 +176,7 @@ func buildExport(
 				cs = &ControlSummary{ID: rec.ControlID}
 				ctlCounts[rec.ControlID] = cs
 			}
-			switch rec.Verdict {
-			case evidence.VerdictPass:
-				cs.PassCount++
-			case evidence.VerdictFail:
-				cs.FailCount++
-			case evidence.VerdictIncomplete:
-				cs.IncompleteCount++
-			}
+			cs.Add(rec)
 		}
 		for _, cs := range ctlCounts {
 			re.Controls = append(re.Controls, *cs)
@@ -173,7 +184,7 @@ func buildExport(
 
 		// Build gaps from failing/incomplete evidence
 		for _, rec := range ra.Evidence {
-			if rec.Verdict == evidence.VerdictFail || rec.Verdict == evidence.VerdictIncomplete {
+			if rec.IsGap() {
 				re.Gaps = append(re.Gaps, GapExport{
 					ControlID:   rec.ControlID,
 					ResourceARN: rec.ResourceARN,

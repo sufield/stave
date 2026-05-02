@@ -110,6 +110,32 @@ func (r *GateResult) ExitError() error {
 	return appcontracts.ErrViolationsFound
 }
 
+// MergeTeamVerdict folds a per-team gate result into this global
+// result. A failing team flips Passed to false and appends a
+// "team <ID>: <reason>" suffix to Reason; a passing team is a no-op.
+// Centralises the AND-merge so cmd/enforce/gate stops mutating
+// Passed and Reason inline at the call site.
+//
+// teamID identifies the source team, teamPassed reflects the team's
+// own gate verdict, and teamReason carries the team-side failure
+// description. Empty teamReason is fine — Reason still flips to
+// the "team X" prefix so the global verdict surfaces the source.
+func (r *GateResult) MergeTeamVerdict(teamID string, teamPassed bool, teamReason string) {
+	if r == nil || teamPassed {
+		return
+	}
+	merged := "team " + teamID
+	if teamReason != "" {
+		merged += ": " + teamReason
+	}
+	if !r.Passed && r.Reason != "" {
+		r.Reason = r.Reason + "; " + merged
+	} else {
+		r.Reason = merged
+	}
+	r.Passed = false
+}
+
 // Gate enforces a CI failure policy and returns the gate result.
 // Wires the same FindingsCounter / BaselineComparer / OverdueCounter
 // adapters the CLI uses, so library and CLI agree on every verdict.

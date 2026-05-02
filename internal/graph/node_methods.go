@@ -83,6 +83,84 @@ func (n *Node) ControlPropertyID() (string, bool) {
 	return stringProp(n.Properties, "control_id")
 }
 
+// ResourceClass / AccountID / ProviderType / ControlName / Narrative
+// are typed accessors over Properties[<key>]. They centralise the
+// stringProp(n.Properties, "<key>") lookups that the export and STIX
+// pipelines used to perform inline so a future property-key rename
+// is one edit on the type. nil receiver and missing keys return "".
+
+// ResourceClass returns the asset's "resource_class" property
+// (e.g. "storage", "identity", "compute"), or "" when missing.
+func (n *Node) ResourceClass() string {
+	s, _ := stringProp(propertiesOf(n), "resource_class")
+	return s
+}
+
+// AccountID returns the cloud account identifier the node is
+// scoped to. Used by the IRI builder for Resource and TenantScope
+// nodes.
+func (n *Node) AccountID() string {
+	s, _ := stringProp(propertiesOf(n), "account_id")
+	return s
+}
+
+// ProviderType returns the snapshot provider's resource type
+// string (e.g. "aws_s3_bucket", "gcp_storage_bucket"). Used by
+// iriPair's bucket-detection branch.
+func (n *Node) ProviderType() string {
+	s, _ := stringProp(propertiesOf(n), "provider_type")
+	return s
+}
+
+// ControlName returns the human-readable name attached to a
+// Control / ComplianceRequirement / RemediationAction node. Used
+// by STIXObject when picking the SDO display name.
+func (n *Node) ControlName() string {
+	s, _ := stringProp(propertiesOf(n), "control_name")
+	return s
+}
+
+// Narrative returns the "narrative" property as the raw any
+// value. ThreatChain / AttackerCapability use it as the STIX
+// description; the field is not always a string so it is returned
+// as-is.
+func (n *Node) Narrative() any {
+	if n == nil || n.Properties == nil {
+		return nil
+	}
+	return n.Properties["narrative"]
+}
+
+// propertiesOf safely returns the Properties map of n, or nil for a
+// nil receiver. Internal helper for the typed accessors above.
+func propertiesOf(n *Node) map[string]any {
+	if n == nil {
+		return nil
+	}
+	return n.Properties
+}
+
+// ExportProperties returns a copy of the node's Properties map with
+// internal ID keys (finding_id, control_id, resource_arn) filtered
+// out and an x_internal_id entry added. Centralises the flatten
+// step so flattenNodeProperties stops poking individual keys at the
+// call site.
+func (n *Node) ExportProperties() map[string]any {
+	if n == nil || n.Properties == nil {
+		return nil
+	}
+	out := make(map[string]any, len(n.Properties)+1)
+	for k, v := range n.Properties {
+		switch k {
+		case "finding_id", "control_id", "resource_arn":
+			continue
+		}
+		out[k] = v
+	}
+	out["x_internal_id"] = n.ID
+	return out
+}
+
 // IRI returns the export instance IRI for this node. The class IRI
 // is exposed separately as ClassIRI; the previous package-level
 // nodeIRI helper returned both as a tuple, which forced the rdfMapper
@@ -139,12 +217,12 @@ func (n *Node) STIXObject(now time.Time, producerID string) (string, map[string]
 		}
 	case NodeTypeResource:
 		obj["name"] = n.ID
-		if rc, ok := n.Properties["resource_class"].(string); ok {
+		if rc := n.ResourceClass(); rc != "" {
 			obj["infrastructure_types"] = []string{rc}
 		}
 	case NodeTypeThreatChain:
 		obj["name"] = n.ID
-		if desc, ok := n.Properties["narrative"]; ok {
+		if desc := n.Narrative(); desc != nil {
 			obj["description"] = desc
 		}
 		if phases, ok := n.Properties["kill_chain_phases"]; ok {
@@ -157,14 +235,14 @@ func (n *Node) STIXObject(now time.Time, producerID string) (string, map[string]
 		}
 	case NodeTypeControl, NodeTypeComplianceRequirement, NodeTypeRemediationAction:
 		switch {
-		case stringPropPresent(n.Properties, "control_name"):
-			obj["name"], _ = stringProp(n.Properties, "control_name")
+		case n.ControlName() != "":
+			obj["name"] = n.ControlName()
 		case stringPropPresent(n.Properties, "action"):
 			obj["name"], _ = stringProp(n.Properties, "action")
 		default:
 			obj["name"] = n.ID
 		}
-		if desc, ok := stringProp(n.Properties, "control_id"); ok {
+		if desc, ok := n.ControlPropertyID(); ok {
 			obj["description"] = desc
 		}
 	case NodeTypeTenantScope:

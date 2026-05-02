@@ -30,6 +30,22 @@ type EvaluateResult struct {
 	LapsedExemptions []exemptlapse.LapsedFinding
 }
 
+// ShouldFailForPolicy reports whether the SLA-policy gate should
+// fail this run. Centralises the (policy → which-breach-flag-to-read)
+// mapping so Reporter.CheckSLAPolicy stops switching on policy at
+// the call site. Returns false for SLAPolicyWarn (the no-fail
+// default) and any unrecognised policy value.
+func (r EvaluateResult) ShouldFailForPolicy(policy SLAPolicy) bool {
+	switch policy {
+	case SLAPolicyStrict:
+		return r.HasSLABreach
+	case SLAPolicyCriticalOnly:
+		return r.HasCriticalSLABreach
+	default:
+		return false
+	}
+}
+
 // BuildEvaluateResult maps a domain safety status into actionable CLI guidance.
 // This lives in the cmd layer because it produces CLI-specific strings
 // (command names, flag suggestions) that the app layer must not know about.

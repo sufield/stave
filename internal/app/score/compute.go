@@ -210,6 +210,30 @@ type ScoreMover struct {
 	PointsLost float64
 }
 
+// Label returns the human-readable mover-row label the score CLI
+// renderer prints. Centralises the per-component template so
+// cmd/score's formatMover stops switching on m.Component at the
+// call site. Unknown components fall through to a generic shape.
+//
+// Note: the points-lost suffix is the same across rows; this
+// method returns only the leading "<count> <message>" portion so
+// the caller can append the (-N.N pts) tail in its preferred
+// width-aligned form.
+func (m ScoreMover) Label() string {
+	switch m.Component {
+	case "severity":
+		return fmt.Sprintf("%d findings currently failing", m.Count)
+	case "sla":
+		return fmt.Sprintf("%d SLA breach(es)", m.Count)
+	case "chain":
+		return fmt.Sprintf("%d active compound chain(s)", m.Count)
+	case "coverage":
+		return fmt.Sprintf("Framework coverage %d%%", m.Count)
+	default:
+		return m.Component + " impact"
+	}
+}
+
 // Movers returns the sub-score components that have lost points
 // for this Result, in the canonical (severity, SLA, chain,
 // coverage) order. Each entry carries the structured numbers the

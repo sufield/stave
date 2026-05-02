@@ -92,23 +92,12 @@ func scoreMovers(r appscore.Result) []string {
 	return out
 }
 
-// formatMover converts the structured ScoreMover into the
-// human-readable arrow-prefixed line used by the score CLI render.
-// Display formatting lives in the CLI layer; the domain owns
-// "which components are movers".
+// formatMover decorates the structured ScoreMover with the arrow
+// prefix and points-lost suffix used by the CLI render. The
+// component-to-message mapping lives on ScoreMover.Label so
+// adding a new mover component is one edit on the type.
 func formatMover(m appscore.ScoreMover) string {
-	switch m.Component {
-	case "severity":
-		return fmt.Sprintf("\u2193 %d findings currently failing        (\u2212%.1f pts)", m.Count, m.PointsLost)
-	case "sla":
-		return fmt.Sprintf("\u2193 %d SLA breach(es)                     (\u2212%.1f pts)", m.Count, m.PointsLost)
-	case "chain":
-		return fmt.Sprintf("\u2193 %d active compound chain(s)           (\u2212%.1f pts)", m.Count, m.PointsLost)
-	case "coverage":
-		return fmt.Sprintf("\u2193 Framework coverage %d%%                (\u2212%.1f pts)", m.Count, m.PointsLost)
-	default:
-		return fmt.Sprintf("\u2193 %s impact                            (\u2212%.1f pts)", m.Component, m.PointsLost)
-	}
+	return fmt.Sprintf("\u2193 %-40s (\u2212%.1f pts)", m.Label(), m.PointsLost)
 }
 
 func scoreBar(score float64) string {

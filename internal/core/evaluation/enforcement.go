@@ -15,6 +15,30 @@ type EnforcementOutcome struct {
 	Signal EnforcementLevel
 }
 
+// IsAllow / IsAdvisory / IsBlock report which enforcement signal
+// this outcome carries. Callers (cmd/apply.ReportApply) ask the
+// outcome rather than switching on Signal at every site.
+func (o EnforcementOutcome) IsAllow() bool    { return o.Signal == LevelAllow }
+func (o EnforcementOutcome) IsAdvisory() bool { return o.Signal == LevelAdvisory }
+func (o EnforcementOutcome) IsBlock() bool    { return o.Signal == LevelBlock }
+
+// SummaryMessage returns the human-readable line a CLI handler
+// should emit before applying its own hints / next-steps. Centralises
+// the per-signal phrasing so a future message tweak is one edit.
+// Returns "" for unrecognised signals.
+func (o EnforcementOutcome) SummaryMessage() string {
+	switch o.Signal {
+	case LevelAllow:
+		return "Evaluation complete. No violations found."
+	case LevelAdvisory:
+		return "Evaluation complete. No violations, but at-risk assets detected."
+	case LevelBlock:
+		return ""
+	default:
+		return ""
+	}
+}
+
 // EnforcementPolicy defines the rules for how security states are translated
 // into terminal actions (Allow/Block). StrictMode ensures that any resource
 // not explicitly Compliant results in a Block signal.

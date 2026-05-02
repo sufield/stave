@@ -194,19 +194,7 @@ func renderOSCAL(
 			req := &assessment.Requirements[ri]
 			oscalCtlID := toOSCALControlID(profile.FrameworkKey, req.RequirementID)
 
-			state := "satisfied"
-			reason := ""
-			switch req.Status {
-			case evidence.RequirementNotMet:
-				state = "not-satisfied"
-				reason = "fail"
-			case evidence.RequirementIncomplete:
-				state = "not-satisfied"
-				reason = "incomplete"
-			case evidence.RequirementNotEvaluated:
-				state = "not-satisfied"
-				reason = "not-evaluated"
-			}
+			state, reason := req.OscalState()
 
 			findingUUID := uuidV5("finding", profile.ID, req.RequirementID, pkg.SnapshotID)
 

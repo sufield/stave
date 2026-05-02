@@ -165,18 +165,10 @@ Exit Codes:
 				})
 				// Combine: the gate must clear BOTH the global policy
 				// (already in result.Passed) and the per-team policy.
-				// Earlier code overwrote Passed with the team result,
-				// which let a passing team gate erase a failing
-				// global gate verdict — a security regression.
-				if !teamResult.Passed {
-					teamReason := fmt.Sprintf("team %s: %s", teamResult.TeamID, teamResult.Reason)
-					if !result.Passed && result.Reason != "" {
-						result.Reason = result.Reason + "; " + teamReason
-					} else {
-						result.Reason = teamReason
-					}
-					result.Passed = false
-				}
+				// MergeTeamVerdict on GateResponse owns the AND-merge
+				// so cmd-side code stops mutating Passed and Reason
+				// inline.
+				result.MergeTeamVerdict(teamResult.TeamID, teamResult.Passed, teamResult.Reason)
 			}
 
 			if renderErr := renderGate(cfg.Stdout, result, cfg.Format.IsJSON(), cfg.Quiet); renderErr != nil {

@@ -66,6 +66,32 @@ type Evidence struct {
 	EvidenceInvalid bool `json:"evidence_invalid,omitempty"`
 }
 
+// RemainingHours returns the time left before this evidence's
+// underlying violation breaches its SLA threshold, plus a presence
+// flag. Returns (0, false) when ThresholdHours is unset (zero) — the
+// evidence has no deadline against which "remaining" makes sense.
+// Negative values are valid and mean the violation is past due.
+//
+// Replaces the inline (ThresholdHours - UnsafeDurationHours)
+// subtraction in the rank-priority urgency math; centralising the
+// arithmetic on the type keeps the threshold semantics in one place
+// for any future "remaining" callers (alerting, forecast).
+func (e Evidence) RemainingHours() (float64, bool) {
+	if e.ThresholdHours <= 0 {
+		return 0, false
+	}
+	return e.ThresholdHours - e.UnsafeDurationHours, true
+}
+
+// IsPastDue reports whether the evidence shows the violation has
+// crossed its SLA threshold. Distinct from Finding.IsOverdue (which
+// also requires the breach flag and overdue-hours field) — this is
+// the duration-only check the rank computation performs to choose
+// the urgency multiplier.
+func (e Evidence) IsPastDue() bool {
+	return e.ThresholdHours > 0 && e.UnsafeDurationHours > e.ThresholdHours
+}
+
 // RootCauseStrings converts typed causes to a raw string slice.
 func (e Evidence) RootCauseStrings() []string {
 	if len(e.RootCauses) == 0 {
@@ -173,36 +199,18 @@ type PostureDrift struct {
 
 // ComputePostureDrift analyzes a lifecycle to classify the violation's drift pattern.
 // Returns nil if the asset is not currently in an unsafe state.
+//
+// The classification logic lives on asset.ExposureLifecycle.DriftFacts;
+// this function wraps the raw (pattern string, episodes int) pair into
+// the typed DriftPattern / PostureDrift wire shape so callers in
+// evaluation continue to receive the typed result.
 func ComputePostureDrift(t *asset.ExposureLifecycle) *PostureDrift {
-	if t.IsSecure() {
+	pattern, episodes := t.DriftFacts()
+	if pattern == "" {
 		return nil
 	}
-
-	history := t.History()
-	closedCount := history.Count()
-	totalEpisodes := closedCount + 1 // Existing history + current open exposure window
-
-	var pattern DriftPattern
-	switch {
-	case closedCount > 0:
-		// If there are any closed exposure windows in history, it means the asset was
-		// previously unsafe, then safe, and is now unsafe again.
-		pattern = DriftIntermittent
-
-	case t.HasActiveWindow() && t.Stats().HasFirstObservation():
-		// Check if the asset was safe at the start of its known history.
-		if t.FirstExposedAt().After(t.Stats().FirstSeenAt()) {
-			pattern = DriftDegraded
-		} else {
-			pattern = DriftPersistent
-		}
-
-	default:
-		pattern = DriftPersistent
-	}
-
 	return &PostureDrift{
-		Pattern:             pattern,
-		ExposureWindowCount: totalEpisodes,
+		Pattern:             DriftPattern(pattern),
+		ExposureWindowCount: episodes,
 	}
 }

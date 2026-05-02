@@ -132,6 +132,56 @@ func (f *Finding) DwellHours() float64 {
 	return f.Evidence.UnsafeDurationHours
 }
 
+// ToDetail returns a FindingDetail seeded with the finding-owned
+// fields (Evidence, PostureDrift, Asset summary). Caller-side fields
+// — Control summary, Trace, Remediation, RemediationPlan, NextSteps —
+// are populated by remediation.BuildFindingDetail after this call.
+//
+// Centralises the (AssetID, AssetType, AssetVendor, Evidence) →
+// FindingAssetSummary projection so a future field addition on
+// Finding lands once on this method instead of in every caller that
+// builds a detail view.
+func (f *Finding) ToDetail() FindingDetail {
+	if f == nil {
+		return FindingDetail{}
+	}
+	return FindingDetail{
+		Evidence:     f.Evidence,
+		PostureDrift: f.PostureDrift,
+		Asset: FindingAssetSummary{
+			ID:         f.AssetID,
+			Type:       f.AssetType,
+			Vendor:     f.AssetVendor,
+			ObservedAt: f.Evidence.LastSeenUnsafeAt,
+		},
+	}
+}
+
+// SLAUrgencyFactor returns the multiplier the rank-priority pass
+// applies to a finding's base risk score based on how close it is
+// to (or past) its SLA threshold. Encapsulates the
+// (RemainingHours, IsOverdue) → urgency-multiplier lookup that the
+// roadmap builder used to compute inline against
+// Evidence.ThresholdHours and Evidence.UnsafeDurationHours.
+//
+// Returns 1.0 when no SLA threshold is set so callers can multiply
+// unconditionally — an unset threshold contributes no urgency.
+//
+// urgencyFn is the package-level multiplier function from the rank
+// package; passing it as a parameter avoids importing the rank
+// package from core (which would invert the dependency arrow). The
+// caller (rank.BuildRoadmap) supplies SLAUrgencyMultiplier.
+func (f *Finding) SLAUrgencyFactor(urgencyFn func(remainingHours float64, isOverdue bool) float64) float64 {
+	if f == nil || urgencyFn == nil {
+		return 1.0
+	}
+	remaining, hasSLA := f.Evidence.RemainingHours()
+	if !hasSLA {
+		return 1.0
+	}
+	return urgencyFn(remaining, f.Evidence.IsPastDue())
+}
+
 // SpanKey returns the canonical "<control_id>@<asset_id>" identifier
 // the engine uses as a trace-span finding ID. Centralises the
 // concatenation so the engine and any future trace consumer agree on

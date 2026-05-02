@@ -137,10 +137,8 @@ func runVerify(stdout io.Writer, opts *options) error {
 		av.WriteTable(w, attestation)
 	}
 
-	switch attestation.Verdict {
-	case "FAIL":
+	if attestation.Failed() {
 		return ui.ErrViolationsFound
-	default:
-		return nil
 	}
+	return nil
 }

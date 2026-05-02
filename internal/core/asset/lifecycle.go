@@ -288,6 +288,19 @@ func (v Verdict) String() string {
 	}
 }
 
+// Verdict reason vocabulary. Each constant captures the lifecycle
+// sub-state that produced the matching Verdict so engine strategies
+// can render the right diagnostic message without re-querying the
+// lifecycle. Used by VerdictWithReason.
+const (
+	ReasonSecurePredicateNotMatched     = "predicate not matched — resource is compliant"
+	ReasonSecureWithinThreshold         = "predicate matched but exposure within SLA threshold"
+	ReasonExposedThresholdExceeded      = "exposure exceeds the SLA threshold"
+	ReasonInconclusiveMissingTimestamps = "missing timestamps"
+	ReasonInconclusiveClampedWindow     = "clamped exposure window — duration math unreliable"
+	ReasonInconclusiveThresholdError    = "threshold check error"
+)
+
 // Verdict returns the asset's exposure verdict at `now` against
 // `threshold`. The evaluation order is:
 //
@@ -304,23 +317,72 @@ func (v Verdict) String() string {
 // (recurrence, coverage validity, exempted assets, exception filtering)
 // still layers on top in the engine.
 func (l *ExposureLifecycle) Verdict(now time.Time, threshold time.Duration) Verdict {
+	v, _ := l.VerdictWithReason(now, threshold)
+	return v
+}
+
+// VerdictWithReason returns the lifecycle's verdict alongside the
+// human-readable reason describing the sub-state that produced it.
+// Strategies (engine.unsafeStateStrategy) consume the second return
+// to render the diagnostic step instead of re-querying IsExposed /
+// MissingExposureTimestamps / HasClampedWindow after the verdict has
+// already classified the lifecycle.
+func (l *ExposureLifecycle) VerdictWithReason(now time.Time, threshold time.Duration) (Verdict, string) {
 	if l.HasClampedWindow() {
-		return VerdictInconclusive
+		return VerdictInconclusive, ReasonInconclusiveClampedWindow
 	}
 	if !l.IsExposed() {
-		return VerdictSecure
+		return VerdictSecure, ReasonSecurePredicateNotMatched
 	}
 	if l.MissingExposureTimestamps() {
-		return VerdictInconclusive
+		return VerdictInconclusive, ReasonInconclusiveMissingTimestamps
 	}
 	exceeds, err := l.ExceedsSLA(now, threshold)
 	if err != nil {
-		return VerdictInconclusive
+		return VerdictInconclusive, ReasonInconclusiveThresholdError
 	}
 	if exceeds {
-		return VerdictExposed
+		return VerdictExposed, ReasonExposedThresholdExceeded
 	}
-	return VerdictSecure
+	return VerdictSecure, ReasonSecureWithinThreshold
+}
+
+// DriftFacts returns the raw drift-pattern classification and the
+// total exposure-episode count for this lifecycle. The values are
+// returned as a plain string + int so the asset package does not
+// have to import internal/core/evaluation's typed DriftPattern /
+// PostureDrift wrappers — evaluation.ComputePostureDrift wraps
+// these into the typed shape. Returns ("", 0) when the lifecycle
+// is currently secure (no active exposure to classify).
+//
+// The pattern values match evaluation.DriftPattern's wire vocabulary
+// ("persistent", "degraded", "intermittent"). Centralising the
+// classification on the type that owns the lifecycle facts means
+// callers stop stitching IsSecure + HasActiveWindow + Stats +
+// FirstExposedAt at every site.
+func (l *ExposureLifecycle) DriftFacts() (pattern string, episodes int) {
+	if l == nil || l.IsSecure() {
+		return "", 0
+	}
+	closedCount := l.History().Count()
+	episodes = closedCount + 1
+	switch {
+	case closedCount > 0:
+		// Closed exposure windows in history mean the asset toggled
+		// between safe and unsafe at least once.
+		pattern = "intermittent"
+	case l.HasActiveWindow() && l.Stats().HasFirstObservation():
+		// Asset was safe at the start of its known history if the
+		// first exposure landed after the first observation.
+		if l.FirstExposedAt().After(l.Stats().FirstSeenAt()) {
+			pattern = "degraded"
+		} else {
+			pattern = "persistent"
+		}
+	default:
+		pattern = "persistent"
+	}
+	return pattern, episodes
 }
 
 // ExceedsSLA reports whether the asset has been exposed long enough to

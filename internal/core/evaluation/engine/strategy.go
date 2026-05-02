@@ -190,13 +190,18 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 		"matched": !t.IsSecure(),
 	})
 
-	verdict := t.Verdict(now, maxUnsafe)
+	verdict, reason := t.VerdictWithReason(now, maxUnsafe)
 	switch verdict {
 	case asset.VerdictSecure:
-		if !t.IsExposed() {
+		// VerdictWithReason returns ReasonSecurePredicateNotMatched
+		// when the asset is not exposed and ReasonSecureWithinThreshold
+		// when it is exposed but within the SLA window. Use the
+		// reason to drive the trace step instead of re-querying
+		// IsExposed.
+		if reason == asset.ReasonSecurePredicateNotMatched {
 			span.RecordStep("verdict_decision", nil, map[string]any{
 				"verdict": "PASS",
-				"reason":  "predicate not matched — resource is compliant",
+				"reason":  reason,
 			})
 			return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
 		}
@@ -208,25 +213,20 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 		})
 		span.RecordStep("verdict_decision", nil, map[string]any{
 			"verdict": "PASS",
-			"reason":  "predicate matched but exposure within SLA threshold",
+			"reason":  reason,
 		})
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
 		return finalizeRow(observation, evaluation.VerdictPass, confidence), nil
 
 	case asset.VerdictInconclusive:
-		// Distinguish the two inconclusive sub-cases so the operator
-		// gets the same diagnostic the previous open-coded shape
-		// produced. Verdict() collapses them into one outcome but the
-		// reason text still carries the diagnostic value.
-		switch {
-		case t.MissingExposureTimestamps():
-			observation.MarkInconclusive("missing timestamps")
-		case t.HasClampedWindow():
-			observation.MarkInconclusive("clamped exposure window — duration math unreliable")
-		default:
+		// Reason carries the lifecycle sub-state directly — log the
+		// threshold-check warning when the evaluator hit the
+		// degraded-arithmetic path, then mark inconclusive with the
+		// already-classified reason.
+		if reason == asset.ReasonInconclusiveThresholdError {
 			s.deps.Logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID)
-			observation.MarkInconclusive("threshold check error")
 		}
+		observation.MarkInconclusive(reason)
 		return observation, nil
 
 	case asset.VerdictExposed:

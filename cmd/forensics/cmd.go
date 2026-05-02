@@ -137,20 +137,8 @@ func writeTableTimeline(w io.Writer, tl *appforensics.Timeline) {
 		tl.Period.From, tl.Period.To, tl.SnapshotsAnalyzed, len(tl.Events))
 
 	for i := range tl.Events {
-		ev := &tl.Events[i]
-		switch ev.EventType {
-		case "first_seen":
-			fmt.Fprintf(w, "%s  FIRST SEEN\n", ev.Timestamp)
-		case "last_seen":
-			fmt.Fprintf(w, "%s  LAST SEEN\n", ev.Timestamp)
-		case "property_change":
-			fmt.Fprintf(w, "%s  PROPERTY  %s  %v → %v\n", ev.Timestamp, ev.Property, ev.From, ev.To)
-		case "control_verdict_change":
-			fmt.Fprintf(w, "%s  CONTROL   %s  %s → %s%s\n", ev.Timestamp, ev.ControlID, ev.From, ev.To, ev.FormattedSeverity())
-		case "chain_activation":
-			fmt.Fprintf(w, "%s  CHAIN ACTIVE  %s\n", ev.Timestamp, ev.ChainID)
-		case "chain_deactivation":
-			fmt.Fprintf(w, "%s  CHAIN DORMANT %s\n", ev.Timestamp, ev.ChainID)
+		if line := tl.Events[i].FormatLine(); line != "" {
+			fmt.Fprintln(w, line)
 		}
 	}
 

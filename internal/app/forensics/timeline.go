@@ -62,6 +62,34 @@ func (e *Event) FormattedSeverity() string {
 	return " (" + strings.ToUpper(e.Severity) + ")"
 }
 
+// FormatLine returns the single-line text-renderer representation of
+// this event. Centralises the per-EventType formatting that
+// cmd/forensics used to switch on at every iteration. Returns ""
+// for unknown EventType values so a future event variety lands as
+// a silent skip rather than a panic.
+func (e *Event) FormatLine() string {
+	if e == nil {
+		return ""
+	}
+	switch e.EventType {
+	case "first_seen":
+		return e.Timestamp + "  FIRST SEEN"
+	case "last_seen":
+		return e.Timestamp + "  LAST SEEN"
+	case "property_change":
+		return fmt.Sprintf("%s  PROPERTY  %s  %v → %v", e.Timestamp, e.Property, e.From, e.To)
+	case "control_verdict_change":
+		return fmt.Sprintf("%s  CONTROL   %s  %s → %s%s",
+			e.Timestamp, e.ControlID, e.From, e.To, e.FormattedSeverity())
+	case "chain_activation":
+		return fmt.Sprintf("%s  CHAIN ACTIVE  %s", e.Timestamp, e.ChainID)
+	case "chain_deactivation":
+		return fmt.Sprintf("%s  CHAIN DORMANT %s", e.Timestamp, e.ChainID)
+	default:
+		return ""
+	}
+}
+
 // IsFail reports whether this event records a transition to the
 // failing state. Returns true only when To is a VerdictState equal
 // to VerdictStateFail; property-change events (whose To carries a

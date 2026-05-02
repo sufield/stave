@@ -60,10 +60,12 @@ func (r Asset) IsType(t string) bool {
 // adapter where it belongs while letting the loader call sites stop
 // repeating the (Properties != nil) guard.
 //
-// Pointer receiver: fn may mutate Properties in place, and the
-// receiver carries the addressable map.
-func (r *Asset) NormalizeProperties(fn func(map[string]any)) {
-	if r == nil || r.Properties == nil || fn == nil {
+// Value receiver: maps in Go are reference types, so fn's mutations
+// to keys/values are visible to the caller's slice element regardless
+// of receiver kind. Matches the receiver shape used by the rest of
+// Asset's predicates (recvcheck-clean).
+func (r Asset) NormalizeProperties(fn func(map[string]any)) {
+	if r.Properties == nil || fn == nil {
 		return
 	}
 	fn(r.Properties)

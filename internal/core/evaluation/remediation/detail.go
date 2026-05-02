@@ -27,18 +27,13 @@ func BuildFindingDetail(r *evaluation.ComplianceReport, req evaluation.FindingDe
 		ctl = req.Controls.FindByID(violation.ControlID)
 	}
 
-	// 2. Initialize the Detail View
-	detail := &evaluation.FindingDetail{
-		Evidence:     violation.Evidence,
-		PostureDrift: violation.PostureDrift,
-		Control:      buildControlSummary(ctl, violation),
-		Asset: evaluation.FindingAssetSummary{
-			ID:         violation.AssetID,
-			Type:       violation.AssetType,
-			Vendor:     violation.AssetVendor,
-			ObservedAt: violation.Evidence.LastSeenUnsafeAt,
-		},
-	}
+	// 2. Initialize the Detail View. Finding.ToDetail seeds the
+	// finding-owned fields (Evidence, PostureDrift, Asset summary);
+	// Control summary needs the external ControlDefinition lookup
+	// so it stays here.
+	seed := violation.ToDetail()
+	detail := &seed
+	detail.Control = buildControlSummary(ctl, violation)
 
 	// 3. Optional: Build Predicate Trace
 	if req.TraceBuilder != nil {

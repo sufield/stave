@@ -119,14 +119,7 @@ func renderTrendOpenMetrics(w io.Writer, r *trendReport) error { //nolint:unpara
 		fmt.Fprintln(w, "# TYPE stave_team_trajectory gauge")
 		for i := range r.TeamTrends {
 			t := &r.TeamTrends[i]
-			val := 0
-			switch t.Trajectory {
-			case trajectoryImproving:
-				val = 1
-			case trajectoryRegressing:
-				val = -1
-			}
-			fmt.Fprintf(w, "stave_team_trajectory{team=%q} %d %d\n", t.ID, val, tsMs)
+			fmt.Fprintf(w, "stave_team_trajectory{team=%q} %d %d\n", t.ID, t.MetricValue(), tsMs)
 		}
 		fmt.Fprintln(w)
 	}

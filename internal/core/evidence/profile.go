@@ -139,6 +139,29 @@ func (r *RequirementAssessment) IsActionable() bool {
 	return r.Status != RequirementMet && r.Status != RequirementNotEvaluated
 }
 
+// OscalState returns the (state, reason) pair the OSCAL exporter
+// emits for this requirement. Centralises the
+// (RequirementStatus → OSCAL state/reason) mapping so the renderer
+// stops switching on Status. The default state is "satisfied" with
+// no reason; non-Met statuses translate to "not-satisfied" with a
+// reason word that matches the OSCAL implementation-status.reason
+// vocabulary.
+func (r *RequirementAssessment) OscalState() (state, reason string) {
+	if r == nil {
+		return "satisfied", ""
+	}
+	switch r.Status {
+	case RequirementNotMet:
+		return "not-satisfied", "fail"
+	case RequirementIncomplete:
+		return "not-satisfied", "incomplete"
+	case RequirementNotEvaluated:
+		return "not-satisfied", "not-evaluated"
+	default:
+		return "satisfied", ""
+	}
+}
+
 // ProfileAssessment is the complete result of evaluating a framework profile
 // against an EvidencePackage.
 type ProfileAssessment struct {

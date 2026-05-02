@@ -66,23 +66,24 @@ func (r *Reporter) ShouldEmit() bool {
 }
 
 // ReportApply prints the outcome of an evaluation and returns an error
-// when the response policy indicates failure.
+// when the response policy indicates failure. Per-signal phrasing
+// lives on EnforcementOutcome.SummaryMessage; this method composes
+// that message with the (advisory / block) hint plumbing.
 func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.EnforcementPolicy) error {
 	outcome := policy.Evaluate(res.SecurityState)
+	if msg := outcome.SummaryMessage(); msg != "" {
+		r.Emit(r.Stderr, msg)
+	}
 
-	switch outcome.Signal {
-	case evaluation.LevelAllow:
-		r.Emit(r.Stderr, "Evaluation complete. No violations found.")
+	switch {
+	case outcome.IsAllow():
 		return nil
-
-	case evaluation.LevelAdvisory:
-		r.Emit(r.Stderr, "Evaluation complete. No violations, but at-risk assets detected.")
+	case outcome.IsAdvisory():
 		if r.ShouldEmit() && res.DiagnoseCommand != "" {
 			ui.WriteHint(r.Stderr, res.DiagnoseCommand)
 		}
 		return nil
-
-	default: // LevelBlock
+	default: // IsBlock
 		if r.ShouldEmit() {
 			ui.WriteHint(r.Stderr, res.DiagnoseCommand)
 			r.Runtime.PrintNextSteps(res.NextSteps...)
@@ -179,20 +180,16 @@ func printReadinessIssue(w io.Writer, issue validation.ValidationFinding) error 
 // for the dedicated `security-audit` command, 3 is "evaluation
 // completed with findings".
 func (r *Reporter) CheckSLAPolicy(policy SLAPolicy, res EvaluateResult) error {
+	if !res.ShouldFailForPolicy(policy) {
+		return nil
+	}
 	switch policy {
 	case SLAPolicyStrict:
-		if res.HasSLABreach {
-			r.Emit(r.Stderr, "SLA policy: strict — SLA breach detected, failing.")
-			return ui.ErrViolationsFound
-		}
+		r.Emit(r.Stderr, "SLA policy: strict — SLA breach detected, failing.")
 	case SLAPolicyCriticalOnly:
-		if res.HasCriticalSLABreach {
-			r.Emit(r.Stderr, "SLA policy: critical-only — critical SLA breach detected, failing.")
-			return ui.ErrViolationsFound
-		}
+		r.Emit(r.Stderr, "SLA policy: critical-only — critical SLA breach detected, failing.")
 	}
-	// "warn" (default) — no exit code change.
-	return nil
+	return ui.ErrViolationsFound
 }
 
 // decorateError maps domain-specific errors to user-facing remediation hints.

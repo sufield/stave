@@ -42,6 +42,11 @@ func (a *Attestation) IsPass() bool { return a != nil && a.Verdict == VerdictPas
 // IsFail reports whether the attestation failed.
 func (a *Attestation) IsFail() bool { return a != nil && a.Verdict == VerdictFail }
 
+// Failed is an alias for IsFail kept so cmd/verify (and any future
+// consumer) can read "did this attestation fail?" with the verb form
+// the plan called for. Pointer receiver matches IsPass / IsFail.
+func (a *Attestation) Failed() bool { return a.IsFail() }
+
 // PeriodResult describes the verified period.
 type PeriodResult struct {
 	Start time.Time `json:"start"`

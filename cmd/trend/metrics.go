@@ -37,6 +37,51 @@ type frameworkTrend struct {
 	Direction string    `json:"direction"`
 }
 
+// Arrow returns the long arrow + label suffix the table renderer
+// appends after the score series ("  ↑ improving" / "  ↓ regressing"
+// / ""). Centralises the per-direction text so render_table stops
+// switching on Direction at the call site.
+func (ft frameworkTrend) Arrow() string {
+	switch ft.Direction {
+	case "improving":
+		return "  ↑ improving"
+	case "regressing":
+		return "  ↓ regressing"
+	default:
+		return ""
+	}
+}
+
+// Symbol returns the single-character trajectory glyph used by the
+// table renderer ("^", "v", "-"). Mirrors the existing arrowFor
+// helper but lives on the type so a future direction value lands
+// in one place.
+func (ft frameworkTrend) Symbol() string {
+	switch ft.Direction {
+	case "improving":
+		return "^"
+	case "regressing":
+		return "v"
+	default:
+		return "-"
+	}
+}
+
+// MetricValue returns the openmetrics integer encoding of the
+// trend direction (1 / -1 / 0). Replaces the inline switch in
+// render_openmetrics so all direction renderings share one source
+// of truth.
+func (ft frameworkTrend) MetricValue() int {
+	switch ft.Direction {
+	case "improving":
+		return 1
+	case "regressing":
+		return -1
+	default:
+		return 0
+	}
+}
+
 // slaTrendMetric captures SLA compliance for a single run.
 type slaTrendMetric struct {
 	CapturedAt        time.Time      `json:"captured_at"`
@@ -110,6 +155,34 @@ type teamTrend struct {
 	OpenFindings int       `json:"open_findings"`
 	CriticalOpen int       `json:"critical_open"`
 	ScoreHistory []float64 `json:"score_history,omitempty"`
+}
+
+// Symbol returns the single-character trajectory glyph for the
+// table renderer ("^", "v", "-"). Mirrors frameworkTrend.Symbol so
+// both shapes ask the same method name for the same answer.
+func (t teamTrend) Symbol() string {
+	switch t.Trajectory {
+	case trajectoryImproving:
+		return "^"
+	case trajectoryRegressing:
+		return "v"
+	default:
+		return "-"
+	}
+}
+
+// MetricValue returns the openmetrics integer encoding of the
+// trajectory (1 / -1 / 0). Replaces the inline switch in
+// render_openmetrics.
+func (t teamTrend) MetricValue() int {
+	switch t.Trajectory {
+	case trajectoryImproving:
+		return 1
+	case trajectoryRegressing:
+		return -1
+	default:
+		return 0
+	}
 }
 
 // teamTrendSummary holds aggregate team statistics.

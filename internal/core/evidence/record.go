@@ -65,6 +65,15 @@ func (e *EvidenceRecord) IsIncomplete() bool {
 	return e != nil && e.Verdict == VerdictIncomplete
 }
 
+// IsGap reports whether this record represents a coverage gap —
+// either a failing control or an incomplete evaluation. Used by
+// the compliance exporter to drive the gap-collection pass; the
+// (Fail || Incomplete) disjunction lives on the record so callers
+// stop joining the two predicates at every site.
+func (e *EvidenceRecord) IsGap() bool {
+	return e.IsFail() || e.IsIncomplete()
+}
+
 // Citation is a single regulatory reference with structured fields.
 type Citation struct {
 	Framework   string `json:"framework" yaml:"framework"`

@@ -129,12 +129,7 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			silentKiller = breakdown.DaysBlind > 300
 		}
 
-		slaUrgency := 1.0
-		remainingHours := f.Evidence.ThresholdHours - f.Evidence.UnsafeDurationHours
-		isOverdue := f.Evidence.UnsafeDurationHours > f.Evidence.ThresholdHours && f.Evidence.ThresholdHours > 0
-		if f.Evidence.ThresholdHours > 0 {
-			slaUrgency = SLAUrgencyMultiplier(remainingHours, isOverdue)
-		}
+		slaUrgency := f.SLAUrgencyFactor(SLAUrgencyMultiplier)
 		score *= slaUrgency
 		totalRisk += score
 
@@ -155,7 +150,7 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			SLAUrgency:    slaUrgency,
 			SilentKiller:  silentKiller,
 			FixAction:     fixAction,
-			Narrative:     priorityNarrative(f, breakdown, silentKiller, isOverdue),
+			Narrative:     priorityNarrative(f, breakdown, silentKiller, f.Evidence.IsPastDue()),
 			Changes:       changes,
 			Confidence:    confidence,
 		}

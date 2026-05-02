@@ -59,14 +59,7 @@ func renderTrendTable(w io.Writer, r *trendReport) error { //nolint:unparam // e
 			for _, s := range ft.Scores[start:] {
 				scoreParts = append(scoreParts, fmt.Sprintf("%.0f%%", s*100))
 			}
-			arrow := ""
-			switch ft.Direction {
-			case "improving":
-				arrow = "  ↑ improving"
-			case "regressing":
-				arrow = "  ↓ regressing"
-			}
-			fmt.Fprintf(w, "  %-12s %s%s\n", ft.Framework, strings.Join(scoreParts, " → "), arrow)
+			fmt.Fprintf(w, "  %-12s %s%s\n", ft.Framework, strings.Join(scoreParts, " → "), ft.Arrow())
 		}
 		fmt.Fprintln(w)
 	}
@@ -127,7 +120,7 @@ func renderTrendTable(w io.Writer, r *trendReport) error { //nolint:unparam // e
 			"-------", "-----", "----", "----")
 		for i := range r.TeamTrends {
 			t := &r.TeamTrends[i]
-			arrow := arrowFor(t.Trajectory)
+			arrow := t.Symbol()
 			name := t.Name
 			if name == "" {
 				name = t.ID
@@ -145,15 +138,4 @@ func renderTrendTable(w io.Writer, r *trendReport) error { //nolint:unparam // e
 	}
 
 	return nil
-}
-
-func arrowFor(trajectory string) string {
-	switch trajectory {
-	case trajectoryImproving:
-		return "^"
-	case trajectoryRegressing:
-		return "v"
-	default:
-		return "-"
-	}
 }

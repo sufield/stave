@@ -69,6 +69,33 @@ type nepSummary struct {
 	IneffectiveBoundaries int `json:"ineffective_boundaries"`
 }
 
+// addPrincipal folds a single ResolvedPermissions into the summary
+// counters: increments IncompletePrincipals when the resolution is
+// flagged as incomplete and bumps the privilege-tier counter that
+// matches r.PrivilegeLevel. Centralises the per-tier switch the
+// runSummary loop used to do inline so a future privilege addition
+// is one edit.
+func (s *nepSummary) addPrincipal(r *iam.ResolvedPermissions) {
+	if s == nil || r == nil {
+		return
+	}
+	if r.Incomplete {
+		s.IncompletePrincipals++
+	}
+	switch r.PrivilegeLevel {
+	case iam.PrivilegeLevelAdmin:
+		s.AdminCount++
+	case iam.PrivilegeLevelElevated:
+		s.ElevatedCount++
+	case iam.PrivilegeLevelStandard:
+		s.StandardCount++
+	case iam.PrivilegeLevelLimited:
+		s.LimitedCount++
+	default:
+		s.NoneCount++
+	}
+}
+
 func runSummary(w io.Writer, opts *summaryOpts) error {
 	snaps, err := loadSnapshots(opts.Snapshot)
 	if err != nil {
@@ -85,21 +112,7 @@ func runSummary(w io.Writer, opts *summaryOpts) error {
 	summary.TotalPrincipals = len(resolved)
 
 	for arn, r := range resolved {
-		if r.Incomplete {
-			summary.IncompletePrincipals++
-		}
-		switch r.PrivilegeLevel {
-		case iam.PrivilegeLevelAdmin:
-			summary.AdminCount++
-		case iam.PrivilegeLevelElevated:
-			summary.ElevatedCount++
-		case iam.PrivilegeLevelStandard:
-			summary.StandardCount++
-		case iam.PrivilegeLevelLimited:
-			summary.LimitedCount++
-		default:
-			summary.NoneCount++
-		}
+		summary.addPrincipal(r)
 
 		// Chain analysis.
 		chains := iam.ResolveChains(iam.RoleChainInput{

@@ -51,14 +51,13 @@ func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...O
 
 	externalErrors := make([]diag.RawIssue, 0, len(diags))
 	for _, d := range diags {
-		cat := d.Category()
-		if !strict && cat == CatAdditionalProperties {
+		if !d.IncludeInResults(strict) {
 			continue
 		}
 		externalErrors = append(externalErrors, schemaError{
 			path: d.Path,
 			desc: d.Message,
-			code: string(cat),
+			code: string(d.Category()),
 		})
 	}
 
@@ -177,6 +176,21 @@ func (d Diagnostic) Category() DiagnosticCategory {
 	default:
 		return CatViolation
 	}
+}
+
+// IncludeInResults reports whether this diagnostic should fold into
+// the converted diag.Assessment given the strict-mode flag. The
+// AdditionalProperties category is filtered out of non-strict
+// results — operators expect schema validation to ignore "extra
+// fields" by default and only flag them when --strict is on.
+// Centralises the gate on the diagnostic itself so DiagnosticsResult
+// stops branching on (cat == CatAdditionalProperties) at the call
+// site.
+func (d Diagnostic) IncludeInResults(strict bool) bool {
+	if !strict && d.Category() == CatAdditionalProperties {
+		return false
+	}
+	return true
 }
 
 // IsUnknownField reports whether the diagnostic represents an

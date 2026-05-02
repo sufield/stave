@@ -306,15 +306,13 @@ func iriPair(n *Node) (instanceIRI, classIRI string) {
 	}
 	switch n.Type {
 	case NodeTypeResource:
-		account, _ := stringProp(n.Properties, "account_id")
-		class, _ := stringProp(n.Properties, "resource_class")
-		providerType, _ := stringProp(n.Properties, "provider_type")
+		class := n.ResourceClass()
 		// Bucket detection: resource_class=storage AND
 		// provider_type contains "bucket" (covers aws_s3_bucket,
 		// gcp_storage_bucket, azure_storage_container variants).
-		if class == "storage" && strings.Contains(strings.ToLower(providerType), "bucket") {
+		if class == "storage" && strings.Contains(strings.ToLower(n.ProviderType()), "bucket") {
 			bucketName := lastPathSegment(n.ID)
-			return BucketIRI(account, bucketName), ontologyBaseIRI + "Bucket"
+			return BucketIRI(n.AccountID(), bucketName), ontologyBaseIRI + "Bucket"
 		}
 		return ResourceIRI(n.ID), ontologyBaseIRI + classFromResourceClass(class)
 	case NodeTypeFinding:
@@ -327,8 +325,7 @@ func iriPair(n *Node) (instanceIRI, classIRI string) {
 		reqID, _ := stringProp(n.Properties, "requirement_id")
 		return RequirementIRI(framework, reqID), ontologyBaseIRI + "ComplianceRequirement"
 	case NodeTypeTenantScope:
-		account, _ := stringProp(n.Properties, "account_id")
-		return ScopeIRI(account), ontologyBaseIRI + "TenantScope"
+		return ScopeIRI(n.AccountID()), ontologyBaseIRI + "TenantScope"
 	case NodeTypeThreatChain:
 		return ChainIRI(n.ID), ontologyBaseIRI + "ThreatChain"
 	case NodeTypeAttackerCapability:
@@ -397,25 +394,15 @@ func classFromResourceClass(class string) string {
 }
 
 // flattenNodeProperties produces the datatype-property map that the
-// JSON-LD and GraphML serializers emit. A few internal property keys
-// are renamed to match the ontology's predicate names, and the
-// severity is augmented with a numeric severityWeight so GDS
-// algorithms can read it directly.
+// JSON-LD and GraphML serializers emit. The internal-ID filter +
+// x_internal_id rename lives on Node.ExportProperties; this function
+// layers on the ontology-flavoured derived fields (severity_weight,
+// category / invariant_number for Control nodes).
 func flattenNodeProperties(n *Node) map[string]any {
-	if n.Properties == nil {
+	out := n.ExportProperties()
+	if out == nil {
 		return nil
 	}
-	out := make(map[string]any, len(n.Properties)+2)
-	for k, v := range n.Properties {
-		// Skip internal IDs we already encode as @id; users joining
-		// back to the original ID can read x_internal_id below.
-		if k == "finding_id" || k == "control_id" || k == "resource_arn" {
-			continue
-		}
-		out[k] = v
-	}
-	out["x_internal_id"] = n.ID
-
 	if sev, ok := n.SeverityString(); ok {
 		out["severity_weight"] = SeverityWeight(sev)
 	}
