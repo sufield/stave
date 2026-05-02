@@ -268,7 +268,7 @@ func writeTable(w io.Writer, r appbudget.Report) {
 	// Velocity section.
 	for i := range r.BurnRates {
 		br := &r.BurnRates[i]
-		if len(br.WeeklyConsumption) > 0 && br.Severity == "critical" {
+		if len(br.WeeklyConsumption) > 0 && br.IsCritical() {
 			fmt.Fprintf(w, "\nVELOCITY (%s)\n", strings.ToUpper(br.Severity))
 			for wi, wh := range br.WeeklyConsumption {
 				wbar := strings.Repeat("\u2588", int(math.Min(wh, 40)))

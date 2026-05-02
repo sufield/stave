@@ -116,7 +116,7 @@ func (c *AssessmentCollector) RecordFindings(findings []*evaluation.Finding) {
 			// — silent duplicate output. The fallback gives every
 			// such finding an ID that collides on repeat
 			// (control,asset) pairs, restoring the dedup contract.
-			fallback := kernel.FindingID(string(f.ControlID) + "/" + string(f.AssetID))
+			fallback := kernel.FindingID(f.FallbackID())
 			slog.Warn("collector: finding has empty FindingID; using fallback for dedup",
 				"control_id", f.ControlID, "asset_id", f.AssetID,
 				"fallback_finding_id", fallback)

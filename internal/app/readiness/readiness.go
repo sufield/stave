@@ -88,7 +88,7 @@ func readinessDiagnostics(val validation.EvaluationState) *diag.Assessment {
 }
 
 func readinessIssueStatus(issue diag.Finding) outcome.Status {
-	if issue.Severity == diag.SeverityError {
+	if issue.IsError() {
 		return outcome.Fail
 	}
 	return outcome.Warn

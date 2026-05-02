@@ -107,6 +107,64 @@ func (a *AcknowledgedFinding) StatusLabel() string {
 	return "[INVALID: " + a.ReasonDetail() + "]"
 }
 
+// IsValid reports whether the acknowledgment is currently in force.
+// Replaces direct (af.Valid) reads at the suppression-set
+// construction site so callers branch through the named predicate
+// (recvcheck-friendly: pointer receiver matches the mutating Mark*
+// methods below).
+func (a *AcknowledgedFinding) IsValid() bool {
+	return a != nil && a.Valid
+}
+
+// Verdict vocabulary for AcknowledgedFinding state transitions.
+// Centralised here so producers (the assessor's apply pass) and
+// consumers cannot drift on the literal strings.
+const (
+	verdictAcknowledged = "acknowledged"
+	verdictFail         = "fail"
+
+	invalidReasonExpired                  = "expired"
+	invalidReasonCompensatingControlsFail = "compensating_controls_failing"
+)
+
+// MarkExpired records that the acknowledgment has lapsed past its
+// expiry date: Verdict reverts to fail, Valid is cleared, and the
+// reason carries the "expired" tag for downstream operator
+// messaging. Replaces the three-field assignment block in the
+// assessor's apply pass.
+func (a *AcknowledgedFinding) MarkExpired() {
+	if a == nil {
+		return
+	}
+	a.Verdict = verdictFail
+	a.Valid = false
+	a.InvalidReason = invalidReasonExpired
+}
+
+// MarkCompensatingFailed records that one or more compensating
+// controls listed by the acknowledgment rule are failing on this
+// asset: the acknowledgment cannot stand. Sibling of MarkExpired.
+func (a *AcknowledgedFinding) MarkCompensatingFailed() {
+	if a == nil {
+		return
+	}
+	a.Verdict = verdictFail
+	a.Valid = false
+	a.InvalidReason = invalidReasonCompensatingControlsFail
+}
+
+// MarkValid records a successful acknowledgment: Verdict transitions
+// to "acknowledged" and Valid is set. Counterpart to MarkExpired and
+// MarkCompensatingFailed for the success branch in the assessor's
+// apply pass.
+func (a *AcknowledgedFinding) MarkValid() {
+	if a == nil {
+		return
+	}
+	a.Verdict = verdictAcknowledged
+	a.Valid = true
+}
+
 // ReasonDetail returns the most-specific available reason text for an
 // invalid acknowledgment: InvalidDetail when populated (carries the
 // human-readable explanation), otherwise the shorter InvalidReason

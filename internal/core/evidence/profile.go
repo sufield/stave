@@ -125,6 +125,20 @@ type RequirementAssessment struct {
 	Evidence          []*EvidenceRecord
 }
 
+// IsActionable reports whether this requirement assessment carries a
+// status the gap-collection pass should fold into the cross-framework
+// gap map. RequirementMet (everything satisfied) and
+// RequirementNotEvaluated (no evidence at all) both contribute zero
+// gaps and are skipped; NotMet and Incomplete are actionable.
+// Replaces the (Status == Met || Status == NotEvaluated) skip-pair
+// in composite.go with a single named predicate.
+func (r *RequirementAssessment) IsActionable() bool {
+	if r == nil {
+		return false
+	}
+	return r.Status != RequirementMet && r.Status != RequirementNotEvaluated
+}
+
 // ProfileAssessment is the complete result of evaluating a framework profile
 // against an EvidencePackage.
 type ProfileAssessment struct {

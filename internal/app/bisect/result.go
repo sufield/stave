@@ -68,3 +68,14 @@ func (r Result) IsScanMode() bool {
 func (r Result) IsBisectMode() bool {
 	return r.Mode == ModeBisect
 }
+
+// ShouldWarnMultipleWindows reports whether the cmd/bisect output
+// renderer should print a warning that the bisect search may have
+// missed earlier violation windows. Triggered when the history is
+// non-monotonic AND the search ran in bisect mode (scan mode finds
+// every window, so no warning needed). Replaces the
+// (!IsMonotonic && IsBisectMode()) compound check at
+// cmd/bisect/output.go.
+func (r Result) ShouldWarnMultipleWindows() bool {
+	return !r.IsMonotonic && r.IsBisectMode()
+}

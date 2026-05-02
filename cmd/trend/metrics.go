@@ -6,6 +6,7 @@ import (
 
 	evidenceadapter "github.com/sufield/stave/internal/adapters/evidence"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -316,31 +317,18 @@ func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag str
 func computeSLATrend(assessments []*report.Assessment) []slaTrendMetric {
 	var metrics []slaTrendMetric
 	for _, a := range assessments {
-		totalWithSLA := 0
-		breachedCount := 0
-		breachedBySev := make(map[string]int)
-		for i := range a.Findings {
-			f := &a.Findings[i]
-			if !f.HasSLA() {
-				continue
-			}
-			totalWithSLA++
-			if f.IsOverdue() {
-				breachedCount++
-				breachedBySev[f.SeverityLabel()]++
-			}
-		}
-		if totalWithSLA == 0 {
+		stats := remediation.FindingSet(a.Findings).SLABreachSummary()
+		if stats.TotalWithSLA == 0 {
 			continue
 		}
-		withinSLA := totalWithSLA - breachedCount
-		pct := float64(withinSLA) / float64(totalWithSLA) * 100
+		withinSLA := stats.TotalWithSLA - stats.BreachedCount
+		pct := float64(withinSLA) / float64(stats.TotalWithSLA) * 100
 		metrics = append(metrics, slaTrendMetric{
 			CapturedAt:        a.Run.Now,
-			TotalWithSLA:      totalWithSLA,
-			BreachedCount:     breachedCount,
+			TotalWithSLA:      stats.TotalWithSLA,
+			BreachedCount:     stats.BreachedCount,
 			CompliancePercent: pct,
-			BreachedBySev:     breachedBySev,
+			BreachedBySev:     stats.BreachedBySeverity,
 		})
 	}
 	return metrics

@@ -122,8 +122,8 @@ func CompareDiagnostic(a, b Diagnostic) int {
 // ErrorCount returns the number of error-severity diagnostics.
 func ErrorCount(diags []Diagnostic) int {
 	n := 0
-	for _, d := range diags {
-		if d.Severity == SeverityError {
+	for i := range diags {
+		if diags[i].IsError() {
 			n++
 		}
 	}

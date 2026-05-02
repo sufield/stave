@@ -1,8 +1,6 @@
 package dto
 
 import (
-	"strings"
-
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -129,12 +127,9 @@ func buildRemediationContext(f *remediation.Finding) *RemediationContextDTO {
 	}
 
 	// Asset ARN + region when derivable from an ARN-shaped AssetID.
-	if strings.HasPrefix(string(f.AssetID), "arn:aws:") {
+	if f.AssetID.IsARN() {
 		ctx.Asset.ARN = string(f.AssetID)
-		parts := strings.SplitN(string(f.AssetID), ":", 6)
-		if len(parts) == 6 {
-			ctx.Asset.Region = parts[3]
-		}
+		ctx.Asset.Region = f.AssetID.Region()
 	}
 
 	// Reasoning: mirror each matched clause in a structured shape

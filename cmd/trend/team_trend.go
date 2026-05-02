@@ -102,23 +102,16 @@ func computeTeamTrends(
 			trajectory = trajectoryRegressing
 		}
 
-		// Count critical.
-		critical := 0
-		slaTotal := 0
-		slaWithin := 0
+		// totalDwell stays inline because it isn't part of the
+		// SLASummaryStats shape; the rest of the team-side SLA
+		// aggregation comes from FindingSet.SLASummary in one pass.
+		stats := remediation.FindingSet(findings).SLASummary()
+		critical := stats.Critical
+		slaTotal := stats.SLATotal
+		slaWithin := stats.SLAWithinTarget
 		var totalDwell float64
 		for j := range findings {
-			f := &findings[j]
-			if f.IsCritical() {
-				critical++
-			}
-			if f.HasSLA() {
-				slaTotal++
-				if !f.IsOverdue() {
-					slaWithin++
-				}
-			}
-			totalDwell += f.Evidence.UnsafeDurationHours
+			totalDwell += findings[j].Evidence.UnsafeDurationHours
 		}
 
 		mttr := 0.0

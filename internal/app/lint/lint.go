@@ -29,6 +29,13 @@ type Diagnostic struct {
 	Severity Severity `json:"severity"`
 }
 
+// IsError reports whether this diagnostic is recorded at the error
+// severity. Replaces (d.Severity == SeverityError) probes in
+// ErrorCount so the constant comparison stays on the type.
+func (d *Diagnostic) IsError() bool {
+	return d != nil && d.Severity == SeverityError
+}
+
 // Linter performs quality checks on control YAML definitions.
 type Linter struct {
 	idPattern *regexp.Regexp

@@ -22,6 +22,20 @@ type qualityIssue struct {
 	Evidence *issueEvidence  `json:"evidence,omitempty"`
 }
 
+// IsError reports whether this issue is recorded at the error
+// severity. Replaces direct (Severity == severityError) probes in
+// HasErrors so the constant comparison stays on the type that
+// owns the field.
+func (q *qualityIssue) IsError() bool {
+	return q != nil && q.Severity == severityError
+}
+
+// IsWarning reports whether this issue is recorded at the warning
+// severity. Sibling of IsError.
+func (q *qualityIssue) IsWarning() bool {
+	return q != nil && q.Severity == severityWarning
+}
+
 // issueEvidence holds typed evidence fields for quality issues.
 // Each issue type populates only its relevant fields; the rest
 // serialize as absent via omitempty.
@@ -65,7 +79,7 @@ type qualityReport struct {
 // the pass/fail computation can ask the report directly.
 func (r qualityReport) HasErrors() bool {
 	for i := range r.Issues {
-		if r.Issues[i].Severity == severityError {
+		if r.Issues[i].IsError() {
 			return true
 		}
 	}
@@ -78,7 +92,7 @@ func (r qualityReport) HasErrors() bool {
 // per-issue switch.
 func (r qualityReport) HasWarnings() bool {
 	for i := range r.Issues {
-		if r.Issues[i].Severity == severityWarning {
+		if r.Issues[i].IsWarning() {
 			return true
 		}
 	}

@@ -80,7 +80,7 @@ func writeText(stdout, stderr io.Writer, result appbisect.Result, _ *slog.Logger
 		fmt.Fprintln(stdout)
 	}
 
-	if !result.IsMonotonic && result.IsBisectMode() {
+	if result.ShouldWarnMultipleWindows() {
 		fmt.Fprintln(stderr, "WARNING: Multiple violation windows detected in this snapshot range.")
 		fmt.Fprintln(stderr, "         --mode bisect found the start of the current window only.")
 		fmt.Fprintln(stderr, "         Run with --mode scan to find the earliest occurrence.")

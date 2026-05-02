@@ -48,7 +48,7 @@ func (a *Assessment) Failed() bool {
 		return false
 	}
 	for _, f := range a.Findings {
-		if f.Severity == SeverityError {
+		if f.IsError() {
 			return true
 		}
 	}
@@ -61,7 +61,7 @@ func (a *Assessment) HasWarnings() bool {
 		return false
 	}
 	for _, f := range a.Findings {
-		if f.Severity == SeverityWarn {
+		if f.IsWarning() {
 			return true
 		}
 	}
@@ -92,7 +92,7 @@ func (a *Assessment) filter(sev DiagLevel) []Finding {
 	}
 	filtered := make([]Finding, 0)
 	for _, f := range a.Findings {
-		if f.Severity == sev {
+		if f.HasSeverity(sev) {
 			filtered = append(filtered, f)
 		}
 	}

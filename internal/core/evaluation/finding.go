@@ -121,6 +121,31 @@ func (f *Finding) IsAnyBreach() bool {
 	return f != nil && f.SLABreached
 }
 
+// SpanKey returns the canonical "<control_id>@<asset_id>" identifier
+// the engine uses as a trace-span finding ID. Centralises the
+// concatenation so the engine and any future trace consumer agree on
+// the format. nil receiver returns "" so callers don't need to
+// nil-guard before calling.
+func (f *Finding) SpanKey() string {
+	if f == nil {
+		return ""
+	}
+	return string(f.ControlID) + "@" + string(f.AssetID)
+}
+
+// FallbackID returns a deterministic "<control_id>/<asset_id>"
+// fingerprint used by the collector when a strategy emits a finding
+// without a precomputed FindingID. Distinct from SpanKey: the
+// collector path needs a slash separator to avoid ambiguity with
+// ARN-shaped asset IDs that contain colons. Centralises the format
+// so the collector and any future fallback site stay aligned.
+func (f *Finding) FallbackID() string {
+	if f == nil {
+		return ""
+	}
+	return string(f.ControlID) + "/" + string(f.AssetID)
+}
+
 // HasDiagnosis reports whether the finding carries any of the
 // authored triage prose (Defect / Infection / Failure). Renderers
 // used to ask `f.Defect == "" && f.Infection == "" && f.Failure == ""`

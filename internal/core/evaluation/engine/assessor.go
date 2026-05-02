@@ -483,7 +483,7 @@ func (s *assessmentSession) applyControl(
 		// 4. Record verdict and finding linkage in the trace span
 		span.SetVerdict(string(check.Verdict), string(check.Confidence))
 		if len(findings) > 0 {
-			span.SetFindingID(findings[0].ControlID.String() + "@" + string(findings[0].AssetID))
+			span.SetFindingID(findings[0].SpanKey())
 		}
 		span.End()
 
@@ -647,7 +647,7 @@ func buildSuppressionSet(
 		out[risk.SuppressionKey{ControlID: excepted[i].ControlID, AssetID: excepted[i].AssetID}] = struct{}{}
 	}
 	for i := range acknowledged {
-		if !acknowledged[i].Valid {
+		if !acknowledged[i].IsValid() {
 			continue
 		}
 		out[risk.SuppressionKey{ControlID: acknowledged[i].ControlID, AssetID: acknowledged[i].AssetID}] = struct{}{}
@@ -728,9 +728,7 @@ func applyAcknowledgments(
 
 		// Check expiry.
 		if rule.IsExpired(now) {
-			af.Verdict = "fail"
-			af.Valid = false
-			af.InvalidReason = "expired"
+			af.MarkExpired()
 			acknowledged = append(acknowledged, af)
 			active = append(active, *f) // revert to active
 			continue
@@ -763,17 +761,14 @@ func applyAcknowledgments(
 		}
 
 		if !allCompPassing {
-			af.Verdict = "fail"
-			af.Valid = false
-			af.InvalidReason = "compensating_controls_failing"
+			af.MarkCompensatingFailed()
 			acknowledged = append(acknowledged, af)
 			active = append(active, *f) // revert to active
 			continue
 		}
 
 		// Valid acknowledgment.
-		af.Verdict = "acknowledged"
-		af.Valid = true
+		af.MarkValid()
 		acknowledged = append(acknowledged, af)
 		// Finding is NOT added to active — it's acknowledged.
 	}

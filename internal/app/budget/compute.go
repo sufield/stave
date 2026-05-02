@@ -66,6 +66,14 @@ func (br *SeverityBurnRate) StatusLabel() string {
 	return "WITHIN BUDGET"
 }
 
+// IsCritical reports whether this burn-rate row tracks the critical
+// severity tier. Replaces the (br.Severity == "critical") probe in
+// the velocity-section guard at cmd/budget/cmd.go so the comparison
+// stays on the type that owns the Severity field.
+func (br *SeverityBurnRate) IsCritical() bool {
+	return br != nil && br.Severity == "critical"
+}
+
 // GateResult holds the deployment gate decision.
 type GateResult struct {
 	ThresholdPercent float64  `json:"threshold_percent"`

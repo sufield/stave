@@ -138,7 +138,7 @@ func lintControl(path string, celEval policy.PredicateEval, semantic bool) lintR
 	if !ctl.HasType() {
 		result.Errors = append(result.Errors, "missing required field: type")
 	}
-	if ctl.Severity == 0 {
+	if !ctl.Severity.IsSet() {
 		result.Warnings = append(result.Warnings, "missing optional field: severity")
 	}
 	if len(ctl.Compliance) == 0 {

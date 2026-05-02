@@ -25,6 +25,30 @@ type Finding struct {
 	FixCommand  string                `json:"fix_command,omitempty"`
 }
 
+// IsError reports whether this finding is recorded at the Error
+// severity level. Replaces (f.Severity == SeverityError) probes in
+// assessment.go's filter loop, app/lint, app/readiness, and the
+// validate/handler renderer so callers branch on the predicate
+// instead of repeating the constant comparison.
+func (f Finding) IsError() bool {
+	return f.Severity == SeverityError
+}
+
+// IsWarning reports whether this finding is recorded at the Warning
+// severity level. Sibling of IsError; together they let
+// Assessment.HasWarnings / Failed scans drop the inline constant
+// compare.
+func (f Finding) IsWarning() bool {
+	return f.Severity == SeverityWarn
+}
+
+// HasSeverity reports whether the finding's severity equals sev.
+// Generic accessor used by Assessment.filter so the package-private
+// loop stops comparing fields directly.
+func (f Finding) HasSeverity(sev DiagLevel) bool {
+	return f.Severity == sev
+}
+
 // SeverityLabel returns the human-readable label a text renderer
 // should display for this finding's severity. Centralises the
 // (severity == SeverityError ? "ERROR" : "WARNING") branch so

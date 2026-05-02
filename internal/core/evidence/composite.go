@@ -89,7 +89,7 @@ func BuildCompositeGaps(assessments []*ProfileAssessment) CompositeGapReport {
 	for _, assessment := range assessments {
 		for ri := range assessment.Requirements {
 			req := &assessment.Requirements[ri]
-			if req.Status == RequirementMet || req.Status == RequirementNotEvaluated {
+			if !req.IsActionable() {
 				continue
 			}
 			for _, rec := range req.Evidence {
