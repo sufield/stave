@@ -45,6 +45,13 @@ type TopFinding struct {
 	SLABreached bool    `json:"sla_breached"`
 }
 
+// IsAnyBreach reports whether the underlying finding has breached
+// its SLA. Mirrors evaluation.Finding.IsAnyBreach so monitor render
+// asks the DTO for the answer instead of reading the field directly.
+func (t *TopFinding) IsAnyBreach() bool {
+	return t != nil && t.SLABreached
+}
+
 // TacticRow is one ATT&CK tactic for display.
 type TacticRow struct {
 	ID       string `json:"id"`
@@ -127,7 +134,7 @@ func Build(input BuildInput) *State {
 func computeScore(a *report.Assessment, chainDefs int, maxChainWeight float64) appscore.Result {
 	slaTotal, slaBreached := 0, 0
 	for i := range a.Findings {
-		if a.Findings[i].SLADeadlineHours != nil {
+		if a.Findings[i].HasSLA() {
 			slaTotal++
 			if a.Findings[i].IsOverdue() {
 				slaBreached++
@@ -203,8 +210,8 @@ func rankFindings(findings []remediation.Finding, n int) []TopFinding {
 			w = 1.0
 		}
 		burnRate := 0.0
-		if f.SLADeadlineHours != nil && *f.SLADeadlineHours > 0 {
-			burnRate = f.Evidence.UnsafeDurationHours / *f.SLADeadlineHours
+		if dl, ok := f.SLADeadlineValue(); ok && dl > 0 {
+			burnRate = f.Evidence.UnsafeDurationHours / dl
 		}
 		items = append(items, ranked{idx: i, score: w*100 + burnRate*50})
 	}
@@ -217,12 +224,12 @@ func rankFindings(findings []remediation.Finding, n int) []TopFinding {
 		f := &findings[item.idx]
 		tf := TopFinding{
 			ControlID:   string(f.ControlID),
-			Severity:    f.ControlSeverity.String(),
+			Severity:    f.SeverityLabel(),
 			DwellHours:  f.Evidence.UnsafeDurationHours,
-			SLABreached: f.SLABreached,
+			SLABreached: f.IsAnyBreach(),
 		}
-		if f.SLADeadlineHours != nil && *f.SLADeadlineHours > 0 {
-			tf.SLABurnRate = f.Evidence.UnsafeDurationHours / *f.SLADeadlineHours
+		if dl, ok := f.SLADeadlineValue(); ok && dl > 0 {
+			tf.SLABurnRate = f.Evidence.UnsafeDurationHours / dl
 		}
 		result = append(result, tf)
 	}

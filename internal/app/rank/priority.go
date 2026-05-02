@@ -17,25 +17,40 @@ import (
 )
 
 // PriorityEntry represents a single finding in the remediation roadmap.
+//
+// IsChainMemberField holds the underlying boolean; the IsChainMember
+// method exposes it. The field is renamed to free the method name
+// (the JSON wire tag stays "is_chain_member" so the contract is
+// preserved). Callers should ask through IsChainMember() so a future
+// shape (e.g. switching to a chain-pointer with nil-check) is one
+// edit on the type.
 type PriorityEntry struct {
-	Rank          int                     `json:"rank"`
-	ControlID     kernel.ControlID        `json:"control_id"`
-	ControlName   string                  `json:"control_name"`
-	AssetID       asset.ID                `json:"asset_id"`
-	PriorityScore float64                 `json:"priority_score"`
-	RiskImpact    float64                 `json:"risk_impact_percent"`
-	Breakdown     risk.ScoreBreakdown     `json:"breakdown"`
-	SLAUrgency    float64                 `json:"sla_urgency_multiplier"`
-	SilentKiller  bool                    `json:"silent_killer"`
-	Narrative     string                  `json:"narrative"`
-	FixAction     string                  `json:"fix_action,omitempty"`
-	Changes       []policy.PropertyChange `json:"changes"`
-	Confidence    float64                 `json:"confidence"`
-	IsChainMember bool                    `json:"is_chain_member"`
-	ChainSeverity string                  `json:"chain_severity,omitempty"`
-	ChainID       string                  `json:"chain_id,omitempty"`
-	SLABreached   bool                    `json:"sla_breached,omitempty"`
-	SLAOverdue    string                  `json:"sla_overdue,omitempty"`
+	Rank               int                     `json:"rank"`
+	ControlID          kernel.ControlID        `json:"control_id"`
+	ControlName        string                  `json:"control_name"`
+	AssetID            asset.ID                `json:"asset_id"`
+	PriorityScore      float64                 `json:"priority_score"`
+	RiskImpact         float64                 `json:"risk_impact_percent"`
+	Breakdown          risk.ScoreBreakdown     `json:"breakdown"`
+	SLAUrgency         float64                 `json:"sla_urgency_multiplier"`
+	SilentKiller       bool                    `json:"silent_killer"`
+	Narrative          string                  `json:"narrative"`
+	FixAction          string                  `json:"fix_action,omitempty"`
+	Changes            []policy.PropertyChange `json:"changes"`
+	Confidence         float64                 `json:"confidence"`
+	IsChainMemberField bool                    `json:"is_chain_member"`
+	ChainSeverity      string                  `json:"chain_severity,omitempty"`
+	ChainID            string                  `json:"chain_id,omitempty"`
+	SLABreached        bool                    `json:"sla_breached,omitempty"`
+	SLAOverdue         string                  `json:"sla_overdue,omitempty"`
+}
+
+// IsChainMember reports whether this priority entry corresponds to a
+// finding that participates in at least one chain. Replaces direct
+// reads of the underlying IsChainMemberField so a future shape (e.g.
+// chain-pointer with nil-check) is one edit on the type.
+func (e *PriorityEntry) IsChainMember() bool {
+	return e != nil && e.IsChainMemberField
 }
 
 // IsOverdue reports whether the priority entry has breached SLA AND
@@ -145,7 +160,7 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			Confidence:    confidence,
 		}
 		if f.IsChainMember() {
-			entry.IsChainMember = true
+			entry.IsChainMemberField = true
 			entry.ChainSeverity = f.PrimaryChainSeverity()
 			entry.ChainID = f.PrimaryChainID()
 		}
@@ -160,7 +175,7 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 		// Chain-member findings sort before isolated findings.
 		// true sorts before false (boolToInt: true=0, false=1).
 		return cmp.Or(
-			cmp.Compare(boolToInt(!a.IsChainMember), boolToInt(!b.IsChainMember)),
+			cmp.Compare(boolToInt(!a.IsChainMember()), boolToInt(!b.IsChainMember())),
 			cmp.Compare(boolToInt(!a.SLABreached), boolToInt(!b.SLABreached)),
 			cmp.Compare(b.PriorityScore, a.PriorityScore),
 			cmp.Compare(b.Confidence, a.Confidence),

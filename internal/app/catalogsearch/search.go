@@ -42,7 +42,7 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 		if f.Domain != "" && !strings.Contains(strings.ToLower(string(ctl.ID)), strings.ToLower(f.Domain)) {
 			continue
 		}
-		if f.Severity != "" && ctl.Severity.String() != strings.ToLower(f.Severity) {
+		if f.Severity != "" && !ctl.Severity.Matches(f.Severity) {
 			continue
 		}
 		if f.AttackStage != "" && string(ctl.AttackStage()) != f.AttackStage {

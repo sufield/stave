@@ -74,6 +74,23 @@ func (ctl *ControlDefinition) HasCompliance(key ComplianceFramework) bool {
 	return ctl.Compliance.Has(key)
 }
 
+// HasType reports whether the control declares a non-zero ControlType.
+// Replaces (ctl.Type == 0) probes in lint and validation paths so a
+// future zero-as-default change (e.g. switching to an enum that uses
+// 0 for an explicit "unknown" tier) is one edit on the type.
+func (ctl *ControlDefinition) HasType() bool {
+	return ctl != nil && ctl.Type != TypeUnknown
+}
+
+// RequiresCELValidation reports whether the control is one of the
+// types whose UnsafePredicate must compile under the CEL evaluator
+// at lint time. Currently only TypeUnsafeState carries a CEL-evaluated
+// predicate; types that lift their decision out of the predicate
+// (Recurrence, PrefixExposure) skip the compile check.
+func (ctl *ControlDefinition) RequiresCELValidation() bool {
+	return ctl != nil && ctl.Type == TypeUnsafeState
+}
+
 // OneLineSummary returns the first human-readable label that callers
 // should display for the control: the authored Defect prose when
 // present (it carries the most diagnostic-friendly summary), falling

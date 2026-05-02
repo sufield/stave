@@ -50,6 +50,15 @@ func (s Severity) IsSet() bool {
 	return s > SeverityNone
 }
 
+// Matches reports whether s renders to the same canonical name as
+// the given string, case-insensitively. Replaces the
+// strings.EqualFold(s.String(), other) probe in catalogsearch and
+// similar callers so the comparison logic stays on the type that
+// owns the canonical form.
+func (s Severity) Matches(other string) bool {
+	return strings.EqualFold(s.String(), other)
+}
+
 // Compare returns -1, 0, or +1 comparing severity rank.
 func (s Severity) Compare(other Severity) int {
 	return cmp.Compare(int(s), int(other))

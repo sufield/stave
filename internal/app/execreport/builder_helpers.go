@@ -96,10 +96,10 @@ func buildTopFindings(a *corereport.Assessment, n int) []TopFinding {
 	var items []ranked
 	for i := range a.Findings {
 		f := &a.Findings[i]
-		w := sevWeight[strings.ToLower(f.ControlSeverity.String())]
+		w := sevWeight[f.SeverityLabel()]
 		burn := 0.0
-		if f.SLADeadlineHours != nil && *f.SLADeadlineHours > 0 {
-			burn = f.Evidence.UnsafeDurationHours / *f.SLADeadlineHours
+		if dl, ok := f.SLADeadlineValue(); ok && dl > 0 {
+			burn = f.Evidence.UnsafeDurationHours / dl
 		}
 		items = append(items, ranked{idx: i, score: w*100 + burn*50})
 	}
@@ -113,13 +113,13 @@ func buildTopFindings(a *corereport.Assessment, n int) []TopFinding {
 		tf := TopFinding{
 			Rank:        rank + 1,
 			ControlID:   string(f.ControlID),
-			Severity:    f.ControlSeverity.String(),
+			Severity:    f.SeverityLabel(),
 			AssetID:     string(f.AssetID),
 			DwellHours:  f.Evidence.UnsafeDurationHours,
-			SLABreached: f.SLABreached,
+			SLABreached: f.IsAnyBreach(),
 		}
-		if f.SLADeadlineHours != nil && *f.SLADeadlineHours > 0 {
-			tf.SLABurnRate = f.Evidence.UnsafeDurationHours / *f.SLADeadlineHours
+		if dl, ok := f.SLADeadlineValue(); ok && dl > 0 {
+			tf.SLABurnRate = f.Evidence.UnsafeDurationHours / dl
 		}
 		result = append(result, tf)
 	}
@@ -217,7 +217,7 @@ func buildTeamSections(a *corereport.Assessment, manifest *teams.Manifest) []Tea
 		f := &a.Findings[i]
 		owner := manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
 		teamFindings[owner.TeamID]++
-		if strings.EqualFold(f.ControlSeverity.String(), "critical") {
+		if f.IsCritical() {
 			teamCritical[owner.TeamID]++
 		}
 	}

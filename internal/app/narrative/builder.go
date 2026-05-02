@@ -59,10 +59,27 @@ type ChainContext struct {
 	DeactivationOrder []string      `json:"deactivation_order,omitempty"`
 }
 
+// ChainMember status vocabulary. Centralised here so producers and
+// consumers can't drift on the literal strings.
+const (
+	StatusThisFinding = "this_finding"
+	StatusAlsoFailing = "also_failing"
+	StatusPassing     = "passing"
+)
+
 // ChainMember is a single control in a chain.
 type ChainMember struct {
 	ControlID string `json:"control_id"`
-	Status    string `json:"status"` // "this_finding" | "also_failing" | "passing"
+	Status    string `json:"status"` // see Status* constants above
+}
+
+// IsPassing reports whether this chain member is currently in the
+// passing state (no active finding) — the threshold consumers use
+// to decide whether to render a deactivation hint or skip the
+// member entirely. Replaces (m.Status == "passing") probes in
+// cmd/diagnose so the caller stops comparing to a literal.
+func (m *ChainMember) IsPassing() bool {
+	return m != nil && m.Status == StatusPassing
 }
 
 // Input holds data for building a playbook.
@@ -276,11 +293,11 @@ func buildChainContext(f *remediation.Finding, chainDefs []policy.ChainDefinitio
 
 	if chainDef != nil {
 		for _, ctlID := range chainDef.ControlIDs {
-			status := "passing"
+			status := StatusPassing
 			if string(ctlID) == string(f.ControlID) {
-				status = "this_finding"
+				status = StatusThisFinding
 			} else if failingIDs[string(ctlID)] {
-				status = "also_failing"
+				status = StatusAlsoFailing
 			}
 			ctx.MemberControls = append(ctx.MemberControls, ChainMember{
 				ControlID: string(ctlID),

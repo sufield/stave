@@ -209,7 +209,7 @@ func assessAccount(
 		f := &result.Findings[i]
 		summary.TotalFindings++
 		counts.Add(f.ControlSeverity)
-		if f.SLABreached {
+		if f.IsAnyBreach() {
 			summary.SLABreached++
 		}
 		base := float64(f.ControlSeverity.Weight())

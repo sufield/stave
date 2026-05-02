@@ -33,6 +33,20 @@ type options struct {
 	Simulated  string
 }
 
+// modeRemediation is the recognised value for --mode that triggers
+// the remediation-impact branch instead of the default framework
+// gap analysis. Centralised so the flag literal lives next to
+// IsRemediationMode and the help text in NewCmd.
+const modeRemediation = "remediation"
+
+// IsRemediationMode reports whether the user passed
+// --mode remediation. Replaces the (opts.Mode == "remediation")
+// probe in runCompare so the comparison vocabulary stays on the
+// options type.
+func (o *options) IsRemediationMode() bool {
+	return o != nil && o.Mode == modeRemediation
+}
+
 // NewCmd constructs the compare command.
 func NewCmd() *cobra.Command {
 	opts := &options{Format: "table"}
@@ -87,7 +101,7 @@ Exit Codes:
 
 func runCompare(ctx context.Context, stdout io.Writer, opts *options) error {
 	// Remediation impact mode.
-	if opts.Mode == "remediation" {
+	if opts.IsRemediationMode() {
 		return runRemediationImpact(ctx, stdout, opts)
 	}
 

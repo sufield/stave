@@ -93,7 +93,7 @@ func writeMarkdownTo(w io.Writer, r *Report) {
 		for i := range r.TopFindings {
 			f := &r.TopFindings[i]
 			sla := ""
-			if f.SLABreached {
+			if f.IsAnyBreach() {
 				sla = "BREACHED"
 			}
 			fmt.Fprintf(w, "| %d | %s | %s | %.0fh | %s |\n",

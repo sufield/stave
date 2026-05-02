@@ -27,13 +27,60 @@ type ProjectedState struct {
 	ScoreSlope   float64 `json:"score_slope_per_day"`
 }
 
+// SLAProjection status vocabulary. Centralised here so producers
+// (Compute) and consumers (cmd/trend/forecast renderer) cannot drift
+// on the literal strings — adding a new tier or renaming one is
+// one edit.
+const (
+	StatusOnTrack   = "ON_TRACK"
+	StatusAtRisk    = "AT_RISK"
+	StatusBreaching = "BREACHING"
+)
+
 // SLAProjection holds SLA forecast per severity.
 type SLAProjection struct {
 	Severity      string  `json:"severity"`
 	CurrentMTTR   float64 `json:"current_mttr_hours"`
 	ProjectedMTTR float64 `json:"projected_mttr_hours"`
 	Deadline      float64 `json:"sla_deadline_hours"`
-	Status        string  `json:"status"` // ON_TRACK | AT_RISK | BREACHING
+	Status        string  `json:"status"` // see Status* constants above
+}
+
+// IsOnTrack reports whether the projection has the SLA-met status.
+func (s *SLAProjection) IsOnTrack() bool {
+	return s != nil && s.Status == StatusOnTrack
+}
+
+// IsAtRisk reports whether the projection is approaching the SLA
+// deadline based on the MTTR trajectory.
+func (s *SLAProjection) IsAtRisk() bool {
+	return s != nil && s.Status == StatusAtRisk
+}
+
+// IsBreaching reports whether the projection has already crossed
+// the SLA deadline at the current MTTR trajectory.
+func (s *SLAProjection) IsBreaching() bool {
+	return s != nil && s.Status == StatusBreaching
+}
+
+// StatusMarker returns the unicode glyph the trend renderer uses to
+// flag this projection's state. Centralises the icon-selection
+// branch so cmd/trend/forecast.go stops switching on s.Status
+// directly. nil receiver returns the empty string.
+func (s *SLAProjection) StatusMarker() string {
+	if s == nil {
+		return ""
+	}
+	switch s.Status {
+	case StatusBreaching:
+		return "✗"
+	case StatusAtRisk:
+		return "⚠"
+	case StatusOnTrack:
+		return "✓"
+	default:
+		return ""
+	}
 }
 
 // Input holds data for forecasting.
@@ -90,11 +137,11 @@ func Compute(input Input) (*Result, error) {
 			projectedMTTR = 0
 		}
 
-		status := "ON_TRACK"
+		status := StatusOnTrack
 		if projectedMTTR > deadline {
-			status = "BREACHING"
+			status = StatusBreaching
 		} else if projectedMTTR > deadline*0.8 {
-			status = "AT_RISK"
+			status = StatusAtRisk
 		}
 
 		result.SLAProj = append(result.SLAProj, SLAProjection{

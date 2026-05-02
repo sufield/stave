@@ -54,3 +54,17 @@ type Result struct {
 func (r Result) HasViolation() bool {
 	return len(r.Windows) > 0
 }
+
+// IsScanMode reports whether the result was produced by ModeScan.
+// Replaces (result.Mode == appbisect.ModeScan) probes in cmd/bisect
+// so the renderer asks the result for its mode-shape rather than
+// comparing the field to a constant.
+func (r Result) IsScanMode() bool {
+	return r.Mode == ModeScan
+}
+
+// IsBisectMode reports whether the result was produced by ModeBisect.
+// Sibling of IsScanMode for the binary-search strategy.
+func (r Result) IsBisectMode() bool {
+	return r.Mode == ModeBisect
+}

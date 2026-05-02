@@ -89,6 +89,14 @@ type TopFinding struct {
 	Frameworks        []string `json:"compliance_frameworks,omitempty"`
 }
 
+// IsAnyBreach reports whether the underlying finding has breached
+// its SLA. Mirrors evaluation.Finding.IsAnyBreach so the markdown
+// renderer asks the DTO for the answer instead of reading the field
+// directly.
+func (t *TopFinding) IsAnyBreach() bool {
+	return t != nil && t.SLABreached
+}
+
 // ChainsSection holds active chain data.
 type ChainsSection struct {
 	ActiveCount int           `json:"active_count"`

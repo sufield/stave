@@ -65,6 +65,17 @@ func (tc *TacticCoverage) IsCovered() bool {
 	return tc != nil && (tc.Status == StatusCovered || tc.Status == StatusThin)
 }
 
+// IsGap reports whether this tactic is a coverage gap — either no
+// controls map to it or the count is below the "thin" threshold.
+// Complements IsCovered (the inverse) and replaces the
+// (Status == "no_coverage" || Status == "thin") OR-pair at
+// cmd/map/cmd.go:128. Note that "thin" coverage is both IsCovered
+// and IsGap by design: the gate counts it as covered for the
+// summary, but the map renderer flags it as still-needing-work.
+func (tc *TacticCoverage) IsGap() bool {
+	return tc != nil && (tc.Status == StatusNoCoverage || tc.Status == StatusThin)
+}
+
 // StatusLabel returns the user-facing label for this tactic's
 // status. The wire-level "no_coverage" is normalised to
 // "not_covered" for the execreport rendering to match operator

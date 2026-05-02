@@ -20,7 +20,7 @@ func writeOutput(stdout, stderr io.Writer, result appbisect.Result, format strin
 
 func writeText(stdout, stderr io.Writer, result appbisect.Result, _ *slog.Logger) error {
 	modeName := "BISECT"
-	if result.Mode == appbisect.ModeScan {
+	if result.IsScanMode() {
 		modeName = "SCAN"
 	}
 
@@ -80,14 +80,14 @@ func writeText(stdout, stderr io.Writer, result appbisect.Result, _ *slog.Logger
 		fmt.Fprintln(stdout)
 	}
 
-	if !result.IsMonotonic && result.Mode == appbisect.ModeBisect {
+	if !result.IsMonotonic && result.IsBisectMode() {
 		fmt.Fprintln(stderr, "WARNING: Multiple violation windows detected in this snapshot range.")
 		fmt.Fprintln(stderr, "         --mode bisect found the start of the current window only.")
 		fmt.Fprintln(stderr, "         Run with --mode scan to find the earliest occurrence.")
 		fmt.Fprintln(stderr)
 	}
 
-	if result.Mode == appbisect.ModeScan && len(result.Windows) > 1 {
+	if result.IsScanMode() && len(result.Windows) > 1 {
 		fmt.Fprintf(stdout, "Patient Zero (earliest ever occurrence): Window 1\n")
 	}
 

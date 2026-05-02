@@ -43,7 +43,7 @@ func GroupByOwner(_ *report.Assessment, roadmap Roadmap, manifest *teams.Manifes
 		if e.IsOverdue() {
 			tr.SLABreaches++
 		}
-		if e.IsChainMember {
+		if e.IsChainMember() {
 			tr.ActiveChains++
 		}
 		tr.Entries = append(tr.Entries, *e)

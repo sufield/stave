@@ -194,15 +194,8 @@ func writeForecastTable(w io.Writer, r *forecast.Result) {
 			strings.Repeat("\u2500", 10), strings.Repeat("\u2500", 10))
 		for i := range r.SLAProj {
 			s := &r.SLAProj[i]
-			marker := "\u2713"
-			switch s.Status {
-			case "AT_RISK":
-				marker = "\u26a0"
-			case "BREACHING":
-				marker = "\u2717"
-			}
 			fmt.Fprintf(w, "  %-10s  %8.1fh       %8.0fh     %s %s\n",
-				s.Severity, s.CurrentMTTR, s.Deadline, s.Status, marker)
+				s.Severity, s.CurrentMTTR, s.Deadline, s.Status, s.StatusMarker())
 		}
 		fmt.Fprintln(w)
 	}

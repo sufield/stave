@@ -4,7 +4,6 @@ package scorecard
 import (
 	"cmp"
 	"slices"
-	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -49,7 +48,7 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 				seen[cid] = true
 				total++
 				failing++
-				if strings.EqualFold(f.ControlSeverity.String(), "critical") {
+				if f.IsCritical() {
 					critical++
 					if topFailing == "" {
 						topFailing = cid

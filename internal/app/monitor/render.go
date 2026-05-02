@@ -94,9 +94,10 @@ func RenderPlain(w io.Writer, s *State, color bool) {
 	// Top findings.
 	if len(s.TopFindings) > 0 {
 		fmt.Fprintln(w, "Top Findings:")
-		for _, tf := range s.TopFindings {
+		for i := range s.TopFindings {
+			tf := &s.TopFindings[i]
 			status := ""
-			if tf.SLABreached {
+			if tf.IsAnyBreach() {
 				status = fmt.Sprintf(" %sBREACHED%s", c.red, c.reset)
 			}
 			fmt.Fprintf(w, "  %-28s %-8s %5.0fh  burn:%4.0f%%%s\n",

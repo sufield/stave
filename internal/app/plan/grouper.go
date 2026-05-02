@@ -57,6 +57,13 @@ func (f *PlanFinding) IsOverdue() bool {
 	return f != nil && f.SLABreached && f.OverdueHours != nil
 }
 
+// HasSLA reports whether an SLA deadline is attached to this plan
+// finding. Mirrors Finding.HasSLA so callers branch on a single
+// predicate instead of probing the SLADeadlineHours pointer.
+func (f *PlanFinding) HasSLA() bool {
+	return f != nil && f.SLADeadlineHours != nil
+}
+
 // Plan is the complete remediation plan output.
 type Plan struct {
 	GeneratedAt  string        `json:"generated_at"`
@@ -199,12 +206,12 @@ func computeSummary(findings []PlanFinding) TeamSummary {
 	for i := range findings {
 		f := &findings[i]
 		counts.Add(f.Severity)
-		if f.SLADeadlineHours != nil {
+		if f.HasSLA() {
 			slaTotal++
-			if !f.SLABreached {
-				slaWithin++
-			} else {
+			if f.IsOverdue() {
 				s.SLABreached++
+			} else {
+				slaWithin++
 			}
 		}
 	}

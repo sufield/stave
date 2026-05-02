@@ -125,7 +125,7 @@ func writeTable(w io.Writer, r *appcoverage.CoverageReport) {
 	// Gaps first.
 	hasGaps := false
 	for i := range r.Tactics {
-		if r.Tactics[i].Status == "no_coverage" || r.Tactics[i].Status == "thin" {
+		if r.Tactics[i].IsGap() {
 			if !hasGaps {
 				fmt.Fprintln(w, "COVERAGE GAPS")
 				fmt.Fprintln(w, strings.Repeat("-", 70))

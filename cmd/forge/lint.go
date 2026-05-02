@@ -135,7 +135,7 @@ func lintControl(path string, celEval policy.PredicateEval, semantic bool) lintR
 	if ctl.Description == "" {
 		result.Errors = append(result.Errors, "missing required field: description")
 	}
-	if ctl.Type == 0 {
+	if !ctl.HasType() {
 		result.Errors = append(result.Errors, "missing required field: type")
 	}
 	if ctl.Severity == 0 {
@@ -158,7 +158,7 @@ func lintControl(path string, celEval policy.PredicateEval, semantic bool) lintR
 	}
 
 	// CEL predicate validation — try compiling.
-	if celEval != nil && ctl.Type == policy.TypeUnsafeState {
+	if celEval != nil && ctl.RequiresCELValidation() {
 		testAsset := dummyAsset()
 		isUnsafe, evalErr := celEval(ctl, testAsset, nil)
 		if evalErr != nil {

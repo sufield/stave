@@ -53,7 +53,7 @@ func (t *TextRoadmap) Render(w io.Writer, rm apprank.Roadmap, assessment *report
 		}
 
 		fmt.Fprintf(w, "\n[#%d]  PRIORITY: %.1f (%s)\n", e.Rank, e.PriorityScore, severity)
-		if e.IsChainMember {
+		if e.IsChainMember() {
 			fmt.Fprintf(w, "      [ATTACK PATH: %s]  %s on %s\n", e.ChainID, e.ControlID, e.AssetID)
 		} else {
 			fmt.Fprintf(w, "      %s on %s\n", e.ControlID, e.AssetID)
@@ -66,7 +66,7 @@ func (t *TextRoadmap) Render(w io.Writer, rm apprank.Roadmap, assessment *report
 				fmt.Fprintf(w, "      Reach: —\n")
 			}
 		}
-		if e.SLABreached {
+		if e.IsOverdue() {
 			fmt.Fprintf(w, "      SLA: BREACHED  %s overdue\n", e.SLAOverdue)
 		}
 		if e.Narrative != "" {

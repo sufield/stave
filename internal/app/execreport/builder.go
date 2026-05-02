@@ -239,10 +239,10 @@ func computeScore(a *corereport.Assessment, chainDefs int, maxChainWeight float6
 	hasSLA := false
 	for i := range a.Findings {
 		f := &a.Findings[i]
-		if f.SLADeadlineHours != nil {
+		if f.HasSLA() {
 			hasSLA = true
 			slaTotal++
-			if f.SLABreached {
+			if f.IsAnyBreach() {
 				slaBreached++
 			}
 		}

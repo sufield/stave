@@ -101,12 +101,13 @@ func buildFindingIndex(assessment *report.Assessment) map[string]*findingMeta {
 			assetType: string(f.AssetType),
 			owner:     f.OwnerTeamID.String(),
 		}
-		if f.SLADeadlineHours != nil {
-			m.slaHours = fmt.Sprintf("%.0f", *f.SLADeadlineHours)
+		if dl, ok := f.SLADeadlineValue(); ok {
+			m.slaHours = fmt.Sprintf("%.0f", dl)
 		}
-		if f.SLABreached {
+		switch {
+		case f.IsAnyBreach():
 			m.slaStatus = "BREACHED"
-		} else if f.SLADeadlineHours != nil {
+		case f.HasSLA():
 			m.slaStatus = "OK"
 		}
 		for j := range f.ChainMembership {

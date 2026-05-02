@@ -62,7 +62,7 @@ func runSuggest(ctx context.Context, opts suggestOptions) (*exemptionsuggest.Res
 		af, loadErr := appexempt.Load(opts.AcceptanceFile)
 		if loadErr == nil {
 			for i := range af.Acknowledgments {
-				if af.Acknowledgments[i].Status == "active" {
+				if af.Acknowledgments[i].IsActive() {
 					exemptedKeys[af.Acknowledgments[i].ID] = true
 				}
 			}

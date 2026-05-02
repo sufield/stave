@@ -63,7 +63,7 @@ func TestBuildRoadmap_ChainMembersSortFirst(t *testing.T) {
 	if roadmap.Entries[0].ControlID != "CTL.CHAIN" {
 		t.Errorf("rank 1 = %s, want CTL.CHAIN (chain member sorts first)", roadmap.Entries[0].ControlID)
 	}
-	if !roadmap.Entries[0].IsChainMember {
+	if !roadmap.Entries[0].IsChainMember() {
 		t.Error("rank 1 should have IsChainMember=true")
 	}
 	if roadmap.Entries[0].ChainID != "data_exfiltration_path" {
@@ -72,7 +72,7 @@ func TestBuildRoadmap_ChainMembersSortFirst(t *testing.T) {
 	if roadmap.Entries[1].ControlID != "CTL.ISOLATED" {
 		t.Errorf("rank 2 = %s, want CTL.ISOLATED", roadmap.Entries[1].ControlID)
 	}
-	if roadmap.Entries[1].IsChainMember {
+	if roadmap.Entries[1].IsChainMember() {
 		t.Error("rank 2 should have IsChainMember=false")
 	}
 }
@@ -93,7 +93,7 @@ func TestBuildRoadmap_NoChainFindings(t *testing.T) {
 	}
 
 	roadmap := BuildRoadmap(findings, nil, 0)
-	if roadmap.Entries[0].IsChainMember {
+	if roadmap.Entries[0].IsChainMember() {
 		t.Error("non-chain finding should have IsChainMember=false")
 	}
 }
