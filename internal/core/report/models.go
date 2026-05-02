@@ -44,6 +44,57 @@ type AssessmentRequest struct {
 	AcknowledgedFindings []policy.AcknowledgedFinding
 }
 
+// HasFindings reports whether the assessment carries at least one
+// finding. Replaces (len(a.Findings) == 0) probes at score / collect
+// gating sites with a named accessor on the type.
+func (a *Assessment) HasFindings() bool {
+	return a != nil && len(a.Findings) > 0
+}
+
+// HasTimestamp reports whether the assessment's Run carries a
+// non-zero capture time. Replaces (a.Run.Now.IsZero()) probes at
+// snapshotID / sort sites so callers ask the type directly.
+func (a *Assessment) HasTimestamp() bool {
+	return a != nil && !a.Run.Now.IsZero()
+}
+
+// Before reports whether this assessment was captured before other.
+// Replaces (a.Run.Now.Compare(b.Run.Now)) inline comparators at the
+// score-trend sort site with a named accessor; uses standard
+// time.Before semantics so the comparator follows Go conventions.
+func (a *Assessment) Before(other *Assessment) bool {
+	if a == nil || other == nil {
+		return false
+	}
+	return a.Run.Now.Before(other.Run.Now)
+}
+
+// SLASummary returns the (total, breached) pair that summarises the
+// assessment's SLA posture: total counts findings carrying an SLA
+// deadline, breached counts the subset that have lapsed past it.
+// Replaces the manual nil-check + IsOverdue loop duplicated in
+// cmd/collect/cmd.go's posture-score path so callers ask the
+// assessment for its SLA shape directly.
+//
+// Returns (0, 0) on a nil receiver so caller-side branches stay
+// non-panicking.
+func (a *Assessment) SLASummary() (total, breached int) {
+	if a == nil {
+		return 0, 0
+	}
+	for i := range a.Findings {
+		f := &a.Findings[i]
+		if !f.HasSLA() {
+			continue
+		}
+		total++
+		if f.IsOverdue() {
+			breached++
+		}
+	}
+	return total, breached
+}
+
 // CountBySeverity tallies the assessment's findings into the four
 // named severity buckets (critical / high / medium / low). Replaces
 // the open-coded switch loops in

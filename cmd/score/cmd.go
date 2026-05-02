@@ -130,7 +130,7 @@ func runScoreSingle(ctx context.Context, stdout io.Writer, opts *options, weight
 	// can confirm the input is what they intended; the score is
 	// still computed because empty findings are a legitimate
 	// "everything passed" reading.
-	if len(assessment.Findings) == 0 {
+	if !assessment.HasFindings() {
 		fmt.Fprintf(os.Stderr, "warning: %s contains zero findings — verify the path is the correct assessment\n",
 			opts.OutputFile)
 	}
@@ -148,9 +148,16 @@ func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights
 		return fmt.Errorf("no assessment files found in %s", opts.HistoryDir)
 	}
 
-	// Sort by timestamp.
+	// Sort by timestamp via Assessment.Before.
 	slices.SortFunc(assessments, func(a, b *report.Assessment) int {
-		return a.Run.Now.Compare(b.Run.Now)
+		switch {
+		case a.Before(b):
+			return -1
+		case b.Before(a):
+			return 1
+		default:
+			return 0
+		}
 	})
 
 	// Compute score for each run.
@@ -223,7 +230,7 @@ func buildTrend(results []appscore.Result) []appscore.TrendPoint {
 }
 
 func snapshotID(a *report.Assessment) string {
-	if !a.Run.Now.IsZero() {
+	if a.HasTimestamp() {
 		return "snap-" + a.Run.Now.Format("20060102")
 	}
 	return ""

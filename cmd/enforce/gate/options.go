@@ -29,6 +29,13 @@ type Options struct {
 	formatChanged     bool // set by Prepare from cmd.Flags().Changed
 }
 
+// HasTeamFilter reports whether the operator scoped this gate run
+// to a specific team. Replaces the (opts.Team != "") probe at the
+// team-manifest gating site so the field check stays on the type.
+func (o *Options) HasTeamFilter() bool {
+	return o != nil && o.Team != ""
+}
+
 // DefaultOptions returns the standard defaults for the gate command.
 // Config-derived fields (Policy, MaxUnsafeDuration) start as zero values;
 // call resolveConfigDefaults after flag parsing to fill them from project config.
@@ -89,7 +96,7 @@ func toConfig(o *Options, gf cliflags.GlobalFlags, stdout, stderr io.Writer) (co
 		Format:            o.Format,
 		FormatChanged:     o.formatChanged,
 		SkipPathInference: true,
-		SkipMaxUnsafe:     policy != appconfig.GateSLA,
+		SkipMaxUnsafe:     policy.SkipsMaxUnsafe(),
 	})
 	if err != nil {
 		return config{}, &ui.UserError{Err: fmt.Errorf("prepare evaluation context: %w", err)}

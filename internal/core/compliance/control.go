@@ -46,6 +46,28 @@ type Outcome struct {
 	ComplianceRefs map[string]string `json:"compliance_refs,omitempty"`
 }
 
+// Failed reports whether this outcome represents a control violation.
+// Replaces the (!o.Pass) probes in compound/compound.go's
+// resultFailed helper so the negation lives on the type that owns
+// the Pass field.
+func (o *Outcome) Failed() bool {
+	return o != nil && !o.Pass
+}
+
+// Passed reports whether this outcome represents a control hold.
+// Sibling of Failed for callers that read more naturally as
+// "passed?" than "!failed?".
+func (o *Outcome) Passed() bool {
+	return o != nil && o.Pass
+}
+
+// Matches reports whether this outcome was produced by the control
+// with the given ID. Encapsulates the (o.ControlID == id) probe used
+// by compound's per-rule lookup helpers.
+func (o *Outcome) Matches(id kernel.ControlID) bool {
+	return o != nil && o.ControlID == id
+}
+
 // --- Functional options for control construction ---
 
 // Definition holds the configurable fields for building an control.

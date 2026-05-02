@@ -51,6 +51,17 @@ type ResolvedFinding struct {
 	DwellDays float64          `json:"dwell_days,omitempty"`
 }
 
+// SeverityLabel returns the canonical severity string for this
+// resolved finding. Mirrors evaluation.Finding.SeverityLabel so the
+// new-only renderer reads severity through the same method on every
+// finding shape it iterates.
+func (r *ResolvedFinding) SeverityLabel() string {
+	if r == nil {
+		return ""
+	}
+	return r.Severity
+}
+
 // Result holds the classified findings after filtering.
 type Result struct {
 	NewFindings      []ClassifiedFinding `json:"new_findings"`

@@ -146,7 +146,8 @@ func mapTordfGraph(g *GraphData) *rdfGraph {
 func (m *rdfMapper) nodePass(g *GraphData) {
 	for i := range g.Nodes {
 		n := &g.Nodes[i]
-		iri, classIRI := iriPair(n)
+		iri := n.IRI()
+		classIRI := n.ClassIRI()
 		m.idMap[n.ID] = iri
 		m.nodeKind[n.ID] = n.Type
 		m.nodesByID[n.ID] = n
@@ -155,11 +156,11 @@ func (m *rdfMapper) nodePass(g *GraphData) {
 		if cid, ok := n.FindingControlID(); ok {
 			m.findingControl[n.ID] = cid
 		}
-		if n.Type == NodeTypeControl {
+		if n.IsControl() {
 			// Always map node-ID → node-ID so simple cases work even
 			// when control_id isn't set as a separate property.
 			m.controlIDToNodeID[n.ID] = n.ID
-			if cid, ok := stringProp(n.Properties, "control_id"); ok && cid != "" {
+			if cid, ok := n.ControlPropertyID(); ok && cid != "" {
 				m.controlIDToNodeID[cid] = n.ID
 			}
 		}
@@ -178,7 +179,7 @@ func (m *rdfMapper) nodePass(g *GraphData) {
 func (m *rdfMapper) firstEdgePass(g *GraphData) {
 	for i := range g.Edges {
 		e := &g.Edges[i]
-		pred, ok := wireToPredicate[e.Type]
+		pred, ok := e.PredicateIRI()
 		if !ok {
 			slog.Warn("graph export: dropping edge with unmapped type",
 				"type", e.Type, "from", e.From, "to", e.To)
@@ -415,7 +416,7 @@ func flattenNodeProperties(n *Node) map[string]any {
 	}
 	out["x_internal_id"] = n.ID
 
-	if sev, ok := stringProp(n.Properties, "severity"); ok {
+	if sev, ok := n.SeverityString(); ok {
 		out["severity_weight"] = SeverityWeight(sev)
 	}
 	if cat, num := n.ControlCategory(); cat != "" {

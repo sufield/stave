@@ -111,7 +111,7 @@ func computeTeamTrends(
 		slaWithin := stats.SLAWithinTarget
 		var totalDwell float64
 		for j := range findings {
-			totalDwell += findings[j].Evidence.UnsafeDurationHours
+			totalDwell += findings[j].DwellHours()
 		}
 
 		mttr := 0.0

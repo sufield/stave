@@ -42,6 +42,19 @@ type options struct {
 	EffortModel         string
 }
 
+// sortByBlastRadius is the recognised --sort-by value that flips the
+// ranker into blast-radius ordering (and the text renderer into
+// blast-radius display). Centralised so the literal lives next to
+// SortsByBlastRadius and the help text in NewCmdWithDeps.
+const sortByBlastRadius = "blast-radius"
+
+// SortsByBlastRadius reports whether the operator asked for the
+// blast-radius sort order. Replaces the (opts.SortBy == "blast-radius")
+// probes at lines 144 and 192.
+func (o *options) SortsByBlastRadius() bool {
+	return o != nil && o.SortBy == sortByBlastRadius
+}
+
 // NewCmd constructs the rank command with default factories.
 func NewCmd() *cobra.Command {
 	f := compose.DefaultFactories()
@@ -141,7 +154,7 @@ func run(ctx context.Context, stdout, _ io.Writer, opts *options, deps Deps) err
 	roadmap := apprank.BuildRoadmap(assessment.Findings, assessment.TopExposures, opts.TopN)
 
 	// Re-sort by blast radius if requested.
-	if opts.SortBy == "blast-radius" {
+	if opts.SortsByBlastRadius() {
 		apprank.SortByBlastRadius(&roadmap, apprank.BuildBlastIndex(&assessment))
 	}
 
@@ -162,13 +175,13 @@ func run(ctx context.Context, stdout, _ io.Writer, opts *options, deps Deps) err
 		for i := range assessment.AcknowledgedFindings {
 			af := &assessment.AcknowledgedFindings[i]
 			fmt.Fprintf(stdout, "  %s  %s on %s\n", af.StatusLabel(), af.ControlID, af.AssetID)
-			if af.Rationale != "" {
+			if af.HasRationale() {
 				fmt.Fprintf(stdout, "         Rationale: %s\n", af.Rationale)
 			}
-			if af.AcknowledgedBy != "" {
+			if af.HasAcknowledger() {
 				fmt.Fprintf(stdout, "         By: %s on %s\n", af.AcknowledgedBy, af.AcknowledgedDate)
 			}
-			if af.ExpiryDate != "" {
+			if af.HasExpiry() {
 				fmt.Fprintf(stdout, "         Expires: %s\n", af.ExpiryDate)
 			}
 		}
@@ -189,7 +202,7 @@ func dispatchRoadmap(w io.Writer, opts *options, rm apprank.Roadmap, assessment 
 	case "csv":
 		f = formatter.CSV{}
 	default:
-		f = &formatter.TextRoadmap{ShowReach: opts.SortBy == "blast-radius"}
+		f = &formatter.TextRoadmap{ShowReach: opts.SortsByBlastRadius()}
 	}
 	return f.Render(w, rm, assessment)
 }

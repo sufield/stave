@@ -22,7 +22,6 @@ import (
 	"github.com/sufield/stave/internal/builtin/capabilities"
 	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/controldata"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
@@ -223,24 +222,17 @@ func runCollect(ctx context.Context, stdout, stderr io.Writer, opts *options) er
 	}
 
 	// Count findings by severity.
-	sevCounts := evaluation.CountBySeverity(result.Findings)
+	sevCounts := result.CountBySeverity()
 	criticalCount := sevCounts.Critical
 	highCount := sevCounts.High
 
-	// Compute posture score.
-	slaTotal := 0
-	slaBreached := 0
-	hasSLA := false
+	// Compute posture score. SLA totals come from the report so the
+	// loop below only handles the remediation.Finding projection.
+	slaTotal, slaBreached := result.SLASummary()
+	hasSLA := slaTotal > 0
 	remFindings := make([]remediation.Finding, len(result.Findings))
 	for i := range result.Findings {
 		remFindings[i] = remediation.Finding{Finding: result.Findings[i]}
-		if result.Findings[i].HasSLA() {
-			hasSLA = true
-			slaTotal++
-			if result.Findings[i].IsOverdue() {
-				slaBreached++
-			}
-		}
 	}
 	scoreResult := appscore.Compute(appscore.Input{
 		Findings:       remFindings,

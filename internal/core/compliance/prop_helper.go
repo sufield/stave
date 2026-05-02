@@ -69,6 +69,14 @@ type S3Encryption struct {
 	KMSMasterKeyID    string
 }
 
+// IsEnabled reports whether at-rest encryption is configured for the
+// bucket. Mirrors the IsKMS / IsAWSManagedKey method shape so
+// control evaluators ask the type for its state instead of reading
+// IsEncryptedAtRest directly.
+func (e S3Encryption) IsEnabled() bool {
+	return e.IsEncryptedAtRest
+}
+
 // IsKMS reports whether the encryption algorithm is SSE-KMS (aws:kms).
 func (e S3Encryption) IsKMS() bool {
 	return strings.EqualFold(e.Algorithm, string(kernel.AlgorithmAWSKMS))
@@ -83,8 +91,22 @@ func (e S3Encryption) IsAWSManagedKey() bool {
 }
 
 // S3Versioning holds versioning configuration.
+//
+// The underlying flag is stored in Enabled (renamed from IsEnabled
+// to free the method namespace) so the IsEnabled() method below can
+// match the rest of the package's predicate vocabulary
+// (S3Encryption.IsEnabled, S3Access.IsNetworkRestricted, etc.).
+// Callers go through the method.
 type S3Versioning struct {
-	IsEnabled bool
+	Enabled bool
+}
+
+// IsEnabled reports whether versioning is turned on for the bucket.
+// Wraps the Enabled field so callers ask the type rather than reading
+// the bool directly, matching the pattern used by S3Encryption and
+// S3Access predicates.
+func (v S3Versioning) IsEnabled() bool {
+	return v.Enabled
 }
 
 // S3Access holds access condition flags.
@@ -184,7 +206,7 @@ func ParseS3Properties(a asset.Asset) S3Properties {
 
 	// Versioning
 	if ver, _ := storage["versioning"].(map[string]any); ver != nil {
-		p.Versioning.IsEnabled, _ = ver["enabled"].(bool)
+		p.Versioning.Enabled, _ = ver["enabled"].(bool)
 	}
 
 	// Access

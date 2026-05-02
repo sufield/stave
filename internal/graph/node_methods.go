@@ -52,6 +52,37 @@ func (n *Node) SeverityWeight() float64 {
 	return SeverityWeight(sev)
 }
 
+// SeverityString returns the raw severity string from the node's
+// property bag, or "" when missing. Lets flattenNodeProperties stop
+// reaching directly into n.Properties — callers ask the node for
+// its severity string and the package-level stringProp helper stays
+// internal.
+func (n *Node) SeverityString() (string, bool) {
+	if n == nil {
+		return "", false
+	}
+	return stringProp(n.Properties, "severity")
+}
+
+// IsControl reports whether this node represents a Control node
+// (in the closed NodeType vocabulary). Replaces the
+// (n.Type == NodeTypeControl) probe in the rdf-mapping node pass.
+func (n *Node) IsControl() bool {
+	return n != nil && n.Type == NodeTypeControl
+}
+
+// ControlPropertyID returns the control_id property string, or
+// ("", false) when the node has no such property. Encapsulates the
+// stringProp(n.Properties, "control_id") probe used in the
+// nodePass / shortcut-edge materialiser so the property-bag key
+// stays internal to the type.
+func (n *Node) ControlPropertyID() (string, bool) {
+	if n == nil {
+		return "", false
+	}
+	return stringProp(n.Properties, "control_id")
+}
+
 // IRI returns the export instance IRI for this node. The class IRI
 // is exposed separately as ClassIRI; the previous package-level
 // nodeIRI helper returned both as a tuple, which forced the rdfMapper
@@ -162,6 +193,20 @@ func stringPropPresent(props map[string]any, key string) bool {
 // edge-type renames touch one place.
 func (e *Edge) IsTargets() bool {
 	return e != nil && e.Type == EdgeTypeTargets
+}
+
+// PredicateIRI returns the RDF predicate IRI this edge maps to in
+// the JSON-LD / GraphML export, or ("", false) when the edge type is
+// not in the wireToPredicate vocabulary. Encapsulates the package-
+// level wireToPredicate lookup at the call site (firstEdgePass) so
+// callers ask the edge for its predicate rather than indexing into
+// a private map.
+func (e *Edge) PredicateIRI() (string, bool) {
+	if e == nil {
+		return "", false
+	}
+	pred, ok := wireToPredicate[e.Type]
+	return pred, ok
 }
 
 // FindingResourcePair returns the (finding, resource) endpoints when

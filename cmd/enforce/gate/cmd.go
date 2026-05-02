@@ -139,7 +139,7 @@ Exit Codes:
 			// per-team filter for those cases instead of failing the
 			// command on a missing path the operator was never asked
 			// to provide.
-			if opts.Team != "" && cfg.Policy != appconfig.GateSLA {
+			if opts.HasTeamFilter() && cfg.Policy.RequiresTeamScope() {
 				if opts.TeamManifest == "" {
 					return &ui.UserError{Err: errors.New("--team-manifest is required when using --team")}
 				}

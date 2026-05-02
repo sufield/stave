@@ -140,6 +140,64 @@ type Report struct {
 	FailCounts       map[policy.Severity]int `json:"fail_counts"`
 }
 
+// CriticalFailureCount returns the number of failing controls at
+// the Critical severity. Replaces direct
+// (report.FailCounts[policy.SeverityCritical]) reads at the
+// cmd/evaluate gating site so the count expression lives on the
+// type that owns FailCounts.
+func (r *Report) CriticalFailureCount() int {
+	if r == nil {
+		return 0
+	}
+	return r.FailCounts[policy.SeverityCritical]
+}
+
+// HasCriticalFailures reports whether any Critical-severity control
+// failed in this report. Sibling of CriticalFailureCount for
+// callers that only need the boolean signal.
+func (r *Report) HasCriticalFailures() bool {
+	return r.CriticalFailureCount() > 0
+}
+
+// CompoundCount returns the number of compound (chain) findings
+// active in this report.
+func (r *Report) CompoundCount() int {
+	if r == nil {
+		return 0
+	}
+	return len(r.CompoundFindings)
+}
+
+// HasCompoundFindings reports whether any compound (chain) finding
+// is active. Replaces (len(report.CompoundFindings) > 0) gates at
+// the cmd/evaluate exit-code site with a named accessor.
+func (r *Report) HasCompoundFindings() bool {
+	return r.CompoundCount() > 0
+}
+
+// FilterUnacknowledgedCompound drops any compound finding whose
+// trigger set is fully covered by the supplied valid acknowledgment
+// keys, mutating CompoundFindings in place. Replaces the open-coded
+// filter loop at cmd/evaluate/cmd.go so the
+// "fully-acknowledged → drop" rule lives on the type that owns the
+// slice.
+//
+// The validAcks argument keys by stringified control ID, matching
+// the format produced by the cmd/evaluate exception applier.
+func (r *Report) FilterUnacknowledgedCompound(validAcks map[string]struct{}) {
+	if r == nil {
+		return
+	}
+	filtered := make([]compound.Finding, 0, len(r.CompoundFindings))
+	for i := range r.CompoundFindings {
+		cf := &r.CompoundFindings[i]
+		if !cf.IsFullyAcknowledged(validAcks) {
+			filtered = append(filtered, *cf)
+		}
+	}
+	r.CompoundFindings = filtered
+}
+
 // Recount rebuilds FailCounts and Pass from the current Results and
 // CompoundFindings slices. The previous shape ran this only inside the
 // "exceptions applied" branch in cmd/evaluate, so a profile evaluation

@@ -116,6 +116,26 @@ func (a *AcknowledgedFinding) IsValid() bool {
 	return a != nil && a.Valid
 }
 
+// HasRationale reports whether the acknowledgment carries a
+// non-empty rationale string. Replaces (af.Rationale != "") probes
+// in cmd/rank's inspect renderer so the field check stays on the
+// type that owns Rationale.
+func (a *AcknowledgedFinding) HasRationale() bool {
+	return a != nil && a.Rationale != ""
+}
+
+// HasAcknowledger reports whether the acknowledgment records the
+// approver's identity. Sibling of HasRationale.
+func (a *AcknowledgedFinding) HasAcknowledger() bool {
+	return a != nil && a.AcknowledgedBy != ""
+}
+
+// HasExpiry reports whether the acknowledgment carries an explicit
+// expiry date. Sibling of HasRationale and HasAcknowledger.
+func (a *AcknowledgedFinding) HasExpiry() bool {
+	return a != nil && a.ExpiryDate != ""
+}
+
 // Verdict vocabulary for AcknowledgedFinding state transitions.
 // Centralised here so producers (the assessor's apply pass) and
 // consumers cannot drift on the literal strings.

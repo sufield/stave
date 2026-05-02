@@ -315,6 +315,44 @@ func (r *ComplianceReport) GetFindingByResource(ctlID kernel.ControlID, astID as
 	return nil
 }
 
+// CountBySeverity tallies the report's findings by the four named
+// severity tiers (plus Info for unrecognised values). Wraps the
+// package-level CountBySeverity free function so callers can ask
+// the report directly — replaces
+// evaluation.CountBySeverity(report.Findings) with
+// report.CountBySeverity() at the cmd/collect score-summary site.
+func (r *ComplianceReport) CountBySeverity() SeverityCounts {
+	if r == nil {
+		return SeverityCounts{}
+	}
+	return CountBySeverity(r.Findings)
+}
+
+// SLASummary returns the (total, breached) pair that summarises the
+// report's SLA posture: total counts findings carrying an SLA
+// deadline; breached counts the subset that have lapsed past it.
+// Mirrors report.Assessment.SLASummary so callers holding either
+// shape can ask the same question of the same name.
+//
+// Returns (0, 0) on a nil receiver so the cmd/collect posture-score
+// path stays non-panicking.
+func (r *ComplianceReport) SLASummary() (total, breached int) {
+	if r == nil {
+		return 0, 0
+	}
+	for i := range r.Findings {
+		f := &r.Findings[i]
+		if !f.HasSLA() {
+			continue
+		}
+		total++
+		if f.IsOverdue() {
+			breached++
+		}
+	}
+	return total, breached
+}
+
 // HasAnySLABreach reports whether any finding has breached its SLA,
 // regardless of severity. Encapsulates the "scan findings to set a
 // caller-side flag" loop the apply runner used to do so callers ask

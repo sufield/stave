@@ -20,8 +20,6 @@ import (
 	ui "github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/compliance"
-	"github.com/sufield/stave/internal/core/compliance/compound"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/profile"
@@ -134,7 +132,7 @@ func run(w io.Writer, opts *options) error {
 		validAcks := make(map[string]struct{}, len(acks))
 		for i := range acks {
 			ack := &acks[i]
-			if !ack.Valid {
+			if !ack.IsValid() {
 				continue
 			}
 			validAcks[string(ack.ControlID)] = struct{}{}
@@ -151,19 +149,10 @@ func run(w io.Writer, opts *options) error {
 
 		// Re-evaluate compound findings: a compound risk whose
 		// TriggerIDs are all covered by valid acknowledged exceptions
-		// is no longer an active risk. Filter those out; everything
-		// else stays. Allocate a fresh backing array so the read of
-		// report.CompoundFindings[i] cannot alias filteredCompound's
-		// writes — the previous `[:0]` reuse was correct only by
-		// accident of dereferencing cf before append.
-		filteredCompound := make([]compound.Finding, 0, len(report.CompoundFindings))
-		for i := range report.CompoundFindings {
-			cf := &report.CompoundFindings[i]
-			if !cf.IsFullyAcknowledged(validAcks) {
-				filteredCompound = append(filteredCompound, *cf)
-			}
-		}
-		report.CompoundFindings = filteredCompound
+		// is no longer an active risk. The filter rule lives on
+		// Report.FilterUnacknowledgedCompound so cmd/evaluate stops
+		// open-coding the trigger-set walk.
+		report.FilterUnacknowledgedCompound(validAcks)
 	}
 
 	// Recount FailCounts and Pass from the final filtered results,
@@ -218,9 +207,9 @@ func run(w io.Writer, opts *options) error {
 	// reached the active list is by definition above the noise
 	// threshold the chain catalog encoded — exit non-zero so CI
 	// blocks the release.
-	criticalCount := report.FailCounts[policy.SeverityCritical]
-	compoundCount := len(report.CompoundFindings)
-	if criticalCount > 0 || compoundCount > 0 {
+	criticalCount := report.CriticalFailureCount()
+	compoundCount := report.CompoundCount()
+	if report.HasCriticalFailures() || report.HasCompoundFindings() {
 		var msg string
 		switch {
 		case criticalCount > 0 && compoundCount > 0:

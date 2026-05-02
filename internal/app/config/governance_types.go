@@ -63,6 +63,31 @@ func AllEnforcementGates() []string {
 	return []string{string(GateStrict), string(GateRegression), string(GateSLA)}
 }
 
+// IsSLAPolicy reports whether this gate is the SLA-fast-fail policy
+// (fail_on_overdue_upcoming). Replaces the (policy == GateSLA) probe
+// in cmd/enforce/gate so the literal stays on the type.
+func (g EnforcementGate) IsSLAPolicy() bool {
+	return g == GateSLA
+}
+
+// SkipsMaxUnsafe reports whether this gate policy bypasses the
+// max-unsafe-duration check. The SLA gate evaluates SLA-overdue and
+// upcoming-breach signals only, so it ignores max-unsafe; the other
+// gates apply it. Replaces the (policy != GateSLA) probe in
+// cmd/enforce/gate at the SkipMaxUnsafe wiring point.
+func (g EnforcementGate) SkipsMaxUnsafe() bool {
+	return g != GateSLA
+}
+
+// RequiresTeamScope reports whether this gate policy is compatible
+// with a --team filter. The SLA gate scopes globally and ignores
+// team scoping; the strict and regression gates can be team-scoped.
+// Replaces the (Policy != GateSLA) part of the team-gating compound
+// condition.
+func (g EnforcementGate) RequiresTeamScope() bool {
+	return g != GateSLA
+}
+
 // ParseEnforcementGate validates and normalizes a string into an EnforcementGate.
 func ParseEnforcementGate(raw string) (EnforcementGate, error) {
 	p := EnforcementGate(strings.ToLower(strings.TrimSpace(raw)))

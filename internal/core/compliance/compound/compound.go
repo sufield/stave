@@ -88,9 +88,9 @@ func Detect(rules []Rule, results []compliance.Outcome) []Finding {
 
 // resultFailed returns true if the given invariant ID has a failing result.
 func resultFailed(results []compliance.Outcome, id kernel.ControlID) bool {
-	for _, r := range results {
-		if r.ControlID == id {
-			return !r.Pass
+	for i := range results {
+		if results[i].Matches(id) {
+			return results[i].Failed()
 		}
 	}
 	return false
@@ -98,9 +98,9 @@ func resultFailed(results []compliance.Outcome, id kernel.ControlID) bool {
 
 // resultPassed returns true if the given invariant ID has a passing result.
 func resultPassed(results []compliance.Outcome, id kernel.ControlID) bool {
-	for _, r := range results {
-		if r.ControlID == id {
-			return r.Pass
+	for i := range results {
+		if results[i].Matches(id) {
+			return results[i].Passed()
 		}
 	}
 	return false

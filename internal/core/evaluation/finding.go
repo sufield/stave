@@ -121,6 +121,17 @@ func (f *Finding) IsAnyBreach() bool {
 	return f != nil && f.SLABreached
 }
 
+// DwellHours returns the dwell time (Evidence.UnsafeDurationHours)
+// the trend reports use for MTTR and total-dwell aggregations.
+// Wraps the embedded Evidence field so trend / metrics callers ask
+// the finding rather than reaching through Evidence directly.
+func (f *Finding) DwellHours() float64 {
+	if f == nil {
+		return 0
+	}
+	return f.Evidence.UnsafeDurationHours
+}
+
 // SpanKey returns the canonical "<control_id>@<asset_id>" identifier
 // the engine uses as a trace-span finding ID. Centralises the
 // concatenation so the engine and any future trace consumer agree on

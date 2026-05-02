@@ -137,7 +137,7 @@ func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
 				dwell = fmt.Sprintf("  dwell: %dd", int(f.DwellDays))
 			}
 			fmt.Fprintf(sw, "  %-30s  %-8s  resolved%s\n",
-				f.ControlID, strings.ToUpper(f.Severity), dwell)
+				f.ControlID, strings.ToUpper(f.SeverityLabel()), dwell)
 		}
 		fmt.Fprintln(sw)
 	}

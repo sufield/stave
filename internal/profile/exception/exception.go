@@ -176,6 +176,15 @@ type AcknowledgedResult struct {
 	InvalidDetail        string                `json:"invalid_detail,omitempty"`
 }
 
+// IsValid reports whether the exception successfully suppressed the
+// finding (compensating controls all in place, not expired). Mirrors
+// controldef.AcknowledgedFinding.IsValid so cmd/evaluate's filter
+// loop reads through the same predicate name regardless of which
+// acknowledged shape it holds.
+func (a *AcknowledgedResult) IsValid() bool {
+	return a != nil && a.Valid
+}
+
 // CompensatingControl shows the status of a required compensating invariant.
 type CompensatingControl struct {
 	ControlID kernel.ControlID `json:"control_id"`

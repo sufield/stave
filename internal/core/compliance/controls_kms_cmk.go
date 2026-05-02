@@ -33,7 +33,7 @@ func init() {
 // Evaluate checks that encryption uses aws:kms with a non-AWS-managed key.
 func (ctl *controlsKmsCmk) Evaluate(snap asset.Snapshot) Outcome {
 	return ctl.evaluateS3Buckets(snap, func(a asset.Asset, props S3Properties) *Outcome {
-		if !props.Encryption.IsEncryptedAtRest {
+		if !props.Encryption.IsEnabled() {
 			r := ctl.FailResult(
 				fmt.Sprintf("Bucket %s: encryption is not enabled — CMK requirement cannot be met without SSE", a.ID),
 				"Enable SSE-KMS with a customer-managed CMK. Do not use the AWS-managed key (alias/aws/s3).",
