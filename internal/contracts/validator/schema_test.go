@@ -90,10 +90,10 @@ func TestValidateFindingV1Pass(t *testing.T) {
   "asset_type":"storage_bucket",
   "asset_vendor":"aws",
   "evidence":{
-    "first_seen_unsafe":"2026-01-01T00:00:00Z",
+    "first_unsafe_at":"2026-01-01T00:00:00Z",
     "unsafe_duration_hours":48,
     "threshold_hours":24,
-    "reason":"public"
+    "temporal_risk":"public"
   },
   "remediation":{
     "description":"remove public access",
@@ -121,10 +121,10 @@ func TestValidator_ZeroValueUsable(t *testing.T) {
   "asset_type":"storage_bucket",
   "asset_vendor":"aws",
   "evidence":{
-    "first_seen_unsafe":"2026-01-01T00:00:00Z",
+    "first_unsafe_at":"2026-01-01T00:00:00Z",
     "unsafe_duration_hours":48,
     "threshold_hours":24,
-    "reason":"public"
+    "temporal_risk":"public"
   },
   "remediation":{
     "description":"remove public access",

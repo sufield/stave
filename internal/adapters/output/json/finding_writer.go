@@ -31,12 +31,17 @@ type FindingWriter struct {
 var _ appcontracts.FindingMarshaler = (*FindingWriter)(nil)
 
 // NewFindingWriter creates a new JSON finding marshaler.
-// The validation decision (STAVE_DEV_VALIDATE_FINDINGS / STAVE_DEBUG) is
-// captured at construction time so MarshalFindings remains pure.
+// ValidateContract defaults to true so every emitted finding is
+// checked against schemas/finding/v1/finding.schema.json before
+// the writer returns its bytes. STAVE_DEV_VALIDATE_FINDINGS /
+// STAVE_DEBUG remain as historical opt-in toggles but are no
+// longer required for validation; callers that need to skip
+// validation should construct a FindingWriter literal directly
+// with ValidateContract: false.
 func NewFindingWriter(indent bool) *FindingWriter {
 	return &FindingWriter{
 		Indent:           indent,
-		ValidateContract: shouldValidateFindingContract(),
+		ValidateContract: true,
 	}
 }
 
@@ -103,7 +108,14 @@ func validateFindings(v *contractvalidator.Validator, findings []remediation.Fin
 	var allErrors error
 	for i := range findings {
 		f := &findings[i]
-		raw, err := json.Marshal(f)
+		// Validate the wire-format shape (FindingDTO), not the raw
+		// internal struct. The DTO converter applies the snake_case
+		// JSON tags and field projections that downstream consumers
+		// actually see; validating the raw type produces phantom
+		// schema diffs (e.g. CamelCase delta entries from
+		// policy.DeltaPath which carries no json tags).
+		dto := dto.FromFinding(f)
+		raw, err := json.Marshal(dto)
 		if err != nil {
 			allErrors = errors.Join(allErrors, fmt.Errorf("finding[%d]: marshal failed: %w", i, err))
 			continue

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:stave:schema:finding:v1",
   "title": "Stave Finding Contract v1",
-  "description": "Contract schema for individual Stave findings. Each finding represents a single control violation detected for a specific asset.",
+  "description": "Contract schema for individual Stave findings. Each finding represents a single control violation detected for a specific asset. The shape mirrors internal/adapters/output/dto.FindingDTO; consumers can rely on every documented field appearing exactly as named.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -16,39 +16,59 @@
     "remediation"
   ],
   "properties": {
+    "finding_id": {
+      "type": "string",
+      "title": "Finding ID",
+      "description": "Stable per-finding identifier emitted by the engine; identical across runs for the same (control, asset) pair while the finding is open."
+    },
     "control_id": {
       "type": "string",
-      "minLength": 1,
       "title": "Control ID",
       "description": "Unique identifier of the control that was violated (e.g., CTL.STORAGE.PUBLIC.001)."
     },
     "control_name": {
       "type": "string",
-      "minLength": 1,
       "title": "Control Name",
       "description": "Human-readable name of the violated control."
     },
     "control_description": {
       "type": "string",
-      "minLength": 1,
       "title": "Control Description",
       "description": "Detailed description of the unsafe condition detected by the control."
     },
+    "control_severity": {
+      "type": "string",
+      "title": "Control Severity",
+      "description": "Severity tier (critical | high | medium | low | info | none). Lowercase canonical names matching controldef.Severity."
+    },
+    "control_compliance": {
+      "type": "object",
+      "title": "Control Compliance Mapping",
+      "description": "Map from compliance framework name to citation (e.g. \"hipaa\": \"\u00a7164.312(b)\").",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "control_compliance_ccm_v4": {
+      "type": "array",
+      "title": "CCM v4 Citations",
+      "description": "Cloud Security Alliance Cloud Controls Matrix v4 citations for this control.",
+      "items": {
+        "type": "string"
+      }
+    },
     "asset_id": {
       "type": "string",
-      "minLength": 1,
       "title": "Asset ID",
       "description": "Unique identifier of the asset that violated the control."
     },
     "asset_type": {
       "type": "string",
-      "minLength": 1,
       "title": "Asset Type",
       "description": "Type of the asset (e.g., storage_bucket, iam_role)."
     },
     "asset_vendor": {
       "type": "string",
-      "minLength": 1,
       "title": "Asset Vendor",
       "description": "Cloud vendor or platform of the asset (e.g., aws, gcp, azure)."
     },
@@ -77,7 +97,10 @@
       "additionalProperties": false,
       "title": "Exposure Classification",
       "description": "Classifies who can reach the asset and how.",
-      "required": ["type", "principal_scope"],
+      "required": [
+        "type",
+        "principal_scope"
+      ],
       "properties": {
         "type": {
           "type": "string",
@@ -93,25 +116,122 @@
         }
       }
     },
-    "posture_drift": {
+    "exposure_score": {
+      "type": "number",
+      "title": "Exposure Score",
+      "description": "Derived score factoring asset reachability and audience scope."
+    },
+    "score_breakdown": {
       "type": "object",
-      "additionalProperties": false,
+      "title": "Score Breakdown",
+      "description": "Per-component decomposition of the finding's risk score (severity, exposure, dwell, chain bonus, etc.). Shape mirrors risk.ScoreBreakdown.",
+      "additionalProperties": true
+    },
+    "posture_drift": {
+      "$ref": "#/$defs/postureDrift",
       "title": "Posture Drift Classification",
-      "description": "Classifies the temporal behavior pattern of the violation, computed from the asset timeline.",
-      "required": ["pattern", "episode_count"],
-      "properties": {
-        "pattern": {
-          "type": "string",
-          "enum": ["persistent", "degraded", "intermittent"],
-          "title": "Drift Pattern",
-          "description": "persistent = unsafe since first observation; degraded = was safe, now unsafe; intermittent = toggled between safe and unsafe."
-        },
-        "episode_count": {
-          "type": "integer",
-          "minimum": 1,
-          "title": "Episode Count",
-          "description": "Total number of unsafe episodes (closed + currently open)."
-        }
+      "description": "Classifies the temporal behavior pattern of the violation, computed from the asset timeline."
+    },
+    "chain_membership": {
+      "type": "array",
+      "title": "Chain Membership",
+      "description": "Chains this finding contributes to. Non-empty when the finding is part of one or more active threat chains.",
+      "items": {
+        "$ref": "#/$defs/chainMembership"
+      }
+    },
+    "sla_breached": {
+      "type": "boolean",
+      "title": "SLA Breached",
+      "description": "True when an SLA deadline applies to this finding and has been crossed."
+    },
+    "sla_deadline_hours": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "title": "SLA Deadline (hours)",
+      "description": "Configured SLA deadline in hours. Null when no SLA policy applies."
+    },
+    "sla_overdue_hours": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "title": "SLA Overdue (hours)",
+      "description": "Hours past the SLA deadline at evaluation time. Null when not overdue or no SLA applies."
+    },
+    "sla_escalated_severity": {
+      "type": "string",
+      "title": "SLA-Escalated Severity",
+      "description": "Severity after SLA-driven escalation, if the policy mandates escalation on breach."
+    },
+    "sla_policy_source": {
+      "type": "string",
+      "title": "SLA Policy Source",
+      "description": "Identifier of the SLA policy file or profile that produced the deadline."
+    },
+    "reasoning_trace": {
+      "type": "array",
+      "title": "Reasoning Trace",
+      "description": "Per-clause reasoning trail showing which predicate expressions matched and the observed values that triggered them.",
+      "items": {
+        "$ref": "#/$defs/matchedClause"
+      }
+    },
+    "remediation_context": {
+      "type": "object",
+      "title": "Remediation Context",
+      "description": "Asset identity, violation reasoning, structured changes, and parameterised command \u2014 packaged for downstream remediation generators.",
+      "additionalProperties": true
+    },
+    "alternatives": {
+      "type": "array",
+      "title": "Alternative Tool Coverage",
+      "description": "Equivalent checks in other detection tools, for cross-tool calibration.",
+      "items": {
+        "$ref": "#/$defs/alternative"
+      }
+    },
+    "classification": {
+      "type": "string",
+      "title": "Finding Classification",
+      "description": "Domain-level classification (e.g. state_assertion, drift, vulnerability)."
+    },
+    "scope_tags": {
+      "type": "array",
+      "title": "Scope Tags",
+      "description": "Operational scope tags carried from the control (e.g. environment, business unit).",
+      "items": {
+        "type": "string"
+      }
+    },
+    "defect": {
+      "type": "string",
+      "title": "Defect Class",
+      "description": "Causal defect category (e.g. exposure, integrity, availability)."
+    },
+    "infection": {
+      "type": "string",
+      "title": "Infection Class",
+      "description": "How the unsafe configuration spread (e.g. inherited_default, user_misconfig, terraform_template)."
+    },
+    "failure": {
+      "type": "string",
+      "title": "Failure Class",
+      "description": "Outcome category (e.g. data_exfil_path, privilege_escalation, control_bypass)."
+    },
+    "archetype": {
+      "type": "string",
+      "title": "Finding Archetype",
+      "description": "Higher-level archetype the finding maps to (e.g. public_storage, iam_overscope)."
+    },
+    "delta": {
+      "type": "array",
+      "title": "Fix Paths",
+      "description": "Independent fix paths \u2014 each entry describes one property the operator can change to remediate.",
+      "items": {
+        "$ref": "#/$defs/deltaPath"
       }
     }
   },
@@ -139,25 +259,25 @@
       "type": "object",
       "additionalProperties": false,
       "title": "Temporal Evidence",
-      "description": "Temporal evidence proving the duration and nature of the unsafe condition.",
-      "required": [
-        "first_seen_unsafe",
-        "unsafe_duration_hours",
-        "threshold_hours",
-        "reason"
-      ],
+      "description": "Temporal evidence proving the duration and nature of the unsafe condition. Field names mirror EvidenceDTO JSON tags exactly; legacy first_seen_unsafe is now first_unsafe_at.",
       "properties": {
-        "first_seen_unsafe": {
+        "first_unsafe_at": {
           "type": "string",
           "format": "date-time",
-          "title": "First Seen Unsafe",
+          "title": "First Unsafe At",
           "description": "UTC timestamp (RFC 3339) of the earliest observation snapshot where the asset was in an unsafe state."
+        },
+        "last_seen_unsafe_at": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Last Seen Unsafe At",
+          "description": "UTC timestamp of the most recent observation snapshot where the asset was in an unsafe state."
         },
         "unsafe_duration_hours": {
           "type": "number",
           "minimum": 0,
           "title": "Unsafe Duration Hours",
-          "description": "Number of hours the asset has been continuously unsafe, computed from first_seen_unsafe to the evaluation time."
+          "description": "Hours the asset has been continuously unsafe, computed first_unsafe_at \u2192 evaluation time."
         },
         "threshold_hours": {
           "type": "number",
@@ -165,51 +285,102 @@
           "title": "Threshold Hours",
           "description": "The max-unsafe threshold (in hours) that was exceeded to trigger this violation."
         },
-        "reason": {
-          "type": "string",
-          "minLength": 1,
-          "title": "Violation Reason",
-          "description": "Human-readable explanation of why the asset is considered unsafe (e.g., which predicate rule matched)."
+        "exposure_window_count": {
+          "type": "integer",
+          "minimum": 0,
+          "title": "Exposure Window Count",
+          "description": "Number of distinct exposure windows recorded for this asset within the recurrence-policy lookback."
         },
-        "value": {
-          "title": "Matched Field Value",
-          "description": "The actual field value that triggered the predicate match. Type varies by control."
+        "window_days": {
+          "type": "integer",
+          "minimum": 0,
+          "title": "Lookback Window (days)",
+          "description": "Lookback period used to compute exposure_window_count, in days."
+        },
+        "recurrence_limit": {
+          "type": "integer",
+          "minimum": 0,
+          "title": "Recurrence Limit",
+          "description": "Recurrence-policy threshold above which exposure_window_count constitutes a violation."
+        },
+        "first_exposure_window_at": {
+          "type": "string",
+          "format": "date-time",
+          "title": "First Exposure Window Start"
+        },
+        "last_exposure_window_at": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Last Exposure Window End"
+        },
+        "misconfigurations": {
+          "type": "array",
+          "title": "Misconfigurations",
+          "description": "Per-property mismatch records \u2014 what the predicate examined and what it observed.",
+          "items": {
+            "$ref": "#/$defs/misconfiguration"
+          }
+        },
+        "root_causes": {
+          "type": "array",
+          "title": "Root Causes",
+          "description": "Engine-derived root-cause tags.",
+          "items": {
+            "type": "string"
+          }
         },
         "source_evidence": {
-          "type": "array",
-          "title": "Snapshot Source Evidence",
-          "description": "Per-snapshot source references showing where the unsafe state was observed across time.",
-          "items": {
-            "$ref": "#/$defs/sourceEvidence"
-          }
+          "$ref": "#/$defs/sourceEvidence",
+          "title": "Source Evidence"
+        },
+        "temporal_risk": {
+          "type": "string",
+          "title": "Temporal Risk Description",
+          "description": "Human-readable description of the temporal risk (e.g. \"Unsafe for 24h (threshold: 12h)\")."
         }
       }
     },
     "sourceEvidence": {
       "type": "object",
       "additionalProperties": false,
-      "title": "Snapshot Source Evidence",
-      "description": "Source reference for a specific observation snapshot that contributed to the finding.",
+      "title": "Source Evidence",
+      "description": "Identity-statement and resource-grantee context attached to evidence.",
+      "properties": {
+        "identity_statements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "resource_grantees": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "misconfiguration": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Misconfiguration",
+      "description": "Per-property mismatch record. Mirrors policy.Misconfiguration.",
       "required": [
-        "snapshot_index"
+        "property",
+        "operator"
       ],
       "properties": {
-        "snapshot_index": {
-          "type": "integer",
-          "minimum": 0,
-          "title": "Snapshot Index",
-          "description": "Zero-based index of the observation snapshot in chronological order."
+        "property": {
+          "type": "string"
         },
-        "captured_at": {
-          "type": "string",
-          "format": "date-time",
-          "title": "Snapshot Timestamp",
-          "description": "UTC timestamp (RFC 3339) when this snapshot was captured."
+        "actual_value": {},
+        "operator": {
+          "type": "string"
         },
-        "source": {
-          "$ref": "#/$defs/sourceRef",
-          "title": "Source Reference",
-          "description": "Source file and line reference for this snapshot's asset definition."
+        "expected_value": {},
+        "unsafe_value": {
+          "title": "Unsafe Value",
+          "description": "Value the control treats as unsafe \u2014 type varies by control."
         }
       }
     },
@@ -226,20 +397,17 @@
         "description": {
           "type": "string",
           "minLength": 1,
-          "title": "Remediation Description",
-          "description": "Human-readable explanation of how to fix the unsafe condition."
+          "title": "Remediation Description"
         },
         "action": {
           "type": "string",
           "minLength": 1,
-          "title": "Remediation Action",
-          "description": "Concrete remediation action (e.g., a CLI command, API call, or configuration change)."
+          "title": "Remediation Action"
         },
         "example": {
           "type": "string",
           "minLength": 1,
-          "title": "Remediation Example",
-          "description": "Optional example showing the remediation action applied to a real asset."
+          "title": "Remediation Example"
         }
       }
     },
@@ -248,8 +416,7 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "target",
-        "actions"
+        "target"
       ],
       "properties": {
         "id": {
@@ -307,6 +474,141 @@
           }
         },
         "expected_effect": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string",
+          "title": "Parameterised Action",
+          "description": "RemediationSpec.Action template parameterised to the specific asset (ARN/region/account substituted). Empty when the underlying control has no templated command. Renamed from the legacy 'command' wire name."
+        }
+      }
+    },
+    "postureDrift": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Posture Drift",
+      "description": "Temporal behaviour pattern derived from the asset timeline. Field name `exposure_window_count` matches the PostureDriftDTO JSON tag exactly (was `episode_count` in the v0 schema).",
+      "required": [
+        "pattern",
+        "exposure_window_count"
+      ],
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "enum": [
+            "persistent",
+            "degraded",
+            "intermittent"
+          ],
+          "title": "Drift Pattern"
+        },
+        "exposure_window_count": {
+          "type": "integer",
+          "minimum": 0,
+          "title": "Exposure Window Count",
+          "description": "Total number of exposure windows (closed + currently open)."
+        }
+      }
+    },
+    "chainMembership": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Chain Membership Entry",
+      "description": "One chain membership for the finding.",
+      "required": [
+        "chain_id",
+        "chain_severity",
+        "stage_span",
+        "narrative"
+      ],
+      "properties": {
+        "chain_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "chain_severity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stage_span": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "narrative": {
+          "type": "string"
+        }
+      }
+    },
+    "matchedClause": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Matched Predicate Clause",
+      "description": "One predicate clause that contributed to the finding's truthness, with operator and observed/expected values.",
+      "properties": {
+        "predicate_expr": {
+          "type": "string"
+        },
+        "observation_key": {
+          "type": "string"
+        },
+        "operator": {
+          "type": "string"
+        },
+        "expected_value": {},
+        "observed_value": {}
+      }
+    },
+    "alternative": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Alternative Tool Coverage Entry",
+      "description": "Equivalent check in another detection tool.",
+      "required": [
+        "tool",
+        "check_id",
+        "coverage"
+      ],
+      "properties": {
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "check_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coverage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "deltaPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Delta Fix Path",
+      "description": "One independent property change the operator can make to remediate.",
+      "required": [
+        "property_label",
+        "property_path",
+        "fix_action"
+      ],
+      "properties": {
+        "property_label": {
+          "type": "string"
+        },
+        "property_path": {
+          "type": "string"
+        },
+        "current_value": {
+          "type": "string"
+        },
+        "fix_action": {
           "type": "string"
         }
       }
