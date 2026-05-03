@@ -6,7 +6,7 @@
       "tool": {
         "driver": {
           "name": "stave",
-          "version": "edge",
+          "version": "dev",
           "rules": [
             {
               "id": "CTL.EXP.DURATION.001",
@@ -45,7 +45,27 @@
             {
               "description": {
                 "text": "Review the misconfigured properties and revert to compliant values."
-              }
+              },
+              "changes": [
+                {
+                  "artifactLocation": {
+                    "uri": "res:aws:s3:bucket:public-bucket"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "startLine": 1,
+                        "startColumn": 1,
+                        "endLine": 1,
+                        "endColumn": 1
+                      },
+                      "insertedContent": {
+                        "text": "Review the misconfigured properties and revert to compliant values."
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           ],
           "partialFingerprints": {
