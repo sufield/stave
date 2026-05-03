@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // TestGraphExportE2E builds the stave binary and runs
@@ -22,7 +22,7 @@ func TestGraphExportE2E(t *testing.T) {
 	}
 
 	_, thisFile, _, _ := runtime.Caller(0)
-	repoRoot := filepath.Join(filepath.Dir(thisFile), "..", "..")
+	repoRoot := filepath.Join(filepath.Dir(thisFile), "..", "..", "..")
 
 	// Build binary.
 	bin := filepath.Join(t.TempDir(), "stave-graph-test")
@@ -137,7 +137,7 @@ func TestGraphExportChainsRemoved(t *testing.T) {
 	}
 
 	_, thisFile, _, _ := runtime.Caller(0)
-	repoRoot := filepath.Join(filepath.Dir(thisFile), "..", "..")
+	repoRoot := filepath.Join(filepath.Dir(thisFile), "..", "..", "..")
 
 	bin := filepath.Join(t.TempDir(), "stave-graph-test")
 	build := exec.Command("go", "build", "-o", bin, "./cmd/stave")

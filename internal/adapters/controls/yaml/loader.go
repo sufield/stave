@@ -12,8 +12,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/sufield/stave/internal/adapters/controls/archetype"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/archetype"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/diag"

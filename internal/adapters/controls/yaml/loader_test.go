@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/builtin/predicate"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/core/kernel"
 )

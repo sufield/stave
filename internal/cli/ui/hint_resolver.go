@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // EvaluateErrorWithHint is the primary hinting entry point for evaluation commands.

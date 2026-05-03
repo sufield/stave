@@ -46,15 +46,6 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 				"github.com/sufield/stave/cmd/",
 				"os/exec",
 			},
-			allowed: []string{
-				// Phase 1 of the arch-cleanup plan moved internal/cel
-				// to internal/adapters/cel. Two app/ files (diagnose/trace/
-				// tracer.go and trace/builder.go) consume stavecel.BuildTrace
-				// directly for the policy-trace feature. Phase 2 routes
-				// them through an injected evaluator and removes this
-				// allowance.
-				"github.com/sufield/stave/internal/adapters/cel",
-			},
 		},
 		{
 			dirPrefix: filepath.Join("internal", "adapters"),
@@ -121,6 +112,68 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 	sort.Strings(violations)
 	for _, v := range violations {
 		t.Errorf("hexagonal dependency violation: %s", v)
+	}
+}
+
+// TestNoFloatingInternalPackages guards the layered structure of
+// internal/. Top-level subdirectories under internal/ must be one
+// of the declared architectural layers — anything else is a
+// "floating" package that the dependency direction tests cannot
+// reason about and that adds a new placement convention.
+//
+// Adding a layer requires updating the allow-list below; a future
+// contributor cannot drop a new internal/foo/ package by accident.
+func TestNoFloatingInternalPackages(t *testing.T) {
+	root := findModuleRoot(t)
+	internalDir := filepath.Join(root, "internal")
+
+	allowed := map[string]bool{
+		// Architectural layers tested by TestHexagonalDependencyDirection.
+		"core":     true,
+		"app":      true,
+		"adapters": true,
+		"platform": true,
+		"cli":      true,
+
+		// Cross-cutting helpers carved out by category. Each has a
+		// clear scope; new floating packages are not.
+		"compliance":  true, // compliance-framework metadata
+		"config":      true, // CLI config-file loading
+		"contracts":   true, // legacy global contracts (internal/app/contracts is the active one)
+		"controldata": true, // pre-Phase-5 control data; future move into adapters/controls
+		"doctor":      true, // doctor diagnostics; semi-cmd-like
+		"env":         true, // env-var loading helpers
+		"profile":     true, // compliance profile evaluation
+		"sanitize":    true, // ID sanitisation helpers
+		"testutil":    true, // shared test helpers
+		"tools":       true, // build-time code-gen tools
+		"util":        true, // small pure-functional utilities
+		"version":     true, // version-string constants
+		"yamlutil":    true, // yaml parsing helpers
+	}
+
+	entries, err := os.ReadDir(internalDir)
+	if err != nil {
+		t.Fatalf("read internal/: %v", err)
+	}
+
+	var floating []string
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if strings.HasPrefix(name, ".") {
+			continue
+		}
+		if !allowed[name] {
+			floating = append(floating, name)
+		}
+	}
+
+	sort.Strings(floating)
+	for _, name := range floating {
+		t.Errorf("floating internal package: internal/%s/ — assign to a layer or add to the allow-list with rationale", name)
 	}
 }
 

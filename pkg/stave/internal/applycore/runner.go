@@ -13,25 +13,35 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
+	"github.com/sufield/stave/internal/adapters/controls/pack"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
+	builtinpredicate "github.com/sufield/stave/internal/adapters/predicate"
+	appcapabilities "github.com/sufield/stave/internal/app/capabilities"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/app/reachability"
-	"github.com/sufield/stave/internal/builtin/capabilities"
-	builtinpredicate "github.com/sufield/stave/internal/builtin/predicate"
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/capabilities"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/internal/platform/providers/aws"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 	"github.com/sufield/stave/internal/version"
 )
+
+// libraryOnce guards the library-mode init that wires the AWS
+// provider and the policy library. cmd/root.NewApp does this for
+// CLI users; pkg/stave callers route through Run, so we replicate
+// the same wiring here on first call.
+var libraryOnce sync.Once
 
 // DefaultMaxUnsafe is the fallback when Inputs.MaxUnsafe is zero.
 // Matches the conventional Stave project default (one week).
@@ -92,6 +102,10 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 	if in.SnapshotsDir == "" {
 		return nil, errors.New("applycore.Run: SnapshotsDir is required")
 	}
+	libraryOnce.Do(func() {
+		aws.Register()
+		appcapabilities.Configure(pack.MustNewLibrary())
+	})
 
 	controls, ctlRepo, err := resolveControls(in.ControlsDir)
 	if err != nil {

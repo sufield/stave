@@ -13,7 +13,7 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appupcoming "github.com/sufield/stave/internal/app/prune/upcoming"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // NewCmd constructs the upcoming command.

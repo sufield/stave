@@ -1,5 +1,9 @@
-// Package graph provides the graph-json export builder.
-package graph
+// Package attack defines vendor-neutral mappings between Stave
+// attack-stage names and external taxonomies (ATT&CK tactics, STIX
+// kill-chain phases). Pure lookup data — no graph-export semantics —
+// so consumers in core/app and the graph adapter can both import it
+// without pulling the wider graph package.
+package attack
 
 import "github.com/sufield/stave/internal/core/kernel"
 

@@ -12,8 +12,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	reportrender "github.com/sufield/stave/internal/adapters/output/report"
 	"github.com/sufield/stave/internal/core/reporting"
-	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/metadata"
 	staveversion "github.com/sufield/stave/internal/version"
 )
 

@@ -14,7 +14,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/app/catalogquality"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 func newControlsQualityCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {

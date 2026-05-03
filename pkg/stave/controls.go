@@ -5,8 +5,8 @@ import (
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	builtinpredicate "github.com/sufield/stave/internal/adapters/predicate"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	builtinpredicate "github.com/sufield/stave/internal/builtin/predicate"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
 

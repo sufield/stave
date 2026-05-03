@@ -17,7 +17,7 @@ import (
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appscore "github.com/sufield/stave/internal/app/score"
-	"github.com/sufield/stave/internal/builtin/capabilities"
+	"github.com/sufield/stave/internal/core/capabilities"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/stave"

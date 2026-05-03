@@ -8,17 +8,24 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/sufield/stave/internal/adapters/artifacts"
+	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/adapters/sla"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/builtin/predicate"
 	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
+
+// S3ResolverFactory creates an S3 permission resolver. Adapter
+// concrete in production; test code can substitute an in-memory
+// stub satisfying risk.PermissionResolver.
+type S3ResolverFactory = func() risk.PermissionResolver
 
 // ObsRepoFactory creates an observation repository for loading snapshots.
 type ObsRepoFactory = func() (appcontracts.ObservationRepository, error)
@@ -83,6 +90,7 @@ type Factories struct {
 	NewArtifactLoader       ArtifactLoaderFactory
 	NewSnapshotBundleLoader SnapshotBundleLoaderFactory
 	NewBuiltinControlStore  BuiltinControlStoreFactory
+	NewS3Resolver           S3ResolverFactory
 }
 
 // DefaultFactories returns factory functions configured with standard adapters.
@@ -121,6 +129,9 @@ func DefaultFactories() Factories {
 				ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()),
 			)
 			return store.All()
+		},
+		NewS3Resolver: func() risk.PermissionResolver {
+			return s3resolver.NewResolver()
 		},
 	}
 }

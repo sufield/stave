@@ -7,7 +7,7 @@ import (
 
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/reporting"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 

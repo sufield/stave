@@ -26,7 +26,7 @@ import (
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	covadapter "github.com/sufield/stave/internal/adapters/coverage"
-	"github.com/sufield/stave/internal/builtin/predicate"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	corecov "github.com/sufield/stave/internal/core/evaluation/coverage"
 	"github.com/sufield/stave/internal/core/kernel"

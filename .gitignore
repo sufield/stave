@@ -2,3 +2,5 @@ stave-dev
 .artifacts/
 /stave
 .claude/
+
+.stave/

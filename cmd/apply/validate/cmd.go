@@ -7,7 +7,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 const validateLongHelp = `Validate controls, observations, and configuration for correctness without evaluation.

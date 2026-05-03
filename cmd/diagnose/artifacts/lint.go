@@ -7,8 +7,8 @@ import (
 
 	"github.com/sufield/stave/internal/app/lint"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // NewLintCmd constructs the lint command.

@@ -68,8 +68,9 @@ import (
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
 	infradoctor "github.com/sufield/stave/internal/adapters/doctor"
-	infrafix "github.com/sufield/stave/internal/adapters/fix"
+	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	infrareport "github.com/sufield/stave/internal/adapters/report"
+	infrafix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/core/reporting"
@@ -174,7 +175,7 @@ func WireCommands(app *App) error {
 	root.AddCommand(artifacts.NewPacksCmd())
 
 	// Introspection
-	root.AddCommand(inspect.NewInspectCmd())
+	root.AddCommand(inspect.NewInspectCmd(f.NewS3Resolver))
 
 	// Net Effective Permissions (CIEM)
 	root.AddCommand(stavenep.NewCmd())
@@ -360,7 +361,7 @@ func wireCISubtree(
 			if err != nil {
 				return nil, fmt.Errorf("initialize CEL evaluator for fix command: %w", err)
 			}
-			return infrafix.NewFindingLoader(celEval, fsutil.ReadFileLimited)
+			return infrafix.NewFindingLoader(celEval, fsutil.ReadFileLimited, evaljson.ParseFindings)
 		},
 	}))
 	return nil

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
-	predicates "github.com/sufield/stave/internal/builtin/predicate"
+	predicates "github.com/sufield/stave/internal/adapters/predicate"
 	domainpredicate "github.com/sufield/stave/internal/core/predicate"
 )
 

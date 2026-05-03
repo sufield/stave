@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sufield/stave/internal/adapters/integrity"
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/integrity"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 

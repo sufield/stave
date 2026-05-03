@@ -7,8 +7,8 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appartifacts "github.com/sufield/stave/internal/app/artifacts"
-	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // NewFmtCmd constructs the fmt command with closure-scoped flags.

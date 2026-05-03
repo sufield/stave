@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	packs "github.com/sufield/stave/internal/builtin/pack"
+	packs "github.com/sufield/stave/internal/adapters/controls/pack"
 	"github.com/sufield/stave/internal/core/diag"
 )
 

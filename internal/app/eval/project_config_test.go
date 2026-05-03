@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/adapters/controls/builtin"
-	"github.com/sufield/stave/internal/builtin/pack"
-	"github.com/sufield/stave/internal/builtin/predicate"
+	"github.com/sufield/stave/internal/adapters/controls/pack"
+	"github.com/sufield/stave/internal/adapters/predicate"
 )
 
 func defaultPackRegistry(t *testing.T) *pack.Index {

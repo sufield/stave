@@ -11,15 +11,15 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/internal/adapters/controls/builtin"
+	packs "github.com/sufield/stave/internal/adapters/controls/pack"
+	predicates "github.com/sufield/stave/internal/adapters/predicate"
 	appartifacts "github.com/sufield/stave/internal/app/artifacts"
 	"github.com/sufield/stave/internal/app/catalog"
 	"github.com/sufield/stave/internal/app/catalogsearch"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	packs "github.com/sufield/stave/internal/builtin/pack"
-	predicates "github.com/sufield/stave/internal/builtin/predicate"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 

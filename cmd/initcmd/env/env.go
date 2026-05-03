@@ -10,7 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	staveenv "github.com/sufield/stave/internal/env"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 

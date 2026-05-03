@@ -14,8 +14,8 @@ import (
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appsim "github.com/sufield/stave/internal/app/simulate"
-	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/capabilities"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/platform/fsutil"

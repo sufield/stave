@@ -92,7 +92,7 @@ func TestBuildFindingDetail_Success(t *testing.T) {
 		Controls:     policy.ControlDefinitions{ctl},
 		Snapshots:    []asset.Snapshot{earlierSnap, snap},
 		Result:       &evaluation.ComplianceReport{Findings: []evaluation.Finding{violation}},
-		TraceBuilder: &apptrace.Builder{},
+		TraceBuilder: &apptrace.Builder{Tracer: stavecel.Tracer{}},
 		IDGen:        crypto.NewHasher(),
 	})
 

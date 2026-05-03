@@ -1,10 +1,13 @@
 package artifacts
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/internal/adapters/controls/pack"
 	"github.com/sufield/stave/internal/app/artifacts"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // NewPacksCmd constructs the packs command tree.
@@ -38,7 +41,11 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			inspector, err := artifacts.NewInspector()
+			lib, err := pack.NewLibrary()
+			if err != nil {
+				return fmt.Errorf("load policy library: %w", err)
+			}
+			inspector, err := artifacts.NewInspector(lib)
 			if err != nil {
 				return err
 			}
@@ -68,7 +75,11 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			inspector, err := artifacts.NewInspector()
+			lib, err := pack.NewLibrary()
+			if err != nil {
+				return fmt.Errorf("load policy library: %w", err)
+			}
+			inspector, err := artifacts.NewInspector(lib)
 			if err != nil {
 				return err
 			}

@@ -6,11 +6,11 @@ import (
 
 	"github.com/sufield/stave/internal/adapters/acknowledgment"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
+	"github.com/sufield/stave/internal/adapters/controls/pack"
 	"github.com/sufield/stave/internal/adapters/exemption"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/builtin/pack"
-	"github.com/sufield/stave/internal/builtin/predicate"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
 

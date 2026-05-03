@@ -15,7 +15,7 @@ import (
 	"github.com/sufield/stave/internal/app/forecast"
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/core/report"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 func newForecastCmd() *cobra.Command {

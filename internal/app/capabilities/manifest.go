@@ -4,8 +4,9 @@ import (
 	"io/fs"
 	"slices"
 	"strings"
+	"sync"
 
-	"github.com/sufield/stave/internal/builtin/pack"
+	"github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/compliance"
 	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -57,10 +58,45 @@ func (m *featureManifest) complianceSupport() ComplianceSupport {
 	}
 }
 
-// Manifest is the global feature manifest for this version of Stave.
-var Manifest = newFeatureManifest()
+// libraryProvider is the package-level injection slot for the
+// policy-library adapter. cmd composition calls Configure at
+// startup; tests that exercise Manifest call it from TestMain.
+//
+// The slot exists because newFeatureManifest needs the embedded
+// pack list to populate policyLibrary, but the capabilities
+// package must not import internal/builtin/pack directly (an
+// adapter package). Injection through the contract keeps app/
+// vendor-neutral.
+var (
+	libraryProvider contracts.PolicyLibrary
+	manifestState   *featureManifest
+	manifestOnce    sync.Once
+)
 
-func newFeatureManifest() *featureManifest {
+// Configure registers the PolicyLibrary used to populate the
+// feature manifest. Idempotent — only the first call takes
+// effect (sync.Once-protected so concurrent Configure calls do
+// not race the lazy-init in Manifest()).
+func Configure(lib contracts.PolicyLibrary) {
+	libraryProvider = lib
+}
+
+// Manifest returns the feature manifest, lazy-initializing on
+// first access. Configure must be called before the first
+// Manifest() invocation; otherwise the lazy init panics with a
+// clear message — matches the prior var-init semantics for missing
+// embedded data.
+func Manifest() *featureManifest {
+	manifestOnce.Do(func() {
+		if libraryProvider == nil {
+			panic("capabilities.Manifest: PolicyLibrary not configured; call capabilities.Configure at startup")
+		}
+		manifestState = newFeatureManifest(libraryProvider)
+	})
+	return manifestState
+}
+
+func newFeatureManifest(lib contracts.PolicyLibrary) *featureManifest {
 	observationSchemas := []string{string(kernel.SchemaObservation)}
 	slices.Sort(observationSchemas)
 
@@ -88,17 +124,12 @@ func newFeatureManifest() *featureManifest {
 		connectorIndex[c.Type] = struct{}{}
 	}
 
-	packReg, err := pack.NewEmbeddedRegistry()
-	if err != nil {
-		panic("capabilities: failed to load embedded policy library: " + err.Error())
-	}
-	discovered, err := packReg.ListPacks()
+	discovered, err := lib.ListPacks()
 	if err != nil {
 		// newFeatureManifest is a constructor with no error return —
 		// the embedded registry is built at compile time, so a
 		// ListPacks invariant violation is a build-time bug that
-		// should crash startup loudly. Consistent with the
-		// NewEmbeddedRegistry panic above.
+		// should crash startup loudly.
 		panic("capabilities: failed to enumerate embedded policy library: " + err.Error())
 	}
 	library := make([]PolicyPack, len(discovered))

@@ -20,7 +20,7 @@ import (
 	"text/template"
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
-	"github.com/sufield/stave/internal/builtin/predicate"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sufield/stave/internal/adapters/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/predicate"
@@ -40,7 +41,7 @@ func testSnapshot() *asset.Snapshot {
 }
 
 func TestPolicyTracer_Trace_Text(t *testing.T) {
-	tracer := &PolicyTracer{}
+	tracer := &PolicyTracer{Tracer: cel.Tracer{}}
 	result, err := tracer.Trace(&TraceRequest{
 		Control:    testControl(),
 		Snapshot:   testSnapshot(),
@@ -60,7 +61,7 @@ func TestPolicyTracer_Trace_Text(t *testing.T) {
 }
 
 func TestPolicyTracer_Trace_JSON(t *testing.T) {
-	tracer := &PolicyTracer{}
+	tracer := &PolicyTracer{Tracer: cel.Tracer{}}
 	result, err := tracer.Trace(&TraceRequest{
 		Control:    testControl(),
 		Snapshot:   testSnapshot(),
@@ -80,7 +81,7 @@ func TestPolicyTracer_Trace_JSON(t *testing.T) {
 }
 
 func TestPolicyTracer_Trace_ReturnsResult(t *testing.T) {
-	tracer := &PolicyTracer{}
+	tracer := &PolicyTracer{Tracer: cel.Tracer{}}
 	result, err := tracer.Trace(&TraceRequest{
 		Control:    testControl(),
 		Snapshot:   testSnapshot(),

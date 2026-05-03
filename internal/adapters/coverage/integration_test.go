@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
-	"github.com/sufield/stave/internal/builtin/predicate"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	corecov "github.com/sufield/stave/internal/core/evaluation/coverage"
 )
 

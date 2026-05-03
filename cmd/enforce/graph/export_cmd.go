@@ -9,9 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	graphpkg "github.com/sufield/stave/internal/adapters/graph"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/report"
-	graphpkg "github.com/sufield/stave/internal/graph"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 

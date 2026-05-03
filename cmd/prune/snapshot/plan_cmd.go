@@ -7,8 +7,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
-	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // NewPlanCmd constructs the plan command.

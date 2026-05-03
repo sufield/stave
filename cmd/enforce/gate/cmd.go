@@ -15,8 +15,8 @@ import (
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/metadata"
 	"github.com/sufield/stave/internal/util/jsonutil"
 	"github.com/sufield/stave/pkg/stave"
 )

@@ -12,11 +12,13 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
+	"github.com/sufield/stave/internal/adapters/controls/pack"
+	"github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
+	"github.com/sufield/stave/internal/platform/metadata"
 	"github.com/sufield/stave/internal/platform/providers/aws"
 
 	// Blank import: each control's init() registers into the global
@@ -185,6 +187,9 @@ func NewApp(opts ...AppOption) (*App, error) {
 	// dependency on AWS is visible at the CLI's wiring boundary
 	// instead of hidden behind blank-import side effects.
 	aws.Register()
+	// Wire the embedded policy library so app/capabilities.Manifest
+	// has its data source. Idempotent.
+	capabilities.Configure(pack.MustNewLibrary())
 	app := &App{
 		Edition:  EditionProd,
 		ExitFunc: os.Exit,

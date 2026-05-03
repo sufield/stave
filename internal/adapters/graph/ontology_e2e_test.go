@@ -9,14 +9,16 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // buildStaveBinary builds the stave CLI and returns its path.
 func buildStaveBinary(t *testing.T) (bin, repoRoot string) {
 	t.Helper()
 	_, thisFile, _, _ := runtime.Caller(0)
-	repoRoot = filepath.Join(filepath.Dir(thisFile), "..", "..")
+	// thisFile is internal/adapters/graph/ontology_e2e_test.go;
+	// three levels up reaches the repo root.
+	repoRoot = filepath.Join(filepath.Dir(thisFile), "..", "..", "..")
 
 	bin = filepath.Join(t.TempDir(), "stave-ontology-test")
 	build := exec.Command("go", "build", "-o", bin, "./cmd/stave")

@@ -8,10 +8,10 @@ import (
 	"os"
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
+	packs "github.com/sufield/stave/internal/adapters/controls/pack"
 	"github.com/sufield/stave/internal/adapters/telemetry"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/app/exemptlapse"
-	packs "github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/pkg/stave/cliapi"

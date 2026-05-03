@@ -17,7 +17,7 @@ import (
 	"github.com/sufield/stave/internal/app/auditbundle"
 	appexempt "github.com/sufield/stave/internal/app/exempt"
 	"github.com/sufield/stave/internal/core/report"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 type auditOptions struct {

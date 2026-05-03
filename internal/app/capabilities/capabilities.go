@@ -8,7 +8,7 @@ import (
 // IsConnectorSupported verifies if a specific cloud resource source has
 // an active connector in this version of the tool.
 func IsConnectorSupported(sourceType kernel.ObservationSourceType) bool {
-	_, ok := Manifest.connectorIndex[sourceType]
+	_, ok := Manifest().connectorIndex[sourceType]
 	return ok
 }
 
@@ -77,11 +77,11 @@ func Summarize(version string) AuditCapabilities {
 	return AuditCapabilities{
 		Version:            version,
 		Offline:            true,
-		ObservationSupport: Manifest.observationSupport(),
-		PolicySupport:      Manifest.policySupport(),
-		DataIngress:        Manifest.ingressSupport(),
-		PolicyLibrary:      Manifest.libraryWithVersion(version),
-		RiskReasoning:      Manifest.riskReasoning(),
-		ComplianceSupport:  Manifest.complianceSupport(),
+		ObservationSupport: Manifest().observationSupport(),
+		PolicySupport:      Manifest().policySupport(),
+		DataIngress:        Manifest().ingressSupport(),
+		PolicyLibrary:      Manifest().libraryWithVersion(version),
+		RiskReasoning:      Manifest().riskReasoning(),
+		ComplianceSupport:  Manifest().complianceSupport(),
 	}
 }

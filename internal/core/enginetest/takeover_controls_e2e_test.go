@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/adapters/controls/builtin"
-	"github.com/sufield/stave/internal/builtin/predicate"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"

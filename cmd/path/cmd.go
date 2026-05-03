@@ -14,7 +14,7 @@ import (
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/app/attackpath"
-	"github.com/sufield/stave/internal/builtin/capabilities"
+	"github.com/sufield/stave/internal/core/capabilities"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"

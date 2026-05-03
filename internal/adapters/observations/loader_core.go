@@ -12,11 +12,11 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 
+	"github.com/sufield/stave/internal/adapters/integrity"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/integrity"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )

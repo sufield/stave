@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // errorTemplate defines the UI metadata for a sentinel error category.

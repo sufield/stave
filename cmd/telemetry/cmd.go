@@ -14,8 +14,8 @@ import (
 
 	apptelemetry "github.com/sufield/stave/internal/app/telemetry"
 	"github.com/sufield/stave/internal/core/report"
-	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 type options struct {

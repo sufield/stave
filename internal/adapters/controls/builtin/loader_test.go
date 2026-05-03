@@ -3,7 +3,7 @@ package builtin
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/builtin/predicate"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 

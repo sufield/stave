@@ -9,8 +9,8 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appsnapshot "github.com/sufield/stave/internal/app/prune/snapshot"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // qualityOptions holds the raw CLI flag values for the quality command.

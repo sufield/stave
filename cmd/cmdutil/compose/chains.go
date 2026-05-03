@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/builtin/capabilities"
+	"github.com/sufield/stave/internal/core/capabilities"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
 

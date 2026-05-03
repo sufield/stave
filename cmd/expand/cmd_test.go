@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sufield/stave/internal/adapters/controls/archetype"
 	"github.com/sufield/stave/internal/app/expand"
-	"github.com/sufield/stave/internal/archetype"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )

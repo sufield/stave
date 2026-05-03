@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/sufield/stave/internal/core/attack"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/graph"
 )
 
 // AllTactics is the complete ATT&CK enterprise tactic list.
@@ -300,7 +300,7 @@ func NavigatorLayer(report *CoverageReport) map[string]any {
 func staveToNavigatorTactic(tacticID string) string {
 	for _, td := range AllTactics {
 		if td.ID == tacticID {
-			return graph.ToATTCKTacticID(kernel.AttackStage(td.StaveID)) // returns same ID but validates
+			return attack.ToATTCKTacticID(kernel.AttackStage(td.StaveID)) // returns same ID but validates
 		}
 	}
 	return ""

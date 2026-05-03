@@ -5,7 +5,7 @@ package aliases
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // NewCmd constructs the inspect aliases command.

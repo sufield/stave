@@ -3,7 +3,7 @@ package compliance
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // options holds the raw CLI flag values for the compliance command.

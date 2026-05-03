@@ -130,8 +130,8 @@ func moduleRootFromThisFile() (string, error) {
 	if !ok {
 		return "", os.ErrNotExist
 	}
-	// internal/builtin/pack -> module root is three directories up.
-	return filepath.Clean(filepath.Join(filepath.Dir(thisFile), "..", "..", "..")), nil
+	// internal/adapters/controls/pack -> module root is four directories up.
+	return filepath.Clean(filepath.Join(filepath.Dir(thisFile), "..", "..", "..", "..")), nil
 }
 
 func collectEmbeddedControlPaths(root string) ([]string, error) {

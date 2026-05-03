@@ -10,7 +10,6 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -135,7 +134,9 @@ func NewOverdueCounter(
 	return &OverdueCounter{loadAssets: loadAssets, newCELEvaluator: newCEL}, nil
 }
 
-// CountOverdue loads assets and computes the number of overdue upcoming actions.
+// CountOverdue loads observations + controls + CEL, then delegates
+// the overdue-counting business rule to internal/app/gate.
+// The adapter owns I/O wiring only.
 func (o *OverdueCounter) CountOverdue(ctx context.Context, controlsDir, observationsDir string, maxUnsafe time.Duration, now time.Time) (int, error) {
 	loaded, err := o.loadAssets(ctx, observationsDir, controlsDir)
 	if err != nil {
@@ -145,12 +146,11 @@ func (o *OverdueCounter) CountOverdue(ctx context.Context, controlsDir, observat
 	if err != nil {
 		return 0, err
 	}
-	items := risk.ComputeItems(risk.ThresholdRequest{
+	return CountOverdue(OverdueRequest{
 		Controls:                loaded.Controls,
 		Snapshots:               loaded.Snapshots,
 		GlobalMaxUnsafeDuration: maxUnsafe,
 		Now:                     now,
 		PredicateEval:           celEval,
-	})
-	return items.CountOverdue(), nil
+	}), nil
 }

@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	domainrisk "github.com/sufield/stave/internal/core/evaluation/risk"
-	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/metadata"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 

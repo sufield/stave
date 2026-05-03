@@ -6,10 +6,11 @@ import (
 	"slices"
 	"time"
 
+	"github.com/sufield/stave/internal/core/attack"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 	"github.com/sufield/stave/internal/util/sets"
 )
@@ -289,7 +290,7 @@ func buildFindingProperties(f *remediation.Finding) map[string]any {
 			membership[ci] = map[string]any{
 				"chain_id":       cm.ChainID,
 				"chain_severity": cm.ChainSeverity,
-				"stage_span":     TranslateStages(cm.StageSpan),
+				"stage_span":     attack.TranslateStages(cm.StageSpan),
 				"narrative":      cm.Narrative,
 			}
 		}
@@ -425,8 +426,8 @@ func (b *builderState) processChainFinding(
 			"active":            true,
 			"member_controls":   memberControls,
 			"stage_span_stave":  cf.AttackStages,
-			"stage_span_attck":  TranslateStages(cf.AttackStages),
-			"kill_chain_phases": ToKillChainPhases(cf.AttackStages),
+			"stage_span_attck":  attack.TranslateStages(cf.AttackStages),
+			"kill_chain_phases": attack.ToKillChainPhases(cf.AttackStages),
 		},
 	})
 
@@ -438,7 +439,7 @@ func (b *builderState) processChainFinding(
 		Properties: map[string]any{
 			"chain_id":          chainID,
 			"compound_severity": cf.Severity.String(),
-			"stage_span_attck":  TranslateStages(cf.AttackStages),
+			"stage_span_attck":  attack.TranslateStages(cf.AttackStages),
 		},
 	})
 
@@ -456,7 +457,7 @@ func (b *builderState) processChainFinding(
 				From: string(ff.FindingID), To: chainID, Type: EdgeTypeMemberOf,
 				Properties: map[string]any{
 					"chain_severity":   cf.Severity.String(),
-					"stage_span_attck": TranslateStages(cf.AttackStages),
+					"stage_span_attck": attack.TranslateStages(cf.AttackStages),
 				},
 			})
 		}

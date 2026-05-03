@@ -3,8 +3,8 @@ package capabilities_test
 import (
 	"testing"
 
+	"github.com/sufield/stave/internal/adapters/controls/pack"
 	"github.com/sufield/stave/internal/app/capabilities"
-	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/core/kernel"
 	aws "github.com/sufield/stave/internal/platform/providers/aws"
 )

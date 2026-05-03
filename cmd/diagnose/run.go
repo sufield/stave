@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/adapters/cel"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -114,7 +115,7 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 		AuditReq:     baseCfg,
 		TargetPolicy: targetCtlID,
 		TargetAsset:  asset.ID(cfg.AssetID),
-		TraceBuilder: &apptrace.Builder{},
+		TraceBuilder: &apptrace.Builder{Tracer: cel.Tracer{}},
 		IDGen:        crypto.NewHasher(),
 	})
 

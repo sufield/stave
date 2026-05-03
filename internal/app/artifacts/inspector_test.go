@@ -4,10 +4,16 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/sufield/stave/internal/adapters/controls/pack"
 )
 
 func TestPolicyInspectorAvailablePacks(t *testing.T) {
-	inspector, err := NewInspector()
+	lib, err := pack.NewLibrary()
+	if err != nil {
+		t.Fatalf("pack.NewLibrary: %v", err)
+	}
+	inspector, err := NewInspector(lib)
 	if err != nil {
 		t.Fatalf("NewInspector: %v", err)
 	}
@@ -27,7 +33,11 @@ func TestPolicyInspectorAvailablePacks(t *testing.T) {
 }
 
 func TestPolicyInspectorInspectUnknown(t *testing.T) {
-	inspector, err := NewInspector()
+	lib, err := pack.NewLibrary()
+	if err != nil {
+		t.Fatalf("pack.NewLibrary: %v", err)
+	}
+	inspector, err := NewInspector(lib)
 	if err != nil {
 		t.Fatalf("NewInspector: %v", err)
 	}

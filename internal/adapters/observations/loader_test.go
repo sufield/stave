@@ -13,10 +13,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sufield/stave/internal/adapters/integrity"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/integrity"
 )
 
 // TestObservationLoader_RejectsMissingSchemaVersion tests that LoadSnapshots returns an error

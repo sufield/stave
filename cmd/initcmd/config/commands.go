@@ -15,7 +15,7 @@ import (
 	initenv "github.com/sufield/stave/cmd/initcmd/env"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // NewConfigCmd builds the config command tree with runtime-aware behavior.

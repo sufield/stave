@@ -3,17 +3,25 @@ package apptrace
 import (
 	"time"
 
-	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
-// Builder implements evaluation.FindingTraceBuilder using the CEL engine.
-type Builder struct{}
+// Builder implements evaluation.FindingTraceBuilder by delegating
+// the predicate-trace step to an injected predicate.Tracer (the
+// cel adapter in production). The asset-locating logic is
+// vendor-neutral and stays here.
+type Builder struct {
+	Tracer predicate.Tracer
+}
 
-// BuildTrace builds a CEL-based predicate evaluation trace for the given request.
+// BuildTrace builds a predicate-evaluation trace for the given
+// request. Returns nil when the request is missing fields, when
+// the asset cannot be located, or when no tracer is wired —
+// callers fall through to a synthetic trace.
 func (b *Builder) BuildTrace(req evaluation.TraceRequest) *evaluation.FindingTrace {
-	if req.Control == nil {
+	if req.Control == nil || b == nil || b.Tracer == nil {
 		return nil
 	}
 
@@ -22,25 +30,14 @@ func (b *Builder) BuildTrace(req evaluation.TraceRequest) *evaluation.FindingTra
 		return nil
 	}
 
-	tr, err := stavecel.BuildTrace(req.Control, found, snapshot)
-	if tr != nil {
-		// BuildTrace now returns a populated trace even when eval
-		// fails, with the error attached on tr.Error. Prefer the
-		// real trace (it has the compiled expression) over a
-		// synthetic one — only fall through to the synthetic path
-		// when tr is nil (compiler-init failure or contract guard).
-		return &evaluation.FindingTrace{
-			Raw:         tr,
-			FinalResult: tr.Result,
-		}
+	renderer, passed, _ := b.Tracer.BuildTrace(req.Control, found, snapshot)
+	if renderer == nil {
+		return nil
 	}
-	if err != nil {
-		return &evaluation.FindingTrace{
-			Raw:         &stavecel.TraceResult{Error: err.Error()},
-			FinalResult: false,
-		}
+	return &evaluation.FindingTrace{
+		Raw:         renderer,
+		FinalResult: passed,
 	}
-	return nil
 }
 
 // findAssetInSnapshots locates an asset in the loaded snapshots,

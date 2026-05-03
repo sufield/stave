@@ -1,13 +1,15 @@
 package trace
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
 
-	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 // TraceRequest defines the context required to perform a logic audit on
@@ -19,25 +21,41 @@ type TraceRequest struct {
 	SourcePath string
 }
 
-// PolicyTracer provides deep explainability for security control evaluations.
-type PolicyTracer struct{}
+// PolicyTracer provides deep explainability for security control
+// evaluations. The Tracer field is the predicate-engine
+// implementation that builds the underlying trace; cmd composition
+// wires the cel adapter so this package never imports it.
+type PolicyTracer struct {
+	Tracer predicate.Tracer
+}
+
+// ErrTracerNotWired is returned when Trace is called on a
+// PolicyTracer whose Tracer field is nil. Surfaces the missing
+// wiring at the composition boundary instead of silently returning
+// a nil result.
+var ErrTracerNotWired = errors.New("trace: PolicyTracer.Tracer is nil; wire a contracts.Tracer at composition")
 
 // Trace executes the logic audit for a single resource and returns
-// a step-by-step breakdown of the evaluation logic.
-func (t *PolicyTracer) Trace(req *TraceRequest) (*stavecel.TraceResult, error) {
+// the underlying trace renderer (text or JSON). Returning
+// evaluation.TraceRenderer keeps the signature vendor-neutral —
+// cmd-layer callers only need the rendering surface.
+func (t *PolicyTracer) Trace(req *TraceRequest) (evaluation.TraceRenderer, error) {
+	if t == nil || t.Tracer == nil {
+		return nil, ErrTracerNotWired
+	}
 	resource, err := LocateResource(req.Snapshot, asset.ID(req.TargetID), req.SourcePath)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := stavecel.BuildTrace(&req.Control, resource, req.Snapshot)
+	renderer, _, err := t.Tracer.BuildTrace(&req.Control, resource, req.Snapshot)
 	if err != nil {
 		return nil, fmt.Errorf("trace: build trace for %s: %w", req.TargetID, err)
 	}
-	if result == nil {
+	if renderer == nil {
 		return nil, fmt.Errorf("trace: engine failed to produce a logic audit for %s", req.TargetID)
 	}
-	return result, nil
+	return renderer, nil
 }
 
 // LocateResource finds a cloud asset by its unique ID within an observation snapshot.

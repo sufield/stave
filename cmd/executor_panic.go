@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 func (a *App) recoverExecutePanic() {

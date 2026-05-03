@@ -12,8 +12,8 @@ import (
 	"time"
 
 	contexts "github.com/sufield/stave/internal/config"
-	"github.com/sufield/stave/internal/pathinfer"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/pathinfer"
 )
 
 // Project context constants.

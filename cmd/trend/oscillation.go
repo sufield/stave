@@ -13,7 +13,7 @@ import (
 	"github.com/sufield/stave/internal/app/oscillation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
-	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 func newOscillationCmd() *cobra.Command {

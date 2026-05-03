@@ -81,11 +81,23 @@ func (s *Service) Fix(ctx context.Context, req Request) error {
 		return err
 	}
 
-	if selected.RemediationPlan == nil {
-		selected.RemediationPlan = s.Planner.PlanFor(selected)
-	}
+	EnsurePlan(&selected)
 
 	return WriteFixResult(req.Stdout, selected)
+}
+
+// EnsurePlan mutates f in place to ensure it has a non-nil
+// RemediationPlan, generating one via the default planner when
+// missing. Centralises the "every finding needs a plan" business
+// rule. Pointer receiver because remediation.Finding is a heavy
+// value type and gocritic flags the by-value form (864 bytes).
+func EnsurePlan(f *remediation.Finding) {
+	if f == nil {
+		return
+	}
+	if f.RemediationPlan == nil {
+		f.RemediationPlan = remediation.NewPlanner().PlanFor(*f)
+	}
 }
 
 // SelectFinding locates a finding by its canonical key (<control_id>@<asset_id>).

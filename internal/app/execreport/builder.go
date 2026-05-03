@@ -13,7 +13,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/app/teams"
-	"github.com/sufield/stave/internal/builtin/capabilities"
+	"github.com/sufield/stave/internal/core/capabilities"
 	corereport "github.com/sufield/stave/internal/core/report"
 )
 

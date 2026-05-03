@@ -23,8 +23,8 @@ import (
 	appcoverage "github.com/sufield/stave/internal/app/coverage"
 	appmon "github.com/sufield/stave/internal/app/monitor"
 	appscore "github.com/sufield/stave/internal/app/score"
-	"github.com/sufield/stave/internal/builtin/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/capabilities"
 	"github.com/sufield/stave/internal/core/report"
 )
 

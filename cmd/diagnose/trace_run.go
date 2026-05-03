@@ -10,13 +10,14 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/adapters/cel"
 	apptrace "github.com/sufield/stave/internal/app/diagnose/trace"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/metadata"
 )
 
 // NewTraceCmd constructs the trace command.
@@ -82,7 +83,7 @@ Exit Codes:
 				return err
 			}
 
-			tracer := &apptrace.PolicyTracer{}
+			tracer := &apptrace.PolicyTracer{Tracer: cel.Tracer{}}
 			result, err := tracer.Trace(&apptrace.TraceRequest{
 				Control:    control,
 				Snapshot:   snapshot,
