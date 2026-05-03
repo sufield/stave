@@ -1,7 +1,6 @@
 package compliance
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -65,21 +64,12 @@ func runComposite(
 		Composite:    gapReport,
 	}
 
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(export); err != nil {
-			return err
-		}
-	case "table", "markdown":
-		renderCompositeTable(w, export)
-	default:
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(export); err != nil {
-			return err
-		}
+	renderer, err := NewRenderer(opts.Format, opts.Verbose)
+	if err != nil {
+		return err
+	}
+	if renderErr := renderer.Render(w, export); renderErr != nil {
+		return renderErr
 	}
 
 	return exitErrorComposite(assessments)

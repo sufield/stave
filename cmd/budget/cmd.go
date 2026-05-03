@@ -256,7 +256,7 @@ func writeTable(w io.Writer, r appbudget.Report) {
 		br := &r.BurnRates[i]
 		bar := burnBar(br.BurnRatePercent)
 		fmt.Fprintf(w, "%-10s %7.0fh %9.0fh %9.0fh %9.1f%%   %s  %s\n",
-			strings.ToUpper(br.Severity), br.AllowedHours, br.ConsumedHours,
+			strings.ToUpper(br.SeverityLabel()), br.AllowedHours, br.ConsumedHours,
 			br.RemainingHours, br.BurnRatePercent, bar, br.StatusLabel())
 	}
 
@@ -264,7 +264,7 @@ func writeTable(w io.Writer, r appbudget.Report) {
 	for i := range r.BurnRates {
 		br := &r.BurnRates[i]
 		if len(br.WeeklyConsumption) > 0 && br.IsCritical() {
-			fmt.Fprintf(w, "\nVELOCITY (%s)\n", strings.ToUpper(br.Severity))
+			fmt.Fprintf(w, "\nVELOCITY (%s)\n", strings.ToUpper(br.SeverityLabel()))
 			for wi, wh := range br.WeeklyConsumption {
 				wbar := strings.Repeat("\u2588", int(math.Min(wh, 40)))
 				fmt.Fprintf(w, "  Week %d  %5.0fh  %s\n", wi+1, wh, wbar)
@@ -285,7 +285,7 @@ func writeOpenMetrics(w io.Writer, r appbudget.Report) {
 	for i := range r.BurnRates {
 		br := &r.BurnRates[i]
 		fmt.Fprintf(w, "stave_security_burn_rate{severity=%q,profile=%q} %.3f %d\n",
-			br.Severity, r.SLAProfile, br.BurnRateRatio(), tsMs)
+			br.SeverityLabel(), r.SLAProfile, br.BurnRateRatio(), tsMs)
 	}
 
 	fmt.Fprintln(w, "# HELP stave_security_budget_hours_remaining Budget hours remaining this period")
@@ -293,7 +293,7 @@ func writeOpenMetrics(w io.Writer, r appbudget.Report) {
 	for i := range r.BurnRates {
 		br := &r.BurnRates[i]
 		fmt.Fprintf(w, "stave_security_budget_hours_remaining{severity=%q} %.1f %d\n",
-			br.Severity, br.RemainingHours, tsMs)
+			br.SeverityLabel(), br.RemainingHours, tsMs)
 	}
 
 	fmt.Fprintln(w, "# HELP stave_security_budget_exhausted 1 if budget exhausted (burn rate >= 1.0)")
@@ -305,7 +305,7 @@ func writeOpenMetrics(w io.Writer, r appbudget.Report) {
 			exhausted = 1
 		}
 		fmt.Fprintf(w, "stave_security_budget_exhausted{severity=%q} %d %d\n",
-			br.Severity, exhausted, tsMs)
+			br.SeverityLabel(), exhausted, tsMs)
 	}
 
 	fmt.Fprintln(w, "# EOF")
@@ -324,7 +324,7 @@ func writeMarkdown(w io.Writer, r appbudget.Report) {
 	for i := range r.BurnRates {
 		br := &r.BurnRates[i]
 		fmt.Fprintf(w, "| %s | %.0fh | %.0fh | %.1f%% | %s |\n",
-			strings.ToUpper(br.Severity[:1])+br.Severity[1:], br.AllowedHours, br.ConsumedHours,
+			strings.ToUpper(br.SeverityLabel()[:1])+br.SeverityLabel()[1:], br.AllowedHours, br.ConsumedHours,
 			br.BurnRatePercent, br.StatusLabel())
 	}
 

@@ -315,6 +315,23 @@ func (r *ComplianceReport) GetFindingByResource(ctlID kernel.ControlID, astID as
 	return nil
 }
 
+// FindByID returns the finding matching the given FindingID and ok =
+// true; ok = false when no finding matches. Replaces the
+// open-coded scan in text/finding_writer's Issues renderer where
+// a member-FindingID needs to resolve back to its (Control, Asset)
+// pair.
+func (r *ComplianceReport) FindByID(fid string) (*Finding, bool) {
+	if r == nil {
+		return nil, false
+	}
+	for i := range r.Findings {
+		if string(r.Findings[i].FindingID) == fid {
+			return &r.Findings[i], true
+		}
+	}
+	return nil, false
+}
+
 // CountBySeverity tallies the report's findings by the four named
 // severity tiers (plus Info for unrecognised values). Wraps the
 // package-level CountBySeverity free function so callers can ask

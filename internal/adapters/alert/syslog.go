@@ -58,9 +58,12 @@ func ParseSyslogFacility(name string) (syslog.Priority, error) {
 }
 
 // Emit writes an alert to syslog with severity-appropriate priority.
+// Routes through WatchTransition.SyslogSeverity (RFC 5424 numeric
+// severity) so the syslog mapping table lives on the core type
+// rather than duplicated here.
 func (s *SyslogSink) Emit(_ context.Context, a ports.WatchAlert) error {
 	msg := FormatSyslog(a)
-	switch transitionSeverity(a.Transition) {
+	switch syslog.Priority(a.Transition.SyslogSeverity()) {
 	case syslog.LOG_CRIT:
 		return s.writer.Crit(msg)
 	case syslog.LOG_ERR:
@@ -104,19 +107,4 @@ func humanSummary(a ports.WatchAlert) string {
 	}
 	return fmt.Sprintf("%s: %d violations (%d new), state=%s",
 		a.Transition, a.Violations, a.NewViolations, a.SecurityState)
-}
-
-func transitionSeverity(t ports.WatchTransition) syslog.Priority {
-	switch t {
-	case ports.TransitionRegression:
-		return syslog.LOG_ERR
-	case ports.TransitionDegradation:
-		return syslog.LOG_WARNING
-	case ports.TransitionError:
-		return syslog.LOG_CRIT
-	case ports.TransitionRecovery:
-		return syslog.LOG_INFO
-	default:
-		return syslog.LOG_INFO
-	}
 }

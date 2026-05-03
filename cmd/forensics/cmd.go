@@ -148,7 +148,7 @@ func writeTableTimeline(w io.Writer, tl *appforensics.Timeline) {
 		for i := range tl.ExposureWindows {
 			ew := &tl.ExposureWindows[i]
 			fmt.Fprintf(w, "  %-30s  first: %s  duration: %.0f days  %s\n",
-				ew.ControlID, ew.FirstFailed[:10], ew.ExposureDays, strings.ToUpper(ew.Status))
+				ew.ControlID, ew.FirstFailed[:10], ew.ExposureDays, ew.DisplayStatus())
 		}
 	}
 }

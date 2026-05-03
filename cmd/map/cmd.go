@@ -133,7 +133,7 @@ func writeTable(w io.Writer, r *appcoverage.CoverageReport) {
 			}
 			tc := &r.Tactics[i]
 			fmt.Fprintf(w, "  %-22s %-7s %3d controls  %s\n",
-				tc.TacticName, tc.TacticID, tc.ControlCount, strings.ToUpper(tc.Status))
+				tc.TacticName, tc.TacticID, tc.ControlCount, tc.DisplayStatus())
 		}
 	}
 	if hasGaps {

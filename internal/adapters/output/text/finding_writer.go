@@ -363,8 +363,8 @@ func (w *FindingWriter) writeIssues(d *drawer, result *evaluation.ComplianceRepo
 		d.f("   Root cause: %s\n", strings.Join(sharedStrs, ", "))
 		d.f("   Members:\n")
 		for _, fid := range iss.MemberFindingIDs {
-			if cid, aid, ok := lookupControlForFindingID(result.Findings, string(fid)); ok {
-				d.f("     - %s (%s)\n", cid, aid)
+			if f, ok := result.FindByID(string(fid)); ok {
+				d.f("     - %s (%s)\n", f.ControlID, f.AssetID)
 			} else {
 				d.f("     - %s\n", fid)
 			}
@@ -377,15 +377,6 @@ func pluralize(n int, singular, plural string) string {
 		return singular
 	}
 	return plural
-}
-
-func lookupControlForFindingID(findings []evaluation.Finding, fid string) (string, string, bool) {
-	for i := range findings {
-		if string(findings[i].FindingID) == fid {
-			return string(findings[i].ControlID), string(findings[i].AssetID), true
-		}
-	}
-	return "", "", false
 }
 
 // writeFindingReasoning renders the inline reasoning trace — the

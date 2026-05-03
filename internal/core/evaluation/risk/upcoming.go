@@ -23,6 +23,14 @@ const (
 	StatusUpcoming ThresholdStatus = "UPCOMING"
 )
 
+// IsOverdue reports whether the status string identifies the
+// OVERDUE bucket. Wraps the constant comparison so wire-decode
+// callers (cmd/watch) can route through the typed predicate
+// instead of comparing against the magic "OVERDUE" literal.
+func (s ThresholdStatus) IsOverdue() bool {
+	return s == StatusOverdue
+}
+
 // ValidateStatuses normalizes and validates a slice of status strings.
 func ValidateStatuses(statuses []string) ([]ThresholdStatus, error) {
 	out := make([]ThresholdStatus, 0, len(statuses))
@@ -54,11 +62,30 @@ type ThresholdItem struct {
 }
 
 // IsOverdue reports whether this item has crossed its SLA
-// threshold. Wraps the (Status == StatusOverdue) probe so
-// counters and summary builders stop comparing the field to a
-// constant directly.
+// threshold. Routes through ThresholdStatus.IsOverdue so the
+// "OVERDUE" comparison lives on the status type, not the item
+// wrapper.
 func (t *ThresholdItem) IsOverdue() bool {
-	return t != nil && t.Status == StatusOverdue
+	return t != nil && t.Status.IsOverdue()
+}
+
+// IsDueNow reports whether this item is at the SLA boundary —
+// the StatusDueNow bucket Summarize / renderers treat as a
+// distinct urgency tier from Overdue and Upcoming.
+func (t *ThresholdItem) IsDueNow() bool {
+	return t != nil && t.Status == StatusDueNow
+}
+
+// IsDueSoon reports whether this upcoming item will reach its
+// SLA boundary within `threshold`. Exclusive of items that have
+// already breached (IsOverdue) or hit the boundary (IsDueNow);
+// Summarize uses this to bin upcoming items into "due-soon" vs
+// "later" without re-implementing the time-window math.
+func (t *ThresholdItem) IsDueSoon(threshold time.Duration) bool {
+	if t == nil || t.IsOverdue() || t.IsDueNow() {
+		return false
+	}
+	return t.Remaining > 0 && t.Remaining <= threshold
 }
 
 // ThresholdItems is a collection of upcoming risk it.
@@ -141,17 +168,15 @@ func (it ThresholdItems) Summarize(dueSoonThreshold time.Duration) ThresholdSumm
 	s.Total = len(it)
 	for i := range it {
 		threshold := &it[i]
-		switch threshold.Status {
-		case StatusOverdue:
+		switch {
+		case threshold.IsOverdue():
 			s.Overdue++
-		case StatusDueNow:
+		case threshold.IsDueNow():
 			s.DueNow++
+		case threshold.IsDueSoon(dueSoonThreshold):
+			s.DueSoon++
 		default:
-			if threshold.Remaining > 0 && threshold.Remaining <= dueSoonThreshold {
-				s.DueSoon++
-			} else {
-				s.Later++
-			}
+			s.Later++
 		}
 	}
 	return s

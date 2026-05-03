@@ -179,9 +179,9 @@ func TestCEFTransitionSeverity(t *testing.T) {
 		{ports.TransitionInitial, 1},
 	}
 	for _, tt := range tests {
-		got := cefTransitionSeverity(tt.transition)
+		got := tt.transition.CEFSeverity()
 		if got != tt.want {
-			t.Errorf("cefTransitionSeverity(%s) = %d, want %d", tt.transition, got, tt.want)
+			t.Errorf("CEFSeverity(%s) = %d, want %d", tt.transition, got, tt.want)
 		}
 	}
 }

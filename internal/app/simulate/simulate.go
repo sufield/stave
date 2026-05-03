@@ -3,6 +3,8 @@
 package simulate
 
 import (
+	"strings"
+
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
@@ -24,6 +26,13 @@ type ChainChange struct {
 	ChainID  string `json:"chain_id"`
 	Severity string `json:"severity"`
 	Status   string `json:"status"` // "DEACTIVATED"
+}
+
+// DisplaySeverity returns the chain change's severity in uppercase
+// for the simulation report column. Centralised so cmd-side render
+// loops stop calling strings.ToUpper inline at every site.
+func (c ChainChange) DisplaySeverity() string {
+	return strings.ToUpper(c.Severity)
 }
 
 // Input holds simulation parameters.

@@ -63,7 +63,7 @@ func renderTable(w io.Writer, export *EvidenceExport, verbose bool) error { //no
 				g := &r.Gaps[j]
 				arn := truncate(g.ResourceARN, 65)
 				fmt.Fprintf(w, "  %s  %s\n", g.ControlID, arn)
-				fmt.Fprintf(w, "  %s: %s\n", strings.ToUpper(g.Severity), g.Message)
+				fmt.Fprintf(w, "  %s: %s\n", strings.ToUpper(g.Severity.String()), g.Message)
 
 				if verbose {
 					renderVerboseTrace(w, export, g.ControlID, g.ResourceARN)

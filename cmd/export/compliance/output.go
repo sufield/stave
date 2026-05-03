@@ -164,24 +164,30 @@ func (cs *ControlSummary) Add(rec *evidence.EvidenceRecord) {
 	}
 }
 
-// GapExport identifies a specific compliance gap.
+// GapExport identifies a specific compliance gap. Severity is the
+// typed policy.Severity so renderers can ask the type for its
+// label / threshold predicate instead of re-parsing the string at
+// each call site.
 type GapExport struct {
-	ControlID   string `json:"control_id"`
-	ResourceARN string `json:"resource_arn"`
-	Severity    string `json:"severity"`
-	Message     string `json:"message"`
+	ControlID   string          `json:"control_id"`
+	ResourceARN string          `json:"resource_arn"`
+	Severity    policy.Severity `json:"severity"`
+	Message     string          `json:"message"`
 }
 
-// EvidenceRecordExport is a single evidence record in the JSON output.
+// EvidenceRecordExport is a single evidence record in the JSON
+// output. Severity is the typed policy.Severity (its MarshalJSON
+// emits the canonical lowercase label, so the wire format is
+// unchanged from the prior string field).
 type EvidenceRecordExport struct {
-	ControlID      string        `json:"control_id"`
-	ControlName    string        `json:"control_name"`
-	ResourceARN    string        `json:"resource_arn"`
-	Verdict        string        `json:"verdict"`
-	Severity       string        `json:"severity"`
-	Citations      []CitationExp `json:"citations"`
-	ReasoningTrace TraceExport   `json:"reasoning_trace"`
-	EvaluatedAt    time.Time     `json:"evaluated_at"`
+	ControlID      string          `json:"control_id"`
+	ControlName    string          `json:"control_name"`
+	ResourceARN    string          `json:"resource_arn"`
+	Verdict        string          `json:"verdict"`
+	Severity       policy.Severity `json:"severity"`
+	Citations      []CitationExp   `json:"citations"`
+	ReasoningTrace TraceExport     `json:"reasoning_trace"`
+	EvaluatedAt    time.Time       `json:"evaluated_at"`
 }
 
 // CitationExp is a regulatory citation reference.
@@ -261,13 +267,16 @@ func buildExport(
 			re.Controls = append(re.Controls, *cs)
 		}
 
-		// Build gaps from failing/incomplete evidence
+		// Build gaps from failing/incomplete evidence. Severity parse
+		// errors fall back to SeverityNone — the export still emits
+		// the gap, just without a typed severity tier.
 		for _, rec := range ra.Evidence {
 			if rec.IsGap() {
+				sev, _ := policy.ParseSeverity(rec.Severity)
 				re.Gaps = append(re.Gaps, GapExport{
 					ControlID:   rec.ControlID,
 					ResourceARN: rec.ResourceARN,
-					Severity:    rec.Severity,
+					Severity:    sev,
 					Message:     rec.ReasoningTrace.FindingMessage,
 				})
 			}
@@ -281,12 +290,18 @@ func buildExport(
 		export.Requirements = append(export.Requirements, re)
 	}
 
+	// Parse the minimum-severity threshold once; sentinels (""/"all")
+	// resolve to SeverityNone so every record passes the filter.
+	threshold, _ := policy.ParseSeverity(minSeverity)
+	includeAll := minSeverity == "" || minSeverity == "all"
+
 	// Build filtered evidence records
 	for _, rec := range pkg.Records {
 		if !includePasses && rec.IsPass() {
 			continue
 		}
-		if recordIsBelowMinSeverity(rec.Severity, minSeverity) {
+		recSev, _ := policy.ParseSeverity(rec.Severity)
+		if !includeAll && recSev.IsLowerThan(threshold) {
 			continue
 		}
 
@@ -295,7 +310,7 @@ func buildExport(
 			ControlName: rec.ControlName,
 			ResourceARN: rec.ResourceARN,
 			Verdict:     rec.Verdict.String(),
-			Severity:    rec.Severity,
+			Severity:    recSev,
 			EvaluatedAt: rec.EvaluatedAt,
 			ReasoningTrace: TraceExport{
 				InvariantEvaluated: rec.ReasoningTrace.InvariantEvaluated,
@@ -376,28 +391,4 @@ func computeRequirementSLA(ra *evidence.RequirementAssessment, findings []evalua
 		CompliancePercent:   pct,
 		LongestOverdueHours: longestOverdue,
 	}
-}
-
-// recordIsBelowMinSeverity is the skip-fast guard for the evidence-
-// export filter loop. Reads linearly — "if the record is below the
-// minimum, skip it" — and routes the comparison through the typed
-// policy.Severity.IsLowerThan ladder so a future severity-tier
-// addition (e.g. inserting "notice" between "info" and "low")
-// lands once on the type instead of in this filter.
-//
-// Returns false ("not below") for the sentinels "" / "all" so the
-// caller's `if recordIsBelowMinSeverity(...) { continue }` keeps
-// every record. Unparseable severities also return false: filter
-// the row out by parse error elsewhere, not by treating an unknown
-// label as "below threshold".
-func recordIsBelowMinSeverity(recordSeverity, minSeverity string) bool {
-	if minSeverity == "" || minSeverity == "all" {
-		return false
-	}
-	rec, recErr := policy.ParseSeverity(recordSeverity)
-	threshold, minErr := policy.ParseSeverity(minSeverity)
-	if recErr != nil || minErr != nil {
-		return false
-	}
-	return rec.IsLowerThan(threshold)
 }

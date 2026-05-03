@@ -4,6 +4,7 @@ package coverage
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/sufield/stave/internal/core/attack"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -63,6 +64,16 @@ type TacticCoverage struct {
 // owns the threshold definition.
 func (tc *TacticCoverage) IsCovered() bool {
 	return tc != nil && (tc.Status == StatusCovered || tc.Status == StatusThin)
+}
+
+// DisplayStatus returns the tactic's status in uppercase for the
+// `stave map` report column. Centralised so cmd-side renderers
+// stop calling strings.ToUpper inline at every site.
+func (tc *TacticCoverage) DisplayStatus() string {
+	if tc == nil {
+		return ""
+	}
+	return strings.ToUpper(tc.Status)
 }
 
 // IsGap reports whether this tactic is a coverage gap — either no

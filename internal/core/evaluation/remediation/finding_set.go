@@ -144,6 +144,41 @@ func (s FindingSet) SLABreachSummary() SLABreachStats {
 	return stats
 }
 
+// FindByID returns the finding with the matching FindingID and
+// ok = true; ok = false when no member matches. Centralises the
+// linear-scan-by-id pattern so callers stop walking the slice
+// inline. Pointer-return so callers can keep working on the
+// underlying record (e.g. mutating an SLA flag) when needed.
+func (s FindingSet) FindByID(id string) (*Finding, bool) {
+	for i := range s {
+		if string(s[i].FindingID) == id {
+			return &s[i], true
+		}
+	}
+	return nil, false
+}
+
+// GroupBySeverity buckets the set's findings by their canonical
+// severity label (the SeverityLabel string). Replaces the
+// open-coded "for f := range findings { byKey[f.SeverityLabel()] =
+// append(...) }" pattern in cmd-side reporters that need a
+// per-severity view. Empty / unknown severity labels collapse to
+// "unknown" so the map key set always covers every input finding.
+func (s FindingSet) GroupBySeverity() map[string][]Finding {
+	if len(s) == 0 {
+		return nil
+	}
+	out := make(map[string][]Finding)
+	for i := range s {
+		sev := s[i].SeverityLabel()
+		if sev == "" {
+			sev = "unknown"
+		}
+		out[sev] = append(out[sev], s[i])
+	}
+	return out
+}
+
 // CountCritical returns the number of findings with a Critical
 // control severity. Centralised so cmd-side callers stop walking
 // the slice and comparing the enum.

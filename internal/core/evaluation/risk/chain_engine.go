@@ -30,6 +30,17 @@ type CompoundFinding struct {
 	AttackStages      []kernel.AttackStage `json:"attack_stages,omitempty"`
 }
 
+// SeverityLabel returns the canonical lowercase severity string
+// for the chain finding (e.g. "critical"). Mirrors the shape on
+// Finding so renderers can ask either type for its label without
+// knowing which variant is in hand.
+func (c *CompoundFinding) SeverityLabel() string {
+	if c == nil {
+		return ""
+	}
+	return c.Severity.String()
+}
+
 // DetectChains checks each chain definition per asset: a chain fires only
 // when a single asset has enough of the chain's controls failing. This
 // prevents a control failing on asset A from triggering compound risk for

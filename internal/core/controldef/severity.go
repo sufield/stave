@@ -92,6 +92,21 @@ func (s Severity) IsLowerThan(threshold Severity) bool {
 	return s < threshold
 }
 
+// SARIFLevel returns the SARIF v2.1.0 result-level string the
+// GitHub Code Scanning surface expects: Critical/High → "error",
+// Medium → "warning", everything else → "note". Centralised so
+// the SARIF writer stops carrying its own mapSeverityToSarif copy.
+func (s Severity) SARIFLevel() string {
+	switch s {
+	case SeverityCritical, SeverityHigh:
+		return "error"
+	case SeverityMedium:
+		return "warning"
+	default:
+		return "note"
+	}
+}
+
 // NormalizedWeight returns the four-tier (1.0 — 4.0) severity scale
 // the severity-score and execreport top-findings ranker use.
 // Distinct from Weight, which returns the 25/50/75/100 scale used by

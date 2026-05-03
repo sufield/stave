@@ -116,7 +116,7 @@ func runSimulate(stdout io.Writer, opts *options) error {
 		if len(result.ChainsDeactivated) > 0 {
 			fmt.Fprintln(w, "CHAINS DEACTIVATED")
 			for _, c := range result.ChainsDeactivated {
-				fmt.Fprintf(w, "  %-40s %s → %s\n", c.ChainID, strings.ToUpper(c.Severity), c.Status)
+				fmt.Fprintf(w, "  %-40s %s → %s\n", c.ChainID, c.DisplaySeverity(), c.Status)
 			}
 			fmt.Fprintln(w)
 		}

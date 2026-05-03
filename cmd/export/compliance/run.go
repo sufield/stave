@@ -148,28 +148,22 @@ func runCompliance(
 		return runComposite(out, opts, profiles, assessments, pkg, snapshotTime)
 	}
 
-	// OSCAL format — works for single and composite.
+	// OSCAL format — works for single and composite. Routed
+	// directly because OSCAL needs the raw profiles / assessments /
+	// snapshotTime that the trimmed EvidenceExport projection drops.
 	if opts.Format == "oscal" {
 		return renderOSCAL(out, opts, profiles, assessments, pkg, snapshotTime)
 	}
 
+	renderer, err := NewRenderer(opts.Format, opts.Verbose)
+	if err != nil {
+		return &ui.UserError{Err: err}
+	}
+
 	// Single-framework path (unchanged behavior).
 	export := buildExport(profiles[0], assessments[0], pkg, version.String, snapshotTime, opts.IncludePass, opts.MinSeverity, result.Findings)
-	switch opts.Format {
-	case "json":
-		if renderErr := renderJSON(out, export); renderErr != nil {
-			return renderErr
-		}
-	case "table":
-		if renderErr := renderTable(out, export, opts.Verbose); renderErr != nil {
-			return renderErr
-		}
-	case "markdown":
-		if renderErr := renderMarkdown(out, export); renderErr != nil {
-			return renderErr
-		}
-	default:
-		return &ui.UserError{Err: fmt.Errorf("unsupported format: %q", opts.Format)}
+	if renderErr := renderer.Render(out, export); renderErr != nil {
+		return renderErr
 	}
 
 	return exitError(assessments[0])

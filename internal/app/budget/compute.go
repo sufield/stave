@@ -49,6 +49,18 @@ func (br *SeverityBurnRate) IsExhausted() bool {
 	return br != nil && br.Status == StatusBudgetExhausted
 }
 
+// SeverityLabel returns the canonical severity label this burn-rate
+// row reports against. Mirrors the SeverityLabel() shape on Finding
+// and ChainFinding so renderers can ask either type for its label
+// without knowing which variant is in hand. Pointer-receiver-safe:
+// returns "" on a nil receiver.
+func (br *SeverityBurnRate) SeverityLabel() string {
+	if br == nil {
+		return ""
+	}
+	return br.Severity
+}
+
 // StatusLabel returns the human-readable label renderers (text,
 // markdown) display for this severity's burn-rate state. Centralises
 // the (IsExhausted ? "EXHAUSTED" : "WITHIN BUDGET") branch the
@@ -250,7 +262,7 @@ func EvaluateGate(report *Report, threshold float64, severities []string) GateRe
 		}
 		if br.BurnRatePercent >= threshold {
 			gate.Passed = false
-			gate.Reason = br.Severity + " burn rate " +
+			gate.Reason = br.SeverityLabel() + " burn rate " +
 				formatPct(br.BurnRatePercent) + "% exceeds threshold " +
 				formatPct(threshold) + "%"
 			break
@@ -261,7 +273,7 @@ func EvaluateGate(report *Report, threshold float64, severities []string) GateRe
 		for i := range report.BurnRates {
 			br := &report.BurnRates[i]
 			if allowed[br.Severity] {
-				gate.Reason = br.Severity + " burn rate " +
+				gate.Reason = br.SeverityLabel() + " burn rate " +
 					formatPct(br.BurnRatePercent) + "% is below threshold " +
 					formatPct(threshold) + "%"
 				break

@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/kernel"
 )
 
 const (
@@ -52,7 +51,7 @@ func enrichSnapshotBucketAPExposure(snap asset.Snapshot) asset.Snapshot {
 
 	for i := range enriched.Assets {
 		a := &enriched.Assets[i]
-		if a.Type != kernel.AssetType(assetTypeBucket) {
+		if !a.IsType(assetTypeBucket) {
 			continue
 		}
 		storage, _ := a.Properties["storage"].(map[string]any)
@@ -74,7 +73,7 @@ func enrichSnapshotBucketAPExposure(snap asset.Snapshot) asset.Snapshot {
 func collectPublicAccessPointsByBucket(snap asset.Snapshot) map[string][]string {
 	byBucket := map[string][]string{}
 	for _, a := range snap.Assets {
-		if a.Type != kernel.AssetType(assetTypeAccessPoint) {
+		if !a.IsType(assetTypeAccessPoint) {
 			continue
 		}
 		storage, _ := a.Properties["storage"].(map[string]any)

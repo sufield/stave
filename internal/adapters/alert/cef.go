@@ -86,7 +86,7 @@ func (s *CEFFileSink) Close() error {
 func FormatCEF(a ports.WatchAlert) string {
 	sigID := string(a.Transition)
 	name := humanSummaryCEF(a)
-	sev := cefTransitionSeverity(a.Transition)
+	sev := a.Transition.CEFSeverity()
 
 	// Extension key=value pairs.
 	var ext []string
@@ -127,21 +127,6 @@ func humanSummaryCEF(a ports.WatchAlert) string {
 	}
 	return fmt.Sprintf("%s: %d violations (%d new)",
 		a.Transition, a.Violations, a.NewViolations)
-}
-
-func cefTransitionSeverity(t ports.WatchTransition) int {
-	switch t {
-	case ports.TransitionRegression:
-		return 8
-	case ports.TransitionDegradation:
-		return 6
-	case ports.TransitionError:
-		return 10
-	case ports.TransitionRecovery:
-		return 3
-	default:
-		return 1
-	}
 }
 
 // cefEscape escapes CEF values per ArcSight spec:

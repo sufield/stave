@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func testExport() *EvidenceExport {
@@ -28,7 +30,7 @@ func testExport() *EvidenceExport {
 				Controls: []ControlSummary{{ID: "CTL.B", FailCount: 1}},
 				Gaps: []GapExport{{
 					ControlID: "CTL.B", ResourceARN: "arn:aws:s3:::bucket",
-					Severity: "critical", Message: "Bucket not encrypted",
+					Severity: policy.SeverityCritical, Message: "Bucket not encrypted",
 				}},
 			},
 			{
@@ -38,7 +40,7 @@ func testExport() *EvidenceExport {
 		},
 		Evidence: []EvidenceRecordExport{{
 			ControlID: "CTL.B", ResourceARN: "arn:aws:s3:::bucket",
-			Verdict: "fail", Severity: "critical",
+			Verdict: "fail", Severity: policy.SeverityCritical,
 			ReasoningTrace: TraceExport{
 				InvariantEvaluated: "S3 buckets must be encrypted",
 				FindingMessage:     "Bucket not encrypted",

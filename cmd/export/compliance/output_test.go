@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evidence"
 )
 
@@ -148,11 +149,12 @@ func TestBuildExport_GapsPopulated(t *testing.T) {
 	}
 }
 
-func TestRecordIsBelowMinSeverity(t *testing.T) {
-	// "want" describes the original include semantics ("does this
-	// record meet the threshold?"); the helper now answers the
-	// inverse ("is this record below the threshold?"), so the test
-	// inverts each expectation.
+func TestSeverityFilter(t *testing.T) {
+	// Validates the typed-severity filter loop in buildExport: a
+	// record passes when its parsed severity is at or above the
+	// minimum threshold, with the "" / "all" sentinels disabling
+	// the filter entirely. Confirms the IsLowerThan ladder mirrors
+	// the prior recordIsBelowMinSeverity helper.
 	tests := []struct {
 		record, min string
 		wantInclude bool
@@ -166,9 +168,12 @@ func TestRecordIsBelowMinSeverity(t *testing.T) {
 		{"critical", "", true},
 	}
 	for _, tt := range tests {
-		below := recordIsBelowMinSeverity(tt.record, tt.min)
-		if got := !below; got != tt.wantInclude {
-			t.Errorf("recordIsBelowMinSeverity(%q, %q) = %v; want include=%v", tt.record, tt.min, below, tt.wantInclude)
+		recSev, _ := policy.ParseSeverity(tt.record)
+		threshold, _ := policy.ParseSeverity(tt.min)
+		includeAll := tt.min == "" || tt.min == "all"
+		include := includeAll || !recSev.IsLowerThan(threshold)
+		if include != tt.wantInclude {
+			t.Errorf("severity filter(%q, %q) = %v; want %v", tt.record, tt.min, include, tt.wantInclude)
 		}
 	}
 }

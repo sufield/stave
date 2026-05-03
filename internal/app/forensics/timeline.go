@@ -122,6 +122,13 @@ type ExposureWindow struct {
 	Status       string  `json:"status"` // ongoing | remediated
 }
 
+// DisplayStatus returns the window's status in uppercase for the
+// timeline report. Centralised so cmd-side renderers stop calling
+// strings.ToUpper inline at every site.
+func (w ExposureWindow) DisplayStatus() string {
+	return strings.ToUpper(w.Status)
+}
+
 // Timeline is the complete forensic reconstruction for an asset.
 type Timeline struct {
 	AssetID           string           `json:"asset_id"`

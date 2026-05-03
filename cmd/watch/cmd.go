@@ -21,14 +21,16 @@ import (
 	"github.com/sufield/stave/internal/adapters/alert"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/app/watch"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/ports"
 )
 
 // watchAssessment is the partial wire-shape of stave apply's JSON
-// output that the watch loop consumes. Promoted from the inline
-// anonymous struct so the per-signal IsOverdue predicate can live
-// on the type rather than as an open-coded string compare at the
-// call site.
+// output that the watch loop consumes. RiskSignals.Status
+// deserialises into the domain risk.ThresholdStatus so the
+// "OVERDUE" check routes through the typed predicate
+// (ThresholdStatus.IsOverdue) instead of repeating the magic
+// literal here.
 type watchAssessment struct {
 	Status  string `json:"status"`
 	Summary struct {
@@ -46,18 +48,11 @@ type watchAssessment struct {
 }
 
 // watchRiskSignal is the partial wire-shape of a single risk_signals
-// entry. The Status field carries the same vocabulary as
-// risk.ThresholdStatus (OVERDUE / DUE_NOW / UPCOMING); the watch
-// JSON decode goes through a string for forwards-compatibility
-// with new statuses, but IsOverdue centralises the comparison so
-// callers stop checking against the magic literal.
+// entry. Embeds risk.ThresholdStatus directly so the watch loop
+// asks the typed status its IsOverdue predicate without re-binding
+// the magic vocabulary.
 type watchRiskSignal struct {
-	Status string `json:"status"`
-}
-
-// IsOverdue reports whether the risk signal is in the OVERDUE bucket.
-func (rs *watchRiskSignal) IsOverdue() bool {
-	return rs != nil && rs.Status == "OVERDUE"
+	Status risk.ThresholdStatus `json:"status"`
 }
 
 type options struct {
@@ -213,9 +208,11 @@ func buildAssessFunc(binary string, opts *options) watch.AssessFunc {
 			return "", 0, 0, 0, nil, fmt.Errorf("parse assessment output: %w", jsonErr)
 		}
 
-		// Count SLA breaches.
+		// Count SLA breaches via the domain ThresholdStatus.IsOverdue
+		// predicate so the OVERDUE vocabulary stays on the typed
+		// status, not in the watch decode.
 		for i := range result.RiskSignals {
-			if result.RiskSignals[i].IsOverdue() {
+			if result.RiskSignals[i].Status.IsOverdue() {
 				slaBreaches++
 			}
 		}

@@ -147,18 +147,6 @@ func buildRules(findings []remediation.Finding) ([]sarifRule, map[kernel.Control
 	return rules, ruleIndex
 }
 
-// mapSeverityToSarif converts a policy severity to a SARIF level string.
-func mapSeverityToSarif(s policy.Severity) string {
-	switch s {
-	case policy.SeverityCritical, policy.SeverityHigh:
-		return "error"
-	case policy.SeverityMedium:
-		return "warning"
-	default:
-		return "note"
-	}
-}
-
 // buildResults converts enriched findings to SARIF result objects.
 func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID]int) []sarifResult {
 	results := make([]sarifResult, 0, len(findings))
@@ -168,7 +156,7 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 		result := sarifResult{
 			RuleID:    f.ControlID,
 			RuleIndex: ruleIndex[f.ControlID],
-			Level:     mapSeverityToSarif(f.ControlSeverity),
+			Level:     f.ControlSeverity.SARIFLevel(),
 			Message: sarifMessage{
 				Text: buildMessage(f),
 			},
