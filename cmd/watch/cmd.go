@@ -301,8 +301,17 @@ type manifestResolver struct {
 }
 
 func (r *manifestResolver) ResolveViolation(violationID string) (teamID, teamName, contact, slack, jira string) {
-	// violationID is "controlID:assetID"
-	controlID, assetID, _ := strings.Cut(violationID, ":")
+	// violationID is "controlID:assetID". A missing separator means
+	// the producer emitted a malformed ID — log it and skip ownership
+	// resolution rather than passing the whole string as the asset ID
+	// (which would mis-route alerts to whichever owner happens to
+	// match a sloppy prefix).
+	controlID, assetID, found := strings.Cut(violationID, ":")
+	if !found {
+		slog.Warn("watch: skipping ownership resolution for malformed violation_id (missing ':' separator)",
+			"violation_id", violationID)
+		return "", "", "", "", ""
+	}
 	owner := r.manifest.ResolveOwner(nil, assetID, controlID)
 	team := r.manifest.TeamByID(owner.TeamID)
 	if team != nil {

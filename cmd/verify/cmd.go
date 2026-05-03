@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	av "github.com/sufield/stave/internal/app/archiveverify"
 	"github.com/sufield/stave/internal/cli/ui"
 )
@@ -114,27 +114,22 @@ func runVerify(stdout io.Writer, opts *options) error {
 		return fmt.Errorf("verify archive: %w", verifyErr)
 	}
 
-	w := stdout
-	if opts.OutFile != "" {
-		f, fErr := os.Create(opts.OutFile)
-		if fErr != nil {
-			return fmt.Errorf("create output file: %w", fErr)
+	if writeErr := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
+		switch opts.Format {
+		case "json":
+			enc := json.NewEncoder(w)
+			enc.SetIndent("", "  ")
+			if encErr := enc.Encode(attestation); encErr != nil {
+				return fmt.Errorf("encode json: %w", encErr)
+			}
+		case "markdown":
+			av.WriteMarkdown(w, attestation)
+		default:
+			av.WriteTable(w, attestation)
 		}
-		defer f.Close()
-		w = f
-	}
-
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if encErr := enc.Encode(attestation); encErr != nil {
-			return fmt.Errorf("encode json: %w", encErr)
-		}
-	case "markdown":
-		av.WriteMarkdown(w, attestation)
-	default:
-		av.WriteTable(w, attestation)
+		return nil
+	}); writeErr != nil {
+		return writeErr
 	}
 
 	if attestation.Failed() {

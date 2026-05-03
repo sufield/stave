@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/app/exportchanges"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -68,15 +68,7 @@ func runChanges(stdout io.Writer, assessmentPath, outputPath string, minConfiden
 		GeneratedAt:   time.Now().UTC().Format(time.RFC3339),
 	})
 
-	w := stdout
-	if outputPath != "" {
-		f, fErr := os.Create(outputPath) //nolint:gosec // user-specified output path
-		if fErr != nil {
-			return fmt.Errorf("create output: %w", fErr)
-		}
-		defer f.Close()
-		w = f
-	}
-
-	return jsonutil.WriteIndented(w, report)
+	return cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
+		return jsonutil.WriteIndented(w, report)
+	})
 }

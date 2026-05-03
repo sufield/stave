@@ -15,6 +15,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	appatt "github.com/sufield/stave/internal/app/attest"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
@@ -211,19 +212,11 @@ func runSign(stdout io.Writer, snapshotPath, keyPath, keyID, outPath string) err
 		Assets:        snapshot.Assets,
 	}
 
-	w := stdout
-	if outPath != "" {
-		f, fErr := os.Create(outPath) //nolint:gosec // user-specified output
-		if fErr != nil {
-			return fmt.Errorf("create output: %w", fErr)
-		}
-		defer f.Close()
-		w = f
-	}
-
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(attested)
+	return cmdutil.WriteTo(stdout, outPath, func(w io.Writer) error {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(attested)
+	})
 }
 
 func runVerify(stdout io.Writer, snapshotPath, keyPath string) error {

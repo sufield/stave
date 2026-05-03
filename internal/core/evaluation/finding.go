@@ -967,12 +967,20 @@ func (f *Finding) SLAContribution() SLAStats {
 		return SLAStats{}
 	}
 	out := SLAStats{Detected: 1}
-	if f.IsOverdue() {
+	switch {
+	case f.IsOverdue():
 		out.Breached = 1
 		if h, ok := f.OverdueHours(); ok {
 			out.OverdueHours = h
 		}
-	} else {
+	case f.IsAnyBreach():
+		// Degraded-mode breach: the SLA flag is set but the
+		// overdue-hours field is nil (snapshot lacks lifecycle
+		// dates needed to compute remaining time). Counts as
+		// breached, NOT within-SLA — the previous else branch
+		// silently classified these as compliant.
+		out.Breached = 1
+	default:
 		out.WithinSLA = 1
 	}
 	return out
@@ -983,9 +991,15 @@ func (f *Finding) SLAContribution() SLAStats {
 // High → 1, Medium → 2, Low → 3, Info → 4. Encapsulates the
 // (SeverityCritical - ControlSeverity) arithmetic on the iota
 // ordering so renderers stop reaching for the constant directly.
+//
+// A nil receiver returns 0 — the highest-priority bucket — so a
+// degenerate / placeholder Finding sorts to the front rather than
+// being buried under real Critical findings (the previous behaviour
+// returned int(SeverityCritical) which is 5, sorting nil findings
+// last).
 func (f *Finding) SeveritySortRank() int {
 	if f == nil {
-		return int(policy.SeverityCritical)
+		return 0
 	}
 	return int(policy.SeverityCritical - f.ControlSeverity)
 }
@@ -1057,7 +1071,14 @@ func (f *Finding) MatchesOwner(allowed map[string]bool) bool {
 // IsChainMember reports whether the finding contributed to one or
 // more fired chains. Sorting and rendering paths use this to push
 // chain participants ahead of single-control violations.
+//
+// Nil-safe: required because HasEnrichedContext calls this on
+// possibly-nil receivers (the other predicates folded into the
+// disjunction already nil-guard themselves).
 func (f *Finding) IsChainMember() bool {
+	if f == nil {
+		return false
+	}
 	return len(f.ChainMembership) > 0
 }
 

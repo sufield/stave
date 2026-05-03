@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
@@ -194,25 +195,17 @@ func run(ctx context.Context, stdout, stderr io.Writer, opts *options) error {
 	}
 
 	// Output.
-	out := stdout
-	if opts.OutPath != "" {
-		f, createErr := os.Create(opts.OutPath)
-		if createErr != nil {
-			return fmt.Errorf("create output: %w", createErr)
+	return cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
+		switch opts.Format {
+		case "json":
+			enc := json.NewEncoder(out)
+			enc.SetIndent("", "  ")
+			return enc.Encode(report)
+		default:
+			appconsolidate.WriteTextReport(out, report, opts.FocusAccount)
 		}
-		defer f.Close()
-		out = f
-	}
-
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
-		return enc.Encode(report)
-	default:
-		appconsolidate.WriteTextReport(out, report, opts.FocusAccount)
 		return nil
-	}
+	})
 }
 
 func loadAccounts(opts *options) ([]appconsolidate.AccountInput, string, error) {

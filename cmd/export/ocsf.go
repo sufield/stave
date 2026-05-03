@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	appocsf "github.com/sufield/stave/internal/app/ocsf"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -57,22 +57,14 @@ func runOCSF(stdout io.Writer, assessmentPath, outputPath string) error {
 
 	events := appocsf.Export(assessment.Findings)
 
-	w := stdout
-	if outputPath != "" {
-		f, fErr := os.Create(outputPath) //nolint:gosec // user-specified output path
-		if fErr != nil {
-			return fmt.Errorf("create output: %w", fErr)
+	return cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
+		// NDJSON: one event per line.
+		enc := json.NewEncoder(w)
+		for i := range events {
+			if encErr := enc.Encode(&events[i]); encErr != nil {
+				return fmt.Errorf("encode event: %w", encErr)
+			}
 		}
-		defer f.Close()
-		w = f
-	}
-
-	// NDJSON: one event per line.
-	enc := json.NewEncoder(w)
-	for i := range events {
-		if encErr := enc.Encode(&events[i]); encErr != nil {
-			return fmt.Errorf("encode event: %w", encErr)
-		}
-	}
-	return nil
+		return nil
+	})
 }

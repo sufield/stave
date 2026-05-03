@@ -101,6 +101,17 @@ Exit Codes:
 }
 
 func runPlan(stdout io.Writer, opts *options) error {
+	// Cross-flag validation: --threshold and --compliance-profile must
+	// be set together. The previous (Threshold > 0 && Profile != "")
+	// guard silently ran the non-compliance path when only one flag
+	// was set, surprising users who expected an error.
+	if opts.ComplianceProfile != "" && opts.Threshold <= 0 {
+		return &ui.UserError{Err: errors.New("--compliance-profile requires --threshold > 0; both flags must be used together")}
+	}
+	if opts.Threshold > 0 && opts.ComplianceProfile == "" {
+		return &ui.UserError{Err: errors.New("--threshold requires --compliance-profile; both flags must be used together")}
+	}
+
 	// Load assessment.
 	data, err := fsutil.ReadFileLimited(opts.Assessment)
 	if err != nil {

@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	appcompare "github.com/sufield/stave/internal/app/compare"
 	"github.com/sufield/stave/internal/app/remediationimpact"
@@ -125,27 +125,19 @@ func runCompare(ctx context.Context, stdout io.Writer, opts *options) error {
 		Findings:     assessment.Findings,
 	})
 
-	w := stdout
-	if opts.OutFile != "" {
-		f, fErr := os.Create(opts.OutFile)
-		if fErr != nil {
-			return fmt.Errorf("create output: %w", fErr)
+	return cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
+		switch opts.Format {
+		case "json":
+			enc := json.NewEncoder(w)
+			enc.SetIndent("", "  ")
+			return enc.Encode(result)
+		case "markdown":
+			appcompare.WriteMarkdown(w, result)
+		default:
+			appcompare.WriteTable(w, result)
 		}
-		defer f.Close()
-		w = f
-	}
-
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(result)
-	case "markdown":
-		appcompare.WriteMarkdown(w, result)
-	default:
-		appcompare.WriteTable(w, result)
-	}
-	return nil
+		return nil
+	})
 }
 
 func runRemediationImpact(ctx context.Context, stdout io.Writer, opts *options) error {
@@ -170,17 +162,9 @@ func runRemediationImpact(ctx context.Context, stdout io.Writer, opts *options) 
 		After:  after,
 	})
 
-	w := stdout
-	if opts.OutFile != "" {
-		f, fErr := os.Create(opts.OutFile)
-		if fErr != nil {
-			return fmt.Errorf("create output: %w", fErr)
-		}
-		defer f.Close()
-		w = f
-	}
-
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(result)
+	return cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(result)
+	})
 }

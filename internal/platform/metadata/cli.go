@@ -1,10 +1,10 @@
 package metadata
 
 import (
-	"net/url"
 	"strings"
 
 	"github.com/sufield/stave/internal/env"
+	"github.com/sufield/stave/internal/platform/netutil"
 )
 
 // CLI metadata constants.
@@ -36,17 +36,17 @@ func IssuesRef() string {
 // one is later added — keeping the env-resolution policy
 // centralised in the env package.
 //
-// Topics are PathEscaped before being concatenated into the fragment
-// so a topic that happens to contain a space (e.g. "stave docs
-// search no controls found") produces a valid URL — the previous
-// raw concatenation produced URLs like "...#no controls found"
-// which most browsers reject.
+// Topics are escaped via netutil.EscapeFragment so "/" is preserved
+// (hierarchical topic IDs like "guides/getting-started" stay
+// hierarchical) while spaces and other unsafe fragment characters
+// are encoded. Future cmd-side helpers (JiraRef, TelemetryRef) can
+// reuse the same fragment-safe escape rather than re-deriving it.
 func DocsRef(topic string) string {
 	if topic == "" {
 		topic = "troubleshooting"
 	}
 	if base := strings.TrimSpace(env.DocsURL.Value()); base != "" {
-		return base + "#" + url.PathEscape(topic)
+		return base + "#" + netutil.EscapeFragment(topic)
 	}
 	return "run 'stave docs search " + topic + "'"
 }

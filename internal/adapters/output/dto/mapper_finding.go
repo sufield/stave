@@ -183,7 +183,13 @@ func buildRemediationContext(f *remediation.Finding) *RemediationContextDTO {
 }
 
 func fromFindings(fs []remediation.Finding) []FindingDTO {
-	if fs != nil && len(fs) == 0 {
+	// Always return a non-nil slice. Both nil input and empty input
+	// must serialise as `"findings": []` rather than `"findings":
+	// null` so JSON consumers (dashboards, dashboards-of-dashboards,
+	// jq pipelines) can iterate without a separate null-check. The
+	// previous (nil && len==0) guard treated the two cases
+	// asymmetrically.
+	if len(fs) == 0 {
 		return []FindingDTO{}
 	}
 	return mapSlice(fs, func(f remediation.Finding) FindingDTO { return FromFinding(&f) })

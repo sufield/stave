@@ -21,11 +21,26 @@ func WithResolver(ctx context.Context, eval *appconfig.GovernanceResolver) conte
 
 // ResolverFromCmd retrieves the project config resolver from the command's context.
 // Returns nil if the resolver was not set (e.g., for tolerant commands like init/help).
+//
+// A wrong-type value in the context slot indicates a bootstrap bug
+// (someone stored the wrong concrete type under resolverKey) and is
+// logged at WARN — silently dropping it would mask the
+// misconfiguration. Tolerant commands proceed with nil; strict
+// commands surface the missing-resolver error themselves.
 func ResolverFromCmd(cmd *cobra.Command) *appconfig.GovernanceResolver {
 	if cmd == nil {
 		return nil
 	}
-	eval, _ := cmd.Context().Value(resolverKey{}).(*appconfig.GovernanceResolver)
+	raw := cmd.Context().Value(resolverKey{})
+	if raw == nil {
+		return nil
+	}
+	eval, ok := raw.(*appconfig.GovernanceResolver)
+	if !ok {
+		slog.Warn("cmdctx: resolverKey context value is not *appconfig.GovernanceResolver — bootstrap bug",
+			"actual_type", "non-resolver value")
+		return nil
+	}
 	return eval
 }
 

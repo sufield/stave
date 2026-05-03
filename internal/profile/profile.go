@@ -5,6 +5,7 @@
 package profile
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -239,15 +240,27 @@ func (r *Report) FilterUnacknowledgedCompound(validAcks map[string]struct{}) {
 // single contributing control's severity, which is the entire point
 // of "compound risk"); they fold into FailCounts and force Pass=false.
 func (r *Report) Recount() {
+	// Rebuild Counts in lockstep with FailCounts. The previous shape
+	// only refreshed FailCounts, leaving Counts pinned to whatever
+	// snapshot the original Evaluate produced — exception applies and
+	// other Recount callers were silently working off stale severity
+	// totals.
+	r.Counts = make(map[policy.Severity]int)
 	r.FailCounts = make(map[policy.Severity]int)
 	r.Pass = true
 	for i := range r.Results {
+		r.Counts[r.Results[i].Severity]++
 		if !r.Results[i].Pass {
 			r.FailCounts[r.Results[i].Severity]++
 			r.Pass = false
 		}
 	}
 	for i := range r.CompoundFindings {
+		// Compound findings contribute to both views: they are
+		// failures (FailCounts) and they exist in the report
+		// (Counts), so a downstream summary that reads Counts to
+		// "size" the report sees them.
+		r.Counts[r.CompoundFindings[i].Severity]++
 		r.FailCounts[r.CompoundFindings[i].Severity]++
 	}
 	if len(r.CompoundFindings) > 0 {
@@ -302,7 +315,14 @@ func (a AcknowledgedEntry) ReasonDetail() string {
 // When p.Controls is empty the profile discovers its controls from the
 // registries using each control's ComplianceProfiles() metadata — no
 // hardcoded list required.
-func (p *Profile) Evaluate(snap asset.Snapshot, registries ...*compliance.ControlCatalog) (Report, error) {
+//
+// ctx threads cancellation through control evaluation; a cancelled
+// context returns early so callers (CLI, library) can abort a long
+// run without waiting for every control to finish.
+func (p *Profile) Evaluate(ctx context.Context, snap asset.Snapshot, registries ...*compliance.ControlCatalog) (Report, error) {
+	if err := ctx.Err(); err != nil {
+		return Report{}, fmt.Errorf("profile %s: %w", p.ID, err)
+	}
 	controls := p.Controls
 	if len(controls) == 0 {
 		controls = discoverControls(p.ID.String(), registries)

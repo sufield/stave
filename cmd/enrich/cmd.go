@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	appenrich "github.com/sufield/stave/internal/app/enrich"
 	"github.com/sufield/stave/internal/app/inventory"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -105,18 +106,11 @@ func run(stdout io.Writer, opts *options) error {
 		MinCVSS:   opts.MinCVSS,
 	})
 
-	// Write output.
-	out := stdout
-	if opts.OutPath != "" {
-		f, createErr := os.Create(opts.OutPath)
-		if createErr != nil {
-			return fmt.Errorf("create output: %w", createErr)
-		}
-		defer f.Close()
-		out = f
-	}
-
-	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
-	return enc.Encode(result)
+	// Write output. cmdutil.WriteTo handles os.Create + Close-error
+	// propagation in one place — see cmd/cmdutil/output.go.
+	return cmdutil.WriteTo(stdout, opts.OutPath, func(w io.Writer) error {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(result)
+	})
 }

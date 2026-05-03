@@ -7,11 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/adapters/observations"
 	appinv "github.com/sufield/stave/internal/app/inventory"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -69,17 +69,13 @@ func runInventory(stdout io.Writer, opts *options) error {
 		Assets:      versions,
 	}
 
-	w := stdout
-	if opts.OutFile != "" {
-		f, fErr := os.Create(opts.OutFile)
-		if fErr != nil {
-			return fmt.Errorf("create output: %w", fErr)
-		}
-		defer f.Close()
-		w = f
-	}
+	return cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
+		return writeInventory(w, opts.Format, versions, report)
+	})
+}
 
-	switch opts.Format {
+func writeInventory(w io.Writer, format string, versions []appinv.AssetVersion, report appinv.Report) error {
+	switch format {
 	case "csv":
 		// csv.Writer buffers internally; a per-row Write returns the
 		// first deferred error encountered, but subsequent calls will

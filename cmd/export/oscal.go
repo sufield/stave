@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	apposcal "github.com/sufield/stave/internal/app/oscal"
 	"github.com/sufield/stave/internal/app/oscalpoam"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -82,17 +82,9 @@ func runOSCAL(stdout io.Writer, assessmentPath, outputPath, docType, systemUUID 
 		result = apposcal.Export(assessment.Findings, now)
 	}
 
-	w := stdout
-	if outputPath != "" {
-		f, fErr := os.Create(outputPath) //nolint:gosec // user-specified output
-		if fErr != nil {
-			return fmt.Errorf("create output: %w", fErr)
-		}
-		defer f.Close()
-		w = f
-	}
-
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(result)
+	return cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(result)
+	})
 }

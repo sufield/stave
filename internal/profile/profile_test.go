@@ -88,7 +88,7 @@ func TestHIPAAProfile_Evaluate(t *testing.T) {
 		t.Fatalf("load hipaa: %v", err)
 	}
 
-	report, err := p.Evaluate(fixtureSnapshot(), allRegistries()...)
+	report, err := p.TestEvaluate(fixtureSnapshot(), allRegistries()...)
 	if err != nil {
 		t.Fatalf("evaluate: %v", err)
 	}
@@ -128,7 +128,7 @@ func TestHIPAAProfile_Evaluate(t *testing.T) {
 
 func TestHIPAAProfile_SeverityCounts(t *testing.T) {
 	p, _ := LoadProfile("hipaa")
-	report, err := p.Evaluate(fixtureSnapshot(), allRegistries()...)
+	report, err := p.TestEvaluate(fixtureSnapshot(), allRegistries()...)
 	if err != nil {
 		t.Fatalf("evaluate: %v", err)
 	}
@@ -153,7 +153,7 @@ func TestHIPAAProfile_SeverityCounts(t *testing.T) {
 
 func TestHIPAAProfile_ComplianceRefs(t *testing.T) {
 	p, _ := LoadProfile("hipaa")
-	report, err := p.Evaluate(fixtureSnapshot(), allRegistries()...)
+	report, err := p.TestEvaluate(fixtureSnapshot(), allRegistries()...)
 	if err != nil {
 		t.Fatalf("evaluate: %v", err)
 	}
@@ -187,7 +187,7 @@ func TestHIPAAProfile_ComplianceRefs(t *testing.T) {
 
 func TestHIPAAProfile_ResultsSortedBySeverity(t *testing.T) {
 	p, _ := LoadProfile("hipaa")
-	report, err := p.Evaluate(fixtureSnapshot(), allRegistries()...)
+	report, err := p.TestEvaluate(fixtureSnapshot(), allRegistries()...)
 	if err != nil {
 		t.Fatalf("evaluate: %v", err)
 	}

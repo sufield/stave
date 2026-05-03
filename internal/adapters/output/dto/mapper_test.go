@@ -230,9 +230,11 @@ func TestFromFinding_MinimalFields(t *testing.T) {
 }
 
 func TestFromFindings_NilInput(t *testing.T) {
+	// Both nil and empty must produce a non-nil empty slice so the
+	// JSON shape stays `"findings": []` regardless of input.
 	result := fromFindings(nil)
-	if result != nil {
-		t.Errorf("fromFindings(nil) = %v, want nil", result)
+	if result == nil || len(result) != 0 {
+		t.Errorf("fromFindings(nil) = %v, want empty non-nil slice", result)
 	}
 }
 

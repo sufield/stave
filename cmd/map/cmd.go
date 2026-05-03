@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcoverage "github.com/sufield/stave/internal/app/coverage"
 	"github.com/sufield/stave/internal/core/report"
@@ -88,33 +88,24 @@ func runMap(ctx context.Context, stdout io.Writer, opts *options) error {
 
 	coverageReport := appcoverage.Build(input)
 
-	out := stdout
-	if opts.OutPath != "" {
-		outFile, createErr := os.Create(opts.OutPath)
-		if createErr != nil {
-			return fmt.Errorf("create output: %w", createErr)
+	return cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
+		switch opts.Format {
+		case "json":
+			enc := json.NewEncoder(out)
+			enc.SetIndent("", "  ")
+			return enc.Encode(coverageReport)
+		case "navigator":
+			layer := appcoverage.NavigatorLayer(coverageReport)
+			enc := json.NewEncoder(out)
+			enc.SetIndent("", "  ")
+			return enc.Encode(layer)
+		case "markdown":
+			writeMarkdown(out, coverageReport)
+		default:
+			writeTable(out, coverageReport)
 		}
-		defer outFile.Close()
-		out = outFile
-	}
-
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
-		return enc.Encode(coverageReport)
-	case "navigator":
-		layer := appcoverage.NavigatorLayer(coverageReport)
-		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
-		return enc.Encode(layer)
-	case "markdown":
-		writeMarkdown(out, coverageReport)
 		return nil
-	default:
-		writeTable(out, coverageReport)
-		return nil
-	}
+	})
 }
 
 func writeTable(w io.Writer, r *appcoverage.CoverageReport) {

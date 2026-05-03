@@ -2,6 +2,7 @@
 package compliance
 
 import (
+	"log/slog"
 	"strings"
 	"time"
 
@@ -267,17 +268,22 @@ func buildExport(
 			re.Controls = append(re.Controls, *cs)
 		}
 
-		// Build gaps from failing/incomplete evidence. Severity parse
-		// errors fall back to SeverityNone — the export still emits
-		// the gap, just without a typed severity tier.
+		// Build gaps from failing/incomplete evidence. Routes
+		// severity parsing through policy.ParseSeverityLax so the
+		// "unrecognised severity → SeverityNone + warn" policy lives
+		// on the type and the export adapter only declares its
+		// row-level context.
 		for _, rec := range ra.Evidence {
 			if rec.IsGap() {
-				sev, _ := policy.ParseSeverity(rec.Severity)
 				re.Gaps = append(re.Gaps, GapExport{
 					ControlID:   rec.ControlID,
 					ResourceARN: rec.ResourceARN,
-					Severity:    sev,
-					Message:     rec.ReasoningTrace.FindingMessage,
+					Severity: policy.ParseSeverityLax(rec.Severity, slog.Default(), map[string]string{
+						"control_id":   rec.ControlID,
+						"resource_arn": rec.ResourceARN,
+						"site":         "compliance export gap",
+					}),
+					Message: rec.ReasoningTrace.FindingMessage,
 				})
 			}
 		}
@@ -291,16 +297,33 @@ func buildExport(
 	}
 
 	// Parse the minimum-severity threshold once; sentinels (""/"all")
-	// resolve to SeverityNone so every record passes the filter.
-	threshold, _ := policy.ParseSeverity(minSeverity)
+	// disable the filter entirely. A non-sentinel that fails to parse
+	// is a CLI input error: log loud, fall through to includeAll so
+	// the export does not silently drop every record.
 	includeAll := minSeverity == "" || minSeverity == "all"
+	var threshold policy.Severity
+	if !includeAll {
+		t, thErr := policy.ParseSeverity(minSeverity)
+		if thErr != nil {
+			slog.Warn("compliance export: unrecognised --min-severity, treating as 'all'",
+				"min_severity", minSeverity,
+				"error", thErr)
+			includeAll = true
+		} else {
+			threshold = t
+		}
+	}
 
 	// Build filtered evidence records
 	for _, rec := range pkg.Records {
 		if !includePasses && rec.IsPass() {
 			continue
 		}
-		recSev, _ := policy.ParseSeverity(rec.Severity)
+		recSev := policy.ParseSeverityLax(rec.Severity, slog.Default(), map[string]string{
+			"control_id":   rec.ControlID,
+			"resource_arn": rec.ResourceARN,
+			"site":         "compliance export evidence record",
+		})
 		if !includeAll && recSev.IsLowerThan(threshold) {
 			continue
 		}

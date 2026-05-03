@@ -227,8 +227,11 @@ func TestDeduplicateEdges_AccumulatesChainSeverities(t *testing.T) {
 	}
 }
 
-func TestDeduplicateEdges_SingleChainSeverityOmitsPlural(t *testing.T) {
+func TestDeduplicateEdges_SingleChainSeverityKeepsPlural(t *testing.T) {
 	t.Parallel()
+	// finalizeMultiValueProps now emits the plural key regardless of
+	// cardinality so consumers can reliably detect deduplication
+	// occurred — distinguishing "one value seen" from "no dedup".
 	edges := []Edge{
 		{From: "f1", To: "c1", Type: "VIOLATES", Properties: map[string]any{"chain_severity": "critical"}},
 		{From: "f1", To: "c1", Type: "VIOLATES", Properties: map[string]any{"chain_severity": "critical"}},
@@ -237,7 +240,12 @@ func TestDeduplicateEdges_SingleChainSeverityOmitsPlural(t *testing.T) {
 	if len(out) != 1 {
 		t.Fatalf("expected 1 deduplicated edge, got %d", len(out))
 	}
-	if _, present := out[0].Properties["chain_severities"]; present {
-		t.Error("chain_severities must be absent when only one distinct value seen")
+	got, present := out[0].Properties["chain_severities"]
+	if !present {
+		t.Fatal("chain_severities must be present after dedup, even with one distinct value")
+	}
+	values, ok := got.([]string)
+	if !ok || len(values) != 1 || values[0] != "critical" {
+		t.Errorf("chain_severities = %v (%T), want [critical]", got, got)
 	}
 }

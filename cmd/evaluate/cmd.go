@@ -5,6 +5,7 @@
 package evaluate
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -64,7 +65,7 @@ Exit Codes:
 				return fmt.Errorf("open output: %w", err)
 			}
 			defer closer(&runErr)
-			return run(w, opts)
+			return run(cmd.Context(), w, opts)
 		},
 	}
 
@@ -79,7 +80,7 @@ Exit Codes:
 	return cmd
 }
 
-func run(w io.Writer, opts *options) error {
+func run(ctx context.Context, w io.Writer, opts *options) error {
 	// Load snapshot. A missing or malformed snapshot file is a user
 	// input failure, not an internal error — wrap as ui.UserError so
 	// the global ExitCode classifier maps it to ExitInputError (=2).
@@ -99,8 +100,9 @@ func run(w io.Writer, opts *options) error {
 		return &ui.UserError{Err: fmt.Errorf("load profile: %w", err)}
 	}
 
-	// Evaluate.
-	report, err := prof.Evaluate(snap, allRegistries()...)
+	// Evaluate. ctx threads cancellation through control evaluation
+	// so a SIGINT during a long run aborts cleanly.
+	report, err := prof.Evaluate(ctx, snap, allRegistries()...)
 	if err != nil {
 		return fmt.Errorf("evaluate: %w", err)
 	}

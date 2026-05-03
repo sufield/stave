@@ -515,8 +515,19 @@ func resolveStorePath() (string, error) {
 		return cleaned, nil
 	}
 
-	if cfgDir, err := os.UserConfigDir(); err == nil && cfgDir != "" {
+	cfgDir, cfgErr := os.UserConfigDir()
+	if cfgErr == nil && cfgDir != "" {
 		return filepath.Join(cfgDir, configDirName, contextsFileName), nil
+	}
+	if cfgErr != nil {
+		// Log the platform-reported reason before falling through
+		// to UserHomeDir — silently swallowing it has masked WSL /
+		// container environments where XDG_CONFIG_HOME is missing
+		// AND HOME is set to a path the platform considers invalid,
+		// producing confusing "config not found" errors with no
+		// clue which lookup actually failed.
+		slog.Warn("config: os.UserConfigDir failed; falling back to UserHomeDir",
+			"error", cfgErr)
 	}
 
 	home, err := os.UserHomeDir()

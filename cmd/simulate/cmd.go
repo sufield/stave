@@ -7,11 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appsim "github.com/sufield/stave/internal/app/simulate"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -94,33 +94,25 @@ func runSimulate(stdout io.Writer, opts *options) error {
 		CurrentScore:  70, // approximate — would need score computation
 	})
 
-	w := stdout
-	if opts.OutFile != "" {
-		f, fErr := os.Create(opts.OutFile)
-		if fErr != nil {
-			return fmt.Errorf("create output: %w", fErr)
-		}
-		defer f.Close()
-		w = f
-	}
-
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(result)
-	default:
-		fmt.Fprintf(w, "REMEDIATION SIMULATION\nFixing: %s\n\n", strings.Join(opts.Fix, ", "))
-		fmt.Fprintf(w, "POSTURE SCORE\n  Current:    %.1f\n  Simulated:  %.1f  (%+.1f)\n\n",
-			result.ScoreCurrent, result.ScoreSimulated, result.ScoreDelta)
-		if len(result.ChainsDeactivated) > 0 {
-			fmt.Fprintln(w, "CHAINS DEACTIVATED")
-			for _, c := range result.ChainsDeactivated {
-				fmt.Fprintf(w, "  %-40s %s → %s\n", c.ChainID, c.DisplaySeverity(), c.Status)
+	return cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
+		switch opts.Format {
+		case "json":
+			enc := json.NewEncoder(w)
+			enc.SetIndent("", "  ")
+			return enc.Encode(result)
+		default:
+			fmt.Fprintf(w, "REMEDIATION SIMULATION\nFixing: %s\n\n", strings.Join(opts.Fix, ", "))
+			fmt.Fprintf(w, "POSTURE SCORE\n  Current:    %.1f\n  Simulated:  %.1f  (%+.1f)\n\n",
+				result.ScoreCurrent, result.ScoreSimulated, result.ScoreDelta)
+			if len(result.ChainsDeactivated) > 0 {
+				fmt.Fprintln(w, "CHAINS DEACTIVATED")
+				for _, c := range result.ChainsDeactivated {
+					fmt.Fprintf(w, "  %-40s %s → %s\n", c.ChainID, c.DisplaySeverity(), c.Status)
+				}
+				fmt.Fprintln(w)
 			}
-			fmt.Fprintln(w)
+			fmt.Fprintf(w, "FINDINGS ELIMINATED: %d\n", result.FindingsRemoved)
 		}
-		fmt.Fprintf(w, "FINDINGS ELIMINATED: %d\n", result.FindingsRemoved)
 		return nil
-	}
+	})
 }

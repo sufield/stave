@@ -20,16 +20,17 @@ import (
 	"sync/atomic"
 )
 
-// bytesPerMB is the bit-shift used to convert bytes ↔ megabytes
-// (2^20 = 1,048,576). Centralised so error messages and limit
-// calculations both refer to the same constant rather than each
-// open-coding ">> 20" or "<< 20".
-const bytesPerMB = 20
+// mbShift is the log2(bytes-per-megabyte) bit-shift exponent
+// (2^20 = 1 MiB). Used as `limit << mbShift` to convert MB → bytes
+// and `bytes >> mbShift` for the reverse — NOT a raw byte count.
+// Centralised so error messages and limit calculations refer to
+// the same exponent rather than each open-coding `>> 20` / `<< 20`.
+const mbShift = 20
 
 // DefaultMaxInputFileBytes is the conservative default safety limit for input
 // files (256 MB). Override via SetMaxInputFileBytes for environments that
 // process larger snapshots (e.g., enterprise CI with thousands of assets).
-const DefaultMaxInputFileBytes int64 = 256 << bytesPerMB
+const DefaultMaxInputFileBytes int64 = 256 << mbShift
 
 // maxInputFileBytes is the active safety limit. Stored atomically so
 // the bootstrap-time SetMaxInputFileBytes write does not race with
@@ -98,7 +99,7 @@ func ReadFileLimited(path string) ([]byte, error) {
 				"to prevent resource exhaustion, Stave does not process files larger than this — "+
 				"please check if this file was generated correctly",
 			ErrFileTooLarge,
-			filepath.Base(path), limit>>bytesPerMB)
+			filepath.Base(path), limit>>mbShift)
 	}
 	if probeErr != nil && !errors.Is(probeErr, io.EOF) {
 		return nil, probeErr
@@ -147,7 +148,7 @@ func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {
 				"to prevent resource exhaustion, Stave does not process input larger than this — "+
 				"please check if this input was generated correctly",
 			ErrFileTooLarge,
-			sourceName, maxInputFileBytes.Load()>>bytesPerMB)
+			sourceName, maxInputFileBytes.Load()>>mbShift)
 	}
 	if probeErr != nil && !errors.Is(probeErr, io.EOF) {
 		return nil, fmt.Errorf("read %s: %w", sourceName, probeErr)

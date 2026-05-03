@@ -43,7 +43,11 @@ func (Tracer) BuildTrace(
 	}
 	tr, err := BuildTrace(control, a, snap)
 	if tr != nil {
-		return tr, tr.Result, nil
+		// Propagate err alongside the partial trace — BuildTrace can
+		// return a populated trace AND an evaluation error (e.g. a
+		// soft-fail clause); swallowing it hides the failure from
+		// callers that decide whether to gate on errors.
+		return tr, tr.Result, err
 	}
 	if err != nil {
 		return &TraceResult{Error: err.Error()}, false, err

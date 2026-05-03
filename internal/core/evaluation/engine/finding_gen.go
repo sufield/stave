@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"errors"
 	"slices"
 	"time"
 
@@ -27,6 +28,13 @@ type DurationFindingInput struct {
 // violation is still emitted, but the caller is expected to surface
 // the error via its own logger — core/ stays free of side effects.
 func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error) {
+	if in.ExposureLifecycle == nil {
+		// Required input. Returning early keeps the engine from
+		// dereferencing a nil pointer in the duration / asset path
+		// — a malformed call site (test harness, partial result
+		// reconstruction) should fail loud rather than panic.
+		return nil, errors.New("CreateDurationFinding: ExposureLifecycle is required")
+	}
 	a := in.ExposureLifecycle.Asset()
 	duration, durationErr := in.ExposureLifecycle.ExposureDuration(in.Now)
 	if durationErr != nil {

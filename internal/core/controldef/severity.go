@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 )
 
@@ -223,6 +224,28 @@ func ParseSeverity(s string) (Severity, error) {
 	default:
 		return SeverityNone, fmt.Errorf("invalid severity level %q", s)
 	}
+}
+
+// ParseSeverityLax wraps ParseSeverity for boundary code (export
+// adapters, evidence-record loaders) that needs to keep going on
+// an unrecognised severity rather than failing the run. On error
+// it returns SeverityNone and logs at WARN with the supplied
+// context map (control_id, resource_arn, etc.) appended to the
+// log key/value pairs so operators see which row produced the
+// malformed severity.
+//
+// Logger may be nil — in that case the warn is silently dropped,
+// which matches the prior cmd-side fallback behaviour.
+func ParseSeverityLax(val string, logger *slog.Logger, context map[string]string) Severity {
+	sev, err := ParseSeverity(val)
+	if err != nil && logger != nil {
+		args := []any{"severity", val, "error", err}
+		for k, v := range context {
+			args = append(args, k, v)
+		}
+		logger.Warn("unrecognised severity; defaulting to none", args...)
+	}
+	return sev
 }
 
 // --- Serialization Primitives ---

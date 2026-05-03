@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appscore "github.com/sufield/stave/internal/app/score"
@@ -140,26 +141,18 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 	}
 
 	// Write output.
-	out := w
-	if opts.Out != "" {
-		f, fileErr := os.Create(opts.Out)
-		if fileErr != nil {
-			return fmt.Errorf("create output file: %w", fileErr)
+	return cmdutil.WriteTo(w, opts.Out, func(out io.Writer) error {
+		switch opts.Format {
+		case "json":
+			return renderTrendJSON(out, &report)
+		case "openmetrics":
+			return renderTrendOpenMetrics(out, &report)
+		case "executive-summary":
+			return renderExecutiveSummary(out, &report)
+		default:
+			return renderTrendTable(out, &report)
 		}
-		defer f.Close()
-		out = f
-	}
-
-	switch opts.Format {
-	case "json":
-		return renderTrendJSON(out, &report)
-	case "openmetrics":
-		return renderTrendOpenMetrics(out, &report)
-	case "executive-summary":
-		return renderExecutiveSummary(out, &report)
-	default:
-		return renderTrendTable(out, &report)
-	}
+	})
 }
 
 func computePostureScore(a *report.Assessment, slaTrend []slaTrendMetric, chainDefs int, maxChainWeight float64) appscore.Result {

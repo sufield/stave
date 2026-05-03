@@ -239,10 +239,15 @@ func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucke
 		return nil
 	}
 
-	// Build result lookup.
+	// Build result lookup. originallyPassing freezes the pre-exception
+	// pass state so subsequent exceptions on the same control are not
+	// silently skipped after the first one acknowledges the finding
+	// via MarkExempt (which flips Result.Pass to true).
 	resultMap := make(map[kernel.ControlID]*profile.Result)
+	originallyPassing := make(map[kernel.ControlID]bool)
 	for i := range results {
 		resultMap[results[i].ControlID] = &results[i]
+		originallyPassing[results[i].ControlID] = results[i].Pass
 	}
 
 	var acknowledged []AcknowledgedResult
@@ -254,8 +259,11 @@ func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucke
 		}
 
 		r, exists := resultMap[exc.ControlID]
-		if !exists || r.Pass {
-			continue // not evaluated or already passing
+		if !exists {
+			continue // control not evaluated in this run
+		}
+		if originallyPassing[exc.ControlID] {
+			continue // control passed evaluation; nothing to acknowledge
 		}
 
 		// Check compensating controls. validateException already

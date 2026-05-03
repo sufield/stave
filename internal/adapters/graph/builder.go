@@ -630,13 +630,12 @@ func finalizeMultiValueProps(edges []Edge) {
 				values = append(values, v)
 			}
 			slices.Sort(values)
-			if len(values) <= 1 {
-				// A single value adds no information beyond the
-				// singular key — drop the plural alias to keep
-				// outputs minimal for the common case.
-				delete(props, pluralKey)
-				continue
-			}
+			// Always emit the plural key, even for single-element
+			// slices. The previous shape deleted it for len ≤ 1, so
+			// downstream consumers had no reliable way to tell
+			// "deduplicated to one value" from "no deduplication
+			// happened" — the plural alias is the dedup signal, and
+			// JSON consumers expect a stable shape across runs.
 			props[pluralKey] = values
 		}
 	}

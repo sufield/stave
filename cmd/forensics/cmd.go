@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appbisect "github.com/sufield/stave/internal/app/bisect"
 	appforensics "github.com/sufield/stave/internal/app/forensics"
@@ -110,25 +110,17 @@ func runForensics(ctx context.Context, stdout io.Writer, opts *options) error {
 		return tlErr
 	}
 
-	out := stdout
-	if opts.OutPath != "" {
-		outFile, createErr := os.Create(opts.OutPath)
-		if createErr != nil {
-			return fmt.Errorf("create output: %w", createErr)
+	return cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
+		switch opts.Format {
+		case "json":
+			enc := json.NewEncoder(out)
+			enc.SetIndent("", "  ")
+			return enc.Encode(tl)
+		default:
+			writeTableTimeline(out, tl)
 		}
-		defer outFile.Close()
-		out = outFile
-	}
-
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
-		return enc.Encode(tl)
-	default:
-		writeTableTimeline(out, tl)
 		return nil
-	}
+	})
 }
 
 func writeTableTimeline(w io.Writer, tl *appforensics.Timeline) {

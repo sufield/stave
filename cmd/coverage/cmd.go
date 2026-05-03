@@ -7,11 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/app/fieldcov"
@@ -107,27 +107,22 @@ func runCoverage(ctx context.Context, stdout io.Writer, opts *options, newCtlRep
 		Snapshots:    snapshots,
 	})
 
-	w := stdout
-	if opts.OutFile != "" {
-		f, fErr := os.Create(opts.OutFile)
-		if fErr != nil {
-			return fmt.Errorf("create output file: %w", fErr)
+	if writeErr := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
+		switch opts.Format {
+		case "table":
+			fieldcov.WriteTable(w, report)
+		case "json":
+			enc := json.NewEncoder(w)
+			enc.SetIndent("", "  ")
+			if encErr := enc.Encode(report); encErr != nil {
+				return fmt.Errorf("encode json: %w", encErr)
+			}
+		default:
+			return &ui.UserError{Err: fmt.Errorf("unknown format %q (valid: table, json)", opts.Format)}
 		}
-		defer f.Close()
-		w = f
-	}
-
-	switch opts.Format {
-	case "table":
-		fieldcov.WriteTable(w, report)
-	case "json":
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if encErr := enc.Encode(report); encErr != nil {
-			return fmt.Errorf("encode json: %w", encErr)
-		}
-	default:
-		return &ui.UserError{Err: fmt.Errorf("unknown format %q (valid: table, json)", opts.Format)}
+		return nil
+	}); writeErr != nil {
+		return writeErr
 	}
 
 	if report.Summary.SilentRisk > 0 {

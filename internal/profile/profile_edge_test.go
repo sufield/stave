@@ -14,7 +14,7 @@ func TestSeverityOverrideAppliedInResults(t *testing.T) {
 		t.Fatalf("load hipaa: %v", err)
 	}
 
-	report, err := p.Evaluate(fixtureSnapshot(), allRegistries()...)
+	report, err := p.TestEvaluate(fixtureSnapshot(), allRegistries()...)
 	if err != nil {
 		t.Fatalf("evaluate: %v", err)
 	}
@@ -61,7 +61,7 @@ func TestProfileRationaleInResults(t *testing.T) {
 		t.Fatalf("load hipaa: %v", err)
 	}
 
-	report, err := p.Evaluate(fixtureSnapshot(), allRegistries()...)
+	report, err := p.TestEvaluate(fixtureSnapshot(), allRegistries()...)
 	if err != nil {
 		t.Fatalf("evaluate: %v", err)
 	}
@@ -101,7 +101,7 @@ func TestAllHIPAATaggedControlsAppearInResults(t *testing.T) {
 		t.Fatal("no controls tagged for hipaa")
 	}
 
-	report, err := p.Evaluate(fixtureSnapshot(), allRegistries()...)
+	report, err := p.TestEvaluate(fixtureSnapshot(), allRegistries()...)
 	if err != nil {
 		t.Fatalf("evaluate: %v", err)
 	}
@@ -129,7 +129,7 @@ func TestSeveritySortingWithOverrides(t *testing.T) {
 		t.Fatalf("load hipaa: %v", err)
 	}
 
-	report, err := p.Evaluate(fixtureSnapshot(), allRegistries()...)
+	report, err := p.TestEvaluate(fixtureSnapshot(), allRegistries()...)
 	if err != nil {
 		t.Fatalf("evaluate: %v", err)
 	}
@@ -173,7 +173,7 @@ func TestCompoundRulesExistInHIPAAProfile(t *testing.T) {
 		t.Fatalf("load hipaa: %v", err)
 	}
 
-	report, err := p.Evaluate(fixtureSnapshot(), allRegistries()...)
+	report, err := p.TestEvaluate(fixtureSnapshot(), allRegistries()...)
 	if err != nil {
 		t.Fatalf("evaluate: %v", err)
 	}
