@@ -277,6 +277,24 @@ func (a AcknowledgedEntry) StatusLabel() string {
 	return "INVALID"
 }
 
+// IsValid reports whether the acknowledgment is currently in force.
+// Mirrors policy.AcknowledgedFinding.IsValid so reporters branch on
+// the named predicate instead of reading the Valid field directly.
+func (a AcknowledgedEntry) IsValid() bool {
+	return a.Valid
+}
+
+// ReasonDetail returns the most-specific available reason text for an
+// invalid acknowledgment: InvalidDetail when populated, otherwise the
+// shorter InvalidReason classifier. Empty string when valid or no
+// reason was recorded. Mirrors policy.AcknowledgedFinding.ReasonDetail.
+func (a AcknowledgedEntry) ReasonDetail() string {
+	if a.InvalidDetail != "" {
+		return a.InvalidDetail
+	}
+	return a.InvalidReason
+}
+
 // Evaluate runs all profile invariants against the snapshot.
 // It validates for incompatible pairs, resolves invariants from registries,
 // applies severity overrides, and returns a sorted report.

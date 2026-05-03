@@ -273,6 +273,15 @@ func (e *Edge) IsTargets() bool {
 	return e != nil && e.Type == EdgeTypeTargets
 }
 
+// IsShortcut reports whether this export edge was materialised as an
+// algorithmic shortcut (Resource → Control "violates" edges synthesised
+// from finding chains) rather than coming from the original graph.
+// Replaces the bare e.Shortcut field probe in the GraphML exporter so
+// the answer lives on the type that owns the field.
+func (e *rdfEdge) IsShortcut() bool {
+	return e != nil && e.Shortcut
+}
+
 // PredicateIRI returns the RDF predicate IRI this edge maps to in
 // the JSON-LD / GraphML export, or ("", false) when the edge type is
 // not in the wireToPredicate vocabulary. Encapsulates the package-

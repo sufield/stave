@@ -17,10 +17,14 @@ type SLAConfig struct {
 	EscalationFactor float64
 }
 
-// AnnotateFindingSLA populates SLA fields on a single finding based
-// on the control-level deadline (if set) or the profile-level default.
-func AnnotateFindingSLA(f *Finding, ctl *policy.ControlDefinition, cfg *SLAConfig) {
-	if cfg == nil {
+// AnnotateSLA populates SLA fields on the finding based on the
+// control-level deadline (if set) or the profile-level default. The
+// computation lives on Finding because it both reads (severity, dwell)
+// and writes (SLABreached, SLAOverdueHours, SLAEscalatedSeverity) the
+// finding's own state — keeping the mutation on the receiver that owns
+// the fields.
+func (f *Finding) AnnotateSLA(ctl *policy.ControlDefinition, cfg *SLAConfig) {
+	if f == nil || cfg == nil {
 		return
 	}
 
@@ -70,28 +74,8 @@ func AnnotateFindingSLA(f *Finding, ctl *policy.ControlDefinition, cfg *SLAConfi
 	// preserves the "anything past deadline gets at least +1"
 	// behavior for the just-breached case (dwell ≈ 1.001×).
 	periodsOverdue := max(int(dwell/deadlineHours), 1)
-	escalated := escalateSeverity(f.ControlSeverity, periodsOverdue)
+	escalated := f.ControlSeverity.Bump(periodsOverdue)
 	if escalated != f.ControlSeverity {
 		f.SLAEscalatedSeverity = escalated
 	}
-}
-
-// escalateSeverity bumps severity by n tiers, capping at critical.
-func escalateSeverity(base policy.Severity, tiers int) policy.Severity {
-	order := []policy.Severity{policy.SeverityLow, policy.SeverityMedium, policy.SeverityHigh, policy.SeverityCritical}
-	idx := -1
-	for i, s := range order {
-		if s == base {
-			idx = i
-			break
-		}
-	}
-	if idx < 0 {
-		return base
-	}
-	target := idx + tiers
-	if target >= len(order) {
-		target = len(order) - 1
-	}
-	return order[target]
 }

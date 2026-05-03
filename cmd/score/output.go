@@ -67,15 +67,7 @@ func writeTable(w io.Writer, r appscore.Result) {
 			fmt.Fprintf(w, "  %s  %5.1f  %s\n",
 				tp.Timestamp.Format("2006-01-02"), tp.Score, bar)
 		}
-		first := r.Trend[0].Score
-		last := r.Trend[len(r.Trend)-1].Score
-		netChange := last - first
-		direction := "STABLE"
-		if netChange > 1 {
-			direction = "IMPROVING"
-		} else if netChange < -1 {
-			direction = "DECLINING"
-		}
+		direction, netChange := r.TrendDirection()
 		fmt.Fprintf(w, "\nNet change: %+.1f pts  Direction: %s\n", netChange, direction)
 	}
 }

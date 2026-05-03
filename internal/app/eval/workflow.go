@@ -171,7 +171,7 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 				}
 				continue
 			}
-			evaluation.AnnotateFindingSLA(&report.Findings[i], ctl, cfg.SLAConfig)
+			report.Findings[i].AnnotateSLA(ctl, cfg.SLAConfig)
 		}
 	}
 

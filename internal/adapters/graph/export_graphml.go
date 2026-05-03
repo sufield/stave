@@ -280,7 +280,7 @@ func writeGraphMLEdge(xw *graphmlWriter, scratch *bytes.Buffer, e *rdfEdge, keyI
 		xw.writeString("</data>\n")
 	}
 
-	if e.Shortcut {
+	if e.IsShortcut() {
 		if id, ok := keyIdx["edge:isAlgorithmShortcut"]; ok {
 			xw.writeString("    <data key=\"")
 			xw.writeString(id)

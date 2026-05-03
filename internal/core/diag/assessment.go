@@ -109,10 +109,10 @@ func (a *Assessment) Error() string {
 
 	var errs, warns int
 	for _, f := range a.Findings {
-		switch f.Severity {
-		case SeverityError:
+		switch {
+		case f.IsError():
 			errs++
-		case SeverityWarn:
+		case f.IsWarning():
 			warns++
 		}
 	}

@@ -284,7 +284,7 @@ func buildFindingProperties(f *remediation.Finding) map[string]any {
 	if f.IsOverdue() {
 		props["sla_breached"] = true
 	}
-	if len(f.ChainMembership) > 0 {
+	if f.IsChainMember() {
 		membership := make([]map[string]any, len(f.ChainMembership))
 		for ci, cm := range f.ChainMembership {
 			membership[ci] = map[string]any{

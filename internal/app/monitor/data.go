@@ -155,21 +155,17 @@ func computeScore(a *report.Assessment, chainDefs int, maxChainWeight float64) a
 }
 
 func countFindings(findings []remediation.Finding) FindingSummary {
-	var fs FindingSummary
-	fs.Total = len(findings)
+	var c report.SeverityCounts
 	for i := range findings {
-		switch findings[i].ControlSeverity.BucketName() {
-		case "critical":
-			fs.Critical++
-		case "high":
-			fs.High++
-		case "medium":
-			fs.Medium++
-		case "low":
-			fs.Low++
-		}
+		c.Add(findings[i].ControlSeverity)
 	}
-	return fs
+	return FindingSummary{
+		Total:    len(findings),
+		Critical: c.Critical,
+		High:     c.High,
+		Medium:   c.Medium,
+		Low:      c.Low,
+	}
 }
 
 func computeSLABurnFromDeadlines(findings []remediation.Finding, deadlines map[string]float64) map[string]float64 {

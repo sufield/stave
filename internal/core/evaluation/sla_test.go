@@ -21,12 +21,12 @@ func defaultSLAConfig() *SLAConfig {
 	}
 }
 
-func TestAnnotateFindingSLA_WithinDeadline(t *testing.T) {
+func TestFindingAnnotateSLA_WithinDeadline(t *testing.T) {
 	f := Finding{
 		ControlSeverity: policy.SeverityCritical,
 		Evidence:        Evidence{UnsafeDurationHours: 48}, // 48h < 72h deadline
 	}
-	AnnotateFindingSLA(&f, nil, defaultSLAConfig())
+	f.AnnotateSLA(nil, defaultSLAConfig())
 
 	if f.SLADeadlineHours == nil || *f.SLADeadlineHours != 72 {
 		t.Errorf("deadline = %v, want 72", f.SLADeadlineHours)
@@ -45,12 +45,12 @@ func TestAnnotateFindingSLA_WithinDeadline(t *testing.T) {
 	}
 }
 
-func TestAnnotateFindingSLA_Breached_OneTier(t *testing.T) {
+func TestFindingAnnotateSLA_Breached_OneTier(t *testing.T) {
 	f := Finding{
 		ControlSeverity: policy.SeverityHigh,
 		Evidence:        Evidence{UnsafeDurationHours: 500}, // 500h, deadline 336h, 1× overdue
 	}
-	AnnotateFindingSLA(&f, nil, defaultSLAConfig())
+	f.AnnotateSLA(nil, defaultSLAConfig())
 
 	if !f.SLABreached {
 		t.Fatal("should be breached")
@@ -65,12 +65,12 @@ func TestAnnotateFindingSLA_Breached_OneTier(t *testing.T) {
 	}
 }
 
-func TestAnnotateFindingSLA_Breached_ThreeTiers(t *testing.T) {
+func TestFindingAnnotateSLA_Breached_ThreeTiers(t *testing.T) {
 	f := Finding{
 		ControlSeverity: policy.SeverityLow,
 		Evidence:        Evidence{UnsafeDurationHours: 20000}, // way overdue
 	}
-	AnnotateFindingSLA(&f, nil, defaultSLAConfig())
+	f.AnnotateSLA(nil, defaultSLAConfig())
 
 	if !f.SLABreached {
 		t.Fatal("should be breached")
@@ -81,7 +81,7 @@ func TestAnnotateFindingSLA_Breached_ThreeTiers(t *testing.T) {
 	}
 }
 
-func TestAnnotateFindingSLA_ControlOverride(t *testing.T) {
+func TestFindingAnnotateSLA_ControlOverride(t *testing.T) {
 	ctl := &policy.ControlDefinition{
 		Params: policy.NewParams(map[string]any{"sla_deadline": "4h"}),
 	}
@@ -93,7 +93,7 @@ func TestAnnotateFindingSLA_ControlOverride(t *testing.T) {
 		ControlSeverity: policy.SeverityCritical,
 		Evidence:        Evidence{UnsafeDurationHours: 10}, // 10h > 4h
 	}
-	AnnotateFindingSLA(&f, ctl, defaultSLAConfig())
+	f.AnnotateSLA(ctl, defaultSLAConfig())
 
 	if f.SLADeadlineHours == nil || *f.SLADeadlineHours != 4 {
 		t.Errorf("deadline = %v, want 4 (control override)", f.SLADeadlineHours)
@@ -106,24 +106,24 @@ func TestAnnotateFindingSLA_ControlOverride(t *testing.T) {
 	}
 }
 
-func TestAnnotateFindingSLA_NilConfig(t *testing.T) {
+func TestFindingAnnotateSLA_NilConfig(t *testing.T) {
 	f := Finding{
 		ControlSeverity: policy.SeverityCritical,
 		Evidence:        Evidence{UnsafeDurationHours: 100},
 	}
-	AnnotateFindingSLA(&f, nil, nil)
+	f.AnnotateSLA(nil, nil)
 
 	if f.SLADeadlineHours != nil {
 		t.Error("should have no SLA data with nil config")
 	}
 }
 
-func TestAnnotateFindingSLA_NoEscalationWhenAlreadyCritical(t *testing.T) {
+func TestFindingAnnotateSLA_NoEscalationWhenAlreadyCritical(t *testing.T) {
 	f := Finding{
 		ControlSeverity: policy.SeverityCritical,
 		Evidence:        Evidence{UnsafeDurationHours: 200}, // 200h, deadline 72h
 	}
-	AnnotateFindingSLA(&f, nil, defaultSLAConfig())
+	f.AnnotateSLA(nil, defaultSLAConfig())
 
 	if !f.SLABreached {
 		t.Fatal("should be breached")
@@ -134,7 +134,7 @@ func TestAnnotateFindingSLA_NoEscalationWhenAlreadyCritical(t *testing.T) {
 	}
 }
 
-func TestEscalateSeverity(t *testing.T) {
+func TestSeverityBump(t *testing.T) {
 	tests := []struct {
 		base  policy.Severity
 		tiers int
@@ -151,19 +151,19 @@ func TestEscalateSeverity(t *testing.T) {
 		{policy.SeverityInfo, 1, policy.SeverityInfo},         // not in escalation table
 	}
 	for _, tt := range tests {
-		got := escalateSeverity(tt.base, tt.tiers)
+		got := tt.base.Bump(tt.tiers)
 		if got != tt.want {
-			t.Errorf("escalateSeverity(%v, %d) = %v, want %v", tt.base, tt.tiers, got, tt.want)
+			t.Errorf("%v.Bump(%d) = %v, want %v", tt.base, tt.tiers, got, tt.want)
 		}
 	}
 }
 
-// TestAnnotateFindingSLA_2xDwellEscalates_2Tiers pins the off-by-one
+// TestFindingAnnotateSLA_2xDwellEscalates_2Tiers pins the off-by-one
 // fix: a finding sitting at exactly 2× the deadline must escalate by
 // 2 tiers, and 3× by 3 tiers. The earlier formula divided overdue
 // (= dwell - deadline) by deadline and floored, so 2× dwell gave +1
 // (off by one) and 3× gave +2.
-func TestAnnotateFindingSLA_2xDwellEscalates_2Tiers(t *testing.T) {
+func TestFindingAnnotateSLA_2xDwellEscalates_2Tiers(t *testing.T) {
 	cfg := defaultSLAConfig()
 	deadline := cfg.DeadlineBySeverity["medium"]
 	if deadline == 0 {
@@ -173,7 +173,7 @@ func TestAnnotateFindingSLA_2xDwellEscalates_2Tiers(t *testing.T) {
 		ControlSeverity: policy.SeverityMedium,
 		Evidence:        Evidence{UnsafeDurationHours: 2 * deadline},
 	}
-	AnnotateFindingSLA(&f, nil, cfg)
+	f.AnnotateSLA(nil, cfg)
 	if !f.SLABreached {
 		t.Fatal("2× dwell must be breached")
 	}
@@ -184,7 +184,7 @@ func TestAnnotateFindingSLA_2xDwellEscalates_2Tiers(t *testing.T) {
 	}
 }
 
-func TestAnnotateFindingSLA_3xDwellEscalates_3Tiers(t *testing.T) {
+func TestFindingAnnotateSLA_3xDwellEscalates_3Tiers(t *testing.T) {
 	cfg := defaultSLAConfig()
 	deadline := cfg.DeadlineBySeverity["low"]
 	if deadline == 0 {
@@ -194,7 +194,7 @@ func TestAnnotateFindingSLA_3xDwellEscalates_3Tiers(t *testing.T) {
 		ControlSeverity: policy.SeverityLow,
 		Evidence:        Evidence{UnsafeDurationHours: 3 * deadline},
 	}
-	AnnotateFindingSLA(&f, nil, cfg)
+	f.AnnotateSLA(nil, cfg)
 	if !f.SLABreached {
 		t.Fatal("3× dwell must be breached")
 	}
@@ -231,7 +231,7 @@ func TestSLADurationParsing(t *testing.T) {
 // applyAcknowledgments() removes them from the active findings slice
 // before SLA annotation runs. This test documents that calling
 // AnnotateFindingSLA with nil config (the acknowledged path) is a no-op.
-func TestAnnotateFindingSLA_AcknowledgedExclusion(t *testing.T) {
+func TestFindingAnnotateSLA_AcknowledgedExclusion(t *testing.T) {
 	f := Finding{
 		ControlSeverity: policy.SeverityCritical,
 		Evidence:        Evidence{UnsafeDurationHours: 9999},
@@ -239,7 +239,7 @@ func TestAnnotateFindingSLA_AcknowledgedExclusion(t *testing.T) {
 	// Acknowledged findings are excluded from the SLA annotation loop
 	// (workflow.go:119-122 iterates only report.Findings, which excludes
 	// acknowledged findings). Calling with nil config simulates this.
-	AnnotateFindingSLA(&f, nil, nil)
+	f.AnnotateSLA(nil, nil)
 
 	if f.SLABreached {
 		t.Error("acknowledged finding should not have SLA breach annotation")
@@ -250,7 +250,7 @@ func TestAnnotateFindingSLA_AcknowledgedExclusion(t *testing.T) {
 }
 
 // Verify that the SLA field is set on the finding when it's non-zero.
-func TestAnnotateFindingSLA_FieldsPopulated(t *testing.T) {
+func TestFindingAnnotateSLA_FieldsPopulated(t *testing.T) {
 	now := time.Now()
 	f := Finding{
 		ControlSeverity: policy.SeverityMedium,
@@ -261,7 +261,7 @@ func TestAnnotateFindingSLA_FieldsPopulated(t *testing.T) {
 			ThresholdHours:      168,
 		},
 	}
-	AnnotateFindingSLA(&f, nil, defaultSLAConfig())
+	f.AnnotateSLA(nil, defaultSLAConfig())
 
 	if f.SLADeadlineHours == nil {
 		t.Fatal("deadline should be set")

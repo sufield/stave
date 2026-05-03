@@ -272,6 +272,31 @@ func (r Result) Movers() []ScoreMover {
 	return movers
 }
 
+// TrendDirection classifies the score's trajectory across the trend
+// points using a ±1-point net-change threshold:
+//   - "IMPROVING": last - first > 1
+//   - "DECLINING": last - first < -1
+//   - "STABLE":    otherwise (or fewer than 2 points)
+//
+// Centralised on Result so the cmd/score renderer stops open-coding
+// the IMPROVING/DECLINING/STABLE branch against the trend slice.
+// Returns "STABLE" with a zero net-change when no trend is recorded
+// so callers can render unconditionally.
+func (r Result) TrendDirection() (direction string, netChange float64) {
+	if len(r.Trend) < 2 {
+		return "STABLE", 0
+	}
+	netChange = r.Trend[len(r.Trend)-1].Score - r.Trend[0].Score
+	switch {
+	case netChange > 1:
+		return "IMPROVING", netChange
+	case netChange < -1:
+		return "DECLINING", netChange
+	default:
+		return "STABLE", netChange
+	}
+}
+
 // RubricBandNumeric maps the textual RubricBand to its numeric
 // gauge representation used by the OpenMetrics exporter:
 // strong=4, adequate=3, needs_attention=2, at_risk=1, critical=0.

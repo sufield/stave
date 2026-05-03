@@ -88,7 +88,7 @@ func computeSLAMetrics(findings []remediation.Finding) map[string]float64 {
 
 	for i := range findings {
 		f := &findings[i]
-		if f.SLADeadlineHours == nil {
+		if !f.HasSLA() {
 			continue
 		}
 		sev := f.SeverityLabel()

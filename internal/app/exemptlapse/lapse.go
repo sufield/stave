@@ -65,12 +65,19 @@ func Detect(in Input) []LapsedFinding {
 			daysSince = max(0, int(in.Now.Sub(expiry).Hours()/24))
 		}
 
-		originalSev := severityFromFinding(af)
+		// Findings without a recorded severity (zero value) are treated
+		// as Medium for governance purposes — an unreviewed risk
+		// acceptance with unknown severity should still surface, and
+		// "medium" is the historical default this lapse path emitted.
+		originalSev := af.Severity
+		if !originalSev.IsSet() {
+			originalSev = policy.SeverityMedium
+		}
 		effectiveSev := originalSev
 
 		var bumpReason string
 		if daysSince > severityBumpThresholdDays {
-			effectiveSev = bumpSeverity(originalSev)
+			effectiveSev = originalSev.Bump(1)
 			bumpReason = "Known risk allowed to expire unreviewed"
 		}
 
@@ -83,8 +90,8 @@ func Detect(in Input) []LapsedFinding {
 			FindingType:        "EXEMPTION_LAPSED",
 			ControlID:          af.ControlID,
 			AssetID:            af.AssetID,
-			Severity:           effectiveSev,
-			OriginalSeverity:   originalSev,
+			Severity:           effectiveSev.BucketName(),
+			OriginalSeverity:   originalSev.BucketName(),
 			ExemptionID:        string(af.ControlID) + "@" + string(af.AssetID),
 			GrantedAt:          af.AcknowledgedDate,
 			ExpiredAt:          af.ExpiryDate,
@@ -96,35 +103,4 @@ func Detect(in Input) []LapsedFinding {
 	}
 
 	return lapsed
-}
-
-func severityFromFinding(af *policy.AcknowledgedFinding) string {
-	switch af.Severity {
-	case policy.SeverityCritical:
-		return "critical"
-	case policy.SeverityHigh:
-		return "high"
-	case policy.SeverityMedium:
-		return "medium"
-	case policy.SeverityLow:
-		return "low"
-	case policy.SeverityInfo:
-		return "info"
-	default:
-		return "medium"
-	}
-}
-
-// bumpSeverity increases severity by one level.
-func bumpSeverity(sev string) string {
-	switch sev {
-	case "low":
-		return "medium"
-	case "medium":
-		return "high"
-	case "high":
-		return "critical"
-	default:
-		return sev
-	}
 }

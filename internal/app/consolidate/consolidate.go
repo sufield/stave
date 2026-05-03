@@ -214,7 +214,7 @@ func assessAccount(
 		}
 		for i := range result.Findings {
 			ctl := ctlLookup[result.Findings[i].ControlID]
-			evaluation.AnnotateFindingSLA(&result.Findings[i], ctl, slaCfg)
+			result.Findings[i].AnnotateSLA(ctl, slaCfg)
 		}
 	}
 
