@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:stave:schema:output:v0.1",
+  "$id": "urn:stave:schema:output:v1",
   "title": "Stave Output Schema v0.1",
   "description": "Schema for Stave evaluation and verification output artifacts. Uses oneOf to distinguish evaluation results from verification (before/after) results.",
   "oneOf": [

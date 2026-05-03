@@ -207,19 +207,7 @@ func run(w io.Writer, opts *options) error {
 	// reached the active list is by definition above the noise
 	// threshold the chain catalog encoded — exit non-zero so CI
 	// blocks the release.
-	criticalCount := report.CriticalFailureCount()
-	compoundCount := report.CompoundCount()
-	if report.HasCriticalFailures() || report.HasCompoundFindings() {
-		var msg string
-		switch {
-		case criticalCount > 0 && compoundCount > 0:
-			msg = fmt.Sprintf("%d CRITICAL control(s) failed and %d compound risk chain(s) active",
-				criticalCount, compoundCount)
-		case criticalCount > 0:
-			msg = fmt.Sprintf("%d CRITICAL control(s) failed", criticalCount)
-		default:
-			msg = fmt.Sprintf("%d compound risk chain(s) active", compoundCount)
-		}
+	if msg, fail := report.FailureSummary(); fail {
 		// Wrap with ui.ErrSecurityAuditFindings so the global
 		// handleExecutionError routing maps this to ExitSecurity (=1)
 		// and renders it through the standard error reporter. The

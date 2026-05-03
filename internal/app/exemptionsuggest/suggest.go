@@ -123,7 +123,7 @@ func Suggest(in Input) *Result {
 					controlID:   f.ControlID,
 					assetID:     f.AssetID,
 					severity:    f.SeverityLabel(),
-					ownerTeamID: f.OwnerTeamID.String(),
+					ownerTeamID: f.OwnerKey(),
 					firstSeen:   a.Run.Now,
 					appearances: make([]bool, assessmentCount),
 				}

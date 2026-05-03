@@ -155,10 +155,26 @@ func TestWriteFindings_SARIFStructure(t *testing.T) {
 		t.Errorf("expected uri main.tf, got %v", artLoc["uri"])
 	}
 
-	// Check fixes
+	// Check fixes — SARIF 2.1.0 §3.55 requires every fix object
+	// carry a non-empty changes array with at least one
+	// artifactLocation+replacements entry. Validators reject
+	// otherwise.
 	fixes := r["fixes"].([]any)
 	if len(fixes) != 1 {
 		t.Fatalf("expected 1 fix, got %d", len(fixes))
+	}
+	fix := fixes[0].(map[string]any)
+	changes, ok := fix["changes"].([]any)
+	if !ok || len(changes) == 0 {
+		t.Fatalf("fix.changes empty: %v", fix)
+	}
+	change := changes[0].(map[string]any)
+	if _, hasLoc := change["artifactLocation"].(map[string]any); !hasLoc {
+		t.Errorf("change.artifactLocation missing or wrong shape: %v", change)
+	}
+	replacements, ok := change["replacements"].([]any)
+	if !ok || len(replacements) == 0 {
+		t.Errorf("change.replacements empty: %v", change)
 	}
 }
 

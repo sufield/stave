@@ -31,7 +31,7 @@ stave apply \
   --observations observations \
   --max-unsafe 0s \
   --format json \
-  | jq -r '.findings[].resource_id' > violating-buckets.txt
+  | jq -r '.findings[].asset_id' > violating-buckets.txt
 ```
 
 Step 2 — Create a Cloud Custodian policy that acts on those buckets:

@@ -145,7 +145,7 @@ func Group(input GroupInput) *Plan {
 		if si != sj {
 			return si < sj
 		}
-		return items[i].finding.Evidence.UnsafeDurationHours > items[j].finding.Evidence.UnsafeDurationHours
+		return items[i].finding.DwellHours() > items[j].finding.DwellHours()
 	})
 
 	// Group by team.
@@ -199,7 +199,7 @@ func toPlanFinding(f *remediation.Finding) PlanFinding {
 		ControlName:      f.ControlName,
 		Severity:         f.ControlSeverity,
 		AssetID:          string(f.AssetID),
-		DwellHours:       f.Evidence.UnsafeDurationHours,
+		DwellHours:       f.DwellHours(),
 		SLABreached:      f.SLABreached,
 		SLADeadlineHours: f.SLADeadlineHours,
 		OverdueHours:     f.SLAOverdueHours,

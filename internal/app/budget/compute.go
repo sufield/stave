@@ -82,6 +82,41 @@ type GateResult struct {
 	Reason           string   `json:"reason"`
 }
 
+// GateFailedError carries a deployment-gate failure reason.
+// Returned by GateResult.ExitError so cmd-side callers receive a
+// typed error instead of open-coding the wrap.
+type GateFailedError struct {
+	Reason string
+}
+
+// Error formats in the shape cmd/budget previously emitted
+// ("deployment gate failed: <reason>") so wire behaviour is
+// preserved.
+func (e *GateFailedError) Error() string {
+	return "deployment gate failed: " + e.Reason
+}
+
+// PassLabel returns the canonical "PASS" / "FAIL" string used by
+// CLI renderers. Centralised so cmd/budget doesn't open-code the
+// ternary at every render site. Mirrors pkg/stave.GateResult.PassLabel.
+func (g *GateResult) PassLabel() string {
+	if g == nil || !g.Passed {
+		return "FAIL"
+	}
+	return "PASS"
+}
+
+// ExitError returns nil when the gate passed, or a GateFailedError
+// wrapping the gate's reason when it failed. Mirrors
+// pkg/stave.GateResult.ExitError so the cmd-side runner returns
+// this directly.
+func (g *GateResult) ExitError() error {
+	if g == nil || g.Passed {
+		return nil
+	}
+	return &GateFailedError{Reason: g.Reason}
+}
+
 // Report is the complete burn rate output.
 type Report struct {
 	GeneratedAt time.Time          `json:"generated_at"`

@@ -58,6 +58,17 @@ const (
 	ProfileAWSEFS Profile = "aws-efs"
 )
 
+// UsesPHIScope reports whether this profile keeps the default PHI
+// audit scope. Only the AWS-S3 default profile does — every other
+// profile (IAM/EFS/GCS/HIPAA/SOC2/CIS/PCI/NIST/FedRAMP/GDPR/FFIEC/
+// ISO/NISTCSF) wants the global scope so PHIBoundary doesn't
+// silently filter out IAM, VPC, KMS, and compute assets the
+// profile must evaluate. Replaces the open-coded
+// `cfg.Profile != ProfileAWSS3` probe in resolveScopeFilter.
+func (p Profile) UsesPHIScope() bool {
+	return p == ProfileAWSS3
+}
+
 // ParseProfile validates and returns a Profile value.
 func ParseProfile(s string) (Profile, error) {
 	switch Profile(s) {

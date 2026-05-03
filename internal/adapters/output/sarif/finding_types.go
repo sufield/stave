@@ -66,7 +66,10 @@ type sarifArtifactLocation struct {
 }
 
 type sarifRegion struct {
-	StartLine int `json:"startLine"`
+	StartLine   int `json:"startLine"`
+	StartColumn int `json:"startColumn,omitempty"`
+	EndLine     int `json:"endLine,omitempty"`
+	EndColumn   int `json:"endColumn,omitempty"`
 }
 
 type sarifLogicalLocation struct {
@@ -77,8 +80,35 @@ type sarifLogicalLocation struct {
 
 type sarifSuggestion struct {
 	Description sarifMessage `json:"description"`
+	// Changes carries the SARIF 2.1.0 required artifactChanges
+	// list — without at least one entry, validators reject the
+	// fix object. Stave does not generally know the source-file
+	// location to patch, so the writer emits a placeholder change
+	// pointing at the asset URI.
+	Changes []sarifChange `json:"changes"`
 }
 
 type sarifMessage struct {
+	Text string `json:"text"`
+}
+
+// sarifChange is an artifactChanges entry per SARIF 2.1.0 §3.55.
+type sarifChange struct {
+	ArtifactLocation sarifArtifactLocation `json:"artifactLocation"`
+	Replacements     []sarifReplacement    `json:"replacements"`
+}
+
+// sarifReplacement is a deletedRegion / insertedContent pair.
+// Stave emits a synthetic replacement with the remediation text as
+// insertedContent — concrete file ranges are not generally
+// available because findings target cloud resources, not source
+// files.
+type sarifReplacement struct {
+	DeletedRegion   sarifRegion        `json:"deletedRegion"`
+	InsertedContent sarifMessageString `json:"insertedContent"`
+}
+
+// sarifMessageString is the SARIF "text" wrapper for replacement content.
+type sarifMessageString struct {
 	Text string `json:"text"`
 }

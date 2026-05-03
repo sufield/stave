@@ -24,7 +24,7 @@ func resolveScopeFilter(cfg Config) *asset.AuditScope {
 	// them; the result was a silent zero-findings outcome that
 	// looked like compliance evidence. Match the original intent
 	// (only the S3 default-scope use case keeps PHI filtering).
-	if cfg.Profile != ProfileAWSS3 {
+	if !cfg.Profile.UsesPHIScope() {
 		return asset.GetGlobalScope()
 	}
 	return asset.PHIBoundary()

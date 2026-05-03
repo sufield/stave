@@ -12,9 +12,34 @@ Draft 2020-12.
 |----------|---------|-----------|
 | Control | `ctrl.v1` | `urn:stave:schema:control:v1` |
 | Observation | `obs.v0.1` | `urn:stave:schema:observation:v1` |
-| Output | `out.v0.1` | `urn:stave:schema:output:v0.1` |
+| Snapshot (external producer) | n/a | `urn:stave:schema:snapshot:external` |
+| Output | `out.v0.1` | `urn:stave:schema:output:v1` |
 | Finding | `v1` | `urn:stave:schema:finding:v1` |
 | Diagnose | `v1` | `urn:stave:schema:diagnose:v1` |
+
+> **Two observation schemas — one engine-internal, one for external
+> producers.** `urn:stave:schema:observation:v1` is the strict
+> wire-format the engine validates inbound snapshots against
+> (`schemas/observation/v1/observation.schema.json`). `urn:stave:schema:snapshot:external`
+> at `docs/snapshot.schema.json` is a documented producer-side
+> contract for external tools (Terraform plan renderers,
+> CloudFormation renderers, test-fixture generators) — the same
+> shape, with looser language about field meaning, intended for
+> reading by humans writing extractors. Use the strict schema for
+> validation; reference the external schema for documentation.
+>
+> **Version strings vs schema URNs.** The **Version** column carries
+> the user-facing wire-format identifier emitted in document
+> `schema_version` fields (e.g. `out.v0.1` lands in the JSON output
+> under `"schema_version": "out.v0.1"`). The **Schema ID** column
+> carries the internal URN the schema registry compiles each
+> contract under. The two evolve independently: a wire-format
+> revision (e.g. `out.v0.2`) does not require a new URN if the
+> schema document is backward-compatible, and a URN bump
+> (`urn:…:v2`) does not require all consumers to switch wire
+> versions in lockstep. Forward-compatibility note: both `obs.v0.1`
+> and a future `obs.v1` are accepted by the loader so producers can
+> ship the new wire string ahead of consumer rollout.
 
 ---
 
@@ -134,7 +159,7 @@ Optional fields:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `first_seen_unsafe` | string | RFC 3339 timestamp of first unsafe observation |
+| `first_unsafe_at` | string | RFC 3339 timestamp of first unsafe observation |
 | `unsafe_duration_hours` | number | Hours continuously unsafe |
 | `threshold_hours` | number | Max-unsafe threshold that was exceeded |
 | `reason` | string | Why the asset is unsafe |

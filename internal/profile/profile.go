@@ -175,6 +175,33 @@ func (r *Report) HasCompoundFindings() bool {
 	return r.CompoundCount() > 0
 }
 
+// FailureSummary returns the human-readable failure message and
+// true when this report carries critical control failures or
+// active compound risk chains. Returns "" and false when neither
+// condition is present so the caller can use the bool as a single
+// gate without consulting the message. Encapsulates the
+// critical-vs-compound switch that cmd/evaluate previously
+// open-coded.
+func (r *Report) FailureSummary() (string, bool) {
+	if r == nil {
+		return "", false
+	}
+	criticalCount := r.CriticalFailureCount()
+	compoundCount := r.CompoundCount()
+	if criticalCount == 0 && compoundCount == 0 {
+		return "", false
+	}
+	switch {
+	case criticalCount > 0 && compoundCount > 0:
+		return fmt.Sprintf("%d CRITICAL control(s) failed and %d compound risk chain(s) active",
+			criticalCount, compoundCount), true
+	case criticalCount > 0:
+		return fmt.Sprintf("%d CRITICAL control(s) failed", criticalCount), true
+	default:
+		return fmt.Sprintf("%d compound risk chain(s) active", compoundCount), true
+	}
+}
+
 // FilterUnacknowledgedCompound drops any compound finding whose
 // trigger set is fully covered by the supplied valid acknowledgment
 // keys, mutating CompoundFindings in place. Replaces the open-coded

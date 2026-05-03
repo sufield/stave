@@ -21,7 +21,7 @@ stave telemetry --in assessment.json --severity critical,high
 Each finding becomes one NDJSON line with a stable schema:
 
 ```json
-{"schema_version":"telemetry.v1","captured_at":"2026-01-11T00:00:00Z","control_id":"CTL.S3.PUBLIC.001","control_name":"Public Bucket Access","severity":"critical","resource_id":"arn:aws:s3:::prod-phi","resource_type":"aws_s3_bucket","verdict":"violation","policy_fingerprint":"sha256:b75f334c843a","status":"NON_COMPLIANT"}
+{"schema_version":"telemetry.v2","captured_at":"2026-01-11T00:00:00Z","control_id":"CTL.S3.PUBLIC.001","control_name":"Public Bucket Access","severity":"critical","resource_id":"arn:aws:s3:::prod-phi","resource_type":"aws_s3_bucket","verdict":"violation","finding_id":"f-d0b4a78c6a1f","policy_fingerprint":"sha256:b75f334c843a","status":"NON_COMPLIANT"}
 ```
 
 ## Why NDJSON
@@ -50,6 +50,7 @@ Every major log shipper treats NDJSON as native input:
 | `resource_id` | string | Asset identifier |
 | `resource_type` | string | Asset type |
 | `verdict` | string | `"violation"` |
+| `finding_id` | string | Per-finding identifier emitted by the engine; stable across runs for the same (control, asset) pair |
 | `policy_fingerprint` | string | Control set hash (catalog-wide) |
 | `control_fingerprint` | string | Per-control logic hash (ID + severity + type + predicate) |
 | `environmental_score` | float | `base_impact x sensitivity x exposure` (nil when inputs missing) |

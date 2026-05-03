@@ -179,16 +179,11 @@ func runBudget(ctx context.Context, stdout io.Writer, opts *options) error {
 		writeTable(out, result)
 	}
 
-	// Exit code for gate.
-	if result.Gate != nil && !result.Gate.Passed {
-		return &gateError{reason: result.Gate.Reason}
-	}
-	return nil
+	// Exit code for gate. GateResult.ExitError centralises the
+	// "passed → nil; failed → typed error" rule so this and
+	// pkg/stave share a single source of truth.
+	return result.Gate.ExitError()
 }
-
-type gateError struct{ reason string }
-
-func (e *gateError) Error() string { return "deployment gate failed: " + e.reason }
 
 func loadDeadlines(opts *options) (map[string]float64, string, error) {
 	var pol *sla.Policy
@@ -278,11 +273,7 @@ func writeTable(w io.Writer, r appbudget.Report) {
 	}
 
 	if r.Gate != nil {
-		result := "PASS"
-		if !r.Gate.Passed {
-			result = "FAIL"
-		}
-		fmt.Fprintf(w, "\nDEPLOYMENT GATE: %s  (%s)\n", result, r.Gate.Reason)
+		fmt.Fprintf(w, "\nDEPLOYMENT GATE: %s  (%s)\n", r.Gate.PassLabel(), r.Gate.Reason)
 	}
 }
 

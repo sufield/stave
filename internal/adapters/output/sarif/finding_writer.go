@@ -177,8 +177,28 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 		if fixText != "" {
 			result.Suggestions = []sarifSuggestion{
 				{
-					Description: sarifMessage{
-						Text: fixText,
+					Description: sarifMessage{Text: fixText},
+					// SARIF 2.1.0 §3.55 requires at least one entry in
+					// changes for a valid fix object. Stave does not
+					// know a source-file location to patch — findings
+					// target cloud resources — so we emit a single
+					// placeholder change pointing at the asset URI
+					// with the remediation text as insertedContent.
+					Changes: []sarifChange{
+						{
+							ArtifactLocation: sarifArtifactLocation{URI: string(f.AssetID)},
+							Replacements: []sarifReplacement{
+								{
+									DeletedRegion: sarifRegion{
+										StartLine:   1,
+										StartColumn: 1,
+										EndLine:     1,
+										EndColumn:   1,
+									},
+									InsertedContent: sarifMessageString{Text: fixText},
+								},
+							},
+						},
 					},
 				},
 			}
