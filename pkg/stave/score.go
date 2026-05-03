@@ -190,18 +190,21 @@ func scoreFindingsFromAssessment(a *Assessment) []remediation.Finding {
 		// The scorer reads ControlSeverity directly; without this
 		// the severity component would treat every finding as Info.
 		sev := severityFromString(f.Severity)
-		out[i] = remediation.Finding{
-			Finding: evaluation.Finding{
-				FindingID:        f.FindingID,
-				ControlID:        f.ControlID,
-				AssetID:          f.AssetID,
-				ControlSeverity:  sev,
-				ExposureScore:    kernel.ExposureScore(f.ExposureScore),
-				SLABreached:      f.SLABreached,
-				SLADeadlineHours: f.SLADeadlineHours,
-				SLAOverdueHours:  f.SLAOverdueHours,
-			},
+		ev := evaluation.Finding{
+			FindingID:       f.FindingID,
+			ControlID:       f.ControlID,
+			AssetID:         f.AssetID,
+			ControlSeverity: sev,
+			ExposureScore:   kernel.ExposureScore(f.ExposureScore),
 		}
+		// SLA state is private on evaluation.Finding; rehydrate
+		// via the package-internal setter. SLAEscalatedSeverity
+		// and SLAPolicySource are not carried on the wire shape
+		// score consumes here, so they pass through as zero —
+		// sufficient for the scorer, which only reads the breach
+		// + dwell signals.
+		ev.RehydrateSLA(f.SLADeadlineHours, f.SLABreached, f.SLAOverdueHours, 0, "")
+		out[i] = remediation.Finding{Finding: ev}
 	}
 	return out
 }

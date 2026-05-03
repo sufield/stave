@@ -44,13 +44,21 @@ func (f *Finding) HasRemediationContext() bool {
 	return !f.RemediationSpec.IsEmpty()
 }
 
+// HasRemediationPlan reports whether the finding carries a
+// remediation plan (the asset-parameterized fix). Replaces the
+// bare (f.RemediationPlan != nil) probe in DTO and graph
+// emitters.
+func (f *Finding) HasRemediationPlan() bool {
+	return f != nil && f.RemediationPlan != nil
+}
+
 // HasRemediationCommand reports whether the finding's plan
 // carries an executable command. The plan pointer is nil when no
 // remediation enricher ran; the Command field is empty for
 // advisory plans. Both branches collapse to a single predicate
 // callers consume.
 func (f *Finding) HasRemediationCommand() bool {
-	return f != nil && f.RemediationPlan != nil && f.RemediationPlan.Command != ""
+	return f.HasRemediationPlan() && f.RemediationPlan.Command != ""
 }
 
 // RemediationCommand returns the plan's Command together with a

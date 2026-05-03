@@ -115,6 +115,18 @@ func (a *Assessment) SLASummary() (total, breached int) {
 	return total, breached
 }
 
+// SnapshotID returns the deterministic snapshot identifier
+// callers (cmd/score's trend builder) attach to per-assessment
+// rows: "snap-YYYYMMDD" derived from Run.Now, or "" when the
+// assessment carries no timestamp. Centralised here so the
+// formatting rule lives on the type that owns Run.Now.
+func (a *Assessment) SnapshotID() string {
+	if a == nil || !a.HasTimestamp() {
+		return ""
+	}
+	return "snap-" + a.Run.Now.Format("20060102")
+}
+
 // CountBySeverity tallies the assessment's findings into the four
 // named severity buckets (critical / high / medium / low). Replaces
 // the open-coded switch loops in

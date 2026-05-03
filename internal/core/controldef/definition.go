@@ -64,8 +64,11 @@ type ControlDefinition struct {
 	Archetype kernel.ArchetypeID
 
 	// prepared holds pre-calculated values to optimize the evaluation
-	// hot path. Read via PreparedParams(); only Prepare()
-	// (in this package) writes to it.
+	// hot path. Only Prepare() (in this package) writes to it; the
+	// per-attribute accessors below are the read surface for
+	// external callers (HasSLADeadline, MaxUnsafeDuration,
+	// HasMaxUnsafeDuration, PrefixExposureParams,
+	// EffectiveMaxUnsafeDuration, ExposurePrefixes).
 	prepared PreparedParams `json:"-"`
 }
 
@@ -120,18 +123,32 @@ func (ctl *ControlDefinition) AppliesToAssetType(assetType kernel.AssetType) boo
 	return slices.Contains(ctl.ApplicableAssetTypes, assetType)
 }
 
-// PreparedParams returns the cached pre-calculated parameters
-// populated by Prepare(). Read-only view — callers must not mutate
-// the returned struct's reference fields. Useful for callers that
-// want to inspect prepare state without going through the
-// per-attribute accessors below.
-func (ctl *ControlDefinition) PreparedParams() PreparedParams {
-	return ctl.prepared
+// HasMaxUnsafeDuration reports whether this control has an
+// explicit max_unsafe_duration param. Sibling of HasSLADeadline.
+// Replaces the (PreparedParams().HasMaxUnsafeDuration) probe at
+// strategy.go so callers do not have to reach through the
+// PreparedParams aggregate to ask one boolean.
+func (ctl *ControlDefinition) HasMaxUnsafeDuration() bool {
+	_ = ctl.ensurePrepared()
+	return ctl.prepared.HasMaxUnsafeDuration
+}
+
+// PrefixExposureParams returns the typed prefix-exposure params
+// populated by Prepare. Mirrors the existing ExposurePrefixes
+// accessor but returns the full struct so callers (the
+// prefix-exposure assessor) get both AllowedPublicPrefixes and
+// ProtectedPrefixes in one call.
+func (ctl *ControlDefinition) PrefixExposureParams() PrefixExposureParams {
+	_ = ctl.ensurePrepared()
+	return ctl.prepared.PrefixExposure
 }
 
 // Prepare extracts and validates typed parameters from the raw Params map.
 // Idempotent — safe to call multiple times but not concurrently.
-// See PreparedParams for concurrency notes.
+// External callers read prepare state through the per-attribute
+// accessors (HasSLADeadline, MaxUnsafeDuration,
+// HasMaxUnsafeDuration, PrefixExposureParams) — the full struct
+// is not exposed.
 func (ctl *ControlDefinition) Prepare() error {
 	if ctl.prepared.Ready {
 		return nil

@@ -190,7 +190,7 @@ func computeFromAssessment(ctx context.Context, a *report.Assessment, weights ap
 		ChainMaxWeight: maxChainWeight,
 		ChainDefs:      chainDefs,
 		Compliance:     parseComplianceList(compliance),
-		SnapshotID:     snapshotID(a),
+		SnapshotID:     a.SnapshotID(),
 	}
 	res, err := stave.Score(ctx, cfg)
 	if err != nil {
@@ -229,12 +229,6 @@ func buildTrend(results []appscore.Result) []appscore.TrendPoint {
 	return points
 }
 
-func snapshotID(a *report.Assessment) string {
-	if a.HasTimestamp() {
-		return "snap-" + a.Run.Now.Format("20060102")
-	}
-	return ""
-}
 
 func loadAssessment(_ context.Context, path string) (*report.Assessment, error) {
 	data, err := fsutil.ReadFileLimited(path)

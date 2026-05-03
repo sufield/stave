@@ -57,6 +57,27 @@ func (s FindingSet) SLASummary() SLASummaryStats {
 	return stats
 }
 
+// GroupByOwner buckets the set's findings by the owning team's
+// key. Findings whose Owner is unset are dropped — the result is
+// safe to consume as a "team_id → findings" map without
+// downstream nil-key handling. Returns nil when the set has no
+// owner-tagged findings so callers can branch on len(map) > 0.
+func (s FindingSet) GroupByOwner() map[string][]Finding {
+	out := map[string][]Finding{}
+	for i := range s {
+		f := &s[i]
+		if !f.HasOwner() {
+			continue
+		}
+		key := f.OwnerKey()
+		out[key] = append(out[key], *f)
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
 // SLABreachSummary walks the set once and returns the
 // assessment-side SLA breach stats. Replaces the manual
 // (totalWithSLA / breachedCount / breachedBySev) accumulation loop

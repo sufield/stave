@@ -14,13 +14,12 @@ func makeFinding(sev policy.Severity, dwellHours float64, deadlineHours float64)
 	if deadlineHours > 0 {
 		deadline = &deadlineHours
 	}
-	return remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlSeverity:  sev,
-			Evidence:         evaluation.Evidence{UnsafeDurationHours: dwellHours},
-			SLADeadlineHours: deadline,
-		},
+	ev := evaluation.Finding{
+		ControlSeverity: sev,
+		Evidence:        evaluation.Evidence{UnsafeDurationHours: dwellHours},
 	}
+	ev.RehydrateSLA(deadline, false, nil, 0, "")
+	return remediation.Finding{Finding: ev}
 }
 
 func TestCompute_BurnRateEqualsConsumedOverAllowed(t *testing.T) {

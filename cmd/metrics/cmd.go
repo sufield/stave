@@ -77,16 +77,7 @@ func run(ctx context.Context, stdout io.Writer, opts *options) error {
 	}
 
 	// Group findings by team from OwnerTeamID (populated by stave apply --team-manifest).
-	teamFindings := make(map[string][]remediation.Finding)
-	for i := range latest.Findings {
-		f := &latest.Findings[i]
-		if f.HasOwner() {
-			teamFindings[f.OwnerKey()] = append(teamFindings[f.OwnerKey()], *f)
-		}
-	}
-	if len(teamFindings) == 0 {
-		teamFindings = nil
-	}
+	teamFindings := remediation.FindingSet(latest.Findings).GroupByOwner()
 
 	input := appmetrics.Input{
 		Assessment:   latest,

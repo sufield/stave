@@ -28,20 +28,20 @@ func TestFindingAnnotateSLA_WithinDeadline(t *testing.T) {
 	}
 	f.AnnotateSLA(nil, defaultSLAConfig())
 
-	if f.SLADeadlineHours == nil || *f.SLADeadlineHours != 72 {
-		t.Errorf("deadline = %v, want 72", f.SLADeadlineHours)
+	if f.slaDeadlineHours == nil || *f.slaDeadlineHours != 72 {
+		t.Errorf("deadline = %v, want 72", f.slaDeadlineHours)
 	}
-	if f.SLABreached {
+	if f.slaBreached {
 		t.Error("should not be breached (48h < 72h)")
 	}
-	if f.SLAOverdueHours != nil {
+	if f.slaOverdueHours != nil {
 		t.Error("overdue hours should be nil when not breached")
 	}
-	if f.SLAEscalatedSeverity != policy.SeverityNone {
+	if f.slaEscalatedSeverity != policy.SeverityNone {
 		t.Error("escalated severity should be empty when not breached")
 	}
-	if f.SLAPolicySource != kernel.SLAPolicySourceProfile("default") {
-		t.Errorf("policy source = %q, want profile:default", f.SLAPolicySource)
+	if f.slaPolicySource != kernel.SLAPolicySourceProfile("default") {
+		t.Errorf("policy source = %q, want profile:default", f.slaPolicySource)
 	}
 }
 
@@ -52,16 +52,16 @@ func TestFindingAnnotateSLA_Breached_OneTier(t *testing.T) {
 	}
 	f.AnnotateSLA(nil, defaultSLAConfig())
 
-	if !f.SLABreached {
+	if !f.slaBreached {
 		t.Fatal("should be breached")
 	}
-	if f.SLAOverdueHours == nil || *f.SLAOverdueHours != 164 {
-		t.Errorf("overdue = %v, want 164", f.SLAOverdueHours)
+	if f.slaOverdueHours == nil || *f.slaOverdueHours != 164 {
+		t.Errorf("overdue = %v, want 164", f.slaOverdueHours)
 	}
 	// 164h overdue / 336h deadline < 1 period → 1 tier escalation
 	// high → critical
-	if f.SLAEscalatedSeverity != policy.SeverityCritical {
-		t.Errorf("escalated = %q, want critical", f.SLAEscalatedSeverity)
+	if f.slaEscalatedSeverity != policy.SeverityCritical {
+		t.Errorf("escalated = %q, want critical", f.slaEscalatedSeverity)
 	}
 }
 
@@ -72,12 +72,12 @@ func TestFindingAnnotateSLA_Breached_ThreeTiers(t *testing.T) {
 	}
 	f.AnnotateSLA(nil, defaultSLAConfig())
 
-	if !f.SLABreached {
+	if !f.slaBreached {
 		t.Fatal("should be breached")
 	}
 	// Capped at critical regardless of how many tiers.
-	if f.SLAEscalatedSeverity != policy.SeverityCritical {
-		t.Errorf("escalated = %q, want critical (capped)", f.SLAEscalatedSeverity)
+	if f.slaEscalatedSeverity != policy.SeverityCritical {
+		t.Errorf("escalated = %q, want critical (capped)", f.slaEscalatedSeverity)
 	}
 }
 
@@ -95,13 +95,13 @@ func TestFindingAnnotateSLA_ControlOverride(t *testing.T) {
 	}
 	f.AnnotateSLA(ctl, defaultSLAConfig())
 
-	if f.SLADeadlineHours == nil || *f.SLADeadlineHours != 4 {
-		t.Errorf("deadline = %v, want 4 (control override)", f.SLADeadlineHours)
+	if f.slaDeadlineHours == nil || *f.slaDeadlineHours != 4 {
+		t.Errorf("deadline = %v, want 4 (control override)", f.slaDeadlineHours)
 	}
-	if f.SLAPolicySource != kernel.SLAPolicySourceControlOverride {
-		t.Errorf("policy source = %q, want control_override", f.SLAPolicySource)
+	if f.slaPolicySource != kernel.SLAPolicySourceControlOverride {
+		t.Errorf("policy source = %q, want control_override", f.slaPolicySource)
 	}
-	if !f.SLABreached {
+	if !f.slaBreached {
 		t.Error("should be breached (10h > 4h)")
 	}
 }
@@ -113,7 +113,7 @@ func TestFindingAnnotateSLA_NilConfig(t *testing.T) {
 	}
 	f.AnnotateSLA(nil, nil)
 
-	if f.SLADeadlineHours != nil {
+	if f.slaDeadlineHours != nil {
 		t.Error("should have no SLA data with nil config")
 	}
 }
@@ -125,12 +125,12 @@ func TestFindingAnnotateSLA_NoEscalationWhenAlreadyCritical(t *testing.T) {
 	}
 	f.AnnotateSLA(nil, defaultSLAConfig())
 
-	if !f.SLABreached {
+	if !f.slaBreached {
 		t.Fatal("should be breached")
 	}
 	// Already critical — no escalation possible.
-	if f.SLAEscalatedSeverity != policy.SeverityNone {
-		t.Errorf("escalated = %q, want empty (already critical)", f.SLAEscalatedSeverity)
+	if f.slaEscalatedSeverity != policy.SeverityNone {
+		t.Errorf("escalated = %q, want empty (already critical)", f.slaEscalatedSeverity)
 	}
 }
 
@@ -174,13 +174,13 @@ func TestFindingAnnotateSLA_2xDwellEscalates_2Tiers(t *testing.T) {
 		Evidence:        Evidence{UnsafeDurationHours: 2 * deadline},
 	}
 	f.AnnotateSLA(nil, cfg)
-	if !f.SLABreached {
+	if !f.slaBreached {
 		t.Fatal("2× dwell must be breached")
 	}
 	// medium + 2 tiers should escalate to critical (low→medium→high→critical;
 	// medium + 2 = critical at index 3).
-	if f.SLAEscalatedSeverity != policy.SeverityCritical {
-		t.Errorf("2× dwell from medium: escalated = %q, want critical", f.SLAEscalatedSeverity)
+	if f.slaEscalatedSeverity != policy.SeverityCritical {
+		t.Errorf("2× dwell from medium: escalated = %q, want critical", f.slaEscalatedSeverity)
 	}
 }
 
@@ -195,12 +195,12 @@ func TestFindingAnnotateSLA_3xDwellEscalates_3Tiers(t *testing.T) {
 		Evidence:        Evidence{UnsafeDurationHours: 3 * deadline},
 	}
 	f.AnnotateSLA(nil, cfg)
-	if !f.SLABreached {
+	if !f.slaBreached {
 		t.Fatal("3× dwell must be breached")
 	}
 	// low + 3 tiers = critical (index 0 + 3 = 3, which is critical).
-	if f.SLAEscalatedSeverity != policy.SeverityCritical {
-		t.Errorf("3× dwell from low: escalated = %q, want critical", f.SLAEscalatedSeverity)
+	if f.slaEscalatedSeverity != policy.SeverityCritical {
+		t.Errorf("3× dwell from low: escalated = %q, want critical", f.slaEscalatedSeverity)
 	}
 }
 
@@ -241,10 +241,10 @@ func TestFindingAnnotateSLA_AcknowledgedExclusion(t *testing.T) {
 	// acknowledged findings). Calling with nil config simulates this.
 	f.AnnotateSLA(nil, nil)
 
-	if f.SLABreached {
+	if f.slaBreached {
 		t.Error("acknowledged finding should not have SLA breach annotation")
 	}
-	if f.SLADeadlineHours != nil {
+	if f.slaDeadlineHours != nil {
 		t.Error("acknowledged finding should not have SLA deadline")
 	}
 }
@@ -263,24 +263,24 @@ func TestFindingAnnotateSLA_FieldsPopulated(t *testing.T) {
 	}
 	f.AnnotateSLA(nil, defaultSLAConfig())
 
-	if f.SLADeadlineHours == nil {
+	if f.slaDeadlineHours == nil {
 		t.Fatal("deadline should be set")
 	}
-	if *f.SLADeadlineHours != 1440 {
-		t.Errorf("deadline = %f, want 1440", *f.SLADeadlineHours)
+	if *f.slaDeadlineHours != 1440 {
+		t.Errorf("deadline = %f, want 1440", *f.slaDeadlineHours)
 	}
-	if !f.SLABreached {
+	if !f.slaBreached {
 		t.Fatal("should be breached")
 	}
-	if f.SLAOverdueHours == nil {
+	if f.slaOverdueHours == nil {
 		t.Fatal("overdue should be set")
 	}
 	// 2000 - 1440 = 560 hours overdue
-	if *f.SLAOverdueHours != 560 {
-		t.Errorf("overdue = %f, want 560", *f.SLAOverdueHours)
+	if *f.slaOverdueHours != 560 {
+		t.Errorf("overdue = %f, want 560", *f.slaOverdueHours)
 	}
 	// medium → high (1 tier at 560/1440 < 1 period)
-	if f.SLAEscalatedSeverity != policy.SeverityHigh {
-		t.Errorf("escalated = %q, want high", f.SLAEscalatedSeverity)
+	if f.slaEscalatedSeverity != policy.SeverityHigh {
+		t.Errorf("escalated = %q, want high", f.slaEscalatedSeverity)
 	}
 }

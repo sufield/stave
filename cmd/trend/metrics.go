@@ -178,6 +178,29 @@ func (t *teamTrend) IsStable() bool {
 	return t != nil && t.Trajectory == trajectoryStable
 }
 
+// teamTrends is the slice alias the summary tally hangs off so
+// the per-trajectory switch lives on the collection rather than
+// the cmd/trend renderer.
+type teamTrends []teamTrend
+
+// TallyTrajectories walks the slice and returns the
+// (improving, regressing, stable) counts. Replaces the inline
+// IsImproving / IsRegressing / default switch in
+// cmd/trend/team_trend.go's summary builder.
+func (s teamTrends) TallyTrajectories() (improving, regressing, stable int) {
+	for i := range s {
+		switch {
+		case s[i].IsImproving():
+			improving++
+		case s[i].IsRegressing():
+			regressing++
+		default:
+			stable++
+		}
+	}
+	return improving, regressing, stable
+}
+
 // ClassifyTrajectory sets Trajectory based on delta vs threshold:
 //   - delta ≥  threshold → trajectoryImproving
 //   - delta ≤ -threshold → trajectoryRegressing

@@ -157,16 +157,12 @@ func computeTeamTrends(
 	})
 
 	// Summary.
-	summary := &teamTrendSummary{TeamsTracked: len(trends)}
-	for i := range trends {
-		switch {
-		case trends[i].IsImproving():
-			summary.TeamsImproving++
-		case trends[i].IsRegressing():
-			summary.TeamsRegressing++
-		default:
-			summary.TeamsStable++
-		}
+	improving, regressing, stable := teamTrends(trends).TallyTrajectories()
+	summary := &teamTrendSummary{
+		TeamsTracked:    len(trends),
+		TeamsImproving:  improving,
+		TeamsRegressing: regressing,
+		TeamsStable:     stable,
 	}
 
 	return trends, summary

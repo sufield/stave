@@ -223,11 +223,7 @@ func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth 
 			fmt.Fprintf(w, "Chain: %s (ACTIVE)\n", cc.ChainID)
 			for i := range cc.MemberControls {
 				m := &cc.MemberControls[i]
-				icon := "\u2717"
-				if m.IsPassing() {
-					icon = "\u2713"
-				}
-				fmt.Fprintf(w, "  %s %s  %s\n", icon, m.ControlID, m.Status)
+				fmt.Fprintf(w, "  %s %s  %s\n", m.StatusIcon(), m.ControlID, m.Status)
 			}
 			if cc.ChainNarrative != "" {
 				fmt.Fprintf(w, "\n%s\n", cc.ChainNarrative)
@@ -311,11 +307,7 @@ func writeMarkdownPlaybooks(w io.Writer, playbooks []narrative.Playbook, depth s
 			fmt.Fprintf(w, "## Chain Context: %s\n\n", cc.ChainID)
 			for i := range cc.MemberControls {
 				m := &cc.MemberControls[i]
-				icon := "x"
-				if m.IsPassing() {
-					icon = "v"
-				}
-				fmt.Fprintf(w, "- [%s] %s (%s)\n", icon, m.ControlID, m.Status)
+				fmt.Fprintf(w, "- [%s] %s (%s)\n", m.StatusGlyph(), m.ControlID, m.Status)
 			}
 			fmt.Fprintln(w)
 		}

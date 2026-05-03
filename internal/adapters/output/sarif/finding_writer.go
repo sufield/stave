@@ -171,8 +171,8 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 		// docs/product/metrics.md § Metric 4 (SARIF fix-object
 		// completeness).
 		fixText := f.RemediationSpec.Action
-		if f.RemediationPlan != nil && f.RemediationPlan.Command != "" {
-			fixText = f.RemediationPlan.Command
+		if cmd, ok := f.RemediationCommand(); ok {
+			fixText = cmd
 		}
 		if fixText != "" {
 			result.Suggestions = []sarifSuggestion{

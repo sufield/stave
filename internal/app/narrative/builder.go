@@ -82,6 +82,30 @@ func (m *ChainMember) IsPassing() bool {
 	return m != nil && m.Status == StatusPassing
 }
 
+// StatusIcon returns the unicode marker the cmd/diagnose narrative
+// renderer prefixes member-control rows with: a check mark when
+// the member is passing, a cross when it is failing or holding
+// a finding. Replaces the `icon := "✗"; if IsPassing { icon = "✓" }`
+// branch in the explain-narrative renderer so the rendering choice
+// stays on the type that owns Status.
+func (m *ChainMember) StatusIcon() string {
+	if m != nil && m.IsPassing() {
+		return "✓"
+	}
+	return "✗"
+}
+
+// StatusGlyph returns the ASCII fallback the markdown variant of
+// the explain-narrative renderer uses when the unicode StatusIcon
+// won't render: "v" for passing, "x" otherwise. Sibling of
+// StatusIcon for the markdown renderer.
+func (m *ChainMember) StatusGlyph() string {
+	if m != nil && m.IsPassing() {
+		return "v"
+	}
+	return "x"
+}
+
 // Input holds data for building a playbook.
 type Input struct {
 	Finding     remediation.Finding

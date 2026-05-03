@@ -185,6 +185,28 @@ func (a *AcknowledgedResult) IsValid() bool {
 	return a != nil && a.Valid
 }
 
+// ToAcknowledgedEntry projects this AcknowledgedResult into the
+// profile.AcknowledgedEntry shape the report consumes. Replaces
+// the field-by-field copy block at cmd/evaluate/cmd.go so the
+// projection lives on the type that owns the source fields.
+//
+// nil receiver returns the zero entry so a defensive caller can
+// translate optional results without nil-guarding.
+func (a *AcknowledgedResult) ToAcknowledgedEntry() profile.AcknowledgedEntry {
+	if a == nil {
+		return profile.AcknowledgedEntry{}
+	}
+	return profile.AcknowledgedEntry{
+		ControlID:      a.ControlID,
+		Bucket:         a.Bucket,
+		Rationale:      a.Rationale,
+		AcknowledgedBy: a.AcknowledgedBy,
+		Valid:          a.Valid,
+		InvalidReason:  string(a.InvalidReason),
+		InvalidDetail:  a.InvalidDetail,
+	}
+}
+
 // CompensatingControl shows the status of a required compensating invariant.
 type CompensatingControl struct {
 	ControlID kernel.ControlID `json:"control_id"`

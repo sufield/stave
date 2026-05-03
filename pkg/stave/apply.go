@@ -105,7 +105,7 @@ func toEvalSLAConfig(c *SLAConfig) *evaluation.SLAConfig {
 func BuildAssessment(report *evaluation.ComplianceReport, controls []policy.ControlDefinition) *Assessment {
 	slaBreaches := 0
 	for i := range report.Findings {
-		if report.Findings[i].SLABreached {
+		if report.Findings[i].IsAnyBreach() {
 			slaBreaches++
 		}
 	}
@@ -192,10 +192,10 @@ func convertFinding(f *evaluation.Finding) Finding {
 		Infection:            f.Infection,
 		Failure:              f.Failure,
 		Delta:                convertDelta(f.Delta),
-		SLABreached:          f.SLABreached,
-		SLADeadlineHours:     f.SLADeadlineHours,
-		SLAOverdueHours:      f.SLAOverdueHours,
-		SLAEscalatedSeverity: Severity(f.SLAEscalatedSeverity.String()),
+		SLABreached:          f.SLABreachedFlag(),
+		SLADeadlineHours:     f.SLADeadlinePtr(),
+		SLAOverdueHours:      f.SLAOverduePtr(),
+		SLAEscalatedSeverity: Severity(f.SLAEscalatedSeverityValue().String()),
 	}
 	if f.Reachability != nil {
 		out.Reachability = &Reachability{

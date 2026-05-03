@@ -200,11 +200,11 @@ func toPlanFinding(f *remediation.Finding) PlanFinding {
 		Severity:         f.ControlSeverity,
 		AssetID:          string(f.AssetID),
 		DwellHours:       f.DwellHours(),
-		SLABreached:      f.SLABreached,
-		SLADeadlineHours: f.SLADeadlineHours,
-		OverdueHours:     f.SLAOverdueHours,
+		SLABreached:      f.SLABreachedFlag(),
+		SLADeadlineHours: f.SLADeadlinePtr(),
+		OverdueHours:     f.SLAOverduePtr(),
 	}
-	if f.RemediationSpec.Action != "" {
+	if f.RemediationSpec.HasAction() {
 		pf.RemediationAction = f.RemediationSpec.Action
 	}
 	if len(f.ControlCompliance) > 0 {

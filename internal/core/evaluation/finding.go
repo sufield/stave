@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"slices"
@@ -41,12 +42,21 @@ type Finding struct {
 	// of one or more chains that are currently firing.
 	ChainMembership []ChainMembershipEntry `json:"chain_membership,omitempty"`
 
-	// SLA fields — populated when an SLA deadline applies to this finding.
-	SLADeadlineHours     *float64               `json:"sla_deadline_hours,omitempty"`
-	SLABreached          bool                   `json:"sla_breached,omitempty"`
-	SLAOverdueHours      *float64               `json:"sla_overdue_hours,omitempty"`
-	SLAEscalatedSeverity policy.Severity        `json:"sla_escalated_severity,omitempty"`
-	SLAPolicySource      kernel.SLAPolicySource `json:"sla_policy_source,omitempty"`
+	// SLA fields — populated when an SLA deadline applies to this
+	// finding. Private: only AnnotateSLA mutates them. External
+	// readers go through the accessor methods (HasSLA, IsOverdue,
+	// SLADeadlineValue, OverdueHours, SLAContribution, IsAnyBreach,
+	// IsCriticalSLABreach, SLAEscalatedSeverityValue,
+	// SLAPolicySourceLabel, SLADeadlinePtr, SLAOverduePtr,
+	// SLABreachedFlag); JSON readers go through MarshalJSON /
+	// UnmarshalJSON which expose the original sla_* tags via a
+	// shadow struct. The Go visibility decision is therefore
+	// decoupled from the wire-format shape.
+	slaDeadlineHours     *float64
+	slaBreached          bool
+	slaOverdueHours      *float64
+	slaEscalatedSeverity policy.Severity
+	slaPolicySource      kernel.SLAPolicySource
 
 	// Owner routing — populated when a team manifest is loaded.
 	OwnerTeamID     kernel.TeamID `json:"owner_team_id,omitempty"`
@@ -98,6 +108,68 @@ type Finding struct {
 	Delta []policy.DeltaPath `json:"delta,omitempty"`
 }
 
+// findingShadow is the wire-format projection used by Finding's
+// custom MarshalJSON / UnmarshalJSON. It exposes the SLA fields
+// under their original sla_* JSON tags so external consumers see
+// the identical wire format regardless of whether the Go fields
+// are exported. The Alias type-trick avoids infinite recursion:
+// json.Marshal on *Alias does not recurse into Finding's
+// MarshalJSON because Alias does not inherit the method set.
+//
+// Adding a new wire-only SLA shape here is the single edit
+// required to extend the JSON contract — no code outside the
+// evaluation package needs to change.
+type findingShadow struct {
+	*findingAlias
+	SLADeadlineHours     *float64               `json:"sla_deadline_hours,omitempty"`
+	SLABreached          bool                   `json:"sla_breached,omitempty"`
+	SLAOverdueHours      *float64               `json:"sla_overdue_hours,omitempty"`
+	SLAEscalatedSeverity policy.Severity        `json:"sla_escalated_severity,omitempty"`
+	SLAPolicySource      kernel.SLAPolicySource `json:"sla_policy_source,omitempty"`
+}
+
+// findingAlias breaks the JSON method-set recursion: json.Marshal
+// on (*findingAlias)(f) calls the default reflection-based
+// marshaller instead of Finding's MarshalJSON.
+type findingAlias Finding
+
+// MarshalJSON projects the private SLA fields back to their
+// original sla_* wire tags via the Shadow Struct pattern. The
+// JSON output is byte-identical to the previous public-fields
+// shape; consumers (FindingDTO, ASFF, SARIF wrappers, evidence
+// bundles) parse the same payload.
+func (f Finding) MarshalJSON() ([]byte, error) {
+	alias := findingAlias(f)
+	return json.Marshal(findingShadow{
+		findingAlias:         &alias,
+		SLADeadlineHours:     f.slaDeadlineHours,
+		SLABreached:          f.slaBreached,
+		SLAOverdueHours:      f.slaOverdueHours,
+		SLAEscalatedSeverity: f.slaEscalatedSeverity,
+		SLAPolicySource:      f.slaPolicySource,
+	})
+}
+
+// UnmarshalJSON pairs with MarshalJSON so loaders that read the
+// wire format reconstruct a Finding with its SLA state intact.
+// The shadow's SLA fields are copied into the receiver's private
+// slots; everything else flows through the alias's default
+// reflection unmarshal.
+func (f *Finding) UnmarshalJSON(data []byte) error {
+	alias := (*findingAlias)(f)
+	var shadow findingShadow
+	shadow.findingAlias = alias
+	if err := json.Unmarshal(data, &shadow); err != nil {
+		return err
+	}
+	f.slaDeadlineHours = shadow.SLADeadlineHours
+	f.slaBreached = shadow.SLABreached
+	f.slaOverdueHours = shadow.SLAOverdueHours
+	f.slaEscalatedSeverity = shadow.SLAEscalatedSeverity
+	f.slaPolicySource = shadow.SLAPolicySource
+	return nil
+}
+
 // IsCriticalSLABreach reports whether this finding is an SLA breach
 // where either the original control severity or the SLA-escalated
 // severity reaches Critical. Consumed by the apply runner to decide
@@ -105,11 +177,11 @@ type Finding struct {
 // compound condition lives on the type so callers don't open-code
 // the (SLABreached && severity-check) pair at every site.
 func (f *Finding) IsCriticalSLABreach() bool {
-	if !f.SLABreached {
+	if !f.slaBreached {
 		return false
 	}
 	return f.ControlSeverity == policy.SeverityCritical ||
-		f.SLAEscalatedSeverity == policy.SeverityCritical
+		f.slaEscalatedSeverity == policy.SeverityCritical
 }
 
 // IsAnyBreach reports whether this finding has breached its SLA
@@ -119,7 +191,7 @@ func (f *Finding) IsCriticalSLABreach() bool {
 // directly — keeping the SLA state surface inside the type that
 // owns the underlying fields.
 func (f *Finding) IsAnyBreach() bool {
-	return f != nil && f.SLABreached
+	return f != nil && f.slaBreached
 }
 
 // DwellHours returns the dwell time (Evidence.UnsafeDurationHours)
@@ -349,7 +421,7 @@ func (f *Finding) ComputeBaseScore() (float64, risk.ScoreBreakdown) {
 
 // IsOverdue reports whether the finding has breached SLA AND the
 // overdue duration is recorded. Replaces the
-// `f.SLABreached && f.SLAOverdueHours != nil` pair that recurs
+// `f.slaBreached && f.slaOverdueHours != nil` pair that recurs
 // across rank/priority, rank/formatter/csv, and graph/builder.
 //
 // The two-field check matters: a finding can be SLABreached without
@@ -357,41 +429,147 @@ func (f *Finding) ComputeBaseScore() (float64, risk.ScoreBreakdown) {
 // mode (no deadline configured). Treating SLABreached alone as
 // "overdue" inflated counters in those cases.
 func (f *Finding) IsOverdue() bool {
-	return f.SLABreached && f.SLAOverdueHours != nil
+	return f.slaBreached && f.slaOverdueHours != nil
 }
 
 // HasSLA reports whether an SLA deadline applies to this finding.
-// Replaces the (f.SLADeadlineHours != nil) nil-check that recurred
+// Replaces the (f.slaDeadlineHours != nil) nil-check that recurred
 // across cmd/trend/team_trend.go, cmd/trend/run.go,
 // cmd/trend/metrics.go, cmd/collect/cmd.go, and
 // cmd/export/compliance/output.go. Centralising the presence check
 // keeps the SLA-state surface on the type that owns the pointer.
 func (f *Finding) HasSLA() bool {
-	return f != nil && f.SLADeadlineHours != nil
+	return f != nil && f.slaDeadlineHours != nil
 }
 
 // SLADeadlineValue returns the SLA deadline in hours together with
 // a presence indicator. Replaces patterns that dereferenced
-// f.SLADeadlineHours after a separate nil check; callers can pass
+// f.slaDeadlineHours after a separate nil check; callers can pass
 // the (value, ok) pair through their formatters without touching
 // the underlying pointer.
 func (f *Finding) SLADeadlineValue() (float64, bool) {
-	if f == nil || f.SLADeadlineHours == nil {
+	if f == nil || f.slaDeadlineHours == nil {
 		return 0, false
 	}
-	return *f.SLADeadlineHours, true
+	return *f.slaDeadlineHours, true
 }
 
 // OverdueHours returns the number of hours past SLA, with a presence
 // indicator. Returns (0, false) when the finding is not overdue or
 // has no recorded overdue duration. Replaces the raw
-// (*f.SLAOverdueHours) dereference in cmd/export/compliance/output.go
+// (*f.slaOverdueHours) dereference in cmd/export/compliance/output.go
 // and callers that need the value without re-checking the nil.
 func (f *Finding) OverdueHours() (float64, bool) {
-	if f == nil || f.SLAOverdueHours == nil {
+	if f == nil || f.slaOverdueHours == nil {
 		return 0, false
 	}
-	return *f.SLAOverdueHours, true
+	return *f.slaOverdueHours, true
+}
+
+// RehydrateSLA restores the SLA state from previously-serialised
+// wire fields. Used by loaders / library converters that
+// reconstruct a Finding from JSON (or from a public mirror like
+// pkg/stave.Finding); the AnnotateSLA invariant — only the
+// evaluation package writes the SLA fields — is preserved
+// because RehydrateSLA itself lives in the evaluation package
+// and accepts the wire shape as input.
+//
+// The escalated severity carries through as-is; if the snapshot
+// did not capture an escalation, callers pass policy.SeverityNone.
+func (f *Finding) RehydrateSLA(deadline *float64, breached bool, overdue *float64, escalated policy.Severity, source kernel.SLAPolicySource) {
+	if f == nil {
+		return
+	}
+	f.slaDeadlineHours = deadline
+	f.slaBreached = breached
+	f.slaOverdueHours = overdue
+	f.slaEscalatedSeverity = escalated
+	f.slaPolicySource = source
+}
+
+// SLAEscalatedSeverityValue returns the escalated severity the SLA
+// evaluator computed for this finding (Critical when dwell time
+// has rolled the original severity past the catalog ladder).
+// Returns SeverityNone when no escalation applied.
+func (f *Finding) SLAEscalatedSeverityValue() policy.Severity {
+	if f == nil {
+		return policy.SeverityNone
+	}
+	return f.slaEscalatedSeverity
+}
+
+// SLAPolicySourceLabel returns the SLA policy source's wire-format
+// label ("control_override", "profile:<id>", or "" when no SLA
+// applies). Replaces the f.slaPolicySource.String() probe.
+func (f *Finding) SLAPolicySourceLabel() string {
+	if f == nil {
+		return ""
+	}
+	return f.slaPolicySource.String()
+}
+
+// SLAPolicySourceValue returns the typed SLA policy source. Use
+// when comparing against kernel.SLAPolicySource constants;
+// renderers prefer SLAPolicySourceLabel.
+func (f *Finding) SLAPolicySourceValue() kernel.SLAPolicySource {
+	if f == nil {
+		return ""
+	}
+	return f.slaPolicySource
+}
+
+// SLADeadlinePtr returns the SLA deadline as a *float64 — same
+// pointer shape the wire format and DTO use. Nil when no deadline
+// applies. For boolean / numeric inspection prefer HasSLA,
+// IsOverdue, SLADeadlineValue.
+func (f *Finding) SLADeadlinePtr() *float64 {
+	if f == nil {
+		return nil
+	}
+	return f.slaDeadlineHours
+}
+
+// SLAOverduePtr returns the SLA-overdue dwell as a *float64. See
+// SLADeadlinePtr for the pointer-shape rationale.
+func (f *Finding) SLAOverduePtr() *float64 {
+	if f == nil {
+		return nil
+	}
+	return f.slaOverdueHours
+}
+
+// SLABreachedFlag returns the raw boolean. Use only when copying
+// the SLA triple into a DTO that mirrors the wire shape;
+// otherwise prefer the predicate methods (IsAnyBreach, IsOverdue,
+// SLAContribution).
+func (f *Finding) SLABreachedFlag() bool {
+	return f != nil && f.slaBreached
+}
+
+// HasSource reports whether the finding carries a SourceRef
+// (file/line annotation from the originating extractor). Replaces
+// the (f.Source != nil) probe in the DTO mapper.
+func (f *Finding) HasSource() bool {
+	return f != nil && f.Source != nil
+}
+
+// HasExposure reports whether the finding carries the catalog's
+// authored Exposure block. Replaces (f.Exposure != nil) probes.
+func (f *Finding) HasExposure() bool {
+	return f != nil && f.Exposure != nil
+}
+
+// HasPostureDrift reports whether the finding carries
+// recurrence-pattern data. Replaces (f.PostureDrift != nil) probes.
+func (f *Finding) HasPostureDrift() bool {
+	return f != nil && f.PostureDrift != nil
+}
+
+// HasAlternatives reports whether the catalog declared
+// alternative-tool mappings for the finding's control. Replaces
+// (len(f.Alternatives) > 0) probes.
+func (f *Finding) HasAlternatives() bool {
+	return f != nil && len(f.Alternatives) > 0
 }
 
 // TemporalRiskMessage returns the Evidence-side risk message

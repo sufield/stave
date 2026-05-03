@@ -44,8 +44,8 @@ func (f *Finding) AnnotateSLA(ctl *policy.ControlDefinition, cfg *SLAConfig) {
 		return
 	}
 
-	f.SLADeadlineHours = &deadlineHours
-	f.SLAPolicySource = source
+	f.slaDeadlineHours = &deadlineHours
+	f.slaPolicySource = source
 
 	dwell := f.Evidence.UnsafeDurationHours
 	if dwell <= deadlineHours {
@@ -53,9 +53,9 @@ func (f *Finding) AnnotateSLA(ctl *policy.ControlDefinition, cfg *SLAConfig) {
 	}
 
 	// SLA breached.
-	f.SLABreached = true
+	f.slaBreached = true
 	overdue := dwell - deadlineHours
-	f.SLAOverdueHours = &overdue
+	f.slaOverdueHours = &overdue
 
 	// Escalation: bump severity by one tier per multiple of the
 	// deadline elapsed. The mapping is intentionally measured in
@@ -76,6 +76,6 @@ func (f *Finding) AnnotateSLA(ctl *policy.ControlDefinition, cfg *SLAConfig) {
 	periodsOverdue := max(int(dwell/deadlineHours), 1)
 	escalated := f.ControlSeverity.Bump(periodsOverdue)
 	if escalated != f.ControlSeverity {
-		f.SLAEscalatedSeverity = escalated
+		f.slaEscalatedSeverity = escalated
 	}
 }

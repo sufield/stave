@@ -21,7 +21,7 @@ func FromReportAssessment(r *report.Assessment) *Assessment {
 
 	slaBreaches := 0
 	for i := range r.Findings {
-		if r.Findings[i].SLABreached {
+		if r.Findings[i].IsAnyBreach() {
 			slaBreaches++
 		}
 	}

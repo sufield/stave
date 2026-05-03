@@ -136,15 +136,7 @@ func run(w io.Writer, opts *options) error {
 				continue
 			}
 			validAcks[string(ack.ControlID)] = struct{}{}
-			report.Acknowledged = append(report.Acknowledged, profile.AcknowledgedEntry{
-				ControlID:      ack.ControlID,
-				Bucket:         ack.Bucket,
-				Rationale:      ack.Rationale,
-				AcknowledgedBy: ack.AcknowledgedBy,
-				Valid:          ack.Valid,
-				InvalidReason:  string(ack.InvalidReason),
-				InvalidDetail:  ack.InvalidDetail,
-			})
+			report.Acknowledged = append(report.Acknowledged, ack.ToAcknowledgedEntry())
 		}
 
 		// Re-evaluate compound findings: a compound risk whose

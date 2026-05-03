@@ -178,7 +178,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 	// control author intended immediate detection. Per-control
 	// max_unsafe_duration is still honored when explicitly declared.
 	var maxUnsafe time.Duration
-	if s.ctl.PreparedParams().HasMaxUnsafeDuration {
+	if s.ctl.HasMaxUnsafeDuration() {
 		maxUnsafe = s.deps.slaThresholdFor(s.ctl)
 	}
 	span := s.deps.currentSpan()

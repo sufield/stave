@@ -14,15 +14,16 @@ import (
 func TestGenerate_FindingMapsToItem(t *testing.T) {
 	slaHours := 72.0
 	findings := []remediation.Finding{
-		{
-			Finding: evaluation.Finding{
-				ControlID:        kernel.ControlID("CTL.S3.PUBLIC.001"),
-				ControlName:      "S3 public access",
-				AssetID:          asset.ID("arn:aws:s3:::prod-bucket"),
-				ControlSeverity:  policy.SeverityHigh,
-				SLADeadlineHours: &slaHours,
-			},
-		},
+		func() remediation.Finding {
+			ev := evaluation.Finding{
+				ControlID:       kernel.ControlID("CTL.S3.PUBLIC.001"),
+				ControlName:     "S3 public access",
+				AssetID:         asset.ID("arn:aws:s3:::prod-bucket"),
+				ControlSeverity: policy.SeverityHigh,
+			}
+			ev.RehydrateSLA(&slaHours, false, nil, 0, "")
+			return remediation.Finding{Finding: ev}
+		}(),
 	}
 
 	poam := Generate(Input{

@@ -35,37 +35,37 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		Delta:              fromDeltaPaths(f.Delta),
 	}
 
-	if f.Source != nil {
+	if f.HasSource() {
 		dto.Source = &SourceRefDTO{File: f.Source.File, Line: f.Source.Line}
 	}
-	if f.Exposure != nil {
+	if f.HasExposure() {
 		dto.Exposure = &ExposureDTO{
 			Type:           string(f.Exposure.Type),
 			PrincipalScope: f.Exposure.PrincipalScope.String(),
 		}
 	}
-	if f.PostureDrift != nil {
+	if f.HasPostureDrift() {
 		dto.PostureDrift = &PostureDriftDTO{
 			Pattern:             f.PostureDrift.Pattern,
 			ExposureWindowCount: f.PostureDrift.ExposureWindowCount,
 		}
 	}
-	if f.RemediationPlan != nil {
+	if f.HasRemediationPlan() {
 		plan := fromRemediationPlan(*f.RemediationPlan)
 		dto.RemediationPlan = &plan
 	}
-	if len(f.ChainMembership) > 0 {
+	if f.IsChainMember() {
 		dto.ChainMembership = mapSlice(f.ChainMembership, fromChainMembershipEntry)
 	}
 
-	dto.SLADeadlineHours = f.SLADeadlineHours
-	dto.SLABreached = f.SLABreached
-	dto.SLAOverdueHours = f.SLAOverdueHours
-	dto.SLAEscalatedSeverity = f.SLAEscalatedSeverity.String()
-	dto.SLAPolicySource = f.SLAPolicySource.String()
+	dto.SLADeadlineHours = f.SLADeadlinePtr()
+	dto.SLABreached = f.SLABreachedFlag()
+	dto.SLAOverdueHours = f.SLAOverduePtr()
+	dto.SLAEscalatedSeverity = f.SLAEscalatedSeverityValue().String()
+	dto.SLAPolicySource = f.SLAPolicySourceLabel()
 	dto.ExposureScore = f.ExposureScore.Value()
 	dto.ScoreBreakdown = f.ScoreBreakdown
-	if len(f.ReasoningTrace) > 0 {
+	if f.HasReasoningTrace() {
 		dto.ReasoningTrace = make([]MatchedClauseDTO, len(f.ReasoningTrace))
 		for i, mc := range f.ReasoningTrace {
 			dto.ReasoningTrace[i] = MatchedClauseDTO{
@@ -78,7 +78,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		}
 	}
 	dto.RemediationContext = buildRemediationContext(f)
-	if len(f.Alternatives) > 0 {
+	if f.HasAlternatives() {
 		dto.Alternatives = make([]AlternativeDTO, len(f.Alternatives))
 		for i, a := range f.Alternatives {
 			dto.Alternatives[i] = AlternativeDTO{

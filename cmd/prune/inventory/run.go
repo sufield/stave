@@ -301,21 +301,32 @@ func recommendAction(retentionEligible, qualityPass, assessed bool) (string, str
 	}
 }
 
+// TallyInto adds this entry's size and recommendation to the
+// supplied summary. Centralises the per-recommendation switch on
+// the type that owns the recommendation predicates so callers
+// (computeSummary) iterate without re-implementing the dispatch.
+func (e *snapshotEntry) TallyInto(s *inventorySummary) {
+	if e == nil || s == nil {
+		return
+	}
+	s.TotalSizeBytes += e.FileSizeBytes
+	switch {
+	case e.IsKeep():
+		s.RecommendedKeep++
+	case e.IsArchive():
+		s.RecommendedArchive++
+	case e.IsDelete():
+		s.RecommendedDelete++
+	case e.IsReview():
+		s.RecommendedReview++
+	}
+}
+
 func computeSummary(snapshots []snapshotEntry) inventorySummary {
 	var s inventorySummary
 	s.TotalFiles = len(snapshots)
 	for i := range snapshots {
-		s.TotalSizeBytes += snapshots[i].FileSizeBytes
-		switch {
-		case snapshots[i].IsKeep():
-			s.RecommendedKeep++
-		case snapshots[i].IsArchive():
-			s.RecommendedArchive++
-		case snapshots[i].IsDelete():
-			s.RecommendedDelete++
-		case snapshots[i].IsReview():
-			s.RecommendedReview++
-		}
+		snapshots[i].TallyInto(&s)
 	}
 	return s
 }

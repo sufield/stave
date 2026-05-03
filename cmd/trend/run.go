@@ -154,18 +154,8 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 }
 
 func computePostureScore(a *report.Assessment, slaTrend []slaTrendMetric, chainDefs int, maxChainWeight float64) appscore.Result {
-	slaTotal := 0
-	slaBreached := 0
-	hasSLA := false
-	for i := range a.Findings {
-		if a.Findings[i].HasSLA() {
-			hasSLA = true
-			slaTotal++
-			if a.Findings[i].IsOverdue() {
-				slaBreached++
-			}
-		}
-	}
+	slaTotal, slaBreached := a.SLASummary()
+	hasSLA := slaTotal > 0
 	// Use SLA trend data if no per-finding SLA.
 	if !hasSLA && len(slaTrend) > 0 {
 		latest := slaTrend[len(slaTrend)-1]
