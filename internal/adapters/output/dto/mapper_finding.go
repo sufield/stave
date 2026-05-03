@@ -8,6 +8,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/translation"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
 
 // FromFinding projects a single remediation.Finding into a FindingDTO.
@@ -127,9 +128,9 @@ func buildRemediationContext(f *remediation.Finding) *RemediationContextDTO {
 	}
 
 	// Asset ARN + region when derivable from an ARN-shaped AssetID.
-	if f.AssetID.IsARN() {
+	if iam.IsARN(string(f.AssetID)) {
 		ctx.Asset.ARN = string(f.AssetID)
-		ctx.Asset.Region = f.AssetID.Region()
+		ctx.Asset.Region = iam.Region(string(f.AssetID))
 	}
 
 	// Reasoning: mirror each matched clause in a structured shape

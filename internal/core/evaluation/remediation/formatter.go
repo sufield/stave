@@ -106,7 +106,11 @@ func buildSubstitutions(a asset.Asset) map[string]string {
 		subs["<queue-name>"] = shortID
 	}
 
-	// ARN-derived account + region tokens.
+	// ARN-derived account + region tokens, plus the generic <arn>
+	// token for any asset whose ID parses as an ARN. Consolidated
+	// here so the parsing decision lives in one place — the prior
+	// `strings.HasPrefix(assetID, "arn:aws:")` literal duplicated
+	// what parseARNContext already determines.
 	if ctx, ok := parseARNContext(assetID); ok {
 		if ctx.Account != "" {
 			subs["<account>"] = ctx.Account
@@ -115,10 +119,6 @@ func buildSubstitutions(a asset.Asset) map[string]string {
 		if ctx.Region != "" {
 			subs["<region>"] = ctx.Region
 		}
-	}
-
-	// Generic ARN token for any asset whose ID is an ARN.
-	if strings.HasPrefix(assetID, "arn:aws:") {
 		subs["<arn>"] = assetID
 	}
 

@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"os"
@@ -29,6 +31,10 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 				"github.com/sufield/stave/internal/adapters/",
 				"github.com/sufield/stave/internal/app",
 				"github.com/sufield/stave/cmd/",
+				// core/ ships vendor-neutral abstractions; provider
+				// packages depend on core, never the reverse. Catches
+				// regressions on the Phase 5 stage D direction reversal.
+				"github.com/sufield/stave/internal/platform/providers/",
 			},
 		},
 		{
@@ -106,6 +112,77 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 	sort.Strings(violations)
 	for _, v := range violations {
 		t.Errorf("hexagonal dependency violation: %s", v)
+	}
+}
+
+// TestNoVendorStringsInCore guards the vendor-neutrality of
+// internal/core/. Production .go files (test files excluded) must
+// not contain string literals carrying AWS-specific markers; those
+// strings belong with the AWS provider package.
+//
+// The check is case-insensitive and operates on string-literal
+// AST nodes only — comments and identifier names are ignored, so a
+// docstring that says "AWS" or a function named UseAWS is fine.
+func TestNoVendorStringsInCore(t *testing.T) {
+	root := findModuleRoot(t)
+	coreDir := filepath.Join(root, "internal", "core")
+
+	bannedSubstrings := []string{
+		"arn:aws",
+		".amazonaws.com",
+		".iam.gserviceaccount.com",
+	}
+
+	fset := token.NewFileSet()
+	var violations []string
+
+	walkErr := filepath.WalkDir(coreDir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if filepath.Ext(path) != ".go" || strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+
+		file, parseErr := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		if parseErr != nil {
+			return parseErr
+		}
+
+		rel, relErr := filepath.Rel(root, path)
+		if relErr != nil {
+			rel = path
+		}
+
+		ast.Inspect(file, func(n ast.Node) bool {
+			lit, ok := n.(*ast.BasicLit)
+			if !ok || lit.Kind != token.STRING {
+				return true
+			}
+			lower := strings.ToLower(lit.Value)
+			for _, banned := range bannedSubstrings {
+				if strings.Contains(lower, banned) {
+					pos := fset.Position(lit.Pos())
+					violations = append(violations,
+						fmt.Sprintf("%s:%d: literal %s contains banned substring %q",
+							rel, pos.Line, lit.Value, banned))
+					break
+				}
+			}
+			return true
+		})
+		return nil
+	})
+	if walkErr != nil {
+		t.Fatalf("walk %s: %v", coreDir, walkErr)
+	}
+
+	sort.Strings(violations)
+	for _, v := range violations {
+		t.Errorf("vendor string in core: %s", v)
 	}
 }
 

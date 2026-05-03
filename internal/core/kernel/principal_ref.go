@@ -21,17 +21,13 @@ type PrincipalRef string
 
 // recognisedPrincipalSuffixes covers service-principal hostnames
 // that legitimately appear as principals but don't carry an ARN
-// scheme. Provider packages register their suffixes via
-// RegisterPrincipalSuffix at init; the kernel ships with the AWS
-// and GCP defaults as a transitional seed. Phase 5 of the
-// provider-extraction plan moves the seeding to the AWS / GCP
-// provider init().
+// scheme. The kernel ships this registry empty; provider packages
+// contribute their suffixes via RegisterPrincipalSuffix from
+// Register() (e.g. providers/aws.Register registers
+// ".amazonaws.com").
 var (
 	recognisedPrincipalSuffixesMu sync.RWMutex
-	recognisedPrincipalSuffixes   = []string{
-		".amazonaws.com",
-		".iam.gserviceaccount.com",
-	}
+	recognisedPrincipalSuffixes   = []string{}
 )
 
 // RegisterPrincipalSuffix adds suffix to the set of service-

@@ -89,3 +89,23 @@ func TestSourceTypeAWSS3Snapshot_RegisteredViaRegister(t *testing.T) {
 		t.Errorf("after aws.Register, %q missing from KnownObservationSourceTypes()", aws.SourceTypeAWSS3Snapshot)
 	}
 }
+
+func TestRegister_RegistersAmazonAWSPrincipalSuffix(t *testing.T) {
+	// The kernel no longer ships .amazonaws.com as a default
+	// principal-suffix seed; aws.Register is the only path that
+	// makes service-principal hostnames like "lambda.amazonaws.com"
+	// pass kernel.PrincipalRef.Validate.
+	aws.Register()
+	if _, err := kernel.NewPrincipalRef("lambda.amazonaws.com"); err != nil {
+		t.Errorf("after aws.Register, NewPrincipalRef(\"lambda.amazonaws.com\") error = %v", err)
+	}
+}
+
+func TestRegister_RegistersARNURIScheme(t *testing.T) {
+	// Symmetric coverage — aws.Register also registers the
+	// "arn:" URI scheme so resource ARNs validate.
+	aws.Register()
+	if _, err := kernel.ParseResourceURI("arn:aws:s3:::example-bucket"); err != nil {
+		t.Errorf("after aws.Register, ParseResourceURI for an AWS ARN error = %v", err)
+	}
+}
