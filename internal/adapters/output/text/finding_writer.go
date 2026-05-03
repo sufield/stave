@@ -421,36 +421,23 @@ func writeFindingReasoning(d *drawer, f *remediation.Finding) {
 
 // writeFindingTriage renders the authored DEFECT / INFECTION / FAILURE
 // chain — Andreas Zeller's failure-theory vocabulary applied to cloud
-// misconfigurations. Skips any section whose prose is empty; emits
-// nothing at all when all three are empty (controls not yet authored
-// for the triage chain render identically to pre-iteration output).
+// misconfigurations. Iterates Finding.TriageEntries() so the
+// presence-and-order policy stays on the type that owns the prose;
+// renderers do not branch on each field individually.
 func writeFindingTriage(d *drawer, f *remediation.Finding) {
-	if !f.HasDiagnosis() {
-		return
-	}
-	if f.Defect != "" {
-		d.f("   Defect:\n")
-		d.f("     %s\n", collapseWhitespace(f.Defect))
-	}
-	if f.Infection != "" {
-		d.f("   Infection:\n")
-		d.f("     %s\n", collapseWhitespace(f.Infection))
-	}
-	if f.Failure != "" {
-		d.f("   Failure:\n")
-		d.f("     %s\n", collapseWhitespace(f.Failure))
+	for _, entry := range f.TriageEntries() {
+		d.f("   %s:\n", entry.Label)
+		d.f("     %s\n", collapseWhitespace(entry.Text))
 	}
 }
 
 // writeFindingObserved renders the property-path / observed-value pairs
-// the predicate consulted during evaluation. Gated on triage presence:
-// emits only when the control carries authored Defect/Infection/Failure,
-// preserving byte-identical output for unauthored controls.
+// the predicate consulted during evaluation. Gated on the joint
+// presence of authored triage AND a reasoning trace via
+// HasObservableDiagnosis — preserving byte-identical output for
+// unauthored controls.
 func writeFindingObserved(d *drawer, f *remediation.Finding) {
-	if !f.HasDiagnosis() {
-		return
-	}
-	if !f.HasReasoningTrace() {
+	if !f.HasObservableDiagnosis() {
 		return
 	}
 	d.f("   Observed:\n")
@@ -460,13 +447,10 @@ func writeFindingObserved(d *drawer, f *remediation.Finding) {
 }
 
 // writeFindingDelta renders the DELTA section — mechanically derived fix
-// paths from the predicate and observed values. Gated on triage presence
-// (same as OBSERVED).
+// paths from the predicate and observed values. Gated on
+// HasDeltaDiagnosis (triage AND delta).
 func writeFindingDelta(d *drawer, f *remediation.Finding) {
-	if !f.HasDiagnosis() {
-		return
-	}
-	if !f.HasDelta() {
+	if !f.HasDeltaDiagnosis() {
 		return
 	}
 	if len(f.Delta) == 1 {
@@ -529,15 +513,11 @@ func writeFindingRemediation(d *drawer, f *remediation.Finding) {
 	}
 }
 
-// remediationAction returns the action text to display. Prefers
-// RemediationPlan.Command (parameterized when placeholders resolve)
-// over RemediationSpec.Action (the reusable template). Returns "" when
-// neither is set.
+// remediationAction returns the action text to display, delegating
+// to Finding.EffectiveRemediationCommand which encapsulates the
+// (Plan.Command preferred over Spec.Action) fallback chain.
 func remediationAction(f *remediation.Finding) string {
-	if f.RemediationPlan != nil && f.RemediationPlan.Command != "" {
-		return f.RemediationPlan.Command
-	}
-	return f.RemediationSpec.Action
+	return f.EffectiveRemediationCommand()
 }
 
 // toRemediationFindings converts port-boundary enriched findings to

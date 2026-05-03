@@ -49,39 +49,6 @@ type PlanFinding struct {
 	Compliance        map[string]string `json:"compliance,omitempty"`
 }
 
-// IsOverdue reports whether the plan finding has breached SLA AND
-// the overdue duration was recorded. Mirrors Finding.IsOverdue's
-// two-field check so the plan renderer branches on a single
-// predicate instead of repeating the compound check at every site.
-func (f *PlanFinding) IsOverdue() bool {
-	return f != nil && f.SLABreached && f.OverdueHours != nil
-}
-
-// HasSLA reports whether an SLA deadline is attached to this plan
-// finding. Mirrors Finding.HasSLA so callers branch on a single
-// predicate instead of probing the SLADeadlineHours pointer.
-func (f *PlanFinding) HasSLA() bool {
-	return f != nil && f.SLADeadlineHours != nil
-}
-
-// SLADeadlineValue returns the deadline in hours plus a presence
-// indicator. Mirrors evaluation.Finding.SLADeadlineValue so plan
-// renderers stop dereferencing the pointer at the call site.
-func (f *PlanFinding) SLADeadlineValue() (float64, bool) {
-	if f == nil || f.SLADeadlineHours == nil {
-		return 0, false
-	}
-	return *f.SLADeadlineHours, true
-}
-
-// OverdueHoursValue returns the overdue-hours duration plus a
-// presence indicator. Mirrors evaluation.Finding.OverdueHours.
-func (f *PlanFinding) OverdueHoursValue() (float64, bool) {
-	if f == nil || f.OverdueHours == nil {
-		return 0, false
-	}
-	return *f.OverdueHours, true
-}
 
 // Plan is the complete remediation plan output.
 type Plan struct {
@@ -225,9 +192,9 @@ func computeSummary(findings []PlanFinding) TeamSummary {
 	for i := range findings {
 		f := &findings[i]
 		counts.Add(f.Severity)
-		if f.HasSLA() {
+		if f.SLADeadlineHours != nil {
 			slaTotal++
-			if f.IsOverdue() {
+			if f.SLABreached && f.OverdueHours != nil {
 				s.SLABreached++
 			} else {
 				slaWithin++

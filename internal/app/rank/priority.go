@@ -41,8 +41,13 @@ type PriorityEntry struct {
 	IsChainMemberField bool                    `json:"is_chain_member"`
 	ChainSeverity      string                  `json:"chain_severity,omitempty"`
 	ChainID            string                  `json:"chain_id,omitempty"`
-	SLABreached        bool                    `json:"sla_breached,omitempty"`
-	SLAOverdue         string                  `json:"sla_overdue,omitempty"`
+	// SLABreached / SLAOverdue are display-only fields: the wire
+	// format the rank renderer prints. Set at construction time
+	// from Finding.IsOverdue() / Finding.OverdueHours(); not
+	// intended as a predicate surface — call sites should ask the
+	// originating Finding for SLA semantics, not the entry.
+	SLABreached bool   `json:"sla_breached,omitempty"`
+	SLAOverdue  string `json:"sla_overdue,omitempty"`
 }
 
 // IsChainMember reports whether this priority entry corresponds to a
@@ -53,14 +58,6 @@ func (e *PriorityEntry) IsChainMember() bool {
 	return e != nil && e.IsChainMemberField
 }
 
-// IsOverdue reports whether the priority entry has breached SLA AND
-// the overdue duration was recorded. Mirrors Finding.IsOverdue's
-// two-field check so consumers branch on a single predicate
-// regardless of whether they're holding a Finding or a
-// roadmap-side PriorityEntry.
-func (e *PriorityEntry) IsOverdue() bool {
-	return e != nil && e.SLABreached && e.SLAOverdue != ""
-}
 
 // RemediationBundle groups findings by a shared fix action.
 type RemediationBundle struct {
@@ -171,13 +168,15 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 	slices.SortFunc(entries, func(a, b PriorityEntry) int {
 		// Chain-member findings sort before isolated findings.
 		// true sorts before false (boolToInt: true=0, false=1).
-		// IsOverdue captures the same "SLA breached + overdue hours
-		// recorded" pair PriorityEntry sets above, so the sort uses
-		// the named predicate instead of the SLABreached field
-		// directly.
+		// SLA-breached display state matches the (SLABreached &&
+		// SLAOverdue != "") pair the construction loop sets above;
+		// inlined here so PriorityEntry stops carrying a predicate
+		// surface that mirrors evaluation.Finding.IsOverdue.
 		return cmp.Or(
 			cmp.Compare(boolToInt(!a.IsChainMember()), boolToInt(!b.IsChainMember())),
-			cmp.Compare(boolToInt(!a.IsOverdue()), boolToInt(!b.IsOverdue())),
+			cmp.Compare(
+				boolToInt(!(a.SLABreached && a.SLAOverdue != "")),
+				boolToInt(!(b.SLABreached && b.SLAOverdue != ""))),
 			cmp.Compare(b.PriorityScore, a.PriorityScore),
 			cmp.Compare(b.Confidence, a.Confidence),
 			cmp.Compare(a.ControlID, b.ControlID),

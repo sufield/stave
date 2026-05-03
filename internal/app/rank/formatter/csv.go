@@ -104,14 +104,22 @@ func buildFindingIndex(assessment *report.Assessment) map[string]*findingMeta {
 		if dl, ok := f.SLADeadlineValue(); ok {
 			m.slaHours = fmt.Sprintf("%.0f", dl)
 		}
+		// IsAnyBreach is the right predicate for the CSV's
+		// SLA status column: it reports whether ANY breach has
+		// been recorded, regardless of whether the overdue
+		// duration was captured. The roadmap renderer uses the
+		// stricter (SLABreached && SLAOverdue != "") combo for
+		// its display because it dereferences the duration; the
+		// CSV only emits a string state, so the broader predicate
+		// is the intentional choice here.
 		switch {
 		case f.IsAnyBreach():
 			m.slaStatus = "BREACHED"
 		case f.HasSLA():
 			m.slaStatus = "OK"
 		}
-		for j := range f.ChainMembership {
-			m.chainIDs = append(m.chainIDs, string(f.ChainMembership[j].ChainID))
+		for _, id := range f.ChainIDs() {
+			m.chainIDs = append(m.chainIDs, string(id))
 		}
 		idx[key] = m
 	}

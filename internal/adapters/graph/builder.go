@@ -284,14 +284,16 @@ func buildFindingProperties(f *remediation.Finding) map[string]any {
 	if f.IsOverdue() {
 		props["sla_breached"] = true
 	}
-	if f.IsChainMember() {
-		membership := make([]map[string]any, len(f.ChainMembership))
-		for ci, cm := range f.ChainMembership {
-			membership[ci] = map[string]any{
-				"chain_id":       cm.ChainID,
-				"chain_severity": cm.ChainSeverity,
-				"stage_span":     attack.TranslateStages(cm.StageSpan),
-				"narrative":      cm.Narrative,
+	if membership := f.ChainMembershipProperties(); membership != nil {
+		// Post-process the per-entry stage_span: the core
+		// projection emits raw kernel.AttackStage values; the
+		// graph wire-format wants the ATT&CK-translated labels.
+		// Keeping the translation in this adapter avoids
+		// coupling core/evaluation to the providers/aws ATT&CK
+		// vocabulary.
+		for ci := range membership {
+			if raw, ok := membership[ci]["stage_span"].([]kernel.AttackStage); ok {
+				membership[ci]["stage_span"] = attack.TranslateStages(raw)
 			}
 		}
 		props["x_stave_chain_membership"] = membership

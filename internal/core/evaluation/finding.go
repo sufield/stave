@@ -170,12 +170,36 @@ func (f *Finding) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// SLA state vocabulary on Finding. The four predicates form a
+// strict-subset ladder; pick the loosest one that answers the
+// caller's actual question.
+//
+//	HasSLA()              ← a deadline applies (the SLA evaluator
+//	                        attached one). Says nothing about
+//	                        whether it was met.
+//	IsAnyBreach()         ← the breach flag is set. The overdue
+//	                        duration may not be captured (degraded
+//	                        mode when the evaluator runs without a
+//	                        timestamped deadline). Use for boolean
+//	                        rollups (count of breached, gating).
+//	IsOverdue()           ← breached AND the overdue duration was
+//	                        recorded. Use when the value will be
+//	                        dereferenced (the renderer that prints
+//	                        "%.0fh overdue").
+//	IsCriticalSLABreach() ← breached AND the original or escalated
+//	                        severity reaches Critical. The
+//	                        gating-side "must block CI" predicate.
+//
+// Ladder direction: HasSLA ⊇ IsAnyBreach ⊇ IsOverdue (overdue
+// implies breach implies tracked). IsCriticalSLABreach is a
+// strictly tighter version of IsAnyBreach (severity-bounded), not
+// of IsOverdue — a critical breach can fire without an overdue
+// duration recorded.
+//
 // IsCriticalSLABreach reports whether this finding is an SLA breach
 // where either the original control severity or the SLA-escalated
 // severity reaches Critical. Consumed by the apply runner to decide
-// whether to set HasCriticalSLABreach on the run summary; the
-// compound condition lives on the type so callers don't open-code
-// the (SLABreached && severity-check) pair at every site.
+// whether to set HasCriticalSLABreach on the run summary.
 func (f *Finding) IsCriticalSLABreach() bool {
 	if !f.slaBreached {
 		return false
@@ -184,12 +208,14 @@ func (f *Finding) IsCriticalSLABreach() bool {
 		f.slaEscalatedSeverity == policy.SeverityCritical
 }
 
-// IsAnyBreach reports whether this finding has breached its SLA
-// regardless of severity. Complements IsCriticalSLABreach by giving
-// callers (the apply runner, gating logic) a named accessor for the
-// "any breach happened" signal so they stop reading SLABreached
-// directly — keeping the SLA state surface inside the type that
-// owns the underlying fields.
+// IsAnyBreach reports whether this finding has breached its SLA,
+// regardless of severity OR overdue-duration capture. Use for
+// counters, gating booleans, and CSV status columns where only
+// the "did the breach happen" signal matters; prefer IsOverdue
+// when the renderer will dereference the overdue hours value.
+//
+// See the SLA state vocabulary on IsCriticalSLABreach for the
+// full ladder.
 func (f *Finding) IsAnyBreach() bool {
 	return f != nil && f.slaBreached
 }
@@ -322,6 +348,55 @@ func (f *Finding) HasDiagnosis() bool {
 	return f != nil && (f.Defect != "" || f.Infection != "" || f.Failure != "")
 }
 
+// TriageEntry pairs an authored-triage label with its prose. Used
+// by renderers iterating Defect / Infection / Failure as one
+// labelled list rather than three separate (label, value) pairs
+// at the call site.
+type TriageEntry struct {
+	Label string
+	Text  string
+}
+
+// TriageEntries returns the non-empty triage prose attached to
+// the finding in the canonical Defect → Infection → Failure
+// order. Renderers consume the slice and emit one row per entry;
+// missing fields disappear from the output without the caller
+// branching on each one. Empty receiver returns nil.
+func (f *Finding) TriageEntries() []TriageEntry {
+	if f == nil {
+		return nil
+	}
+	var out []TriageEntry
+	if f.Defect != "" {
+		out = append(out, TriageEntry{Label: "Defect", Text: f.Defect})
+	}
+	if f.Infection != "" {
+		out = append(out, TriageEntry{Label: "Infection", Text: f.Infection})
+	}
+	if f.Failure != "" {
+		out = append(out, TriageEntry{Label: "Failure", Text: f.Failure})
+	}
+	return out
+}
+
+// HasObservableDiagnosis reports whether the finding carries both
+// authored triage prose AND a reasoning trace — the joint condition
+// the text renderer uses to decide whether to print the OBSERVED
+// section. Single predicate replaces the
+// (HasDiagnosis() && HasReasoningTrace()) compound check at the
+// renderer site.
+func (f *Finding) HasObservableDiagnosis() bool {
+	return f.HasDiagnosis() && f.HasReasoningTrace()
+}
+
+// HasDeltaDiagnosis reports whether the finding carries both
+// authored triage prose AND a mechanically-derived delta — the
+// joint condition the text renderer uses to decide whether to
+// print the DELTA section. Sibling of HasObservableDiagnosis.
+func (f *Finding) HasDeltaDiagnosis() bool {
+	return f.HasDiagnosis() && f.HasDelta()
+}
+
 // HasReasoningTrace reports whether the finding carries the
 // predicate-clause reasoning trace the engine emits when a control
 // matches. Replaces the `len(f.ReasoningTrace) == 0` probe in text
@@ -392,6 +467,57 @@ func (f *Finding) PrimaryChainID() string {
 	return string(f.ChainMembership[0].ChainID)
 }
 
+// PrimaryChainNarrative returns the narrative attached to the
+// first chain this finding participates in, or "" if the finding
+// is not a chain member. Sibling of PrimaryChainID /
+// PrimaryChainSeverity for the renderer that needs the prose
+// alongside the IDs.
+func (f *Finding) PrimaryChainNarrative() string {
+	if f == nil || len(f.ChainMembership) == 0 {
+		return ""
+	}
+	return f.ChainMembership[0].Narrative
+}
+
+// ChainIDs returns every chain ID the finding contributes to, in
+// catalogue order. Nil slice for non-chain findings so range loops
+// behave the same as on an empty membership.
+func (f *Finding) ChainIDs() []kernel.ChainID {
+	if f == nil || len(f.ChainMembership) == 0 {
+		return nil
+	}
+	out := make([]kernel.ChainID, len(f.ChainMembership))
+	for i := range f.ChainMembership {
+		out[i] = f.ChainMembership[i].ChainID
+	}
+	return out
+}
+
+// ChainMembershipProperties returns the per-chain property maps
+// the graph builder embeds on a finding node's
+// `x_stave_chain_membership` extension. Each entry carries
+// chain_id, chain_severity, and narrative; stage_span is left for
+// callers that need ATT&CK projections (the graph builder applies
+// attack.TranslateStages on top of this slice's entries).
+//
+// Centralising the map shape here keeps the wire format stable
+// across producers — any future addition lands in one place.
+func (f *Finding) ChainMembershipProperties() []map[string]any {
+	if f == nil || len(f.ChainMembership) == 0 {
+		return nil
+	}
+	out := make([]map[string]any, len(f.ChainMembership))
+	for i, cm := range f.ChainMembership {
+		out[i] = map[string]any{
+			"chain_id":       cm.ChainID,
+			"chain_severity": cm.ChainSeverity,
+			"stage_span":     cm.StageSpan,
+			"narrative":      cm.Narrative,
+		}
+	}
+	return out
+}
+
 // ComputeBaseScore returns the per-finding base exposure score the
 // remediation roadmap uses when the chain-aware top-N ranker has not
 // produced a precomputed score for this finding (e.g. assets that
@@ -420,24 +546,27 @@ func (f *Finding) ComputeBaseScore() (float64, risk.ScoreBreakdown) {
 }
 
 // IsOverdue reports whether the finding has breached SLA AND the
-// overdue duration is recorded. Replaces the
-// `f.slaBreached && f.slaOverdueHours != nil` pair that recurs
-// across rank/priority, rank/formatter/csv, and graph/builder.
+// overdue duration is recorded. Use this when the renderer or
+// summary will dereference the overdue value; use IsAnyBreach for
+// boolean-only rollups.
 //
-// The two-field check matters: a finding can be SLABreached without
-// an SLAOverdueHours when the SLA evaluator runs in a degraded
-// mode (no deadline configured). Treating SLABreached alone as
-// "overdue" inflated counters in those cases.
+// The two-field check matters: a finding can be flagged breached
+// without an overdue duration when the SLA evaluator runs in a
+// degraded mode (no deadline configured). Treating the breach
+// flag alone as "overdue" inflated counters in those cases.
+//
+// See IsCriticalSLABreach for the full SLA state vocabulary.
 func (f *Finding) IsOverdue() bool {
 	return f.slaBreached && f.slaOverdueHours != nil
 }
 
 // HasSLA reports whether an SLA deadline applies to this finding.
-// Replaces the (f.slaDeadlineHours != nil) nil-check that recurred
-// across cmd/trend/team_trend.go, cmd/trend/run.go,
-// cmd/trend/metrics.go, cmd/collect/cmd.go, and
-// cmd/export/compliance/output.go. Centralising the presence check
-// keeps the SLA-state surface on the type that owns the pointer.
+// The loosest predicate in the SLA vocabulary: says only that the
+// evaluator attached a deadline, not that the deadline has been
+// met or breached. Use for "is this finding under SLA tracking?"
+// gating; use IsAnyBreach / IsOverdue for breach-state checks.
+//
+// See IsCriticalSLABreach for the full SLA state ladder.
 func (f *Finding) HasSLA() bool {
 	return f != nil && f.slaDeadlineHours != nil
 }

@@ -141,7 +141,7 @@ func BuildPlaybook(input *Input) Playbook {
 	pb.Narrative.Steps = buildSteps(f.RemediationSpec)
 
 	// Section 5: Chain context.
-	if len(f.ChainMembership) > 0 {
+	if f.IsChainMember() {
 		pb.Narrative.ChainContext = buildChainContext(f, input.ChainDefs, input.AllFindings)
 	}
 
@@ -288,25 +288,25 @@ func groupByNamespace(changes []policy.PropertyChange) []changeGroup {
 }
 
 func buildChainContext(f *remediation.Finding, chainDefs []policy.ChainDefinition, allFindings []remediation.Finding) *ChainContext {
-	if len(f.ChainMembership) == 0 {
+	if !f.IsChainMember() {
 		return nil
 	}
 
-	cm := f.ChainMembership[0]
+	primaryID := f.PrimaryChainID()
 
 	// Find the chain definition.
 	var chainDef *policy.ChainDefinition
 	for i := range chainDefs {
-		if chainDefs[i].ID == cm.ChainID {
+		if string(chainDefs[i].ID) == primaryID {
 			chainDef = &chainDefs[i]
 			break
 		}
 	}
 
 	ctx := &ChainContext{
-		ChainID:        string(cm.ChainID),
+		ChainID:        primaryID,
 		ChainActive:    true,
-		ChainNarrative: cm.Narrative,
+		ChainNarrative: f.PrimaryChainNarrative(),
 	}
 
 	// Build member control status.

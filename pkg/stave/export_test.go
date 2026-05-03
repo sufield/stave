@@ -18,7 +18,7 @@ import (
 const snapshot = `{
 	"schema_version": "obs.v0.1",
 	"captured_at": "2026-05-03T00:00:00Z",
-	"source": "test-fixture",
+	"source": "local",
 	"assets": [
 		{
 			"id": "arn:aws:s3:::data-bucket",

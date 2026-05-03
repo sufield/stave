@@ -66,7 +66,7 @@ func (t *TextRoadmap) Render(w io.Writer, rm apprank.Roadmap, assessment *report
 				fmt.Fprintf(w, "      Reach: —\n")
 			}
 		}
-		if e.IsOverdue() {
+		if e.SLABreached && e.SLAOverdue != "" {
 			fmt.Fprintf(w, "      SLA: BREACHED  %s overdue\n", e.SLAOverdue)
 		}
 		if e.Narrative != "" {
