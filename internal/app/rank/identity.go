@@ -1,16 +1,15 @@
 package rank
 
 import (
-	"log/slog"
 	"slices"
 	"sort"
 	"strings"
 
+	"github.com/sufield/stave/internal/core/access"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
-	"github.com/sufield/stave/internal/core/iam"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/util/props"
 )
@@ -63,6 +62,16 @@ type IdentityRankingConfig struct {
 	TopExposures []risk.ExposureRank
 	Snapshots    []asset.Snapshot
 	TopN         int
+
+	// AccountIDFromARN extracts the account-ID component from a
+	// principal or resource identifier. Provider-specific (an AWS
+	// implementation parses ARNs); injected so this package stays
+	// vendor-neutral. Required.
+	AccountIDFromARN func(string) string
+
+	// BuildResourceAccessIndex builds a per-snapshot index of
+	// resource-based policy grants. Provider-specific. Required.
+	BuildResourceAccessIndex func(*asset.Snapshot) *access.ResourceAccessIndex
 }
 
 // BuildIdentityRanking orchestrates identity risk ranking in three phases:
@@ -74,7 +83,7 @@ func BuildIdentityRanking(cfg IdentityRankingConfig) IdentityRanking {
 
 	findingScores := computeFindingScores(cfg.Findings, cfg.TopExposures)
 	index := buildIdentityIndex(cfg.Findings, cfg.Snapshots)
-	entries, totalRisk := buildIdentityEntries(cfg.Findings, findingScores, index, cfg.Snapshots)
+	entries, totalRisk := buildIdentityEntries(cfg.Findings, findingScores, index, cfg.Snapshots, cfg.AccountIDFromARN, cfg.BuildResourceAccessIndex)
 	return rankIdentities(entries, totalRisk, len(index), cfg.TopN)
 }
 
@@ -137,6 +146,8 @@ func buildIdentityEntries(
 	findingScores []float64,
 	identities map[string]*identityInfo,
 	snapshots []asset.Snapshot,
+	accountIDFromARN func(string) string,
+	buildIndex func(*asset.Snapshot) *access.ResourceAccessIndex,
 ) ([]IdentityRiskEntry, float64) {
 	totalRisk := 0.0
 	for _, s := range findingScores {
@@ -149,7 +160,7 @@ func buildIdentityEntries(
 		findingsByAsset[aid] = append(findingsByAsset[aid], i)
 	}
 
-	reachMap := buildReachabilityMap(snapshots, findings)
+	reachMap := buildReachabilityMap(snapshots, findings, accountIDFromARN, buildIndex)
 
 	entries := make([]IdentityRiskEntry, 0, len(identities))
 	for arn, info := range identities {
@@ -281,7 +292,12 @@ type reachEntry struct {
 // It uses two signals:
 //   - Resource policies (via ResourceAccessIndex) — resource → principal mapping inverted
 //   - Execution role links — compute assets pointing to IAM roles
-func buildReachabilityMap(snapshots []asset.Snapshot, findings []remediation.Finding) map[string][]reachEntry {
+func buildReachabilityMap(
+	snapshots []asset.Snapshot,
+	findings []remediation.Finding,
+	_ func(string) string,
+	buildIndex func(*asset.Snapshot) *access.ResourceAccessIndex,
+) map[string][]reachEntry {
 	reach := make(map[string][]reachEntry)
 
 	// Build a set of resource ARNs that have findings.
@@ -294,7 +310,10 @@ func buildReachabilityMap(snapshots []asset.Snapshot, findings []remediation.Fin
 		snap := &snapshots[si]
 
 		// 1. Resource policy grants: build ResourceAccessIndex, then invert.
-		idx := buildResourceAccessIndex(snap)
+		idx := buildIndex(snap)
+		if idx == nil {
+			continue
+		}
 		for resourceARN, entries := range invertResourceIndex(idx, snap) {
 			for _, e := range entries {
 				reach[e.PrincipalARN] = append(reach[e.PrincipalARN], reachEntry{
@@ -330,7 +349,7 @@ type invertedEntry struct {
 
 // invertResourceIndex inverts a ResourceAccessIndex: for each
 // (resource, principal) pair, return a map of resource → principal entries.
-func invertResourceIndex(idx *iam.ResourceAccessIndex, snap *asset.Snapshot) map[string][]invertedEntry {
+func invertResourceIndex(idx *access.ResourceAccessIndex, snap *asset.Snapshot) map[string][]invertedEntry {
 	result := make(map[string][]invertedEntry)
 
 	// Build asset type lookup.
@@ -357,39 +376,6 @@ func invertResourceIndex(idx *iam.ResourceAccessIndex, snap *asset.Snapshot) map
 	return result
 }
 
-// buildResourceAccessIndex builds a ResourceAccessIndex from a snapshot.
-// Replicates the logic from cmd/nep/resource.go.
-func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
-	idx := iam.NewResourceAccessIndex()
-	for i := range snap.Assets {
-		a := &snap.Assets[i]
-		accountID := extractAccountID(string(a.ID))
-		for _, path := range resourcePolicyPaths {
-			policyJSON := props.GetString(a.Properties, path)
-			if policyJSON == "" {
-				continue
-			}
-			// Non-fatal: malformed policy JSON skips annotation, but a
-			// silent skip masks the operator's bad input. Surface the
-			// reason at Debug — the rank index is already lossy when a
-			// policy fails to parse, and the operator needs a trail.
-			if addErr := idx.AddResourcePolicy(string(a.ID), policyJSON, accountID); addErr != nil {
-				slog.Debug("rank: skip resource policy annotation",
-					"asset", a.ID, "path", strings.Join(path, "."), "err", addErr)
-			}
-		}
-	}
-	return idx
-}
-
-var resourcePolicyPaths = [][]string{
-	{"storage", "policy_json"},
-	{"encryption", "key_policy_json"},
-	{"compute", "resource_policy_json"},
-	{"messaging", "policy_json"},
-	{"secret", "resource_policy_json"},
-}
-
 // resolvePrivilegeLevel extracts the privilege level from identity properties.
 func resolvePrivilegeLevel(p map[string]any) string {
 	level := props.GetString(p, []string{"identity", "nep", "privilege_level"})
@@ -403,10 +389,6 @@ func resolvePrivilegeLevel(p map[string]any) string {
 		return "elevated"
 	}
 	return "standard"
-}
-
-func extractAccountID(arn string) string {
-	return iam.ExtractAccountID(arn)
 }
 
 func appendUnique(ss []string, s string) []string {

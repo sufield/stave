@@ -2,8 +2,8 @@ package predicate
 
 import (
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
+	"github.com/sufield/stave/internal/platform/providers/aws"
 )
 
 func newBuiltinAliasRegistry() *AliasRegistry {
@@ -171,7 +171,7 @@ func builtinAliases() map[string]AliasEntry {
 			// only partially clear the bar.
 			Predicate: policy.UnsafePredicate{
 				All: []policy.PredicateRule{
-					{Field: predicate.NewFieldPath("properties.storage.encryption.algorithm"), Op: predicate.OpNe, Value: policy.Str(kernel.AlgorithmAWSKMS.String())},
+					{Field: predicate.NewFieldPath("properties.storage.encryption.algorithm"), Op: predicate.OpNe, Value: policy.Str(aws.AlgorithmAWSKMS.String())},
 					{Field: predicate.NewFieldPath("properties.storage.encryption.kms_key_id"), Op: predicate.OpEq, Value: policy.Str("")},
 				},
 			},

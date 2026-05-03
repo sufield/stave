@@ -7,7 +7,7 @@ import (
 
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/iam"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 

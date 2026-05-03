@@ -13,7 +13,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/iam"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
 
 type resourceOpts struct {
@@ -182,7 +182,7 @@ func buildResourceAccessIndex(snap *asset.Snapshot) (*iam.ResourceAccessIndex, e
 			if policyJSON == "" {
 				continue
 			}
-			if err := idx.AddResourcePolicy(string(a.ID), policyJSON, accountID); err != nil {
+			if err := iam.AddResourcePolicy(idx, string(a.ID), policyJSON, accountID); err != nil {
 				errs = append(errs, fmt.Errorf("resource %s (%s): %w",
 					a.ID, strings.Join(path, "."), err))
 			}

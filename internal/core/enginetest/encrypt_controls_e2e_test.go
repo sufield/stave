@@ -20,6 +20,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/platform/providers/aws"
 )
 
 // --- Fixture helpers ---
@@ -166,7 +167,7 @@ func TestEncrypt002_TrueNegative_TransitEnforced(t *testing.T) {
 
 // --- E2E Tests: CTL.S3.ENCRYPT.003 (PHI Must Use SSE-KMS with CMK) ---
 // Gated by: tags.data-classification == "phi"
-// Unsafe when: algorithm != string(kernel.AlgorithmAWSKMS) OR kms_key_id == ""
+// Unsafe when: algorithm != string(aws.AlgorithmAWSKMS) OR kms_key_id == ""
 
 func TestEncrypt003_TruePositive_PHIWithAES256(t *testing.T) {
 	t.Parallel()
@@ -187,7 +188,7 @@ func TestEncrypt003_TruePositive_PHIWithKMSButNoKey(t *testing.T) {
 	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("phi-no-key-bucket", map[string]any{
-		"algorithm":  string(kernel.AlgorithmAWSKMS),
+		"algorithm":  string(aws.AlgorithmAWSKMS),
 		"kms_key_id": "",
 	}, map[string]any{
 		"data-classification": "phi",
@@ -202,7 +203,7 @@ func TestEncrypt003_TrueNegative_PHIWithKMSAndCMK(t *testing.T) {
 	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("phi-kms-bucket", map[string]any{
-		"algorithm":  string(kernel.AlgorithmAWSKMS),
+		"algorithm":  string(aws.AlgorithmAWSKMS),
 		"kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/example-key-id",
 	}, map[string]any{
 		"data-classification": "phi",
@@ -231,7 +232,7 @@ func TestEncrypt003_TrueNegative_NonPHIBucket(t *testing.T) {
 
 // --- E2E Tests: CTL.S3.ENCRYPT.004 (Sensitive Data Requires KMS) ---
 // Gated by: kind=bucket AND tags.data-classification present AND not "public" AND not "non-sensitive"
-// Unsafe when: algorithm != string(kernel.AlgorithmAWSKMS)
+// Unsafe when: algorithm != string(aws.AlgorithmAWSKMS)
 
 func TestEncrypt004_TruePositive_ConfidentialWithAES256(t *testing.T) {
 	t.Parallel()
@@ -251,7 +252,7 @@ func TestEncrypt004_TrueNegative_ConfidentialWithKMS(t *testing.T) {
 	t.Parallel()
 	ev := encryptEvaluator(t)
 	bucket := encryptBucket("conf-kms-bucket", map[string]any{
-		"algorithm": string(kernel.AlgorithmAWSKMS),
+		"algorithm": string(aws.AlgorithmAWSKMS),
 	}, map[string]any{
 		"data-classification": "confidential",
 	})

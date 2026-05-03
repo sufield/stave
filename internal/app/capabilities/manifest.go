@@ -68,7 +68,7 @@ func newFeatureManifest() *featureManifest {
 	slices.Sort(policySchemas)
 
 	connectors := []ConnectorSupport{
-		{Type: kernel.SourceTypeAWSS3Snapshot, Description: "AWS S3 Resource State (JSON Snapshots)"},
+		{Type: "aws-s3-snapshot", Description: "AWS S3 Resource State (JSON Snapshots)"},
 		{Type: "aws-iam-snapshot", Description: "AWS IAM Identity Configuration"},
 		{Type: "aws-opensearch-snapshot", Description: "AWS OpenSearch Domain Configuration"},
 		{Type: "aws-vpc-snapshot", Description: "AWS VPC Network Configuration"},

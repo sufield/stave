@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
+	"sync"
 )
 
 // Identity type aliases for domain concepts that are used as identifiers
@@ -107,9 +109,57 @@ func (a *AccountID) UnmarshalJSON(b []byte) error {
 type ResourceURI string
 
 // recognizedURISchemes are the scheme prefixes that ResourceURI
-// accepts at the kernel boundary. Add a new vendor by appending its
-// scheme here and wiring the provider adapter alongside.
-var recognizedURISchemes = []string{"arn:", "gcp:", "azure:"}
+// accepts at the kernel boundary. Provider packages register their
+// scheme via RegisterURIScheme at init time; kernel ships with the
+// historical AWS / GCP / Azure defaults as a transitional seed so
+// existing consumers continue to validate without an explicit
+// provider registration. Phase 5 of the provider-extraction plan
+// will drop the seed once the AWS provider's init() takes over.
+var (
+	recognizedURISchemesMu sync.RWMutex
+	recognizedURISchemes   = []string{"arn:", "gcp:", "azure:"}
+)
+
+// RegisterURIScheme adds scheme to the set of prefixes ResourceURI
+// accepts. Idempotent: registering the same scheme twice is a
+// no-op. Call this from a provider package's init() so the scheme
+// is available before any caller validates a URI carrying it.
+func RegisterURIScheme(scheme string) {
+	if scheme == "" {
+		return
+	}
+	recognizedURISchemesMu.Lock()
+	defer recognizedURISchemesMu.Unlock()
+	if slices.Contains(recognizedURISchemes, scheme) {
+		return
+	}
+	recognizedURISchemes = append(recognizedURISchemes, scheme)
+}
+
+// IsRecognizedURIScheme reports whether uri begins with a registered
+// scheme. Used by ResourceURI.Validate so callers stop reaching for
+// the package-level slice directly.
+func IsRecognizedURIScheme(uri string) bool {
+	recognizedURISchemesMu.RLock()
+	defer recognizedURISchemesMu.RUnlock()
+	for _, scheme := range recognizedURISchemes {
+		if strings.HasPrefix(uri, scheme) {
+			return true
+		}
+	}
+	return false
+}
+
+// recognizedURISchemesSnapshot returns a copy of the current set
+// for diagnostic / error-message purposes (Validate uses it to
+// build the "must start with one of [...]" message).
+func recognizedURISchemesSnapshot() []string {
+	recognizedURISchemesMu.RLock()
+	defer recognizedURISchemesMu.RUnlock()
+	out := make([]string, len(recognizedURISchemes))
+	copy(out, recognizedURISchemes)
+	return out
+}
 
 // String returns the raw URI string.
 func (u ResourceURI) String() string { return string(u) }
@@ -118,18 +168,16 @@ func (u ResourceURI) String() string { return string(u) }
 func (u ResourceURI) IsEmpty() bool { return u == "" }
 
 // Validate ensures the URI is non-empty and carries one of the
-// recognized scheme prefixes. The kernel does not interpret the
+// registered scheme prefixes. The kernel does not interpret the
 // scheme's body — that is the provider adapter's responsibility.
 func (u ResourceURI) Validate() error {
 	if u.IsEmpty() {
 		return errors.New("resource URI must not be empty")
 	}
-	for _, scheme := range recognizedURISchemes {
-		if strings.HasPrefix(string(u), scheme) {
-			return nil
-		}
+	if IsRecognizedURIScheme(string(u)) {
+		return nil
 	}
-	return fmt.Errorf("invalid resource URI %q: must start with one of %v", string(u), recognizedURISchemes)
+	return fmt.Errorf("invalid resource URI %q: must start with one of %v", string(u), recognizedURISchemesSnapshot())
 }
 
 // ParseResourceURI returns a validated ResourceURI.
@@ -173,8 +221,38 @@ func (u *ResourceURI) UnmarshalJSON(b []byte) error {
 // ObservationSourceType identifies the extraction method that produced an observation.
 type ObservationSourceType string
 
-// SourceTypeAWSS3Snapshot is the canonical source type for AWS S3 snapshot observations.
-const SourceTypeAWSS3Snapshot ObservationSourceType = "aws-s3-snapshot"
+var (
+	observationSourceTypesMu sync.RWMutex
+	observationSourceTypes   = []ObservationSourceType{}
+)
+
+// RegisterObservationSourceType adds t to the kernel's known
+// source-type registry. Idempotent: registering the same type
+// twice is a no-op. Provider packages call this from init() so the
+// type is enumerable through KnownObservationSourceTypes without
+// the kernel needing per-vendor constants.
+func RegisterObservationSourceType(t ObservationSourceType) {
+	if t.IsEmpty() {
+		return
+	}
+	observationSourceTypesMu.Lock()
+	defer observationSourceTypesMu.Unlock()
+	if slices.Contains(observationSourceTypes, t) {
+		return
+	}
+	observationSourceTypes = append(observationSourceTypes, t)
+}
+
+// KnownObservationSourceTypes returns a copy of the registered
+// source types. Used by the capabilities manifest so it doesn't
+// need to enumerate vendor-specific types itself.
+func KnownObservationSourceTypes() []ObservationSourceType {
+	observationSourceTypesMu.RLock()
+	defer observationSourceTypesMu.RUnlock()
+	out := make([]ObservationSourceType, len(observationSourceTypes))
+	copy(out, observationSourceTypes)
+	return out
+}
 
 func (t ObservationSourceType) String() string { return string(t) }
 

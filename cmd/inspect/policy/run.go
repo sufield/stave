@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/evaluation/risk"
-	s3policy "github.com/sufield/stave/internal/core/s3/policy"
+	s3policy "github.com/sufield/stave/internal/platform/providers/aws/s3/policy"
 )
 
 // Report is the output of the policy inspector.

@@ -17,6 +17,13 @@ import (
 	"github.com/sufield/stave/internal/metadata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
+	"github.com/sufield/stave/internal/platform/providers/aws"
+	// Blank import: each control's init() registers into the global
+	// compliance.ControlCatalog. Importing the AWS provider package
+	// itself does not transitively load this — the AWS package
+	// stays leaf-imported so providers/aws/compliance can depend on
+	// providers/aws without creating a cycle.
+	_ "github.com/sufield/stave/internal/platform/providers/aws/compliance"
 	"github.com/sufield/stave/internal/sanitize"
 	staveversion "github.com/sufield/stave/internal/version"
 )
@@ -172,6 +179,11 @@ type App struct {
 // as a clean stderr message instead of a panic stack trace.
 func NewApp(opts ...AppOption) (*App, error) {
 	logging.InitDefaultLogger()
+	// Register the AWS provider into the kernel registries before any
+	// command runs. Idempotent and concurrent-safe; explicit so the
+	// dependency on AWS is visible at the CLI's wiring boundary
+	// instead of hidden behind blank-import side effects.
+	aws.Register()
 	app := &App{
 		Edition:  EditionProd,
 		ExitFunc: os.Exit,

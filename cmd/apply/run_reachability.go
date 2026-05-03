@@ -5,6 +5,7 @@ import (
 	"github.com/sufield/stave/internal/app/reachability"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
 
 // annotateReachability enriches findings with IAM reachability context.
@@ -21,7 +22,7 @@ func annotateReachability(result *evaluation.ComplianceReport, obsDir string) {
 	}
 	snap := &snapshots[len(snapshots)-1]
 
-	idx := reachability.BuildIndexFromSnapshot(snap)
+	idx := iam.BuildResourceAccessIndex(snap)
 	if idx == nil {
 		return
 	}

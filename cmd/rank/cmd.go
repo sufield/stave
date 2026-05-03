@@ -21,6 +21,7 @@ import (
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
 
 // Deps holds the adapter factories required by the rank command.
@@ -260,10 +261,12 @@ func runIdentity(ctx context.Context, stdout io.Writer, opts *options, assessmen
 	}
 
 	ranking := apprank.BuildIdentityRanking(apprank.IdentityRankingConfig{
-		Findings:     assessment.Findings,
-		TopExposures: assessment.TopExposures,
-		Snapshots:    snapshots,
-		TopN:         opts.TopN,
+		Findings:                 assessment.Findings,
+		TopExposures:             assessment.TopExposures,
+		Snapshots:                snapshots,
+		TopN:                     opts.TopN,
+		AccountIDFromARN:         iam.ExtractAccountID,
+		BuildResourceAccessIndex: iam.BuildResourceAccessIndex,
 	})
 
 	if opts.Format == "json" {

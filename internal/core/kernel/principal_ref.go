@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
+	"sync"
 )
 
 // PrincipalRef identifies an IAM principal — a user, role, or
@@ -19,12 +21,46 @@ type PrincipalRef string
 
 // recognisedPrincipalSuffixes covers service-principal hostnames
 // that legitimately appear as principals but don't carry an ARN
-// scheme. AWS service principals like "lambda.amazonaws.com" and
-// GCP service accounts ending in ".iam.gserviceaccount.com" are the
-// known shapes; extend as needed when new clouds land.
-var recognisedPrincipalSuffixes = []string{
-	".amazonaws.com",
-	".iam.gserviceaccount.com",
+// scheme. Provider packages register their suffixes via
+// RegisterPrincipalSuffix at init; the kernel ships with the AWS
+// and GCP defaults as a transitional seed. Phase 5 of the
+// provider-extraction plan moves the seeding to the AWS / GCP
+// provider init().
+var (
+	recognisedPrincipalSuffixesMu sync.RWMutex
+	recognisedPrincipalSuffixes   = []string{
+		".amazonaws.com",
+		".iam.gserviceaccount.com",
+	}
+)
+
+// RegisterPrincipalSuffix adds suffix to the set of service-
+// principal hostnames PrincipalRef.Validate accepts. Idempotent:
+// registering the same suffix twice is a no-op. Call from a
+// provider init().
+func RegisterPrincipalSuffix(suffix string) {
+	if suffix == "" {
+		return
+	}
+	recognisedPrincipalSuffixesMu.Lock()
+	defer recognisedPrincipalSuffixesMu.Unlock()
+	if slices.Contains(recognisedPrincipalSuffixes, suffix) {
+		return
+	}
+	recognisedPrincipalSuffixes = append(recognisedPrincipalSuffixes, suffix)
+}
+
+// hasRegisteredPrincipalSuffix reports whether s ends with any
+// registered suffix. Internal helper for Validate.
+func hasRegisteredPrincipalSuffix(s string) bool {
+	recognisedPrincipalSuffixesMu.RLock()
+	defer recognisedPrincipalSuffixesMu.RUnlock()
+	for _, suffix := range recognisedPrincipalSuffixes {
+		if strings.HasSuffix(s, suffix) {
+			return true
+		}
+	}
+	return false
 }
 
 // String returns the raw ref string.
@@ -42,15 +78,11 @@ func (p PrincipalRef) Validate() error {
 		return errors.New("principal ref must not be empty")
 	}
 	s := string(p)
-	for _, scheme := range recognizedURISchemes {
-		if strings.HasPrefix(s, scheme) {
-			return nil
-		}
+	if IsRecognizedURIScheme(s) {
+		return nil
 	}
-	for _, suffix := range recognisedPrincipalSuffixes {
-		if strings.HasSuffix(s, suffix) {
-			return nil
-		}
+	if hasRegisteredPrincipalSuffix(s) {
+		return nil
 	}
 	return fmt.Errorf("invalid principal ref %q: must be an ARN-shaped URI or a known service-principal hostname", s)
 }

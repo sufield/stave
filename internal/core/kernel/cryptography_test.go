@@ -2,15 +2,15 @@ package kernel
 
 import "testing"
 
+// Vendor-neutral algorithm parsing tests. AWS-specific assertions
+// live in internal/platform/providers/aws/aws_test.go where
+// aws.AlgorithmAWSKMS is registered with the kernel.
 func TestParseAlgorithm(t *testing.T) {
 	tests := []struct {
 		input   string
 		want    EncryptionAlgorithm
 		wantErr bool
 	}{
-		{"aws:kms", AlgorithmAWSKMS, false},
-		{"AWS:KMS", AlgorithmAWSKMS, false},
-		{"  aws:kms  ", AlgorithmAWSKMS, false},
 		{"aes256", AlgorithmAES256, false},
 		{"AES256", AlgorithmAES256, false},
 		{"none", AlgorithmNone, false},
@@ -32,8 +32,20 @@ func TestParseAlgorithm(t *testing.T) {
 	}
 }
 
+func TestParseAlgorithm_RegisteredAlgorithm_RoundTrip(t *testing.T) {
+	const sentinel EncryptionAlgorithm = "stave-test:cipher"
+	RegisterEncryptionAlgorithm(sentinel)
+	got, err := ParseAlgorithm(string(sentinel))
+	if err != nil {
+		t.Fatalf("ParseAlgorithm(%q) error = %v after registration", sentinel, err)
+	}
+	if got != sentinel {
+		t.Errorf("ParseAlgorithm(%q) = %v, want %v", sentinel, got, sentinel)
+	}
+}
+
 func TestEncryptionAlgorithm_String(t *testing.T) {
-	if AlgorithmAWSKMS.String() != "aws:kms" {
-		t.Errorf("AlgorithmAWSKMS.String() = %q, want %q", AlgorithmAWSKMS.String(), "aws:kms")
+	if AlgorithmAES256.String() != "aes256" {
+		t.Errorf("AlgorithmAES256.String() = %q, want %q", AlgorithmAES256.String(), "aes256")
 	}
 }

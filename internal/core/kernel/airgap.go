@@ -2,6 +2,7 @@ package kernel
 
 import (
 	"slices"
+	"sync"
 )
 
 // AirgapPolicy defines abstract security boundaries.
@@ -16,12 +17,85 @@ type AirgapPolicy struct {
 	cloudPermissions     map[Vendor][]string // keyed by provider (e.g., "aws", "azure")
 }
 
+// Vendor-specific air-gap inputs live in package-level registries so
+// provider packages contribute their keys and permissions from
+// init() / Register(). DefaultPolicy snapshots the registries at
+// call time. The kernel ships these registries empty; AWS seeds via
+// providers/aws.Register, GCP and Azure register their own keys
+// when those providers ship.
+var (
+	bannedCredentialKeysMu sync.RWMutex
+	bannedCredentialKeys   = []string{}
+
+	cloudPermissionsMu sync.RWMutex
+	cloudPermissions   = map[Vendor][]string{}
+)
+
+// RegisterBannedCredentialKeys appends the given environment-variable
+// names to the air-gap policy's banned-credential-keys list.
+// Duplicates are skipped. Provider packages call this from init().
+func RegisterBannedCredentialKeys(keys ...string) {
+	if len(keys) == 0 {
+		return
+	}
+	bannedCredentialKeysMu.Lock()
+	defer bannedCredentialKeysMu.Unlock()
+	for _, k := range keys {
+		if k == "" || slices.Contains(bannedCredentialKeys, k) {
+			continue
+		}
+		bannedCredentialKeys = append(bannedCredentialKeys, k)
+	}
+}
+
+// RegisterCloudPermissions appends the given IAM/equivalent
+// permission strings to the air-gap policy's per-vendor permission
+// list. Duplicates within a vendor are skipped. Provider packages
+// call this from init().
+func RegisterCloudPermissions(vendor Vendor, perms ...string) {
+	if vendor == "" || len(perms) == 0 {
+		return
+	}
+	cloudPermissionsMu.Lock()
+	defer cloudPermissionsMu.Unlock()
+	existing := cloudPermissions[vendor]
+	for _, p := range perms {
+		if p == "" || slices.Contains(existing, p) {
+			continue
+		}
+		existing = append(existing, p)
+	}
+	cloudPermissions[vendor] = existing
+}
+
+// snapshotBannedCredentialKeys returns a copy of the registry.
+func snapshotBannedCredentialKeys() []string {
+	bannedCredentialKeysMu.RLock()
+	defer bannedCredentialKeysMu.RUnlock()
+	return slices.Clone(bannedCredentialKeys)
+}
+
+// snapshotCloudPermissions returns a deep copy of the registry.
+func snapshotCloudPermissions() map[Vendor][]string {
+	cloudPermissionsMu.RLock()
+	defer cloudPermissionsMu.RUnlock()
+	out := make(map[Vendor][]string, len(cloudPermissions))
+	for v, perms := range cloudPermissions {
+		out[v] = slices.Clone(perms)
+	}
+	return out
+}
+
 // DefaultPolicy returns the standard air-gap restriction policy.
 // This is the single source of truth for the system's isolation requirements.
 func DefaultPolicy() AirgapPolicy {
 	return AirgapPolicy{
 		protectedPaths: []string{
 			"internal/core/kernel/airgap.go",
+			// aws.Register names AWS credential env vars when seeding
+			// the banned-keys list. Like airgap.go, the file declares
+			// the policy itself; the air-gap test must not flag it.
+			"internal/platform/providers/aws/aws.go",
 		},
 		proxyEnvVars: []string{
 			"HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY",
@@ -42,26 +116,8 @@ func DefaultPolicy() AirgapPolicy {
 				`"text/template"`: {},
 			},
 		},
-		bannedCredentialKeys: []string{
-			"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN",
-			"AWS_PROFILE", "AWS_DEFAULT_REGION", "AWS_SHARED_CREDENTIALS_FILE",
-			"GOOGLE_APPLICATION_CREDENTIALS",
-			"AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET", "AZURE_TENANT_ID",
-		},
-		cloudPermissions: map[Vendor][]string{
-			Vendor("aws"): {
-				"s3:GetBucketAcl",
-				"s3:GetBucketLogging",
-				"s3:GetBucketObjectLockConfiguration",
-				"s3:GetBucketPolicy",
-				"s3:GetBucketPublicAccessBlock",
-				"s3:GetBucketTagging",
-				"s3:GetBucketVersioning",
-				"s3:GetEncryptionConfiguration",
-				"s3:GetLifecycleConfiguration",
-				"s3:ListAllMyBuckets",
-			},
-		},
+		bannedCredentialKeys: snapshotBannedCredentialKeys(),
+		cloudPermissions:     snapshotCloudPermissions(),
 	}
 }
 

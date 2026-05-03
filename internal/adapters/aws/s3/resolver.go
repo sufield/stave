@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/platform/providers/aws"
 )
 
 type trieNode struct {
@@ -86,7 +87,10 @@ func (r *Resolver) insert(key string, perm risk.Permission) {
 }
 
 // SourceTypeAWSS3Snapshot identifies observations produced by S3 snapshot extraction.
-const SourceTypeAWSS3Snapshot = kernel.SourceTypeAWSS3Snapshot
+// Re-exported from internal/platform/providers/aws so consumers of
+// this adapter (the snapshot extractor's callers) keep a stable
+// import path even after the canonical home moved.
+const SourceTypeAWSS3Snapshot = aws.SourceTypeAWSS3Snapshot
 
 // ARN returns the full S3 ARN for a bucket: "arn:aws:s3:::<name>".
 func ARN(ref kernel.BucketRef) string {

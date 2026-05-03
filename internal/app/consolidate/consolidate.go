@@ -4,17 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"math"
 	"sort"
-	"strings"
 	"time"
 
+	"github.com/sufield/stave/internal/core/access"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
-	"github.com/sufield/stave/internal/core/iam"
 	"github.com/sufield/stave/internal/core/kernel"
 	corereport "github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/util/props"
@@ -31,6 +29,16 @@ type Input struct {
 	CELEvaluator policy.PredicateEval
 	OrgName      string
 	Now          time.Time
+
+	// AccountIDFromARN extracts the account-ID component from a
+	// principal or resource identifier. Provider-specific (an AWS
+	// implementation parses ARNs); injected so this package stays
+	// vendor-neutral. Required.
+	AccountIDFromARN func(string) string
+
+	// BuildResourceAccessIndex builds a per-snapshot index of
+	// resource-based policy grants. Provider-specific. Required.
+	BuildResourceAccessIndex func(*asset.Snapshot) *access.ResourceAccessIndex
 }
 
 // AccountInput represents a single account to evaluate.
@@ -154,7 +162,7 @@ func Run(ctx context.Context, input Input) (*ConsolidatedReport, []string, error
 	}
 
 	// Cross-account analysis.
-	crossFindings, crossIdentities := detectCrossAccountFindings(input.Accounts)
+	crossFindings, crossIdentities := detectCrossAccountFindings(input.Accounts, input.AccountIDFromARN, input.BuildResourceAccessIndex)
 	report.CrossAccount = crossFindings
 	report.OrgPosture.CrossAccountIdentities = crossIdentities
 
@@ -226,8 +234,13 @@ func assessAccount(
 }
 
 // detectCrossAccountFindings checks for cross-account resource policy
-// grants and execution role links between accounts.
-func detectCrossAccountFindings(accounts []AccountInput) ([]CrossAccountFinding, int) {
+// grants and execution role links between accounts. accountIDFromARN
+// and buildIndex are vendor-specific helpers injected via Input.
+func detectCrossAccountFindings(
+	accounts []AccountInput,
+	accountIDFromARN func(string) string,
+	buildIndex func(*asset.Snapshot) *access.ResourceAccessIndex,
+) ([]CrossAccountFinding, int) {
 	// Build a map of all assets by account.
 	type assetInfo struct {
 		accountID string
@@ -255,16 +268,19 @@ func detectCrossAccountFindings(accounts []AccountInput) ([]CrossAccountFinding,
 		acct := &accounts[i]
 		for si := range acct.Snapshots {
 			snap := &acct.Snapshots[si]
-			idx := buildResourceAccessIndex(snap)
+			idx := buildIndex(snap)
+			if idx == nil {
+				continue
+			}
 			for ai := range snap.Assets {
 				resourceARN := string(snap.Assets[ai].ID)
-				resourceAcct := extractAccountID(resourceARN)
+				resourceAcct := accountIDFromARN(resourceARN)
 				entries := idx.EntriesFor(resourceARN)
 				for _, entry := range entries {
 					if entry.IsPublic {
 						continue
 					}
-					principalAcct := extractAccountID(entry.PrincipalARN)
+					principalAcct := accountIDFromARN(entry.PrincipalARN)
 					if principalAcct == "" || principalAcct == resourceAcct {
 						continue
 					}
@@ -297,8 +313,8 @@ func detectCrossAccountFindings(accounts []AccountInput) ([]CrossAccountFinding,
 		if roleARN == "" {
 			continue
 		}
-		roleAcct := extractAccountID(roleARN)
-		assetAcct := extractAccountID(string(a.ID))
+		roleAcct := accountIDFromARN(roleARN)
+		assetAcct := accountIDFromARN(string(a.ID))
 		if roleAcct == "" || roleAcct == assetAcct {
 			continue
 		}
@@ -323,36 +339,3 @@ func detectCrossAccountFindings(accounts []AccountInput) ([]CrossAccountFinding,
 	return findings, len(crossAccountPrincipals)
 }
 
-var resourcePolicyPaths = [][]string{
-	{"storage", "policy_json"},
-	{"encryption", "key_policy_json"},
-	{"compute", "resource_policy_json"},
-	{"messaging", "policy_json"},
-	{"secret", "resource_policy_json"},
-}
-
-func buildResourceAccessIndex(snap *asset.Snapshot) *iam.ResourceAccessIndex {
-	idx := iam.NewResourceAccessIndex()
-	for i := range snap.Assets {
-		a := &snap.Assets[i]
-		accountID := extractAccountID(string(a.ID))
-		for _, path := range resourcePolicyPaths {
-			policyJSON := props.GetString(a.Properties, path)
-			if policyJSON == "" {
-				continue
-			}
-			// Non-fatal: malformed policy JSON skips annotation. Log so
-			// silent skips do not mask broken extractor output during
-			// multi-account consolidation runs.
-			if addErr := idx.AddResourcePolicy(string(a.ID), policyJSON, accountID); addErr != nil {
-				slog.Debug("consolidate: skip resource policy annotation",
-					"asset", a.ID, "path", strings.Join(path, "."), "err", addErr)
-			}
-		}
-	}
-	return idx
-}
-
-func extractAccountID(arn string) string {
-	return iam.ExtractAccountID(arn)
-}

@@ -6,16 +6,16 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/iam"
+	"github.com/sufield/stave/internal/core/access"
 )
 
 func TestAnnotateFindings_ViolationGetsAnnotation(t *testing.T) {
-	idx := iam.NewResourceAccessIndex()
-	idx.AddEntry("arn:aws:s3:::phi-records", iam.ResourceAccessEntry{
+	idx := access.NewResourceAccessIndex()
+	idx.AddEntry("arn:aws:s3:::phi-records", access.ResourceAccessEntry{
 		PrincipalARN: "arn:aws:iam::123:role/AdminRole",
 		Actions:      []string{"s3:*"},
 	})
-	idx.AddEntry("arn:aws:s3:::phi-records", iam.ResourceAccessEntry{
+	idx.AddEntry("arn:aws:s3:::phi-records", access.ResourceAccessEntry{
 		PrincipalARN: "arn:aws:iam::123:role/ReadOnly",
 		Actions:      []string{"s3:GetObject"},
 	})
@@ -45,7 +45,7 @@ func TestAnnotateFindings_ViolationGetsAnnotation(t *testing.T) {
 }
 
 func TestAnnotateFindings_ResourceNotInIndex(t *testing.T) {
-	idx := iam.NewResourceAccessIndex()
+	idx := access.NewResourceAccessIndex()
 
 	findings := []remediation.Finding{
 		{Finding: evaluation.Finding{
@@ -71,8 +71,8 @@ func TestAnnotateFindings_NilIndex(t *testing.T) {
 }
 
 func TestAnnotateFindings_ExternalPrincipal(t *testing.T) {
-	idx := iam.NewResourceAccessIndex()
-	idx.AddEntry("arn:aws:s3:::public-bucket", iam.ResourceAccessEntry{
+	idx := access.NewResourceAccessIndex()
+	idx.AddEntry("arn:aws:s3:::public-bucket", access.ResourceAccessEntry{
 		PrincipalARN:   "*",
 		Actions:        []string{"s3:GetObject"},
 		IsPublic:       true,
@@ -96,12 +96,12 @@ func TestAnnotateFindings_ExternalPrincipal(t *testing.T) {
 
 func TestBlastRadiusScore(t *testing.T) {
 	// 2 privileged (20*2=40) + 5 total (2*5=10) + external (30) = 80
-	idx := iam.NewResourceAccessIndex()
-	idx.AddEntry("res", iam.ResourceAccessEntry{PrincipalARN: "a", Actions: []string{"s3:*"}})
-	idx.AddEntry("res", iam.ResourceAccessEntry{PrincipalARN: "b", Actions: []string{"kms:*"}})
-	idx.AddEntry("res", iam.ResourceAccessEntry{PrincipalARN: "c", Actions: []string{"s3:Get"}})
-	idx.AddEntry("res", iam.ResourceAccessEntry{PrincipalARN: "d", Actions: []string{"s3:List"}})
-	idx.AddEntry("res", iam.ResourceAccessEntry{PrincipalARN: "*", Actions: []string{"s3:Get"}, IsPublic: true})
+	idx := access.NewResourceAccessIndex()
+	idx.AddEntry("res", access.ResourceAccessEntry{PrincipalARN: "a", Actions: []string{"s3:*"}})
+	idx.AddEntry("res", access.ResourceAccessEntry{PrincipalARN: "b", Actions: []string{"kms:*"}})
+	idx.AddEntry("res", access.ResourceAccessEntry{PrincipalARN: "c", Actions: []string{"s3:Get"}})
+	idx.AddEntry("res", access.ResourceAccessEntry{PrincipalARN: "d", Actions: []string{"s3:List"}})
+	idx.AddEntry("res", access.ResourceAccessEntry{PrincipalARN: "*", Actions: []string{"s3:Get"}, IsPublic: true})
 
 	findings := []remediation.Finding{
 		{Finding: evaluation.Finding{AssetID: "res"}},

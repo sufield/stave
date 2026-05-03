@@ -29,6 +29,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 	"github.com/sufield/stave/internal/version"
 )
 
@@ -231,7 +232,7 @@ func annotateReachability(findings []evaluation.Finding, snapshots []asset.Snaps
 	if len(findings) == 0 || len(snapshots) == 0 {
 		return
 	}
-	idx := reachability.BuildIndexFromSnapshot(&snapshots[0])
+	idx := iam.BuildResourceAccessIndex(&snapshots[0])
 	if idx == nil {
 		return
 	}

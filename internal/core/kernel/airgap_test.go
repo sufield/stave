@@ -61,41 +61,48 @@ func TestDefaultPolicy_BannedImports(t *testing.T) {
 	}
 }
 
-func TestDefaultPolicy_BannedCredentialKeys(t *testing.T) {
-	p := DefaultPolicy()
-	keys := p.BannedCredentialKeys()
-	if len(keys) == 0 {
-		t.Fatal("expected non-empty banned credential keys")
-	}
+func TestDefaultPolicy_BannedCredentialKeys_Registration(t *testing.T) {
+	// The kernel ships with an empty banned-credential-keys list;
+	// providers register their own. Verify the registration round-
+	// trip (vendor-neutral mechanism test). AWS-specific assertions
+	// live alongside aws.Register in internal/platform/providers/aws.
+	const sentinel = "STAVE_KERNEL_TEST_BANNED_KEY"
+	RegisterBannedCredentialKeys(sentinel)
+	keys := DefaultPolicy().BannedCredentialKeys()
 	found := false
 	for _, k := range keys {
-		if k == "AWS_ACCESS_KEY_ID" {
+		if k == sentinel {
 			found = true
 		}
 	}
 	if !found {
-		t.Error("expected AWS_ACCESS_KEY_ID in banned credential keys")
+		t.Errorf("registered key %q missing from DefaultPolicy().BannedCredentialKeys()", sentinel)
 	}
 }
 
-func TestDefaultPolicy_ProviderPermissions(t *testing.T) {
-	p := DefaultPolicy()
-	perms := p.ProviderPermissions("aws")
+func TestDefaultPolicy_ProviderPermissions_Registration(t *testing.T) {
+	// Same shape as the credential-keys test: round-trip a
+	// vendor-neutral sentinel through RegisterCloudPermissions and
+	// confirm DefaultPolicy surfaces it.
+	const testVendor Vendor = "stave-kernel-test"
+	const sentinel = "stave:TestPermission"
+	RegisterCloudPermissions(testVendor, sentinel)
+	perms := DefaultPolicy().ProviderPermissions(testVendor)
 	if len(perms) == 0 {
-		t.Fatal("expected non-empty AWS permissions")
+		t.Fatalf("expected non-empty permissions for %q, got 0", testVendor)
 	}
 	found := false
 	for _, perm := range perms {
-		if perm == "s3:GetBucketAcl" {
+		if perm == sentinel {
 			found = true
 		}
 	}
 	if !found {
-		t.Error("expected s3:GetBucketAcl in AWS permissions")
+		t.Errorf("registered permission %q missing from DefaultPolicy().ProviderPermissions(%q)", sentinel, testVendor)
 	}
 
 	// Unknown provider returns nil/empty.
-	unknown := p.ProviderPermissions("unknown_provider")
+	unknown := DefaultPolicy().ProviderPermissions("never_registered_vendor")
 	if len(unknown) != 0 {
 		t.Errorf("expected empty permissions for unknown provider, got %d", len(unknown))
 	}

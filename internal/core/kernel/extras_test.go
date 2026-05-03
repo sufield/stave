@@ -29,9 +29,12 @@ func TestAssetType_MarshalJSON(t *testing.T) {
 }
 
 func TestObservationSourceType_String(t *testing.T) {
-	st := SourceTypeAWSS3Snapshot
-	if got := st.String(); got != "aws-s3-snapshot" {
-		t.Errorf("String() = %q, want %q", got, "aws-s3-snapshot")
+	// Vendor-neutral mechanism test — uses an arbitrary value
+	// because vendor-specific source types (aws-s3-snapshot, etc.)
+	// live with their provider packages.
+	st := ObservationSourceType("kernel-test-source")
+	if got := st.String(); got != "kernel-test-source" {
+		t.Errorf("String() = %q, want %q", got, "kernel-test-source")
 	}
 	empty := ObservationSourceType("")
 	if got := empty.String(); got != "" {

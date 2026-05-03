@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/sufield/stave/internal/core/evaluation/risk"
-	s3acl "github.com/sufield/stave/internal/core/s3/acl"
+	s3acl "github.com/sufield/stave/internal/platform/providers/aws/s3/acl"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 

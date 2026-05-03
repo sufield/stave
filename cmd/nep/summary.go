@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/core/iam"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
 
 type summaryOpts struct {

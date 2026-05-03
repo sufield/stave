@@ -22,7 +22,11 @@ type Control interface {
 	Evaluate(snap asset.Snapshot) Outcome
 }
 
-// Outcome captures the outcome of evaluating a single control against a snapshot.
+// Outcome captures the outcome of evaluating a single control against
+// a snapshot. The canonical Outcome type for Stave — vendor-neutral
+// fields (Pass / ControlID / Severity / Finding / Remediation /
+// ComplianceRefs) so providers, profile-level reporters, and the
+// JSON wire format all agree on one shape.
 type Outcome struct {
 	// Pass is true when the control holds (no violation detected).
 	Pass bool `json:"pass"`

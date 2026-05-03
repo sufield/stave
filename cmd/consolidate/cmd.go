@@ -27,6 +27,7 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
 
 type options struct {
@@ -173,13 +174,15 @@ func run(ctx context.Context, stdout, stderr io.Writer, opts *options) error {
 
 	// Run consolidation.
 	report, warnings, consolidateErr := appconsolidate.Run(ctx, appconsolidate.Input{
-		Accounts:     accounts,
-		Controls:     controls,
-		ChainDefs:    chains,
-		SLAConfig:    slaCfg,
-		CELEvaluator: celEval,
-		OrgName:      orgName,
-		Now:          now,
+		Accounts:                 accounts,
+		Controls:                 controls,
+		ChainDefs:                chains,
+		SLAConfig:                slaCfg,
+		CELEvaluator:             celEval,
+		OrgName:                  orgName,
+		Now:                      now,
+		AccountIDFromARN:         iam.ExtractAccountID,
+		BuildResourceAccessIndex: iam.BuildResourceAccessIndex,
 	})
 	if consolidateErr != nil {
 		return consolidateErr
