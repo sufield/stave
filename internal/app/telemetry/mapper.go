@@ -76,7 +76,7 @@ func computeEnvironmentalScore(f *remediation.Finding) float64 {
 	sensitivity := 1.0
 	exposure := 1.0
 
-	if f.Exposure != nil {
+	if f.HasExposure() {
 		exposure = risk.LookupExposure(f.Exposure.PrincipalScope.String())
 	}
 

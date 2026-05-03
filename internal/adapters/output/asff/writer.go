@@ -73,7 +73,7 @@ func MapAssessment(assessment *report.Assessment) []ASFFinding {
 }
 
 func mapFinding(f *remediation.Finding, timestamp string) ASFFinding {
-	sev := mapSeverity(f.ControlSeverity.String())
+	sev := mapSeverity(f.SeverityLabel())
 
 	af := ASFFinding{
 		SchemaVersion: "2018-10-08",

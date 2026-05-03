@@ -275,11 +275,13 @@ func computeFindingScores(findings []remediation.Finding, topExposures []risk.Ex
 			score = float64(base) * durFactor
 		}
 
-		if f.Evidence.ThresholdHours > 0 {
-			remainingHours := f.Evidence.ThresholdHours - f.Evidence.UnsafeDurationHours
-			isOverdue := f.Evidence.UnsafeDurationHours > f.Evidence.ThresholdHours
-			score *= SLAUrgencyMultiplier(remainingHours, isOverdue)
-		}
+		// Delegate the SLA-urgency calculation through Finding's
+		// SLAUrgencyFactor accessor so the (RemainingHours,
+		// IsPastDue) → multiplier lookup uses Evidence's canonical
+		// accessors instead of duplicating the threshold arithmetic.
+		// Returns 1.0 when no SLA threshold is set, so the
+		// multiplication is a no-op in that case.
+		score *= f.SLAUrgencyFactor(SLAUrgencyMultiplier)
 		scores[i] = score
 	}
 	return scores

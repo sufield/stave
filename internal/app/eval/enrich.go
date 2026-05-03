@@ -131,7 +131,7 @@ func sanitizeFinding(f remediation.Finding, s kernel.Sanitizer) remediation.Find
 	out := f
 	out.AssetID = asset.ID(s.ID(string(f.AssetID)))
 
-	if f.Source != nil {
+	if f.HasSource() {
 		src := *f.Source
 		src.File = s.Path(src.File)
 		out.Source = &src
@@ -156,7 +156,7 @@ func sanitizeFinding(f remediation.Finding, s kernel.Sanitizer) remediation.Find
 	// through Misconfiguration.ActualValue. The trace is built before
 	// sanitization runs (engine/finding_builder.go), so sanitization
 	// must mask its values alongside the Misconfigurations.
-	if len(f.ReasoningTrace) > 0 {
+	if f.HasReasoningTrace() {
 		trace := make([]evaluation.MatchedClause, len(f.ReasoningTrace))
 		for i, mc := range f.ReasoningTrace {
 			mc.ObservedValue = sanitizeActualValue(mc.ObservedValue, s)
@@ -168,7 +168,7 @@ func sanitizeFinding(f remediation.Finding, s kernel.Sanitizer) remediation.Find
 	// DeltaPath.CurrentValue is a string snapshot of the observed
 	// value rendered for human-readable fix guidance — route it
 	// through the per-field Sanitizer.
-	if len(f.Delta) > 0 {
+	if f.HasDelta() {
 		delta := make([]policy.DeltaPath, len(f.Delta))
 		for i, d := range f.Delta {
 			d.CurrentValue = s.Value(d.CurrentValue)

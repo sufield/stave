@@ -257,7 +257,7 @@ func countNewFindings(sorted []*report.Assessment, cutoff time.Time) int {
 func countBySeverity(findings []remediation.Finding, sev string) int {
 	count := 0
 	for i := range findings {
-		if findings[i].ControlSeverity.String() == sev {
+		if findings[i].SeverityLabel() == sev {
 			count++
 		}
 	}

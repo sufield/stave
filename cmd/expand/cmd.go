@@ -351,7 +351,7 @@ func sortedKeys[V any](m map[string]V) []string {
 
 func oneLineSummary(ctl *policy.ControlDefinition) string {
 	// Prefer the authored Defect (one sentence triage); fall back to Name.
-	if ctl.Defect != "" {
+	if ctl.HasDiagnosis() {
 		return firstSentence(ctl.Defect)
 	}
 	return ctl.Name

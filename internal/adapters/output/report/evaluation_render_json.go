@@ -131,17 +131,16 @@ func appendReportFinding(
 }
 
 func toReportFinding(finding *remediation.Finding) reportFinding {
-	sev := finding.ControlSeverity
 	out := reportFinding{
 		ControlID:  string(finding.ControlID),
 		AssetID:    string(finding.AssetID),
 		AssetType:  string(finding.AssetType),
 		Vendor:     string(finding.AssetVendor),
-		Severity:   sev.String(),
+		Severity:   finding.SeverityLabel(),
 		Compliance: finding.ControlCompliance,
 		DurationH:  finding.Evidence.UnsafeDurationHours,
 		ThresholdH: finding.Evidence.ThresholdHours,
-		sevRank:    int(policy.SeverityCritical - sev),
+		sevRank:    int(policy.SeverityCritical - finding.ControlSeverity),
 	}
 	if !finding.Evidence.FirstUnsafeAt.IsZero() {
 		out.FirstUnsafe = finding.Evidence.FirstUnsafeAt.Format(time.RFC3339)

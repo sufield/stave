@@ -285,7 +285,7 @@ func writeOpenMetrics(w io.Writer, r appbudget.Report) {
 	for i := range r.BurnRates {
 		br := &r.BurnRates[i]
 		fmt.Fprintf(w, "stave_security_burn_rate{severity=%q,profile=%q} %.3f %d\n",
-			br.Severity, r.SLAProfile, br.BurnRatePercent/100, tsMs)
+			br.Severity, r.SLAProfile, br.BurnRateRatio(), tsMs)
 	}
 
 	fmt.Fprintln(w, "# HELP stave_security_budget_hours_remaining Budget hours remaining this period")
@@ -301,7 +301,7 @@ func writeOpenMetrics(w io.Writer, r appbudget.Report) {
 	for i := range r.BurnRates {
 		br := &r.BurnRates[i]
 		exhausted := 0
-		if br.BurnRatePercent >= 100 {
+		if br.IsExhausted() {
 			exhausted = 1
 		}
 		fmt.Fprintf(w, "stave_security_budget_exhausted{severity=%q} %d %d\n",
@@ -330,7 +330,7 @@ func writeMarkdown(w io.Writer, r appbudget.Report) {
 
 	if r.Gate != nil {
 		result := "No deployment freezes triggered."
-		if !r.Gate.Passed {
+		if !r.Gate.IsPassed() {
 			result = "**DEPLOYMENT FREEZE TRIGGERED.** " + r.Gate.Reason
 		}
 		fmt.Fprintf(w, "\n## Deployment Gate\n\n%s\n", result)

@@ -144,7 +144,7 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 			currentKeys[k] = true
 			if _, exists := open[k]; !exists {
 				open[k] = &mttrWindow{
-					sev:    a.Findings[i].ControlSeverity.String(),
+					sev:    a.Findings[i].SeverityLabel(),
 					openAt: a.Run.Now,
 				}
 			}
@@ -190,7 +190,7 @@ func weightedMTTR(findings []remediation.Finding, mttr map[string]float64) float
 	}
 	total := 0.0
 	for i := range findings {
-		sev := findings[i].ControlSeverity.String()
+		sev := findings[i].SeverityLabel()
 		if days, ok := mttr[sev]; ok {
 			total += days
 		} else {
@@ -203,7 +203,7 @@ func weightedMTTR(findings []remediation.Finding, mttr map[string]float64) float
 func findBySeverity(findings []remediation.Finding, sev string) []remediation.Finding {
 	var result []remediation.Finding
 	for i := range findings {
-		if findings[i].ControlSeverity.String() == sev {
+		if findings[i].SeverityLabel() == sev {
 			result = append(result, findings[i])
 		}
 	}

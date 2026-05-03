@@ -105,10 +105,19 @@ func (ctl *ControlDefinition) OneLineSummary() string {
 	if ctl == nil {
 		return ""
 	}
-	if ctl.Defect != "" {
+	if ctl.HasDiagnosis() {
 		return ctl.Defect
 	}
 	return ctl.Name
+}
+
+// HasDiagnosis reports whether the control carries any of the
+// authored triage prose (Defect / Infection / Failure). Mirrors
+// evaluation.Finding.HasDiagnosis so renderers consuming the
+// catalog directly (cmd/expand) stop probing the Defect field
+// individually.
+func (ctl *ControlDefinition) HasDiagnosis() bool {
+	return ctl != nil && (ctl.Defect != "" || ctl.Infection != "" || ctl.Failure != "")
 }
 
 // AppliesToAssetType reports whether this control should evaluate against

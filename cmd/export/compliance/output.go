@@ -265,7 +265,7 @@ func buildExport(
 
 	// Build filtered evidence records
 	for _, rec := range pkg.Records {
-		if !includePasses && rec.Verdict == evidence.VerdictPass {
+		if !includePasses && rec.IsPass() {
 			continue
 		}
 		if !matchesSeverity(rec.Severity, minSeverity) {

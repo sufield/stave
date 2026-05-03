@@ -74,6 +74,18 @@ func (br *SeverityBurnRate) IsCritical() bool {
 	return br != nil && br.Severity == "critical"
 }
 
+// BurnRateRatio returns the burn rate as a 0..1 ratio (i.e.
+// BurnRatePercent / 100). Used by Prometheus / OpenMetrics
+// gauge writers that want the ratio rather than the percentage —
+// keeping the /100 normalisation on the type so renderer sites
+// stop dividing by 100 inline.
+func (br *SeverityBurnRate) BurnRateRatio() float64 {
+	if br == nil {
+		return 0
+	}
+	return br.BurnRatePercent / 100
+}
+
 // GateResult holds the deployment gate decision.
 type GateResult struct {
 	ThresholdPercent float64  `json:"threshold_percent"`
@@ -96,11 +108,19 @@ func (e *GateFailedError) Error() string {
 	return "deployment gate failed: " + e.Reason
 }
 
+// IsPassed reports whether the gate passed. Wraps the bare
+// Passed field so cmd-side callers stop reading the field
+// directly. nil receiver returns false (a missing gate result
+// counts as "not passed" — fail-safe for gate logic).
+func (g *GateResult) IsPassed() bool {
+	return g != nil && g.Passed
+}
+
 // PassLabel returns the canonical "PASS" / "FAIL" string used by
 // CLI renderers. Centralised so cmd/budget doesn't open-code the
 // ternary at every render site. Mirrors pkg/stave.GateResult.PassLabel.
 func (g *GateResult) PassLabel() string {
-	if g == nil || !g.Passed {
+	if !g.IsPassed() {
 		return "FAIL"
 	}
 	return "PASS"
@@ -111,7 +131,7 @@ func (g *GateResult) PassLabel() string {
 // pkg/stave.GateResult.ExitError so the cmd-side runner returns
 // this directly.
 func (g *GateResult) ExitError() error {
-	if g == nil || g.Passed {
+	if g.IsPassed() {
 		return nil
 	}
 	return &GateFailedError{Reason: g.Reason}

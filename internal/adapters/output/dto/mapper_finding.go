@@ -22,7 +22,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		AssetType:          f.AssetType,
 		AssetVendor:        f.AssetVendor,
 		Evidence:           fromEvidence(f.Evidence),
-		ControlSeverity:    f.ControlSeverity.String(),
+		ControlSeverity:    f.SeverityLabel(),
 		ControlCompliance:  complianceToStrings(f.ControlCompliance),
 		ControlCCMV4:       f.ControlCCMV4,
 		Remediation:        fromRemediationSpec(f.RemediationSpec),
@@ -119,7 +119,7 @@ func buildRemediationContext(f *remediation.Finding) *RemediationContextDTO {
 		Violation: RemediationViolationDTO{
 			ControlID:   string(f.ControlID),
 			ControlName: f.ControlName,
-			Severity:    f.ControlSeverity.String(),
+			Severity:    f.SeverityLabel(),
 		},
 	}
 

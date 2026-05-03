@@ -76,7 +76,7 @@ func Write(w io.Writer, in Input) {
 func countBySeverity(findings []remediation.Finding) map[string]int {
 	counts := make(map[string]int)
 	for i := range findings {
-		sev := findings[i].ControlSeverity.String()
+		sev := findings[i].SeverityLabel()
 		counts[sev]++
 	}
 	return counts

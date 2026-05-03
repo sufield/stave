@@ -278,7 +278,7 @@ func buildFindingProperties(f *remediation.Finding) map[string]any {
 		"control_id":   string(f.ControlID),
 		"control_name": f.ControlName,
 		"verdict":      "fail",
-		"severity":     f.ControlSeverity.String(),
+		"severity":     f.SeverityLabel(),
 		"message":      f.TemporalRiskMessage(),
 	}
 	if f.IsOverdue() {
@@ -314,7 +314,7 @@ func (b *builderState) emitControlNode(f *remediation.Finding) {
 		Properties: map[string]any{
 			"control_id":   string(f.ControlID),
 			"control_name": f.ControlName,
-			"severity":     f.ControlSeverity.String(),
+			"severity":     f.SeverityLabel(),
 		},
 	})
 }

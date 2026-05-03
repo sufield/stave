@@ -24,6 +24,10 @@ func TestNoBannedImportsInRuntime(t *testing.T) {
 		"vendor":         true,
 		"internal/tools": true,
 		"cmd":            true,
+		// experiments/ is a separate Go module per its own go.mod;
+		// nothing in there links into the runtime binary, so the
+		// air-gap import policy does not apply.
+		"experiments": true,
 	}
 
 	root := findRepoRoot(t)

@@ -276,7 +276,7 @@ func writeFindingHeader(d *drawer, num int, f *remediation.Finding) {
 }
 
 func writeFindingSource(d *drawer, f *remediation.Finding) {
-	if f.Source == nil {
+	if !f.HasSource() {
 		return
 	}
 	d.f("   Source: %s:%d\n", f.Source.File, f.Source.Line)

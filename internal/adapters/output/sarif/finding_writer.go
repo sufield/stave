@@ -213,7 +213,7 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 		alts := alternativesAsProperties(f.Alternatives)
 		hasClass := f.Classification != ""
 		hasScopeTags := len(f.ScopeTags) > 0
-		if len(f.ChainMembership) > 0 || len(f.ReasoningTrace) > 0 || len(alts) > 0 || hasClass || hasScopeTags {
+		if f.IsChainMember() || f.HasReasoningTrace() || len(alts) > 0 || hasClass || hasScopeTags {
 			result.Properties = map[string]any{}
 			if hasClass {
 				result.Properties["stave/classification"] = string(f.Classification)
@@ -225,14 +225,14 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 				}
 				result.Properties["stave/scope_tags"] = tags
 			}
-			if len(f.ChainMembership) > 0 {
+			if f.IsChainMember() {
 				cm := f.ChainMembership[0]
 				result.Properties["chain_id"] = cm.ChainID
 				result.Properties["chain_severity"] = cm.ChainSeverity
 				result.Properties["stage_span"] = cm.StageSpan
 				result.Properties["finding_id"] = f.FindingID
 			}
-			if len(f.ReasoningTrace) > 0 {
+			if f.HasReasoningTrace() {
 				trace := make([]map[string]any, len(f.ReasoningTrace))
 				for i, mc := range f.ReasoningTrace {
 					trace[i] = map[string]any{
@@ -257,7 +257,7 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 }
 
 func buildLocations(f *remediation.Finding) []sarifLocation {
-	if f.Source != nil {
+	if f.HasSource() {
 		return []sarifLocation{
 			{
 				PhysicalLocation: &sarifPhysicalLocation{
@@ -290,7 +290,7 @@ func buildLocations(f *remediation.Finding) []sarifLocation {
 func buildMessage(f *remediation.Finding) string {
 	var prefix string
 	var suffix string
-	if len(f.ChainMembership) > 0 {
+	if f.IsChainMember() {
 		cm := f.ChainMembership[0]
 		prefix = fmt.Sprintf("[ATTACK PATH: %s] ", cm.ChainID)
 		suffix = ". This finding is part of a live attack path — chain severity: " + cm.ChainSeverity.String()
@@ -329,10 +329,10 @@ func alternativesAsProperties(alts []policy.Alternative) []map[string]any {
 // buildRuleTags creates the tags array for a SARIF rule's properties.
 func buildRuleTags(f *remediation.Finding) []string {
 	var tags []string
-	if f.ControlSeverity.String() != "" {
-		tags = append(tags, "severity:"+f.ControlSeverity.String())
+	if f.ControlSeverity.IsSet() {
+		tags = append(tags, "severity:"+f.SeverityLabel())
 	}
-	if f.Exposure != nil {
+	if f.HasExposure() {
 		tags = append(tags, "domain:"+string(f.Exposure.Type))
 	}
 	return tags
