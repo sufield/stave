@@ -2,15 +2,40 @@ package consolidate
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
 	stavecel "github.com/sufield/stave/internal/cel"
+	"github.com/sufield/stave/internal/core/access"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 )
+
+// testAccountIDFromARN is a minimal ARN account-ID extractor for
+// tests. Production wires iam.ExtractAccountID via cmd/consolidate;
+// the test injects this thin equivalent so consolidate's
+// cross-account analysis runs without taking a dependency on the
+// AWS provider package.
+//
+// ARN shape: arn:partition:service:region:account-id:resource
+func testAccountIDFromARN(s string) string {
+	parts := strings.Split(s, ":")
+	if len(parts) < 6 {
+		return ""
+	}
+	return parts[4]
+}
+
+// testEmptyResourceAccessIndex is a no-op index builder. The
+// execution-role cross-account pass does not consult the index, so
+// returning an empty one is sufficient to satisfy the Run-level
+// gate.
+func testEmptyResourceAccessIndex(*asset.Snapshot) *access.ResourceAccessIndex {
+	return access.NewResourceAccessIndex()
+}
 
 func makeControl(id string, severity policy.Severity) policy.ControlDefinition {
 	return policy.ControlDefinition{
@@ -240,6 +265,13 @@ func TestRun_CrossAccountExecutionRole(t *testing.T) {
 		Controls:     []policy.ControlDefinition{makeControl("CTL.TEST.001", policy.SeverityLow)},
 		CELEvaluator: stavecel.MustPredicateEval(),
 		Now:          time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+
+		// Inject the provider-specific helpers so Run executes the
+		// cross-account analysis. Production wires iam.* equivalents
+		// in cmd/consolidate; the test stays vendor-neutral by
+		// providing thin substitutes.
+		AccountIDFromARN:         testAccountIDFromARN,
+		BuildResourceAccessIndex: testEmptyResourceAccessIndex,
 	}
 
 	report, _, err := Run(context.Background(), input)
