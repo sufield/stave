@@ -30,8 +30,8 @@ func TestAnnotateChainMembership_SingleChain(t *testing.T) {
 	annotateChainMembership(report)
 
 	// CTL.A should be a member.
-	if len(report.Findings[0].ChainMembership) != 1 {
-		t.Fatalf("CTL.A: expected 1 chain membership, got %d", len(report.Findings[0].ChainMembership))
+	if got := report.Findings[0].ChainMembershipCount(); got != 1 {
+		t.Fatalf("CTL.A: expected 1 chain membership, got %d", got)
 	}
 	cm := report.Findings[0].ChainMembership[0]
 	if cm.ChainID != "test_chain" {
@@ -46,13 +46,13 @@ func TestAnnotateChainMembership_SingleChain(t *testing.T) {
 	}
 
 	// CTL.B should be a member.
-	if len(report.Findings[1].ChainMembership) != 1 {
-		t.Fatalf("CTL.B: expected 1 chain membership, got %d", len(report.Findings[1].ChainMembership))
+	if got := report.Findings[1].ChainMembershipCount(); got != 1 {
+		t.Fatalf("CTL.B: expected 1 chain membership, got %d", got)
 	}
 
 	// CTL.C should NOT be a member.
-	if len(report.Findings[2].ChainMembership) != 0 {
-		t.Errorf("CTL.C: expected 0 chain membership, got %d", len(report.Findings[2].ChainMembership))
+	if got := report.Findings[2].ChainMembershipCount(); got != 0 {
+		t.Errorf("CTL.C: expected 0 chain membership, got %d", got)
 	}
 }
 
@@ -83,8 +83,8 @@ func TestAnnotateChainMembership_MultipleChains(t *testing.T) {
 	annotateChainMembership(report)
 
 	// CTL.SHARED should be in both chains.
-	if len(report.Findings[0].ChainMembership) != 2 {
-		t.Fatalf("CTL.SHARED: expected 2 chain memberships, got %d", len(report.Findings[0].ChainMembership))
+	if got := report.Findings[0].ChainMembershipCount(); got != 2 {
+		t.Fatalf("CTL.SHARED: expected 2 chain memberships, got %d", got)
 	}
 	if report.Findings[0].ChainMembership[0].ChainID != "chain_a" {
 		t.Errorf("first membership = %q, want chain_a", report.Findings[0].ChainMembership[0].ChainID)
@@ -94,8 +94,8 @@ func TestAnnotateChainMembership_MultipleChains(t *testing.T) {
 	}
 
 	// CTL.ONLY_A should be in one chain.
-	if len(report.Findings[1].ChainMembership) != 1 {
-		t.Fatalf("CTL.ONLY_A: expected 1 chain membership, got %d", len(report.Findings[1].ChainMembership))
+	if got := report.Findings[1].ChainMembershipCount(); got != 1 {
+		t.Fatalf("CTL.ONLY_A: expected 1 chain membership, got %d", got)
 	}
 }
 
@@ -108,8 +108,8 @@ func TestAnnotateChainMembership_NoChains(t *testing.T) {
 
 	annotateChainMembership(report)
 
-	if len(report.Findings[0].ChainMembership) != 0 {
-		t.Errorf("expected no chain membership, got %d", len(report.Findings[0].ChainMembership))
+	if got := report.Findings[0].ChainMembershipCount(); got != 0 {
+		t.Errorf("expected no chain membership, got %d", got)
 	}
 }
 

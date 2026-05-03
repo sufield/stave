@@ -44,6 +44,23 @@ type Candidate struct {
 	ExemptCmd   string           `json:"exempt_command"`
 }
 
+// HasOwner reports whether this candidate carries an owner-team
+// identifier. Mirrors the Finding.HasOwner shape so cmd-side
+// renderers can ask either type the same question.
+func (c *Candidate) HasOwner() bool {
+	return c != nil && c.OwnerTeamID != ""
+}
+
+// OwnerKey returns the owner-team identifier or "" when no owner is
+// set. Mirrors Finding.OwnerKey so cmd-side text / markdown
+// renderers stop reading the field directly.
+func (c *Candidate) OwnerKey() string {
+	if c == nil {
+		return ""
+	}
+	return c.OwnerTeamID
+}
+
 // Result holds the exemption suggestions.
 type Result struct {
 	Oscillating  []Candidate `json:"oscillating"`

@@ -155,7 +155,7 @@ func buildProductFields(f *remediation.Finding) map[string]string {
 	fields := map[string]string{
 		"ControlId":     string(f.ControlID),
 		"SecurityState": "NON_COMPLIANT",
-		"DurationHours": fmt.Sprintf("%.1f", f.Evidence.UnsafeDurationHours),
+		"DurationHours": fmt.Sprintf("%.1f", f.DwellHours()),
 		"StaveVersion":  "edge",
 	}
 	// Add all compliance citations as separate ProductFields.

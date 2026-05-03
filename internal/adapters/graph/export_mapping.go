@@ -85,10 +85,6 @@ type rdfMapper struct {
 	// idMap maps internal node IDs (ARNs, finding hashes, control IDs,
 	// account scope names) to their export IRIs.
 	idMap map[string]string
-	// nodeKind tracks the original Stave node Type for each internal ID
-	// so the shortcut-edge materialization step can identify Resource,
-	// Finding, and Control nodes without a second scan.
-	nodeKind map[string]NodeType
 	// findingControl maps each Finding's internal ID to its
 	// control_id property string.
 	findingControl map[string]string
@@ -119,7 +115,6 @@ func newRDFMapper(g *GraphData) *rdfMapper {
 			Edges:       make([]rdfEdge, 0, len(g.Edges)+len(g.Nodes)),
 		},
 		idMap:             make(map[string]string, len(g.Nodes)),
-		nodeKind:          make(map[string]NodeType, len(g.Nodes)),
 		findingControl:    make(map[string]string, len(g.Nodes)),
 		controlIDToNodeID: make(map[string]string, len(g.Nodes)),
 		findingResource:   make(map[string]string, len(g.Nodes)),
@@ -142,14 +137,16 @@ func mapTordfGraph(g *GraphData) *rdfGraph {
 }
 
 // nodePass walks every node, emits the rdfNode, and populates
-// idMap / nodeKind / nodesByID / findingControl / controlIDToNodeID.
+// idMap / nodesByID / findingControl / controlIDToNodeID. Routes
+// classification through the IsControl / FindingControlID etc.
+// discriminator methods so the raw n.Type field stays an
+// implementation detail of the node type.
 func (m *rdfMapper) nodePass(g *GraphData) {
 	for i := range g.Nodes {
 		n := &g.Nodes[i]
 		iri := n.IRI()
 		classIRI := n.ClassIRI()
 		m.idMap[n.ID] = iri
-		m.nodeKind[n.ID] = n.Type
 		m.nodesByID[n.ID] = n
 
 		props := flattenNodeProperties(n)
@@ -181,8 +178,7 @@ func (m *rdfMapper) firstEdgePass(g *GraphData) {
 		e := &g.Edges[i]
 		pred, ok := e.PredicateIRI()
 		if !ok {
-			slog.Warn("graph export: dropping edge with unmapped type",
-				"type", e.Type, "from", e.From, "to", e.To)
+			slog.Warn("graph export: dropping edge with unmapped type", "edge", e.DebugLabel())
 			m.out.UnmappedEdges = append(m.out.UnmappedEdges, UnmappedEdge{
 				Type: e.Type, From: e.From, To: e.To,
 			})
@@ -190,14 +186,12 @@ func (m *rdfMapper) firstEdgePass(g *GraphData) {
 		}
 		fromIRI, ok := m.idMap[e.From]
 		if !ok {
-			slog.Warn("graph export: dropping edge with unknown source node",
-				"type", e.Type, "from", e.From, "to", e.To)
+			slog.Warn("graph export: dropping edge with unknown source node", "edge", e.DebugLabel())
 			continue
 		}
 		toIRI, ok := m.idMap[e.To]
 		if !ok {
-			slog.Warn("graph export: dropping edge with unknown target node",
-				"type", e.Type, "from", e.From, "to", e.To)
+			slog.Warn("graph export: dropping edge with unknown target node", "edge", e.DebugLabel())
 			continue
 		}
 

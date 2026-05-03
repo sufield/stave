@@ -356,7 +356,7 @@ func fromAtRiskItems(items risk.ThresholdItems) []AtRiskItemDTO {
 			ControlID:      item.ControlID,
 			AssetID:        item.AssetID,
 			AssetType:      item.AssetType,
-			Status:         string(item.Status),
+			Status:         item.Status.String(),
 			DueAt:          item.DueAt,
 			RemainingHours: item.Remaining.Hours(),
 			FirstUnsafeAt:  item.FirstUnsafeAt,

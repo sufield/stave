@@ -111,7 +111,7 @@ func resolveProjectContext() (projectContext, error) {
 	}
 
 	selectedContext := ""
-	if sc, scErr := resolver.ResolveSelected(); scErr == nil && sc.Active {
+	if sc, scErr := resolver.ResolveSelected(); scErr == nil && sc.IsUsable() {
 		selectedContext = sc.Name
 	}
 

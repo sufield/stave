@@ -124,6 +124,18 @@ type Edge struct {
 	Properties map[string]any `json:"properties,omitempty"`
 }
 
+// DebugLabel returns a single-string label suitable for slog
+// "graph export: dropping edge ..." warnings. Centralised so the
+// drop-warning sites stop spelling out (type, from, to) at every
+// log call — a future field rename or telemetry-redaction tweak
+// is one edit on the type.
+func (e *Edge) DebugLabel() string {
+	if e == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s %s -> %s", e.Type, e.From, e.To)
+}
+
 // BuildInput holds the data for graph construction.
 type BuildInput struct {
 	Findings      []remediation.Finding

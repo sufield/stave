@@ -53,7 +53,7 @@ func Plan(input Input) SprintResult {
 			hours = h
 		}
 
-		risk := f.Evidence.UnsafeDurationHours
+		risk := f.DwellHours()
 		if risk <= 0 {
 			risk = 1
 		}

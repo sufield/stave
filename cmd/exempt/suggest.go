@@ -165,8 +165,8 @@ func writeSuggestTable(w io.Writer, r *exemptionsuggest.Result) error {
 				strings.ToUpper(c.Severity),
 				c.AssetID)
 			fmt.Fprintf(w, "    Cycles: %d in %d days\n", c.Cycles, r.WindowDays)
-			if c.OwnerTeamID != "" {
-				fmt.Fprintf(w, "    Team: %s\n", c.OwnerTeamID)
+			if c.HasOwner() {
+				fmt.Fprintf(w, "    Team: %s\n", c.OwnerKey())
 			}
 			fmt.Fprintf(w, "    Command: %s\n", c.ExemptCmd)
 		}
@@ -178,8 +178,8 @@ func writeSuggestTable(w io.Writer, r *exemptionsuggest.Result) error {
 		for i := range r.Chronic {
 			c := &r.Chronic[i]
 			team := ""
-			if c.OwnerTeamID != "" {
-				team = "  Team " + c.OwnerTeamID
+			if c.HasOwner() {
+				team = "  Team " + c.OwnerKey()
 			}
 			fmt.Fprintf(w, "  %-30s  %-8s  open %dd%s\n",
 				c.ControlID,

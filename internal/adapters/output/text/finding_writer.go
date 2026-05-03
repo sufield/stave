@@ -552,7 +552,7 @@ func (w *FindingWriter) writeChainFindings(d *drawer, result *evaluation.Complia
 	d.f("\n--------------------\n")
 	for i := range result.ChainFindings {
 		cf := &result.ChainFindings[i]
-		d.f("\n  [%s] Chain: %s\n", cf.Severity, cf.ChainID)
+		d.f("\n  [%s] Chain: %s\n", cf.SeverityLabel(), cf.ChainID)
 		if cf.Description != "" {
 			d.f("  %s\n", strings.TrimSpace(cf.Description))
 		}

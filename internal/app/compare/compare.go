@@ -114,7 +114,7 @@ func Analyze(input Input) *Result {
 		item := CompareItem{
 			ControlID:  cid,
 			Severity:   c.finding.SeverityLabel(),
-			DwellHours: c.finding.Evidence.UnsafeDurationHours,
+			DwellHours: c.finding.DwellHours(),
 		}
 		if c.inBaseline {
 			item.Baseline = extractCitations(c.finding.ControlCompliance, input.BaselineKey)

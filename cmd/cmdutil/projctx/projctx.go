@@ -49,6 +49,15 @@ type SelectedContext struct {
 	Active  bool
 }
 
+// IsUsable reports whether the resolved context is ready to source
+// project / config / SLA paths from. Both flags must align: Active
+// signals the user picked a context, and Context != nil signals the
+// load succeeded. Centralised so cmd-side callers stop repeating
+// the (sc.Active && sc.Context != nil) probe at every site.
+func (sc *SelectedContext) IsUsable() bool {
+	return sc != nil && sc.Active && sc.Context != nil
+}
+
 // ResolveSelected returns the currently selected global context.
 func (r *Resolver) ResolveSelected() (SelectedContext, error) {
 	st, _, err := contexts.Load()
@@ -65,7 +74,7 @@ func (r *Resolver) ResolveSelected() (SelectedContext, error) {
 // ProjectRoot determines the root of the current project.
 // Priority: Active Context -> Discovery from WorkingDir -> WorkingDir fallback.
 func (r *Resolver) ProjectRoot() string {
-	if sc, err := r.ResolveSelected(); err == nil && sc.Active && sc.Context != nil {
+	if sc, err := r.ResolveSelected(); err == nil && sc.IsUsable() {
 		if root := strings.TrimSpace(sc.Context.ProjectRoot); root != "" {
 			return root
 		}
@@ -141,7 +150,7 @@ func (e *InferenceEngine) InferDir(name, currentInput string) string {
 	// 1. Try Context Defaults
 	if e.resolver != nil {
 		sc, err := e.resolver.ResolveSelected()
-		if err == nil && sc.Active && sc.Context != nil {
+		if err == nil && sc.IsUsable() {
 			var ctxPath string
 			switch name {
 			case "controls":

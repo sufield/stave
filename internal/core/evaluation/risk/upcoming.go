@@ -31,6 +31,13 @@ func (s ThresholdStatus) IsOverdue() bool {
 	return s == StatusOverdue
 }
 
+// String returns the canonical wire-format label for the status
+// (OVERDUE / DUE_NOW / UPCOMING). DTO mappers route through this
+// instead of `string(item.Status)` so the conversion is named.
+func (s ThresholdStatus) String() string {
+	return string(s)
+}
+
 // ValidateStatuses normalizes and validates a slice of status strings.
 func ValidateStatuses(statuses []string) ([]ThresholdStatus, error) {
 	out := make([]ThresholdStatus, 0, len(statuses))

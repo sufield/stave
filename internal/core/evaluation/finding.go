@@ -473,8 +473,19 @@ func (f *Finding) ToRankInput() risk.RankInput {
 		ControlSeverity:      f.ControlSeverity,
 		Exposure:             f.Exposure,
 		UnsafeDurationHours:  f.Evidence.UnsafeDurationHours,
-		ChainMembershipCount: len(f.ChainMembership),
+		ChainMembershipCount: f.ChainMembershipCount(),
 	}
+}
+
+// ChainMembershipCount returns the number of chains this finding
+// participates in. Wraps the embedded slice length so callers
+// (RankInput projection, chain-membership tests) stop reading
+// `len(f.ChainMembership)` directly.
+func (f *Finding) ChainMembershipCount() int {
+	if f == nil {
+		return 0
+	}
+	return len(f.ChainMembership)
 }
 
 // PrimaryChainSeverity returns the severity of the first chain this
