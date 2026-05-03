@@ -160,7 +160,7 @@ func runCollect(ctx context.Context, stdout, stderr io.Writer, opts *options) er
 	// genuinely intended to disable compliance reporting.
 	var frameworks []string
 	if trimmed := strings.TrimSpace(opts.Compliance); trimmed != "" {
-		for _, part := range strings.Split(trimmed, ",") {
+		for part := range strings.SplitSeq(trimmed, ",") {
 			if name := strings.TrimSpace(part); name != "" {
 				frameworks = append(frameworks, name)
 			}

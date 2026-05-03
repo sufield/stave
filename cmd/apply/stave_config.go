@@ -1,6 +1,7 @@
 package apply
 
 import (
+	"maps"
 	"time"
 
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -69,9 +70,7 @@ func toPublicSLAConfig(c *evaluation.SLAConfig) *stave.SLAConfig {
 		return nil
 	}
 	deadlines := make(map[string]float64, len(c.DeadlineBySeverity))
-	for k, v := range c.DeadlineBySeverity {
-		deadlines[k] = v
-	}
+	maps.Copy(deadlines, c.DeadlineBySeverity)
 	return &stave.SLAConfig{
 		ProfileID:          c.ProfileID,
 		DeadlineBySeverity: deadlines,

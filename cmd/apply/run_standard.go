@@ -12,7 +12,6 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/app/staleness"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation"
 )
@@ -83,18 +82,16 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 		return decorateError(err)
 	}
 
-	// Staleness check: --assert-recent.
-	if threshold, hasThreshold, parseErr := opts.StalenessThreshold(); parseErr != nil {
-		return &ui.UserError{Err: parseErr}
-	} else if hasThreshold {
-		now := params.clock.Now()
+	// Staleness check: --assert-recent. The decision-and-evaluate
+	// pair lives on Options.CheckStaleness; the caller only loads
+	// snapshots when the flag is set so the cost is paid lazily.
+	if opts.HasStalenessCheck() {
 		snapshots, snapErr := compose.LoadSnapshotsFrom(ctx, deps.NewObsRepo, cfg.ObservationsDir)
 		if snapErr != nil {
 			return fmt.Errorf("load snapshots for staleness check: %w", snapErr)
 		}
-		result := staleness.Check(snapshots, threshold, now)
-		if result.Stale {
-			return &ui.UserError{Err: fmt.Errorf("%s", result.Message)}
+		if err := opts.CheckStaleness(snapshots, params.clock.Now()); err != nil {
+			return err
 		}
 	}
 

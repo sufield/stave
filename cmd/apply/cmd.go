@@ -9,7 +9,9 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/app/staleness"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/metadata"
 )
@@ -120,21 +122,37 @@ func (o *Options) IsNewOnlyMode() bool {
 	return o != nil && (o.NewOnly || o.NewSince != "")
 }
 
-// StalenessThreshold parses the --assert-recent flag. Returns
-// (threshold, true, nil) when the flag is set and parses cleanly,
-// (0, false, nil) when the flag is empty (no assertion requested),
-// and (0, false, err) when set but malformed. Encapsulates the
-// empty-check + ParseDuration pair the apply runner used to
-// open-code at the call site.
-func (o *Options) StalenessThreshold() (time.Duration, bool, error) {
-	if o == nil || o.AssertRecent == "" {
-		return 0, false, nil
+// HasStalenessCheck reports whether --assert-recent was set.
+// Used by the apply runner to gate the snapshot-load + staleness
+// evaluation; replaces the tuple-unpack the runner used to do
+// inline.
+func (o *Options) HasStalenessCheck() bool {
+	return o != nil && o.AssertRecent != ""
+}
+
+// CheckStaleness evaluates the --assert-recent flag against the
+// supplied snapshots. Returns nil when:
+//
+//   - The flag was not set (no assertion requested), or
+//   - The flag was set and the staleness check passed.
+//
+// Returns a UserError when the flag is malformed or when the
+// snapshots are stale relative to the configured threshold. The
+// "should I check?" decision lives inside the method so the
+// caller branches on a single error value.
+func (o *Options) CheckStaleness(snapshots []asset.Snapshot, now time.Time) error {
+	if !o.HasStalenessCheck() {
+		return nil
 	}
 	d, err := time.ParseDuration(o.AssertRecent)
 	if err != nil {
-		return 0, false, fmt.Errorf("parse --assert-recent %q: %w", o.AssertRecent, err)
+		return &ui.UserError{Err: fmt.Errorf("parse --assert-recent %q: %w", o.AssertRecent, err)}
 	}
-	return d, true, nil
+	result := staleness.Check(snapshots, d, now)
+	if result.Stale {
+		return &ui.UserError{Err: fmt.Errorf("%s", result.Message)}
+	}
+	return nil
 }
 
 // normalize cleans all user-supplied paths in one pass.

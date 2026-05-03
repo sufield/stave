@@ -12,7 +12,6 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	corereport "github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/util/props"
@@ -51,6 +50,15 @@ type AccountInput struct {
 	Environment  string
 	BusinessUnit string
 	Snapshots    []asset.Snapshot
+}
+
+// IsProduction reports whether this account's Environment label
+// marks it as production. Replaces the (Environment ==
+// "production") string comparison the org-rollup walk used to
+// open-code; centralising the predicate makes a future
+// vocabulary change ("prod", "production-us", etc.) one edit.
+func (a *AccountInput) IsProduction() bool {
+	return a != nil && a.Environment == "production"
 }
 
 // ToSummaryHeader returns an AccountSummary pre-populated with the
@@ -116,7 +124,7 @@ func Run(ctx context.Context, input Input) (*ConsolidatedReport, []string, error
 		report.Accounts = append(report.Accounts, summary)
 		totalRisk += acctRisk
 
-		if acct.Environment == "production" {
+		if acct.IsProduction() {
 			productionRisk += acctRisk
 		} else {
 			nonProductionRisk += acctRisk
@@ -233,9 +241,7 @@ func assessAccount(
 		if f.IsAnyBreach() {
 			summary.SLABreached++
 		}
-		base := float64(f.ControlSeverity.Weight())
-		dur := risk.DurationFactor(f.Evidence.UnsafeDurationHours)
-		riskScore += base * dur
+		riskScore += f.RiskContribution()
 	}
 	summary.CriticalCount = counts.Critical
 	summary.HighCount = counts.High

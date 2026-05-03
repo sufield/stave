@@ -14,6 +14,7 @@ import (
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/capabilities"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	corereport "github.com/sufield/stave/internal/core/report"
 )
 
@@ -234,19 +235,10 @@ func buildSparkline(assessments []*corereport.Assessment, latestScore float64, c
 // Pulled out of cmd/ so report builds and any other library caller
 // share one definition of "what's the score for this assessment."
 func computeScore(a *corereport.Assessment, chainDefs int, maxChainWeight float64) appscore.Result {
-	slaTotal := 0
-	slaBreached := 0
-	hasSLA := false
-	for i := range a.Findings {
-		f := &a.Findings[i]
-		if f.HasSLA() {
-			hasSLA = true
-			slaTotal++
-			if f.IsAnyBreach() {
-				slaBreached++
-			}
-		}
-	}
+	slaStats := remediation.FindingSet(a.Findings).SLABreachSummary()
+	slaTotal := slaStats.TotalWithSLA
+	slaBreached := slaStats.BreachedCount
+	hasSLA := slaStats.TotalWithSLA > 0
 
 	var violationWeight float64
 	for i := range a.Findings {

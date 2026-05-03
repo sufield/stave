@@ -285,10 +285,7 @@ func buildTierPlan(params BuildPlanParams, tierName string, files []File) (tierP
 	olderThanStr := olderThan.String()
 
 	for i, f := range files {
-		ageSeconds := int64(params.Now.UTC().Sub(f.CapturedAt.UTC()).Seconds())
-		if ageSeconds < 0 {
-			ageSeconds = 0
-		}
+		ageSeconds := max(int64(params.Now.UTC().Sub(f.CapturedAt.UTC()).Seconds()), 0)
 		entry := PlanFile{
 			FilePath:   f.Path,
 			RelPath:    f.RelPath,

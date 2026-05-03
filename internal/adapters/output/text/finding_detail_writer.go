@@ -37,7 +37,7 @@ func writeFindingDetailHeader(d *drawer, detail *evaluation.FindingDetail) {
 
 func writeMetadataLine(d *drawer, detail *evaluation.FindingDetail) {
 	var parts []string
-	if detail.Control.Severity != 0 {
+	if detail.Control.Severity.IsSet() {
 		parts = append(parts, "Severity: "+titleCase(detail.Control.Severity.String()))
 	}
 	if len(detail.Control.Compliance) > 0 {
@@ -58,10 +58,8 @@ func writeControlSection(d *drawer, detail *evaluation.FindingDetail) {
 	writeField(d, "Type", detail.Control.Type.String())
 	writeField(d, "Domain", string(detail.Control.Domain))
 
-	if detail.Control.Exposure != nil {
-		d.f("  Exposure: %s (scope: %s)\n",
-			detail.Control.Exposure.Type,
-			detail.Control.Exposure.PrincipalScope.String())
+	if expType, scope, ok := detail.Control.ExposureSummary(); ok {
+		d.f("  Exposure: %s (scope: %s)\n", expType, scope)
 	}
 	if detail.PostureDrift != nil {
 		d.f("  SecurityState drift: %s (%d exposure window(s))\n",
@@ -119,7 +117,7 @@ func writeOptionalStringField(d *drawer, format, value string) {
 }
 
 func writeEvidenceMisconfigurations(d *drawer, ev *evaluation.Evidence) {
-	if len(ev.Misconfigurations) > 0 {
+	if ev.HasMisconfigurations() {
 		d.ln("  Misconfigurations:")
 		for _, mc := range ev.Misconfigurations {
 			d.f("    - %s\n", mc.String())
@@ -131,7 +129,7 @@ func writeEvidenceMisconfigurations(d *drawer, ev *evaluation.Evidence) {
 }
 
 func writeEvidenceSourceDetails(d *drawer, ev *evaluation.Evidence) {
-	if ev.SourceEvidence == nil {
+	if !ev.HasSourceEvidence() {
 		return
 	}
 	if len(ev.SourceEvidence.IdentityStatements) > 0 {

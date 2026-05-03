@@ -152,7 +152,7 @@ func fallbackScrubMessage(s string) string {
 		}
 		// Octet range validation: every part must fit 0..255 to
 		// be a real IPv4.
-		for _, octet := range strings.Split(groups[2], ".") {
+		for octet := range strings.SplitSeq(groups[2], ".") {
 			n, err := strconv.Atoi(octet)
 			if err != nil || n > 255 {
 				return m

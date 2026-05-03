@@ -1,5 +1,15 @@
 // Package text provides text-based output functionality for evaluation results.
 // It handles formatting and writing of findings as human-readable text.
+//
+// TDA in adapters: this writer queries domain predicates
+// (HasAlternatives, TemporalRiskMessage, PrimaryChain*, IsOverdue,
+// ...) to decide which sections to render and what phrasing to use.
+// That is acceptable Tell-Don't-Ask: the renderer asks the domain
+// "is X true?" and picks a representation. It is NOT acceptable for
+// the renderer to reproduce domain logic inline (e.g. composing a
+// chain narrative from raw chain membership fields, or deciding SLA
+// breach from raw deadline math) — those decisions belong on
+// Finding so a single edit updates every output adapter at once.
 package text
 
 import (
@@ -222,13 +232,12 @@ func joinControls(ids []kernel.ControlID) string {
 
 // writeChainMemberFinding writes a finding that is part of an active attack chain.
 func (w *FindingWriter) writeChainMemberFinding(d *drawer, num int, f *remediation.Finding) {
-	cm := f.ChainMembership[0]
-	d.f("\n%d. [ATTACK PATH] %s  %s\n", num, cm.ChainID, cm.ChainSeverity)
+	d.f("\n%d. [ATTACK PATH] %s  %s\n", num, f.PrimaryChainID(), f.PrimaryChainSeverity())
 	d.f("   %s  %s\n", f.ControlID, f.AssetID)
-	if f.Evidence.TemporalRisk != "" {
-		d.f("   %s\n", f.Evidence.TemporalRisk)
+	if risk := f.TemporalRiskMessage(); risk != "" {
+		d.f("   %s\n", risk)
 	}
-	narrative := strings.TrimSpace(cm.Narrative)
+	narrative := strings.TrimSpace(f.PrimaryChainNarrative())
 	if narrative != "" {
 		d.f("   Chain: %s\n", narrative)
 	}
@@ -261,7 +270,7 @@ func (w *FindingWriter) writeIsolatedFinding(d *drawer, num int, f *remediation.
 // not rendered in text output to keep finding headers compact; full
 // note text remains in JSON output.
 func writeFindingAlternatives(d *drawer, f *remediation.Finding) {
-	if len(f.Alternatives) == 0 {
+	if !f.HasAlternatives() {
 		return
 	}
 	for _, a := range f.Alternatives {
@@ -289,6 +298,13 @@ func writeFindingEvidence(d *drawer, f *remediation.Finding) {
 }
 
 func writeFindingEvidenceLifecycle(d *drawer, f *remediation.Finding) {
+	// HasLifecycleDates short-circuits when neither FirstUnsafeAt
+	// nor LastSeenUnsafeAt is recorded. Duration can still be
+	// non-zero in the degraded-mode SLA path (no timestamp but a
+	// dwell-hours figure), so its guard stays separate.
+	if !f.Evidence.HasLifecycleDates() && f.Evidence.UnsafeDurationHours <= 0 {
+		return
+	}
 	if !f.Evidence.FirstUnsafeAt.IsZero() {
 		d.f("     First unsafe: %s\n", f.Evidence.FirstUnsafeAt.Format("2006-01-02 15:04:05 UTC"))
 	}
@@ -301,11 +317,11 @@ func writeFindingEvidenceLifecycle(d *drawer, f *remediation.Finding) {
 }
 
 func writeFindingEvidenceContext(d *drawer, f *remediation.Finding) {
-	if f.Evidence.ExposureWindowCount > 0 {
+	if f.Evidence.HasExposureWindows() {
 		d.f("     Exposure Windows:     %d (limit: %d within %d days)\n", f.Evidence.ExposureWindowCount, f.Evidence.RecurrenceLimit, f.Evidence.WindowDays)
 	}
-	if f.Evidence.TemporalRisk != "" {
-		d.f("     Why now:      %s\n", f.Evidence.TemporalRisk)
+	if msg := f.TemporalRiskMessage(); msg != "" {
+		d.f("     Why now:      %s\n", msg)
 	}
 }
 

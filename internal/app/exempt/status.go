@@ -67,6 +67,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 			continue
 		case "expiring_soon":
 			report.ExpiringDays30++
+			report.ExpiringDays60++
 			report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
 				ControlID:     ack.ControlID,
 				AssetID:       ack.AssetID,
@@ -74,8 +75,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 				DaysRemaining: daysRemaining,
 				Reason:        ack.Reason,
 			})
-		}
-		if daysRemaining <= 60 {
+		case "expiring_60d":
 			report.ExpiringDays60++
 		}
 

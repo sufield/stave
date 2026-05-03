@@ -188,6 +188,32 @@ func (c *SeverityCounts) Total() int {
 	return c.Critical + c.High + c.Medium + c.Low
 }
 
+// AsMap returns the counts keyed by canonical bucket name
+// (critical / high / medium / low). Buckets with zero count are
+// omitted so the map mirrors the open-coded "if count > 0" hooks
+// trend metrics used. Allows cmd-side renderers to consume the
+// same severity tally as JSON or template output without
+// reproducing the four-field struct unpack.
+func (c *SeverityCounts) AsMap() map[string]int {
+	if c == nil {
+		return nil
+	}
+	out := make(map[string]int, 4)
+	if c.Critical > 0 {
+		out["critical"] = c.Critical
+	}
+	if c.High > 0 {
+		out["high"] = c.High
+	}
+	if c.Medium > 0 {
+		out["medium"] = c.Medium
+	}
+	if c.Low > 0 {
+		out["low"] = c.Low
+	}
+	return out
+}
+
 // Add increments the bucket that matches the given severity by 1.
 // Severity values that don't map to one of the four named tiers
 // (None, Info) are dropped — the counters represent only the

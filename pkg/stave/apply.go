@@ -3,6 +3,7 @@ package stave
 import (
 	"context"
 	"errors"
+	"maps"
 	"time"
 
 	covadapter "github.com/sufield/stave/internal/adapters/coverage"
@@ -84,9 +85,7 @@ func toEvalSLAConfig(c *SLAConfig) *evaluation.SLAConfig {
 		return nil
 	}
 	deadlines := make(map[string]float64, len(c.DeadlineBySeverity))
-	for k, v := range c.DeadlineBySeverity {
-		deadlines[k] = v
-	}
+	maps.Copy(deadlines, c.DeadlineBySeverity)
 	return &evaluation.SLAConfig{
 		ProfileID:          c.ProfileID,
 		DeadlineBySeverity: deadlines,
@@ -179,7 +178,7 @@ func convertFinding(f *evaluation.Finding) Finding {
 		ControlName:          f.ControlName,
 		AssetID:              f.AssetID,
 		AssetType:            f.AssetType,
-		Severity:             Severity(f.ControlSeverity.String()),
+		Severity:             Severity(f.SeverityLabel()),
 		Classification:       f.Classification,
 		ScopeTags:            f.ScopeTags,
 		ControlCompliance:    convertCompliance(f.ControlCompliance),
@@ -197,7 +196,7 @@ func convertFinding(f *evaluation.Finding) Finding {
 		SLAOverdueHours:      f.SLAOverduePtr(),
 		SLAEscalatedSeverity: Severity(f.SLAEscalatedSeverityValue().String()),
 	}
-	if f.Reachability != nil {
+	if f.HasReachability() {
 		out.Reachability = &Reachability{
 			TotalReachablePrincipals:   f.Reachability.TotalReachablePrincipals,
 			PrivilegedPrincipalCount:   f.Reachability.PrivilegedPrincipalCount,

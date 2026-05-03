@@ -132,23 +132,15 @@ func Build(input BuildInput) *State {
 }
 
 func computeScore(a *report.Assessment, chainDefs int, maxChainWeight float64) appscore.Result {
-	slaTotal, slaBreached := 0, 0
-	for i := range a.Findings {
-		if a.Findings[i].HasSLA() {
-			slaTotal++
-			if a.Findings[i].IsOverdue() {
-				slaBreached++
-			}
-		}
-	}
+	slaStats := remediation.FindingSet(a.Findings).SLABreachSummary()
 	return appscore.Compute(appscore.Input{
 		Findings:       a.Findings,
 		ChainFindings:  a.ChainFindings,
 		ChainDefs:      chainDefs,
 		MaxChainWeight: maxChainWeight,
-		SLABreached:    slaBreached,
-		SLATotal:       slaTotal,
-		HasSLA:         slaTotal > 0,
+		SLABreached:    slaStats.BreachedCount,
+		SLATotal:       slaStats.TotalWithSLA,
+		HasSLA:         slaStats.TotalWithSLA > 0,
 		Weights:        appscore.DefaultWeights(),
 		GeneratedAt:    a.Run.Now,
 	})

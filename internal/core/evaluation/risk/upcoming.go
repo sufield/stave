@@ -53,6 +53,14 @@ type ThresholdItem struct {
 	Threshold      time.Duration
 }
 
+// IsOverdue reports whether this item has crossed its SLA
+// threshold. Wraps the (Status == StatusOverdue) probe so
+// counters and summary builders stop comparing the field to a
+// constant directly.
+func (t *ThresholdItem) IsOverdue() bool {
+	return t != nil && t.Status == StatusOverdue
+}
+
 // ThresholdItems is a collection of upcoming risk it.
 type ThresholdItems []ThresholdItem
 
@@ -60,8 +68,7 @@ type ThresholdItems []ThresholdItem
 func (it ThresholdItems) CountOverdue() int {
 	count := 0
 	for i := range it {
-		threshold := &it[i]
-		if threshold.Status == StatusOverdue {
+		if it[i].IsOverdue() {
 			count++
 		}
 	}
@@ -214,7 +221,7 @@ func ComputeItems(req ThresholdRequest) ThresholdItems {
 	var items ThresholdItems
 	for i := range req.Controls {
 		ctl := &req.Controls[i]
-		if ctl.Type != policy.TypeUnsafeDuration && ctl.Type != policy.TypeUnsafeState {
+		if !ctl.IsTemporalControl() {
 			continue
 		}
 

@@ -131,8 +131,13 @@ func Suggest(in Input) *Result {
 			}
 			m.lastSeen = a.Run.Now
 			m.appearances[idx] = true
-			if f.HasOwner() {
-				m.ownerTeamID = f.OwnerKey()
+			// Owner upgrade: if a later sighting carries an owner key
+			// (where earlier ones did not), promote it. OwnerKey
+			// returns "" when no owner is set, so the empty check
+			// preserves an earlier-recorded owner against a later
+			// owner-less finding.
+			if k := f.OwnerKey(); k != "" {
+				m.ownerTeamID = k
 			}
 		}
 	}

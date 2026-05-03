@@ -283,16 +283,17 @@ func computeRunMetrics(a *report.Assessment, prev *runMetrics) runMetrics {
 		rate = float64(violations) / float64(total)
 	}
 
-	bySeverity := make(map[string]int)
-	currentKeys := make(map[string]bool)
-	for i := range a.Findings {
-		f := &a.Findings[i]
-		sev := f.SeverityLabel()
-		if sev == "" {
-			sev = "unknown"
-		}
-		bySeverity[sev]++
-		currentKeys[string(f.ControlID)+":"+string(f.AssetID)] = true
+	counts := a.CountBySeverity()
+	bySeverity := counts.AsMap()
+	if bySeverity == nil {
+		bySeverity = map[string]int{}
+	}
+	// Preserve the unknown-severity bucket: CountBySeverity drops
+	// findings outside (critical/high/medium/low), but trend metrics
+	// historically surfaced the residue under "unknown" so report
+	// readers see when the catalog produces unmapped tiers.
+	if unknown := len(a.Findings) - counts.Total(); unknown > 0 {
+		bySeverity["unknown"] = unknown
 	}
 
 	byStage := make(map[string]int)
@@ -422,16 +423,8 @@ func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag str
 
 		var scores []float64
 		for _, a := range assessments {
-			// Count how many requirements have violations.
-			violatedReqs := make(map[string]bool)
-			for i := range a.Findings {
-				f := &a.Findings[i]
-				req := f.ControlCompliance.Get(policy.ComplianceFramework(fw))
-				if !req.IsEmpty() {
-					violatedReqs[string(req)] = true
-				}
-			}
-			satisfied := totalReqs - len(violatedReqs)
+			violated := remediation.FindingSet(a.Findings).ViolatedRequirements(policy.ComplianceFramework(fw))
+			satisfied := totalReqs - len(violated)
 			score := float64(satisfied) / float64(totalReqs)
 			scores = append(scores, score)
 		}

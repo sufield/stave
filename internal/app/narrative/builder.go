@@ -161,7 +161,7 @@ func buildWhySection(f *remediation.Finding, ctl *policy.ControlDefinition) stri
 		}
 	}
 
-	if f.Reachability != nil && f.Reachability.TotalReachablePrincipals > 0 {
+	if f.HasReachability() && f.Reachability.TotalReachablePrincipals > 0 {
 		reach := fmt.Sprintf("Reachability: %d principal(s) can reach this resource",
 			f.Reachability.TotalReachablePrincipals)
 		if f.Reachability.PrivilegedPrincipalCount > 0 {

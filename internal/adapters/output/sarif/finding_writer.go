@@ -1,4 +1,14 @@
 // Package sarif provides SARIF v2.1.0 output for GitHub Code Scanning integration.
+//
+// TDA in adapters: this writer queries domain predicates
+// (Finding.IsChainMember, HasEnrichedContext, IsOverdue, ...) to
+// decide which SARIF properties to emit. That is acceptable Tell-
+// Don't-Ask: the adapter is asking the domain "is this finding in
+// state X?" so it can pick a representation. It is NOT acceptable
+// for the adapter to reproduce domain logic inline (e.g. computing
+// SLA breach from f.SLADeadlineHours and f.Evidence.UnsafeDuration
+// here) — those checks must live on Finding so a single edit on the
+// type updates every output adapter at once.
 package sarif
 
 import (
@@ -211,14 +221,17 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 		// and semantic classification use the properties bag per
 		// SARIF extension conventions.
 		alts := alternativesAsProperties(f.Alternatives)
-		hasClass := f.Classification != ""
-		hasScopeTags := len(f.ScopeTags) > 0
-		if f.IsChainMember() || f.HasReasoningTrace() || len(alts) > 0 || hasClass || hasScopeTags {
+		// HasEnrichedContext folds the
+		// (chain | trace | alts | class | scope_tags)
+		// disjunction into one predicate on Finding so a future
+		// enrichment field is one edit on the type — see
+		// internal/core/evaluation/finding.go.
+		if f.HasEnrichedContext() {
 			result.Properties = map[string]any{}
-			if hasClass {
+			if f.HasClassification() {
 				result.Properties["stave/classification"] = string(f.Classification)
 			}
-			if hasScopeTags {
+			if f.HasScopeTags() {
 				tags := make([]string, len(f.ScopeTags))
 				for i, t := range f.ScopeTags {
 					tags[i] = string(t)
@@ -226,10 +239,9 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 				result.Properties["stave/scope_tags"] = tags
 			}
 			if f.IsChainMember() {
-				cm := f.ChainMembership[0]
-				result.Properties["chain_id"] = cm.ChainID
-				result.Properties["chain_severity"] = cm.ChainSeverity
-				result.Properties["stage_span"] = cm.StageSpan
+				result.Properties["chain_id"] = f.PrimaryChainID()
+				result.Properties["chain_severity"] = f.PrimaryChainSeverity()
+				result.Properties["stage_span"] = f.PrimaryChainStageSpan()
 				result.Properties["finding_id"] = f.FindingID
 			}
 			if f.HasReasoningTrace() {
@@ -291,14 +303,13 @@ func buildMessage(f *remediation.Finding) string {
 	var prefix string
 	var suffix string
 	if f.IsChainMember() {
-		cm := f.ChainMembership[0]
-		prefix = fmt.Sprintf("[ATTACK PATH: %s] ", cm.ChainID)
-		suffix = ". This finding is part of a live attack path — chain severity: " + cm.ChainSeverity.String()
+		prefix = fmt.Sprintf("[ATTACK PATH: %s] ", f.PrimaryChainID())
+		suffix = ". This finding is part of a live attack path — chain severity: " + f.PrimaryChainSeverity()
 	}
 	msg := fmt.Sprintf("%s%s: %s on %s (%s)",
 		prefix, f.ControlID, f.ControlName, f.AssetID, f.AssetType)
-	if f.Evidence.TemporalRisk != "" {
-		msg += ". " + f.Evidence.TemporalRisk
+	if risk := f.TemporalRiskMessage(); risk != "" {
+		msg += ". " + risk
 	}
 	msg += suffix
 	return msg

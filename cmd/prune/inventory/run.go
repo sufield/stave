@@ -185,10 +185,7 @@ func buildSnapshotEntry(path string, now time.Time, retentionThreshold time.Dura
 		capturedAt = info.ModTime()
 	}
 
-	ageDur := now.Sub(capturedAt)
-	if ageDur < 0 {
-		ageDur = 0
-	}
+	ageDur := max(now.Sub(capturedAt), 0)
 	ageSeconds := int64(ageDur.Seconds())
 	assetCount := len(snap.Assets)
 	retentionEligible := now.Sub(capturedAt) > retentionThreshold

@@ -35,7 +35,7 @@ func (f *Finding) AnnotateSLA(ctl *policy.ControlDefinition, cfg *SLAConfig) {
 		deadlineHours = ctl.SLADeadline().Hours()
 		source = kernel.SLAPolicySourceControlOverride
 	} else {
-		sev := f.ControlSeverity.String()
+		sev := f.SeverityLabel()
 		deadlineHours = cfg.DeadlineBySeverity[sev]
 		source = kernel.SLAPolicySourceProfile(cfg.ProfileID)
 	}

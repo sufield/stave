@@ -90,10 +90,14 @@ func (a *AcknowledgmentEntry) DaysRemaining(now time.Time) (int, bool) {
 // expiry-status thresholds the exempt status report uses:
 //   - "expired"        — DaysRemaining < 0
 //   - "expiring_soon"  — 0 ≤ DaysRemaining ≤ 30
-//   - "active"         — DaysRemaining > 30
+//   - "expiring_60d"   — 30 < DaysRemaining ≤ 60
+//   - "active"         — DaysRemaining > 60
 //   - ""               — ExpiryDate missing / unparseable
 //
-// Replaces the cascade of inline arithmetic in ComputeStatus.
+// Replaces the cascade of inline arithmetic in ComputeStatus. The
+// 60-day bucket lets the report distinguish near-term renewals (the
+// exempt-renewal cohort) from healthy long-lived entries without
+// the caller post-processing on a separate `<=60` branch.
 func (a *AcknowledgmentEntry) ExpiryClassification(now time.Time) string {
 	days, ok := a.DaysRemaining(now)
 	if !ok {
@@ -104,6 +108,8 @@ func (a *AcknowledgmentEntry) ExpiryClassification(now time.Time) string {
 		return "expired"
 	case days <= 30:
 		return "expiring_soon"
+	case days <= 60:
+		return "expiring_60d"
 	default:
 		return "active"
 	}

@@ -83,30 +83,11 @@ func countBySeverity(findings []remediation.Finding) map[string]int {
 }
 
 func computeSLAMetrics(findings []remediation.Finding) map[string]float64 {
-	type slaAgg struct{ total, breached int }
-	agg := make(map[string]*slaAgg)
-
-	for i := range findings {
-		f := &findings[i]
-		if !f.HasSLA() {
-			continue
-		}
-		sev := f.SeverityLabel()
-		a, ok := agg[sev]
-		if !ok {
-			a = &slaAgg{}
-			agg[sev] = a
-		}
-		a.total++
-		if f.IsOverdue() {
-			a.breached++
-		}
-	}
-
-	rates := make(map[string]float64, len(agg))
-	for sev, a := range agg {
-		if a.total > 0 {
-			rates[sev] = float64(a.breached) / float64(a.total)
+	stats := remediation.FindingSet(findings).SLABreachSummary()
+	rates := make(map[string]float64, len(stats.TotalBySeverity))
+	for sev, total := range stats.TotalBySeverity {
+		if total > 0 {
+			rates[sev] = float64(stats.BreachedBySeverity[sev]) / float64(total)
 		}
 	}
 	return rates

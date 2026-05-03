@@ -92,6 +92,43 @@ func (e Evidence) IsPastDue() bool {
 	return e.ThresholdHours > 0 && e.UnsafeDurationHours > e.ThresholdHours
 }
 
+// HasTemporalRisk reports whether the evidence carries a human-
+// readable temporal-risk summary string. Replaces the
+// (e.TemporalRisk != "") probe at renderer call sites.
+func (e Evidence) HasTemporalRisk() bool {
+	return e.TemporalRisk != ""
+}
+
+// HasMisconfigurations reports whether the evidence carries any
+// per-clause misconfiguration entries. Replaces the
+// (len(e.Misconfigurations) > 0) probe.
+func (e Evidence) HasMisconfigurations() bool {
+	return len(e.Misconfigurations) > 0
+}
+
+// HasSourceEvidence reports whether the evidence carries a
+// pointer to specific configuration entries (SIDs, grantees).
+// Replaces the (e.SourceEvidence != nil) probe.
+func (e Evidence) HasSourceEvidence() bool {
+	return e.SourceEvidence != nil
+}
+
+// HasLifecycleDates reports whether the evidence has a recorded
+// FirstUnsafeAt or LastSeenUnsafeAt timestamp. Replaces the
+// (!e.FirstUnsafeAt.IsZero() || !e.LastSeenUnsafeAt.IsZero())
+// compound check at renderer sites.
+func (e Evidence) HasLifecycleDates() bool {
+	return !e.FirstUnsafeAt.IsZero() || !e.LastSeenUnsafeAt.IsZero()
+}
+
+// HasExposureWindows reports whether the evidence's recurrence
+// counter is non-zero (the asset went unsafe at least once in
+// the recurrence window). Replaces the
+// (e.ExposureWindowCount > 0) probe.
+func (e Evidence) HasExposureWindows() bool {
+	return e.ExposureWindowCount > 0
+}
+
 // RootCauseStrings converts typed causes to a raw string slice.
 func (e Evidence) RootCauseStrings() []string {
 	if len(e.RootCauses) == 0 {

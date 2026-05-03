@@ -113,7 +113,7 @@ func Analyze(input Input) *Result {
 	for cid, c := range controlMap {
 		item := CompareItem{
 			ControlID:  cid,
-			Severity:   c.finding.ControlSeverity.String(),
+			Severity:   c.finding.SeverityLabel(),
 			DwellHours: c.finding.Evidence.UnsafeDurationHours,
 		}
 		if c.inBaseline {

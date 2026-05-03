@@ -130,19 +130,8 @@ func (r *Reporter) ReportPlan(report validation.ReadinessAssessment) error {
 		}
 	}
 
-	nextCmd := readinessNextCommand(report)
-	_, err := fmt.Fprintf(w, "\nNext: %s\n", nextCmd)
+	_, err := fmt.Fprintf(w, "\nNext: %s\n", report.NextCommand())
 	return err
-}
-
-// readinessNextCommand returns the recommended next CLI command based on readiness status.
-func readinessNextCommand(report validation.ReadinessAssessment) string {
-	if report.IsSafe {
-		return fmt.Sprintf("stave apply --controls %s --observations %s",
-			report.ControlSource, report.ObservationSource)
-	}
-	return fmt.Sprintf("stave validate --controls %s --observations %s",
-		report.ControlSource, report.ObservationSource)
 }
 
 func printReadinessIssue(w io.Writer, issue validation.ValidationFinding) error {

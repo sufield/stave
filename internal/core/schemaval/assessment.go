@@ -1,6 +1,7 @@
 package schemaval
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/sufield/stave/internal/core/diag"
@@ -52,6 +53,35 @@ func NewReadinessAssessment(controlSrc, observationSrc string) *ReadinessAssessm
 		ObservationSource: observationSrc,
 		findings:          make([]ValidationFinding, 0),
 	}
+}
+
+// IsReady reports whether the readiness check considers the
+// environment safe to proceed with `stave apply`. Wraps the
+// IsSafe field so cmd-side callers stop reading the field
+// directly.
+func (r *ReadinessAssessment) IsReady() bool {
+	return r != nil && r.IsSafe
+}
+
+// NextCommand returns the recommended next CLI command for the
+// operator to run, based on readiness state. When the assessment
+// is ready, the next command is `stave apply`; when unsafe, the
+// command is `stave validate` so the operator can investigate
+// the recorded findings before re-running.
+//
+// Centralised here so the cmd-side renderer stops constructing
+// the string from (IsSafe, ControlSource, ObservationSource)
+// inline.
+func (r *ReadinessAssessment) NextCommand() string {
+	if r == nil {
+		return ""
+	}
+	verb := "validate"
+	if r.IsReady() {
+		verb = "apply"
+	}
+	return fmt.Sprintf("stave %s --controls %s --observations %s",
+		verb, r.ControlSource, r.ObservationSource)
 }
 
 // Findings returns a copy of the recorded structural or environmental issues.

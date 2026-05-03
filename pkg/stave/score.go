@@ -3,6 +3,7 @@ package stave
 import (
 	"context"
 	"errors"
+	"slices"
 
 	appscore "github.com/sufield/stave/internal/app/score"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -139,12 +140,9 @@ func computeCoverage(a *Assessment, compliance []string) (pct float64, has bool)
 	var total float64
 	var matched int
 	for _, fr := range a.Summary.FrameworkReadiness {
-		for _, want := range compliance {
-			if fr.Framework == want {
-				total += float64(fr.ReadinessPercent)
-				matched++
-				break
-			}
+		if slices.Contains(compliance, fr.Framework) {
+			total += float64(fr.ReadinessPercent)
+			matched++
 		}
 	}
 	if matched == 0 {
@@ -171,10 +169,7 @@ func estimateTotalCheckWeight(a *Assessment, findings []remediation.Finding) flo
 	for i := range findings {
 		failing[string(findings[i].AssetID)] = struct{}{}
 	}
-	passing := a.Summary.TotalAssets - len(failing)
-	if passing < 0 {
-		passing = 0
-	}
+	passing := max(a.Summary.TotalAssets-len(failing), 0)
 	return violationWeight + float64(passing)*2.0
 }
 

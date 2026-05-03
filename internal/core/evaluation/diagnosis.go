@@ -36,6 +36,18 @@ type FindingControlSummary struct {
 	Exposure    *policy.Exposure         `json:"exposure,omitempty"`
 }
 
+// ExposureSummary returns the (type, principal-scope) pair the
+// catalog's Exposure block exposes for renderers. ok = false
+// when the summary has no Exposure annotation. Mirrors
+// controldef.ControlDefinition.ExposureSummary so renderers
+// branching on either type carry the same predicate shape.
+func (s FindingControlSummary) ExposureSummary() (exposureType, principalScope string, ok bool) {
+	if s.Exposure == nil {
+		return "", "", false
+	}
+	return string(s.Exposure.Type), s.Exposure.PrincipalScope.String(), true
+}
+
 // FindingAssetSummary holds asset metadata for the diagnosed finding.
 type FindingAssetSummary struct {
 	ID         asset.ID         `json:"id"`

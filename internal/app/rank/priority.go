@@ -150,16 +150,13 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 			Changes:       changes,
 			Confidence:    confidence,
 		}
-		if f.IsChainMember() {
-			entry.IsChainMemberField = true
-			entry.ChainSeverity = f.PrimaryChainSeverity()
-			entry.ChainID = f.PrimaryChainID()
-		}
-		if f.IsOverdue() {
-			entry.SLABreached = true
-			if hours, ok := f.OverdueHours(); ok {
-				entry.SLAOverdue = formatOverdue(hours)
-			}
+		attrs := f.PriorityAttributes()
+		entry.IsChainMemberField = attrs.IsChainMember
+		entry.ChainID = attrs.ChainID
+		entry.ChainSeverity = attrs.ChainSeverity
+		entry.SLABreached = attrs.SLABreached
+		if attrs.HasOverdue {
+			entry.SLAOverdue = formatOverdue(attrs.OverdueHours)
 		}
 		entries = append(entries, entry)
 	}

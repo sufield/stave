@@ -1,3 +1,15 @@
+// Package dto maps internal domain types onto the wire-shape DTOs
+// the JSON / SARIF / contract-output adapters consume.
+//
+// TDA in adapters: the mapping helpers below query domain predicates
+// (HasReachability, IsOverdue, HasSLA, ...) to decide which optional
+// fields to surface in the DTO. That is acceptable Tell-Don't-Ask:
+// the mapper asks the domain "do you carry data X?" and projects
+// accordingly. It is NOT acceptable for the mapper to reimplement
+// domain calculations inline (e.g. computing SLA breach state or
+// chain primary fields from raw slices) — those belong on the
+// originating type so a single edit propagates to every output
+// surface.
 package dto
 
 import (

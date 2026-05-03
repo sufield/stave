@@ -485,6 +485,17 @@ func (f *Finding) PrimaryChainNarrative() string {
 	return f.ChainMembership[0].Narrative
 }
 
+// PrimaryChainStageSpan returns the StageSpan slice of the first
+// chain this finding participates in, or nil when the finding is
+// not a chain member. Used by the SARIF renderer's chain-context
+// properties bag so the per-stage list lives on the type.
+func (f *Finding) PrimaryChainStageSpan() []kernel.AttackStage {
+	if f == nil || len(f.ChainMembership) == 0 {
+		return nil
+	}
+	return f.ChainMembership[0].StageSpan
+}
+
 // ChainIDs returns every chain ID the finding contributes to, in
 // catalogue order. Nil slice for non-chain findings so range loops
 // behave the same as on an empty membership.
@@ -549,6 +560,68 @@ func (f *Finding) ComputeBaseScore() (float64, risk.ScoreBreakdown) {
 		BlindMultiplier:    blindMult,
 		DaysBlind:          daysBlind,
 	}
+}
+
+// PriorityAttributes packages the chain-membership + SLA-overdue
+// state the rank renderer needs into a single struct so the priority
+// entry construction site doesn't query four predicates and two
+// accessors separately. Returned values mirror the originating
+// Finding accessors:
+//
+//   - IsChainMember / ChainID / ChainSeverity come from
+//     IsChainMember() and the PrimaryChain* accessors.
+//   - SLABreached / OverdueHours come from IsOverdue() and
+//     OverdueHours().
+//
+// Centralised here so a future enrichment field (e.g. chain
+// confidence, SLA escalation severity) lands on the type, not at
+// every priority-entry construction site.
+type PriorityAttributes struct {
+	IsChainMember bool
+	ChainID       string
+	ChainSeverity string
+	SLABreached   bool
+	OverdueHours  float64
+	HasOverdue    bool
+}
+
+// PriorityAttributes returns the chain-membership and SLA overdue
+// projections for use by the rank renderer. See PriorityAttributes
+// for the contract.
+func (f *Finding) PriorityAttributes() PriorityAttributes {
+	if f == nil {
+		return PriorityAttributes{}
+	}
+	out := PriorityAttributes{}
+	if f.IsChainMember() {
+		out.IsChainMember = true
+		out.ChainID = f.PrimaryChainID()
+		out.ChainSeverity = f.PrimaryChainSeverity()
+	}
+	if f.IsOverdue() {
+		out.SLABreached = true
+		if hours, ok := f.OverdueHours(); ok {
+			out.OverdueHours = hours
+			out.HasOverdue = true
+		}
+	}
+	return out
+}
+
+// RiskContribution returns the per-finding contribution to an
+// account-level risk score: severity weight × duration factor.
+// Differs from ComputeBaseScore in that it omits the BlindMultiplier
+// — consolidate's per-account roll-up uses the simpler formula so a
+// long-blind finding doesn't dominate the account total. Centralised
+// so consolidate's assessAccount loop stops re-deriving the (base ×
+// dur) product inline.
+func (f *Finding) RiskContribution() float64 {
+	if f == nil {
+		return 0
+	}
+	base := float64(f.ControlSeverity.Weight())
+	dur := risk.DurationFactor(f.Evidence.UnsafeDurationHours)
+	return base * dur
 }
 
 // IsOverdue reports whether the finding has breached SLA AND the
@@ -707,6 +780,55 @@ func (f *Finding) HasAlternatives() bool {
 	return f != nil && len(f.Alternatives) > 0
 }
 
+// HasReachability reports whether the finding carries IAM-graph
+// reachability context. Populated when the snapshot includes
+// identity data and the reachability annotator has run; nil
+// otherwise. Replaces (f.Reachability != nil) probes in the
+// narrative builder, rank blast-radius scorer, and the public
+// mirror converter.
+func (f *Finding) HasReachability() bool {
+	return f != nil && f.Reachability != nil
+}
+
+// HasClassification reports whether the finding carries a
+// non-empty Classification tag (e.g. "state_assertion",
+// "presence_check"). Replaces (f.Classification != "") probes in
+// the SARIF properties-bag builder.
+func (f *Finding) HasClassification() bool {
+	return f != nil && f.Classification != ""
+}
+
+// HasScopeTags reports whether the finding carries any
+// scope-tag annotations (e.g. "aws", "s3", "public-access").
+// Replaces (len(f.ScopeTags) > 0) probes.
+func (f *Finding) HasScopeTags() bool {
+	return f != nil && len(f.ScopeTags) > 0
+}
+
+// HasEnrichedContext reports whether the finding carries
+// analytical metadata beyond the bare control violation: a chain
+// membership, a reasoning trace, alternative-tool mappings, a
+// semantic classification tag, or scope tags. Renderers
+// (currently the SARIF properties-bag emitter) gate the
+// extended-context block on this single predicate so a future
+// enrichment field (e.g. probability score, ontology mapping)
+// is one edit on the Finding type rather than a 5-clause OR in
+// every output adapter.
+//
+// Aligns with Stave's pipeline framing: a "raw" finding is just
+// a rule failure; an "enriched" finding has been through the
+// graph / ontology / chain layers and gained context. Callers
+// asking the type "do you have enriched context?" no longer
+// reconstruct that meaning from a multi-part disjunction at
+// every site.
+func (f *Finding) HasEnrichedContext() bool {
+	return f.IsChainMember() ||
+		f.HasReasoningTrace() ||
+		f.HasAlternatives() ||
+		f.HasClassification() ||
+		f.HasScopeTags()
+}
+
 // TemporalRiskMessage returns the Evidence-side risk message
 // catalog authors attach to a finding (e.g. "asset has been
 // unsafe for 4 days, exceeding the 7-day SLA"). Centralised so
@@ -755,6 +877,18 @@ func (f *Finding) SLAContribution() SLAStats {
 		out.WithinSLA = 1
 	}
 	return out
+}
+
+// SeveritySortRank returns the sort key the JSON report renderer
+// uses to order findings by descending severity. Critical → 0,
+// High → 1, Medium → 2, Low → 3, Info → 4. Encapsulates the
+// (SeverityCritical - ControlSeverity) arithmetic on the iota
+// ordering so renderers stop reaching for the constant directly.
+func (f *Finding) SeveritySortRank() int {
+	if f == nil {
+		return int(policy.SeverityCritical)
+	}
+	return int(policy.SeverityCritical - f.ControlSeverity)
 }
 
 // IsCritical reports whether this finding's control severity is

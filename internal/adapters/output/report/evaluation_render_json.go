@@ -140,13 +140,15 @@ func toReportFinding(finding *remediation.Finding) reportFinding {
 		Compliance: finding.ControlCompliance,
 		DurationH:  finding.Evidence.UnsafeDurationHours,
 		ThresholdH: finding.Evidence.ThresholdHours,
-		sevRank:    int(policy.SeverityCritical - finding.ControlSeverity),
+		sevRank:    finding.SeveritySortRank(),
 	}
-	if !finding.Evidence.FirstUnsafeAt.IsZero() {
-		out.FirstUnsafe = finding.Evidence.FirstUnsafeAt.Format(time.RFC3339)
-	}
-	if !finding.Evidence.LastSeenUnsafeAt.IsZero() {
-		out.LastUnsafe = finding.Evidence.LastSeenUnsafeAt.Format(time.RFC3339)
+	if finding.Evidence.HasLifecycleDates() {
+		if !finding.Evidence.FirstUnsafeAt.IsZero() {
+			out.FirstUnsafe = finding.Evidence.FirstUnsafeAt.Format(time.RFC3339)
+		}
+		if !finding.Evidence.LastSeenUnsafeAt.IsZero() {
+			out.LastUnsafe = finding.Evidence.LastSeenUnsafeAt.Format(time.RFC3339)
+		}
 	}
 	return out
 }

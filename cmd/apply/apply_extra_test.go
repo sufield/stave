@@ -121,7 +121,7 @@ func TestReadinessNextCommand_Ready(t *testing.T) {
 		ControlSource:     "controls/s3",
 		ObservationSource: "observations",
 	}
-	got := readinessNextCommand(report)
+	got := report.NextCommand()
 	if !strings.Contains(got, "stave apply") {
 		t.Fatalf("expected apply command, got: %q", got)
 	}
@@ -136,7 +136,7 @@ func TestReadinessNextCommand_NotReady(t *testing.T) {
 		ControlSource:     "controls/s3",
 		ObservationSource: "observations",
 	}
-	got := readinessNextCommand(report)
+	got := report.NextCommand()
 	if !strings.Contains(got, "stave validate") {
 		t.Fatalf("expected validate command, got: %q", got)
 	}

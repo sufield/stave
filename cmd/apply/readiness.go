@@ -73,7 +73,7 @@ func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
 		return err
 	}
 
-	if !report.IsSafe {
+	if !report.IsReady() {
 		return ui.ErrValidationFailed
 	}
 	return nil
@@ -91,7 +91,7 @@ func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.Rea
 	if cfg.Format.IsJSON() {
 		return jsonutil.WriteIndented(cfg.Stdout, readinessJSONReport{
 			ReadinessAssessment: report,
-			NextCommand:         readinessNextCommand(report),
+			NextCommand:         report.NextCommand(),
 		})
 	}
 	rep := &Reporter{Stdout: cfg.Stdout, Stderr: cfg.Stderr}

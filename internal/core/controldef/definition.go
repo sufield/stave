@@ -120,6 +120,38 @@ func (ctl *ControlDefinition) HasDiagnosis() bool {
 	return ctl != nil && (ctl.Defect != "" || ctl.Infection != "" || ctl.Failure != "")
 }
 
+// IsUnsafeState reports whether the control is the state-assertion
+// shape (the predicate fires on a snapshot's instantaneous values).
+func (ctl *ControlDefinition) IsUnsafeState() bool {
+	return ctl != nil && ctl.Type == TypeUnsafeState
+}
+
+// IsUnsafeDuration reports whether the control is the duration-
+// based shape (the predicate fires once dwell time exceeds a
+// threshold).
+func (ctl *ControlDefinition) IsUnsafeDuration() bool {
+	return ctl != nil && ctl.Type == TypeUnsafeDuration
+}
+
+// IsTemporalControl reports whether the control's type is one of
+// the temporal evaluation shapes the upcoming-risk engine
+// considers (state-assertion or duration-based). Encapsulates
+// the (TypeUnsafeState || TypeUnsafeDuration) compound check.
+func (ctl *ControlDefinition) IsTemporalControl() bool {
+	return ctl.IsUnsafeState() || ctl.IsUnsafeDuration()
+}
+
+// ExposureSummary returns the (type, principal-scope) pair the
+// catalog's Exposure block exposes for renderers. ok = false
+// when the control has no Exposure annotation, so callers can
+// branch on a single boolean instead of nil-checking the pointer.
+func (ctl *ControlDefinition) ExposureSummary() (exposureType, principalScope string, ok bool) {
+	if ctl == nil || ctl.Exposure == nil {
+		return "", "", false
+	}
+	return string(ctl.Exposure.Type), ctl.Exposure.PrincipalScope.String(), true
+}
+
 // AppliesToAssetType reports whether this control should evaluate against
 // the given asset type. Returns true when the control declares no
 // applicable types (legacy default — fire on all) or when the asset type

@@ -95,6 +95,34 @@ type appearance struct {
 	inLatest  bool
 }
 
+// IsChronic reports whether this appearance describes a finding
+// that is present in the latest historical assessment — i.e.
+// still firing, suppressed by the current run only because the
+// new-only filter is active. Sibling of IsReturned.
+func (a *appearance) IsChronic() bool {
+	return a != nil && a.inLatest
+}
+
+// IsReturned reports whether this appearance describes a finding
+// that was previously open, briefly resolved, and has now
+// returned. The classification loop tags such findings
+// ClassReturned so the operator sees the cycle count.
+func (a *appearance) IsReturned() bool {
+	return a != nil && !a.inLatest
+}
+
+// DwellDays returns the dwell time in days from this finding's
+// first historical sighting to the supplied current time. Used
+// by the per-finding "how long has this been an issue?" rendering;
+// callers stop computing the (Now.Sub(firstSeen).Hours()/24)
+// arithmetic at every site.
+func (a *appearance) DwellDays(now time.Time) float64 {
+	if a == nil {
+		return 0
+	}
+	return now.Sub(a.firstSeen).Hours() / 24
+}
+
 // Classify compares current findings against historical assessments and
 // classifies each finding as new, chronic, or returned.
 func Classify(in Input) *Result {
@@ -210,7 +238,7 @@ func classifyCurrent(in Input, timeline map[findingKey]*appearance, gapCount map
 			})
 			continue
 		}
-		if ap.inLatest {
+		if ap.IsChronic() {
 			suppressedCount++
 			continue
 		}
@@ -221,7 +249,7 @@ func classifyCurrent(in Input, timeline map[findingKey]*appearance, gapCount map
 			Class:     ClassReturned,
 			FirstSeen: &firstSeen,
 			LastSeen:  &lastSeen,
-			DwellDays: in.Now.Sub(ap.firstSeen).Hours() / 24,
+			DwellDays: ap.DwellDays(in.Now),
 			Cycles:    gapCount[k] + 1,
 		})
 	}
@@ -250,14 +278,11 @@ func buildResolved(in Input, latest *report.Assessment, timeline map[findingKey]
 			continue
 		}
 		ap := timeline[k]
-		var dwell float64
-		if ap != nil {
-			dwell = in.Now.Sub(ap.firstSeen).Hours() / 24
-		}
+		dwell := ap.DwellDays(in.Now)
 		resolved = append(resolved, ResolvedFinding{
 			ControlID: k.ControlID,
 			AssetID:   k.AssetID,
-			Severity:  latest.Findings[i].ControlSeverity.String(),
+			Severity:  latest.Findings[i].SeverityLabel(),
 			DwellDays: dwell,
 		})
 	}

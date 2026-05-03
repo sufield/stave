@@ -32,11 +32,12 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 
 	for _, fw := range frameworks {
 		fwKey := policy.ComplianceFramework(fw)
-		total := 0
-		failing := 0
-		critical := 0
-		var topFailing string
-
+		// Reduce to one representative finding per (framework, control)
+		// pair so downstream counts are control-level, not finding-
+		// level. Routing the unique slice through FindingSet then
+		// lets us delegate "how many of these are Critical?" to the
+		// domain method instead of branching on the severity here.
+		var perControl remediation.FindingSet
 		seen := make(map[string]bool)
 		for i := range findings {
 			f := &findings[i]
@@ -44,21 +45,16 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 				continue
 			}
 			cid := string(f.ControlID)
-			if !seen[cid] {
-				seen[cid] = true
-				total++
-				failing++
-				if f.IsCritical() {
-					critical++
-					if topFailing == "" {
-						topFailing = cid
-					}
-				}
-				if topFailing == "" {
-					topFailing = cid
-				}
+			if seen[cid] {
+				continue
 			}
+			seen[cid] = true
+			perControl = append(perControl, *f)
 		}
+		total := len(perControl)
+		failing := total
+		critical := perControl.CountCritical()
+		topFailing := string(perControl.Headline())
 
 		// Approximate total controls from findings (we only see failures).
 		// In practice, the caller would provide control catalog count.

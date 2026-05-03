@@ -33,9 +33,18 @@ func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
 		return fmt.Errorf("trend requires at least %d assessment files (found %d)", opts.MinRuns, len(assessments))
 	}
 
-	// Sort by timestamp.
+	// Sort by timestamp via Assessment.Before — mirrors the score-trend
+	// sort comparator in cmd/score/cmd.go so future Before-semantics
+	// changes land at the type, not at every sort site.
 	slices.SortFunc(assessments, func(a, b *report.Assessment) int {
-		return a.Run.Now.Compare(b.Run.Now)
+		switch {
+		case a.Before(b):
+			return -1
+		case b.Before(a):
+			return 1
+		default:
+			return 0
+		}
 	})
 
 	// Apply window limit.
