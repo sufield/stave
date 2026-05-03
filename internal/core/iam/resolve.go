@@ -40,6 +40,29 @@ type ResolvedPermissions struct {
 	HasTransitiveAdmin bool
 }
 
+// PrivilegeBucket returns the canonical lowercase bucket name the
+// nep summary uses for its privilege-tier counters: "admin",
+// "elevated", "standard", "limited", or "none". Replaces the
+// inline switch on PrivilegeLevel that the summary loop used to
+// reproduce.
+func (r *ResolvedPermissions) PrivilegeBucket() string {
+	if r == nil {
+		return "none"
+	}
+	switch r.PrivilegeLevel {
+	case PrivilegeLevelAdmin:
+		return "admin"
+	case PrivilegeLevelElevated:
+		return "elevated"
+	case PrivilegeLevelStandard:
+		return "standard"
+	case PrivilegeLevelLimited:
+		return "limited"
+	default:
+		return "none"
+	}
+}
+
 // ResolutionInput holds the policy data for a single principal.
 type ResolutionInput struct {
 	PrincipalARN     string

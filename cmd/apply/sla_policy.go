@@ -17,3 +17,19 @@ const (
 
 // String returns the wire value.
 func (p SLAPolicy) String() string { return string(p) }
+
+// FailureMessage returns the operator-facing line printed to stderr
+// when this policy gates the apply run to a non-zero exit. Returns
+// "" for SLAPolicyWarn (the default never fails) and any
+// unrecognised policy value. Centralises the per-policy phrasing so
+// Reporter.CheckSLAPolicy stops switching on the policy literal.
+func (p SLAPolicy) FailureMessage() string {
+	switch p {
+	case SLAPolicyStrict:
+		return "SLA policy: strict — SLA breach detected, failing."
+	case SLAPolicyCriticalOnly:
+		return "SLA policy: critical-only — critical SLA breach detected, failing."
+	default:
+		return ""
+	}
+}

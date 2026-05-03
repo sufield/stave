@@ -104,10 +104,10 @@ func writeFindingMarkdown(w io.Writer, f *PlanFinding) {
 	fmt.Fprintf(w, "| Severity | %s |\n", strings.ToUpper(f.Severity.String()))
 	fmt.Fprintf(w, "| Asset | %s |\n", f.AssetID)
 	fmt.Fprintf(w, "| Dwell time | %.0f hours |\n", f.DwellHours)
-	if f.SLADeadlineHours != nil {
-		fmt.Fprintf(w, "| SLA deadline | %.0fh |\n", *f.SLADeadlineHours)
-		if f.IsOverdue() {
-			fmt.Fprintf(w, "| SLA status | BREACHED — %.0fh overdue |\n", *f.OverdueHours)
+	if dl, ok := f.SLADeadlineValue(); ok {
+		fmt.Fprintf(w, "| SLA deadline | %.0fh |\n", dl)
+		if hours, ok := f.OverdueHoursValue(); ok {
+			fmt.Fprintf(w, "| SLA status | BREACHED — %.0fh overdue |\n", hours)
 		} else {
 			fmt.Fprintf(w, "| SLA status | Within SLA |\n")
 		}
@@ -208,8 +208,8 @@ func WriteCSV(w io.Writer, p *Plan) error {
 				slaStatus = "breached"
 			}
 			dlh := ""
-			if f.SLADeadlineHours != nil {
-				dlh = fmt.Sprintf("%.0f", *f.SLADeadlineHours)
+			if v, ok := f.SLADeadlineValue(); ok {
+				dlh = fmt.Sprintf("%.0f", v)
 			}
 			row := []string{
 				tp.TeamName,

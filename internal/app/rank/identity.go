@@ -164,9 +164,7 @@ func buildIdentityEntries(
 		for _, idx := range findingsByAsset[arn] {
 			entry.DirectFindingIDs = append(entry.DirectFindingIDs, string(findings[idx].FindingID))
 			directScore += findingScores[idx]
-			if findings[idx].ControlSeverity > directMaxSev {
-				directMaxSev = findings[idx].ControlSeverity
-			}
+			directMaxSev = findings[idx].MaxSeverityWith(directMaxSev)
 			if act := findings[idx].RemediationSpec.Action; act != "" {
 				entry.RemediationActions = appendUnique(entry.RemediationActions, strings.TrimSpace(act))
 			}
@@ -192,12 +190,8 @@ func buildIdentityEntries(
 					transitiveScore += findingScores[idx]
 					entry.TransitiveFindingIDs = append(entry.TransitiveFindingIDs, fid)
 				}
-				if findings[idx].ControlSeverity > maxSev {
-					maxSev = findings[idx].ControlSeverity
-				}
-				if findings[idx].ControlSeverity > transitiveMaxSev {
-					transitiveMaxSev = findings[idx].ControlSeverity
-				}
+				maxSev = findings[idx].MaxSeverityWith(maxSev)
+				transitiveMaxSev = findings[idx].MaxSeverityWith(transitiveMaxSev)
 			}
 			rr.MaxSeverity = maxSev.String()
 			entry.ReachableResources = append(entry.ReachableResources, rr)

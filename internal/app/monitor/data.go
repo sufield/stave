@@ -177,7 +177,7 @@ func computeSLABurnFromDeadlines(findings []remediation.Finding, deadlines map[s
 	counts := map[string]int{}
 	for i := range findings {
 		f := &findings[i]
-		sev := f.ControlSeverity.String()
+		sev := f.SeverityLabel()
 		deadline := deadlines[sev]
 		if deadline <= 0 {
 			continue

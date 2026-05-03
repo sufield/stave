@@ -161,7 +161,9 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 		}
 		if f.IsOverdue() {
 			entry.SLABreached = true
-			entry.SLAOverdue = formatOverdue(*f.SLAOverdueHours)
+			if hours, ok := f.OverdueHours(); ok {
+				entry.SLAOverdue = formatOverdue(hours)
+			}
 		}
 		entries = append(entries, entry)
 	}
@@ -169,9 +171,13 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 	slices.SortFunc(entries, func(a, b PriorityEntry) int {
 		// Chain-member findings sort before isolated findings.
 		// true sorts before false (boolToInt: true=0, false=1).
+		// IsOverdue captures the same "SLA breached + overdue hours
+		// recorded" pair PriorityEntry sets above, so the sort uses
+		// the named predicate instead of the SLABreached field
+		// directly.
 		return cmp.Or(
 			cmp.Compare(boolToInt(!a.IsChainMember()), boolToInt(!b.IsChainMember())),
-			cmp.Compare(boolToInt(!a.SLABreached), boolToInt(!b.SLABreached)),
+			cmp.Compare(boolToInt(!a.IsOverdue()), boolToInt(!b.IsOverdue())),
 			cmp.Compare(b.PriorityScore, a.PriorityScore),
 			cmp.Compare(b.Confidence, a.Confidence),
 			cmp.Compare(a.ControlID, b.ControlID),

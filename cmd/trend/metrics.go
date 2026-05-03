@@ -157,10 +157,55 @@ type teamTrend struct {
 	ScoreHistory []float64 `json:"score_history,omitempty"`
 }
 
+// IsImproving reports whether the team's posture is trending
+// upward. Replaces direct (Trajectory == trajectoryImproving)
+// probes at filter / aggregation / rendering sites. Pointer
+// receiver matches ClassifyTrajectory below (recvcheck-clean).
+func (t *teamTrend) IsImproving() bool {
+	return t != nil && t.Trajectory == trajectoryImproving
+}
+
+// IsRegressing reports whether the team's posture is trending
+// downward.
+func (t *teamTrend) IsRegressing() bool {
+	return t != nil && t.Trajectory == trajectoryRegressing
+}
+
+// IsStable reports whether the team's delta is within the stable
+// band (the default classification when neither improving nor
+// regressing fires).
+func (t *teamTrend) IsStable() bool {
+	return t != nil && t.Trajectory == trajectoryStable
+}
+
+// ClassifyTrajectory sets Trajectory based on delta vs threshold:
+//   - delta ≥  threshold → trajectoryImproving
+//   - delta ≤ -threshold → trajectoryRegressing
+//   - otherwise         → trajectoryStable
+//
+// Centralises the rule that computeTeamTrends used to reproduce
+// inline. Pointer receiver because this mutates the field.
+func (t *teamTrend) ClassifyTrajectory(delta, threshold float64) {
+	if t == nil {
+		return
+	}
+	switch {
+	case delta >= threshold:
+		t.Trajectory = trajectoryImproving
+	case delta <= -threshold:
+		t.Trajectory = trajectoryRegressing
+	default:
+		t.Trajectory = trajectoryStable
+	}
+}
+
 // Symbol returns the single-character trajectory glyph for the
 // table renderer ("^", "v", "-"). Mirrors frameworkTrend.Symbol so
 // both shapes ask the same method name for the same answer.
-func (t teamTrend) Symbol() string {
+func (t *teamTrend) Symbol() string {
+	if t == nil {
+		return "-"
+	}
 	switch t.Trajectory {
 	case trajectoryImproving:
 		return "^"
@@ -174,7 +219,10 @@ func (t teamTrend) Symbol() string {
 // MetricValue returns the openmetrics integer encoding of the
 // trajectory (1 / -1 / 0). Replaces the inline switch in
 // render_openmetrics.
-func (t teamTrend) MetricValue() int {
+func (t *teamTrend) MetricValue() int {
+	if t == nil {
+		return 0
+	}
 	switch t.Trajectory {
 	case trajectoryImproving:
 		return 1

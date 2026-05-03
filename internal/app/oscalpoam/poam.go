@@ -92,12 +92,12 @@ func Generate(in Input) *POAM {
 				},
 			},
 			Risk: &POAMRisk{
-				Status: f.ControlSeverity.String(),
+				Status: f.SeverityLabel(),
 			},
 		}
 
-		if f.SLADeadlineHours != nil {
-			deadline := in.Now.Add(time.Duration(*f.SLADeadlineHours) * time.Hour)
+		if dl, ok := f.SLADeadlineValue(); ok {
+			deadline := in.Now.Add(time.Duration(dl) * time.Hour)
 			item.ScheduledCompletionDate = deadline.Format("2006-01-02")
 		}
 

@@ -64,6 +64,25 @@ func (f *PlanFinding) HasSLA() bool {
 	return f != nil && f.SLADeadlineHours != nil
 }
 
+// SLADeadlineValue returns the deadline in hours plus a presence
+// indicator. Mirrors evaluation.Finding.SLADeadlineValue so plan
+// renderers stop dereferencing the pointer at the call site.
+func (f *PlanFinding) SLADeadlineValue() (float64, bool) {
+	if f == nil || f.SLADeadlineHours == nil {
+		return 0, false
+	}
+	return *f.SLADeadlineHours, true
+}
+
+// OverdueHoursValue returns the overdue-hours duration plus a
+// presence indicator. Mirrors evaluation.Finding.OverdueHours.
+func (f *PlanFinding) OverdueHoursValue() (float64, bool) {
+	if f == nil || f.OverdueHours == nil {
+		return 0, false
+	}
+	return *f.OverdueHours, true
+}
+
 // Plan is the complete remediation plan output.
 type Plan struct {
 	GeneratedAt  string        `json:"generated_at"`

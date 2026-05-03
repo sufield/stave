@@ -64,7 +64,7 @@ func SeverityToPriority(severity string) string {
 func fromFinding(f *remediation.Finding) Ticket {
 	ctlID := string(f.ControlID)
 	astID := string(f.AssetID)
-	sev := f.ControlSeverity.String()
+	sev := f.SeverityLabel()
 	dwellDays := f.Evidence.UnsafeDurationHours / 24
 
 	labels := []string{"security", sev}

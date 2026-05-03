@@ -64,7 +64,7 @@ func AnalyzeParity(input ParityInput) *ParityResult {
 			f := &input.Environments[env][i]
 			failingByEnv[env][f.ControlID] = true
 			if _, ok := allControls[f.ControlID]; !ok {
-				allControls[f.ControlID] = f.ControlSeverity.String()
+				allControls[f.ControlID] = f.SeverityLabel()
 			}
 		}
 	}

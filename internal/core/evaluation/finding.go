@@ -157,6 +157,39 @@ func (f *Finding) ToDetail() FindingDetail {
 	}
 }
 
+// MaxSeverityWith returns the higher of this finding's ControlSeverity
+// and other. Centralises the
+// (if f.ControlSeverity > maxSev { maxSev = f.ControlSeverity })
+// pattern that identity-rank's direct/transitive max-severity loops
+// reproduce twice. nil receiver returns other.
+func (f *Finding) MaxSeverityWith(other policy.Severity) policy.Severity {
+	if f == nil {
+		return other
+	}
+	if other > f.ControlSeverity {
+		return other
+	}
+	return f.ControlSeverity
+}
+
+// MatchesSeverityFilter reports whether this finding's severity is
+// in the allowed-set passed by a filter. The allowed map keys are
+// the canonical lowercase severity labels (SeverityLabel form).
+// Empty / nil allowed-map matches every finding so callers can pass
+// a single filter shape regardless of whether a severity restriction
+// is active. Replaces the
+// (filter.Severities[f.ControlSeverity.String()]) probe in
+// telemetry/mapper.go's matchesFilter.
+func (f *Finding) MatchesSeverityFilter(allowed map[string]bool) bool {
+	if len(allowed) == 0 {
+		return true
+	}
+	if f == nil {
+		return false
+	}
+	return allowed[f.SeverityLabel()]
+}
+
 // SLAUrgencyFactor returns the multiplier the rank-priority pass
 // applies to a finding's base risk score based on how close it is
 // to (or past) its SLA threshold. Encapsulates the

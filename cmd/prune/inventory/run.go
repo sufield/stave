@@ -57,6 +57,39 @@ type snapshotEntry struct {
 	Reason            string    `json:"reason"`
 }
 
+// Recognised Action values. Centralised so the inventory summary
+// counters and the renderer cannot drift on the literal strings.
+const (
+	actionKeep      = "keep"
+	actionArchive   = "archive"
+	actionDelete    = "delete"
+	actionReview    = "review"
+	statusEvaluated = "evaluated"
+)
+
+// IsKeep / IsArchive / IsDelete / IsReview report whether this
+// snapshot entry's Action matches the corresponding recommendation.
+// Replaces (s.Action == "<literal>") probes in computeSummary and
+// the openmetrics renderer.
+func (s *snapshotEntry) IsKeep() bool    { return s != nil && s.Action == actionKeep }
+func (s *snapshotEntry) IsArchive() bool { return s != nil && s.Action == actionArchive }
+func (s *snapshotEntry) IsDelete() bool  { return s != nil && s.Action == actionDelete }
+func (s *snapshotEntry) IsReview() bool  { return s != nil && s.Action == actionReview }
+
+// IsEvaluated reports whether this snapshot has been processed by an
+// assessment run (AssessmentStatus == "evaluated"). Used by the
+// inventory summary to count evaluated vs unevaluated snapshots.
+func (s *snapshotEntry) IsEvaluated() bool {
+	return s != nil && s.AssessmentStatus == statusEvaluated
+}
+
+// KnownActions returns the canonical action vocabulary the
+// inventory renderer iterates when rolling up counts. Centralised
+// here so a future action addition is one edit.
+func KnownActions() []string {
+	return []string{actionKeep, actionArchive, actionDelete, actionReview}
+}
+
 func runInventory(w io.Writer, opts *inventoryOptions) error {
 	entries, err := os.ReadDir(opts.ObservationsDir)
 	if err != nil {
@@ -273,14 +306,14 @@ func computeSummary(snapshots []snapshotEntry) inventorySummary {
 	s.TotalFiles = len(snapshots)
 	for i := range snapshots {
 		s.TotalSizeBytes += snapshots[i].FileSizeBytes
-		switch snapshots[i].Action {
-		case "keep":
+		switch {
+		case snapshots[i].IsKeep():
 			s.RecommendedKeep++
-		case "archive":
+		case snapshots[i].IsArchive():
 			s.RecommendedArchive++
-		case "delete":
+		case snapshots[i].IsDelete():
 			s.RecommendedDelete++
-		case "review":
+		case snapshots[i].IsReview():
 			s.RecommendedReview++
 		}
 	}
@@ -312,7 +345,7 @@ func renderInventoryTable(w io.Writer, r *inventoryReport) error { //nolint:unpa
 	for i := range r.Snapshots {
 		s := &r.Snapshots[i]
 		assessed := "NO"
-		if s.AssessmentStatus == "evaluated" {
+		if s.IsEvaluated() {
 			assessed = "YES"
 		}
 		quality := "FAIL"
@@ -330,7 +363,7 @@ func renderInventoryOpenMetrics(w io.Writer, r *inventoryReport) error { //nolin
 
 	fmt.Fprintln(w, "# HELP stave_snapshot_count Total snapshot files by recommended action")
 	fmt.Fprintln(w, "# TYPE stave_snapshot_count gauge")
-	for _, action := range []string{"keep", "archive", "delete", "review"} {
+	for _, action := range KnownActions() {
 		count := 0
 		for i := range r.Snapshots {
 			if r.Snapshots[i].Action == action {
@@ -345,7 +378,7 @@ func renderInventoryOpenMetrics(w io.Writer, r *inventoryReport) error { //nolin
 
 	fmt.Fprintln(w, "# HELP stave_snapshot_size_bytes Total size of snapshot files by action")
 	fmt.Fprintln(w, "# TYPE stave_snapshot_size_bytes gauge")
-	for _, action := range []string{"keep", "archive", "delete", "review"} {
+	for _, action := range KnownActions() {
 		var size int64
 		for i := range r.Snapshots {
 			if r.Snapshots[i].Action == action {

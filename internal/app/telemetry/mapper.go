@@ -32,7 +32,7 @@ func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFinger
 			FindingID:         string(f.FindingID),
 			ControlID:         string(f.ControlID),
 			ControlName:       f.ControlName,
-			Severity:          f.ControlSeverity.String(),
+			Severity:          f.SeverityLabel(),
 			ResourceID:        string(f.AssetID),
 			ResourceType:      string(f.AssetType),
 			Verdict:           "violation",
@@ -62,10 +62,8 @@ func MapAssessmentWithWindows(a *report.Assessment, filter Filter, controlFPs Co
 }
 
 func matchesFilter(f *remediation.Finding, filter Filter) bool {
-	if len(filter.Severities) > 0 {
-		if !filter.Severities[f.ControlSeverity.String()] {
-			return false
-		}
+	if !f.MatchesSeverityFilter(filter.Severities) {
+		return false
 	}
 	if filter.ResourceARN != "" && string(f.AssetID) != filter.ResourceARN {
 		return false

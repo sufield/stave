@@ -183,11 +183,8 @@ func (r *Reporter) CheckSLAPolicy(policy SLAPolicy, res EvaluateResult) error {
 	if !res.ShouldFailForPolicy(policy) {
 		return nil
 	}
-	switch policy {
-	case SLAPolicyStrict:
-		r.Emit(r.Stderr, "SLA policy: strict — SLA breach detected, failing.")
-	case SLAPolicyCriticalOnly:
-		r.Emit(r.Stderr, "SLA policy: critical-only — critical SLA breach detected, failing.")
+	if msg := policy.FailureMessage(); msg != "" {
+		r.Emit(r.Stderr, msg)
 	}
 	return ui.ErrViolationsFound
 }

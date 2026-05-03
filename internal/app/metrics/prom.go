@@ -91,7 +91,7 @@ func computeSLAMetrics(findings []remediation.Finding) map[string]float64 {
 		if f.SLADeadlineHours == nil {
 			continue
 		}
-		sev := f.ControlSeverity.String()
+		sev := f.SeverityLabel()
 		a, ok := agg[sev]
 		if !ok {
 			a = &slaAgg{}

@@ -72,9 +72,9 @@ type nepSummary struct {
 // addPrincipal folds a single ResolvedPermissions into the summary
 // counters: increments IncompletePrincipals when the resolution is
 // flagged as incomplete and bumps the privilege-tier counter that
-// matches r.PrivilegeLevel. Centralises the per-tier switch the
-// runSummary loop used to do inline so a future privilege addition
-// is one edit.
+// matches r.PrivilegeBucket(). The per-tier mapping lives on
+// iam.ResolvedPermissions so a future privilege addition is one
+// edit on that type.
 func (s *nepSummary) addPrincipal(r *iam.ResolvedPermissions) {
 	if s == nil || r == nil {
 		return
@@ -82,14 +82,14 @@ func (s *nepSummary) addPrincipal(r *iam.ResolvedPermissions) {
 	if r.Incomplete {
 		s.IncompletePrincipals++
 	}
-	switch r.PrivilegeLevel {
-	case iam.PrivilegeLevelAdmin:
+	switch r.PrivilegeBucket() {
+	case "admin":
 		s.AdminCount++
-	case iam.PrivilegeLevelElevated:
+	case "elevated":
 		s.ElevatedCount++
-	case iam.PrivilegeLevelStandard:
+	case "standard":
 		s.StandardCount++
-	case iam.PrivilegeLevelLimited:
+	case "limited":
 		s.LimitedCount++
 	default:
 		s.NoneCount++

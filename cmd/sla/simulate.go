@@ -147,10 +147,10 @@ func simulate(pol *infraSLA.Policy, findings []simFinding) simResult {
 			deadlineHours: deadline,
 			burnRate:      burn,
 		}
-		switch {
-		case burn >= 1.0:
+		switch ClassifyBurnRate(burn) {
+		case BurnRateBreached:
 			res.breached = append(res.breached, entry)
-		case burn >= 0.7:
+		case BurnRateApproaching:
 			res.approaching = append(res.approaching, entry)
 		default:
 			res.within = append(res.within, entry)

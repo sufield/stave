@@ -47,16 +47,15 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 		}
 		report.TotalActive++
 
-		// Parse expiry.
-		expiry, err := time.Parse("2006-01-02", ack.ExpiryDate)
-		if err != nil {
+		// Expiry-date arithmetic lives on AcknowledgmentEntry —
+		// DaysRemaining handles the parse + diff, ExpiryClassification
+		// applies the threshold buckets the status report wants.
+		daysRemaining, ok := ack.DaysRemaining(now)
+		if !ok {
 			continue
 		}
-
-		daysRemaining := int(expiry.Sub(now).Hours() / 24)
-
-		// Check if expired.
-		if daysRemaining < 0 {
+		switch ack.ExpiryClassification(now) {
+		case "expired":
 			report.AlreadyExpired++
 			report.ExpiredItems = append(report.ExpiredItems, ExpiryItem{
 				ControlID:     ack.ControlID,
@@ -66,10 +65,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 				Reason:        ack.Reason,
 			})
 			continue
-		}
-
-		// Check if expiring soon.
-		if daysRemaining <= 30 {
+		case "expiring_soon":
 			report.ExpiringDays30++
 			report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
 				ControlID:     ack.ControlID,

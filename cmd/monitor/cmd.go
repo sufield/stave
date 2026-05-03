@@ -117,12 +117,7 @@ func runMonitor(ctx context.Context, stdout, _ io.Writer, opts *options) error {
 				// would leave SLA deadlines nil with no diagnostic.
 				return nil, fmt.Errorf("load sla profile %s: %w", opts.SLAFile, slaErr)
 			}
-			slaDeadlines = map[string]float64{
-				"critical": pol.DeadlineHoursFor("critical"),
-				"high":     pol.DeadlineHoursFor("high"),
-				"medium":   pol.DeadlineHoursFor("medium"),
-				"low":      pol.DeadlineHoursFor("low"),
-			}
+			slaDeadlines = pol.AllDeadlines()
 		}
 		state := appmon.Build(appmon.BuildInput{
 			GeneratedAt:    time.Now().UTC().Format("2006-01-02 15:04:05"),

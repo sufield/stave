@@ -122,7 +122,7 @@ func Suggest(in Input) *Result {
 				m = &findingMeta{
 					controlID:   f.ControlID,
 					assetID:     f.AssetID,
-					severity:    f.ControlSeverity.String(),
+					severity:    f.SeverityLabel(),
 					ownerTeamID: f.OwnerTeamID.String(),
 					firstSeen:   a.Run.Now,
 					appearances: make([]bool, assessmentCount),
@@ -131,8 +131,8 @@ func Suggest(in Input) *Result {
 			}
 			m.lastSeen = a.Run.Now
 			m.appearances[idx] = true
-			if !f.OwnerTeamID.IsEmpty() {
-				m.ownerTeamID = f.OwnerTeamID.String()
+			if f.HasOwner() {
+				m.ownerTeamID = f.OwnerKey()
 			}
 		}
 	}

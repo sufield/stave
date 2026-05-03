@@ -66,7 +66,7 @@ func Plan(input Input) SprintResult {
 		items = append(items, SprintItem{
 			ControlID:   string(f.ControlID),
 			AssetID:     string(f.AssetID),
-			Severity:    f.ControlSeverity.String(),
+			Severity:    f.SeverityLabel(),
 			EffortHours: hours,
 			RiskScore:   risk,
 			ROI:         roi,

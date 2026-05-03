@@ -34,7 +34,7 @@ func renderTable(w io.Writer, export *EvidenceExport, verbose bool) error { //no
 	for i := range export.Requirements {
 		r := &export.Requirements[i]
 		desc := truncate(r.Description, 30)
-		status := statusLabel(r.Status)
+		status := r.Status.Label()
 		ctlSummary := controlCountSummary(r.Controls)
 		fmt.Fprintf(w, "%-25s %-30s %-12s %s\n", r.ID, desc, status, ctlSummary)
 	}
@@ -57,7 +57,7 @@ func renderTable(w io.Writer, export *EvidenceExport, verbose bool) error { //no
 			if len(r.Gaps) == 0 {
 				continue
 			}
-			fmt.Fprintf(w, "\n%s %s [%s — %d gap(s)]\n", r.ID, r.Description, statusLabel(r.Status), len(r.Gaps))
+			fmt.Fprintf(w, "\n%s %s [%s — %d gap(s)]\n", r.ID, r.Description, r.Status.Label(), len(r.Gaps))
 
 			for j := range r.Gaps {
 				g := &r.Gaps[j]
@@ -112,26 +112,11 @@ func printScoreBar(w io.Writer, label string, count, total int) {
 	fmt.Fprintf(w, "  %-12s %s  %d/%d  (%.1f%%)\n", label, bar, count, total, pct)
 }
 
-func statusLabel(status string) string {
-	switch status {
-	case "met":
-		return "SATISFIED"
-	case "not_met":
-		return "NOT MET"
-	case "not_evaluated":
-		return "NOT EVAL"
-	case "incomplete":
-		return "INCOMPLETE"
-	default:
-		return strings.ToUpper(status)
-	}
-}
-
 func controlCountSummary(controls []ControlSummary) string {
 	pass := 0
 	total := len(controls)
 	for i := range controls {
-		if controls[i].FailCount == 0 && controls[i].IncompleteCount == 0 {
+		if controls[i].IsPassing() {
 			pass++
 		}
 	}

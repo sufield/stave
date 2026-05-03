@@ -2,6 +2,7 @@
 package compliance
 
 import (
+	"strings"
 	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -40,13 +41,65 @@ type ScoreExport struct {
 
 // RequirementExport is a single requirement in the JSON output.
 type RequirementExport struct {
-	ID            string           `json:"id"`
-	Description   string           `json:"description"`
-	Section       string           `json:"section"`
-	Status        string           `json:"status"`
-	Controls      []ControlSummary `json:"controls"`
-	Gaps          []GapExport      `json:"gaps,omitempty"`
-	SLACompliance *SLACompliance   `json:"sla_compliance,omitempty"`
+	ID            string            `json:"id"`
+	Description   string            `json:"description"`
+	Section       string            `json:"section"`
+	Status        RequirementStatus `json:"status"`
+	Controls      []ControlSummary  `json:"controls"`
+	Gaps          []GapExport       `json:"gaps,omitempty"`
+	SLACompliance *SLACompliance    `json:"sla_compliance,omitempty"`
+}
+
+// RequirementStatus is the wire-format string a requirement carries
+// in compliance JSON / markdown / table output. Values match the
+// vocabulary the evidence-profile evaluator emits ("met", "not_met",
+// "not_evaluated", "incomplete"). Label / Icon methods replace the
+// per-renderer switch statements that used to do the same mapping.
+type RequirementStatus string
+
+// Recognised RequirementStatus values.
+const (
+	RequirementStatusMet          RequirementStatus = "met"
+	RequirementStatusNotMet       RequirementStatus = "not_met"
+	RequirementStatusNotEvaluated RequirementStatus = "not_evaluated"
+	RequirementStatusIncomplete   RequirementStatus = "incomplete"
+)
+
+// Label returns the uppercase human-readable label compliance text
+// renderers print for this status. Replaces the standalone
+// statusLabel function that used to live in render_table.
+func (s RequirementStatus) Label() string {
+	switch s {
+	case RequirementStatusMet:
+		return "SATISFIED"
+	case RequirementStatusNotMet:
+		return "NOT MET"
+	case RequirementStatusNotEvaluated:
+		return "NOT EVAL"
+	case RequirementStatusIncomplete:
+		return "INCOMPLETE"
+	default:
+		return strings.ToUpper(string(s))
+	}
+}
+
+// Icon returns the markdown-friendly label compliance markdown
+// renderers print. Currently identical to Label for recognised
+// values and the raw string otherwise; kept as a separate method
+// so a future markdown-only emoji / glyph addition lands once.
+func (s RequirementStatus) Icon() string {
+	switch s {
+	case RequirementStatusMet:
+		return "SATISFIED"
+	case RequirementStatusNotMet:
+		return "NOT MET"
+	case RequirementStatusNotEvaluated:
+		return "NOT EVAL"
+	case RequirementStatusIncomplete:
+		return "INCOMPLETE"
+	default:
+		return string(s)
+	}
 }
 
 // SLACompliance holds per-requirement SLA metrics. Present only when
@@ -65,6 +118,14 @@ type ControlSummary struct {
 	PassCount       int    `json:"pass_count"`
 	FailCount       int    `json:"fail_count"`
 	IncompleteCount int    `json:"incomplete_count"`
+}
+
+// IsPassing reports whether this control summary records zero
+// failures and zero incomplete evaluations — the gate the table
+// renderer uses to count "passing" controls. Replaces the inline
+// (FailCount == 0 && IncompleteCount == 0) probe.
+func (cs *ControlSummary) IsPassing() bool {
+	return cs != nil && cs.FailCount == 0 && cs.IncompleteCount == 0
 }
 
 // Add increments the appropriate counter on this summary based on
@@ -165,7 +226,7 @@ func buildExport(
 			ID:          ra.RequirementID,
 			Description: ra.Description,
 			Section:     ra.Section,
-			Status:      ra.Status.String(),
+			Status:      RequirementStatus(ra.Status.String()),
 		}
 
 		// Build per-control summaries from evidence records

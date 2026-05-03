@@ -67,6 +67,48 @@ func (a *AcknowledgmentEntry) IsInactive() bool {
 	return a != nil && (a.IsRevoked() || a.IsExpired())
 }
 
+// DaysRemaining parses the entry's ExpiryDate (YYYY-MM-DD) and
+// returns the number of whole days from now until expiry. Negative
+// values indicate the entry has already lapsed. Returns (0, false)
+// when the date string is missing or unparseable so callers can
+// distinguish "no expiry data" from "0 days left".
+//
+// Replaces the inline time.Parse + Hours()/24 arithmetic in
+// internal/app/exempt/status.go's ComputeStatus loop.
+func (a *AcknowledgmentEntry) DaysRemaining(now time.Time) (int, bool) {
+	if a == nil || a.ExpiryDate == "" {
+		return 0, false
+	}
+	expiry, err := time.Parse("2006-01-02", a.ExpiryDate)
+	if err != nil {
+		return 0, false
+	}
+	return int(expiry.Sub(now).Hours() / 24), true
+}
+
+// ExpiryClassification labels the entry's lifetime against the
+// expiry-status thresholds the exempt status report uses:
+//   - "expired"        — DaysRemaining < 0
+//   - "expiring_soon"  — 0 ≤ DaysRemaining ≤ 30
+//   - "active"         — DaysRemaining > 30
+//   - ""               — ExpiryDate missing / unparseable
+//
+// Replaces the cascade of inline arithmetic in ComputeStatus.
+func (a *AcknowledgmentEntry) ExpiryClassification(now time.Time) string {
+	days, ok := a.DaysRemaining(now)
+	if !ok {
+		return ""
+	}
+	switch {
+	case days < 0:
+		return "expired"
+	case days <= 30:
+		return "expiring_soon"
+	default:
+		return "active"
+	}
+}
+
 // IsExportable reports whether the acknowledgment should appear in
 // POA&M / external compliance exports. Active and expired entries
 // both export — active becomes an "accepted" risk, expired becomes

@@ -81,7 +81,7 @@ func Analyze(in Input) *Report {
 			closed = append(closed, ClosedFinding{
 				ControlID: k.ControlID,
 				AssetID:   k.AssetID,
-				Severity:  f.ControlSeverity.String(),
+				Severity:  f.SeverityLabel(),
 				DwellDays: f.Evidence.UnsafeDurationHours / 24,
 			})
 		}

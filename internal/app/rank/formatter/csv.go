@@ -97,7 +97,7 @@ func buildFindingIndex(assessment *report.Assessment) map[string]*findingMeta {
 		f := &assessment.Findings[i]
 		key := string(f.ControlID) + "@" + string(f.AssetID)
 		m := &findingMeta{
-			severity:  f.ControlSeverity.String(),
+			severity:  f.SeverityLabel(),
 			assetType: string(f.AssetType),
 			owner:     f.OwnerTeamID.String(),
 		}

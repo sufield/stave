@@ -90,17 +90,13 @@ func computeTeamTrends(
 
 		// Delta and trajectory.
 		var delta float64
-		trajectory := trajectoryStable
 		if es, ok := earlierScores[t.ID]; ok {
 			delta = score - es
 		} else if len(findings) == 0 && earlierScores != nil {
 			delta = 0 // no findings then or now
 		}
-		if delta >= trajectoryThreshold {
-			trajectory = trajectoryImproving
-		} else if delta <= -trajectoryThreshold {
-			trajectory = trajectoryRegressing
-		}
+		var stage teamTrend
+		stage.ClassifyTrajectory(delta, trajectoryThreshold)
 
 		// totalDwell stays inline because it isn't part of the
 		// SLASummaryStats shape; the rest of the team-side SLA
@@ -124,7 +120,7 @@ func computeTeamTrends(
 			slaPct = float64(slaWithin) / float64(slaTotal) * 100
 		}
 
-		if regressionOnly && trajectory != trajectoryRegressing {
+		if regressionOnly && !stage.IsRegressing() {
 			continue
 		}
 
@@ -134,7 +130,7 @@ func computeTeamTrends(
 			Contact:      t.Contact,
 			PostureScore: score,
 			ScoreDelta:   delta,
-			Trajectory:   trajectory,
+			Trajectory:   stage.Trajectory,
 			MTTRHours:    mttr,
 			SLACompPct:   slaPct,
 			OpenFindings: len(findings),
@@ -163,13 +159,13 @@ func computeTeamTrends(
 	// Summary.
 	summary := &teamTrendSummary{TeamsTracked: len(trends)}
 	for i := range trends {
-		switch trends[i].Trajectory {
-		case trajectoryImproving:
+		switch {
+		case trends[i].IsImproving():
 			summary.TeamsImproving++
-		case trajectoryStable:
-			summary.TeamsStable++
-		case trajectoryRegressing:
+		case trends[i].IsRegressing():
 			summary.TeamsRegressing++
+		default:
+			summary.TeamsStable++
 		}
 	}
 

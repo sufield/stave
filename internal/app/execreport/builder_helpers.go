@@ -3,7 +3,6 @@ package execreport
 import (
 	"context"
 	"sort"
-	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appcoverage "github.com/sufield/stave/internal/app/coverage"
@@ -40,7 +39,7 @@ func buildSLASection(a *corereport.Assessment, cfg *evaluation.SLAConfig) *SLASe
 
 	for i := range a.Findings {
 		f := &a.Findings[i]
-		sev := strings.ToLower(f.ControlSeverity.String())
+		sev := f.SeverityLabel()
 		deadline := cfg.DeadlineBySeverity[sev]
 		if deadline <= 0 {
 			continue
@@ -92,11 +91,10 @@ func buildTopFindings(a *corereport.Assessment, n int) []TopFinding {
 		idx   int
 		score float64
 	}
-	sevWeight := map[string]float64{"critical": 4, "high": 3, "medium": 2, "low": 1}
 	var items []ranked
 	for i := range a.Findings {
 		f := &a.Findings[i]
-		w := sevWeight[f.SeverityLabel()]
+		w := f.ControlSeverity.NormalizedWeight()
 		burn := 0.0
 		if dl, ok := f.SLADeadlineValue(); ok && dl > 0 {
 			burn = f.Evidence.UnsafeDurationHours / dl

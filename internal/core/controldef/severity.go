@@ -73,6 +73,26 @@ func (s Severity) Gte(other Severity) bool {
 // risk-priority calculations when a control does not define
 // base_impact in its params.
 //
+// NormalizedWeight returns the four-tier (1.0 — 4.0) severity scale
+// the execreport top-findings ranker uses. Distinct from Weight,
+// which returns the 25/50/75/100 scale used by exposure scoring.
+// Centralised here so callers stop reproducing the local
+// {"critical":4, "high":3, "medium":2, "low":1} map.
+func (s Severity) NormalizedWeight() float64 {
+	switch s {
+	case SeverityCritical:
+		return 4
+	case SeverityHigh:
+		return 3
+	case SeverityMedium:
+		return 2
+	case SeverityLow:
+		return 1
+	default:
+		return 0
+	}
+}
+
 // Centralised on the Severity type so risk and rank packages do not
 // each open-code the same Critical=100/High=75/Medium=50/Low=25
 // switch — see exposure_rank.go, app/rank/identity.go,

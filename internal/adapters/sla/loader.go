@@ -34,6 +34,28 @@ type DeadlineTiers struct {
 	Low      string `yaml:"low"      json:"low"`
 }
 
+// KnownSeverities returns the canonical severity vocabulary the
+// SLA policy supports. Centralised so callers iterating "all
+// severities to deadline" stop reproducing the slice.
+func (p *Policy) KnownSeverities() []string {
+	return []string{"critical", "high", "medium", "low"}
+}
+
+// AllDeadlines returns a (severity → hours) map covering every
+// known severity tier. Centralises the four-call DeadlineHoursFor
+// table cmd/monitor used to build inline so a future tier addition
+// (e.g. info) lands as one edit on this method plus KnownSeverities.
+func (p *Policy) AllDeadlines() map[string]float64 {
+	if p == nil {
+		return nil
+	}
+	deadlines := make(map[string]float64, 4)
+	for _, sev := range p.KnownSeverities() {
+		deadlines[sev] = p.DeadlineHoursFor(sev)
+	}
+	return deadlines
+}
+
 // DeadlineHoursFor returns the deadline in hours for a given severity.
 // Returns 0 if severity is unrecognized or has no deadline.
 func (p *Policy) DeadlineHoursFor(severity string) float64 {

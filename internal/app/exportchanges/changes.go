@@ -56,7 +56,7 @@ func Export(in Input) *Report {
 				ControlID:      string(f.ControlID),
 				AssetID:        string(f.AssetID),
 				AssetType:      string(f.AssetType),
-				Severity:       f.ControlSeverity.String(),
+				Severity:       f.SeverityLabel(),
 				Confidence:     confidence,
 				PropertyPath:   pc.PropertyPath,
 				CurrentValue:   pc.CurrentValue,

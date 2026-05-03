@@ -98,7 +98,7 @@ func BuildPlaybook(input *Input) Playbook {
 		FindingID:   string(f.FindingID),
 		ControlID:   string(f.ControlID),
 		AssetID:     string(f.AssetID),
-		Severity:    f.ControlSeverity.String(),
+		Severity:    f.SeverityLabel(),
 		ControlName: f.ControlName,
 	}
 
