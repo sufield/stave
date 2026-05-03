@@ -37,7 +37,7 @@ Exit Codes:
 			if err != nil {
 				return err
 			}
-			return renderQuery(cmd.OutOrStdout(), result, opts.Format)
+			return result.Render(cmd.OutOrStdout(), opts.Format)
 		},
 	}
 

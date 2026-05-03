@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/internal/app/snapshotquery"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
@@ -28,6 +29,22 @@ type queryOptions struct {
 	NewerThanDur time.Duration
 	HasOlderThan bool
 	HasNewerThan bool
+}
+
+// ToFilter projects the resolved options into the Filter shape
+// the snapshotquery package consumes. Centralises the
+// (HasOlderThan / HasNewerThan) → Filter conversion on the type
+// that owns the resolved fields, so the runner stops constructing
+// the Filter inline.
+func (o *queryOptions) ToFilter() snapshotquery.Filter {
+	f := snapshotquery.Filter{Now: o.Now}
+	if o.HasOlderThan {
+		f.OlderThan = o.OlderThanDur
+	}
+	if o.HasNewerThan {
+		f.NewerThan = o.NewerThanDur
+	}
+	return f
 }
 
 // defaultQueryOptions returns the zero-state Options with flag

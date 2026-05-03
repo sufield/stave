@@ -101,7 +101,7 @@ func buildControlSummary(ctl *policy.ControlDefinition, f *evaluation.Finding) e
 func buildNextSteps(d *evaluation.FindingDetail) []string {
 	steps := make([]string, 0, 3)
 
-	if d.Remediation.Actionable() {
+	if d.Remediation.HasAction() {
 		steps = append(steps, "Apply the remediation action described above.")
 	}
 

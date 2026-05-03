@@ -105,10 +105,12 @@ func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluatio
 		return
 	}
 
-	// Partition into chain-member and isolated findings.
+	// Partition into chain-member and isolated findings via the
+	// finding's own predicate so the renderer stops asking about
+	// the slice length and asks the type instead.
 	var chainFindings, isolatedFindings []remediation.Finding
 	for i := range enriched {
-		if len(enriched[i].ChainMembership) > 0 {
+		if enriched[i].IsChainMember() {
 			chainFindings = append(chainFindings, enriched[i])
 		} else {
 			isolatedFindings = append(isolatedFindings, enriched[i])
@@ -159,10 +161,11 @@ func (w *FindingWriter) writeExceptedFindings(d *drawer, excepted []evaluation.E
 		return
 	}
 	d.f("\nExcepted Findings: %d\n", len(excepted))
-	for _, s := range excepted {
+	for i := range excepted {
+		s := &excepted[i]
 		d.f("  - %s on %s: %s", s.ControlID, s.AssetID, s.Reason)
-		if !s.Expires.IsZero() {
-			d.f(" (expires %s)", s.Expires.String())
+		if s.HasExpiry() {
+			d.f(" (expires %s)", s.Expires)
 		}
 		d.f("\n")
 	}

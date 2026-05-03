@@ -134,7 +134,7 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 		totalRisk += score
 
 		fixAction := ""
-		if f.RemediationSpec.Actionable() {
+		if f.RemediationSpec.HasAction() {
 			fixAction = strings.TrimSpace(f.RemediationSpec.Action)
 		}
 
@@ -215,7 +215,7 @@ func buildBundles(findings []remediation.Finding, exposureByKey map[string]risk.
 	accum := make(map[string]*bundleAccum)
 	for i := range findings {
 		f := &findings[i]
-		if !f.RemediationSpec.Actionable() {
+		if !f.RemediationSpec.HasAction() {
 			continue
 		}
 		action := strings.TrimSpace(f.RemediationSpec.Action)

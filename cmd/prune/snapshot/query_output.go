@@ -10,20 +10,29 @@ import (
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
-// renderQuery writes the query result in the requested format to w.
-// Takes no *cobra.Command — the caller resolves the writer at the
-// RunE boundary.
-func renderQuery(w io.Writer, result queryResult, format string) error {
+// Render writes the result in the requested format. Replaces the
+// renderQuery free function and its double IsHealth check by
+// hanging the dispatch off the result type that owns the
+// IsHealth flag.
+func (result queryResult) Render(w io.Writer, format string) error {
+	payload := result.payload()
 	if format == "json" {
-		if result.IsHealth {
-			return jsonutil.WriteIndented(w, result.HealthReport)
-		}
-		return jsonutil.WriteIndented(w, result.Listing)
+		return jsonutil.WriteIndented(w, payload)
 	}
 	if result.IsHealth {
 		return renderHealthText(w, result.HealthReport)
 	}
 	return renderListingText(w, result.Listing)
+}
+
+// payload returns the JSON-shaped struct for the result's active
+// branch. Keeping the JSON dispatch on the type lets renderJSON
+// stop branching on IsHealth in two places.
+func (result queryResult) payload() any {
+	if result.IsHealth {
+		return result.HealthReport
+	}
+	return result.Listing
 }
 
 func renderHealthText(w io.Writer, r *snapshotquery.HealthReport) error {

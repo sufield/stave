@@ -279,7 +279,7 @@ func buildFindingProperties(f *remediation.Finding) map[string]any {
 		"control_name": f.ControlName,
 		"verdict":      "fail",
 		"severity":     f.ControlSeverity.String(),
-		"message":      f.Evidence.TemporalRisk,
+		"message":      f.TemporalRiskMessage(),
 	}
 	if f.IsOverdue() {
 		props["sla_breached"] = true
@@ -385,7 +385,7 @@ func (b *builderState) emitTenantScope(f *remediation.Finding, resourceID string
 // unconditionally for every Finding that names a RemediationAction so
 // the post-pass dedup can merge identical edges from sibling findings.
 func (b *builderState) emitRemediation(f *remediation.Finding, findingID string) {
-	if f.RemediationSpec.Action == "" {
+	if !f.HasRemediationAction() {
 		return
 	}
 	remID := "remediation_" + findingID

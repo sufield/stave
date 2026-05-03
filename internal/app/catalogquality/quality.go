@@ -58,7 +58,7 @@ func Analyze(input Input) Report {
 		}
 
 		// remediation.action
-		if ctl.Remediation.Actionable() {
+		if ctl.Remediation.HasAction() {
 			inc(&completeness, "remediation.action", true)
 		} else {
 			inc(&completeness, "remediation.action", false)

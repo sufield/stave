@@ -106,11 +106,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 // in one shape downstream consumers can feed into AI prompts or
 // ticketing. See docs/product/metrics.md § Metric 4.
 func buildRemediationContext(f *remediation.Finding) *RemediationContextDTO {
-	// Skip when the finding has neither reasoning nor remediation to
-	// package — avoids emitting empty context blocks.
-	hasTrace := len(f.ReasoningTrace) > 0
-	hasSpec := f.RemediationSpec.Action != "" || f.RemediationSpec.Description != ""
-	if !hasTrace && !hasSpec {
+	if !f.HasRemediationContext() {
 		return nil
 	}
 
@@ -167,8 +163,8 @@ func buildRemediationContext(f *remediation.Finding) *RemediationContextDTO {
 		})
 	}
 
-	if f.RemediationPlan != nil && f.RemediationPlan.Command != "" {
-		ctx.Action = f.RemediationPlan.Command
+	if cmd, ok := f.RemediationCommand(); ok {
+		ctx.Action = cmd
 	}
 
 	return ctx

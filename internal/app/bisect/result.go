@@ -79,3 +79,22 @@ func (r Result) IsBisectMode() bool {
 func (r Result) ShouldWarnMultipleWindows() bool {
 	return !r.IsMonotonic && r.IsBisectMode()
 }
+
+// ModeLabel returns the uppercase mode tag the cmd/bisect text
+// renderer prints in the headline ("SCAN" or "BISECT"). Replaces
+// the inline (IsScanMode ? "SCAN" : "BISECT") branch so the
+// rendering choice stays on the type that owns Mode.
+func (r Result) ModeLabel() string {
+	if r.IsScanMode() {
+		return "SCAN"
+	}
+	return "BISECT"
+}
+
+// HasPatientZero reports whether this result has a "patient zero"
+// (earliest-ever) window worth surfacing in the output. True only
+// in scan mode with multiple windows — bisect mode finds the
+// current window but cannot name the historical first.
+func (r Result) HasPatientZero() bool {
+	return r.IsScanMode() && len(r.Windows) > 1
+}

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -393,6 +394,56 @@ func (f *Finding) OverdueHours() (float64, bool) {
 	return *f.SLAOverdueHours, true
 }
 
+// TemporalRiskMessage returns the Evidence-side risk message
+// catalog authors attach to a finding (e.g. "asset has been
+// unsafe for 4 days, exceeding the 7-day SLA"). Centralised so
+// renderers stop reaching into Evidence.TemporalRisk directly —
+// keeps the Evidence-field probe on the type that owns it.
+func (f *Finding) TemporalRiskMessage() string {
+	if f == nil {
+		return ""
+	}
+	return f.Evidence.TemporalRisk
+}
+
+// SLAStats is the per-finding SLA contribution surfaced by
+// SLAContribution. Renderers and aggregators consume one struct
+// rather than three accessors (HasSLA, IsOverdue, OverdueHours)
+// in sequence.
+//
+//   - Detected is 1 when an SLA deadline applies to this finding.
+//   - Breached is 1 when the deadline has been exceeded.
+//   - WithinSLA is 1 when the deadline applies but is not yet
+//     breached. Detected = Breached + WithinSLA.
+//   - OverdueHours is the dwell-time excess past the deadline.
+type SLAStats struct {
+	Detected     int
+	Breached     int
+	WithinSLA    int
+	OverdueHours float64
+}
+
+// SLAContribution returns this finding's contribution to an SLA
+// rollup. Replaces the (HasSLA / IsOverdue / OverdueHours)
+// triple-call pattern in cmd/export/compliance/output.go and
+// similar accumulators so a future SLA-shape change is one edit
+// on the type.
+func (f *Finding) SLAContribution() SLAStats {
+	if f == nil || !f.HasSLA() {
+		return SLAStats{}
+	}
+	out := SLAStats{Detected: 1}
+	if f.IsOverdue() {
+		out.Breached = 1
+		if h, ok := f.OverdueHours(); ok {
+			out.OverdueHours = h
+		}
+	} else {
+		out.WithinSLA = 1
+	}
+	return out
+}
+
 // IsCritical reports whether this finding's control severity is
 // Critical. Replaces the
 // strings.EqualFold(f.ControlSeverity.String(), "critical") pattern
@@ -623,4 +674,26 @@ type ExceptedFinding struct {
 	AssetID   asset.ID          `json:"asset_id"`
 	Reason    string            `json:"reason"`
 	Expires   policy.ExpiryDate `json:"expires"`
+}
+
+// HasExpiry reports whether this exception carries an expiry
+// date. Replaces the (!s.Expires.IsZero()) probe in renderers so
+// the field check stays on the type that owns Expires.
+func (e *ExceptedFinding) HasExpiry() bool {
+	return e != nil && !e.Expires.IsZero()
+}
+
+// WriteText renders the exception as a single grep-friendly text
+// line: "<control> on <asset> — <reason>" with " (expires <date>)"
+// appended when an expiry is recorded. Centralises the renderer
+// so callers stop reaching into Expires / Reason directly.
+func (e *ExceptedFinding) WriteText(w io.Writer) {
+	if e == nil {
+		return
+	}
+	fmt.Fprintf(w, "%s on %s — %s", e.ControlID, e.AssetID, e.Reason)
+	if e.HasExpiry() {
+		fmt.Fprintf(w, " (expires %s)", e.Expires)
+	}
+	fmt.Fprintln(w)
 }

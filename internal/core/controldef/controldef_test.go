@@ -706,17 +706,17 @@ func TestCatalogNil(t *testing.T) {
 
 func TestRemediationSpecActionable(t *testing.T) {
 	var nilSpec *RemediationSpec
-	if nilSpec.Actionable() {
+	if nilSpec.HasAction() {
 		t.Fatal("nil spec should not be actionable")
 	}
 
 	s := &RemediationSpec{}
-	if s.Actionable() {
+	if s.HasAction() {
 		t.Fatal("empty action should not be actionable")
 	}
 
 	s.Action = "do something"
-	if !s.Actionable() {
+	if !s.HasAction() {
 		t.Fatal("should be actionable")
 	}
 }

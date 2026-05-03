@@ -80,9 +80,12 @@ func NewRemediationSpec(desc, action, example string) *RemediationSpec {
 	}
 }
 
-// Actionable reports whether the specification contains a concrete remediation instruction.
-// It is safe to call on a nil receiver.
-func (s *RemediationSpec) Actionable() bool {
+// HasAction reports whether the specification contains a concrete
+// remediation instruction (the Action string is non-empty). Safe
+// to call on a nil receiver. Replaces external probes of the form
+// `spec.Action != ""` so the field check stays on the type that
+// owns it.
+func (s *RemediationSpec) HasAction() bool {
 	return s != nil && s.Action != ""
 }
 

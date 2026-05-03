@@ -19,10 +19,7 @@ func writeOutput(stdout, stderr io.Writer, result appbisect.Result, format strin
 }
 
 func writeText(stdout, stderr io.Writer, result appbisect.Result, _ *slog.Logger) error {
-	modeName := "BISECT"
-	if result.IsScanMode() {
-		modeName = "SCAN"
-	}
+	modeName := result.ModeLabel()
 
 	if !result.HasViolation() {
 		fmt.Fprintf(stdout, "%s COMPLETE: No violation found across %d snapshots.\n\n", modeName, result.SnapshotsTotal)
@@ -87,7 +84,7 @@ func writeText(stdout, stderr io.Writer, result appbisect.Result, _ *slog.Logger
 		fmt.Fprintln(stderr)
 	}
 
-	if result.IsScanMode() && len(result.Windows) > 1 {
+	if result.HasPatientZero() {
 		fmt.Fprintf(stdout, "Patient Zero (earliest ever occurrence): Window 1\n")
 	}
 

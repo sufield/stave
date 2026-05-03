@@ -1,6 +1,8 @@
 package controldef
 
 import (
+	"fmt"
+	"io"
 	"sync"
 	"time"
 
@@ -195,4 +197,26 @@ func (a *AcknowledgedFinding) ReasonDetail() string {
 		return a.InvalidDetail
 	}
 	return a.InvalidReason
+}
+
+// WriteDetails writes the rationale / acknowledger / expiry block
+// the rank inspect renderer surfaces under each acknowledged
+// finding. Each subline is conditional: missing fields are
+// skipped silently rather than rendered as blank rows. Replaces
+// the per-field HasRationale / HasAcknowledger / HasExpiry probe
+// chain at the renderer site so the rendering policy stays on
+// the type that owns the fields.
+func (a *AcknowledgedFinding) WriteDetails(w io.Writer) {
+	if a == nil {
+		return
+	}
+	if a.HasRationale() {
+		fmt.Fprintf(w, "         Rationale: %s\n", a.Rationale)
+	}
+	if a.HasAcknowledger() {
+		fmt.Fprintf(w, "         By: %s on %s\n", a.AcknowledgedBy, a.AcknowledgedDate)
+	}
+	if a.HasExpiry() {
+		fmt.Fprintf(w, "         Expires: %s\n", a.ExpiryDate)
+	}
 }

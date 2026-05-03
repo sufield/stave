@@ -176,15 +176,7 @@ func run(ctx context.Context, stdout, _ io.Writer, opts *options, deps Deps) err
 		for i := range assessment.AcknowledgedFindings {
 			af := &assessment.AcknowledgedFindings[i]
 			fmt.Fprintf(stdout, "  %s  %s on %s\n", af.StatusLabel(), af.ControlID, af.AssetID)
-			if af.HasRationale() {
-				fmt.Fprintf(stdout, "         Rationale: %s\n", af.Rationale)
-			}
-			if af.HasAcknowledger() {
-				fmt.Fprintf(stdout, "         By: %s on %s\n", af.AcknowledgedBy, af.AcknowledgedDate)
-			}
-			if af.HasExpiry() {
-				fmt.Fprintf(stdout, "         Expires: %s\n", af.ExpiryDate)
-			}
+			af.WriteDetails(stdout)
 		}
 	}
 

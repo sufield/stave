@@ -1,0 +1,18 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "z3-experiment-fixture",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::deny-test-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AllowRead\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::111122223333:role/ServiceB\"},\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::deny-test-bucket/*\"},{\"Sid\":\"DenyAll\",\"Effect\":\"Deny\",\"Principal\":{\"AWS\":\"arn:aws:iam::111122223333:role/ServiceB\"},\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::deny-test-bucket/*\"}]}"
+        }
+      }
+    }
+  ]
+}

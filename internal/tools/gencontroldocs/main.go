@@ -130,7 +130,7 @@ func buildTemplateData(catalog *policy.Catalog, hasher ports.Digester) templateD
 		}
 		slices.Sort(cd.Compliance)
 
-		if ctl.Remediation != nil && ctl.Remediation.Actionable() {
+		if ctl.Remediation != nil && ctl.Remediation.HasAction() {
 			cd.HasAction = true
 			cd.Action = strings.TrimSpace(ctl.Remediation.Action)
 		}

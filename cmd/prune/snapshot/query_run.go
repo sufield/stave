@@ -29,15 +29,7 @@ func runQuery(opts queryOptions) (queryResult, error) {
 		return queryResult{IsHealth: true, HealthReport: report}, nil
 	}
 
-	f := snapshotquery.Filter{Now: opts.Now}
-	if opts.HasOlderThan {
-		f.OlderThan = opts.OlderThanDur
-	}
-	if opts.HasNewerThan {
-		f.NewerThan = opts.NewerThanDur
-	}
-
-	results, err := snapshotquery.Query(opts.Dir, f)
+	results, err := snapshotquery.Query(opts.Dir, opts.ToFilter())
 	if err != nil {
 		return queryResult{}, fmt.Errorf("snapshot query: %w", err)
 	}
