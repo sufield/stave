@@ -21,8 +21,8 @@ import (
 // will eventually emit. Listed here so the report shape is
 // known up-front.
 const (
-	QueryUnauthToS3Data  = "unauth_to_s3_data"
-	QueryIAMS3KMSCompat  = "iam_s3_kms_compat"
+	QueryUnauthToS3Data   = "unauth_to_s3_data"
+	QueryIAMS3KMSCompat   = "iam_s3_kms_compat"
 	QueryNetworkToService = "network_to_service"
 )
 

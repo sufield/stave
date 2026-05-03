@@ -12,6 +12,7 @@ package policyexport
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -138,7 +139,7 @@ var (
 // point-in-time projection, not an append-only log.
 func Run(ctx context.Context, cfg Config) (*Result, error) {
 	if cfg.SnapshotsDir == "" {
-		return nil, fmt.Errorf("policyexport: SnapshotsDir is required")
+		return nil, errors.New("policyexport: SnapshotsDir is required")
 	}
 
 	loader := observations.NewObservationLoader()

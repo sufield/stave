@@ -138,8 +138,14 @@ type findingAlias Finding
 // JSON output is byte-identical to the previous public-fields
 // shape; consumers (FindingDTO, ASFF, SARIF wrappers, evidence
 // bundles) parse the same payload.
-func (f Finding) MarshalJSON() ([]byte, error) {
-	alias := findingAlias(f)
+//
+// Pointer receiver so json.Marshal does not copy the ~700-byte
+// Finding on every encode call.
+func (f *Finding) MarshalJSON() ([]byte, error) {
+	if f == nil {
+		return []byte("null"), nil
+	}
+	alias := findingAlias(*f)
 	return json.Marshal(findingShadow{
 		findingAlias:         &alias,
 		SLADeadlineHours:     f.slaDeadlineHours,

@@ -150,9 +150,9 @@ type SkippedFixture struct {
 // service's Z3 model. Honest accounting matters: a UNSAT verdict
 // is sound only relative to the modeled fragment.
 type ModelCoverage struct {
-	Modeled           []string `json:"modeled"`
-	NotModeled        []string `json:"not_modeled"`
-	KnownLimitations  []string `json:"known_limitations,omitempty"`
+	Modeled          []string `json:"modeled"`
+	NotModeled       []string `json:"not_modeled"`
+	KnownLimitations []string `json:"known_limitations,omitempty"`
 }
 
 // IsAgreement reports whether the comparison's result is one of

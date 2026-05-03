@@ -177,7 +177,7 @@ func loadInvariantControls(ctx context.Context, dir string) ([]controldef.Contro
 // stay consistent with the [Finding] surface.
 func projectControl(ctl *controldef.ControlDefinition) InvariantDefinition {
 	def := InvariantDefinition{
-		ID:          ControlID(ctl.ID),
+		ID:          ctl.ID,
 		Description: strings.TrimSpace(ctl.Description),
 		Severity:    Severity(ctl.Severity.String()),
 		Scope:       ScopeSingleAsset,
@@ -186,7 +186,7 @@ func projectControl(ctl *controldef.ControlDefinition) InvariantDefinition {
 	if len(ctl.ApplicableAssetTypes) > 0 {
 		def.Assets = make([]AssetConstraint, len(ctl.ApplicableAssetTypes))
 		for i, t := range ctl.ApplicableAssetTypes {
-			def.Assets[i] = AssetConstraint{Type: AssetType(t)}
+			def.Assets[i] = AssetConstraint{Type: t}
 		}
 	}
 	return def

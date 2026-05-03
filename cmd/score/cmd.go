@@ -229,7 +229,6 @@ func buildTrend(results []appscore.Result) []appscore.TrendPoint {
 	return points
 }
 
-
 func loadAssessment(_ context.Context, path string) (*report.Assessment, error) {
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {

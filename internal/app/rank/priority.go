@@ -58,7 +58,6 @@ func (e *PriorityEntry) IsChainMember() bool {
 	return e != nil && e.IsChainMemberField
 }
 
-
 // RemediationBundle groups findings by a shared fix action.
 type RemediationBundle struct {
 	Action           string             `json:"action"`
@@ -175,8 +174,8 @@ func BuildRoadmap(findings []remediation.Finding, topExposures []risk.ExposureRa
 		return cmp.Or(
 			cmp.Compare(boolToInt(!a.IsChainMember()), boolToInt(!b.IsChainMember())),
 			cmp.Compare(
-				boolToInt(!(a.SLABreached && a.SLAOverdue != "")),
-				boolToInt(!(b.SLABreached && b.SLAOverdue != ""))),
+				boolToInt(!a.SLABreached || a.SLAOverdue == ""),
+				boolToInt(!b.SLABreached || b.SLAOverdue == "")),
 			cmp.Compare(b.PriorityScore, a.PriorityScore),
 			cmp.Compare(b.Confidence, a.Confidence),
 			cmp.Compare(a.ControlID, b.ControlID),

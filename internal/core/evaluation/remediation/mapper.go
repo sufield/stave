@@ -35,13 +35,16 @@ type Finding struct {
 // object map, splice in the remediation-side fields, re-marshal.
 // JSON object key order is unspecified, so this preserves the
 // schema-required fields without depending on Go struct order.
-func (f Finding) MarshalJSON() ([]byte, error) {
-	inner, err := json.Marshal(f.Finding)
+func (f *Finding) MarshalJSON() ([]byte, error) {
+	if f == nil {
+		return []byte("null"), nil
+	}
+	inner, err := json.Marshal(&f.Finding)
 	if err != nil {
 		return nil, fmt.Errorf("marshal embedded finding: %w", err)
 	}
 	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(inner, &raw); err != nil {
+	if err = json.Unmarshal(inner, &raw); err != nil {
 		return nil, fmt.Errorf("decode embedded finding: %w", err)
 	}
 	remRaw, err := json.Marshal(f.RemediationSpec)

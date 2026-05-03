@@ -49,7 +49,6 @@ type PlanFinding struct {
 	Compliance        map[string]string `json:"compliance,omitempty"`
 }
 
-
 // Plan is the complete remediation plan output.
 type Plan struct {
 	GeneratedAt  string        `json:"generated_at"`
