@@ -6,13 +6,8 @@ import (
 	"math"
 	"time"
 
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
-
-func sevString(s policy.Severity) string {
-	return s.String()
-}
 
 // Input holds data for burn rate computation.
 type Input struct {
@@ -176,12 +171,12 @@ func Compute(input Input) Report {
 
 		for i := range input.Findings {
 			f := &input.Findings[i]
-			if sevString(f.ControlSeverity) != sev {
+			if f.SeverityLabel() != sev {
 				continue
 			}
 			count++
 
-			dwell := f.Evidence.UnsafeDurationHours
+			dwell := f.DwellHours()
 			if dwell <= 0 {
 				continue
 			}
@@ -297,10 +292,10 @@ func computeWeekly(findings []remediation.Finding, sev string, deadline float64,
 
 	for i := range findings {
 		f := &findings[i]
-		if sevString(f.ControlSeverity) != sev {
+		if f.SeverityLabel() != sev {
 			continue
 		}
-		dwell := math.Min(f.Evidence.UnsafeDurationHours, deadline)
+		dwell := math.Min(f.DwellHours(), deadline)
 		if dwell <= 0 {
 			continue
 		}

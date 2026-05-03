@@ -125,31 +125,24 @@ func lintControl(path string, celEval policy.PredicateEval, semantic bool) lintR
 
 	result.ControlID = string(ctl.ID)
 
-	// Schema checks.
-	if ctl.ID == "" {
-		result.Errors = append(result.Errors, "missing required field: id")
+	// Schema checks. Delegated to ControlDefinition.Validate so the
+	// metadata-completeness rules live on the type — a future
+	// required-field addition lands one place instead of in every
+	// authoring tool's linter.
+	for _, issue := range ctl.Validate() {
+		switch {
+		case issue.IsError():
+			result.Errors = append(result.Errors, issue.Message)
+		case issue.IsWarning():
+			result.Warnings = append(result.Warnings, issue.Message)
+		}
 	}
-	if ctl.Name == "" {
-		result.Errors = append(result.Errors, "missing required field: name")
-	}
-	if ctl.Description == "" {
-		result.Errors = append(result.Errors, "missing required field: description")
-	}
-	if !ctl.HasType() {
-		result.Errors = append(result.Errors, "missing required field: type")
-	}
-	if !ctl.Severity.IsSet() {
-		result.Warnings = append(result.Warnings, "missing optional field: severity")
-	}
-	if len(ctl.Compliance) == 0 {
-		result.Warnings = append(result.Warnings, "missing optional field: compliance (no framework citations)")
-	}
-	if ctl.Remediation == nil || ctl.Remediation.Action == "" {
-		result.Warnings = append(result.Warnings, "missing remediation.action")
-	}
-	if ctl.AttackStage() == "" {
-		result.Warnings = append(result.Warnings, "missing params.attack_stage")
-	}
+	// Metadata-quality review (compliance citations, remediation
+	// action, taxonomy mapping). Routes through CheckQuality so
+	// the metadata-completeness rules live on the type — a future
+	// recommended-field addition (e.g. documentation URL) lands one
+	// place rather than at every authoring tool.
+	result.Warnings = append(result.Warnings, ctl.CheckQuality().Warnings...)
 
 	// Prepare validation.
 	if prepErr := ctl.Prepare(); prepErr != nil {

@@ -54,7 +54,7 @@ func buildSLASection(a *corereport.Assessment, cfg *evaluation.SLAConfig) *SLASe
 			s.Breached++
 		}
 		bySev[sev] = s
-		burnRates[sev] += f.Evidence.UnsafeDurationHours / deadline
+		burnRates[sev] += f.DwellHours() / deadline
 		burnCounts[sev]++
 	}
 
@@ -97,7 +97,7 @@ func buildTopFindings(a *corereport.Assessment, n int) []TopFinding {
 		w := f.ControlSeverity.NormalizedWeight()
 		burn := 0.0
 		if dl, ok := f.SLADeadlineValue(); ok && dl > 0 {
-			burn = f.Evidence.UnsafeDurationHours / dl
+			burn = f.DwellHours() / dl
 		}
 		items = append(items, ranked{idx: i, score: w*100 + burn*50})
 	}
@@ -113,11 +113,11 @@ func buildTopFindings(a *corereport.Assessment, n int) []TopFinding {
 			ControlID:   string(f.ControlID),
 			Severity:    f.SeverityLabel(),
 			AssetID:     string(f.AssetID),
-			DwellHours:  f.Evidence.UnsafeDurationHours,
+			DwellHours:  f.DwellHours(),
 			SLABreached: f.IsAnyBreach(),
 		}
 		if dl, ok := f.SLADeadlineValue(); ok && dl > 0 {
-			tf.SLABurnRate = f.Evidence.UnsafeDurationHours / dl
+			tf.SLABurnRate = f.DwellHours() / dl
 		}
 		result = append(result, tf)
 	}

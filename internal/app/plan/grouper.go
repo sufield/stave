@@ -88,8 +88,7 @@ func Group(input GroupInput) *Plan {
 	var items []attributed
 	for i := range input.Findings {
 		f := &input.Findings[i]
-		sev, _ := policy.SeverityOrder(f.ControlSeverity)
-		if sev > minSev {
+		if f.SeveritySortRank() > minSev {
 			continue
 		}
 		owner := input.Manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
@@ -106,8 +105,8 @@ func Group(input GroupInput) *Plan {
 
 	// Sort by severity DESC, dwell DESC.
 	sort.Slice(items, func(i, j int) bool {
-		si, _ := policy.SeverityOrder(items[i].finding.ControlSeverity)
-		sj, _ := policy.SeverityOrder(items[j].finding.ControlSeverity)
+		si := items[i].finding.SeveritySortRank()
+		sj := items[j].finding.SeveritySortRank()
 		if si != sj {
 			return si < sj
 		}

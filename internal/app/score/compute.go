@@ -523,12 +523,10 @@ func computeSeverityScore(input Input) severityResult {
 	var actualExposure float64
 	failingCount := 0
 	for i := range input.Findings {
-		s := input.Findings[i].ControlSeverity
-		sw := severityWeight[s]
-		if sw == 0 {
-			sw = 1.0
-		}
-		actualExposure += sw
+		// NormalizedWeight is the canonical four-tier ladder; the type
+		// owns the "every finding contributes ≥ 1.0" floor so this
+		// loop can sum directly without a local correction.
+		actualExposure += input.Findings[i].ControlSeverity.NormalizedWeight()
 		failingCount++
 	}
 
@@ -551,7 +549,7 @@ func computeSeverityScore(input Input) severityResult {
 		// shape (TotalCheckWeight==0) so callers can warn that the
 		// upstream count is missing.
 		avgWeight := actualExposure / float64(failingCount)
-		maxSev := severityWeight[policy.SeverityCritical]
+		maxSev := policy.SeverityCritical.NormalizedWeight()
 		if maxSev > 0 {
 			subScore = 1.0 - (avgWeight / maxSev)
 		}

@@ -162,13 +162,14 @@ func mapToDiagnosticFindings(findings []evaluation.Finding) []diagnosis.Diagnost
 	out := make([]diagnosis.DiagnosticFinding, len(findings))
 	for i := range findings {
 		f := &findings[i]
+		snap := f.Evidence.TemporalSnapshot()
 		out[i] = diagnosis.DiagnosticFinding{
 			AssetID:             f.AssetID,
 			ControlID:           f.ControlID,
-			FirstUnsafeAt:       f.Evidence.FirstUnsafeAt,
-			LastSeenUnsafeAt:    f.Evidence.LastSeenUnsafeAt,
-			UnsafeDurationHours: f.Evidence.UnsafeDurationHours,
-			ThresholdHours:      f.Evidence.ThresholdHours,
+			FirstUnsafeAt:       snap.FirstUnsafeAt,
+			LastSeenUnsafeAt:    snap.LastSeenUnsafeAt,
+			UnsafeDurationHours: snap.UnsafeDurationHours,
+			ThresholdHours:      snap.ThresholdHours,
 		}
 	}
 	return out

@@ -65,7 +65,7 @@ func fromFinding(f *remediation.Finding) Ticket {
 	ctlID := string(f.ControlID)
 	astID := string(f.AssetID)
 	sev := f.SeverityLabel()
-	dwellDays := f.Evidence.UnsafeDurationHours / 24
+	dwellDays := f.DwellDays()
 
 	labels := []string{"security", sev}
 	if f.AssetType != "" {

@@ -76,22 +76,19 @@ func renderTable(w io.Writer, export *EvidenceExport, verbose bool) error { //no
 }
 
 func renderVerboseTrace(w io.Writer, export *EvidenceExport, controlID, resourceARN string) {
-	for i := range export.Evidence {
-		e := &export.Evidence[i]
-		if e.ControlID != controlID || e.ResourceARN != resourceARN {
-			continue
+	e := export.FindEvidence(controlID, resourceARN)
+	if e == nil {
+		return
+	}
+	fmt.Fprintln(w, "  Reasoning trace:")
+	if e.ReasoningTrace.InvariantEvaluated != "" {
+		fmt.Fprintf(w, "    Invariant: %s\n", e.ReasoningTrace.InvariantEvaluated)
+	}
+	if len(e.ReasoningTrace.Observations) > 0 {
+		fmt.Fprintln(w, "    Observations:")
+		for _, o := range e.ReasoningTrace.Observations {
+			fmt.Fprintf(w, "      %s = %s\n", o.Field, o.Value)
 		}
-		fmt.Fprintln(w, "  Reasoning trace:")
-		if e.ReasoningTrace.InvariantEvaluated != "" {
-			fmt.Fprintf(w, "    Invariant: %s\n", e.ReasoningTrace.InvariantEvaluated)
-		}
-		if len(e.ReasoningTrace.Observations) > 0 {
-			fmt.Fprintln(w, "    Observations:")
-			for _, o := range e.ReasoningTrace.Observations {
-				fmt.Fprintf(w, "      %s = %s\n", o.Field, o.Value)
-			}
-		}
-		break
 	}
 }
 

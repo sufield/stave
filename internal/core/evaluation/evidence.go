@@ -99,6 +99,56 @@ func (e Evidence) HasTemporalRisk() bool {
 	return e.TemporalRisk != ""
 }
 
+// TemporalSnapshot bundles the four temporal fields downstream
+// projections need together. Centralised so diagnose / DTO mappers
+// stop reading FirstUnsafeAt / LastSeenUnsafeAt /
+// UnsafeDurationHours / ThresholdHours individually — one method
+// keeps "what's the temporal posture of this evidence?" on the
+// type that owns the fields.
+type TemporalSnapshot struct {
+	FirstUnsafeAt       time.Time
+	LastSeenUnsafeAt    time.Time
+	UnsafeDurationHours float64
+	ThresholdHours      float64
+}
+
+// TemporalSnapshot returns the (first / last / duration / threshold)
+// projection callers need to seed temporal-aware DTOs without
+// reaching into the four fields directly.
+func (e Evidence) TemporalSnapshot() TemporalSnapshot {
+	return TemporalSnapshot{
+		FirstUnsafeAt:       e.FirstUnsafeAt,
+		LastSeenUnsafeAt:    e.LastSeenUnsafeAt,
+		UnsafeDurationHours: e.UnsafeDurationHours,
+		ThresholdHours:      e.ThresholdHours,
+	}
+}
+
+// HasDiscoveryDate reports whether the snapshot recorded a first-
+// unsafe timestamp — i.e. we know when this state transition
+// occurred. Renderers gate the "First unsafe:" line on this so the
+// section reads as business intent rather than a (!IsZero()) probe.
+func (s TemporalSnapshot) HasDiscoveryDate() bool {
+	return !s.FirstUnsafeAt.IsZero()
+}
+
+// HasRecentActivity reports whether the snapshot recorded a
+// last-seen-unsafe timestamp — i.e. the violation was observed in a
+// later snapshot than the first sighting. Same intent-revealing
+// shape as HasDiscoveryDate.
+func (s TemporalSnapshot) HasRecentActivity() bool {
+	return !s.LastSeenUnsafeAt.IsZero()
+}
+
+// IsDurationTracked reports whether the snapshot has a measured
+// dwell time. The threshold is `> 0` so degenerate fractional
+// durations (sub-second blip on a freshly-created resource) still
+// count, but a zero-duration unanchored finding is treated as
+// "not yet tracked" and the renderer skips the row.
+func (s TemporalSnapshot) IsDurationTracked() bool {
+	return s.UnsafeDurationHours > 0
+}
+
 // HasMisconfigurations reports whether the evidence carries any
 // per-clause misconfiguration entries. Replaces the
 // (len(e.Misconfigurations) > 0) probe.

@@ -61,7 +61,7 @@ func writeControlSection(d *drawer, detail *evaluation.FindingDetail) {
 	if expType, scope, ok := detail.Control.ExposureSummary(); ok {
 		d.f("  Exposure: %s (scope: %s)\n", expType, scope)
 	}
-	if detail.PostureDrift != nil {
+	if detail.HasPostureDrift() {
 		d.f("  SecurityState drift: %s (%d exposure window(s))\n",
 			detail.PostureDrift.Pattern,
 			detail.PostureDrift.ExposureWindowCount)

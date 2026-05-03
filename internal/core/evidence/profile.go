@@ -125,18 +125,30 @@ type RequirementAssessment struct {
 	Evidence          []*EvidenceRecord
 }
 
+// IsMet reports whether the requirement evaluated as fully
+// satisfied. Centralises the Status comparison so callers stop
+// reading the raw enum.
+func (r *RequirementAssessment) IsMet() bool {
+	return r != nil && r.Status == RequirementMet
+}
+
+// IsNotEvaluated reports whether the requirement could not be
+// evaluated (no evidence collected, framework gaps).
+func (r *RequirementAssessment) IsNotEvaluated() bool {
+	return r != nil && r.Status == RequirementNotEvaluated
+}
+
 // IsActionable reports whether this requirement assessment carries a
 // status the gap-collection pass should fold into the cross-framework
-// gap map. RequirementMet (everything satisfied) and
-// RequirementNotEvaluated (no evidence at all) both contribute zero
-// gaps and are skipped; NotMet and Incomplete are actionable.
-// Replaces the (Status == Met || Status == NotEvaluated) skip-pair
-// in composite.go with a single named predicate.
+// gap map. Met (everything satisfied) and NotEvaluated (no evidence
+// at all) both contribute zero gaps and are skipped; NotMet and
+// Incomplete are actionable. Routes through IsMet / IsNotEvaluated
+// so a future status addition lands one place.
 func (r *RequirementAssessment) IsActionable() bool {
 	if r == nil {
 		return false
 	}
-	return r.Status != RequirementMet && r.Status != RequirementNotEvaluated
+	return !r.IsMet() && !r.IsNotEvaluated()
 }
 
 // OscalState returns the (state, reason) pair the OSCAL exporter

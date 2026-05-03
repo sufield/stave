@@ -223,7 +223,7 @@ func buildBundles(findings []remediation.Finding, exposureByKey map[string]risk.
 		if er, ok := exposureByKey[key]; ok {
 			score = er.ExposureScore.Value()
 		} else {
-			score = float64(f.ControlSeverity.Weight())
+			score, _ = f.ComputeBaseScore()
 		}
 
 		ba, ok := accum[action]

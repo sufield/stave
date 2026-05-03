@@ -2,8 +2,6 @@ package doctor
 
 import (
 	"slices"
-
-	"github.com/sufield/stave/internal/core/outcome"
 )
 
 // DiagnosticSuite maintains an ordered collection of environment probes.
@@ -41,7 +39,7 @@ func (s *DiagnosticSuite) Execute(env *SystemEnvironment) ([]Diagnostic, bool) {
 			continue
 		}
 
-		if res.Status == outcome.Fail {
+		if res.IsFailure() {
 			isReady = false
 		}
 

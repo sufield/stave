@@ -25,6 +25,14 @@ func (v *ValidationFinding) IsPassing() bool {
 	return v != nil && v.Status == outcome.Pass
 }
 
+// IsWarning reports whether the finding is recorded at the Warn
+// status level. Sibling of IsPassing — the readiness aggregator
+// uses the predicate to bin findings without re-reading the raw
+// enum.
+func (v *ValidationFinding) IsWarning() bool {
+	return v != nil && v.Status == outcome.Warn
+}
+
 // AssessmentSummary aggregates metrics from the structural validation of the
 // security controls and configuration states.
 type AssessmentSummary struct {
@@ -93,11 +101,14 @@ func (r *ReadinessAssessment) Findings() []ValidationFinding {
 
 // RecordFinding logs a validation issue and updates the aggregate safety state.
 func (r *ReadinessAssessment) RecordFinding(f ValidationFinding) {
-	switch f.Status {
-	case outcome.Fail:
+	switch {
+	case !f.IsPassing() && !f.IsWarning():
+		// Anything that's neither passing nor a warning is a hard
+		// failure: it knocks the readiness flag off and counts
+		// against the error budget.
 		r.IsSafe = false
 		r.Summary.Errors++
-	case outcome.Warn:
+	case f.IsWarning():
 		r.Summary.Warnings++
 	}
 	r.findings = append(r.findings, f)

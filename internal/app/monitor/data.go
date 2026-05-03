@@ -7,7 +7,6 @@ import (
 	"slices"
 
 	appscore "github.com/sufield/stave/internal/app/score"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -170,7 +169,7 @@ func computeSLABurnFromDeadlines(findings []remediation.Finding, deadlines map[s
 		if deadline <= 0 {
 			continue
 		}
-		burn[sev] += f.Evidence.UnsafeDurationHours / deadline
+		burn[sev] += f.DwellHours() / deadline
 		counts[sev]++
 	}
 	for sev, total := range burn {
@@ -189,17 +188,13 @@ func rankFindings(findings []remediation.Finding, n int) []TopFinding {
 	var items []ranked
 	for i := range findings {
 		f := &findings[i]
-		w, ok := policy.SeverityWeight(f.ControlSeverity)
-		if !ok {
-			// Unrecognized severity (e.g. SeverityNone, SeverityInfo)
-			// drops to the lowest non-zero rank rather than 0,
-			// which would zero out burnRate's contribution and let
-			// SLA-overdue findings rank below scored ones.
-			w = 1.0
-		}
+		// NormalizedWeight floors at 1.0 for unrecognised severities
+		// (None / Info) so an SLA-overdue finding with no canonical
+		// tier still contributes burnRate to its score.
+		w := f.ControlSeverity.NormalizedWeight()
 		burnRate := 0.0
 		if dl, ok := f.SLADeadlineValue(); ok && dl > 0 {
-			burnRate = f.Evidence.UnsafeDurationHours / dl
+			burnRate = f.DwellHours() / dl
 		}
 		items = append(items, ranked{idx: i, score: w*100 + burnRate*50})
 	}
@@ -213,11 +208,11 @@ func rankFindings(findings []remediation.Finding, n int) []TopFinding {
 		tf := TopFinding{
 			ControlID:   string(f.ControlID),
 			Severity:    f.SeverityLabel(),
-			DwellHours:  f.Evidence.UnsafeDurationHours,
+			DwellHours:  f.DwellHours(),
 			SLABreached: f.IsAnyBreach(),
 		}
 		if dl, ok := f.SLADeadlineValue(); ok && dl > 0 {
-			tf.SLABurnRate = f.Evidence.UnsafeDurationHours / dl
+			tf.SLABurnRate = f.DwellHours() / dl
 		}
 		result = append(result, tf)
 	}

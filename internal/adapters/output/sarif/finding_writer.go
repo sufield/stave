@@ -344,7 +344,7 @@ func buildRuleTags(f *remediation.Finding) []string {
 		tags = append(tags, "severity:"+f.SeverityLabel())
 	}
 	if f.HasExposure() {
-		tags = append(tags, "domain:"+string(f.Exposure.Type))
+		tags = append(tags, "domain:"+f.ExposureType())
 	}
 	return tags
 }

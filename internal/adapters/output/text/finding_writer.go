@@ -298,21 +298,23 @@ func writeFindingEvidence(d *drawer, f *remediation.Finding) {
 }
 
 func writeFindingEvidenceLifecycle(d *drawer, f *remediation.Finding) {
-	// HasLifecycleDates short-circuits when neither FirstUnsafeAt
-	// nor LastSeenUnsafeAt is recorded. Duration can still be
-	// non-zero in the degraded-mode SLA path (no timestamp but a
-	// dwell-hours figure), so its guard stays separate.
-	if !f.Evidence.HasLifecycleDates() && f.Evidence.UnsafeDurationHours <= 0 {
+	// IsTemporallySignificant gates the entire block: a finding
+	// without lifecycle dates AND without measured dwell is an
+	// unanchored noise event — skip the section entirely so the
+	// renderer doesn't print three empty lines for a first-run
+	// observation that hasn't accumulated weight yet.
+	if !f.IsTemporallySignificant() {
 		return
 	}
-	if !f.Evidence.FirstUnsafeAt.IsZero() {
-		d.f("     First unsafe: %s\n", f.Evidence.FirstUnsafeAt.Format("2006-01-02 15:04:05 UTC"))
+	snap := f.Evidence.TemporalSnapshot()
+	if snap.HasDiscoveryDate() {
+		d.f("     First unsafe: %s\n", snap.FirstUnsafeAt.Format("2006-01-02 15:04:05 UTC"))
 	}
-	if !f.Evidence.LastSeenUnsafeAt.IsZero() {
-		d.f("     Last seen:    %s\n", f.Evidence.LastSeenUnsafeAt.Format("2006-01-02 15:04:05 UTC"))
+	if snap.HasRecentActivity() {
+		d.f("     Last seen:    %s\n", snap.LastSeenUnsafeAt.Format("2006-01-02 15:04:05 UTC"))
 	}
-	if f.Evidence.UnsafeDurationHours > 0 {
-		d.f("     Duration:     %.0fh (threshold: %.0fh)\n", f.Evidence.UnsafeDurationHours, f.Evidence.ThresholdHours)
+	if snap.IsDurationTracked() {
+		d.f("     Duration:     %.0fh (threshold: %.0fh)\n", snap.UnsafeDurationHours, snap.ThresholdHours)
 	}
 }
 

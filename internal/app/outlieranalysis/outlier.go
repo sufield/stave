@@ -66,7 +66,7 @@ func findControlDwell(a *report.Assessment, ctlID kernel.ControlID) (float64, bo
 	for i := range a.Findings {
 		f := &a.Findings[i]
 		if f.ControlID == ctlID {
-			return f.Evidence.UnsafeDurationHours / 24, true
+			return f.DwellDays(), true
 		}
 	}
 	return 0, false

@@ -30,6 +30,14 @@ type CaseResult struct {
 	Hint            string `json:"hint,omitempty"`
 }
 
+// IsPassing reports whether the case matched its expected verdict.
+// Centralised so cmd/test renderers stop reading the raw Passed
+// field — a future schema change (e.g. moving to a tri-state
+// outcome enum) lands one place.
+func (c *CaseResult) IsPassing() bool {
+	return c != nil && c.Passed
+}
+
 // Summary holds aggregate test results.
 type Summary struct {
 	ControlsTested int `json:"controls_tested"`

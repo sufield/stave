@@ -148,10 +148,14 @@ func TestBuildExport_GapsPopulated(t *testing.T) {
 	}
 }
 
-func TestMatchesSeverity(t *testing.T) {
+func TestRecordIsBelowMinSeverity(t *testing.T) {
+	// "want" describes the original include semantics ("does this
+	// record meet the threshold?"); the helper now answers the
+	// inverse ("is this record below the threshold?"), so the test
+	// inverts each expectation.
 	tests := []struct {
 		record, min string
-		want        bool
+		wantInclude bool
 	}{
 		{"critical", "all", true},
 		{"low", "all", true},
@@ -162,8 +166,9 @@ func TestMatchesSeverity(t *testing.T) {
 		{"critical", "", true},
 	}
 	for _, tt := range tests {
-		if got := matchesSeverity(tt.record, tt.min); got != tt.want {
-			t.Errorf("matchesSeverity(%q, %q) = %v, want %v", tt.record, tt.min, got, tt.want)
+		below := recordIsBelowMinSeverity(tt.record, tt.min)
+		if got := !below; got != tt.wantInclude {
+			t.Errorf("recordIsBelowMinSeverity(%q, %q) = %v; want include=%v", tt.record, tt.min, below, tt.wantInclude)
 		}
 	}
 }

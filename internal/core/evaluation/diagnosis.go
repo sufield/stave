@@ -23,6 +23,14 @@ type FindingDetail struct {
 	NextSteps       []string                `json:"next_steps"`
 }
 
+// HasPostureDrift reports whether the diagnosis carries
+// recurrence-pattern data. Replaces the (PostureDrift != nil)
+// probe in detail renderers so the optional-pointer concern stays
+// on the type that owns the field.
+func (d *FindingDetail) HasPostureDrift() bool {
+	return d != nil && d.PostureDrift != nil
+}
+
 // FindingControlSummary holds control metadata relevant to diagnosis.
 type FindingControlSummary struct {
 	ID          kernel.ControlID         `json:"id"`

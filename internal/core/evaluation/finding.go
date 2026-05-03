@@ -237,6 +237,31 @@ func (f *Finding) DwellHours() float64 {
 	return f.Evidence.UnsafeDurationHours
 }
 
+// DwellDays returns the dwell time in days. Centralised so callers
+// stop dividing UnsafeDurationHours by 24 inline at every ticket /
+// outlier / remediation-impact site.
+func (f *Finding) DwellDays() float64 {
+	return f.DwellHours() / 24.0
+}
+
+// IsTemporallySignificant reports whether the finding has enough
+// temporal data — historical lifecycle dates OR a non-zero current
+// duration — to be a reportable, "live" violation rather than an
+// unanchored noise event (a brand-new resource with no measured
+// dwell yet, or a fixture with no captured timestamps). The
+// renderer / scorer / report pipeline filters on this so first-run
+// observations don't fire as alerts before they accumulate weight.
+//
+// Pure projection on the finding's own Evidence: callers don't pass
+// in a separate snapshot, the evidence already reflects the
+// current observation's UnsafeDurationHours.
+func (f *Finding) IsTemporallySignificant() bool {
+	if f == nil {
+		return false
+	}
+	return f.Evidence.HasLifecycleDates() || f.Evidence.UnsafeDurationHours > 0
+}
+
 // ToDetail returns a FindingDetail seeded with the finding-owned
 // fields (Evidence, PostureDrift, Asset summary). Caller-side fields
 // — Control summary, Trace, Remediation, RemediationPlan, NextSteps —
@@ -761,16 +786,79 @@ func (f *Finding) HasSource() bool {
 	return f != nil && f.Source != nil
 }
 
+// AddChainMembership appends a chain-membership entry to the
+// finding. Centralised so the chain-attribution pass in
+// app/eval/workflow stops mutating the slice directly — keeps the
+// invariant ("entries are appended in chain-detection order, never
+// reordered") on the type that owns the slice. A future change
+// (deduplication, capacity reservation) lands one place.
+func (f *Finding) AddChainMembership(entry ChainMembershipEntry) {
+	if f == nil {
+		return
+	}
+	f.ChainMembership = append(f.ChainMembership, entry)
+}
+
+// ChainMembershipEntries returns the chain-membership slice for
+// adapter mapping. Returns nil when the finding does not
+// participate in any chain so callers can branch on len(out) > 0
+// without dereferencing a nil receiver.
+func (f *Finding) ChainMembershipEntries() []ChainMembershipEntry {
+	if f == nil {
+		return nil
+	}
+	return f.ChainMembership
+}
+
 // HasExposure reports whether the finding carries the catalog's
 // authored Exposure block. Replaces (f.Exposure != nil) probes.
 func (f *Finding) HasExposure() bool {
 	return f != nil && f.Exposure != nil
 }
 
+// ExposureType returns the catalog's exposure type as a string,
+// or "" when no exposure block is present. Centralises the
+// (f.Exposure != nil ? string(f.Exposure.Type) : "") cascade so
+// callers stop reaching through the optional pointer.
+func (f *Finding) ExposureType() string {
+	if !f.HasExposure() {
+		return ""
+	}
+	return string(f.Exposure.Type)
+}
+
+// PrincipalScopeString returns the principal-scope rendering
+// expected by DTO / SARIF / telemetry surfaces, or "" when no
+// exposure block is present.
+func (f *Finding) PrincipalScopeString() string {
+	if !f.HasExposure() {
+		return ""
+	}
+	return f.Exposure.PrincipalScope.String()
+}
+
 // HasPostureDrift reports whether the finding carries
 // recurrence-pattern data. Replaces (f.PostureDrift != nil) probes.
 func (f *Finding) HasPostureDrift() bool {
 	return f != nil && f.PostureDrift != nil
+}
+
+// PostureDriftPattern returns the catalog-emitted drift label, or
+// the zero value when no posture-drift block is present.
+func (f *Finding) PostureDriftPattern() DriftPattern {
+	if !f.HasPostureDrift() {
+		return ""
+	}
+	return f.PostureDrift.Pattern
+}
+
+// PostureDriftWindowCount returns the recurrence count from the
+// drift block, or 0 when no posture-drift block is present.
+func (f *Finding) PostureDriftWindowCount() int {
+	if !f.HasPostureDrift() {
+		return 0
+	}
+	return f.PostureDrift.ExposureWindowCount
 }
 
 // HasAlternatives reports whether the catalog declared

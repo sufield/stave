@@ -149,7 +149,7 @@ func writeTable(w io.Writer, results []controltest.Result, summary controltest.S
 		r := &results[i]
 		for j := range r.Cases {
 			c := &r.Cases[j]
-			if !c.Passed {
+			if !c.IsPassing() {
 				if failures == 0 {
 					fmt.Fprintf(w, "FAILURES\n%s\n\n", strings.Repeat("-", 60))
 				}
@@ -194,7 +194,7 @@ func writeJSON(w io.Writer, results []controltest.Result, summary controltest.Su
 	}
 	for i := range results {
 		for j := range results[i].Cases {
-			if !results[i].Cases[j].Passed {
+			if !results[i].Cases[j].IsPassing() {
 				output.Failures = append(output.Failures, results[i].Cases[j])
 			}
 		}
@@ -212,7 +212,7 @@ func writeTAP(w io.Writer, results []controltest.Result, summary controltest.Sum
 		for j := range r.Cases {
 			n++
 			c := &r.Cases[j]
-			if c.Passed {
+			if c.IsPassing() {
 				fmt.Fprintf(w, "ok %d - %s :: %s\n", n, r.ControlID, c.Name)
 			} else {
 				fmt.Fprintf(w, "not ok %d - %s :: %s\n", n, r.ControlID, c.Name)

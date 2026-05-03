@@ -77,6 +77,67 @@ func (ctl *ControlDefinition) HasCompliance(key ComplianceFramework) bool {
 	return ctl.Compliance.Has(key)
 }
 
+// HasComplianceCitations reports whether the catalog has wired any
+// framework citation onto the control. Distinct from HasCompliance,
+// which checks a specific framework — this asks the broader
+// "is this control mapped at all?" question the metadata-quality
+// review uses.
+func (ctl *ControlDefinition) HasComplianceCitations() bool {
+	return ctl != nil && len(ctl.Compliance) > 0
+}
+
+// IsActionable reports whether the control's remediation block
+// carries a concrete fix action. The metadata-quality check uses
+// this to flag controls operators can detect but not act on.
+func (ctl *ControlDefinition) IsActionable() bool {
+	return ctl != nil && ctl.Remediation != nil && ctl.Remediation.Action != ""
+}
+
+// IsTaxonomyMapped reports whether the control declares an
+// attack-stage mapping (the kill-chain / MITRE ATT&CK label the
+// catalog ships with). Used by the metadata-quality review to flag
+// controls that are missing the taxonomy linkage downstream
+// reporting depends on.
+func (ctl *ControlDefinition) IsTaxonomyMapped() bool {
+	return ctl != nil && ctl.AttackStage() != ""
+}
+
+// MetadataQuality is the structured outcome of a control-completeness
+// review. It groups warnings the authoring guide treats as
+// non-blocking but recommended.
+type MetadataQuality struct {
+	Warnings []string
+}
+
+// HasWarnings reports whether the review found any quality gaps.
+func (q MetadataQuality) HasWarnings() bool {
+	return len(q.Warnings) > 0
+}
+
+// CheckQuality reviews the control's metadata-completeness signals
+// (compliance citations, remediation action, taxonomy mapping) and
+// returns the issues an authoring tool should surface. Distinct
+// from Validate (which checks structural correctness — predicate
+// shape, parameter binding, severity validity) — CheckQuality
+// answers "is this control well-annotated?" rather than "is this
+// control structurally valid?". Forge runs both during lint.
+func (ctl *ControlDefinition) CheckQuality() MetadataQuality {
+	var q MetadataQuality
+	if ctl == nil {
+		return q
+	}
+	if !ctl.HasComplianceCitations() {
+		q.Warnings = append(q.Warnings, "missing optional field: compliance (no framework citations)")
+	}
+	if !ctl.IsActionable() {
+		q.Warnings = append(q.Warnings, "missing remediation.action")
+	}
+	if !ctl.IsTaxonomyMapped() {
+		q.Warnings = append(q.Warnings, "missing params.attack_stage")
+	}
+	return q
+}
+
 // HasType reports whether the control declares a non-zero ControlType.
 // Replaces (ctl.Type == 0) probes in lint and validation paths so a
 // future zero-as-default change (e.g. switching to an enum that uses

@@ -225,12 +225,12 @@ func TestCompute_DetailFields(t *testing.T) {
 	if r.Severity.Detail.FailingFindings != 3 {
 		t.Errorf("failing_findings = %d, want 3", r.Severity.Detail.FailingFindings)
 	}
-	// MaxRiskExposure = 10 + 4 + 1 = 15
-	if r.Severity.Detail.MaxRiskExposure != 15 {
-		t.Errorf("max_risk_exposure = %f, want 15", r.Severity.Detail.MaxRiskExposure)
+	// MaxRiskExposure = NormalizedWeight(critical+high+low) = 4 + 3 + 1 = 8
+	if r.Severity.Detail.MaxRiskExposure != 8 {
+		t.Errorf("max_risk_exposure = %f, want 8", r.Severity.Detail.MaxRiskExposure)
 	}
-	if r.Severity.Detail.ActualExposure != 15 {
-		t.Errorf("actual_exposure = %f, want 15 (all failing)", r.Severity.Detail.ActualExposure)
+	if r.Severity.Detail.ActualExposure != 8 {
+		t.Errorf("actual_exposure = %f, want 8 (all failing)", r.Severity.Detail.ActualExposure)
 	}
 }
 
@@ -318,13 +318,14 @@ func TestCompute_CoverageImpact(t *testing.T) {
 func TestCompute_SeverityScore_ZeroTotalWeight_FallbackUsesAvgSeverity(t *testing.T) {
 	// Fallback path: TotalCheckWeight unavailable. Previously this
 	// collapsed to severity score 0 regardless of finding severity.
-	// Now: Low-only findings score near 0.9, Critical-only score 0.
+	// On the NormalizedWeight (1—4) ladder, Low-only findings score
+	// 1 - 1/4 = 0.75; Critical-only score 0.
 	low := []remediation.Finding{
 		{Finding: evaluation.Finding{ControlSeverity: policy.SeverityLow}},
 	}
 	rLow := Compute(Input{Findings: low, Weights: DefaultWeights()})
-	if rLow.Severity.SubScore < 0.85 {
-		t.Errorf("low-only fallback severity = %.3f, want >= 0.85", rLow.Severity.SubScore)
+	if rLow.Severity.SubScore < 0.7 {
+		t.Errorf("low-only fallback severity = %.3f, want >= 0.7", rLow.Severity.SubScore)
 	}
 
 	crit := []remediation.Finding{

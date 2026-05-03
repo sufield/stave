@@ -22,6 +22,24 @@ type EvidenceExport struct {
 	Evidence        []EvidenceRecordExport `json:"evidence"`
 }
 
+// FindEvidence returns the first evidence record matching the given
+// control + resource pair, or nil when no record matches.
+// Centralised so renderers stop walking the slice with an inline
+// (ControlID == "" || ResourceARN == "") match each time they need
+// the per-row reasoning trace.
+func (e *EvidenceExport) FindEvidence(controlID, resourceARN string) *EvidenceRecordExport {
+	if e == nil {
+		return nil
+	}
+	for i := range e.Evidence {
+		rec := &e.Evidence[i]
+		if rec.ControlID == controlID && rec.ResourceARN == resourceARN {
+			return rec
+		}
+	}
+	return nil
+}
+
 // ProfileSummary is the profile metadata in the JSON output.
 type ProfileSummary struct {
 	ID      string `json:"id"`
@@ -268,7 +286,7 @@ func buildExport(
 		if !includePasses && rec.IsPass() {
 			continue
 		}
-		if !matchesSeverity(rec.Severity, minSeverity) {
+		if recordIsBelowMinSeverity(rec.Severity, minSeverity) {
 			continue
 		}
 
@@ -360,28 +378,26 @@ func computeRequirementSLA(ra *evidence.RequirementAssessment, findings []evalua
 	}
 }
 
-// severityRank returns a numeric rank for severity comparison.
-func severityRank(s string) int {
-	switch s {
-	case "critical":
-		return 5
-	case "high":
-		return 4
-	case "medium":
-		return 3
-	case "low":
-		return 2
-	case "info":
-		return 1
-	default:
-		return 0
-	}
-}
-
-// matchesSeverity returns true if the record severity meets the minimum threshold.
-func matchesSeverity(recordSeverity, minSeverity string) bool {
+// recordIsBelowMinSeverity is the skip-fast guard for the evidence-
+// export filter loop. Reads linearly — "if the record is below the
+// minimum, skip it" — and routes the comparison through the typed
+// policy.Severity.IsLowerThan ladder so a future severity-tier
+// addition (e.g. inserting "notice" between "info" and "low")
+// lands once on the type instead of in this filter.
+//
+// Returns false ("not below") for the sentinels "" / "all" so the
+// caller's `if recordIsBelowMinSeverity(...) { continue }` keeps
+// every record. Unparseable severities also return false: filter
+// the row out by parse error elsewhere, not by treating an unknown
+// label as "below threshold".
+func recordIsBelowMinSeverity(recordSeverity, minSeverity string) bool {
 	if minSeverity == "" || minSeverity == "all" {
-		return true
+		return false
 	}
-	return severityRank(recordSeverity) >= severityRank(minSeverity)
+	rec, recErr := policy.ParseSeverity(recordSeverity)
+	threshold, minErr := policy.ParseSeverity(minSeverity)
+	if recErr != nil || minErr != nil {
+		return false
+	}
+	return rec.IsLowerThan(threshold)
 }

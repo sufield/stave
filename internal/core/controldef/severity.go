@@ -73,11 +73,37 @@ func (s Severity) Gte(other Severity) bool {
 // risk-priority calculations when a control does not define
 // base_impact in its params.
 //
+// MeetsThreshold reports whether this severity is at or above the
+// given minimum threshold on the canonical iota ladder
+// (None < Info < Low < Medium < High < Critical). Renderers and
+// export filters route "include if severity ≥ threshold" through
+// this so the comparison reads as a domain rule, not an integer
+// inequality.
+func (s Severity) MeetsThreshold(threshold Severity) bool {
+	return s >= threshold
+}
+
+// IsLowerThan reports whether this severity falls below the given
+// threshold. Designed for the "skip-fast" guard pattern in
+// filtering loops — `if rec.Severity.IsLowerThan(min) { continue }`
+// reads linearly without the double-negative friction of
+// `!MeetsThreshold`.
+func (s Severity) IsLowerThan(threshold Severity) bool {
+	return s < threshold
+}
+
 // NormalizedWeight returns the four-tier (1.0 — 4.0) severity scale
-// the execreport top-findings ranker uses. Distinct from Weight,
-// which returns the 25/50/75/100 scale used by exposure scoring.
-// Centralised here so callers stop reproducing the local
-// {"critical":4, "high":3, "medium":2, "low":1} map.
+// the severity-score and execreport top-findings ranker use.
+// Distinct from Weight, which returns the 25/50/75/100 scale used by
+// exposure scoring. Centralised here so callers stop reproducing the
+// local {"critical":4, "high":3, "medium":2, "low":1} map.
+//
+// Severities outside the reportable bucket (None / Info / unknown)
+// floor at 1.0 so every finding contributes positive exposure to the
+// score. This is a domain policy: the loop callers must not
+// "correct" the value with a local `if sw == 0` check — keep the
+// flooring on the type so a future tier change (e.g. Info → 0.5)
+// lands at one site.
 func (s Severity) NormalizedWeight() float64 {
 	switch s {
 	case SeverityCritical:
@@ -89,7 +115,7 @@ func (s Severity) NormalizedWeight() float64 {
 	case SeverityLow:
 		return 1
 	default:
-		return 0
+		return 1
 	}
 }
 

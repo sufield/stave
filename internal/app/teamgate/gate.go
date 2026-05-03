@@ -7,6 +7,7 @@ package teamgate
 import (
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	corereport "github.com/sufield/stave/internal/core/report"
 )
 
 // Thresholds defines the maximum allowed findings per severity.
@@ -64,23 +65,16 @@ func Evaluate(in Input) GateResult {
 		}
 	}
 
-	var critical, high, medium int
+	var counts corereport.SeverityCounts
 	for i := range teamFindings {
-		switch teamFindings[i].ControlSeverity.BucketName() {
-		case "critical":
-			critical++
-		case "high":
-			high++
-		case "medium":
-			medium++
-		}
+		counts.Add(teamFindings[i].ControlSeverity)
 	}
 
 	result := GateResult{
 		TeamID:        in.TeamID,
-		CriticalCount: critical,
-		HighCount:     high,
-		MediumCount:   medium,
+		CriticalCount: counts.Critical,
+		HighCount:     counts.High,
+		MediumCount:   counts.Medium,
 		TotalFindings: len(teamFindings),
 		Passed:        true,
 	}
@@ -89,13 +83,13 @@ func Evaluate(in Input) GateResult {
 	// matching the documented sentinel. Apply consistently across
 	// critical/high/medium so callers don't need a different pattern
 	// per tier.
-	if in.Thresholds.MaxCritical >= 0 && critical > in.Thresholds.MaxCritical {
+	if in.Thresholds.MaxCritical >= 0 && counts.Critical > in.Thresholds.MaxCritical {
 		result.Passed = false
 		result.Reason = "critical findings exceed threshold"
-	} else if in.Thresholds.MaxHigh >= 0 && high > in.Thresholds.MaxHigh {
+	} else if in.Thresholds.MaxHigh >= 0 && counts.High > in.Thresholds.MaxHigh {
 		result.Passed = false
 		result.Reason = "high findings exceed threshold"
-	} else if in.Thresholds.MaxMedium >= 0 && medium > in.Thresholds.MaxMedium {
+	} else if in.Thresholds.MaxMedium >= 0 && counts.Medium > in.Thresholds.MaxMedium {
 		result.Passed = false
 		result.Reason = "medium findings exceed threshold"
 	}

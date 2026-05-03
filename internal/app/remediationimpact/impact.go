@@ -82,7 +82,7 @@ func Analyze(in Input) *Report {
 				ControlID: k.ControlID,
 				AssetID:   k.AssetID,
 				Severity:  f.SeverityLabel(),
-				DwellDays: f.Evidence.UnsafeDurationHours / 24,
+				DwellDays: f.DwellDays(),
 			})
 		}
 	}

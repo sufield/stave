@@ -292,7 +292,7 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 		f := &report.Findings[i]
 		for _, ce := range chainEntries {
 			if ce.controlIDs.Contains(f.ControlID) {
-				f.ChainMembership = append(f.ChainMembership, ce.membership)
+				f.AddChainMembership(ce.membership)
 			}
 		}
 	}

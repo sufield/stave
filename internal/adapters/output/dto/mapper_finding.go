@@ -52,14 +52,14 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	}
 	if f.HasExposure() {
 		dto.Exposure = &ExposureDTO{
-			Type:           string(f.Exposure.Type),
-			PrincipalScope: f.Exposure.PrincipalScope.String(),
+			Type:           f.ExposureType(),
+			PrincipalScope: f.PrincipalScopeString(),
 		}
 	}
 	if f.HasPostureDrift() {
 		dto.PostureDrift = &PostureDriftDTO{
-			Pattern:             f.PostureDrift.Pattern,
-			ExposureWindowCount: f.PostureDrift.ExposureWindowCount,
+			Pattern:             f.PostureDriftPattern(),
+			ExposureWindowCount: f.PostureDriftWindowCount(),
 		}
 	}
 	if f.HasRemediationPlan() {
@@ -67,7 +67,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		dto.RemediationPlan = &plan
 	}
 	if f.IsChainMember() {
-		dto.ChainMembership = mapSlice(f.ChainMembership, fromChainMembershipEntry)
+		dto.ChainMembership = mapSlice(f.ChainMembershipEntries(), fromChainMembershipEntry)
 	}
 
 	dto.SLADeadlineHours = f.SLADeadlinePtr()
