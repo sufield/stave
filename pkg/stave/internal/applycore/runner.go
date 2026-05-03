@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"time"
 
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
@@ -23,7 +24,6 @@ import (
 	"github.com/sufield/stave/internal/app/reachability"
 	"github.com/sufield/stave/internal/builtin/capabilities"
 	builtinpredicate "github.com/sufield/stave/internal/builtin/predicate"
-	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"

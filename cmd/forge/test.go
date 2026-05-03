@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
-	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )

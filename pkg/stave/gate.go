@@ -7,10 +7,10 @@ import (
 	"time"
 
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	infragate "github.com/sufield/stave/internal/adapters/gate"
 	"github.com/sufield/stave/internal/adapters/observations"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"

@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	"github.com/sufield/stave/internal/app/celeval"
-	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/metadata"

@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -16,6 +15,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 	clockadp "github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/predicate"
+	aws "github.com/sufield/stave/internal/platform/providers/aws"
 )
 
 type evalControlRepoStub struct {
@@ -101,12 +101,12 @@ func TestAuditWorkflowPerformAssessment(t *testing.T) {
 	}
 	snapshots := []asset.Snapshot{
 		{
-			GeneratedBy: &asset.GeneratedBy{SourceType: s3.SourceTypeAWSS3Snapshot},
+			GeneratedBy: &asset.GeneratedBy{SourceType: aws.SourceTypeAWSS3Snapshot},
 			CapturedAt:  now.Add(-2 * time.Hour),
 			Assets:      []asset.Asset{resource},
 		},
 		{
-			GeneratedBy: &asset.GeneratedBy{SourceType: s3.SourceTypeAWSS3Snapshot},
+			GeneratedBy: &asset.GeneratedBy{SourceType: aws.SourceTypeAWSS3Snapshot},
 			CapturedAt:  now.Add(-1 * time.Hour),
 			Assets:      []asset.Asset{resource},
 		},

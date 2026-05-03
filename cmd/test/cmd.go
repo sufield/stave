@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	"github.com/sufield/stave/internal/app/controltest"
-	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 

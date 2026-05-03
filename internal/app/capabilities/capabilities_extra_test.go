@@ -3,13 +3,13 @@ package capabilities_test
 import (
 	"testing"
 
-	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/core/kernel"
+	aws "github.com/sufield/stave/internal/platform/providers/aws"
 )
 
 func TestIsConnectorSupported_Known(t *testing.T) {
-	if !capabilities.IsConnectorSupported(s3.SourceTypeAWSS3Snapshot) {
+	if !capabilities.IsConnectorSupported(aws.SourceTypeAWSS3Snapshot) {
 		t.Fatal("expected aws_s3_snapshot to be supported")
 	}
 }

@@ -3,7 +3,7 @@ package apptrace
 import (
 	"time"
 
-	stavecel "github.com/sufield/stave/internal/cel"
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
 )

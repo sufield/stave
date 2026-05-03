@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
+	aws "github.com/sufield/stave/internal/platform/providers/aws"
 
 	"github.com/sufield/stave/internal/core/asset"
 
@@ -38,12 +38,12 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 	}
 	snapshots := []asset.Snapshot{
 		{
-			GeneratedBy: &asset.GeneratedBy{SourceType: s3.SourceTypeAWSS3Snapshot},
+			GeneratedBy: &asset.GeneratedBy{SourceType: aws.SourceTypeAWSS3Snapshot},
 			CapturedAt:  now.Add(-2 * time.Hour),
 			Assets:      []asset.Asset{resource},
 		},
 		{
-			GeneratedBy: &asset.GeneratedBy{SourceType: s3.SourceTypeAWSS3Snapshot},
+			GeneratedBy: &asset.GeneratedBy{SourceType: aws.SourceTypeAWSS3Snapshot},
 			CapturedAt:  now.Add(-1 * time.Hour),
 			Assets:      []asset.Asset{resource},
 		},

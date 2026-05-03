@@ -46,6 +46,15 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 				"github.com/sufield/stave/cmd/",
 				"os/exec",
 			},
+			allowed: []string{
+				// Phase 1 of the arch-cleanup plan moved internal/cel
+				// to internal/adapters/cel. Two app/ files (diagnose/trace/
+				// tracer.go and trace/builder.go) consume stavecel.BuildTrace
+				// directly for the policy-trace feature. Phase 2 routes
+				// them through an injected evaluator and removes this
+				// allowance.
+				"github.com/sufield/stave/internal/adapters/cel",
+			},
 		},
 		{
 			dirPrefix: filepath.Join("internal", "adapters"),

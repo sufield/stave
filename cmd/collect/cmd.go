@@ -13,6 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
@@ -20,7 +21,6 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/builtin/capabilities"
-	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/ports"

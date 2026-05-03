@@ -3,7 +3,7 @@ package controltest
 import (
 	"testing"
 
-	stavecel "github.com/sufield/stave/internal/cel"
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/predicate"

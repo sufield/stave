@@ -13,7 +13,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 
-	stavecel "github.com/sufield/stave/internal/cel"
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 )
 
 func newPreviewCmd() *cobra.Command {

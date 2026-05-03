@@ -3,10 +3,10 @@ package capabilities_test
 import (
 	"testing"
 
-	s3 "github.com/sufield/stave/internal/adapters/aws/s3"
 	"github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/core/kernel"
+	aws "github.com/sufield/stave/internal/platform/providers/aws"
 )
 
 func TestCapabilities_ConnectorCount(t *testing.T) {
@@ -27,7 +27,7 @@ func TestCapabilities_ConnectorsExpectedSet(t *testing.T) {
 	}
 
 	want := []kernel.ObservationSourceType{
-		s3.SourceTypeAWSS3Snapshot,
+		aws.SourceTypeAWSS3Snapshot,
 	}
 
 	for _, sourceType := range want {

@@ -9,8 +9,8 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	apptrace "github.com/sufield/stave/internal/app/trace"
-	stavecel "github.com/sufield/stave/internal/cel"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/platform/crypto"

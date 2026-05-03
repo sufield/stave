@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	stavecel "github.com/sufield/stave/internal/cel"
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"

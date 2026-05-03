@@ -3,9 +3,9 @@ package builtin
 import (
 	"testing"
 
+	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	"github.com/sufield/stave/internal/builtin/pack"
 	"github.com/sufield/stave/internal/builtin/predicate"
-	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"

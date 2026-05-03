@@ -11,7 +11,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	stavecel "github.com/sufield/stave/internal/cel"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -786,7 +785,7 @@ func (a *Assessor) FingerprintPolicy() kernel.Digest {
 	// Hash per-control fingerprints (which include predicate, severity,
 	// type — not just IDs) sorted by ID for determinism.
 	fingerprints := make([]string, 0, len(a.controls)+1)
-	fingerprints = append(fingerprints, "eval_version:"+stavecel.EvalVersion)
+	fingerprints = append(fingerprints, "eval_version:"+EvalVersion)
 	for i := range a.controls {
 		ctl := &a.controls[i]
 		fingerprints = append(fingerprints, string(ctl.ID)+":"+string(ctl.Fingerprint(a.hasher)))
