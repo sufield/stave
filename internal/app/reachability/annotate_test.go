@@ -3,10 +3,10 @@ package reachability
 import (
 	"testing"
 
+	"github.com/sufield/stave/internal/core/access"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/access"
 )
 
 func TestAnnotateFindings_ViolationGetsAnnotation(t *testing.T) {

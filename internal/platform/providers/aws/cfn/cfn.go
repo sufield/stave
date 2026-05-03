@@ -22,13 +22,13 @@ type sensitiveParamNamesDoc struct {
 var (
 	patternsOnce sync.Once
 	patterns     []string
-	patternsErr  error
+	errPatterns  error
 )
 
 func loadPatterns() {
 	var doc sensitiveParamNamesDoc
 	if err := yaml.Unmarshal(sensitiveParamNamesYAML, &doc); err != nil {
-		patternsErr = fmt.Errorf("cfn: parse sensitive_param_names.yaml: %w", err)
+		errPatterns = fmt.Errorf("cfn: parse sensitive_param_names.yaml: %w", err)
 		return
 	}
 	patterns = doc.Patterns
@@ -53,5 +53,5 @@ func SensitiveParamPatterns() []string {
 // silently degrading to an empty pattern list.
 func SensitiveParamPatternsE() ([]string, error) {
 	patternsOnce.Do(loadPatterns)
-	return patterns, patternsErr
+	return patterns, errPatterns
 }

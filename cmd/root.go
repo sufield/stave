@@ -18,6 +18,7 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/logging"
 	"github.com/sufield/stave/internal/platform/providers/aws"
+
 	// Blank import: each control's init() registers into the global
 	// compliance.ControlCatalog. Importing the AWS provider package
 	// itself does not transitively load this — the AWS package

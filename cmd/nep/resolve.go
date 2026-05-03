@@ -7,8 +7,8 @@ import (
 
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
 
 // loadSnapshots loads snapshots from a file, supporting both bundle format

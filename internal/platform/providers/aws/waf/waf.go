@@ -19,9 +19,9 @@ var requiredRuleGroupsYAML []byte
 // IDs the group covers (e.g. "A03", "A05") so coverage reports
 // can surface which categories a WAFv2 deployment satisfies.
 type RuleGroup struct {
-	Name             string   `yaml:"name"`
-	Description      string   `yaml:"description"`
-	OWASPCategories  []string `yaml:"owasp_categories"`
+	Name            string   `yaml:"name"`
+	Description     string   `yaml:"description"`
+	OWASPCategories []string `yaml:"owasp_categories"`
 }
 
 type requiredRuleGroupsDoc struct {
@@ -32,13 +32,13 @@ type requiredRuleGroupsDoc struct {
 var (
 	groupsOnce sync.Once
 	groups     []RuleGroup
-	groupsErr  error
+	errGroups  error
 )
 
 func loadGroups() {
 	var doc requiredRuleGroupsDoc
 	if err := yaml.Unmarshal(requiredRuleGroupsYAML, &doc); err != nil {
-		groupsErr = fmt.Errorf("waf: parse required_rule_groups.yaml: %w", err)
+		errGroups = fmt.Errorf("waf: parse required_rule_groups.yaml: %w", err)
 		return
 	}
 	groups = doc.Groups
@@ -70,8 +70,8 @@ func RequiredRuleGroupCatalog() []RuleGroup {
 // error. See cfn.SensitiveParamPatternsE for the rationale.
 func RequiredRuleGroupsE() ([]string, error) {
 	groupsOnce.Do(loadGroups)
-	if groupsErr != nil {
-		return nil, groupsErr
+	if errGroups != nil {
+		return nil, errGroups
 	}
 	return RequiredRuleGroups(), nil
 }

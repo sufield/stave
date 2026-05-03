@@ -6,7 +6,7 @@ import (
 
 func TestResourceAccessIndex_PublicPolicy(t *testing.T) {
 	idx := NewResourceAccessIndex()
-	err := AddResourcePolicy(idx, 
+	err := AddResourcePolicy(idx,
 		"arn:aws:s3:::public-bucket",
 		`{"Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"*"}]}`,
 		"123456789012",
@@ -33,7 +33,7 @@ func TestResourceAccessIndex_PublicPolicy(t *testing.T) {
 
 func TestResourceAccessIndex_CrossAccountGrant(t *testing.T) {
 	idx := NewResourceAccessIndex()
-	err := AddResourcePolicy(idx, 
+	err := AddResourcePolicy(idx,
 		"arn:aws:s3:::shared-bucket",
 		`{"Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:iam::999888777666:role/external"}]}`,
 		"123456789012",
@@ -53,7 +53,7 @@ func TestResourceAccessIndex_CrossAccountGrant(t *testing.T) {
 
 func TestResourceAccessIndex_SameAccountGrant(t *testing.T) {
 	idx := NewResourceAccessIndex()
-	err := AddResourcePolicy(idx, 
+	err := AddResourcePolicy(idx,
 		"arn:aws:s3:::internal-bucket",
 		`{"Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:iam::123456789012:role/app"}]}`,
 		"123456789012",
@@ -85,7 +85,7 @@ func TestResourceAccessIndex_AbsentPolicy(t *testing.T) {
 
 func TestResourceAccessIndex_DenySkipped(t *testing.T) {
 	idx := NewResourceAccessIndex()
-	err := AddResourcePolicy(idx, 
+	err := AddResourcePolicy(idx,
 		"arn:aws:s3:::deny-bucket",
 		`{"Statement":[{"Effect":"Deny","Action":"s3:*","Resource":"*"}]}`,
 		"123456789012",
@@ -101,7 +101,7 @@ func TestResourceAccessIndex_DenySkipped(t *testing.T) {
 
 func TestHasNonDesignatedPHIAccess_AllDesignated(t *testing.T) {
 	idx := NewResourceAccessIndex()
-	_ = AddResourcePolicy(idx, 
+	_ = AddResourcePolicy(idx,
 		"arn:aws:s3:::phi-bucket",
 		`{"Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:iam::123456789012:role/phi-processor"}]}`,
 		"123456789012",
@@ -117,7 +117,7 @@ func TestHasNonDesignatedPHIAccess_AllDesignated(t *testing.T) {
 
 func TestHasNonDesignatedPHIAccess_NonDesignated(t *testing.T) {
 	idx := NewResourceAccessIndex()
-	_ = AddResourcePolicy(idx, 
+	_ = AddResourcePolicy(idx,
 		"arn:aws:s3:::phi-bucket",
 		`{"Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:iam::123456789012:role/random-dev"}]}`,
 		"123456789012",
@@ -133,7 +133,7 @@ func TestHasNonDesignatedPHIAccess_NonDesignated(t *testing.T) {
 
 func TestHasNonDesignatedPHIAccess_PublicAlwaysNonDesignated(t *testing.T) {
 	idx := NewResourceAccessIndex()
-	_ = AddResourcePolicy(idx, 
+	_ = AddResourcePolicy(idx,
 		"arn:aws:s3:::phi-bucket",
 		`{"Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"*"}]}`,
 		"123456789012",

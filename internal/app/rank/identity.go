@@ -66,11 +66,14 @@ type IdentityRankingConfig struct {
 	// AccountIDFromARN extracts the account-ID component from a
 	// principal or resource identifier. Provider-specific (an AWS
 	// implementation parses ARNs); injected so this package stays
-	// vendor-neutral. Required.
+	// vendor-neutral. Optional — currently unused by ranking
+	// (reserved for cross-account weighting).
 	AccountIDFromARN func(string) string
 
 	// BuildResourceAccessIndex builds a per-snapshot index of
-	// resource-based policy grants. Provider-specific. Required.
+	// resource-based policy grants. Provider-specific. Optional —
+	// when nil, the resource-policy reachability signal is skipped
+	// and only execution-role links contribute to the reach map.
 	BuildResourceAccessIndex func(*asset.Snapshot) *access.ResourceAccessIndex
 }
 
@@ -292,6 +295,14 @@ type reachEntry struct {
 // It uses two signals:
 //   - Resource policies (via ResourceAccessIndex) — resource → principal mapping inverted
 //   - Execution role links — compute assets pointing to IAM roles
+//
+// Resource-policy reachability requires a vendor-specific index
+// builder (e.g. providers/aws/iam.BuildResourceAccessIndex). When
+// buildIndex is nil, the resource-policy signal is skipped and only
+// execution-role links are recorded — tests that build a minimal
+// IdentityRankingConfig without provider wiring still produce a
+// usable reachability map for findings whose only path is via an
+// execution role.
 func buildReachabilityMap(
 	snapshots []asset.Snapshot,
 	findings []remediation.Finding,
@@ -310,21 +321,24 @@ func buildReachabilityMap(
 		snap := &snapshots[si]
 
 		// 1. Resource policy grants: build ResourceAccessIndex, then invert.
-		idx := buildIndex(snap)
-		if idx == nil {
-			continue
-		}
-		for resourceARN, entries := range invertResourceIndex(idx, snap) {
-			for _, e := range entries {
-				reach[e.PrincipalARN] = append(reach[e.PrincipalARN], reachEntry{
-					resourceARN:  resourceARN,
-					resourceType: e.ResourceType,
-					accessPath:   "resource_policy",
-				})
+		// buildIndex is provider-specific; tests skip wiring it.
+		if buildIndex != nil {
+			if idx := buildIndex(snap); idx != nil {
+				for resourceARN, entries := range invertResourceIndex(idx, snap) {
+					for _, e := range entries {
+						reach[e.PrincipalARN] = append(reach[e.PrincipalARN], reachEntry{
+							resourceARN:  resourceARN,
+							resourceType: e.ResourceType,
+							accessPath:   "resource_policy",
+						})
+					}
+				}
 			}
 		}
 
 		// 2. Execution role links: Lambda/compute → IAM role.
+		// Vendor-neutral — relies only on the props.* path stored
+		// at extraction time, no provider helper needed.
 		for ai := range snap.Assets {
 			a := &snap.Assets[ai]
 			roleARN := props.GetString(a.Properties, []string{"compute", "execution_role", "role_arn"})

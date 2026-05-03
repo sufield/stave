@@ -8,9 +8,9 @@ import (
 
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
-	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/metadata"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 	"github.com/sufield/stave/internal/util/sets"
 )
 

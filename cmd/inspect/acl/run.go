@@ -6,8 +6,8 @@ import (
 	"io"
 
 	"github.com/sufield/stave/internal/core/evaluation/risk"
-	s3acl "github.com/sufield/stave/internal/platform/providers/aws/s3/acl"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	s3acl "github.com/sufield/stave/internal/platform/providers/aws/s3/acl"
 )
 
 // Report is the output of the ACL inspector.

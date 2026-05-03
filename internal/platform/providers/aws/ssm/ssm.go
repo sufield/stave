@@ -21,13 +21,13 @@ type sensitivePathsDoc struct {
 var (
 	prefixesOnce sync.Once
 	prefixes     []string
-	prefixesErr  error
+	errPrefixes  error
 )
 
 func loadPrefixes() {
 	var doc sensitivePathsDoc
 	if err := yaml.Unmarshal(sensitivePathsYAML, &doc); err != nil {
-		prefixesErr = fmt.Errorf("ssm: parse sensitive_paths.yaml: %w", err)
+		errPrefixes = fmt.Errorf("ssm: parse sensitive_paths.yaml: %w", err)
 		return
 	}
 	prefixes = doc.Prefixes
@@ -47,5 +47,5 @@ func SensitivePathPrefixes() []string {
 // error. See cfn.SensitiveParamPatternsE for the rationale.
 func SensitivePathPrefixesE() ([]string, error) {
 	prefixesOnce.Do(loadPrefixes)
-	return prefixes, prefixesErr
+	return prefixes, errPrefixes
 }

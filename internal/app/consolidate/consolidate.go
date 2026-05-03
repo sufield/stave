@@ -33,11 +33,14 @@ type Input struct {
 	// AccountIDFromARN extracts the account-ID component from a
 	// principal or resource identifier. Provider-specific (an AWS
 	// implementation parses ARNs); injected so this package stays
-	// vendor-neutral. Required.
+	// vendor-neutral. Optional — when nil, cross-account analysis
+	// is skipped and a warning is appended.
 	AccountIDFromARN func(string) string
 
 	// BuildResourceAccessIndex builds a per-snapshot index of
-	// resource-based policy grants. Provider-specific. Required.
+	// resource-based policy grants. Provider-specific. Optional —
+	// when nil, cross-account analysis is skipped and a warning is
+	// appended.
 	BuildResourceAccessIndex func(*asset.Snapshot) *access.ResourceAccessIndex
 }
 
@@ -161,10 +164,20 @@ func Run(ctx context.Context, input Input) (*ConsolidatedReport, []string, error
 		report.OrgPosture.NonProductionRisk = (nonProductionRisk / totalRisk) * 100
 	}
 
-	// Cross-account analysis.
-	crossFindings, crossIdentities := detectCrossAccountFindings(input.Accounts, input.AccountIDFromARN, input.BuildResourceAccessIndex)
-	report.CrossAccount = crossFindings
-	report.OrgPosture.CrossAccountIdentities = crossIdentities
+	// Cross-account analysis. Skipped when either provider helper
+	// is missing — see Input.AccountIDFromARN /
+	// Input.BuildResourceAccessIndex docs. detectCrossAccountFindings
+	// also nil-guards the call internally; the call-site check here
+	// avoids the function-call overhead in the common test path.
+	if input.AccountIDFromARN != nil && input.BuildResourceAccessIndex != nil {
+		crossFindings, crossIdentities := detectCrossAccountFindings(
+			input.Accounts,
+			input.AccountIDFromARN,
+			input.BuildResourceAccessIndex,
+		)
+		report.CrossAccount = crossFindings
+		report.OrgPosture.CrossAccountIdentities = crossIdentities
+	}
 
 	return report, warnings, nil
 }
@@ -235,12 +248,18 @@ func assessAccount(
 
 // detectCrossAccountFindings checks for cross-account resource policy
 // grants and execution role links between accounts. accountIDFromARN
-// and buildIndex are vendor-specific helpers injected via Input.
+// and buildIndex are vendor-specific helpers injected via Input;
+// either being nil disables the analysis (the helper is also called
+// from a guard in Run, but defending here makes the function safe
+// for direct callers too).
 func detectCrossAccountFindings(
 	accounts []AccountInput,
 	accountIDFromARN func(string) string,
 	buildIndex func(*asset.Snapshot) *access.ResourceAccessIndex,
 ) ([]CrossAccountFinding, int) {
+	if accountIDFromARN == nil || buildIndex == nil {
+		return nil, 0
+	}
 	// Build a map of all assets by account.
 	type assetInfo struct {
 		accountID string
@@ -338,4 +357,3 @@ func detectCrossAccountFindings(
 
 	return findings, len(crossAccountPrincipals)
 }
-
