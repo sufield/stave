@@ -3,6 +3,7 @@ package stave
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"slices"
 
 	appscore "github.com/sufield/stave/internal/app/score"
@@ -185,6 +186,15 @@ func scoreFindingsFromAssessment(a *Assessment) []remediation.Finding {
 		// The scorer reads ControlSeverity directly; without this
 		// the severity component would treat every finding as Info.
 		sev := severityFromString(f.Severity)
+		// A non-empty input that resolves to SeverityNone signals a
+		// data-quality issue upstream — wrong case, typo, or a value
+		// outside the canonical set. ParseSeverity swallows those
+		// silently, so log here so operators see when score input is
+		// being downgraded to the no-contribution bucket.
+		if sev == policy.SeverityNone && f.Severity != "" {
+			slog.Warn("score: unknown finding severity coerced to none",
+				"control_id", f.ControlID, "asset_id", f.AssetID, "severity", f.Severity)
+		}
 		ev := evaluation.Finding{
 			FindingID:       f.FindingID,
 			ControlID:       f.ControlID,
@@ -214,9 +224,14 @@ func scoreChainFindingsFromAssessment(a *Assessment) []risk.CompoundFinding {
 	out := make([]risk.CompoundFinding, len(a.ChainFindings))
 	for i := range a.ChainFindings {
 		c := &a.ChainFindings[i]
+		sev := severityFromString(c.Severity)
+		if sev == policy.SeverityNone && c.Severity != "" {
+			slog.Warn("score: unknown chain severity coerced to none",
+				"chain_id", c.ChainID, "severity", c.Severity)
+		}
 		out[i] = risk.CompoundFinding{
 			ChainID:  c.ChainID,
-			Severity: severityFromString(c.Severity),
+			Severity: sev,
 		}
 	}
 	return out

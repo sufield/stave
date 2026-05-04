@@ -58,13 +58,18 @@ const (
 // it returns MaxConfigurableInputFileBytes unchanged (4 GiB fits
 // trivially). On 32-bit hosts it clamps at math.MaxInt32 - 1 so the
 // constant cannot overflow downstream `int` math in fsutil.
+//
+// The clamp uses math.MaxInt (platform-sized) rather than
+// math.MaxInt32: on 64-bit hosts MaxInt is 2^63-1 so 4 GiB sits well
+// below the cap and passes through unchanged; on 32-bit hosts MaxInt
+// equals MaxInt32, so the comparison still triggers and we fall back
+// to the 32-bit-safe ceiling.
 func effectiveMaxConfigurableInputFileBytes() int64 {
-	const cap32 = int64(math.MaxInt32 - 1)
-	if MaxConfigurableInputFileBytes > cap32 {
-		// 32-bit host: the literal already wraps, so guard against
-		// a wrapped (negative) value in addition to clamping the
-		// successful path.
-		return cap32
+	if MaxConfigurableInputFileBytes > int64(math.MaxInt) {
+		// 32-bit host: the package-level int literal cannot represent
+		// 4 GiB, so clamp to the largest int we can safely round-trip
+		// through downstream `int` math.
+		return int64(math.MaxInt32 - 1)
 	}
 	return int64(MaxConfigurableInputFileBytes)
 }
@@ -154,7 +159,10 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 
 	// Production guard blocked commands
 	if cmds := eval.BlockedCommands(); len(cmds) > 0 {
-		SetBlockedCommands(cmds)
+		if err := SetBlockedCommands(cmds); err != nil {
+			logger.Warn("config: ignoring invalid blocked_commands entry",
+				"error", err)
+		}
 	}
 
 	// Max validation errors reported (default 3)

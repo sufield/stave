@@ -303,8 +303,22 @@ func writeEdgeGroup(buf *bytes.Buffer, grp *edgeGroup) {
 // encodeJSONString writes a JSON-quoted string. Routes through
 // json.Marshal to get correct escaping for control chars, quotes,
 // and Unicode without a custom escape table.
+//
+// json.Marshal of a Go string is not a documented failure case
+// (invalid UTF-8 is replaced with U+FFFD, not errored), so the err
+// branch here is theoretically unreachable. It is wired anyway so a
+// future Go-runtime change cannot silently corrupt the document —
+// the warning makes the regression visible and the empty-string
+// fallback keeps the surrounding JSON well-formed (an `@id` or key
+// that would otherwise be a bare token).
 func encodeJSONString(buf *bytes.Buffer, s string) {
-	b, _ := json.Marshal(s)
+	b, err := json.Marshal(s)
+	if err != nil {
+		slog.Warn("graph jsonld: string failed to marshal; emitting empty string",
+			"error", err)
+		buf.WriteString(`""`)
+		return
+	}
 	buf.Write(b)
 }
 

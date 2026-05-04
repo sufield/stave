@@ -83,7 +83,15 @@ func (a *AcknowledgmentEntry) DaysRemaining(now time.Time) (int, bool) {
 	if err != nil {
 		return 0, false
 	}
-	return int(expiry.Sub(now).Hours() / 24), true
+	// Calendar-day arithmetic: truncate both endpoints to midnight UTC
+	// before subtracting so the result counts whole days, not 24-hour
+	// windows. Without truncation, an entry whose ExpiryDate already
+	// passed earlier today (e.g. expiry 00:00 UTC, now 18:00 UTC) lands
+	// at -0.75 → int = 0 → "expiring_soon" instead of the correct
+	// "expired" — `int()` truncates toward zero for negative floats.
+	expiryDay := expiry.Truncate(24 * time.Hour)
+	nowDay := now.UTC().Truncate(24 * time.Hour)
+	return int(expiryDay.Sub(nowDay).Hours() / 24), true
 }
 
 // ExpiryClassification labels the entry's lifetime against the
@@ -225,9 +233,9 @@ func (f *AcceptanceFile) AddAcknowledgment(entry AcknowledgmentEntry, timestamp 
 	}
 
 	entry.ID = entry.ControlID + "@" + entry.AssetID
-	if len(timestamp) < 10 {
-		return fmt.Errorf("timestamp too short or empty: %q (expected RFC3339)", timestamp)
-	}
+	// time.Parse(RFC3339, ...) above already rejected anything shorter
+	// than the 20-char minimum (`YYYY-MM-DDTHH:MM:SSZ`), so the first
+	// 10 chars are guaranteed to be the date.
 	entry.AcknowledgedDate = timestamp[:10] // YYYY-MM-DD from RFC3339
 	entry.Status = AckStatusActive
 	entry.AuditTrail = []AuditEvent{

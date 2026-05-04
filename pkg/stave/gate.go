@@ -221,8 +221,13 @@ func Gate(ctx context.Context, cfg GateConfig) (*GateResult, error) {
 		return nil, err
 	}
 	return &GateResult{
-		Policy:            GatePolicy(resp.Policy),
-		Passed:            resp.Passed,
+		Policy: GatePolicy(resp.Policy),
+		Passed: resp.Passed,
+		// merged=true: the engine has already determined Passed, so a
+		// subsequent MergeTeamVerdict must AND-merge with it instead of
+		// re-seeding Passed=true (which would erase an engine-side FAIL
+		// the first time a team verdict folds in).
+		merged:            true,
 		Reason:            resp.Reason,
 		CheckedAt:         resp.CheckedAt,
 		CurrentViolations: resp.CurrentViolations,

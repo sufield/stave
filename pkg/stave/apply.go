@@ -102,6 +102,9 @@ func toEvalSLAConfig(c *SLAConfig) *evaluation.SLAConfig {
 // SLABreaches is computed by counting findings with SLABreached set.
 // FrameworkReadiness is mirrored from the report's summary.
 func BuildAssessment(report *evaluation.ComplianceReport, controls []policy.ControlDefinition) *Assessment {
+	if report == nil {
+		return nil
+	}
 	slaBreaches := 0
 	for i := range report.Findings {
 		if report.Findings[i].IsAnyBreach() {

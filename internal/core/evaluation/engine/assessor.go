@@ -173,7 +173,13 @@ func (a *Assessor) PredicateParser() policy.PredicateParser { return a.predicate
 func (a *Assessor) ContinuityLimit() time.Duration { return a.continuityLimit }
 
 // slaThresholdFor returns the effective SLA (Max Unsafe Duration) for a control.
+// A nil control falls back to the assessor's default SLA threshold rather than
+// panicking — callers in the chain-finding path occasionally synthesize
+// findings without a corresponding ControlDefinition lookup.
 func (a *Assessor) slaThresholdFor(ctl *policy.ControlDefinition) time.Duration {
+	if ctl == nil {
+		return a.slaThreshold
+	}
 	return ctl.EffectiveMaxUnsafeDuration(a.slaThreshold)
 }
 

@@ -73,10 +73,9 @@ func (g EnforcementGate) IsSLAPolicy() bool {
 // SkipsMaxUnsafe reports whether this gate policy bypasses the
 // max-unsafe-duration check. The SLA gate evaluates SLA-overdue and
 // upcoming-breach signals only, so it ignores max-unsafe; the other
-// gates apply it. Replaces the (policy != GateSLA) probe in
-// cmd/enforce/gate at the SkipMaxUnsafe wiring point.
+// gates apply it.
 func (g EnforcementGate) SkipsMaxUnsafe() bool {
-	return g != GateSLA
+	return g == GateSLA
 }
 
 // RequiresTeamScope reports whether this gate policy is compatible

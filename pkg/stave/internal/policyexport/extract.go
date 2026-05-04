@@ -161,6 +161,14 @@ func Run(ctx context.Context, cfg Config) (*Result, error) {
 			r.processIdentity(&snap.Identities[j])
 		}
 	}
+	// Fall back to wall-clock when no snapshots were loaded so
+	// GeneratedAt is always populated. A zero time renders as
+	// "0001-01-01T00:00:00Z", which is a valid Go zero but a
+	// confusing wire value indistinguishable from a real (very old)
+	// observation.
+	if r.latestAt.IsZero() {
+		r.latestAt = time.Now()
+	}
 	return r.finalize(), nil
 }
 

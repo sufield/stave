@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"log/slog"
+
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -30,7 +32,17 @@ func NewFinding(
 }
 
 // newBaseFinding returns a Finding pre-populated with control and asset metadata.
+// A nil ExposureLifecycle (or nil control) returns a zero-value finding rather
+// than panicking on the downstream `t.Asset()` / `ctl.Metadata()` deref —
+// callers in the chain-finding and recurrence paths can be wired with
+// partially-resolved inputs, and the previous shape would crash the whole
+// evaluation rather than skip the malformed entry.
 func newBaseFinding(ctl *policy.ControlDefinition, t *asset.ExposureLifecycle) *evaluation.Finding {
+	if t == nil || ctl == nil {
+		slog.Warn("newBaseFinding called with nil input; returning zero finding",
+			"nil_lifecycle", t == nil, "nil_control", ctl == nil)
+		return &evaluation.Finding{}
+	}
 	a := t.Asset()
 	f := evaluation.NewFindingFromMetadata(ctl.Metadata())
 	f.FindingID = evaluation.StableFindingID(ctl.ID, t.ID)
