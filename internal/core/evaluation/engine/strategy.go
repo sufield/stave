@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -50,9 +51,24 @@ var (
 // centralizing the construction makes the "what does sufficient
 // coverage mean" decision live in one place.
 func validateCoverage(deps strategyDeps, t *asset.ExposureLifecycle, minSpan time.Duration) (string, bool) {
-	v := CoverageValidator{
-		minRequiredSpan: minSpan,
-		maxAllowedGap:   deps.ContinuityLimit(),
+	// Route through NewCoverageValidator so the constructor's
+	// invariants (minSpan > 0, minSpan >= maxGap) catch a
+	// misconfigured strategy before it produces a permanently-
+	// passing or never-firing validator. The previous shape used
+	// a struct literal that bypassed those checks; a future minor
+	// edit to either threshold could land an inconsistent pair
+	// without anyone noticing.
+	v, err := NewCoverageValidator(minSpan, deps.ContinuityLimit())
+	if err != nil {
+		// Treat a misconfigured validator as "coverage cannot
+		// be assessed" — force INCONCLUSIVE downstream rather
+		// than letting evaluation continue with a struct that
+		// would have produced wrong verdicts. The slog.Warn
+		// surfaces the misconfig so an operator can fix the
+		// strategy thresholds.
+		deps.Logger().Warn("strategy: coverage validator misconfigured; returning insufficient coverage",
+			"min_span", minSpan, "max_gap", deps.ContinuityLimit(), "error", err)
+		return fmt.Sprintf("coverage validator misconfigured: %v", err), false
 	}
 	return v.IsSufficient(t)
 }
@@ -358,6 +374,19 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 
 	// 1. Violation Check
 	if findings := EvaluateRecurrenceForControl(t, s.ctl, now); len(findings) > 0 {
+		// CreateRecurrenceFinding intentionally omits TemporalRisk
+		// (recurrence findings are count-based, not duration-based),
+		// but the renderers still expect the field populated for
+		// consistent output across all violation kinds. Compute it
+		// here so the recurrence branch matches the duration-strategy
+		// shape without routing through emitViolationFinding (which
+		// is wired for duration-style construction).
+		summary := t.FormatExposureSummary(s.ctl.MaxUnsafeDuration(), now)
+		for i := range findings {
+			if findings[i] != nil {
+				findings[i].Evidence.TemporalRisk = summary
+			}
+		}
 		span.RecordStep("recurrence_check", nil, map[string]any{
 			"exceeds_limit": true,
 			"finding_count": len(findings),

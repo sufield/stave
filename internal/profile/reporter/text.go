@@ -3,6 +3,7 @@ package reporter
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/compliance/compound"
@@ -146,8 +147,14 @@ func filterBySeverity(results []profile.Result, sev policy.Severity) []profile.R
 // String returns the full text report as a string.
 func (t TextReporter) String(report profile.Report, meta ReportMeta) string {
 	var b strings.Builder
-	// Write to strings.Builder never returns an error.
-	_ = t.Write(&b, report, meta)
+	// Write to strings.Builder cannot fail at the writer layer
+	// (Builder.Write never errors), but t.Write may surface a
+	// formatting / data error from upstream layers — log so a
+	// future failure mode surfaces during triage instead of
+	// being swallowed by `_ =`.
+	if err := t.Write(&b, report, meta); err != nil {
+		slog.Warn("profile/reporter: text render failed", "error", err)
+	}
 	return b.String()
 }
 

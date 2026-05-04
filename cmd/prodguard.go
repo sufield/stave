@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 	"sync"
@@ -52,6 +53,15 @@ func (d *EnvironmentDetector) Detect() Environment {
 
 	st, _, err := contexts.Load()
 	if err != nil {
+		// Surface the load failure so an operator can see why the
+		// production guard fell back to "non-production". The
+		// previous shape silently treated every load failure as
+		// "safe to run destructive commands" — fail-safe would be
+		// IsProduction=true, but flipping the default risks
+		// blocking every command in environments with transient
+		// context-store errors. Logging keeps the gap visible while
+		// preserving the established non-blocking behaviour.
+		slog.Warn("production guard: failed to load context, assuming non-production", "error", err)
 		return Environment{}
 	}
 	name, ctx, ok, resolveErr := st.ResolveSelected()

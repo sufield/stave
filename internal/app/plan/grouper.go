@@ -192,7 +192,14 @@ func computeSummary(findings []PlanFinding) TeamSummary {
 		counts.Add(f.Severity)
 		if f.SLADeadlineHours != nil {
 			slaTotal++
-			if f.SLABreached && f.OverdueHours != nil {
+			// Count by SLABreached alone — the previous shape also
+			// required OverdueHours to be populated, which dropped
+			// breached-but-overdue-not-recorded findings into the
+			// within-SLA bucket and inflated the compliance
+			// percentage. OverdueHours is a renderer concern
+			// (how-long-overdue display), not the authoritative
+			// breach signal.
+			if f.SLABreached {
 				s.SLABreached++
 			} else {
 				slaWithin++

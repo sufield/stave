@@ -132,8 +132,26 @@ func (m *Monitor) Run(ctx context.Context) error {
 			}
 			if event.Has(fsnotify.Create) || event.Has(fsnotify.Write) {
 				// Debounce: wait 500ms after last write before processing.
+				// Stop's return value tells us the previous timer's state:
+				//   - true: callback was pending and Stop cancelled
+				//     it; the deferred Done() will NEVER run, so we
+				//     must balance the prior Add(1) by calling
+				//     Done() here. Otherwise each cancelled timer
+				//     leaks a +1 on the WaitGroup and shutdown's
+				//     Wait() blocks forever.
+				//   - false: callback already fired (or is firing);
+				//     its deferred Done() will balance its Add(1).
+				//     Wait for it before scheduling the next one so
+				//     a new runCycle doesn't pile up on top of an
+				//     in-flight one (runCycle's running.CompareAndSwap
+				//     also coalesces, but waiting here keeps the
+				//     debounce semantics tight).
 				if debounce != nil {
-					debounce.Stop()
+					if debounce.Stop() {
+						m.debounceWG.Done()
+					} else {
+						m.debounceWG.Wait()
+					}
 				}
 				m.debounceWG.Add(1)
 				debounce = time.AfterFunc(500*time.Millisecond, func() {

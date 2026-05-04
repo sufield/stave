@@ -32,7 +32,7 @@ func (a *App) expandAliasIfMatch() []string {
 	// `[0] == '-'` check assumed at least one byte. Equivalent to
 	// "treat empty as not-an-alias".
 	if len(os.Args) < 2 || os.Args[1] == "" || os.Args[1][0] == '-' {
-		return os.Args
+		return append([]string(nil), os.Args...)
 	}
 	aliases, err := projconfig.LoadUserAliases()
 	if err != nil {
@@ -41,14 +41,14 @@ func (a *App) expandAliasIfMatch() []string {
 		// would otherwise hide every alias miss behind the
 		// "command not found" message Cobra produces below.
 		fmt.Fprintf(a.Root.ErrOrStderr(), "stave: load user aliases: %v\n", err)
-		return os.Args
+		return append([]string(nil), os.Args...)
 	}
 	if len(aliases) == 0 {
-		return os.Args
+		return append([]string(nil), os.Args...)
 	}
 	expanded, ok := aliases[os.Args[1]]
 	if !ok {
-		return os.Args
+		return append([]string(nil), os.Args...)
 	}
 	tokens, err := shlex.Split(expanded)
 	if err != nil {
@@ -56,7 +56,7 @@ func (a *App) expandAliasIfMatch() []string {
 		// os.Args unchanged so the CLI produces a "command not found" error
 		// rather than silently misexpanding.
 		fmt.Fprintf(a.Root.ErrOrStderr(), "stave: alias %q: %v\n", os.Args[1], err)
-		return os.Args
+		return append([]string(nil), os.Args...)
 	}
 	newArgs := slices.Concat(tokens, os.Args[2:])
 	a.Root.SetArgs(newArgs)

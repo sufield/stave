@@ -59,8 +59,15 @@ func ensureFirstRunRunHint(message string, args []string) string {
 
 func markFirstRunHintSeenIfNeeded(show bool, markerPath string) {
 	if show && markerPath != "" {
-		// Best-effort: failure to persist the marker is harmless; the hint just shows again.
-		_ = state.MarkFirstRunSeen(markerPath)
+		// Best-effort: failure to persist the marker is harmless;
+		// the hint just shows again on the next invocation. Log
+		// at debug so a stuck "the hint never goes away" report
+		// can be diagnosed without re-instrumenting the call.
+		// Mirrors the slog handling for adjacent state failures
+		// in this file.
+		if err := state.MarkFirstRunSeen(markerPath); err != nil {
+			slog.Debug("first-run marker persistence failed", "path", markerPath, "error", err)
+		}
 	}
 }
 

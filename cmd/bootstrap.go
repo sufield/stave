@@ -148,6 +148,7 @@ func (a *App) resolveGlobalFlagDefaults(cmd *cobra.Command, eval *appconfig.Gove
 	// of nil produces NPEs at every method call site, hiding the
 	// "no resolver" semantic the caller intended.
 	if eval == nil {
+		slog.Debug("resolveGlobalFlagDefaults: config resolver is nil, skipping")
 		return
 	}
 	ctx := cmdctx.WithResolver(cmd.Context(), eval)
