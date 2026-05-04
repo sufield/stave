@@ -3,6 +3,7 @@ package diagnose
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -142,7 +143,14 @@ func loadTraceSnapshot(ctx context.Context, newSnapshotRepo compose.SnapshotRepo
 	if err != nil {
 		return nil, fmt.Errorf("open observation file: %w", err)
 	}
-	defer f.Close()
+	// Close errors on a read-only file mostly indicate filesystem
+	// instability (lazy unmount, EIO). Log at Debug so they surface
+	// in verbose runs without obscuring the load result.
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil {
+			slog.Debug("close observation file", "path", path, "error", closeErr)
+		}
+	}()
 
 	snapshot, err := obsLoader.LoadSnapshotFromReader(ctx, f, path)
 	if err != nil {

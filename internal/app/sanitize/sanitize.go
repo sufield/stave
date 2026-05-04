@@ -47,19 +47,36 @@ func DefaultConfig() Config {
 	}
 }
 
-// Sanitize applies sanitization rules to snapshots in place.
-func Sanitize(snapshots []asset.Snapshot, cfg Config) {
+// Result reports per-run sanitization statistics. A non-zero
+// AssetsTouched lets callers verify the rule set actually engaged
+// against the input — a silent zero is the symptom of a misspelled
+// rule.Field name that would otherwise pass without warning.
+type Result struct {
+	AssetsTouched   int
+	RulesApplied    int
+	AccountIDHashes int
+}
+
+// Sanitize applies sanitization rules to snapshots in place and
+// returns a Result describing what changed. The caller is expected
+// to log the Result so a no-op run (rules misspelled, empty input)
+// surfaces explicitly rather than passing silently.
+func Sanitize(snapshots []asset.Snapshot, cfg Config) Result {
+	var r Result
 	for i := range snapshots {
 		snap := &snapshots[i]
 		for j := range snap.Assets {
 			a := &snap.Assets[j]
+			r.AssetsTouched++
 			for _, rule := range cfg.Rules {
 				applyRule(a, rule)
+				r.RulesApplied++
 			}
 			// Always hash account IDs in string property values.
-			sanitizeAccountIDs(a.Properties)
+			r.AccountIDHashes += sanitizeAccountIDs(a.Properties)
 		}
 	}
+	return r
 }
 
 func applyRule(a *asset.Asset, rule Rule) {
@@ -148,10 +165,13 @@ func hashToken(value string) string {
 // `principals: ["arn:aws:iam::111122223333:role/x"]` slipped through
 // because the list element was neither a string at the top level nor
 // a map.
-func sanitizeAccountIDs(props map[string]any) {
+func sanitizeAccountIDs(props map[string]any) int {
+	n := 0
 	for key, val := range props {
 		props[key] = sanitizeAccountIDValue(val)
+		n++
 	}
+	return n
 }
 
 // sanitizeAccountIDValue is the recursive worker that handles the

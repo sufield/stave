@@ -122,12 +122,18 @@ func runVerify(stdout io.Writer, opts *options) error {
 			if encErr := enc.Encode(attestation); encErr != nil {
 				return fmt.Errorf("encode json: %w", encErr)
 			}
+			return nil
 		case "markdown":
-			av.WriteMarkdown(w, attestation)
+			if mdErr := av.WriteMarkdown(w, attestation); mdErr != nil {
+				return fmt.Errorf("render markdown: %w", mdErr)
+			}
+			return nil
 		default:
-			av.WriteTable(w, attestation)
+			if tblErr := av.WriteTable(w, attestation); tblErr != nil {
+				return fmt.Errorf("render table: %w", tblErr)
+			}
+			return nil
 		}
-		return nil
 	}); writeErr != nil {
 		return writeErr
 	}

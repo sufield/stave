@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	appmetrics "github.com/sufield/stave/internal/app/metrics"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -86,13 +87,12 @@ func run(ctx context.Context, stdout io.Writer, opts *options) error {
 	}
 
 	// Write to file.
-	f, err := os.Create(opts.OutPath)
-	if err != nil {
-		return fmt.Errorf("create output: %w", err)
+	if err := cmdutil.WriteTo(io.Discard, opts.OutPath, func(w io.Writer) error {
+		appmetrics.Write(w, input)
+		return nil
+	}); err != nil {
+		return err
 	}
-	defer f.Close()
-
-	appmetrics.Write(f, input)
 
 	fmt.Fprintf(stdout, "Wrote metrics to %s\n", opts.OutPath)
 	return nil

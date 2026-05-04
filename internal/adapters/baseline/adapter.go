@@ -122,12 +122,23 @@ func (w *Writer) WriteBaseline(ctx context.Context, path string, findings []repo
 	// while the temp file was being created. The committed=false
 	// defer cleans up the partial temp.
 	if err := ctx.Err(); err != nil {
-		_ = f.Close()
+		// Propagate Close failures alongside the ctx error — a Close
+		// that fails after a cancelled write can mask the cancel
+		// reason, but errors.Join keeps both visible. Mirrors the
+		// happy-path Close-error handling below.
+		if closeErr := f.Close(); closeErr != nil {
+			return errors.Join(err, fmt.Errorf("close %s: %w", path, closeErr))
+		}
 		return err
 	}
 
 	if writeErr := jsonutil.WriteIndented(f, baseline); writeErr != nil {
-		_ = f.Close()
+		if closeErr := f.Close(); closeErr != nil {
+			return errors.Join(
+				fmt.Errorf("write %s: %w", path, writeErr),
+				fmt.Errorf("close %s: %w", path, closeErr),
+			)
+		}
 		return fmt.Errorf("write %s: %w", path, writeErr)
 	}
 	if closeErr := f.Close(); closeErr != nil {

@@ -7,11 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/app/attackpath"
 	"github.com/sufield/stave/internal/core/capabilities"
@@ -150,26 +150,18 @@ func runPath(stdout io.Writer, opts *options) error {
 		ControlLookup:  controlLookup,
 	})
 
-	w := stdout
-	if opts.OutFile != "" {
-		f, fErr := os.Create(opts.OutFile)
-		if fErr != nil {
-			return fmt.Errorf("create output file: %w", fErr)
+	return cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
+		switch opts.Format {
+		case "json":
+			enc := json.NewEncoder(w)
+			enc.SetIndent("", "  ")
+			return enc.Encode(graph)
+		case "dot":
+			return attackpath.WriteDOT(w, graph)
+		case "csv-edges":
+			return attackpath.WriteCSVEdges(w, graph)
+		default:
+			return fmt.Errorf("unknown format %q (valid: json, dot, csv-edges)", opts.Format)
 		}
-		defer f.Close()
-		w = f
-	}
-
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(graph)
-	case "dot":
-		return attackpath.WriteDOT(w, graph)
-	case "csv-edges":
-		return attackpath.WriteCSVEdges(w, graph)
-	default:
-		return fmt.Errorf("unknown format %q (valid: json, dot, csv-edges)", opts.Format)
-	}
+	})
 }

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -74,8 +75,15 @@ func BuildLifecyclesPerControl(
 // `go test -race` failures, not silent data corruption — exercise
 // the assessor under -race when adding parallelism.
 type controlVendorIndex struct {
-	scopeTags [][]kernel.ScopeTag                          // per-control scope tags
-	cache     map[kernel.Vendor][]policy.ControlDefinition // vendor → cached result; UNGUARDED, see contract above
+	scopeTags [][]kernel.ScopeTag // per-control scope tags
+	// mu guards cache. Concurrent callers (a parallel
+	// per-vendor evaluation pipeline, a watch loop reading the
+	// posture cache while a fresh assessment writes to it) take
+	// RLock for reads and Lock for writes. The previous unguarded
+	// map produced fatal "concurrent map writes" runtime panics
+	// under -race when introducing per-vendor parallelism.
+	mu    sync.RWMutex
+	cache map[kernel.Vendor][]policy.ControlDefinition // vendor → cached result
 }
 
 func buildControlVendorIndex(controls []policy.ControlDefinition) *controlVendorIndex {
@@ -102,7 +110,10 @@ func (idx *controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.Co
 	// the underlying scopeTags. Cloning at the read boundary keeps
 	// the cache immutable from the caller's perspective without
 	// requiring callers to remember to clone themselves.
-	if cached, ok := idx.cache[vendor]; ok {
+	idx.mu.RLock()
+	cached, ok := idx.cache[vendor]
+	idx.mu.RUnlock()
+	if ok {
 		return slices.Clone(cached)
 	}
 
@@ -113,9 +124,19 @@ func (idx *controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.Co
 		}
 	}
 
+	// Re-check under the write lock: a concurrent caller may have
+	// produced the same result and cached it between RUnlock and
+	// Lock. Prefer the existing cached value to avoid duplicating
+	// the slice.
+	idx.mu.Lock()
+	if cached, ok := idx.cache[vendor]; ok {
+		idx.mu.Unlock()
+		return slices.Clone(cached)
+	}
 	if idx.cache != nil {
 		idx.cache[vendor] = result
 	}
+	idx.mu.Unlock()
 	// Return a clone here too so the first caller cannot mutate
 	// the just-cached slice via the returned reference.
 	return slices.Clone(result)

@@ -5,8 +5,10 @@
 package exception
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -105,7 +107,14 @@ func LoadExceptions(path string) ([]Config, error) {
 	}
 
 	var cfg StaveConfig
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
+	// KnownFields(true): reject unknown keys outright. Operators
+	// editing exceptions YAML routinely mistype keys (`controll_id`,
+	// `expires`); silent unmarshal would accept the file and quietly
+	// drop the misspelled exception, leaving the real production
+	// finding ungated. Failing fast surfaces the typo at load time.
+	dec := yaml.NewDecoder(bytes.NewReader(data))
+	dec.KnownFields(true)
+	if err := dec.Decode(&cfg); err != nil && !errors.Is(err, io.EOF) {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
 

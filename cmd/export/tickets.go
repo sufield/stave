@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/app/ticketexport"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -93,24 +93,16 @@ func runTickets(stdout io.Writer, assessmentPath, outputPath, format, teamManife
 		tickets = filtered
 	}
 
-	w := stdout
-	if outputPath != "" {
-		f, fErr := os.Create(outputPath) //nolint:gosec // user-specified output path
-		if fErr != nil {
-			return fmt.Errorf("create output: %w", fErr)
+	return cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
+		switch format {
+		case "csv":
+			return writeTicketsCSV(w, tickets)
+		default:
+			enc := json.NewEncoder(w)
+			enc.SetIndent("", "  ")
+			return enc.Encode(tickets)
 		}
-		defer f.Close()
-		w = f
-	}
-
-	switch format {
-	case "csv":
-		return writeTicketsCSV(w, tickets)
-	default:
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(tickets)
-	}
+	})
 }
 
 func writeTicketsCSV(w io.Writer, tickets []ticketexport.Ticket) error {

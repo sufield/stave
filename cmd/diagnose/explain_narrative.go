@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/app/narrative"
@@ -145,30 +145,22 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 	}
 
 	// Write output.
-	out := stdout
-	if opts.Out != "" {
-		f, createErr := os.Create(opts.Out)
-		if createErr != nil {
-			return fmt.Errorf("create output: %w", createErr)
+	return cmdutil.WriteTo(stdout, opts.Out, func(out io.Writer) error {
+		switch opts.Format {
+		case "json":
+			enc := json.NewEncoder(out)
+			enc.SetIndent("", "  ")
+			if len(playbooks) == 1 {
+				return enc.Encode(playbooks[0])
+			}
+			return enc.Encode(playbooks)
+		case "markdown":
+			writeMarkdownPlaybooks(out, playbooks, opts.Depth)
+		default:
+			writeNarrativePlaybooks(out, playbooks, opts.Depth)
 		}
-		defer f.Close()
-		out = f
-	}
-
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
-		if len(playbooks) == 1 {
-			return enc.Encode(playbooks[0])
-		}
-		return enc.Encode(playbooks)
-	case "markdown":
-		writeMarkdownPlaybooks(out, playbooks, opts.Depth)
-	default:
-		writeNarrativePlaybooks(out, playbooks, opts.Depth)
-	}
-	return nil
+		return nil
+	})
 }
 
 func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth string) {

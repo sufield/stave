@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	"github.com/sufield/stave/internal/app/orgtrend"
 	"github.com/sufield/stave/internal/core/report"
@@ -53,28 +54,19 @@ func runHistory(ctx context.Context, w io.Writer, opts *options) error {
 	})
 
 	// Write output.
-	out := w
-	if opts.OutPath != "" {
-		f, createErr := os.Create(opts.OutPath)
-		if createErr != nil {
-			return fmt.Errorf("create output: %w", createErr)
+	return cmdutil.WriteTo(w, opts.OutPath, func(out io.Writer) error {
+		switch opts.Format {
+		case "json":
+			enc := json.NewEncoder(out)
+			enc.SetIndent("", "  ")
+			return enc.Encode(trendReport)
+		case "markdown":
+			writeHistoryMarkdown(out, trendReport)
+		default:
+			writeHistoryTable(out, trendReport)
 		}
-		defer f.Close()
-		out = f
-	}
-
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
-		return enc.Encode(trendReport)
-	case "markdown":
-		writeHistoryMarkdown(out, trendReport)
 		return nil
-	default:
-		writeHistoryTable(out, trendReport)
-		return nil
-	}
+	})
 }
 
 // loadAccountHistory walks the history directory, treating each

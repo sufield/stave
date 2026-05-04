@@ -291,7 +291,16 @@ func Load() (*Store, string, error) {
 	// context file can contain. The earlier shape unmarshalled and
 	// returned without checking, so a malicious or corrupted entry
 	// only surfaced mid-evaluation as a confusing path error.
+	//
+	// ValidateName is checked alongside the body validators so a
+	// stored YAML with a context key like "../etc/passwd" or one
+	// containing embedded null bytes is rejected at load time —
+	// downstream code that uses the key as a path component or
+	// log key would otherwise inherit the malformed value.
 	for name, ctx := range store.contexts {
+		if nameErr := ValidateName(name); nameErr != nil {
+			return nil, "", fmt.Errorf("context name %q at %q: %w", name, path, nameErr)
+		}
 		if err := ctx.Validate(); err != nil {
 			return nil, "", fmt.Errorf("context %q at %q: %w", name, path, err)
 		}

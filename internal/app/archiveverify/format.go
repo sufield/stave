@@ -6,121 +6,149 @@ import (
 	"strings"
 )
 
-// WriteTable writes the attestation in human-readable table format.
-func WriteTable(w io.Writer, a *Attestation) {
-	fmt.Fprintln(w, "STAVE EVIDENCE ARCHIVE VERIFICATION")
-	fmt.Fprintf(w, "Archive:  %s\n", a.ArchivePath)
-	fmt.Fprintf(w, "Period:   %s (%s to %s)\n", a.Period.Label,
-		a.Period.Start.Format("2006-01-02"), a.Period.End.Format("2006-01-02"))
-	fmt.Fprintf(w, "Max gap:  %.0fh\n\n", a.Parameters.MaxGapHours)
+// stickyWriter captures the first write error and turns subsequent
+// writes into no-ops. The format functions emit dozens of Fprintln/
+// Fprintf calls; checking each return inline would balloon the body
+// and obscure the layout. The sticky pattern lets the formatters
+// stay readable while still surfacing a real I/O failure (full disk,
+// closed pipe) to the caller via Err().
+type stickyWriter struct {
+	w   io.Writer
+	err error
+}
 
-	fmt.Fprintln(w, "BUNDLE VERIFICATION")
-	fmt.Fprintf(w, "  Discovered:   %d bundles\n", a.Summary.RunsDiscovered)
-	fmt.Fprintf(w, "  In period:    %d bundles\n", a.Summary.RunsInPeriod)
-	fmt.Fprintf(w, "  Valid:        %d bundles\n", a.Summary.RunsValid)
-	if a.Summary.RunsInvalid > 0 {
-		fmt.Fprintf(w, "  Invalid:      %d bundles\n", a.Summary.RunsInvalid)
+func (s *stickyWriter) Write(p []byte) (int, error) {
+	if s.err != nil {
+		return 0, s.err
 	}
-	fmt.Fprintln(w)
+	n, err := s.w.Write(p)
+	if err != nil {
+		s.err = err
+	}
+	return n, err
+}
+
+// WriteTable writes the attestation in human-readable table format.
+// Returns the first I/O error encountered, or nil on success.
+func WriteTable(w io.Writer, a *Attestation) error {
+	sw := &stickyWriter{w: w}
+	fmt.Fprintln(sw, "STAVE EVIDENCE ARCHIVE VERIFICATION")
+	fmt.Fprintf(sw, "Archive:  %s\n", a.ArchivePath)
+	fmt.Fprintf(sw, "Period:   %s (%s to %s)\n", a.Period.Label,
+		a.Period.Start.Format("2006-01-02"), a.Period.End.Format("2006-01-02"))
+	fmt.Fprintf(sw, "Max gap:  %.0fh\n\n", a.Parameters.MaxGapHours)
+
+	fmt.Fprintln(sw, "BUNDLE VERIFICATION")
+	fmt.Fprintf(sw, "  Discovered:   %d bundles\n", a.Summary.RunsDiscovered)
+	fmt.Fprintf(sw, "  In period:    %d bundles\n", a.Summary.RunsInPeriod)
+	fmt.Fprintf(sw, "  Valid:        %d bundles\n", a.Summary.RunsValid)
+	if a.Summary.RunsInvalid > 0 {
+		fmt.Fprintf(sw, "  Invalid:      %d bundles\n", a.Summary.RunsInvalid)
+	}
+	fmt.Fprintln(sw)
 
 	if len(a.InvalidRuns) > 0 {
-		fmt.Fprintln(w, "INVALID BUNDLES")
+		fmt.Fprintln(sw, "INVALID BUNDLES")
 		for _, inv := range a.InvalidRuns {
-			fmt.Fprintf(w, "  %s\n", inv.RunID)
-			fmt.Fprintf(w, "    Failure: %s\n", inv.FailureReason)
+			fmt.Fprintf(sw, "  %s\n", inv.RunID)
+			fmt.Fprintf(sw, "    Failure: %s\n", inv.FailureReason)
 			if inv.Detail != "" {
-				fmt.Fprintf(w, "    Detail:  %s\n", inv.Detail)
+				fmt.Fprintf(sw, "    Detail:  %s\n", inv.Detail)
 			}
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintln(sw)
 	}
 
 	if len(a.Gaps) > 0 {
-		fmt.Fprintf(w, "GAPS DETECTED: %d\n", len(a.Gaps))
+		fmt.Fprintf(sw, "GAPS DETECTED: %d\n", len(a.Gaps))
 		for i, g := range a.Gaps {
 			exceeds := "within tolerance"
 			if g.ExceedsMax {
 				exceeds = "EXCEEDS MAX GAP"
 			}
-			fmt.Fprintf(w, "  Gap #%d: %s to %s (%.0fh) — %s\n",
+			fmt.Fprintf(sw, "  Gap #%d: %s to %s (%.0fh) — %s\n",
 				i+1, g.GapStart.Format("2006-01-02T15:04"), g.GapEnd.Format("2006-01-02T15:04"),
 				g.DurationHours, exceeds)
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintln(sw)
 	}
 
 	sep := strings.Repeat("-", 60)
-	fmt.Fprintln(w, "ATTESTATION")
-	fmt.Fprintln(w, sep)
-	fmt.Fprintf(w, "VERDICT: %s\n", a.Verdict)
+	fmt.Fprintln(sw, "ATTESTATION")
+	fmt.Fprintln(sw, sep)
+	fmt.Fprintf(sw, "VERDICT: %s\n", a.Verdict)
 	if a.Reason != "" {
-		fmt.Fprintf(w, "Reason:  %s\n", a.Reason)
+		fmt.Fprintf(sw, "Reason:  %s\n", a.Reason)
 	}
-	fmt.Fprintln(w)
-	fmt.Fprintf(w, "  Bundles verified: %d / %d\n", a.Summary.RunsValid, a.Summary.RunsInPeriod)
-	fmt.Fprintf(w, "  Gaps > %.0fh:      %d\n", a.Parameters.MaxGapHours, a.Summary.GapsExceedingMax)
-	fmt.Fprintf(w, "  Period coverage:  %.1f%%\n", a.Summary.CoveragePct)
-	fmt.Fprintln(w, sep)
+	fmt.Fprintln(sw)
+	fmt.Fprintf(sw, "  Bundles verified: %d / %d\n", a.Summary.RunsValid, a.Summary.RunsInPeriod)
+	fmt.Fprintf(sw, "  Gaps > %.0fh:      %d\n", a.Parameters.MaxGapHours, a.Summary.GapsExceedingMax)
+	fmt.Fprintf(sw, "  Period coverage:  %.1f%%\n", a.Summary.CoveragePct)
+	fmt.Fprintln(sw, sep)
+	return sw.err
 }
 
 // WriteMarkdown writes the attestation as a markdown document.
-func WriteMarkdown(w io.Writer, a *Attestation) {
+// Returns the first I/O error encountered, or nil on success.
+func WriteMarkdown(w io.Writer, a *Attestation) error {
+	sw := &stickyWriter{w: w}
 	verdict := VerdictPass
 	if a.IsFail() {
 		verdict = VerdictFail
 	}
 
-	fmt.Fprintf(w, "# Evidence Archive Attestation — %s\n\n", a.Period.Label)
-	fmt.Fprintf(w, "**Generated:** %s  \n", a.GeneratedAt)
-	fmt.Fprintf(w, "**Archive:** %s  \n", a.ArchivePath)
-	fmt.Fprintf(w, "**Period:** %s to %s  \n",
+	fmt.Fprintf(sw, "# Evidence Archive Attestation — %s\n\n", a.Period.Label)
+	fmt.Fprintf(sw, "**Generated:** %s  \n", a.GeneratedAt)
+	fmt.Fprintf(sw, "**Archive:** %s  \n", a.ArchivePath)
+	fmt.Fprintf(sw, "**Period:** %s to %s  \n",
 		a.Period.Start.Format("2006-01-02"), a.Period.End.Format("2006-01-02"))
-	fmt.Fprintf(w, "**Verdict:** %s\n\n", verdict)
+	fmt.Fprintf(sw, "**Verdict:** %s\n\n", verdict)
 
-	fmt.Fprintln(w, "## Summary")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "| Metric | Value |")
-	fmt.Fprintln(w, "|--------|-------|")
-	fmt.Fprintf(w, "| Bundles verified | %d / %d |\n", a.Summary.RunsValid, a.Summary.RunsInPeriod)
-	fmt.Fprintf(w, "| Gaps > %.0fh | %d |\n", a.Parameters.MaxGapHours, a.Summary.GapsExceedingMax)
-	fmt.Fprintf(w, "| Period coverage | %.1f%% |\n", a.Summary.CoveragePct)
-	fmt.Fprintln(w)
+	fmt.Fprintln(sw, "## Summary")
+	fmt.Fprintln(sw)
+	fmt.Fprintln(sw, "| Metric | Value |")
+	fmt.Fprintln(sw, "|--------|-------|")
+	fmt.Fprintf(sw, "| Bundles verified | %d / %d |\n", a.Summary.RunsValid, a.Summary.RunsInPeriod)
+	fmt.Fprintf(sw, "| Gaps > %.0fh | %d |\n", a.Parameters.MaxGapHours, a.Summary.GapsExceedingMax)
+	fmt.Fprintf(sw, "| Period coverage | %.1f%% |\n", a.Summary.CoveragePct)
+	fmt.Fprintln(sw)
 
 	if len(a.InvalidRuns) > 0 {
-		fmt.Fprintln(w, "## Invalid Bundles")
-		fmt.Fprintln(w)
+		fmt.Fprintln(sw, "## Invalid Bundles")
+		fmt.Fprintln(sw)
 		for _, inv := range a.InvalidRuns {
-			fmt.Fprintf(w, "### %s\n", inv.RunID)
-			fmt.Fprintf(w, "- **Failure:** %s\n", inv.FailureReason)
+			fmt.Fprintf(sw, "### %s\n", inv.RunID)
+			fmt.Fprintf(sw, "- **Failure:** %s\n", inv.FailureReason)
 			if inv.Detail != "" {
-				fmt.Fprintf(w, "- **Detail:** %s\n", inv.Detail)
+				fmt.Fprintf(sw, "- **Detail:** %s\n", inv.Detail)
 			}
-			fmt.Fprintln(w)
+			fmt.Fprintln(sw)
 		}
 	}
 
 	if len(a.Gaps) > 0 {
-		fmt.Fprintln(w, "## Gaps")
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "| Start | End | Duration | Exceeds Max |")
-		fmt.Fprintln(w, "|-------|-----|----------|-------------|")
+		fmt.Fprintln(sw, "## Gaps")
+		fmt.Fprintln(sw)
+		fmt.Fprintln(sw, "| Start | End | Duration | Exceeds Max |")
+		fmt.Fprintln(sw, "|-------|-----|----------|-------------|")
 		for _, g := range a.Gaps {
 			exceeds := "No"
 			if g.ExceedsMax {
 				exceeds = "Yes"
 			}
-			fmt.Fprintf(w, "| %s | %s | %.0fh | %s |\n",
+			fmt.Fprintf(sw, "| %s | %s | %.0fh | %s |\n",
 				g.GapStart.Format("2006-01-02T15:04"), g.GapEnd.Format("2006-01-02T15:04"),
 				g.DurationHours, exceeds)
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintln(sw)
 	}
 
-	fmt.Fprintln(w, "## Attestation Statement")
-	fmt.Fprintln(w)
+	fmt.Fprintln(sw, "## Attestation Statement")
+	fmt.Fprintln(sw)
 	if a.IsPass() {
-		fmt.Fprintf(w, "This archive demonstrates continuous, tamper-evident security monitoring for %s.\n", a.Period.Label)
+		fmt.Fprintf(sw, "This archive demonstrates continuous, tamper-evident security monitoring for %s.\n", a.Period.Label)
 	} else {
-		fmt.Fprintf(w, "This archive **does not** demonstrate continuous monitoring for %s. %s\n", a.Period.Label, a.Reason)
+		fmt.Fprintf(sw, "This archive **does not** demonstrate continuous monitoring for %s. %s\n", a.Period.Label, a.Reason)
 	}
+	return sw.err
 }

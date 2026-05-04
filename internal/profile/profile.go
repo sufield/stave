@@ -352,6 +352,15 @@ func (p *Profile) Evaluate(ctx context.Context, snap asset.Snapshot, registries 
 
 	var results []Result
 	for _, ctrl := range controls {
+		// Per-iteration ctx check so a long-running profile (1000+
+		// controls under load) aborts within one control of cancel
+		// instead of running the loop to completion. The earlier
+		// shape only checked at entry — a SIGINT during evaluation
+		// surfaced as an exit-after-completion rather than the
+		// expected immediate cancel.
+		if err := ctx.Err(); err != nil {
+			return Report{}, fmt.Errorf("profile %s: %w", p.ID, err)
+		}
 		ctl := lookup[ctrl.ControlID]
 		if ctl == nil {
 			return Report{}, fmt.Errorf("control %s declared in profile but not found in any registry", ctrl.ControlID)

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	evidenceadapter "github.com/sufield/stave/internal/adapters/evidence"
 	"github.com/sufield/stave/internal/adapters/observations"
@@ -131,39 +132,30 @@ func runCompliance(
 		assessments = append(assessments, evidence.EvaluateProfile(pkg, profile))
 	}
 
-	// Determine output writer.
-	out := w
-	if opts.Out != "" {
-		f, fileErr := os.Create(opts.Out)
-		if fileErr != nil {
-			return fmt.Errorf("create output file: %w", fileErr)
-		}
-		defer f.Close()
-		out = f
-	}
-
 	snapshotTime := snapshots[len(snapshots)-1].CapturedAt
 
-	if compositeMode {
-		return runComposite(out, opts, profiles, assessments, pkg, snapshotTime)
-	}
+	if writeErr := cmdutil.WriteTo(w, opts.Out, func(out io.Writer) error {
+		if compositeMode {
+			return runComposite(out, opts, profiles, assessments, pkg, snapshotTime)
+		}
 
-	// OSCAL format — works for single and composite. Routed
-	// directly because OSCAL needs the raw profiles / assessments /
-	// snapshotTime that the trimmed EvidenceExport projection drops.
-	if opts.Format == "oscal" {
-		return renderOSCAL(out, opts, profiles, assessments, pkg, snapshotTime)
-	}
+		// OSCAL format — works for single and composite. Routed
+		// directly because OSCAL needs the raw profiles / assessments /
+		// snapshotTime that the trimmed EvidenceExport projection drops.
+		if opts.Format == "oscal" {
+			return renderOSCAL(out, opts, profiles, assessments, pkg, snapshotTime)
+		}
 
-	renderer, err := NewRenderer(opts.Format, opts.Verbose)
-	if err != nil {
-		return &ui.UserError{Err: err}
-	}
+		renderer, err := NewRenderer(opts.Format, opts.Verbose)
+		if err != nil {
+			return &ui.UserError{Err: err}
+		}
 
-	// Single-framework path (unchanged behavior).
-	export := buildExport(profiles[0], assessments[0], pkg, version.String, snapshotTime, opts.IncludePass, opts.MinSeverity, result.Findings)
-	if renderErr := renderer.Render(out, export); renderErr != nil {
-		return renderErr
+		// Single-framework path.
+		export := buildExport(profiles[0], assessments[0], pkg, version.String, snapshotTime, opts.IncludePass, opts.MinSeverity, result.Findings)
+		return renderer.Render(out, export)
+	}); writeErr != nil {
+		return writeErr
 	}
 
 	return exitError(assessments[0])

@@ -94,8 +94,17 @@ func RunStatus(opts StatusOpts) string {
 	if opts.PIDFile != "" {
 		if data, err := os.ReadFile(opts.PIDFile); err == nil { //nolint:gosec
 			pidStr := strings.TrimSpace(string(data))
-			pid, _ := strconv.Atoi(pidStr)
-			if pid > 0 {
+			pid, parseErr := strconv.Atoi(pidStr)
+			switch {
+			case parseErr != nil:
+				// Corrupt PID file (whitespace-only, partial write
+				// from a crashed daemon, manual edit). Surface as
+				// UNKNOWN rather than silently treating as
+				// "NOT RUNNING" — operators otherwise assume the
+				// daemon stopped cleanly when they should be
+				// removing the corrupt PID file.
+				daemonStatus = fmt.Sprintf("UNKNOWN (PID file corrupt: %v)", parseErr)
+			case pid > 0:
 				proc, findErr := os.FindProcess(pid)
 				if findErr == nil {
 					if sigErr := proc.Signal(syscall.Signal(0)); sigErr == nil {

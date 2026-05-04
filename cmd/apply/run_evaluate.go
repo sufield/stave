@@ -50,6 +50,10 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	if err != nil {
 		return EvaluateResult{}, fmt.Errorf("build evaluation dependencies: %w", err)
 	}
+	// ApplyDeps.Close is currently a no-op (no error return); the
+	// defer reserves the resource-cleanup hook so a future Close
+	// implementation can flush trace files / registries without
+	// touching the call site.
 	defer deps.Close()
 
 	// Phase 2 cutover: route the evaluation core through pkg/stave/cliapi

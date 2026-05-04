@@ -13,14 +13,37 @@ import (
 // TextReporter writes a human-readable text report.
 type TextReporter struct{}
 
+// stickyWriter captures the first I/O error and turns subsequent
+// writes into no-ops. The text reporter emits dozens of Fprintf
+// calls; checking each return inline would clutter the body and
+// obscure the layout. The sticky pattern keeps the per-section
+// helpers readable while still surfacing a real I/O failure
+// (closed pipe, full disk) up to Write's caller.
+type stickyWriter struct {
+	w   io.Writer
+	err error
+}
+
+func (s *stickyWriter) Write(p []byte) (int, error) {
+	if s.err != nil {
+		return 0, s.err
+	}
+	n, err := s.w.Write(p)
+	if err != nil {
+		s.err = err
+	}
+	return n, err
+}
+
 // Write renders the report as formatted text.
 func (TextReporter) Write(w io.Writer, report profile.Report, meta ReportMeta) error {
-	writeHeader(w, report, meta)
-	writeCompoundRisks(w, report.CompoundFindings)
-	writeFindingsBySeverity(w, report.Results)
-	writeAcknowledged(w, report.Acknowledged)
-	writeSummary(w, report)
-	return nil
+	sw := &stickyWriter{w: w}
+	writeHeader(sw, report, meta)
+	writeCompoundRisks(sw, report.CompoundFindings)
+	writeFindingsBySeverity(sw, report.Results)
+	writeAcknowledged(sw, report.Acknowledged)
+	writeSummary(sw, report)
+	return sw.err
 }
 
 func writeHeader(w io.Writer, report profile.Report, meta ReportMeta) {

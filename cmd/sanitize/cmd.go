@@ -5,6 +5,7 @@ package sanitize
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -79,7 +80,17 @@ func run(opts *options) error {
 		}
 	}
 
-	appsanitize.Sanitize(snaps, cfg)
+	res := appsanitize.Sanitize(snaps, cfg)
+	// Surface the Result so a no-op run (misspelled rule field,
+	// empty input) is visible — the previous void-return shape
+	// passed silently when the rule set didn't engage.
+	slog.Debug("sanitize: completed",
+		"assets_touched", res.AssetsTouched,
+		"rules_applied", res.RulesApplied,
+		"account_id_hashes", res.AccountIDHashes)
+	if res.AssetsTouched == 0 {
+		slog.Warn("sanitize: no assets matched — input may be empty or rules may be mis-targeted")
+	}
 
 	// Re-wrap into bundle format.
 	bundle := observations.ObservationBundle{

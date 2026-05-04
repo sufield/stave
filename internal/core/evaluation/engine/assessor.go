@@ -638,10 +638,16 @@ func buildSuppressionSet(
 	excepted []evaluation.ExceptedFinding,
 	acknowledged []policy.AcknowledgedFinding,
 ) map[risk.SuppressionKey]struct{} {
-	if len(excepted) == 0 && len(acknowledged) == 0 {
-		return nil
-	}
+	// Always return a non-nil map. risk.ComputeItems and downstream
+	// consumers only READ from this set (`_, ok := s[k]`) — a nil
+	// map is safe for reads, but returning a non-nil empty map
+	// prevents an accidental future writer from triggering a
+	// "assignment to entry in nil map" panic. Cheap; the map header
+	// allocates on first key write anyway.
 	out := make(map[risk.SuppressionKey]struct{}, len(excepted)+len(acknowledged))
+	if len(excepted) == 0 && len(acknowledged) == 0 {
+		return out
+	}
 	for i := range excepted {
 		out[risk.SuppressionKey{ControlID: excepted[i].ControlID, AssetID: excepted[i].AssetID}] = struct{}{}
 	}

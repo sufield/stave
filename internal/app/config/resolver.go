@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log/slog"
 	"os"
 	"strings"
 
@@ -47,7 +48,12 @@ func (r *GovernanceResolver) WithPolicy(p *WorkspacePolicy, pPath string) *Gover
 type FlagDefaultsTarget interface {
 	SetQuiet(bool)
 	SetSanitize(bool)
-	SetPathMode(string)
+	// SetPathMode validates and writes the path-mode default. Errors
+	// reflect a malformed config value (typo: "bsae", "absolute") —
+	// callers are expected to log them rather than fail bootstrap so
+	// a typo'd default does not block command execution; the
+	// previously-applied (or built-in) value stays in place.
+	SetPathMode(string) error
 }
 
 // Flag-key constants. The strings match the CLI flag names defined in
@@ -83,7 +89,15 @@ func (r *GovernanceResolver) ApplyUnsetDefaultsTo(target FlagDefaultsTarget, cha
 		target.SetSanitize(r.Sanitize())
 	}
 	if !changed(FlagKeyPathMode) {
-		target.SetPathMode(r.PathMode())
+		// Best-effort default. A validation error (typo'd config
+		// value) is logged at WARN; bootstrap continues with the
+		// previously applied value rather than failing loud — the
+		// fail-loud surface for malformed PathMode is at the parser
+		// layer (cliflags), not here.
+		if err := target.SetPathMode(r.PathMode()); err != nil {
+			slog.Warn("config: ignoring invalid path-mode default",
+				"value", r.PathMode(), "error", err)
+		}
 	}
 }
 

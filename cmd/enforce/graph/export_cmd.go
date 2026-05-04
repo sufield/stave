@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	graphpkg "github.com/sufield/stave/internal/adapters/graph"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/report"
@@ -83,26 +83,18 @@ func runExport(stdout io.Writer, opts *exportOptions) error {
 		SourcePath:    opts.OutputFile,
 	})
 
-	out := stdout
-	if opts.OutPath != "" {
-		f, createErr := os.Create(opts.OutPath)
-		if createErr != nil {
-			return fmt.Errorf("create output: %w", createErr)
+	return cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
+		switch opts.Format {
+		case "stix":
+			return graphpkg.MarshalSTIX(out, g)
+		case "jsonld":
+			return graphpkg.MarshalJSONLD(out, g)
+		case "graphml":
+			return graphpkg.MarshalGraphML(out, g)
+		default:
+			enc := json.NewEncoder(out)
+			enc.SetIndent("", "  ")
+			return enc.Encode(g)
 		}
-		defer f.Close()
-		out = f
-	}
-
-	switch opts.Format {
-	case "stix":
-		return graphpkg.MarshalSTIX(out, g)
-	case "jsonld":
-		return graphpkg.MarshalJSONLD(out, g)
-	case "graphml":
-		return graphpkg.MarshalGraphML(out, g)
-	default:
-		enc := json.NewEncoder(out)
-		enc.SetIndent("", "  ")
-		return enc.Encode(g)
-	}
+	})
 }

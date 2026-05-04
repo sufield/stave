@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -123,24 +124,16 @@ func runInventory(w io.Writer, opts *inventoryOptions) error {
 	}
 	report.Summary = computeSummary(snapshots)
 
-	out := w
-	if opts.Out != "" {
-		f, fileErr := os.Create(opts.Out)
-		if fileErr != nil {
-			return fmt.Errorf("create output file: %w", fileErr)
+	return cmdutil.WriteTo(w, opts.Out, func(out io.Writer) error {
+		switch opts.Format {
+		case "json":
+			return renderInventoryJSON(out, &report)
+		case "openmetrics":
+			return renderInventoryOpenMetrics(out, &report)
+		default:
+			return renderInventoryTable(out, &report)
 		}
-		defer f.Close()
-		out = f
-	}
-
-	switch opts.Format {
-	case "json":
-		return renderInventoryJSON(out, &report)
-	case "openmetrics":
-		return renderInventoryOpenMetrics(out, &report)
-	default:
-		return renderInventoryTable(out, &report)
-	}
+	})
 }
 
 func buildSnapshotEntry(path string, now time.Time, retentionThreshold time.Duration, minAssets int) *snapshotEntry {

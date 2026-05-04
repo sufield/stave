@@ -67,8 +67,20 @@ func (g *globalFlagsType) ProfilerConfig() (cpuPath, memPath string) {
 // so the typed-value contract on the field is preserved.
 func (g *globalFlagsType) SetQuiet(v bool)    { g.Quiet = v }
 func (g *globalFlagsType) SetSanitize(v bool) { g.Sanitize = v }
-func (g *globalFlagsType) SetPathMode(v string) {
-	g.PathMode = cliflags.PathModeFlag(v)
+
+// SetPathMode validates v before assigning. Allowed values are "base"
+// (basename only in error messages) and "full" (absolute paths).
+// Returns an error so a typo'd project_config (`path_mode: bsae`)
+// surfaces at config-resolution time instead of silently accepting
+// the malformed value and downstream code applying a non-existent
+// rendering mode.
+func (g *globalFlagsType) SetPathMode(v string) error {
+	switch v {
+	case "base", "full":
+		g.PathMode = cliflags.PathModeFlag(v)
+		return nil
+	}
+	return fmt.Errorf("invalid path-mode %q (allowed: \"base\", \"full\")", v)
 }
 
 // AllowsNetworkAccess reports whether the operator has NOT asserted

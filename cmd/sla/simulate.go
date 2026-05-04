@@ -116,7 +116,9 @@ func runSimulate(stdout io.Writer, opts *simulateOptions) error {
 	}
 
 	result := simulate(pol, assessment.Findings)
-	writeSimResult(stdout, opts.SLAProfileFile, opts.OutputFile, result)
+	if writeErr := writeSimResult(stdout, opts.SLAProfileFile, opts.OutputFile, result); writeErr != nil {
+		return fmt.Errorf("render simulation: %w", writeErr)
+	}
 
 	if opts.CompareFile != "" {
 		pol2, err := infraSLA.LoadFromFile(opts.CompareFile)
@@ -124,8 +126,12 @@ func runSimulate(stdout io.Writer, opts *simulateOptions) error {
 			return &ui.UserError{Err: fmt.Errorf("load compare policy: %w", err)}
 		}
 		result2 := simulate(pol2, assessment.Findings)
-		fmt.Fprintln(stdout)
-		writeComparison(stdout, result, opts.SLAProfileFile, result2, opts.CompareFile)
+		if _, err := fmt.Fprintln(stdout); err != nil {
+			return fmt.Errorf("render simulation: %w", err)
+		}
+		if writeErr := writeComparison(stdout, result, opts.SLAProfileFile, result2, opts.CompareFile); writeErr != nil {
+			return fmt.Errorf("render comparison: %w", writeErr)
+		}
 	}
 
 	return nil
@@ -166,49 +172,75 @@ func simulate(pol *infraSLA.Policy, findings []simFinding) simResult {
 	return res
 }
 
-func writeSimResult(w io.Writer, policyPath, assessmentPath string, r simResult) {
+// stickyWriter captures the first I/O error and turns subsequent
+// writes into no-ops. The simulation formatters emit a couple dozen
+// Fprintf/Fprintln calls; threading errors inline would balloon the
+// body and obscure the layout. The sticky pattern keeps the
+// formatters readable while still surfacing a real I/O failure
+// (closed pipe, full disk) to the caller via Err().
+type stickyWriter struct {
+	w   io.Writer
+	err error
+}
+
+func (s *stickyWriter) Write(p []byte) (int, error) {
+	if s.err != nil {
+		return 0, s.err
+	}
+	n, err := s.w.Write(p)
+	if err != nil {
+		s.err = err
+	}
+	return n, err
+}
+
+func writeSimResult(w io.Writer, policyPath, assessmentPath string, r simResult) error {
+	sw := &stickyWriter{w: w}
 	total := len(r.within) + len(r.approaching) + len(r.breached)
 
-	fmt.Fprintln(w, "SLA POLICY SIMULATION")
-	fmt.Fprintf(w, "Policy:     %s (%s)\n", r.policyName, policyPath)
-	fmt.Fprintf(w, "Assessment: %s\n\n", assessmentPath)
+	fmt.Fprintln(sw, "SLA POLICY SIMULATION")
+	fmt.Fprintf(sw, "Policy:     %s (%s)\n", r.policyName, policyPath)
+	fmt.Fprintf(sw, "Assessment: %s\n\n", assessmentPath)
 
-	fmt.Fprintf(w, "FINDINGS SUMMARY\n")
-	fmt.Fprintf(w, "  %d findings within SLA deadline (on track)\n", len(r.within))
-	fmt.Fprintf(w, "  %d findings approaching deadline (>70%% burn rate)\n", len(r.approaching))
-	fmt.Fprintf(w, "  %d findings past deadline (SLA breached)\n", len(r.breached))
-	fmt.Fprintf(w, "  %d total findings with SLA deadlines\n\n", total)
+	fmt.Fprintf(sw, "FINDINGS SUMMARY\n")
+	fmt.Fprintf(sw, "  %d findings within SLA deadline (on track)\n", len(r.within))
+	fmt.Fprintf(sw, "  %d findings approaching deadline (>70%% burn rate)\n", len(r.approaching))
+	fmt.Fprintf(sw, "  %d findings past deadline (SLA breached)\n", len(r.breached))
+	fmt.Fprintf(sw, "  %d total findings with SLA deadlines\n\n", total)
 
 	if len(r.breached) > 0 {
-		fmt.Fprintln(w, "SLA BREACHED:")
+		fmt.Fprintln(sw, "SLA BREACHED:")
 		for _, e := range r.breached {
 			overdue := e.dwellHours - e.deadlineHours
-			fmt.Fprintf(w, "  %-30s %-8s dwell: %.0fh  deadline: %.0fh  overdue: %.0fh\n",
+			fmt.Fprintf(sw, "  %-30s %-8s dwell: %.0fh  deadline: %.0fh  overdue: %.0fh\n",
 				e.controlID, e.severity, e.dwellHours, e.deadlineHours, overdue)
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintln(sw)
 	}
 
 	if len(r.approaching) > 0 {
-		fmt.Fprintln(w, "APPROACHING (>70% burn rate):")
+		fmt.Fprintln(sw, "APPROACHING (>70% burn rate):")
 		for _, e := range r.approaching {
-			fmt.Fprintf(w, "  %-30s %-8s dwell: %.0fh  deadline: %.0fh  burn: %.1f%%\n",
+			fmt.Fprintf(sw, "  %-30s %-8s dwell: %.0fh  deadline: %.0fh  burn: %.1f%%\n",
 				e.controlID, e.severity, e.dwellHours, e.deadlineHours, e.burnRate*100)
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintln(sw)
 	}
+	return sw.err
 }
 
-func writeComparison(w io.Writer, r1 simResult, _ string, r2 simResult, _ string) {
+func writeComparison(w io.Writer, r1 simResult, _ string, r2 simResult, _ string) error {
+	sw := &stickyWriter{w: w}
 	total1 := len(r1.within) + len(r1.approaching) + len(r1.breached)
 	total2 := len(r2.within) + len(r2.approaching) + len(r2.breached)
 
-	fmt.Fprintln(w, "POLICY COMPARISON")
-	fmt.Fprintf(w, "  %-20s %-12s %-12s\n", "Metric", r1.policyName, r2.policyName)
-	fmt.Fprintf(w, "  %-20s %-12s %-12s\n", strings.Repeat("-", 20), strings.Repeat("-", 12), strings.Repeat("-", 12))
-	fmt.Fprintf(w, "  %-20s %-12s %-12s\n", "Findings in SLA",
+	fmt.Fprintln(sw, "POLICY COMPARISON")
+	fmt.Fprintf(sw, "  %-20s %-12s %-12s\n", "Metric", r1.policyName, r2.policyName)
+	fmt.Fprintf(sw, "  %-20s %-12s %-12s\n", strings.Repeat("-", 20), strings.Repeat("-", 12), strings.Repeat("-", 12))
+	fmt.Fprintf(sw, "  %-20s %-12s %-12s\n", "Findings in SLA",
 		fmt.Sprintf("%d/%d", len(r1.within), total1),
 		fmt.Sprintf("%d/%d", len(r2.within), total2))
-	fmt.Fprintf(w, "  %-20s %-12d %-12d\n", "Approaching", len(r1.approaching), len(r2.approaching))
-	fmt.Fprintf(w, "  %-20s %-12d %-12d\n", "Breached", len(r1.breached), len(r2.breached))
+	fmt.Fprintf(sw, "  %-20s %-12d %-12d\n", "Approaching", len(r1.approaching), len(r2.approaching))
+	fmt.Fprintf(sw, "  %-20s %-12d %-12d\n", "Breached", len(r1.breached), len(r2.breached))
+	return sw.err
 }

@@ -238,7 +238,16 @@ func (n *Node) STIXObject(now time.Time, producerID string) (string, map[string]
 		case n.ControlName() != "":
 			obj["name"] = n.ControlName()
 		case stringPropPresent(n.Properties, "action"):
-			obj["name"], _ = stringProp(n.Properties, "action")
+			// stringPropPresent guarantees presence; stringProp
+			// returns ok=false when the value is the wrong type
+			// (a future writer landing a non-string under
+			// "action"). Fall back to the node ID rather than
+			// emit an empty "name" slot.
+			if action, ok := stringProp(n.Properties, "action"); ok {
+				obj["name"] = action
+			} else {
+				obj["name"] = n.ID
+			}
 		default:
 			obj["name"] = n.ID
 		}

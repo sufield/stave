@@ -194,15 +194,25 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 
 func (w *AuditWorkflow) prepareAuditData(ctx context.Context, cfg ObservationConfig) IntentEvaluationResult {
 	intent := NewIntentEvaluation(w.ObservationRepo, w.PolicyRepo)
+
+	// caller-supplied means: any non-nil slice (including empty)
+	// — the caller is explicitly providing the control set, even
+	// if that set is "no controls at all". An empty slice is a
+	// legitimate input (e.g. profile-driven runs that filter to
+	// zero matching controls); it must NOT fall back to loading
+	// from disk, because doing so would silently re-introduce
+	// controls the caller deliberately excluded.
+	callerSupplied := cfg.ActivePolicies != nil
+
 	data := intent.LoadArtifacts(ctx, IntentEvaluationConfig{
 		ControlsDir:       cfg.PolicySource,
 		ObservationsDir:   cfg.ObservationSource,
-		RequireControls:   cfg.ActivePolicies == nil,
-		SkipControlsLoad:  cfg.ActivePolicies != nil,
+		RequireControls:   !callerSupplied,
+		SkipControlsLoad:  callerSupplied,
 		AllowUnknownInput: cfg.AcceptUnknownData,
 		Stderr:            cfg.Stderr,
 	})
-	if cfg.ActivePolicies != nil {
+	if callerSupplied {
 		data.Controls = cfg.ActivePolicies
 	}
 	return data
@@ -315,7 +325,13 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 // EnrichReport applies risk reasoning (chains, attack stages, exposure
 // ranking) to an evaluation report. Exported for use by the profile
 // runner which bypasses the standard assessment workflow.
+//
+// Seeds the workflow with slog.Default() so enrichWithRiskReasoning's
+// Logger.Warn calls (and any future logger reads) never fire on a
+// nil receiver. The previous shape constructed an AuditWorkflow{}
+// with Logger==nil; the current call sites guard with `if w.Logger
+// != nil` but a future reader would silently drop diagnostic output.
 func EnrichReport(report *evaluation.ComplianceReport, controls []policy.ControlDefinition, chainDefs []policy.ChainDefinition) {
-	w := &AuditWorkflow{}
+	w := &AuditWorkflow{Logger: slog.Default()}
 	w.enrichWithRiskReasoning(report, controls, chainDefs)
 }

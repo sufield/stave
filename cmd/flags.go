@@ -26,8 +26,22 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 	// Logging
 	p.CountVarP(&flags.Verbosity, "verbose", "v", "Increase verbosity (-v=INFO, -vv=DEBUG)")
 	p.Var(&flags.LogLevel, "log-level", "Log level: debug|info|warn|error (overrides -v)")
-	flags.LogFormat = "text"
+	// Seed LogFormat through the pflag.Value contract by registering
+	// then calling Set("text"). Direct field assignment side-stepped
+	// pflag's bookkeeping — the value was set but pflag did not mark
+	// the flag as defaulted, so resolveGlobalFlagDefaults could not
+	// distinguish "user passed --log-format=text" from "default
+	// applied" via p.Changed(). The Set route updates both.
 	p.Var(&flags.LogFormat, "log-format", "Log format: text|json")
+	if err := p.Lookup("log-format").Value.Set("text"); err != nil {
+		// pflag only errors here when the Value.Set implementation
+		// rejects the string. logging.Format.Set always returns nil,
+		// so this is a structural test-time check: if a future
+		// Format.Set adds validation, fail loud at startup.
+		panic("flags: failed to seed log-format default: " + err.Error())
+	}
+	p.Lookup("log-format").DefValue = "text"
+	p.Lookup("log-format").Changed = false
 	p.StringVar(&flags.LogFile, cliflags.FlagLogFile, "", "Write logs to file (default: stderr)")
 	p.BoolVar(&flags.LogTimestamps, "log-timestamps", false, "Include timestamps in logs (breaks determinism)")
 	p.BoolVar(&flags.LogTimings, "log-timings", false, "Include timing information (breaks determinism)")

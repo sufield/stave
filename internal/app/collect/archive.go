@@ -196,10 +196,25 @@ func (a *Archive) Verify() ([]string, []string) {
 		errs = append(errs, "manifest.json missing or unreadable")
 		return errs, warnings
 	}
-	expectedHash, _ := os.ReadFile(filepath.Join(a.Path, "manifest.json.sha256")) //nolint:gosec
-	actualHash := "sha256:" + sha256Hex(manifestData)
-	if strings.TrimSpace(string(expectedHash)) != actualHash {
-		errs = append(errs, "manifest.json SHA-256 mismatch")
+	expectedHash, hashErr := os.ReadFile(filepath.Join(a.Path, "manifest.json.sha256")) //nolint:gosec
+	switch {
+	case hashErr == nil:
+		actualHash := "sha256:" + sha256Hex(manifestData)
+		if strings.TrimSpace(string(expectedHash)) != actualHash {
+			errs = append(errs, "manifest.json SHA-256 mismatch")
+		}
+	case os.IsNotExist(hashErr):
+		// No companion .sha256 file. Older archives predate the
+		// integrity sidecar; report as a warning so verify still
+		// completes but the operator is told the integrity check
+		// is degraded — silently passing without a hash file is the
+		// scenario this fix prevents.
+		warnings = append(warnings, "manifest.json.sha256 missing — integrity hash unverified")
+	default:
+		// Permission / IO error reading an existing hash sidecar is
+		// a genuine error: a sidecar file is present but we cannot
+		// read it, so we cannot say the manifest matches.
+		errs = append(errs, fmt.Sprintf("manifest.json.sha256 unreadable: %v", hashErr))
 	}
 
 	// Check each run directory.
