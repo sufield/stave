@@ -1,6 +1,7 @@
 package snapplan
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"text/tabwriter"
@@ -10,7 +11,13 @@ import (
 const humanTime = "2006-01-02 15:04:05"
 
 // RenderPlanText writes a human-readable snapshot plan report to w.
+// Returns an error when plan is nil so a caller that forgot to populate
+// the plan slot fails loud here rather than panicking inside the
+// downstream writers when they dereference plan.GeneratedAt / plan.Files.
 func RenderPlanText(w io.Writer, plan *PlanOutput) error {
+	if plan == nil {
+		return errors.New("snapplan.RenderPlanText: plan is nil")
+	}
 	ew := &errWriter{w: w}
 
 	writeHeader(ew, plan)

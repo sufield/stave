@@ -120,6 +120,15 @@ func hasNoUnsafeSegments(path string) bool {
 	if cleaned != path {
 		return false
 	}
+	// Substring fast-path: when ".." appears nowhere in the cleaned
+	// path, no segment can possibly be `..`, so we skip the
+	// allocation-heavy split + scan. The check is intentionally
+	// conservative — a benign value like `v1..2` (a version string)
+	// contains the substring but is not a traversal, so it falls
+	// through to the segment walk below where it correctly passes
+	// the `slices.Contains(..., "..")` rejection. Future maintainers
+	// who want to "tighten" this path by short-circuiting on the
+	// substring alone would reject legitimate inputs.
 	if !strings.Contains(cleaned, "..") {
 		return true
 	}

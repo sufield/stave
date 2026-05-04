@@ -19,12 +19,15 @@ type Entry struct {
 }
 
 // Value returns the effective value: the environment variable if set,
-// otherwise DefaultValue.
+// otherwise DefaultValue. Both sources are trimmed of surrounding
+// whitespace so an entry declared as " text " in source matches the
+// behaviour of an env var set to "text" — and to stay consistent
+// with the trimming IsTrue applies to its own fallback path.
 func (e Entry) Value() string {
 	if val := strings.TrimSpace(os.Getenv(e.Name)); val != "" {
 		return val
 	}
-	return e.DefaultValue
+	return strings.TrimSpace(e.DefaultValue)
 }
 
 // IsTrue returns true if the environment variable is set to a truthy

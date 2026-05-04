@@ -206,13 +206,14 @@ func (a *AcknowledgedResult) ToAcknowledgedEntry() profile.AcknowledgedEntry {
 		return profile.AcknowledgedEntry{}
 	}
 	return profile.AcknowledgedEntry{
-		ControlID:      a.ControlID,
-		Bucket:         a.Bucket,
-		Rationale:      a.Rationale,
-		AcknowledgedBy: a.AcknowledgedBy,
-		Valid:          a.Valid,
-		InvalidReason:  string(a.InvalidReason),
-		InvalidDetail:  a.InvalidDetail,
+		ControlID:        a.ControlID,
+		Bucket:           a.Bucket,
+		Rationale:        a.Rationale,
+		AcknowledgedBy:   a.AcknowledgedBy,
+		AcknowledgedDate: a.AcknowledgedDate.String(),
+		Valid:            a.Valid,
+		InvalidReason:    string(a.InvalidReason),
+		InvalidDetail:    a.InvalidDetail,
 	}
 }
 

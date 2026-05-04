@@ -445,3 +445,17 @@ func TestRenderPlanText_AlwaysPreviewMode(t *testing.T) {
 		t.Error("missing 'eligible for action' verb")
 	}
 }
+
+func TestRenderPlanText_NilPlan(t *testing.T) {
+	var buf bytes.Buffer
+	err := RenderPlanText(&buf, nil)
+	if err == nil {
+		t.Fatal("RenderPlanText(nil) returned no error; want guard error")
+	}
+	if !strings.Contains(err.Error(), "plan is nil") {
+		t.Errorf("unexpected error message %q", err.Error())
+	}
+	if buf.Len() != 0 {
+		t.Errorf("buffer should be empty on early return, got %q", buf.String())
+	}
+}

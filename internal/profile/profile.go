@@ -270,13 +270,19 @@ func (r *Report) Recount() {
 
 // AcknowledgedEntry surfaces an exception in the report.
 type AcknowledgedEntry struct {
-	ControlID      kernel.ControlID `json:"control_id"`
-	Bucket         string           `json:"bucket"`
-	Rationale      string           `json:"rationale"`
-	AcknowledgedBy string           `json:"acknowledged_by"`
-	Valid          bool             `json:"valid"`
-	InvalidReason  string           `json:"invalid_reason,omitempty"`
-	InvalidDetail  string           `json:"invalid_detail,omitempty"`
+	ControlID kernel.ControlID `json:"control_id"`
+	Bucket    string           `json:"bucket"`
+	Rationale string           `json:"rationale"`
+	// AcknowledgedBy / AcknowledgedDate carry the auditor identity
+	// and acceptance date so the report-side consumer (CLI render,
+	// downstream tooling, OSCAL POAM export) can attribute the
+	// exception without re-reading stave.yaml. Date is serialised as
+	// "YYYY-MM-DD" matching the on-disk format.
+	AcknowledgedBy   string `json:"acknowledged_by"`
+	AcknowledgedDate string `json:"acknowledged_date,omitempty"`
+	Valid            bool   `json:"valid"`
+	InvalidReason    string `json:"invalid_reason,omitempty"`
+	InvalidDetail    string `json:"invalid_detail,omitempty"`
 }
 
 // StatusLabel returns the canonical label a text reporter should

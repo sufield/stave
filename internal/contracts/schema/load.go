@@ -68,14 +68,14 @@ func ResolveVersion(kind Kind, version string) (string, error) {
 	if v == "" {
 		def, ok := defaultVersions[k]
 		if !ok {
-			return "", fmt.Errorf("no default version defined for schema kind %q", kind)
+			return "", fmt.Errorf("no default version defined for schema kind %q", k)
 		}
 		return def, nil
 	}
 
 	if _, ok := registry[k][v]; !ok {
 		return "", fmt.Errorf("unsupported version %q for kind %q (available: %s)",
-			v, kind, strings.Join(SupportedVersions(kind), ", "))
+			v, k, strings.Join(SupportedVersions(k), ", "))
 	}
 
 	return v, nil

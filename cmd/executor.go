@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -212,7 +214,19 @@ func (a *App) handleExecutionError(err error, args []string) {
 	if idx := strings.Index(msg, "\n"); idx > 0 {
 		msg = msg[:idx]
 	}
-	logger.Debug("command failed", "error", msg, "exit_code", exitCode)
+	// Classify context-cancelled / deadline-exceeded as interrupts
+	// rather than command failures: the command did not fault, the
+	// outer context tore it down (SIGINT, parent timeout). Logging
+	// these at the same level as a real command error makes
+	// signal-driven shutdowns look like crashes in the audit trail.
+	switch {
+	case errors.Is(err, context.Canceled):
+		logger.Info("command interrupted by context cancellation", "exit_code", exitCode)
+	case errors.Is(err, context.DeadlineExceeded):
+		logger.Info("command interrupted by deadline", "exit_code", exitCode)
+	default:
+		logger.Debug("command failed", "error", msg, "exit_code", exitCode)
+	}
 
 	// Sentinel errors (ErrViolationsFound, ErrSecurityAuditFindings,
 	// ErrInterrupted) already had their user-facing output produced

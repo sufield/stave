@@ -161,3 +161,45 @@ func TestApplyExceptions_ExceptionForUnknownControl(t *testing.T) {
 		t.Errorf("expected 0 acks for unknown control, got %d", len(acks))
 	}
 }
+
+func TestAcknowledgedResult_ToAcknowledgedEntry_AllFieldsProjected(t *testing.T) {
+	d := Date{}
+	if err := d.UnmarshalYAML(func(v any) error {
+		*(v.(*string)) = "2026-03-15"
+		return nil
+	}); err != nil {
+		t.Fatalf("UnmarshalYAML: %v", err)
+	}
+	r := &AcknowledgedResult{
+		ControlID:        kernel.ControlID("S3-001"),
+		Bucket:           "logs-prod",
+		Rationale:        "logging bucket excluded by policy",
+		AcknowledgedBy:   "alice@example.com",
+		AcknowledgedDate: d,
+		Valid:            false,
+		InvalidReason:    InvalidReasonExpired,
+		InvalidDetail:    "validity period ended 2026-01-15",
+	}
+	got := r.ToAcknowledgedEntry()
+	want := profile.AcknowledgedEntry{
+		ControlID:        kernel.ControlID("S3-001"),
+		Bucket:           "logs-prod",
+		Rationale:        "logging bucket excluded by policy",
+		AcknowledgedBy:   "alice@example.com",
+		AcknowledgedDate: "2026-03-15",
+		Valid:            false,
+		InvalidReason:    string(InvalidReasonExpired),
+		InvalidDetail:    "validity period ended 2026-01-15",
+	}
+	if got != want {
+		t.Errorf("ToAcknowledgedEntry() projection mismatch\n got:  %+v\n want: %+v", got, want)
+	}
+}
+
+func TestAcknowledgedResult_ToAcknowledgedEntry_NilReceiver(t *testing.T) {
+	var r *AcknowledgedResult
+	got := r.ToAcknowledgedEntry()
+	if got != (profile.AcknowledgedEntry{}) {
+		t.Errorf("nil receiver should project to zero entry, got %+v", got)
+	}
+}

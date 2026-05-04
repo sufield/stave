@@ -336,6 +336,12 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 		// components avoids the false positive on legitimate
 		// pre-existing ancestor symlinks that the earlier
 		// full-path EvalSymlinks compare hit.
+		//
+		// O(n²) is intentional: Lstat does not follow the leaf
+		// symlink but DOES traverse parent symlinks, so an O(n)
+		// "check current only" optimization would miss a parent
+		// swap (Lstat("a/b/c") would resolve a symlinked `a` and
+		// only return mode bits for the leaf `c`).
 		for _, p := range createdByUs {
 			pfi, plstatErr := os.Lstat(p)
 			if plstatErr != nil {
