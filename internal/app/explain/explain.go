@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"strings"
 
@@ -190,6 +191,19 @@ func setNested(root map[string]any, dotted string, val any) {
 		}
 		next, ok := curr[p].(map[string]any)
 		if !ok {
+			// Existing non-map value at an intermediate path segment
+			// gets clobbered. Surface a warning so a caller that
+			// tried to set both `a.b` (string) and `a.b.c` (any) sees
+			// the data loss instead of silently losing the leaf
+			// value. The existing value is still overwritten — the
+			// alternative (refusing to set `a.b.c`) would silently
+			// drop the new value, which is an equally bad failure
+			// mode but harder to detect.
+			if existing, present := curr[p]; present {
+				slog.Warn("explain.setNested: overwriting non-map intermediate value",
+					"path", dotted, "segment", p,
+					"existing_type", fmt.Sprintf("%T", existing))
+			}
 			next = map[string]any{}
 			curr[p] = next
 		}

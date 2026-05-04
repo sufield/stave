@@ -289,14 +289,23 @@ func filterAndNormalizeRefs(checkID string, refs []ControlRef, allowed map[Frame
 			return nil, fmt.Errorf("crosswalk entry for %q references unknown framework %q: %w",
 				checkID, r.Framework, canonErr)
 		}
-		if _, ok := allowed[f]; !ok {
-			continue
-		}
 
+		// Validate body fields BEFORE the user-filter check. A blank
+		// control_id or rationale in the crosswalk file is a typo
+		// regardless of which framework the operator selected — the
+		// previous shape only flagged it when the row's framework
+		// happened to be allowed, so a malformed row in a filtered
+		// framework hid until someone re-ran with that framework
+		// enabled. Same rationale as the canonicalizeFramework check
+		// above.
 		cID := strings.TrimSpace(r.ControlID)
 		rat := strings.TrimSpace(r.Rationale)
 		if cID == "" || rat == "" {
 			return nil, fmt.Errorf("crosswalk entry for %q has empty control_id or rationale", checkID)
+		}
+
+		if _, ok := allowed[f]; !ok {
+			continue
 		}
 
 		out = append(out, ControlRef{

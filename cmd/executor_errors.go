@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/sufield/stave/internal/cli/ui"
@@ -67,12 +68,21 @@ func errorInfoFromError(err error, message string) *ui.ErrorInfo {
 	}
 
 	if ui.IsSentinel(err) {
-		if tmpl, ok := sentinelTemplates[ExitCode(err)]; ok {
+		exit := ExitCode(err)
+		if tmpl, ok := sentinelTemplates[exit]; ok {
 			return ui.NewErrorInfo(tmpl.Code, message).
 				WithTitle(tmpl.Title).
 				WithAction(suggested + tmpl.Action).
 				WithURL(docsRef)
 		}
+		// Sentinel without a template entry means a new sentinel was
+		// added but sentinelTemplates wasn't extended — surface the
+		// gap via slog so a maintainer notices in -v mode rather than
+		// the operator silently getting the generic "Command failed"
+		// fallback. The exit code stays correct because ExitCode()
+		// classified it; only the user-facing template is missing.
+		slog.Warn("executor: sentinel error has no template entry; falling back to generic message",
+			"exit_code", exit, "error", message)
 	}
 
 	var userErr *ui.UserError

@@ -407,29 +407,18 @@ func (p *Profile) Evaluate(ctx context.Context, snap asset.Snapshot, registries 
 
 	compoundFindings := compound.Detect(compound.DefaultRules(), preSortOutcomes)
 
-	counts := make(map[policy.Severity]int)
-	failCounts := make(map[policy.Severity]int)
-	allPass := true
-	for _, r := range results {
-		counts[r.Severity]++
-		if !r.Pass {
-			failCounts[r.Severity]++
-			allPass = false
-		}
-	}
-	if len(compoundFindings) > 0 {
-		allPass = false
-	}
-
-	return Report{
+	report := Report{
 		ProfileID:        p.ID.String(),
 		ProfileName:      p.Name,
-		Pass:             allPass,
 		CompoundFindings: compoundFindings,
 		Results:          results,
-		Counts:           counts,
-		FailCounts:       failCounts,
-	}, nil
+	}
+	// Counts / FailCounts / Pass derive from Results + CompoundFindings.
+	// Funnel through Recount so this branch and every other mutation
+	// site (cmd/evaluate's exception applier, the compound-finding
+	// filter) share a single source of truth and cannot drift.
+	report.Recount()
+	return report, nil
 }
 
 // discoverControls builds the Control list by querying all

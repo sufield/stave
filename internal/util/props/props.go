@@ -31,14 +31,41 @@ func GetIn[T any](m map[string]any, path []string) (T, bool) {
 	return v, ok
 }
 
-// GetString is a convenience wrapper for string properties.
+// GetString is a convenience wrapper for string properties. Returns
+// "" when the path is missing or the value isn't a string. Callers
+// that need to distinguish "missing" from "empty string" should use
+// GetStringOk.
 func GetString(m map[string]any, path []string) string {
 	v, _ := GetIn[string](m, path)
 	return v
 }
 
-// GetBool is a convenience wrapper for bool properties.
+// GetStringOk returns the string at path together with the existence
+// flag from GetIn, so callers can branch on missing vs explicitly-set
+// empty.
+func GetStringOk(m map[string]any, path []string) (string, bool) {
+	return GetIn[string](m, path)
+}
+
+// GetBool is a convenience wrapper for bool properties. Returns
+// false when the path is missing or the value isn't a bool. Callers
+// that need to distinguish "missing" from "explicitly false" should
+// use GetBoolOk.
 func GetBool(m map[string]any, path []string) bool {
 	v, _ := GetIn[bool](m, path)
 	return v
+}
+
+// GetBoolOk returns the bool at path together with the existence flag
+// from GetIn, so callers can branch on missing vs explicitly-set false.
+func GetBoolOk(m map[string]any, path []string) (bool, bool) {
+	return GetIn[bool](m, path)
+}
+
+// HasPath reports whether path resolves to a value (of any type) in m.
+// Useful for existence-only checks where the value's type is not
+// known or not needed at the call site.
+func HasPath(m map[string]any, path []string) bool {
+	_, ok := GetIn[any](m, path)
+	return ok
 }

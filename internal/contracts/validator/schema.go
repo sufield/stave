@@ -267,10 +267,17 @@ func flattenErrors(err error) []Diagnostic {
 }
 
 // IsLikelyYAML performs a heuristic check to see if bytes represent YAML or JSON.
+//
+// Empty input returns true: the previous shape returned false, which
+// implied "definitely JSON" and steered downstream parsers into a
+// JSON unmarshal that produced confusing "unexpected end of JSON
+// input" errors. YAML legitimately represents an empty document, so
+// the heuristic stays consistent with the YAML spec rather than
+// guessing JSON for content with no leading token.
 func IsLikelyYAML(raw []byte) bool {
 	s := strings.TrimSpace(string(raw))
 	if s == "" {
-		return false
+		return true
 	}
 	return s[0] != '{' && s[0] != '['
 }

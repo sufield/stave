@@ -118,9 +118,17 @@ func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) 
 		return syntaxErrorResult(cfg.FormatName, err), nil
 	}
 
-	actual := partial.Version
-	if actual == "" {
+	// Pick the version field the document was declared to carry. The
+	// previous shape always preferred schema_version over dsl_version,
+	// so a controls document (cfg.VersionField = "dsl_version") with a
+	// stray schema_version key would silently use the wrong value.
+	// cfg.VersionField is the contract; honour it.
+	var actual string
+	switch cfg.VersionField {
+	case "dsl_version":
 		actual = partial.DSL
+	default:
+		actual = partial.Version
 	}
 
 	if strings.TrimSpace(actual) == "" {

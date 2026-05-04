@@ -40,6 +40,15 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 		// Format.Set adds validation, fail loud at startup.
 		panic("flags: failed to seed log-format default: " + err.Error())
 	}
+	// pflag has no public API to mark a flag as "default-seeded" after
+	// Value.Set — the only path it offers is the constructor family
+	// (StringVar, etc.), which doesn't accept a pflag.Value. We seed
+	// via Value.Set above to honour the typed-Value contract on
+	// LogFormat, then patch DefValue / Changed back to the
+	// "user did not pass --log-format" state by direct field mutation.
+	// Direct mutation is normally a smell but here it's a known
+	// upstream gap; track the relevant pflag issues / consider
+	// migrating off `Value` if pflag ever exposes a SetDefault hook.
 	p.Lookup("log-format").DefValue = "text"
 	p.Lookup("log-format").Changed = false
 	p.StringVar(&flags.LogFile, cliflags.FlagLogFile, "", "Write logs to file (default: stderr)")

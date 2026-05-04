@@ -42,6 +42,13 @@ func SignAssets(assets []asset.Asset, privateKey ed25519.PrivateKey, hostname, v
 	}
 
 	sig := ed25519.Sign(privateKey, canonical)
+	// crypto/ed25519's PrivateKey.Public() always returns an
+	// ed25519.PublicKey for a correctly-typed receiver, so this
+	// assertion cannot fail today. Kept as defense-in-depth: if a
+	// future stdlib change ever broadens the Public() return type,
+	// fingerprinting the wrong key would silently produce signatures
+	// no verifier could check. Failing fast here is cheaper than a
+	// "valid signature, wrong fingerprint" debugging session.
 	pubKey, ok := privateKey.Public().(ed25519.PublicKey)
 	if !ok {
 		return nil, errors.New("private key does not produce Ed25519 public key")

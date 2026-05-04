@@ -302,6 +302,23 @@ func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucke
 			}
 		}
 
+		// InvalidReason priority order (highest first):
+		//   1. InvalidReasonExpired
+		//   2. InvalidReasonNoCompensatingControls
+		//   3. InvalidReasonCompensatingFailed
+		//
+		// When an exception trips multiple conditions (e.g. expired
+		// AND empty RequiresPassing), only the highest-priority
+		// reason is reported on AcknowledgedResult. Expiry wins
+		// because the operator's promise to watch the
+		// compensating-control state has aged out — re-acknowledging
+		// with a fresh date is the prerequisite for any further
+		// triage of the underlying compensating-control set. The
+		// InvalidReason field is a single value, not a set; if a
+		// future report needs to surface every applicable reason,
+		// extend the type rather than concatenating into the detail
+		// string (renderers parse the reason classifier verbatim).
+		//
 		// Expiry check runs before compensating-control check. An
 		// expired exception is invalid regardless of whether the
 		// compensating controls happen to still pass — the

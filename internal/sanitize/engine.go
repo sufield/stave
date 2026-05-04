@@ -127,6 +127,18 @@ func (s *Sanitizer) Path(p string) string {
 // ScrubMessage replaces absolute paths in a free-form string (e.g. an
 // error message) with their basenames.
 //
+// Basename-only is intentional: intermediate path segments
+// (e.g. `/run/secrets/token` → `/token`) are dropped on purpose because
+// the directory layout itself can leak deployment topology — the
+// presence of `/run/secrets/` reveals the operator is using a specific
+// secrets-management convention, the depth reveals nesting, and the
+// sibling sub-paths leak adjacent secret names through autocomplete or
+// repeat-error scenarios. Preserving an intermediate marker like
+// `/.../basename` would still reveal "this was a multi-segment path",
+// which is more than the redaction intends to disclose. If a future
+// caller wants to keep more structure, add a separate Scrub mode
+// rather than relaxing this default.
+//
 // PathMode no longer gates this redaction. PathFull is about how
 // the operator-supplied paths render in user-facing output; it is
 // not about whether credentials embedded in error messages get

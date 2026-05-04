@@ -131,7 +131,7 @@ func NewAuditWorkflow(
 func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentConfig) (evaluation.ComplianceReport, evaluation.SecurityState, error) {
 	auditData := w.prepareAuditData(ctx, cfg.ObservationConfig)
 	if auditData.HasErrors() {
-		return evaluation.ComplianceReport{}, "", auditData.FirstError()
+		return evaluation.ComplianceReport{}, evaluation.StateUnknown, auditData.FirstError()
 	}
 	w.cacheMu.Lock()
 	w.loadedControls = auditData.Controls
@@ -155,7 +155,7 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 		Tracer:               cfg.Tracer,
 	})
 	if err != nil {
-		return evaluation.ComplianceReport{}, "", fmt.Errorf("security assessment failed: %w", err)
+		return evaluation.ComplianceReport{}, evaluation.StateUnknown, fmt.Errorf("security assessment failed: %w", err)
 	}
 
 	// Run the risk reasoning engine: detect chain-based compound findings
@@ -272,8 +272,15 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 		}
 		f := &report.Findings[er.FindingIndex]
 		f.ExposureScore = er.ExposureScore
-		breakdown := er.Breakdown
-		f.ScoreBreakdown = &breakdown
+		// Point directly at the slice element's field. The previous
+		// shape (`breakdown := er.Breakdown; f.ScoreBreakdown = &breakdown`)
+		// allocated a fresh per-iteration copy; pointing into the
+		// existing TopExposures slice avoids the per-iteration alloc
+		// and keeps the score breakdown a single source of truth.
+		// TopExposures is not mutated after this loop (sortFindings
+		// below reorders Findings, not TopExposures), so the shared
+		// pointer is stable for the report's lifetime.
+		f.ScoreBreakdown = &er.Breakdown
 	}
 
 	// Re-sort findings by the newly-populated score.

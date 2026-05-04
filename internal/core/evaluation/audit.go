@@ -26,6 +26,13 @@ const (
 	StateCompliant    SecurityState = "COMPLIANT"
 	StateAtRisk       SecurityState = "AT_RISK"
 	StateNonCompliant SecurityState = "NON_COMPLIANT"
+	// StateUnknown is the explicit zero/error value: used when an
+	// assessment short-circuits before posture can be derived (data
+	// load failed, audit prep errored). Callers comparing posture
+	// strings should not collapse this to "" silently — that path
+	// previously rendered an unset wire field that downstream
+	// consumers could not distinguish from a missing assessment.
+	StateUnknown SecurityState = ""
 )
 
 // SecurityState derives the overall posture from the summary's

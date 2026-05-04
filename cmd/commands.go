@@ -319,7 +319,13 @@ func wireCISubtree(
 	newCtlRepo compose.CtlRepoFactory,
 	newObsRepo compose.ObsRepoFactory,
 ) error {
-	baselineFileOpts := fileout.FileOptions{}
+	// DirPerms defaults to 0o755: the parent dir for the baseline
+	// file might not exist on first run, and SafeMkdirAll passes the
+	// FileMode through to os.Mkdir verbatim — a zero DirPerms would
+	// create the directory with mode 0000 (no rwx for anyone) and
+	// the subsequent SafeCreateFile would fail with "permission
+	// denied" on a directory we just made ourselves.
+	baselineFileOpts := fileout.FileOptions{DirPerms: 0o755}
 
 	baselineWriter, bwErr := infrabaseline.NewWriter(func(path string) (*os.File, error) {
 		return fileout.OpenOutputFile(path, baselineFileOpts)
