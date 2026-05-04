@@ -57,23 +57,27 @@ func (f *Finding) AnnotateSLA(ctl *policy.ControlDefinition, cfg *SLAConfig) {
 	overdue := dwell - deadlineHours
 	f.slaOverdueHours = &overdue
 
-	// Escalation: bump severity by one tier per multiple of the
-	// deadline elapsed. The mapping is intentionally measured in
-	// dwell, not overdue:
+	// Escalation: bump severity by tier-count derived from how many
+	// (deadline × EscalationFactor) periods of dwell have elapsed.
+	// Tier-count layout:
 	//
 	//   dwell ∈ (1×, 2×) → +1 tier
 	//   dwell ∈ [2×, 3×) → +2 tiers
-	//   dwell ∈ [3×, ∞)  → +3 tiers (then capped at critical)
+	//   dwell ∈ [3×, ∞)  → +3 tiers (capped at critical via Bump)
 	//
-	// The earlier formula divided `overdue` by `deadline` and
-	// floored, so dwell of exactly 2× gave overdue/deadline = 1.0,
-	// floor = 1, producing only +1 tier — off by one. Using
-	// `int(dwell/deadline)` directly fixes the boundary so a finding
-	// that has sat at twice the SLA deadline visibly escalates two
-	// tiers, and three times escalates three. The explicit max(,1)
-	// preserves the "anything past deadline gets at least +1"
-	// behavior for the just-breached case (dwell ≈ 1.001×).
-	periodsOverdue := max(int(dwell/deadlineHours), 1)
+	// EscalationFactor scales the period length: a factor of 2 means
+	// the operator wants escalation only every TWO deadlines of
+	// overrun (more lenient than 1×); a factor of 0.5 escalates
+	// every half-deadline (stricter). The previous shape silently
+	// ignored EscalationFactor by dividing dwell by deadlineHours
+	// directly. A non-positive EscalationFactor falls back to 1.0
+	// to preserve the default behaviour.
+	factor := cfg.EscalationFactor
+	if factor <= 0 {
+		factor = 1.0
+	}
+	periodHours := deadlineHours * factor
+	periodsOverdue := max(int(dwell/periodHours), 1)
 	escalated := f.ControlSeverity.Bump(periodsOverdue)
 	if escalated != f.ControlSeverity {
 		f.slaEscalatedSeverity = escalated

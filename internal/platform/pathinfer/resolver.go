@@ -40,12 +40,19 @@ var (
 //
 // The environ parameter controls environment lookups (pass os.Getenv
 // in production; inject a stub in tests).
-func BaseDir(environ ...func(string) string) (string, error) {
-	lookup := os.Getenv
-	if len(environ) > 0 && environ[0] != nil {
-		lookup = environ[0]
+//
+// Optional BaseDirOption values let callers swap the cwd lookup —
+// useful for tests that need a deterministic fallback without
+// chdir'ing the process.
+func BaseDir(opts ...BaseDirOption) (string, error) {
+	cfg := baseDirConfig{
+		lookup: os.Getenv,
+		getwd:  os.Getwd,
 	}
-	if root := lookup(env.ProjectRoot.Name); root != "" {
+	for _, o := range opts {
+		o(&cfg)
+	}
+	if root := cfg.lookup(env.ProjectRoot.Name); root != "" {
 		fi, err := os.Stat(root)
 		switch {
 		case err != nil:
@@ -58,7 +65,36 @@ func BaseDir(environ ...func(string) string) (string, error) {
 			return root, nil
 		}
 	}
-	return os.Getwd()
+	return cfg.getwd()
+}
+
+// BaseDirOption configures BaseDir's lookup hooks.
+type BaseDirOption func(*baseDirConfig)
+
+type baseDirConfig struct {
+	lookup func(string) string
+	getwd  func() (string, error)
+}
+
+// WithEnviron overrides the env-lookup function (defaults to os.Getenv).
+func WithEnviron(lookup func(string) string) BaseDirOption {
+	return func(c *baseDirConfig) {
+		if lookup != nil {
+			c.lookup = lookup
+		}
+	}
+}
+
+// WithGetwd overrides the cwd-lookup function (defaults to os.Getwd).
+// Tests that exercise the STAVE_PROJECT_ROOT-unset / fallback path
+// inject a deterministic getwd here instead of chdir'ing the test
+// process.
+func WithGetwd(getwd func() (string, error)) BaseDirOption {
+	return func(c *baseDirConfig) {
+		if getwd != nil {
+			c.getwd = getwd
+		}
+	}
 }
 
 // Unique looks for a directory named name under base.

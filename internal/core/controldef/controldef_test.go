@@ -749,7 +749,7 @@ func TestRecurrencePolicyEnabled(t *testing.T) {
 		{3, 7, true},
 	}
 	for _, tt := range tests {
-		p := RecurrencePolicy{Limit: tt.limit, WindowDays: tt.window}
+		p := RecurrencePolicy{Threshold: tt.limit, WindowDays: tt.window}
 		if got := p.Enabled(); got != tt.want {
 			t.Errorf("Enabled(%d,%d) = %v, want %v", tt.limit, tt.window, got, tt.want)
 		}
@@ -757,7 +757,7 @@ func TestRecurrencePolicyEnabled(t *testing.T) {
 }
 
 func TestRecurrencePolicyWindowDuration(t *testing.T) {
-	p := RecurrencePolicy{Limit: 3, WindowDays: 7}
+	p := RecurrencePolicy{Threshold: 3, WindowDays: 7}
 	if got := p.WindowDuration(); got != 7*24*time.Hour {
 		t.Fatalf("WindowDuration = %v", got)
 	}
@@ -774,7 +774,7 @@ func TestRecurrencePolicyWindow(t *testing.T) {
 	}
 
 	// Enabled
-	p := RecurrencePolicy{Limit: 3, WindowDays: 7}
+	p := RecurrencePolicy{Threshold: 3, WindowDays: 7}
 	w = p.Window(now)
 	if w.End != now {
 		t.Fatalf("End = %v, want %v", w.End, now)
@@ -787,11 +787,11 @@ func TestRecurrencePolicyWindow(t *testing.T) {
 
 func TestParseRecurrencePolicy(t *testing.T) {
 	p := NewParams(map[string]any{
-		"recurrence_limit": 3,
-		"window_days":      7,
+		"recurrence_threshold": 3,
+		"window_days":          7,
 	})
 	rp := ParseRecurrencePolicy(p)
-	if rp.Limit != 3 || rp.WindowDays != 7 {
+	if rp.Threshold != 3 || rp.WindowDays != 7 {
 		t.Fatalf("got %+v", rp)
 	}
 }

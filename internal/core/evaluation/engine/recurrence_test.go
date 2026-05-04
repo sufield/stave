@@ -15,7 +15,7 @@ import (
 
 func recurrenceControl(id string, limit, windowDays int) *policy.ControlDefinition {
 	params := policy.ControlParams{}
-	params.Set("recurrence_limit", limit)
+	params.Set("recurrence_threshold", limit)
 	params.Set("window_days", windowDays)
 	ctl := &policy.ControlDefinition{
 		ID:     kernel.ControlID(id),
@@ -179,8 +179,8 @@ func TestCreateRecurrenceFinding_Fields(t *testing.T) {
 	if finding.Evidence.ExposureWindowCount != 3 {
 		t.Fatalf("ExposureWindowCount = %d, want 3", finding.Evidence.ExposureWindowCount)
 	}
-	if finding.Evidence.RecurrenceLimit != 2 {
-		t.Fatalf("RecurrenceLimit = %d, want 2", finding.Evidence.RecurrenceLimit)
+	if finding.Evidence.RecurrenceThreshold != 2 {
+		t.Fatalf("RecurrenceThreshold = %d, want 2", finding.Evidence.RecurrenceThreshold)
 	}
 	if finding.Evidence.WindowDays != 7 {
 		t.Fatalf("WindowDays = %d, want 7", finding.Evidence.WindowDays)
@@ -188,7 +188,7 @@ func TestCreateRecurrenceFinding_Fields(t *testing.T) {
 }
 
 func TestRecurrence_ExactlyAtLimitFires(t *testing.T) {
-	// `recurrence_limit: N` means "N occurrences is already too many".
+	// `recurrence_threshold: N` means "N occurrences is already too many".
 	// count == limit fires; only count < limit is compliant.
 	ctl := recurrenceControl("CTL.RECUR.BOUNDARY.001", 3, 90)
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)

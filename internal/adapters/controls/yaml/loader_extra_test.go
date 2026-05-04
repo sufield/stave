@@ -171,7 +171,7 @@ description: Test params field
 type: unsafe_state
 params:
   max_unsafe_duration: "168h"
-  recurrence_limit: 3
+  recurrence_threshold: 3
 unsafe_predicate:
   any:
     - field: "properties.x"

@@ -466,5 +466,5 @@ func isEffectivelyBroadResource(resource string) bool {
 	// covers the rest of a service / account scope. Conservative
 	// (over-classifies rather than under-classifies) so a future
 	// scoped-down ARN catches less, not more.
-	return len(resource) > 0 && resource[len(resource)-1] == '*'
+	return resource != "" && resource[len(resource)-1] == '*'
 }

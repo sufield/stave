@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"log/slog"
+	"math"
 
 	"github.com/sufield/stave/internal/adapters/pruner"
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -42,8 +43,31 @@ const (
 	// memory before parsing — and on 32-bit hosts would overflow
 	// int conversions in fsutil. Operators staging genuinely large
 	// inputs should split them rather than raise this limit.
+	//
+	// 32-BIT NOTE: this constant is `int` and on 32-bit platforms
+	// `int` is 32 bits, so 4 GiB literally cannot be expressed —
+	// the package-level cap is clamped at runtime by
+	// effectiveMaxConfigurableInputFileBytes() to math.MaxInt32-1.
+	// All readers should call that helper rather than referencing
+	// the constant directly when sizing platform-bounded buffers.
 	MaxConfigurableInputFileBytes = 4 * 1024 * 1024 * 1024
 )
+
+// effectiveMaxConfigurableInputFileBytes returns the configured
+// input-file cap clamped to the host's int range. On 64-bit hosts
+// it returns MaxConfigurableInputFileBytes unchanged (4 GiB fits
+// trivially). On 32-bit hosts it clamps at math.MaxInt32 - 1 so the
+// constant cannot overflow downstream `int` math in fsutil.
+func effectiveMaxConfigurableInputFileBytes() int64 {
+	const cap32 = int64(math.MaxInt32 - 1)
+	if MaxConfigurableInputFileBytes > cap32 {
+		// 32-bit host: the literal already wraps, so guard against
+		// a wrapped (negative) value in addition to clamping the
+		// successful path.
+		return cap32
+	}
+	return int64(MaxConfigurableInputFileBytes)
+}
 
 // resolveConfigurableLimits applies user-configurable runtime limits
 // from stave.yaml. Invalid values are warned about (so the operator
@@ -66,13 +90,17 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 		logger = slog.Default()
 	}
 
-	// Max input file size (default 256 MB)
+	// Max input file size (default 256 MB). Cap reads via
+	// effectiveMaxConfigurableInputFileBytes so a 32-bit host clamps
+	// below math.MaxInt32 — the package constant is 4 GiB which
+	// exceeds the int range on those platforms.
+	maxBytes := effectiveMaxConfigurableInputFileBytes()
 	if raw := eval.MaxInputFileSize(); raw != "" {
 		if n, err := kernel.ParseByteSize(raw); err == nil {
-			if n > MaxConfigurableInputFileBytes {
+			if n > maxBytes {
 				logger.Warn("config: clamping max_input_file_size to configured maximum",
-					"requested", n, "max", MaxConfigurableInputFileBytes)
-				n = MaxConfigurableInputFileBytes
+					"requested", n, "max", maxBytes)
+				n = maxBytes
 			}
 			fsutil.SetMaxInputFileBytes(n)
 		} else {
@@ -87,7 +115,14 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 
 	// Confidence classification multipliers (default HIGH=4x, MEDIUM=2x).
 	// Stored on App and passed to Assessor during wiring, not as global state.
-	a.Confidence = evaluation.DefaultConfidenceCalculator()
+	//
+	// Only seed defaults when the field is its zero value. App is not
+	// designed for reuse across bootstrap calls, but a test harness
+	// that pre-populates a.Confidence with custom multipliers should
+	// not have its values silently clobbered here.
+	if a.Confidence == (evaluation.ConfidenceCalculator{}) {
+		a.Confidence = evaluation.DefaultConfidenceCalculator()
+	}
 	if h, m := eval.ConfidenceHighMultiplier(), eval.ConfidenceMedMultiplier(); h > 0 || m > 0 {
 		if h > 0 {
 			if h > MaxConfigurableConfidenceMultiplier {

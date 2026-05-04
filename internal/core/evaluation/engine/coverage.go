@@ -18,15 +18,17 @@ type CoverageValidator struct {
 // be strictly positive: a zero-span validator considers every
 // observation window "long enough", letting controls fire on the
 // first collection — the opposite of the validator's purpose.
-// minSpan must also be > maxGap; a maxGap that exceeds the minimum
-// required span would always trip the gap check before the span
-// check, leaving no observation pattern that could pass.
+// minSpan must also be ≥ maxGap; a maxGap that strictly exceeds
+// minSpan would always trip the gap check before the span check.
+// minSpan == maxGap is permitted: it describes the boundary
+// configuration where a single uninterrupted observation just
+// covers the required window.
 func NewCoverageValidator(minSpan, maxGap time.Duration) (*CoverageValidator, error) {
 	if minSpan <= 0 {
 		return nil, fmt.Errorf("engine.NewCoverageValidator: minSpan must be > 0 (got %s); a zero/negative span makes the validator permanently passing", minSpan)
 	}
-	if maxGap > 0 && minSpan <= maxGap {
-		return nil, fmt.Errorf("engine.NewCoverageValidator: minSpan (%s) must exceed maxGap (%s)", minSpan, maxGap)
+	if maxGap > 0 && minSpan < maxGap {
+		return nil, fmt.Errorf("engine.NewCoverageValidator: minSpan (%s) must be greater than or equal to maxGap (%s)", minSpan, maxGap)
 	}
 	return &CoverageValidator{minRequiredSpan: minSpan, maxAllowedGap: maxGap}, nil
 }

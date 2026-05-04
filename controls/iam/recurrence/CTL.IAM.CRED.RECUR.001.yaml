@@ -18,7 +18,7 @@ scope_tags:
 type: unsafe_recurrence
 classification: aggregate_check
 params:
-  recurrence_limit: 1
+  recurrence_threshold: 1
   window_days: 30
   attack_stage: persistence
 remediation:

@@ -328,7 +328,7 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 
 	if !p.Enabled() {
 		// "Disabled" here means the control's params don't carry the
-		// recurrence_limit and window_days fields the policy needs to
+		// recurrence_threshold and window_days fields the policy needs to
 		// run. The earlier shape returned VerdictPass, which read as
 		// "we evaluated this and the asset is fine" — but in fact the
 		// evaluator never executed any check. Downstream reporters
@@ -342,7 +342,7 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 
 	span.RecordStep("predicate_evaluation", map[string]any{
 		"exposure_window_count": t.History().Count(),
-		"recurrence_limit":      p.Limit,
+		"recurrence_threshold":  p.Threshold,
 		"window_days":           int(p.WindowDuration().Hours() / 24),
 	}, map[string]any{
 		"matched": t.IsExposed(),

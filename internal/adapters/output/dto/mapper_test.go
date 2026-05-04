@@ -513,7 +513,7 @@ func TestFromEvidence_WithAllFields(t *testing.T) {
 		ThresholdHours:        24,
 		ExposureWindowCount:   2,
 		WindowDays:            30,
-		RecurrenceLimit:       3,
+		RecurrenceThreshold:   3,
 		FirstExposureWindowAt: now.Add(-72 * time.Hour),
 		LastExposureWindowAt:  now,
 		TemporalRisk:          "threshold exceeded",

@@ -169,6 +169,11 @@ func TestFindingAnnotateSLA_2xDwellEscalates_2Tiers(t *testing.T) {
 	if deadline == 0 {
 		t.Fatal("test fixture relies on medium having a non-zero deadline")
 	}
+	// EscalationFactor=1 makes "2× dwell" equal "2 periods", producing
+	// the +2 tier bump this test name documents. The package default
+	// (1.5) is a more lenient real-world setting; isolate this test
+	// with factor=1 so the tier-count assertion stays meaningful.
+	cfg.EscalationFactor = 1
 	f := Finding{
 		ControlSeverity: policy.SeverityMedium,
 		Evidence:        Evidence{UnsafeDurationHours: 2 * deadline},
@@ -190,6 +195,7 @@ func TestFindingAnnotateSLA_3xDwellEscalates_3Tiers(t *testing.T) {
 	if deadline == 0 {
 		t.Fatal("test fixture relies on low having a non-zero deadline")
 	}
+	cfg.EscalationFactor = 1 // see TestFindingAnnotateSLA_2x for rationale
 	f := Finding{
 		ControlSeverity: policy.SeverityLow,
 		Evidence:        Evidence{UnsafeDurationHours: 3 * deadline},

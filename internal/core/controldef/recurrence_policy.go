@@ -7,35 +7,35 @@ import (
 )
 
 const (
-	paramRecurrenceLimit = "recurrence_limit"
-	paramWindowDays      = "window_days"
+	paramRecurrenceThreshold = "recurrence_threshold"
+	paramWindowDays          = "window_days"
 )
 
 // RecurrencePolicy defines the thresholds for frequency-based security violations.
 // Example: "Flag if an asset becomes unsafe 3 times within a 7-day window."
 type RecurrencePolicy struct {
-	// Limit is the count at which a finding fires — *not* a tolerance.
-	// `Limit: 3` means "the third occurrence already triggers a
-	// violation"; counts strictly less than Limit are compliant. This
-	// is asymmetric on purpose: the configured number is the count
-	// the operator considers unacceptable, not the last one they're
+	// Threshold is the inclusive count at which a finding fires:
+	// `Threshold: 3` means "the third occurrence already triggers a
+	// violation" (count >= Threshold fires; count < Threshold is
+	// within tolerance). The configured number is the count the
+	// operator considers unacceptable, not the last one they're
 	// willing to ignore. See engine/recurrence.go and the
-	// TestRecurrence_ExactlyAtLimitFires fixture for the contract.
-	Limit      int
+	// TestRecurrence_ExactlyAtThresholdFires fixture for the contract.
+	Threshold  int
 	WindowDays int
 }
 
 // ParseRecurrencePolicy extracts recurrence settings from the raw control parameters.
 func ParseRecurrencePolicy(params ControlParams) RecurrencePolicy {
 	return RecurrencePolicy{
-		Limit:      params.paramInt(paramRecurrenceLimit),
+		Threshold:  params.paramInt(paramRecurrenceThreshold),
 		WindowDays: params.paramInt(paramWindowDays),
 	}
 }
 
 // Enabled reports whether the policy has valid parameters to perform an evaluation.
 func (p RecurrencePolicy) Enabled() bool {
-	return p.Limit > 0 && p.WindowDays > 0
+	return p.Threshold > 0 && p.WindowDays > 0
 }
 
 // WindowDuration converts the day-based window into a standard time.Duration.

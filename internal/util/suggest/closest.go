@@ -41,7 +41,17 @@ func Closest(input string, candidates []string) string {
 		if d > maxDist {
 			continue
 		}
-		if best == "" || d < bestDist || (d == bestDist && norm < bestNorm) {
+		// Tertiary tiebreak on the original (non-normalized) string
+		// guarantees deterministic output when two candidates
+		// normalise to the same value (e.g. "stave-init" and
+		// "Stave-Init" both → "stave-init"). Without it the result
+		// depended on iteration order — fine for `range slice`, but
+		// not for `range map` which produces a different
+		// suggestion across runs.
+		if best == "" ||
+			d < bestDist ||
+			(d == bestDist && norm < bestNorm) ||
+			(d == bestDist && norm == bestNorm && candidate < best) {
 			best = candidate
 			bestNorm = norm
 			bestDist = d

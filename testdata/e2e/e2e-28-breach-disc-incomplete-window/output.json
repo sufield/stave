@@ -42,7 +42,7 @@
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
         "exposure_window_count": 2,
         "window_days": 90,
-        "recurrence_limit": 2,
+        "recurrence_threshold": 2,
         "first_exposure_window_at": "2026-01-01T00:00:00Z",
         "last_exposure_window_at": "2026-01-11T00:00:00Z"
       },

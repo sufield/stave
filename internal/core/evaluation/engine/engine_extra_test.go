@@ -366,8 +366,8 @@ func TestCreateRecurrenceFinding(t *testing.T) {
 		Name: "recurrence test",
 		Type: policy.TypeUnsafeRecurrence,
 		Params: policy.NewParams(map[string]any{
-			"recurrence_limit": 3,
-			"window_days":      7,
+			"recurrence_threshold": 3,
+			"window_days":          7,
 		}),
 	}
 
@@ -387,8 +387,8 @@ func TestCreateRecurrenceFinding(t *testing.T) {
 	if f.Evidence.WindowDays != 7 {
 		t.Fatalf("WindowDays = %d", f.Evidence.WindowDays)
 	}
-	if f.Evidence.RecurrenceLimit != 3 {
-		t.Fatalf("RecurrenceLimit = %d", f.Evidence.RecurrenceLimit)
+	if f.Evidence.RecurrenceThreshold != 3 {
+		t.Fatalf("RecurrenceThreshold = %d", f.Evidence.RecurrenceThreshold)
 	}
 }
 

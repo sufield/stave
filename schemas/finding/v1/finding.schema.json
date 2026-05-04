@@ -297,7 +297,7 @@
           "title": "Lookback Window (days)",
           "description": "Lookback period used to compute exposure_window_count, in days."
         },
-        "recurrence_limit": {
+        "recurrence_threshold": {
           "type": "integer",
           "minimum": 0,
           "title": "Recurrence Limit",

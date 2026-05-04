@@ -31,9 +31,13 @@ func TestSanitizer_PathRespectsMode(t *testing.T) {
 }
 
 func TestSanitizer_ScrubMessage(t *testing.T) {
+	// Output preserves the leading "/" so the scrubbed message
+	// reads grammatically: "cannot read /[BASENAME]:" rather than
+	// "cannot read [BASENAME]:" which loses the absolute-path
+	// signal.
 	baseSan := Policy{SanitizeIDs: true, PathMode: PathBase}.NewSanitizer()
 	got := baseSan.ScrubMessage("cannot read /home/user/data/obs.json: no such file")
-	if got != "cannot read obs.json: no such file" {
+	if got != "cannot read /obs.json: no such file" {
 		t.Errorf("ScrubMessage() with PathBase = %q", got)
 	}
 
@@ -44,7 +48,7 @@ func TestSanitizer_ScrubMessage(t *testing.T) {
 	// secrets like `/secret/token` slip through whenever
 	// `--path-mode=full` was set for unrelated reasons.
 	fullSan := Policy{SanitizeIDs: true, PathMode: PathFull}.NewSanitizer()
-	if got := fullSan.ScrubMessage("cannot read /home/user/data/obs.json: no such file"); got != "cannot read obs.json: no such file" {
+	if got := fullSan.ScrubMessage("cannot read /home/user/data/obs.json: no such file"); got != "cannot read /obs.json: no such file" {
 		t.Errorf("ScrubMessage() should always scrub credential paths regardless of PathMode; got %q", got)
 	}
 }
@@ -64,9 +68,11 @@ func TestSanitizer_ScrubMessage_PreservesURLs(t *testing.T) {
 			"failed to fetch http://example.com/secret"},
 		{"upload to https://bucket.s3.amazonaws.com/data/x.json",
 			"upload to https://bucket.s3.amazonaws.com/data/x.json"},
-		// Path-and-URL mixed: URL preserved, file path scrubbed.
+		// Path-and-URL mixed: URL preserved, file path scrubbed
+		// (leading "/" preserved on the basename to keep the
+		// absolute-path signal in the error string).
 		{"cannot reach http://example.com/x: open /home/u/data: denied",
-			"cannot reach http://example.com/x: open data: denied"},
+			"cannot reach http://example.com/x: open /data: denied"},
 	}
 	for _, tc := range cases {
 		got := s.ScrubMessage(tc.in)
@@ -86,9 +92,9 @@ func TestSanitizer_ScrubMessage_SingleComponentPath(t *testing.T) {
 		in   string
 		want string
 	}{
-		{"cannot read /secret: permission denied", "cannot read secret: permission denied"},
-		{"open /token failed", "open token failed"},
-		{"existing /home/user/data/obs.json untouched", "existing obs.json untouched"},
+		{"cannot read /secret: permission denied", "cannot read /secret: permission denied"},
+		{"open /token failed", "open /token failed"},
+		{"existing /home/user/data/obs.json untouched", "existing /obs.json untouched"},
 		{"empty path / not collapsed", "empty path / not collapsed"}, // bare slash, no basename
 	}
 	for _, tc := range cases {
@@ -111,11 +117,11 @@ func TestSanitizer_ScrubMessage_TrailingSlashPath(t *testing.T) {
 		in   string
 		want string
 	}{
-		{"failed to read /run/secrets/", "failed to read secrets/"},
-		{"mount: /var/run/keys/ is read-only", "mount: keys/ is read-only"},
+		{"failed to read /run/secrets/", "failed to read /secrets/"},
+		{"mount: /var/run/keys/ is read-only", "mount: /keys/ is read-only"},
 		// Confirm the non-trailing-slash variant still matches via
 		// the basename branch.
-		{"open /run/secrets/token", "open token"},
+		{"open /run/secrets/token", "open /token"},
 	}
 	for _, tc := range cases {
 		got := s.ScrubMessage(tc.in)

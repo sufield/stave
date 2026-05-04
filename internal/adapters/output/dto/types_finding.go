@@ -152,7 +152,7 @@ type EvidenceDTO struct {
 	ThresholdHours        float64               `json:"threshold_hours,omitempty"`
 	ExposureWindowCount   int                   `json:"exposure_window_count,omitempty"`
 	WindowDays            int                   `json:"window_days,omitempty"`
-	RecurrenceLimit       int                   `json:"recurrence_limit,omitempty"`
+	RecurrenceThreshold   int                   `json:"recurrence_threshold,omitempty"`
 	FirstExposureWindowAt time.Time             `json:"first_exposure_window_at,omitzero"`
 	LastExposureWindowAt  time.Time             `json:"last_exposure_window_at,omitzero"`
 	Misconfigurations     []MisconfigurationDTO `json:"misconfigurations,omitempty"`

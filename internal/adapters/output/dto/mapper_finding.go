@@ -203,7 +203,7 @@ func fromEvidence(e evaluation.Evidence) EvidenceDTO {
 		ThresholdHours:        e.ThresholdHours,
 		ExposureWindowCount:   e.ExposureWindowCount,
 		WindowDays:            e.WindowDays,
-		RecurrenceLimit:       e.RecurrenceLimit,
+		RecurrenceThreshold:   e.RecurrenceThreshold,
 		FirstExposureWindowAt: e.FirstExposureWindowAt,
 		LastExposureWindowAt:  e.LastExposureWindowAt,
 		TemporalRisk:          e.TemporalRisk,

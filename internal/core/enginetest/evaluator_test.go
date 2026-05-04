@@ -601,8 +601,8 @@ func TestEvaluator_OpenWindowNotInWindowsList(t *testing.T) {
 			ID:   "CTL.EXP.RECURRENCE.001",
 			Type: policy.TypeUnsafeRecurrence,
 			Params: policy.NewParams(map[string]any{
-				"recurrence_limit": 3,
-				"window_days":      90,
+				"recurrence_threshold": 3,
+				"window_days":          90,
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
@@ -769,8 +769,8 @@ func TestEvaluator_TypeGating(t *testing.T) {
 				ID:   "CTL.RECURRENCE.001",
 				Type: policy.TypeUnsafeRecurrence,
 				Params: policy.NewParams(map[string]any{
-					"recurrence_limit": 2,
-					"window_days":      90,
+					"recurrence_threshold": 2,
+					"window_days":          90,
 				}),
 				UnsafePredicate: policy.UnsafePredicate{
 					Any: []policy.PredicateRule{
@@ -1253,8 +1253,8 @@ func TestEvaluator_RecurrenceWindowInconclusive(t *testing.T) {
 			ID:   "CTL.RECURRENCE.INCOMPLETE",
 			Type: policy.TypeUnsafeRecurrence,
 			Params: policy.NewParams(map[string]any{
-				"recurrence_limit": 2,
-				"window_days":      90, // 90-day window
+				"recurrence_threshold": 2,
+				"window_days":          90, // 90-day window
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
@@ -1619,8 +1619,8 @@ func TestEvaluator_RecurrenceOpenExposureWindow(t *testing.T) {
 			ID:   "CTL.RECURRENCE.OPEN",
 			Type: policy.TypeUnsafeRecurrence,
 			Params: policy.NewParams(map[string]any{
-				"recurrence_limit": 3,
-				"window_days":      90,
+				"recurrence_threshold": 3,
+				"window_days":          90,
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
@@ -1720,8 +1720,8 @@ func TestEvaluator_RecurrenceOpenExposureWindowNotCounted(t *testing.T) {
 			ID:   "CTL.RECURRENCE.OPEN.NOCOUNT",
 			Type: policy.TypeUnsafeRecurrence,
 			Params: policy.NewParams(map[string]any{
-				"recurrence_limit": 3,
-				"window_days":      30, // 30-day window
+				"recurrence_threshold": 3,
+				"window_days":          30, // 30-day window
 			}),
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{

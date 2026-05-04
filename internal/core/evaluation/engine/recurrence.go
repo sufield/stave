@@ -48,10 +48,14 @@ func EvaluateRecurrenceForControl(
 		}
 	}
 
-	// p.Limit is the violation threshold: reaching exactly Limit
-	// occurrences inside the window triggers a violation. Counts below
-	// Limit are within the configured tolerance.
-	if count < p.Limit {
+	// p.Threshold is the inclusive violation threshold: a recurrence_threshold
+	// of 3 means 3 OR MORE occurrences trigger a violation (count >=
+	// Limit fires; count < Limit is within tolerance). Despite the
+	// "limit" name, the field acts as a threshold; consider renaming
+	// to recurrence_threshold in a future schema bump for clarity —
+	// kept as-is here for backward compatibility with deployed control
+	// YAML.
+	if count < p.Threshold {
 		return nil
 	}
 
@@ -71,7 +75,7 @@ func CreateRecurrenceFinding(
 	f.Evidence = evaluation.Evidence{
 		ExposureWindowCount:   stats.Count,
 		WindowDays:            p.WindowDays,
-		RecurrenceLimit:       p.Limit,
+		RecurrenceThreshold:   p.Threshold,
 		FirstExposureWindowAt: stats.First,
 		LastExposureWindowAt:  stats.Last,
 

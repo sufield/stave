@@ -92,7 +92,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 					ThresholdHours:      24,
 					ExposureWindowCount: 3,
 					WindowDays:          30,
-					RecurrenceLimit:     2,
+					RecurrenceThreshold: 2,
 					TemporalRisk:        "Threshold exceeded",
 				},
 			},

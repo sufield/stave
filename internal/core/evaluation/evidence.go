@@ -30,7 +30,7 @@ func (rc RootCause) String() string {
 //
 // Fields are conditionally populated based on the control type:
 //   - Duration: FirstUnsafeAt, LastSeenUnsafeAt, UnsafeDurationHours, ThresholdHours
-//   - Recurrence: ExposureWindowCount, WindowDays, RecurrenceLimit, FirstExposureWindowAt, LastExposureWindowAt
+//   - Recurrence: ExposureWindowCount, WindowDays, RecurrenceThreshold, FirstExposureWindowAt, LastExposureWindowAt
 type Evidence struct {
 	// --- Duration Timing ---
 	FirstUnsafeAt       time.Time `json:"first_unsafe_at,omitzero"`
@@ -41,7 +41,7 @@ type Evidence struct {
 	// --- Recurrence Frequency ---
 	ExposureWindowCount   int       `json:"exposure_window_count,omitempty"`
 	WindowDays            int       `json:"window_days,omitempty"`
-	RecurrenceLimit       int       `json:"recurrence_limit,omitempty"`
+	RecurrenceThreshold   int       `json:"recurrence_threshold,omitempty"`
 	FirstExposureWindowAt time.Time `json:"first_exposure_window_at,omitzero"`
 	LastExposureWindowAt  time.Time `json:"last_exposure_window_at,omitzero"`
 

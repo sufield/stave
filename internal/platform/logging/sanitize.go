@@ -57,8 +57,20 @@ const sanitizedValueMissing = sanitize.SanitizedValue + ":missing"
 func SanitizeArgs(args []string) []string {
 	result := append([]string(nil), args...)
 
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
+	// Explicit state machine: skipNext captures the
+	// "currently-consuming-the-value-of-a-sensitive-flag" state so
+	// the next iteration cannot misidentify that already-consumed
+	// value as a fresh flag. The earlier `i++` mid-loop trick
+	// composed with the outer `i++` to land at the right index by
+	// arithmetic accident — easy to break under future edits.
+	skipNext := false
+	for i, arg := range args {
+		if skipNext {
+			// args[i] is the value of a previous sensitive flag.
+			// Already redacted in result[i]; reset and move on.
+			skipNext = false
+			continue
+		}
 
 		if name, _, hasEq := strings.Cut(arg, "="); hasEq {
 			if isSensitiveKey(name) {
@@ -67,40 +79,39 @@ func SanitizeArgs(args []string) []string {
 			continue
 		}
 
-		if isSensitiveKey(arg) {
-			if i+1 >= len(args) {
-				// Sensitive flag is the trailing arg. The value is
-				// missing structurally, but we still want the log
-				// line to communicate that a value was expected so
-				// the operator can correlate against shell history.
-				result[i] = arg + " " + sanitizedValueMissing
-				continue
-			}
-			// If the next arg is itself a known sensitive flag,
-			// don't consume it — let the next loop iteration
-			// redact it independently. The previous shape consumed
-			// blindly, so `--token --password mysecret` redacted
-			// only `--password` (treated as --token's value) and
-			// left `mysecret` exposed in position 2.
-			//
-			// The look-ahead requires the next arg to start with
-			// `--` so a *value* that happens to contain a
-			// sensitive token (e.g. `-very-secret-pass`) is not
-			// mistaken for a flag. A value beginning with `-` plus
-			// a single non-flag character keeps the redaction
-			// path; only the `--name` shape is treated as a
-			// fresh sensitive-flag declaration.
-			if strings.HasPrefix(args[i+1], "--") && isSensitiveKey(args[i+1]) {
-				result[i] = arg + " " + sanitizedValueMissing
-				continue
-			}
-			// Otherwise: always redact. A legitimate password /
-			// token / api-key value can start with `-`; over-
-			// redacting an actual flag is cheaper than under-
-			// redacting a credential.
-			result[i+1] = sanitize.SanitizedValue
-			i++ // skip the consumed value position so the outer loop's i++ doesn't reprocess it as a flag
+		if !isSensitiveKey(arg) {
+			continue
 		}
+
+		if i+1 >= len(args) {
+			// Sensitive flag is the trailing arg. The value is
+			// missing structurally, but we still want the log
+			// line to communicate that a value was expected so
+			// the operator can correlate against shell history.
+			result[i] = arg + " " + sanitizedValueMissing
+			continue
+		}
+		// If the next arg is itself a known sensitive flag,
+		// don't consume it — let the next loop iteration
+		// redact it independently. The previous shape consumed
+		// blindly, so `--token --password mysecret` redacted
+		// only `--password` (treated as --token's value) and
+		// left `mysecret` exposed in position 2.
+		//
+		// The look-ahead requires the next arg to start with
+		// `--` so a *value* that happens to contain a
+		// sensitive token (e.g. `-very-secret-pass`) is not
+		// mistaken for a flag.
+		if strings.HasPrefix(args[i+1], "--") && isSensitiveKey(args[i+1]) {
+			result[i] = arg + " " + sanitizedValueMissing
+			continue
+		}
+		// Otherwise: always redact. A legitimate password /
+		// token / api-key value can start with `-`; over-
+		// redacting an actual flag is cheaper than under-
+		// redacting a credential.
+		result[i+1] = sanitize.SanitizedValue
+		skipNext = true
 	}
 
 	return result

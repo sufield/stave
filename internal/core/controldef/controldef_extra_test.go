@@ -36,15 +36,15 @@ func TestControlDefinitionPrepareNoDuration(t *testing.T) {
 func TestControlDefinitionPrepareWithRecurrence(t *testing.T) {
 	ctl := ControlDefinition{
 		Params: NewParams(map[string]any{
-			"recurrence_limit": 5,
-			"window_days":      14,
+			"recurrence_threshold": 5,
+			"window_days":          14,
 		}),
 	}
 	if err := ctl.Prepare(); err != nil {
 		t.Fatalf("Prepare() err = %v", err)
 	}
 	rp := ctl.RecurrencePolicy()
-	if rp.Limit != 5 || rp.WindowDays != 14 {
+	if rp.Threshold != 5 || rp.WindowDays != 14 {
 		t.Fatalf("recurrence policy: %+v", rp)
 	}
 }

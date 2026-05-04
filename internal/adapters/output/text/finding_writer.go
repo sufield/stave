@@ -320,7 +320,7 @@ func writeFindingEvidenceLifecycle(d *drawer, f *remediation.Finding) {
 
 func writeFindingEvidenceContext(d *drawer, f *remediation.Finding) {
 	if f.Evidence.HasExposureWindows() {
-		d.f("     Exposure Windows:     %d (limit: %d within %d days)\n", f.Evidence.ExposureWindowCount, f.Evidence.RecurrenceLimit, f.Evidence.WindowDays)
+		d.f("     Exposure Windows:     %d (limit: %d within %d days)\n", f.Evidence.ExposureWindowCount, f.Evidence.RecurrenceThreshold, f.Evidence.WindowDays)
 	}
 	if msg := f.TemporalRiskMessage(); msg != "" {
 		d.f("     Why now:      %s\n", msg)

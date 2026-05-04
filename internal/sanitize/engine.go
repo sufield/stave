@@ -154,7 +154,14 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 			return groups[1] // URL — preserve verbatim
 		}
 		if len(groups) > 2 && groups[2] != "" {
-			return groups[2] // credential-style path — keep basename only
+			// Credential-style path — keep basename only. Preserve
+			// the leading slash so the surrounding error message
+			// reads grammatically: "open /[BASENAME]: permission
+			// denied" rather than "open [BASENAME]: permission
+			// denied" which loses the "this is an absolute path"
+			// signal. Relative-path matches don't reach this
+			// branch — the regex requires the leading "/".
+			return "/" + groups[2]
 		}
 		// The two-branch regex is exhaustive over its alternation,
 		// so reaching here would mean the regex matched but no
