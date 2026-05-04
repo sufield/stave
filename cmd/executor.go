@@ -114,6 +114,21 @@ func (a *App) installInterruptHandler() func() {
 	done := make(chan struct{})
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 
+	// sync.Once-guarded closure. Both the deferred-cleanup path
+	// (Execute → defer cleanupInterrupt), the panic-recovery path
+	// (recoverExecutePanic explicitly invokes a.cleanupInterrupt
+	// before ExitFunc), AND the pre-bootstrap signal goroutine path
+	// share this single cleanup. Without the shared Once the second
+	// invocation would `close(done)` a channel already closed by the
+	// first and panic.
+	var once sync.Once
+	cleanup := func() {
+		once.Do(func() {
+			signal.Stop(sigCh)
+			close(done)
+		})
+	}
+
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -125,44 +140,32 @@ func (a *App) installInterruptHandler() func() {
 			fmt.Fprintln(os.Stderr, "Interrupted")
 			if cancel := a.cancel.Load(); cancel != nil {
 				(*cancel)()
-				// Returning here is safe: the cleanup closure
-				// returned by installInterruptHandler (and called
-				// from the main goroutine's defer + the panic
-				// recovery path) is what calls signal.Stop and
-				// close(done). The signal.Stop call must NOT be
-				// duplicated here — sync.Once in the closure
-				// already serializes it, but doubling the
-				// Notify→Stop pair across goroutines without
-				// shared coordination would race. The goroutine
-				// simply exits; cleanup is the closure's job.
+				// Returning here is safe: cleanup() is invoked by
+				// the main goroutine's defer + the panic recovery
+				// path. The shared sync.Once guarantees signal.Stop
+				// and close(done) fire exactly once across all
+				// invocation paths.
 				return
 			}
 			// Pre-bootstrap signal: cancel function not yet stored.
 			// Run minimum cleanup ourselves before exiting so a
 			// CPU profile started by an even earlier startCPUProfile
 			// call (or a log file opened by phaseLogging) is closed
-			// instead of left half-flushed on disk.
+			// instead of left half-flushed on disk. Then run the
+			// shared cleanup so the signal handler unregisters and
+			// `done` closes — important when ExitFunc is mocked
+			// (tests) and the process does not actually terminate;
+			// otherwise sigCh stays registered and the goroutine
+			// leaks.
 			a.cleanupBeforeExit()
+			cleanup()
 			a.ExitFunc(ui.ExitInterrupted)
 		case <-done:
 			return
 		}
 	}()
 
-	// sync.Once-guarded closure. Both the deferred-cleanup path
-	// (Execute → defer cleanupInterrupt) and the panic-recovery
-	// path (recoverExecutePanic explicitly invokes
-	// a.cleanupInterrupt before ExitFunc) can reach this closure;
-	// without the Once, the second invocation would
-	// `close(done)` a channel already closed by the first and
-	// panic the goroutine that's tearing the process down.
-	var once sync.Once
-	return func() {
-		once.Do(func() {
-			signal.Stop(sigCh)
-			close(done)
-		})
-	}
+	return cleanup
 }
 
 func (a *App) executeRootCommand(args []string) {

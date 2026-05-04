@@ -788,12 +788,49 @@ func applyAcknowledgments(
 	return active, acknowledged
 }
 
+// hasEmptyPolicy reports whether this assessor has no controls
+// loaded — a legitimate "nothing to evaluate" state (e.g. no
+// controls match the active vendor). Encapsulates the slice-length
+// probe so the storage layout for controls can change without
+// touching every fingerprint / count call site.
+func (a *Assessor) hasEmptyPolicy() bool {
+	return len(a.controls) == 0
+}
+
+// canComputeDigests reports whether this assessor was wired with a
+// Digester (the dependency that turns a control fingerprint set into
+// a deterministic hash). When false, fingerprinting / integrity
+// signing is off the table — that's a configuration gap, not a
+// transient state, and callers should warn rather than silently
+// emit an empty digest.
+func (a *Assessor) canComputeDigests() bool {
+	return a.hasher != nil
+}
+
 // FingerprintPolicy returns a deterministic hash of the active control-set.
 // This provides an integrity check for auditors to verify which rules were enforced.
+//
+// Returns "" with no error in two distinct cases:
+//   - empty policy: the assessor has nothing to fingerprint (legitimate
+//     empty-catalog state, e.g. when no controls match the active vendor).
+//   - missing digester: the assessor was wired without one. This is an
+//     audit gap — the audit-trail consumer expected a fingerprint and
+//     gets nothing back. Surface a slog.Warn so the gap is visible
+//     instead of a silent empty digest in compliance reports.
 func (a *Assessor) FingerprintPolicy() kernel.Digest {
-	if len(a.controls) == 0 || a.hasher == nil {
+	// Case 1: nothing to fingerprint.
+	if a.hasEmptyPolicy() {
 		return ""
 	}
+
+	// Case 2: controls present but no way to hash them — audit gap.
+	if !a.canComputeDigests() {
+		slog.Warn("assessor: FingerprintPolicy called without a Digester; emitting empty digest",
+			"controls", len(a.controls))
+		return ""
+	}
+
+	// Case 3: ready to fingerprint.
 	// Include evaluator identity — prevents silent evaluator swap.
 	// Hash per-control fingerprints (which include predicate, severity,
 	// type — not just IDs) sorted by ID for determinism.

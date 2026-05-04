@@ -129,12 +129,16 @@ func (ctl *ControlDefinition) validateType() []diag.Finding {
 }
 
 func (ctl *ControlDefinition) validatePredicate() []diag.Finding {
-	if len(ctl.UnsafePredicate.Any) > 0 || len(ctl.UnsafePredicate.All) > 0 {
+	if !ctl.UnsafePredicate.IsEmpty() {
 		return nil
 	}
+	// Error, not Warning: a control with no rules cannot classify
+	// anything, so every asset evaluates as "not unsafe" — silently
+	// passing security checks the control was supposed to enforce.
+	// Loading such a control is worse than rejecting it.
 	return []diag.Finding{
 		ctl.newIssue(diag.RuleControlEmptyPredicate, nil).
-			Warning().
+			Error().
 			Remediation("Define at least one rule under 'any' or 'all' in the unsafe_predicate").
 			Build(),
 	}
@@ -180,7 +184,13 @@ func (ctl *ControlDefinition) validateDuration() []diag.Finding {
 	if !ctl.Params.HasKey(durationKey) {
 		return nil
 	}
-	if ctl.prepared.Ready && ctl.prepared.HasMaxUnsafeDuration {
+	// If preparation already verified the duration, we can skip
+	// re-parsing. The fallback re-parse below covers the
+	// precondition-violated path (Validate called without a
+	// successful prior Prepare — diagnostic harnesses, partial
+	// reconstructions); without it, validateDuration would silently
+	// pass on inputs that the prepared cache hasn't yet validated.
+	if ctl.prepared.IsDurationPrevalidated() {
 		return nil
 	}
 

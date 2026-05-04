@@ -134,8 +134,18 @@ func (l *ControlLoader) loadOne(path string) (policy.ControlDefinition, error) {
 	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("schema validation error: %w", err)
 	}
-	if issues.Failed() || issues.HasWarnings() {
+	if issues.Failed() {
 		return policy.ControlDefinition{}, fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
+	}
+	// Schema warnings are advisory: surface them via slog so the
+	// authoring problem is visible without losing the control. Mirrors
+	// the SeverityWarn handling in enrichAndPrepare below — the
+	// previous shape collapsed warnings into hard failures, so a
+	// non-fatal schema annotation could silently drop an entire
+	// control.
+	if issues.HasWarnings() {
+		slog.Warn("control schema validation warning",
+			"path", path, "issues", issues.Error())
 	}
 
 	ctl, unmarshalErr := UnmarshalControlDefinition(data)

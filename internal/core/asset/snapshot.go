@@ -19,6 +19,14 @@ const (
 // Each snapshot captures the state of assets at a specific moment,
 // identified by CapturedAt. Stave processes multiple snapshots to track
 // how asset states change over time.
+//
+// Duplicate Asset.IDs within Assets are not validated at this layer:
+// FindAsset returns the first match, BuildLifecyclesPerControl
+// merges per-ID across snapshots. Producers (collectors,
+// observation loaders) are responsible for deduping at write time;
+// the snapshot type intentionally accepts whatever shape the wire
+// format carries so a downstream loader can surface the duplicate
+// rather than this type silently dropping rows.
 type Snapshot struct {
 	SchemaVersion kernel.Schema   `json:"schema_version"`
 	GeneratedBy   *GeneratedBy    `json:"generated_by,omitempty"`
@@ -30,7 +38,20 @@ type Snapshot struct {
 
 // FindAsset returns the asset with the given ID.
 // Returns the asset and true if found, or a zero Asset and false if not present.
+//
+// FindAsset uses a pointer receiver (HasTimestamp uses a value receiver
+// — see the type doc) so a nil *Snapshot would otherwise panic at
+// s.Assets. Treat nil as "no assets" instead — callers that thread a
+// possibly-unloaded snapshot through this method get the absent
+// signal they expect.
+//
+// On asset-ID collisions (more than one asset with the same ID in
+// the same snapshot) the first match wins. See the type-level note
+// on Snapshot for the design choice.
 func (s *Snapshot) FindAsset(id string) (Asset, bool) {
+	if s == nil {
+		return Asset{}, false
+	}
 	assetID := ID(id)
 	for i := range s.Assets {
 		if s.Assets[i].ID == assetID {

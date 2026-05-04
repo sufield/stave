@@ -116,6 +116,15 @@ func (c *AssessmentCollector) RecordFindings(findings []*evaluation.Finding) {
 		if f == nil {
 			continue
 		}
+		// Mirror RecordCheck's behavior: a finding with no
+		// attribution is meaningless evidence and would cause
+		// FallbackID-based identity collisions, coalescing distinct
+		// rows into one. Drop instead so the report stays clean.
+		if f.IsUnattributed() {
+			slog.Warn("collector: finding is unattributed; skipping",
+				"finding_id", f.FindingID, "asset_id", f.AssetID)
+			continue
+		}
 		fid := f.FindingID
 		if fid == "" {
 			// Synthesise a deterministic fallback ID from the

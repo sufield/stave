@@ -28,7 +28,15 @@ func LoadChains(dir string, registry policy.CapabilityRegistry) ([]policy.ChainD
 
 	var chains []policy.ChainDefinition
 	for _, entry := range entries {
-		if entry.IsDir() || filepath.Ext(entry.Name()) != ".yaml" {
+		if entry.IsDir() {
+			continue
+		}
+		// Accept both .yaml and .yml, matching isControlFile in
+		// snapshot_loader.go. The previous .yaml-only check silently
+		// dropped chain definitions named *.yml even though the
+		// schema accepts either extension.
+		ext := filepath.Ext(entry.Name())
+		if ext != ".yaml" && ext != ".yml" {
 			continue
 		}
 		path := filepath.Join(dir, entry.Name())

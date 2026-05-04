@@ -1,11 +1,26 @@
 package cel
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
+	"github.com/google/cel-go/common/types/ref"
+
 	"github.com/sufield/stave/internal/core/asset"
 )
+
+// isUnresolved reports whether a CEL evaluation result represents
+// a null/unresolved value — typically the symptom of an expression
+// that walked through a missing field without a `has(...)` guard.
+// Centralises the nil-check so callers describe the *outcome*
+// ("the predicate did not resolve") instead of the implementation
+// detail (`out.Value() == nil`); a future cel-go version that
+// represents null with a typed sentinel rather than a Go nil
+// changes one site, not every consumer.
+func isUnresolved(v ref.Val) bool {
+	return v == nil || v.Value() == nil
+}
 
 // Evaluate runs a compiled CEL predicate against asset properties.
 // Returns true if the asset matches the unsafe predicate (i.e., is unsafe).
@@ -36,6 +51,14 @@ func Evaluate(cp CompiledPredicate, a asset.Asset, identities []asset.CloudIdent
 		return false, fmt.Errorf("cel eval: %w\n  expression: %s", err, cp.Expression)
 	}
 
+	if isUnresolved(out) {
+		// Surface explicitly because a null resolution is usually a
+		// logic error in the expression (e.g. missing has() guard
+		// before walking through an absent field). The generic
+		// "expected bool, got <nil>" path is harder to triage than
+		// "predicate returned null".
+		return false, errors.New("cel eval: predicate returned null instead of bool")
+	}
 	result, ok := out.Value().(bool)
 	if !ok {
 		return false, fmt.Errorf("cel eval: expected bool, got %T", out.Value())

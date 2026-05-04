@@ -1,5 +1,10 @@
 package cel
 
+import (
+	"fmt"
+	"log/slog"
+)
+
 // Activation is the named-key bag of values passed to a compiled CEL
 // program. Encodes the contract between the predicate compiler (which
 // emits expressions like `properties.foo`, `params.bar`,
@@ -16,18 +21,13 @@ type Activation map[string]any
 // compiled predicate: properties from the asset, identities + a
 // single-identity convenience handle, and the control's params.
 //
-// `identity` is the *first* identity when present, or an empty map
-// otherwise. Hardcoding an empty map silently masked all per-identity
-// field reads in single-identity controls — predicates like
-// `identity.type == "service_role"` evaluated against `{}`, returning
-// false on every asset regardless of input.
+// `identity` resolves to the first identity in the slice when one is
+// present and well-typed; missing or malformed inputs fall back to
+// an empty map (see resolvePrimaryIdentity for the resolution
+// policy). The fallback was historically the source of confusing
+// "predicate evaluated against {} → false on every asset" outcomes
+// when collectors handed in wrong-shape identities.
 func NewActivation(properties, params map[string]any, identities []any) Activation {
-	identity := map[string]any{}
-	if len(identities) > 0 {
-		if first, ok := identities[0].(map[string]any); ok {
-			identity = first
-		}
-	}
 	// Mirror the params guard: a nil properties map dereferences to
 	// an unknown-field error in CEL, surfacing as a confusing
 	// "no such key" rather than the cleaner "field absent" semantic
@@ -42,6 +42,35 @@ func NewActivation(properties, params map[string]any, identities []any) Activati
 		"properties": properties,
 		"params":     params,
 		"identities": identities,
-		"identity":   identity,
+		"identity":   resolvePrimaryIdentity(identities),
 	}
+}
+
+// resolvePrimaryIdentity extracts the first identity from the raw
+// slice and ensures it is a structured map. Three possible inputs:
+//
+//   - empty slice / nil entry: no identity supplied → empty map
+//   - first entry is a map[string]any: structured identity → use it
+//   - first entry is non-nil but not a map: upstream type mismatch
+//     → empty map + slog.Warn so the shape bug doesn't hide behind
+//     "predicate evaluated against {} → false"
+//
+// Lifted out of NewActivation so the constructor expresses *what*
+// the activation contains, while this helper expresses *how* the
+// raw identity slice is normalised into the structured form
+// predicates can read.
+func resolvePrimaryIdentity(identities []any) map[string]any {
+	if len(identities) == 0 {
+		return map[string]any{}
+	}
+	raw := identities[0]
+	if raw == nil {
+		return map[string]any{}
+	}
+	if structured, ok := raw.(map[string]any); ok {
+		return structured
+	}
+	slog.Warn("cel.NewActivation: primary identity is not a map; falling back to empty",
+		"actual_type", fmt.Sprintf("%T", raw))
+	return map[string]any{}
 }

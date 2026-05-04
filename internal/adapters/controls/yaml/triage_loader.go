@@ -53,6 +53,15 @@ type TriageIndex struct {
 	families  []familyEntry // sorted longest-prefix-first
 }
 
+// HasTriageData reports whether an external triage index is available
+// to merge into controls. nil-safe by design: a nil receiver returns
+// false so callers can describe their state ("triage data available
+// vs defaults-only") instead of guarding against pointer dereferences
+// at every call site.
+func (idx *TriageIndex) HasTriageData() bool {
+	return idx != nil
+}
+
 // Resolve returns the triage prose for a control, applying the
 // inheritance chain: per-control override > family template.
 // Each field is resolved independently — a control can have an
@@ -211,6 +220,19 @@ func loadFamiliesFS(fsys fs.FS, dir string, idx *TriageIndex) error {
 // from the YAML) act as lowest-priority fallback — they are only
 // overwritten when the triage index provides a non-empty value.
 func ApplyTriage(controls []policy.ControlDefinition, idx *TriageIndex) {
+	// Defaults-only path: when no external triage data is available,
+	// fall back to deriving Defect status from each control's inline
+	// fields and predicate tree. DeriveDefects is the mandatory
+	// closing step on every path through this function — both the
+	// merge branch below and the defaults-only branch here run it,
+	// so the contract "every control gets DeriveDefects exactly
+	// once" stays explicit at both exits.
+	if !idx.HasTriageData() {
+		DeriveDefects(controls)
+		return
+	}
+
+	// Merge external triage data into per-control inline values.
 	for i := range controls {
 		resolved := idx.Resolve(controls[i].ID)
 		if resolved.Defect != "" && controls[i].Defect == "" {

@@ -130,7 +130,12 @@ func coerceStringList(v any) []string {
 }
 
 func scopeTagsToDomain(tags []string) []kernel.ScopeTag {
-	if tags == nil {
+	// Mirror assetTypesToDomain (and the rest of this file): treat
+	// empty-non-nil and nil slices identically, returning nil. The
+	// previous nil-only check produced an empty-but-non-nil slice
+	// for `tags := []string{}`, which downstream consumers compared
+	// against nil and silently mishandled.
+	if len(tags) == 0 {
 		return nil
 	}
 	out := make([]kernel.ScopeTag, len(tags))

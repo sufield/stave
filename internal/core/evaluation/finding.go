@@ -202,6 +202,19 @@ func (f *Finding) UnmarshalJSON(data []byte) error {
 // of IsOverdue — a critical breach can fire without an overdue
 // duration recorded.
 //
+// IsUnattributed reports whether this finding lacks a ControlID,
+// meaning it cannot be linked back to a specific rule. Such findings
+// cannot be safely indexed by control identity (the FallbackID
+// helper would coalesce all unattributed rows into the same key,
+// silently merging distinct findings into one), so collectors and
+// reporters drop them rather than carrying anonymous evidence.
+func (f *Finding) IsUnattributed() bool {
+	if f == nil {
+		return true
+	}
+	return f.ControlID == ""
+}
+
 // IsCriticalSLABreach reports whether this finding is an SLA breach
 // where either the original control severity or the SLA-escalated
 // severity reaches Critical. Consumed by the apply runner to decide

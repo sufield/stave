@@ -13,6 +13,20 @@ type UnsafePredicate struct {
 	All []PredicateRule `json:"all,omitempty"`
 }
 
+// IsEmpty reports whether this predicate carries no rules at all
+// (neither Any nor All populated). Encapsulates the slice-length pair
+// so call sites that gate on "the predicate has nothing to evaluate"
+// stop reaching into the internal Any/All shape — a future third
+// rule category (None, etc.) lands here once instead of at every
+// validation/parser site.
+//
+// Value receiver matches the rest of UnsafePredicate's method set
+// (Walk, MissingParamReferences). Callers with a *UnsafePredicate
+// should nil-check before invoking.
+func (p UnsafePredicate) IsEmpty() bool {
+	return len(p.Any) == 0 && len(p.All) == 0
+}
+
 // PredicateEval evaluates whether an asset is unsafe according to a control's
 // predicate. This function type decouples evaluation consumers from the
 // evaluation engine implementation (CEL or built-in).

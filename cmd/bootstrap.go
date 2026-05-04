@@ -241,7 +241,10 @@ func (a *App) startCPUProfile() error {
 		return fmt.Errorf("create CPU profile: %w", err)
 	}
 	if err := pprof.StartCPUProfile(f); err != nil {
-		_ = f.Close()
+		if closeErr := f.Close(); closeErr != nil {
+			slog.Debug("close cpu profile file after StartCPUProfile failure",
+				"error", closeErr)
+		}
 		return fmt.Errorf("start CPU profile: %w", err)
 	}
 	a.cpuProfileFile.Store(f)

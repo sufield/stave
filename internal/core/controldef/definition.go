@@ -583,6 +583,16 @@ type PreparedParams struct {
 	PrefixExposure       PrefixExposureParams
 }
 
+// IsDurationPrevalidated reports whether Prepare() has already parsed
+// and verified max_unsafe_duration for this control. Validation sites
+// can short-circuit a re-parse when this is true. Encapsulates the
+// (Ready && HasMaxUnsafeDuration) probe so a future change to the
+// prepared-state representation (status enum, additional flags) lands
+// on the type rather than every call site.
+func (p *PreparedParams) IsDurationPrevalidated() bool {
+	return p.Ready && p.HasMaxUnsafeDuration
+}
+
 // PrefixExposureParams holds the typed prefix lists for prefix_exposure controls.
 type PrefixExposureParams struct {
 	AllowedPublicPrefixes PrefixSet

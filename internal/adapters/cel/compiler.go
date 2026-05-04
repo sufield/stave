@@ -527,6 +527,13 @@ func ruleToExprAnyMatch(r *policy.PredicateRule, val any, outerScope string, ide
 		if parsed == nil {
 			return "", errors.New("any_match: nil nested predicate")
 		}
+		// Reject predicates that contain no logic at the parse
+		// boundary. Without this, an empty parsed predicate would
+		// surface downstream as "empty nested predicate" — two
+		// layers removed from the real cause.
+		if parsed.IsEmpty() {
+			return "", errors.New("any_match: nested predicate has no rules")
+		}
 		nested = parsed
 	}
 

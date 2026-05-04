@@ -77,22 +77,24 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 		ProjectConfigPath: cfg.projectConfigPath,
 	}
 
-	results, err := executeEvaluation(ctx, ec)
-	if err != nil {
-		return decorateError(err)
-	}
-
-	// Staleness check: --assert-recent. The decision-and-evaluate
-	// pair lives on Options.CheckStaleness; the caller only loads
-	// snapshots when the flag is set so the cost is paid lazily.
+	// Staleness check: --assert-recent. Run BEFORE evaluation so a
+	// stale-snapshot run fails fast instead of paying the full
+	// evaluation cost only to be rejected. The decision-and-evaluate
+	// pair lives on Options.CheckStaleness; we only load snapshots
+	// when the flag is set so the cost is paid lazily.
 	if opts.HasStalenessCheck() {
 		snapshots, snapErr := compose.LoadSnapshotsFrom(ctx, deps.NewObsRepo, cfg.ObservationsDir)
 		if snapErr != nil {
 			return fmt.Errorf("load snapshots for staleness check: %w", snapErr)
 		}
-		if err := opts.CheckStaleness(snapshots, params.clock.Now()); err != nil {
-			return err
+		if staleErr := opts.CheckStaleness(snapshots, params.clock.Now()); staleErr != nil {
+			return staleErr
 		}
+	}
+
+	results, err := executeEvaluation(ctx, ec)
+	if err != nil {
+		return decorateError(err)
 	}
 
 	// Signal-filtered output: --new-only or --new-since.

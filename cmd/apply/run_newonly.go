@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -184,9 +185,13 @@ func loadHistoryAssessments(ctx context.Context, stderr io.Writer, dir string) (
 func parseDuration(s string) (time.Duration, error) {
 	s = strings.TrimSpace(s)
 	if dayStr, ok := strings.CutSuffix(s, "d"); ok {
-		var days int
-		s = dayStr
-		if _, err := fmt.Sscanf(s, "%d", &days); err != nil {
+		// strconv.Atoi rejects partial matches like "7abc" that
+		// fmt.Sscanf would accept (Sscanf consumes as much as it
+		// can, returning days=7 with no error). Whole-string
+		// validation matches the rest of the duration parsing path
+		// (time.ParseDuration), which is also strict.
+		days, err := strconv.Atoi(dayStr)
+		if err != nil {
 			return 0, fmt.Errorf("parse days: %w", err)
 		}
 		return time.Duration(days) * 24 * time.Hour, nil

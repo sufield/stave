@@ -29,6 +29,14 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfigu
 	if p == nil {
 		return nil
 	}
+	// PredicateRule.collect dereferences ctx (ctx.PropertyMap()) so a
+	// nil ctx panics inside the recursion. Reject here rather than
+	// hoping every caller threads a non-nil context — the function
+	// already returns nil for nil predicates, returning nil for nil
+	// context is the natural sibling.
+	if ctx == nil {
+		return nil
+	}
 
 	var misconfigurations []Misconfiguration
 	for i := range p.Any {
