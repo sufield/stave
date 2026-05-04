@@ -3,6 +3,8 @@ package apply
 import (
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -253,6 +255,7 @@ Remediation scope:
 	// Completion registration is best-effort — if it fails, help output
 	// loses tab completion but the command still works.
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSONSARIF...))
+	_ = cmd.RegisterFlagCompletionFunc("sla-policy", cliflags.CompleteFixed(validSLAPolicyValues...))
 
 	return cmd
 }
@@ -285,12 +288,21 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringVar(&o.AssertRecent, "assert-recent", "", "Fail if no snapshot newer than this duration (e.g. 48h)")
 }
 
+// validSLAPolicyValues is the closed set of accepted --sla-policy
+// values. Kept in one place so the validate() check, the help
+// text on the flag, and the Cobra completion function can't drift.
+var validSLAPolicyValues = []string{"warn", "strict", "critical-only"}
+
 func (o *Options) validate() error {
 	if o.Profile != "" && o.InputFile == "" {
 		return &ui.UserError{Err: errors.New("flag --input is required when using --profile")}
 	}
 	if (o.NewOnly || o.NewSince != "") && o.HistoryDir == "" {
 		return &ui.UserError{Err: errors.New("--history is required when using --new-only or --new-since")}
+	}
+	if !slices.Contains(validSLAPolicyValues, o.SLAPolicy) {
+		return &ui.UserError{Err: fmt.Errorf("--sla-policy %q invalid (allowed: %s)",
+			o.SLAPolicy, strings.Join(validSLAPolicyValues, ", "))}
 	}
 	return nil
 }

@@ -56,14 +56,22 @@ func LoadProfile(id string) (*Profile, error) {
 	if !ok {
 		return nil, fmt.Errorf("unknown profile %q", id)
 	}
-	// Return a shallow copy so a caller mutating its handle (e.g.
-	// appending to Controls, swapping the Name) cannot corrupt the
-	// shared registry slot the next caller will read. The underlying
-	// Controls slice is still shared — slice grow / replace is safe,
-	// but in-place mutation of an existing element would still leak
-	// across callers; the registry contract is "read-only after
-	// register" and this copy is the type-level enforcement.
+	// Shallow struct copy + fresh Controls slice so a caller
+	// mutating either the struct or any Control element cannot
+	// corrupt the shared registry slot. The previous shape only
+	// copied the struct, leaving Controls' backing array shared —
+	// in-place mutation of `cp.Controls[i].Severity` would leak
+	// to every later LoadProfile reader.
+	//
+	// CONTRACT: Control elements are still shallow-copied (any
+	// slice fields they hold — e.g. SeverityOverride if extended
+	// to a slice — would alias). The current Control shape
+	// (ControlID + ComplianceRef + Rationale + *Severity) carries
+	// no caller-mutable slice fields, so this copy is sufficient.
+	// Extending Control with mutable slice/map fields requires
+	// extending this deep-copy in lockstep.
 	cp := *p
+	cp.Controls = append([]Control(nil), p.Controls...)
 	return &cp, nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -179,8 +180,18 @@ func WriteErrorText(w io.Writer, info *ErrorInfo) error {
 
 	if len(info.Evidence) > 0 {
 		sb.WriteString("  Evidence:\n")
-		for k, v := range info.Evidence {
-			fmt.Fprintf(&sb, "    - %s: %s\n", k, v)
+		// Iterate in sorted key order so identical evidence sets
+		// render in identical order across runs. Map iteration is
+		// randomised in Go, so the previous shape produced
+		// flapping diagnostic output that broke goldens and made
+		// support transcripts hard to compare.
+		keys := make([]string, 0, len(info.Evidence))
+		for k := range info.Evidence {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			fmt.Fprintf(&sb, "    - %s: %s\n", k, info.Evidence[k])
 		}
 	}
 

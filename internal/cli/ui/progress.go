@@ -57,10 +57,13 @@ func (cp *CountedProgress) finishProgress() {
 	total := cp.total
 	cp.mu.Unlock()
 
-	if cp.isTTY {
-		close(cp.stopCh)
-		<-cp.finishedCh
-	}
+	// Close stopCh first to signal the render loop to exit, then
+	// wait on finishedCh to confirm it has. In non-TTY mode the
+	// constructor pre-closed finishedCh so the wait returns
+	// immediately. The two-step ordering ensures the final
+	// "Done:" line never overlaps with an in-flight spinner frame.
+	close(cp.stopCh)
+	<-cp.finishedCh
 
 	suffix := fmt.Sprintf(" (%d files, %s)", total, elapsed)
 	if total == 0 {
@@ -118,15 +121,24 @@ func (r *Runtime) BeginCountedProgress(label string) *CountedProgress {
 		start:  time.Now(),
 		errOut: errOut,
 		isTTY:  r.isTerminal(errOut),
+		// Channels initialise unconditionally so Update's
+		// stopCh-select and finishProgress's finishedCh-wait are
+		// safe in both TTY and non-TTY paths. In non-TTY mode
+		// finishedCh is pre-closed below because no renderLoop
+		// goroutine runs to close it on exit.
+		stopCh:     make(chan struct{}),
+		finishedCh: make(chan struct{}),
 	}
 
 	if !cp.isTTY {
 		_, _ = fmt.Fprintf(errOut, "Running: %s...\n", label)
+		// Pre-close finishedCh so finishProgress's `<-finishedCh`
+		// returns immediately rather than dead-locking on a
+		// non-existent renderLoop.
+		close(cp.finishedCh)
 		return cp
 	}
 
-	cp.stopCh = make(chan struct{})
-	cp.finishedCh = make(chan struct{})
 	go cp.renderLoop()
 	return cp
 }

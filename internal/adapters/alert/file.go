@@ -47,10 +47,16 @@ func (s *FileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 
 	data, err := json.Marshal(a)
 	if err != nil {
-		if openedNow {
-			// Close the descriptor we just acquired — caller will
-			// never reach Close() if this Emit returns an error,
-			// and the next attempt should re-open cleanly.
+		// Close the file regardless of openedNow. A persistent
+		// marshal failure (programming bug in WatchAlert
+		// serialization, upstream type that doesn't round-trip)
+		// would otherwise hold the FD open forever — never written
+		// to, but never released. Close + clear s.f means the next
+		// Emit lazily reopens cleanly. We do NOT set s.closed —
+		// marshal failures are typically per-message rather than
+		// terminal, so the sink stays usable for the next alert.
+		_ = openedNow
+		if s.f != nil {
 			closeErr := s.f.Close()
 			s.f = nil
 			if closeErr != nil {

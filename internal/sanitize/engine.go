@@ -259,12 +259,31 @@ func (s *Sanitizer) Snapshot(snap asset.Snapshot) asset.Snapshot {
 // sanitized according to the profile. Nested maps and lists are recursed
 // so sensitive values nested inside list-shaped properties are still scrubbed.
 func (s *Sanitizer) ScrubMap(props map[string]any, profile Profile) map[string]any {
+	return s.scrubMapInScope(props, profile, false)
+}
+
+// scrubMapInScope is the scope-tracking core of ScrubMap. The
+// inSanitizedScope flag carries "we're descending under a key the
+// profile already classified as Sanitize" through nested
+// containers — so a map nested inside a list inside a Sanitize-
+// flagged parent still has its scalar values redacted, instead of
+// the scope being lost the first time scrubList hands a child map
+// back to ScrubMap. The previous shape called ScrubMap directly
+// from scrubList, dropping the flag at every list/map alternation.
+func (s *Sanitizer) scrubMapInScope(props map[string]any, profile Profile, inSanitizedScope bool) map[string]any {
 	if props == nil {
 		return nil
 	}
 	out := make(map[string]any, len(props))
 	for k, v := range props {
 		if profile.ShouldRemove(k) {
+			continue
+		}
+		// In sanitized scope: every non-removed value must be
+		// redacted regardless of whether the child key is itself
+		// classified, and recursion stays in sanitized scope.
+		if inSanitizedScope {
+			out[k] = s.scrubValueWithProfile(v, profile)
 			continue
 		}
 		if profile.ShouldSanitize(k) {
@@ -278,12 +297,12 @@ func (s *Sanitizer) ScrubMap(props map[string]any, profile Profile) map[string]a
 			continue
 		}
 		if nested, ok := v.(map[string]any); ok {
-			out[k] = s.ScrubMap(nested, profile)
+			out[k] = s.scrubMapInScope(nested, profile, inSanitizedScope)
 			continue
 		}
 		if list, ok := v.([]any); ok {
 			// Neutral-parent path: scalars preserved.
-			out[k] = s.scrubList(list, profile, false)
+			out[k] = s.scrubList(list, profile, inSanitizedScope)
 			continue
 		}
 		out[k] = v
@@ -310,7 +329,11 @@ func (s *Sanitizer) scrubList(list []any, profile Profile, inSanitizedScope bool
 	for i, item := range list {
 		switch v := item.(type) {
 		case map[string]any:
-			out[i] = s.ScrubMap(v, profile)
+			// Pass the current scope through so a map element
+			// inside a sanitized list still has its scalars
+			// redacted. The previous shape called ScrubMap, which
+			// reset the scope to false at every map boundary.
+			out[i] = s.scrubMapInScope(v, profile, inSanitizedScope)
 		case []any:
 			out[i] = s.scrubList(v, profile, inSanitizedScope)
 		case string:

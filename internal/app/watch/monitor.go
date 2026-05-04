@@ -103,13 +103,22 @@ func (m *Monitor) Run(ctx context.Context) error {
 	}
 
 	var debounce *time.Timer
+	// debounceWG tracks any outstanding AfterFunc callback so the
+	// shutdown defer can wait for it before closeSinks runs.
+	// Without this, debounce.Stop() returning false (callback
+	// already fired) races the scheduled runCycle against the
+	// outer defer m.closeSinks() — alerts could be emitted into a
+	// closed sink, or state cleared mid-cycle.
+	var debounceWG sync.WaitGroup
 	defer func() {
-		// Stop the debounce timer on shutdown so its scheduled
-		// runCycle goroutine doesn't fire after the sinks are
-		// closed and the context is cancelled.
+		// Stop the debounce timer on shutdown. If Stop returns
+		// false the callback has already fired (or is firing);
+		// wait for the WaitGroup so the callback completes before
+		// the outer defer m.closeSinks() runs.
 		if debounce != nil {
 			debounce.Stop()
 		}
+		debounceWG.Wait()
 	}()
 	for {
 		select {
@@ -125,7 +134,9 @@ func (m *Monitor) Run(ctx context.Context) error {
 				if debounce != nil {
 					debounce.Stop()
 				}
+				debounceWG.Add(1)
 				debounce = time.AfterFunc(500*time.Millisecond, func() {
+					defer debounceWG.Done()
 					m.runCycle(ctx)
 				})
 			}

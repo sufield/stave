@@ -43,6 +43,16 @@ import (
 // the same wiring here on first call.
 var libraryOnce sync.Once
 
+// errLibraryInit captures any panic recovered during library-mode
+// init (typically a misconfigured embedded policy library that
+// pack.MustNewLibrary refuses to construct). Permanent for the
+// process lifetime — sync.Once makes the init body unreachable on
+// every call after the first, so a recovered panic on the first
+// call permanently disables this runner. Callers receive the
+// original panic message wrapped as an error; retries are not
+// attempted.
+var errLibraryInit error
+
 // DefaultMaxUnsafe is the fallback when Inputs.MaxUnsafe is zero.
 // Matches the conventional Stave project default (one week).
 const DefaultMaxUnsafe = 168 * time.Hour
@@ -103,9 +113,22 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 		return nil, errors.New("applycore.Run: SnapshotsDir is required")
 	}
 	libraryOnce.Do(func() {
+		// pack.MustNewLibrary panics on an invalid embedded
+		// library — recover so a misconfigured release builds a
+		// runnable error path instead of taking down every
+		// pkg/stave caller. The error is sticky (see errLibraryInit
+		// doc) — sync.Once won't re-enter this body.
+		defer func() {
+			if r := recover(); r != nil {
+				errLibraryInit = fmt.Errorf("applycore: library init panicked: %v", r)
+			}
+		}()
 		aws.Register()
 		appcapabilities.Configure(pack.MustNewLibrary())
 	})
+	if errLibraryInit != nil {
+		return nil, errLibraryInit
+	}
 
 	controls, ctlRepo, err := resolveControls(in.ControlsDir)
 	if err != nil {

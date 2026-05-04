@@ -72,12 +72,19 @@ var globalNoColor bool
 // SetNoColor sets the global no-color flag. Call once during CLI bootstrap.
 func SetNoColor(v bool) { globalNoColor = v }
 
+// defaultRuntimeForColor caches the DefaultRuntime instance the
+// package-level CanColor delegates to. DefaultRuntime allocates a
+// fresh Runtime on every call, and CanColor is hot — every styled
+// write hits this path. Caching once via sync.OnceValue keeps the
+// allocation off the rendering hot path.
+var defaultRuntimeForColor = sync.OnceValue(DefaultRuntime)
+
 // CanColor reports whether ANSI color output should be used for this writer.
 func CanColor(out io.Writer) bool {
 	if globalNoColor {
 		return false
 	}
-	return DefaultRuntime().CanColor(out)
+	return defaultRuntimeForColor().CanColor(out)
 }
 
 // CanColor reports whether ANSI color output should be used for this writer.

@@ -28,6 +28,20 @@ func FromReportAssessment(r *report.Assessment) *Assessment {
 		}
 	}
 
+	// Coverage carries through from the source report when the
+	// producer captured it. The on-disk shape stores it under
+	// CoveragePosture as a *coverage.CoverageIndex (json:"-" — set
+	// by the in-memory pipeline, not persisted), so a
+	// FromReportAssessment caller that loaded JSON from disk gets
+	// nil here and the resulting Assessment.Coverage stays zero.
+	// Callers that need recomputed coverage should run
+	// BuildAssessment / cliapi.Apply against the original controls
+	// instead of round-tripping through the JSON wire format.
+	var coverage CoveragePosture
+	if r.CoveragePosture != nil {
+		coverage = *r.CoveragePosture
+	}
+
 	return &Assessment{
 		SchemaVersion: string(r.SchemaVersion),
 		Status:        Status(r.Status),
@@ -48,6 +62,7 @@ func FromReportAssessment(r *report.Assessment) *Assessment {
 			Violations:         r.Summary.Violations,
 			FrameworkReadiness: convertFrameworkReadiness(r.Summary.FrameworkReadiness),
 		},
+		Coverage:      coverage,
 		Findings:      convertReportFindings(r.Findings),
 		Issues:        r.Issues,
 		ChainFindings: convertChainFindings(r.ChainFindings),
