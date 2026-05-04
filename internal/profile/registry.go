@@ -56,23 +56,30 @@ func LoadProfile(id string) (*Profile, error) {
 	if !ok {
 		return nil, fmt.Errorf("unknown profile %q", id)
 	}
-	// Shallow struct copy + fresh Controls slice so a caller
-	// mutating either the struct or any Control element cannot
-	// corrupt the shared registry slot. The previous shape only
-	// copied the struct, leaving Controls' backing array shared —
-	// in-place mutation of `cp.Controls[i].Severity` would leak
-	// to every later LoadProfile reader.
-	//
-	// CONTRACT: Control elements are still shallow-copied (any
-	// slice fields they hold — e.g. SeverityOverride if extended
-	// to a slice — would alias). The current Control shape
-	// (ControlID + ComplianceRef + Rationale + *Severity) carries
-	// no caller-mutable slice fields, so this copy is sufficient.
-	// Extending Control with mutable slice/map fields requires
-	// extending this deep-copy in lockstep.
+	return p.Clone(), nil
+}
+
+// Clone returns a deep copy of the profile so a caller mutating the
+// returned handle (changing Name, appending to Controls, swapping
+// a Control element's Severity) cannot corrupt the shared registry
+// slot the next LoadProfile caller will read. Encapsulates the
+// "Profiles are immutable once registered" contract on the type
+// itself; LoadProfile delegates here so the immutability rule
+// lives next to the data definition.
+//
+// The Controls slice is freshly allocated; Control elements are
+// shallow-copied. The current Control shape (ControlID +
+// ComplianceRef + Rationale + *Severity) carries no caller-mutable
+// slice/map fields, so a shallow element copy is sufficient.
+// Extending Control with mutable slice/map fields requires
+// extending Clone in lockstep.
+func (p *Profile) Clone() *Profile {
+	if p == nil {
+		return nil
+	}
 	cp := *p
 	cp.Controls = append([]Control(nil), p.Controls...)
-	return &cp, nil
+	return &cp
 }
 
 // AllProfiles returns all registered profile IDs in stable sorted

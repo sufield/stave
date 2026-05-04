@@ -110,10 +110,33 @@ func (w *Writer) WriteBaseline(ctx context.Context, path string, findings []repo
 	tmpPath := f.Name()
 	// Track whether we still want the on-disk file when this function
 	// exits — on any error we remove it to avoid leaving a partial.
+	//
+	// The deferred cleanup surfaces unexpected Remove failures via
+	// retErr (the named return) instead of swallowing them. ErrNotExist
+	// is the expected case when the file was never written or already
+	// renamed elsewhere; everything else (permission denied, stale NFS
+	// handle, broken filesystem) indicates a real problem the caller
+	// should see. errors.Join preserves any prior retErr so the
+	// original failure isn't masked by the cleanup diagnostic.
+	//
+	// FOLLOW-UP: a debug-only opt-out for the rename-failure path
+	// (preserve tmpPath for forensic inspection instead of cleaning it
+	// up) would help debugging atomic-write failures, but it requires
+	// a build tag or option plumbing the current call sites don't
+	// expose. Tracked as a future enhancement; the unconditional
+	// cleanup below stays the safe default.
 	committed := false
 	defer func() {
-		if !committed {
-			_ = os.Remove(tmpPath)
+		if committed {
+			return
+		}
+		if removeErr := os.Remove(tmpPath); removeErr != nil && !errors.Is(removeErr, os.ErrNotExist) {
+			cleanupErr := fmt.Errorf("remove temp baseline %s: %w", tmpPath, removeErr)
+			if retErr != nil {
+				retErr = errors.Join(retErr, cleanupErr)
+			} else {
+				retErr = cleanupErr
+			}
 		}
 	}()
 

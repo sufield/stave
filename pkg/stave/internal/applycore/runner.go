@@ -53,6 +53,17 @@ var libraryOnce sync.Once
 // attempted.
 var errLibraryInit error
 
+// isLibraryReady reports whether the embedded policy library and
+// cloud adapters initialised successfully. Returns nil on success
+// or the captured init error if the one-time bootstrap panicked.
+// Names the system-health check so Run reads as "is the library
+// ready?" instead of a raw global-error probe — and a future
+// change to the bootstrap status (multiple components, partial
+// init) lands here.
+func isLibraryReady() error {
+	return errLibraryInit
+}
+
 // DefaultMaxUnsafe is the fallback when Inputs.MaxUnsafe is zero.
 // Matches the conventional Stave project default (one week).
 const DefaultMaxUnsafe = 168 * time.Hour
@@ -126,8 +137,8 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 		aws.Register()
 		appcapabilities.Configure(pack.MustNewLibrary())
 	})
-	if errLibraryInit != nil {
-		return nil, errLibraryInit
+	if err := isLibraryReady(); err != nil {
+		return nil, err
 	}
 
 	controls, ctlRepo, err := resolveControls(in.ControlsDir)

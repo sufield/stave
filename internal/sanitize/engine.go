@@ -279,20 +279,12 @@ func (s *Sanitizer) scrubMapInScope(props map[string]any, profile Profile, inSan
 		if profile.ShouldRemove(k) {
 			continue
 		}
-		// In sanitized scope: every non-removed value must be
-		// redacted regardless of whether the child key is itself
-		// classified, and recursion stays in sanitized scope.
-		if inSanitizedScope {
-			out[k] = s.scrubValueWithProfile(v, profile)
-			continue
-		}
-		if profile.ShouldSanitize(k) {
-			// When the value itself is a nested map / list, keep
-			// applying the Profile rules at deeper levels so a child
-			// key still in the Remove set drops out and a child key
-			// still in the Sanitize set is redacted at value level —
-			// rather than blanket-scrubbing the whole subtree's
-			// scalar values uniformly.
+		// Either the caller's scope already classifies us, or this
+		// key opens a new sanitized subtree. Both states route
+		// through scrubValueWithProfile, which redacts every
+		// scalar and recurses into containers without losing
+		// scope.
+		if s.isUnderSanitizedScope(inSanitizedScope, k, profile) {
 			out[k] = s.scrubValueWithProfile(v, profile)
 			continue
 		}
@@ -308,6 +300,18 @@ func (s *Sanitizer) scrubMapInScope(props map[string]any, profile Profile, inSan
 		out[k] = v
 	}
 	return out
+}
+
+// isUnderSanitizedScope reports whether the current container
+// position should treat every non-removed value as opaque and
+// route it through scrubValueWithProfile. True when either the
+// caller is already inside a Sanitize-flagged subtree (the flag
+// propagated through scrubList / scrubMapInScope) or this key
+// itself is classified Sanitize by the profile. Encapsulates the
+// "redaction mode" decision so the loop body reads as one
+// declarative branch rather than a stack of mechanical checks.
+func (s *Sanitizer) isUnderSanitizedScope(inScope bool, key string, profile Profile) bool {
+	return inScope || profile.ShouldSanitize(key)
 }
 
 // scrubList recurses into list elements, scrubbing nested maps/lists

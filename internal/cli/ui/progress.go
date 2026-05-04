@@ -123,22 +123,31 @@ func (r *Runtime) BeginCountedProgress(label string) *CountedProgress {
 		isTTY:  r.isTerminal(errOut),
 		// Channels initialise unconditionally so Update's
 		// stopCh-select and finishProgress's finishedCh-wait are
-		// safe in both TTY and non-TTY paths. In non-TTY mode
-		// finishedCh is pre-closed below because no renderLoop
-		// goroutine runs to close it on exit.
+		// safe in both TTY and non-TTY paths. The headless-mode
+		// preparation below pre-closes finishedCh when no
+		// renderLoop will run.
 		stopCh:     make(chan struct{}),
 		finishedCh: make(chan struct{}),
 	}
+	cp.prepareForHeadlessMode()
 
 	if !cp.isTTY {
 		_, _ = fmt.Fprintf(errOut, "Running: %s...\n", label)
-		// Pre-close finishedCh so finishProgress's `<-finishedCh`
-		// returns immediately rather than dead-locking on a
-		// non-existent renderLoop.
-		close(cp.finishedCh)
 		return cp
 	}
 
 	go cp.renderLoop()
 	return cp
+}
+
+// prepareForHeadlessMode pre-configures the progress tracker for
+// environments without a TTY (CI logs, file redirects). When no
+// renderLoop will run to close finishedCh on exit, finishProgress's
+// `<-finishedCh` would dead-lock; pre-closing the channel here
+// makes finish calls return immediately. No-op in TTY mode where
+// the renderLoop owns the close.
+func (cp *CountedProgress) prepareForHeadlessMode() {
+	if !cp.isTTY {
+		close(cp.finishedCh)
+	}
 }

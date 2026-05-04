@@ -55,6 +55,12 @@ type Monitor struct {
 	running       atomic.Bool
 	previousState string
 	previousIDs   map[string]bool
+	// debounceWG tracks any in-flight AfterFunc callback scheduled
+	// off a watcher event. Held on the Monitor so the shutdown
+	// helpers can describe their work in domain terms
+	// (waitForPendingAlertCycle) instead of passing the WaitGroup
+	// around as a closure-captured local.
+	debounceWG sync.WaitGroup
 }
 
 // New creates a new Monitor. A nil cfg.Clock is replaced with
@@ -103,22 +109,17 @@ func (m *Monitor) Run(ctx context.Context) error {
 	}
 
 	var debounce *time.Timer
-	// debounceWG tracks any outstanding AfterFunc callback so the
-	// shutdown defer can wait for it before closeSinks runs.
-	// Without this, debounce.Stop() returning false (callback
-	// already fired) races the scheduled runCycle against the
-	// outer defer m.closeSinks() — alerts could be emitted into a
-	// closed sink, or state cleared mid-cycle.
-	var debounceWG sync.WaitGroup
 	defer func() {
-		// Stop the debounce timer on shutdown. If Stop returns
-		// false the callback has already fired (or is firing);
-		// wait for the WaitGroup so the callback completes before
-		// the outer defer m.closeSinks() runs.
+		// Stop the debounce timer on shutdown, then wait for any
+		// in-flight cycle to finish before the outer defer
+		// m.closeSinks() runs. Without this, debounce.Stop()
+		// returning false (callback already fired) would race the
+		// scheduled runCycle against closeSinks — alerts could
+		// reach a closed sink, or state could be cleared mid-cycle.
 		if debounce != nil {
 			debounce.Stop()
 		}
-		debounceWG.Wait()
+		m.waitForPendingAlertCycle()
 	}()
 	for {
 		select {
@@ -134,9 +135,9 @@ func (m *Monitor) Run(ctx context.Context) error {
 				if debounce != nil {
 					debounce.Stop()
 				}
-				debounceWG.Add(1)
+				m.debounceWG.Add(1)
 				debounce = time.AfterFunc(500*time.Millisecond, func() {
-					defer debounceWG.Done()
+					defer m.debounceWG.Done()
 					m.runCycle(ctx)
 				})
 			}
@@ -266,6 +267,17 @@ func (m *Monitor) closeSinks() {
 	for _, sink := range m.cfg.Sinks {
 		_ = sink.Close()
 	}
+}
+
+// waitForPendingAlertCycle blocks until any AfterFunc-scheduled
+// runCycle started by the file-write debounce has finished.
+// Called from Run's shutdown defer so closeSinks doesn't race a
+// runCycle goroutine that fired its callback just before
+// debounce.Stop() raced it. Names the lifecycle action ("wait for
+// the alert cycle to drain") so the shutdown sequence reads as
+// service-lifecycle code rather than concurrency primitives.
+func (m *Monitor) waitForPendingAlertCycle() {
+	m.debounceWG.Wait()
 }
 
 func isObservationFile(name string) bool {

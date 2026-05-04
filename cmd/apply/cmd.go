@@ -293,6 +293,15 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 // text on the flag, and the Cobra completion function can't drift.
 var validSLAPolicyValues = []string{"warn", "strict", "critical-only"}
 
+// hasSupportedSLAPolicy reports whether the configured policy mode
+// is recognised by the engine. Encapsulates the slice-membership
+// check so the validate() body reads as a business-rule chain
+// instead of mechanical string comparisons — and a future move
+// from a static slice to a richer registry edits one place.
+func (o *Options) hasSupportedSLAPolicy() bool {
+	return slices.Contains(validSLAPolicyValues, o.SLAPolicy)
+}
+
 func (o *Options) validate() error {
 	if o.Profile != "" && o.InputFile == "" {
 		return &ui.UserError{Err: errors.New("flag --input is required when using --profile")}
@@ -300,7 +309,7 @@ func (o *Options) validate() error {
 	if (o.NewOnly || o.NewSince != "") && o.HistoryDir == "" {
 		return &ui.UserError{Err: errors.New("--history is required when using --new-only or --new-since")}
 	}
-	if !slices.Contains(validSLAPolicyValues, o.SLAPolicy) {
+	if !o.hasSupportedSLAPolicy() {
 		return &ui.UserError{Err: fmt.Errorf("--sla-policy %q invalid (allowed: %s)",
 			o.SLAPolicy, strings.Join(validSLAPolicyValues, ", "))}
 	}
