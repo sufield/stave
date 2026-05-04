@@ -48,7 +48,13 @@ func TestResourceID_ARN(t *testing.T) {
 func TestResourceID_ARN_WithPath(t *testing.T) {
 	r := New(WithIDSanitization(true))
 	got := r.Asset("arn:aws:s3:::my-bucket/some/key")
-	want := asset.ID("arn:aws:s3:::SANITIZED_" + crypto.ShortToken("my-bucket") + "/some/key")
+	// Each segment is tokenised independently — preserves structure
+	// (segment count) without leaking content. The previous shape
+	// kept "/some/key" verbatim, leaking customer / object-name
+	// fragments through the sanitizer.
+	want := asset.ID("arn:aws:s3:::SANITIZED_" + crypto.ShortToken("my-bucket") +
+		"/SANITIZED_" + crypto.ShortToken("some") +
+		"/SANITIZED_" + crypto.ShortToken("key"))
 	if got != want {
 		t.Errorf("AssetID(ARN with path) = %q, want %q", got, want)
 	}

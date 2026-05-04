@@ -34,8 +34,12 @@ func Quote(s string) string {
 			b.WriteString(`\t`)
 		default:
 			if r < 0x20 || r == 0x7f {
-				// C0 control range plus DEL — escape via \xNN.
-				fmt.Fprintf(&b, `\x%02x`, r)
+				// C0 control range plus DEL — escape via the YAML
+				// 1.2 four-digit Unicode escape \uNNNN. The earlier
+				// \xNN form was a Go fmt convention but is NOT a
+				// valid YAML 1.2 escape, so yaml.v3 rejected the
+				// output our own serializer produced.
+				fmt.Fprintf(&b, `\u%04x`, r)
 				continue
 			}
 			b.WriteRune(r)
@@ -59,7 +63,11 @@ func Block(s string, indent int) string {
 	}
 	s = strings.ReplaceAll(s, "\r\n", "\n")
 	prefix := strings.Repeat(" ", indent)
-	lines := strings.Split(strings.TrimRight(s, "\n"), "\n")
+	// TrimSuffix removes only ONE trailing newline so an authored
+	// "paragraph\n\n" keeps the visible blank line at the end of the
+	// block. TrimRight stripped every trailing newline, collapsing
+	// authored spacing into a single line break.
+	lines := strings.Split(strings.TrimSuffix(s, "\n"), "\n")
 	var b strings.Builder
 	b.WriteString("|\n")
 	for _, line := range lines {

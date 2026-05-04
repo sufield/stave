@@ -42,7 +42,12 @@ func filterSnapshots(stderr io.Writer, quiet bool, cfg Config, snapshots []asset
 	filtered := asset.ApplyScopeToSnapshots(scopeFilter, snapshots)
 	if len(filtered) == 0 {
 		if !quiet {
-			fmt.Fprintln(stderr, "No S3 buckets matching configured scope found in observations")
+			// Profile.AssetTypeLabel() resolves the asset-type plural
+			// for this profile (S3 buckets / IAM identities / EFS
+			// file systems / etc.). The previous hardcoded "S3
+			// buckets" misled non-S3 operators about why their scope
+			// filter produced no assets.
+			fmt.Fprintf(stderr, "No %s matching configured scope found in observations\n", cfg.Profile.AssetTypeLabel())
 		}
 		return nil
 	}

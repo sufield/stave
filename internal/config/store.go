@@ -59,8 +59,11 @@ func (c Context) Validate() error {
 	// ProjectRoot is normally absolute (a stave context labels a
 	// working directory) so the absolute/relative check is skipped
 	// here; only reject traversal that would let a context escape
-	// itself once joined with a sub-path.
-	if filepath.Clean(root) != root || strings.Contains(root, "..") {
+	// itself once joined with a sub-path. Routes through the same
+	// segment-based ".." detection isPathSafe uses for the relative
+	// fields, so a future tightening (UNC handling, separator
+	// normalisation) lands once.
+	if !hasNoUnsafeSegments(root) {
 		return fmt.Errorf("project_root contains unsafe path components: %q", root)
 	}
 	cfg := strings.TrimSpace(c.ProjectConfig)
@@ -95,36 +98,33 @@ func isPathSafe(path string) bool {
 	if filepath.IsAbs(path) {
 		return false
 	}
+	return hasNoUnsafeSegments(path)
+}
+
+// hasNoUnsafeSegments returns true when path is in canonical form and
+// carries no `..` segment. Shared by isPathSafe (rejects absolute
+// paths, used for relative defaults) and the ProjectRoot check
+// (which ALLOWS absolute paths and only screens for traversal).
+//
+// Empty input is safe. Cleans the path; if Clean changes it the
+// input wasn't canonical and is rejected. Then splits on either
+// separator to catch "..\foo" (Windows) and "../foo" (POSIX) at the
+// segment level — this is the segment-based guard the user-facing
+// validators all funnel through so a future tightening (UNC, BOM,
+// reserved names) lands once.
+func hasNoUnsafeSegments(path string) bool {
+	if path == "" {
+		return true
+	}
 	cleaned := filepath.Clean(path)
 	if cleaned != path {
 		return false
 	}
-	// The slices.Contains(..., "..") check is NOT redundant with
-	// filepath.Clean. Clean collapses traversal that can be
-	// canceled (e.g. "a/../b" → "b"), but leaves leading or
-	// otherwise-uncancelable parent refs intact: "../etc/passwd"
-	// stays "../etc/passwd" after Clean, and survives the
-	// `cleaned != path` check above.
-	//
-	// Windows compatibility: filepath.Separator is '\' on Windows,
-	// so a Unix-style "../etc" submitted from a config file would
-	// split into a single segment and miss detection. We also
-	// scan via strings.Contains(cleaned, "..") as a separator-
-	// agnostic backstop, AND replace `\` with `/` before the
-	// segment split so the explicit ".." check fires regardless
-	// of which separator the platform uses.
-	if strings.Contains(cleaned, "..") {
-		// Fast path: "..\foo" (Windows) or "../foo" (POSIX) or
-		// embedded "..foo" — over-rejects edge cases like a real
-		// segment named "..safe" but those are not legitimate
-		// directory names in any plausible context use; favour
-		// strict over permissive at the trust boundary.
-		normalized := strings.ReplaceAll(cleaned, "\\", "/")
-		if slices.Contains(strings.Split(normalized, "/"), "..") {
-			return false
-		}
+	if !strings.Contains(cleaned, "..") {
+		return true
 	}
-	return true
+	normalized := strings.ReplaceAll(cleaned, "\\", "/")
+	return !slices.Contains(strings.Split(normalized, "/"), "..")
 }
 
 // IsProduction reports whether the context is marked as a production
@@ -245,11 +245,20 @@ func (s *Store) SetContext(name string, ctx Context) error {
 // DeleteContext removes name from the store. Returns
 // ErrContextNotFound when the name is unknown so callers can
 // distinguish "removed it" from "wasn't there to begin with".
+//
+// If the deleted context happens to be the active one, the active
+// pointer is cleared rather than left dangling — a stale Active
+// reference is a worse failure mode than "no context selected"
+// because lookups silently return the contexts map's zero value
+// (an empty Context) and downstream code reads through it.
 func (s *Store) DeleteContext(name string) error {
 	if _, ok := s.contexts[name]; !ok {
 		return fmt.Errorf("%w: %q", ErrContextNotFound, name)
 	}
 	delete(s.contexts, name)
+	if s.Active == name {
+		s.Active = ""
+	}
 	return nil
 }
 

@@ -16,6 +16,7 @@ import (
 	"github.com/sufield/stave/internal/app/contracts"
 	er "github.com/sufield/stave/internal/app/execreport"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // Deps holds the adapter factories the report command depends on.
@@ -182,8 +183,15 @@ func writeReport(stdout io.Writer, opts *options, report *er.Report) error {
 	w := stdout
 	var f *os.File
 	if opts.OutFile != "" {
+		// SafeCreateFile applies symlink rejection and 0o600 perms
+		// — a report contains finding IDs and may carry sensitive
+		// asset identifiers, so a world-readable file (the default
+		// os.Create behaviour) is the wrong default. Mirrors the
+		// cmd/evaluate output-write pattern.
+		writeOpts := fsutil.DefaultWriteOpts()
+		writeOpts.Overwrite = true
 		var fErr error
-		f, fErr = os.Create(opts.OutFile)
+		f, fErr = fsutil.SafeCreateFile(opts.OutFile, writeOpts)
 		if fErr != nil {
 			return fmt.Errorf("create output file: %w", fErr)
 		}

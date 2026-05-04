@@ -273,11 +273,18 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 	}
 
 	cleanPath := filepath.Clean(path)
-	components := strings.Split(cleanPath, string(filepath.Separator))
+	// Strip the volume / UNC prefix before splitting so a path like
+	// `C:\stave\state` or `\\host\share\stave` doesn't produce empty
+	// leading segments that the segment loop below would treat as
+	// component names. The volume becomes the seed `current`; the
+	// loop walks the remaining segments.
+	volume := filepath.VolumeName(cleanPath)
+	rest := strings.TrimPrefix(cleanPath, volume)
+	components := strings.Split(rest, string(filepath.Separator))
 
-	current := ""
-	if filepath.IsAbs(cleanPath) {
-		current = string(filepath.Separator)
+	current := volume
+	if filepath.IsAbs(cleanPath) || (volume != "" && strings.HasPrefix(rest, string(filepath.Separator))) {
+		current += string(filepath.Separator)
 	}
 
 	// createdByUs tracks components this loop materially created

@@ -49,6 +49,14 @@ func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
 		}
 	}
 
+	// Compute Quiet once and pass the same value to both Config.Quiet
+	// and ResolveStdout. The previous shape passed
+	// `cs.GlobalFlags.Quiet` to ResolveStdout while Config.Quiet
+	// also folded in machine-format detection — so JSON / SARIF
+	// runs had Config.Quiet=true but Stdout was still cs.Stdout
+	// rather than the machine-output writer ResolveStdout would
+	// have selected with the same input.
+	quiet := cs.GlobalFlags.Quiet || isMachineFormat(format)
 	cfg := &Config{
 		InputFile:         o.InputFile,
 		Profile:           profiles[0], // Primary profile for output labeling.
@@ -57,8 +65,8 @@ func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
 		IncludeAll:        o.IncludeAll,
 		MaxUnsafeDuration: maxUnsafe,
 		OutputFormat:      format,
-		Quiet:             cs.GlobalFlags.Quiet || isMachineFormat(format),
-		Stdout:            compose.ResolveStdout(cs.Stdout, cs.GlobalFlags.Quiet, format),
+		Quiet:             quiet,
+		Stdout:            compose.ResolveStdout(cs.Stdout, quiet, format),
 		Stderr:            cs.Stderr,
 		Sanitizer:         cs.GlobalFlags.GetSanitizer(),
 	}

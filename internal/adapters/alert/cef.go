@@ -65,10 +65,10 @@ func (s *CEFFileSink) Close() error {
 	syncErr := s.f.Sync()
 	closeErr := s.f.Close()
 	s.f = nil
-	if syncErr != nil {
-		return syncErr
-	}
-	return closeErr
+	// errors.Join keeps both diagnostics visible when both fail —
+	// previously closeErr was silently dropped on a Sync failure,
+	// hiding a separate underlying problem.
+	return errors.Join(syncErr, closeErr)
 }
 
 // FormatCEF produces a CEF line from a WatchAlert.

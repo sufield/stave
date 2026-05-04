@@ -251,9 +251,17 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErrIn error) error 
 
 // pathDepth counts directory separators in the cleaned relative path.
 // "a" = 0, "a/b" = 1, "a/b/c" = 2.
+//
+// Strips the volume name (Windows "C:" or `\\host\share` UNC prefix)
+// before counting so a path like `C:\stave\controls` reports depth
+// 1 — same as POSIX `stave/controls`. Without the strip, the volume
+// adds spurious separators on Windows and a depth-2 budget would
+// reject every Windows search path.
 func pathDepth(rel string) int {
 	rel = filepath.Clean(rel)
-	if rel == "." {
+	rel = strings.TrimPrefix(rel, filepath.VolumeName(rel))
+	rel = strings.TrimPrefix(rel, string(filepath.Separator))
+	if rel == "" || rel == "." {
 		return 0
 	}
 	return strings.Count(rel, string(filepath.Separator))

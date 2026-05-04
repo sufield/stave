@@ -34,6 +34,11 @@ type options struct {
 	ProfileID    string
 	Format       appcontracts.OutputFormat
 	OutputPath   string
+	// Now overrides exception expiry / acknowledgment date evaluation
+	// for deterministic test fixtures and time-travel debugging. Empty
+	// (the default) lets the command read time.Now() the first time it
+	// resolves the exception evaluation point.
+	Now string
 }
 
 // NewCmd constructs the evaluate command.
@@ -73,6 +78,12 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.ProfileID, "profile", "", "Compliance profile ID (required)")
 	cmd.Flags().VarP(&opts.Format, "format", "f", "Output format: text or json")
 	cmd.Flags().StringVarP(&opts.OutputPath, "output", "o", "", "Output file path (default: stdout)")
+	// --now overrides the exception evaluation point so a recorded
+	// fixture can replay deterministically (no fixture flapping when
+	// the wall clock crosses an expiry threshold). STAVE_NOW takes
+	// precedence over the flag-default empty string but the flag
+	// itself wins when set explicitly.
+	cmd.Flags().StringVar(&opts.Now, "now", os.Getenv("STAVE_NOW"), "RFC3339 timestamp used as evaluation \"now\" for exception expiry (defaults to STAVE_NOW env, else wall clock)")
 
 	_ = cmd.MarkFlagRequired("snapshot")
 	_ = cmd.MarkFlagRequired("profile")
@@ -125,7 +136,11 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 		}
 	}
 	if len(excs) > 0 {
-		acks := exception.ApplyExceptions(excs, report.Results, extractBucketName(snap), time.Now())
+		nowAt, nowErr := resolveEvaluationNow(opts.Now)
+		if nowErr != nil {
+			return &ui.UserError{Err: fmt.Errorf("--now: %w", nowErr)}
+		}
+		acks := exception.ApplyExceptions(excs, report.Results, extractBucketName(snap), nowAt)
 		// Only valid exceptions belong in the public Acknowledged list.
 		// Previously, invalid acks (where the compensating control
 		// wasn't in place) were also appended, making it look as if
@@ -297,4 +312,21 @@ func resolveOutput(path string, stdout io.Writer) (io.Writer, func(*error), erro
 			*outErr = closeErr
 		}
 	}, nil
+}
+
+// resolveEvaluationNow returns the wall-clock instant the evaluation
+// should treat as "now" for exception expiry math. An empty raw
+// string defers to time.Now(); any non-empty value must parse as
+// RFC3339. Mirrors the apply command's --now / clock-injection
+// pattern so deterministic fixtures replay identically across both
+// commands.
+func resolveEvaluationNow(raw string) (time.Time, error) {
+	if raw == "" {
+		return time.Now(), nil
+	}
+	t, err := time.Parse(time.RFC3339, raw)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("expected RFC3339 timestamp, got %q: %w", raw, err)
+	}
+	return t, nil
 }

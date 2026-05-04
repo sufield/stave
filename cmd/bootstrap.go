@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -259,12 +260,19 @@ func (a *App) stopCPUProfile() {
 		return
 	}
 	pprof.StopCPUProfile()
-	if err := f.Close(); err != nil && a.Logger != nil {
+	if err := f.Close(); err != nil {
 		// Mirror the memory-profile path: a CPU profile that fails
 		// to flush is a diagnostic gap, not a fatal one. Log so the
 		// silent-truncation case becomes visible without changing
-		// the existing fire-and-forget contract.
-		a.Logger.Warn("close CPU profile", "error", err)
+		// the existing fire-and-forget contract. Fall back to
+		// slog.Default when a.Logger is nil — same pattern as
+		// recoverExecutePanic — so panic / signal paths still
+		// surface the warning before the logger is wired.
+		if a.Logger != nil {
+			a.Logger.Warn("close CPU profile", "error", err)
+		} else {
+			slog.Default().Warn("close CPU profile", "error", err)
+		}
 	}
 }
 
@@ -284,6 +292,12 @@ func (a *App) writeMemProfile(cmd *cobra.Command) {
 func (a *App) writeMemProfileTo(stderr io.Writer) {
 	_, memPath := a.Flags.ProfilerConfig()
 	if memPath == "" {
+		return
+	}
+	// Idempotency: a panic mid-run lands in both recoverExecutePanic
+	// and the deferred finalize path; without the CAS guard the
+	// second writer truncates the first writer's output.
+	if !a.memProfileWritten.CompareAndSwap(false, true) {
 		return
 	}
 	warnf := func(msg string, err error) {

@@ -27,11 +27,23 @@ func (e Entry) Value() string {
 	return e.DefaultValue
 }
 
-// IsTrue returns true if the environment variable is set to a truthy value.
-// It accepts all forms recognized by strconv.ParseBool: 1, t, T, TRUE, true,
-// True, 0, f, F, FALSE, false, False. Unset or unparseable values are false.
+// IsTrue returns true if the environment variable is set to a truthy
+// value. It accepts all forms recognized by strconv.ParseBool: 1, t,
+// T, TRUE, true, True, 0, f, F, FALSE, false, False. Unset or
+// empty values fall back to parsing e.DefaultValue, so an Entry that
+// declares a boolean default (e.g. DefaultValue: "true") behaves
+// consistently whether the operator left the env unset or unset
+// fresh after a previous override. Unparseable values still return
+// false — over-rejecting an invalid env wins over inferring a
+// dangerous truthy value from a typo.
 func (e Entry) IsTrue() bool {
 	v := strings.TrimSpace(os.Getenv(e.Name))
+	if v == "" {
+		v = strings.TrimSpace(e.DefaultValue)
+	}
+	if v == "" {
+		return false
+	}
 	b, err := strconv.ParseBool(v)
 	return err == nil && b
 }

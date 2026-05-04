@@ -179,8 +179,17 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 
 // sanitizeRaw applies prefix-aware sanitization to a raw identifier string.
 // For each preserved prefix, the first path segment after the prefix is
-// tokenised while the rest of the path is kept intact. Identifiers that
-// match no prefix become "SANITIZED_<token>".
+// tokenised AND every subsequent path segment is independently tokenised.
+// Path structure (segment count, separators) is preserved so debug output
+// keeps "this was a 4-segment object key" but no segment carries the
+// original content. Identifiers that match no prefix become
+// "SANITIZED_<token>".
+//
+// The earlier shape preserved the path tail verbatim — an S3 ARN like
+// `arn:aws:s3:::bucket/customer/12345/secret.json` produced
+// `arn:aws:s3:::SANITIZED_<bucket>/customer/12345/secret.json`,
+// leaking customer / object-name fragments downstream consumers
+// treat as opaque.
 func (s *Sanitizer) sanitizeRaw(raw string) string {
 	if raw == "" {
 		return ""
@@ -188,10 +197,21 @@ func (s *Sanitizer) sanitizeRaw(raw string) string {
 	for _, prefix := range preservedPrefixes {
 		if rest, ok := strings.CutPrefix(raw, prefix); ok {
 			bucket, path, _ := strings.Cut(rest, "/")
+			scrubbed := prefix + "SANITIZED_" + crypto.ShortToken(bucket)
 			if path != "" {
-				path = "/" + path
+				// Tokenise each path segment independently so empty
+				// segments (the "//" pattern in object keys) round-
+				// trip as empty strings, preserving structure.
+				parts := strings.Split(path, "/")
+				for i, p := range parts {
+					if p == "" {
+						continue
+					}
+					parts[i] = "SANITIZED_" + crypto.ShortToken(p)
+				}
+				scrubbed += "/" + strings.Join(parts, "/")
 			}
-			return prefix + "SANITIZED_" + crypto.ShortToken(bucket) + path
+			return scrubbed
 		}
 	}
 	return "SANITIZED_" + crypto.ShortToken(raw)
@@ -348,39 +368,22 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 		}
 		return "SANITIZED_" + crypto.ShortToken(val)
 	case bool:
-		// Scrub bools to their zero value (false) so the JSON output
-		// keeps its declared type. The earlier shape returned the
-		// SanitizedValue *string* here, which silently broke
-		// schema-typed JSON consumers — a field declared as a bool
-		// in out.v0.1.json suddenly contained `"[SANITIZED]"`,
-		// failing schema validation and downstream type assertions.
-		// The privacy concern that drove the string output ("a
-		// scrubbed false is indistinguishable from a legitimate
-		// false") is real but secondary to the type-safety break;
-		// callers that need to distinguish "redacted" vs "really
-		// false" should set the parent map key to a Sanitize-flagged
-		// path so the value is removed entirely, or wrap the bool
-		// in a typed sentinel struct.
+		// Booleans are returned UNCHANGED. Booleans are never
+		// sensitive on their own — `enabled: true` does not leak a
+		// secret the way a string identifier might — and the
+		// previous "scrub to false" path silently flipped control
+		// verdicts when sanitized output was re-ingested (a `true`
+		// became `false` and a `block_public_acls` finding turned
+		// passing). Schema typing also stays intact: bool fields
+		// declared in out.v0.1.json keep their declared type
+		// regardless of the SanitizeIDs flag.
 		//
-		// IMPORTANT: this means a sanitized output of a bool field is
-		// not distinguishable from a legitimate `false`. Pipelines
-		// that *re-ingest* sanitized output (a sanitized snapshot
-		// becoming an input to another stave run, for example) MUST
-		// treat bool fields as untrusted: a sanitized `true` becomes
-		// `false` after the round trip, which can flip a control's
-		// verdict. Treat sanitization as a one-way operation toward
-		// human consumers, not an idempotent transform.
-		//
-		// Surface the sanitization at warn level when the original
-		// value was true — flipping true→false is the asymmetric case
-		// that matters for re-ingestion safety; an already-false bool
-		// rounds-trips harmlessly. Without this, sanitized→re-ingested
-		// pipelines could silently flip a control verdict and the
-		// operator would have no signal in the logs.
-		if val {
-			slog.Warn("sanitize: bool true scrubbed to false (one-way operation; do not re-ingest sanitized output)")
-		}
-		return false
+		// If a future use case needs to distinguish "redacted" from
+		// "really false", set the parent map key to a Sanitize-
+		// flagged path so the value is removed entirely (the
+		// neutral-key recursion above redacts every primitive
+		// child of a Sanitize parent).
+		return val
 	case int:
 		return 0
 	case int8:

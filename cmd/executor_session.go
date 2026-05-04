@@ -22,8 +22,14 @@ func persistSessionStateIfApplicable(resolver *projctx.Resolver, args []string) 
 		slog.Debug("session persistence skipped", "error", err)
 		return ""
 	}
-	// Best-effort: session state is advisory; failure doesn't affect the command result.
-	_ = projctx.SaveSession(projectRoot, args)
+	// Best-effort: session state is advisory; failure doesn't affect
+	// the command result. Log at debug — mirrors the
+	// DetectProjectRoot pattern above — so a corrupted session file
+	// surfaces in verbose output without forcing the operator to
+	// re-instrument the call.
+	if saveErr := projctx.SaveSession(projectRoot, args); saveErr != nil {
+		slog.Debug("session save failed", "error", saveErr)
+	}
 	return projectRoot
 }
 

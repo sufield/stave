@@ -58,15 +58,24 @@ func BuildLifecyclesPerControl(
 // the single source of truth for the vendor-applicability
 // heuristic shared with the risk pipeline.
 //
-// Concurrency contract: NOT safe for concurrent use. The current
-// caller (BuildLifecyclesPerControl) iterates snapshots
-// sequentially. If a future caller wants to parallelize, add a
-// sync.Mutex around the cache map; do NOT remove it and rely on
-// "value receiver makes copies" — the cache map is a reference
-// type, so copies still share state.
+// IMPORTANT: NOT safe for concurrent use. The current caller
+// (BuildLifecyclesPerControl) iterates snapshots sequentially on a
+// single goroutine; the `cache` map is mutated without locking and
+// concurrent readers WILL race a writer (`fatal error: concurrent
+// map writes`). If a future caller wants to parallelize:
+//
+//  1. Add a sync.RWMutex to controlVendorIndex.
+//  2. Wrap cache reads in mu.RLock / mu.RUnlock.
+//  3. Wrap cache writes in mu.Lock / mu.Unlock.
+//
+// Do NOT rely on "value receiver makes copies" — the cache map is a
+// reference type, so copies still share state. Tests that
+// inadvertently introduce a race here surface as nondeterministic
+// `go test -race` failures, not silent data corruption — exercise
+// the assessor under -race when adding parallelism.
 type controlVendorIndex struct {
 	scopeTags [][]kernel.ScopeTag                          // per-control scope tags
-	cache     map[kernel.Vendor][]policy.ControlDefinition // vendor → cached result
+	cache     map[kernel.Vendor][]policy.ControlDefinition // vendor → cached result; UNGUARDED, see contract above
 }
 
 func buildControlVendorIndex(controls []policy.ControlDefinition) *controlVendorIndex {

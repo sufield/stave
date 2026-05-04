@@ -38,6 +38,7 @@ type options struct {
 	Period     time.Duration
 	PIDFile    string
 	AuditLabel string
+	MaxUnsafe  time.Duration
 }
 
 // NewCmd constructs the collect command.
@@ -81,6 +82,11 @@ Exit Codes:
 	cmd.Flags().DurationVar(&opts.Period, "period", 24*time.Hour, "collection interval for daemon mode")
 	cmd.Flags().StringVar(&opts.PIDFile, "pid-file", "", "path to PID file (daemon mode)")
 	cmd.Flags().StringVar(&opts.AuditLabel, "audit-label", "", "label embedded in bundle metadata")
+	// Match cmd/apply's default so an asset's tolerated-unsafe budget
+	// is consistent across the collect / apply pair. Without this
+	// flag the SLA threshold defaulted to zero, which made every
+	// duration-based control fire on first observation.
+	cmd.Flags().DurationVar(&opts.MaxUnsafe, "max-unsafe", 168*time.Hour, "maximum tolerated unsafe duration before a finding fires (default 168h)")
 
 	_ = cmd.MarkFlagRequired("archive")
 
@@ -160,7 +166,7 @@ func runCollect(ctx context.Context, stdout, stderr io.Writer, opts *options) er
 	// genuinely intended to disable compliance reporting.
 	var frameworks []string
 	if trimmed := strings.TrimSpace(opts.Compliance); trimmed != "" {
-		for part := range strings.SplitSeq(trimmed, ",") {
+		for _, part := range strings.Split(trimmed, ",") {
 			if name := strings.TrimSpace(part); name != "" {
 				frameworks = append(frameworks, name)
 			}
@@ -200,13 +206,14 @@ func runCollect(ctx context.Context, stdout, stderr io.Writer, opts *options) er
 
 	// Run assessment.
 	result, evalErr := appeval.EvaluateLoaded(ctx, appeval.EvaluationRequest{
-		Controls:        controls,
-		Snapshots:       snapshots,
-		Clock:           ports.RealClock{},
-		Hasher:          crypto.NewHasher(),
-		StaveVersion:    version.String,
-		PredicateParser: ctlyaml.ParsePredicate,
-		CELEvaluator:    celEval,
+		Controls:          controls,
+		Snapshots:         snapshots,
+		MaxUnsafeDuration: opts.MaxUnsafe,
+		Clock:             ports.RealClock{},
+		Hasher:            crypto.NewHasher(),
+		StaveVersion:      version.String,
+		PredicateParser:   ctlyaml.ParsePredicate,
+		CELEvaluator:      celEval,
 	})
 	if evalErr != nil {
 		return fmt.Errorf("assessment: %w", evalErr)

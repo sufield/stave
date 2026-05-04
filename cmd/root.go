@@ -144,6 +144,13 @@ type App struct {
 	// stopCPUProfile cannot race when both fire near the same
 	// instant (mocked ExitFunc in tests, mid-execution panic).
 	cpuProfileFile atomic.Pointer[os.File]
+	// memProfileWritten gates writeMemProfileTo so the profile is
+	// emitted exactly once across the (finalize / cleanupBeforeExit /
+	// recoverExecutePanic) call sites. Without it, a panic mid-run
+	// caused two writes (one from the recover path, one from the
+	// deferred finalize) and the second open-with-O_TRUNC clobbered
+	// the first.
+	memProfileWritten atomic.Bool
 	// cancel is published by bootstrap (phaseContext) and read by the
 	// signal-handler goroutine. atomic.Pointer makes the publish/load
 	// race-free without locking the read path.

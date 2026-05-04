@@ -69,6 +69,28 @@ func (p Profile) UsesPHIScope() bool {
 	return p == ProfileAWSS3
 }
 
+// AssetTypeLabel returns the human-readable asset-type plural the
+// "no assets matching scope" error message references. Centralised
+// so the error string in filterSnapshots adapts to the profile —
+// the previous hardcoded "S3 buckets" misled IAM / EFS / GCS / KMS
+// operators when an empty filter result was about identities or
+// EFS volumes, not buckets.
+func (p Profile) AssetTypeLabel() string {
+	switch p {
+	case ProfileAWSS3:
+		return "S3 buckets"
+	case ProfileAWSIAM:
+		return "IAM identities"
+	case ProfileAWSEFS:
+		return "EFS file systems"
+	case ProfileGCPGCS:
+		return "GCS buckets"
+	}
+	// Compliance profiles span multiple asset types; the message
+	// generalises rather than enumerating.
+	return "assets"
+}
+
 // ParseProfile validates and returns a Profile value.
 func ParseProfile(s string) (Profile, error) {
 	switch Profile(s) {
@@ -243,14 +265,46 @@ func validateInput(path string) error {
 }
 
 func (r *Runner) loadControlsMulti(ctx context.Context, profiles []Profile) (string, []policy.ControlDefinition, error) {
-	// Use the first profile to determine the control directory.
-	domain := profileControlDomain(profiles[0])
-	ctlDir := filepath.Join(getControlsBaseDir(), domain)
-
-	controls, err := r.LoadControls(ctx, ctlDir)
-	if err != nil {
-		return "", nil, err
+	// Walk every profile's control domain so a multi-profile run
+	// (e.g. --profile=hipaa,soc2,pci-dss-v4.0) sees the union of
+	// available controls. The previous "use the first profile only"
+	// shape silently dropped controls authored in any other domain
+	// and the profile-side compliance filter would then have nothing
+	// to match — multi-profile runs collapsed to their first
+	// profile's domain content.
+	base := getControlsBaseDir()
+	seenDir := make(map[string]struct{})
+	seenCtl := make(map[kernel.ControlID]struct{})
+	var primaryDir string
+	var controls []policy.ControlDefinition
+	for _, prof := range profiles {
+		domain := profileControlDomain(prof)
+		dir := filepath.Join(base, domain)
+		if primaryDir == "" {
+			primaryDir = dir
+		}
+		if _, dup := seenDir[dir]; dup {
+			continue
+		}
+		seenDir[dir] = struct{}{}
+		loaded, err := r.LoadControls(ctx, dir)
+		if err != nil {
+			return "", nil, err
+		}
+		// Dedup by ControlID — the same control can live under
+		// multiple framework directories during the migration to
+		// per-profile catalogues, and a duplicate would inflate
+		// finding counts in the assessment summary.
+		for i := range loaded {
+			id := loaded[i].ID
+			if _, dup := seenCtl[id]; dup {
+				continue
+			}
+			seenCtl[id] = struct{}{}
+			controls = append(controls, loaded[i])
+		}
 	}
+	ctlDir := primaryDir
 
 	// Collect compliance frameworks from all profiles.
 	var frameworks []policy.ComplianceFramework
@@ -268,7 +322,7 @@ func (r *Runner) loadControlsMulti(ctx context.Context, profiles []Profile) (str
 	}
 
 	if len(controls) == 0 {
-		label := domain
+		label := profileControlDomain(profiles[0])
 		if label == "" {
 			var names []string
 			for _, p := range profiles {

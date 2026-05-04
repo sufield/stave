@@ -25,10 +25,16 @@ type ControlStore struct {
 	root          string
 	aliasResolver policy.AliasResolver
 
-	mu    sync.RWMutex
-	cache []policy.ControlDefinition
-	err   error
-	once  sync.Once
+	// mu guards loaded / cache / err. Lazy init follows the
+	// double-checked locking pattern from internal/adapters/cel/trace.go
+	// — the previous sync.Once memoised transient load failures and
+	// locked the registry into a permanent error state. The new shape
+	// retries on each call until load succeeds, then takes the
+	// read-locked fast path.
+	mu     sync.RWMutex
+	loaded bool
+	cache  []policy.ControlDefinition
+	err    error
 }
 
 // NewControlStore creates a registry backed by the given filesystem.
@@ -52,19 +58,46 @@ func WithAliasResolver(resolver policy.AliasResolver) StoreOption {
 
 // All returns all control definitions. It performs a lazy load on the first
 // call and returns a shallow clone of the cache for subsequent calls.
+//
+// Concurrency: double-checked locking — RLock fast path returns the
+// cached slice once `loaded` is true; a writer takes the full Lock,
+// re-checks `loaded` (another goroutine may have raced ahead), and
+// runs load() once. A transient load() failure clears `loaded`
+// before returning so the next call retries instead of memoising
+// the failure (the previous sync.Once shape locked the registry
+// into a permanent error state on first-call init failure).
 func (r *ControlStore) All() ([]policy.ControlDefinition, error) {
-	r.once.Do(func() {
-		r.mu.Lock()
-		defer r.mu.Unlock()
-		r.cache, r.err = r.load()
-	})
-
-	if r.err != nil {
-		return nil, r.err
-	}
-
 	r.mu.RLock()
-	defer r.mu.RUnlock()
+	if r.loaded {
+		clone := slices.Clone(r.cache)
+		err := r.err
+		r.mu.RUnlock()
+		if err != nil {
+			return nil, err
+		}
+		return clone, nil
+	}
+	r.mu.RUnlock()
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.loaded {
+		// Another goroutine raced ahead and finished the load.
+		if r.err != nil {
+			return nil, r.err
+		}
+		return slices.Clone(r.cache), nil
+	}
+	cache, err := r.load()
+	if err != nil {
+		// Don't mark loaded on failure — let the next call retry
+		// rather than pinning the failure for the process lifetime.
+		r.err = err
+		return nil, err
+	}
+	r.cache = cache
+	r.err = nil
+	r.loaded = true
 	return slices.Clone(r.cache), nil
 }
 
