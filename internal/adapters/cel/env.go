@@ -98,6 +98,24 @@ func IsTypeError(val ref.Val) bool {
 	return false
 }
 
+// isCollectionEmpty reports whether a CEL collection (list or map)
+// is empty OR has an unmeasurable size. Returning true on a Size()
+// error is a fail-safe policy: a malformed lister/mapper wrapper
+// that can't report its length would otherwise compare unequal to
+// IntZero and let the caller treat unparseable data as "populated"
+// — bypassing missing-data predicates that gate downstream
+// evaluation. Treating "unmeasurable" as "absent" keeps that path
+// closed.
+//
+// Both lister and mapper isMissing branches funnel through this
+// helper so the empty-vs-error policy lives in one place.
+func isCollectionEmpty(size ref.Val) bool {
+	if types.IsError(size) {
+		return true
+	}
+	return size.Equal(types.IntZero) == types.True
+}
+
 // isMissing implements Stave's three-way absence semantics:
 // null, empty string (trimmed), empty list, empty map, structural CEL
 // error. Runtime errors (division by zero, type mismatch, overload
@@ -144,10 +162,10 @@ func isMissing(val ref.Val) bool {
 	// below cover values injected directly into the activation
 	// (Properties / Params / etc.) before they pass through CEL.
 	if lister, ok := val.(traits.Lister); ok {
-		return lister.Size().Equal(types.IntZero) == types.True
+		return isCollectionEmpty(lister.Size())
 	}
 	if mapper, ok := val.(traits.Mapper); ok {
-		return mapper.Size().Equal(types.IntZero) == types.True
+		return isCollectionEmpty(mapper.Size())
 	}
 
 	switch v := val.Value().(type) {

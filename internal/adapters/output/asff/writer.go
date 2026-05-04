@@ -6,12 +6,35 @@ package asff
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/report"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
+
+// unknownAWSAccountID is the placeholder ASFF AccountId emitted when
+// the asset identifier doesn't carry an extractable AWS account ID.
+// AWS Security Hub validates the field's shape (12 digits) but
+// accepts the all-zero sentinel as the documented "unknown owner"
+// marker, so downstream rules that pivot on AccountId still parse
+// the row instead of rejecting it for a missing field.
+const unknownAWSAccountID = "000000000000"
+
+// extractAWSAccountID pulls the 12-digit AWS account from an asset
+// identifier (typically an ARN). Returns the unknown-account
+// sentinel when no account could be parsed so the ASFF AccountId
+// field stays well-formed. Mirrors the graph builder's account-ID
+// extraction so the two output paths agree on what "owns" each
+// finding.
+func extractAWSAccountID(assetID string) string {
+	if id := iam.ExtractAccountID(assetID); id != "" {
+		return id
+	}
+	return unknownAWSAccountID
+}
 
 // ASFFinding represents a single finding in AWS Security Finding Format.
 type ASFFinding struct {
@@ -80,7 +103,7 @@ func mapFinding(f *remediation.Finding, timestamp string) ASFFinding {
 		ID:            fmt.Sprintf("stave/%s/%s", f.ControlID, f.AssetID),
 		ProductARN:    "arn:aws:securityhub:local:stave:product/stave/safety-engine",
 		GeneratorID:   "stave-logic-engine",
-		AWSAccountID:  "000000000000",
+		AWSAccountID:  extractAWSAccountID(string(f.AssetID)),
 		Types:         []string{"Software and Configuration Checks/Vulnerabilities/Misconfiguration"},
 		CreatedAt:     timestamp,
 		UpdatedAt:     timestamp,
@@ -115,7 +138,7 @@ func MapChainFindings(chains []risk.CompoundFinding, timestamp string) []ASFFind
 			ID:            "stave/chain/" + string(cf.ChainID),
 			ProductARN:    "arn:aws:securityhub:local:stave:product/stave/safety-engine",
 			GeneratorID:   "stave-logic-engine",
-			AWSAccountID:  "000000000000",
+			AWSAccountID:  extractAWSAccountID(string(cf.AssetID)),
 			Types:         []string{"Software and Configuration Checks/Vulnerabilities/Compound Risk"},
 			CreatedAt:     timestamp,
 			UpdatedAt:     timestamp,
@@ -124,7 +147,7 @@ func MapChainFindings(chains []risk.CompoundFinding, timestamp string) []ASFFind
 				Normalized: severityToNormalized(cf.Severity.String()),
 			},
 			Title:       "Compound Risk: " + string(cf.ChainID),
-			Description: cf.Narrative,
+			Description: chainDescription(cf),
 			Resources:   []ASFFResource{{Type: "Other", ID: string(cf.ChainID)}},
 			ProductFields: map[string]string{
 				"ChainId":       string(cf.ChainID),
@@ -172,8 +195,32 @@ func mapSeverity(sev string) ASFFSeverity {
 	}
 }
 
+// chainDescription picks the most informative text available on a
+// CompoundFinding for the ASFF Description slot. Narrative is the
+// per-finding personalised explanation built from the actual failing
+// controls (preferred); Description is the static text from the
+// chain definition (fallback). Either alone could be empty, so the
+// helper covers the gap rather than emitting an empty Description
+// to AWS Security Hub.
+func chainDescription(cf *risk.CompoundFinding) string {
+	if cf == nil {
+		return ""
+	}
+	if narrative := strings.TrimSpace(cf.Narrative); narrative != "" {
+		return narrative
+	}
+	return strings.TrimSpace(cf.Description)
+}
+
 func severityToNormalized(sev string) int {
-	switch sev {
+	// Lowercase the input so the switch matches regardless of how
+	// the producer canonicalises severity. Stave's Severity.String()
+	// returns lowercase today (the matching path), but
+	// f.SeverityLabel and cf.Severity.String are two separate call
+	// sites — accepting both cases here keeps the mapping robust if
+	// either changes its convention or a future caller passes
+	// already-uppercased ASFF labels through this helper.
+	switch strings.ToLower(strings.TrimSpace(sev)) {
 	case "critical":
 		return 90
 	case "high":

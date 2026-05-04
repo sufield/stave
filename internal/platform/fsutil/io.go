@@ -541,21 +541,20 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 
 	_, err = tmp.Write(data)
 	if err != nil {
-		// Best-effort close; defer handles temp file removal.
-		_ = tmp.Close()
-		return err
+		// Surface a Close error alongside the original Write failure
+		// instead of dropping it silently. Disk-full / NFS / quota
+		// failures often surface only at Close (deferred metadata
+		// writeback), and silencing them masks the real cause when
+		// triaging a partial copy. Defer handles temp file removal.
+		return errors.Join(err, tmp.Close())
 	}
 	err = tmp.Chmod(perm)
 	if err != nil {
-		// Best-effort close; defer handles temp file removal.
-		_ = tmp.Close()
-		return err
+		return errors.Join(err, tmp.Close())
 	}
 	err = tmp.Sync()
 	if err != nil {
-		// Best-effort close; defer handles temp file removal.
-		_ = tmp.Close()
-		return err
+		return errors.Join(err, tmp.Close())
 	}
 	// Capture the close error explicitly: even after a successful
 	// Sync, Close can still return errors for buffered metadata

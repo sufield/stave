@@ -388,9 +388,15 @@ func sortItems(items ThresholdItems) {
 	}
 
 	slices.SortFunc(items, func(a, b ThresholdItem) int {
+		// Status rank is the primary key so all Overdue items sort
+		// before all DueNow items, and DueNow before later. The
+		// previous primary-by-DueAt order interleaved overdue rows
+		// with sufficiently-old upcoming ones — operators reading
+		// the list expected "what's blown the deadline" at the top
+		// regardless of how long blown.
 		return cmp.Or(
-			a.DueAt.Compare(b.DueAt),
 			cmp.Compare(rank(a.Status), rank(b.Status)),
+			a.DueAt.Compare(b.DueAt),
 			cmp.Compare(string(a.ControlID), string(b.ControlID)),
 			cmp.Compare(string(a.AssetID), string(b.AssetID)),
 			cmp.Compare(string(a.AssetType), string(b.AssetType)),

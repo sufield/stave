@@ -292,10 +292,16 @@ func ApplyExceptions(exceptions []Config, results []profile.Result, currentBucke
 			allPassing = false
 		}
 		for i, reqID := range exc.RequiresPassing {
-			passing := false
-			if req, ok := resultMap[reqID]; ok {
-				passing = req.Pass
-			}
+			// Read from originallyPassing instead of req.Pass: an
+			// earlier exception in this loop may have called
+			// MarkExempt on a previously-failing compensating
+			// control, flipping its Pass flag to true. Trusting the
+			// mutated state would let exceptions prop each other up
+			// — A's compensating control B passes only because B
+			// was itself acknowledged. The snapshot keeps every
+			// "compensating control passes" assertion grounded in
+			// the original evaluation result.
+			passing := originallyPassing[reqID]
 			controls[i] = CompensatingControl{ControlID: reqID, Passing: passing}
 			if !passing {
 				allPassing = false

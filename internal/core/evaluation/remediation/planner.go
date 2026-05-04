@@ -45,7 +45,12 @@ func (p *Planner) PlanFor(f Finding) *evaluation.RemediationPlan {
 }
 
 // EnrichFindings combines raw violations with their remediation specs and plans.
+// A nil result returns a nil slice so callers that thread a possibly-empty
+// assessment through this method don't panic on result.Findings.
 func (p *Planner) EnrichFindings(result *evaluation.ComplianceReport) []Finding {
+	if result == nil {
+		return nil
+	}
 	enriched := make([]Finding, len(result.Findings))
 	for i := range result.Findings {
 		f := &result.Findings[i]

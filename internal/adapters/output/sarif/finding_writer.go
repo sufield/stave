@@ -63,6 +63,12 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	// downstream consumers can reconstruct the consolidated view.
 	// See docs/product/metrics.md § Metric 2.
 	if len(enriched.Result.Issues) > 0 {
+		// Verify the architectural contract before walking the two
+		// slices in lockstep — buildResults is required to preserve
+		// per-finding order so issue-id metadata lands on the right
+		// SARIF row. A future change that filters or reorders would
+		// otherwise silently mis-attribute the annotations.
+		verifyPositionalInvariant(results, remFindings)
 		fidToIssue := make(map[string]string, len(remFindings))
 		for _, iss := range enriched.Result.Issues {
 			for _, fid := range iss.MemberFindingIDs {
@@ -70,9 +76,6 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 			}
 		}
 		for i := range results {
-			if i >= len(remFindings) {
-				break
-			}
 			if issueID, ok := fidToIssue[string(remFindings[i].FindingID)]; ok {
 				if results[i].PartialFingerprints == nil {
 					results[i].PartialFingerprints = map[string]string{}
@@ -106,6 +109,26 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 		return nil, fmt.Errorf("sarif encode: %w", err)
 	}
 	return buf.Bytes(), nil
+}
+
+// verifyPositionalInvariant ensures that the generated SARIF results
+// maintain a strict 1-to-1 positional mapping with the source
+// findings. The annotate-issue-id loop in MarshalFindings reads
+// `results[i]` and `findings[i]` together, so any divergence in
+// length means a future change to buildResults (filtering,
+// reordering, deduplication) has broken the contract. Failing loud
+// at the assertion point names the architectural rule that was
+// violated; a silent mismatch would attribute issue-id metadata to
+// the wrong SARIF row, sending operators to investigate the wrong
+// finding.
+func verifyPositionalInvariant(results []sarifResult, findings []remediation.Finding) {
+	if len(results) != len(findings) {
+		panic(fmt.Sprintf(
+			"sarif: positional invariant violated (results: %d, findings: %d); "+
+				"buildResults must preserve finding order so issue-id annotations land on the correct row",
+			len(results), len(findings),
+		))
+	}
 }
 
 // buildRules deduplicates control IDs and builds SARIF rule descriptors.

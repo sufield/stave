@@ -152,7 +152,6 @@ type BuildInput struct {
 type builderState struct {
 	g                *GraphData
 	seenNodes        sets.Set[string]
-	seenControls     sets.Set[kernel.ControlID]
 	seenRequirements sets.Set[string]
 	seenAccounts     sets.Set[string]
 	seenMapsTo       sets.Set[string]
@@ -164,7 +163,6 @@ func newBuilderState(g *GraphData) *builderState {
 	return &builderState{
 		g:                g,
 		seenNodes:        sets.New[string](),
-		seenControls:     sets.New[kernel.ControlID](),
 		seenRequirements: sets.New[string](),
 		seenAccounts:     sets.New[string](),
 		// seenMapsTo / seenBelongsTo / seenViolates: inline edge-dedup
@@ -314,13 +312,13 @@ func buildFindingProperties(f *remediation.Finding) map[string]any {
 }
 
 // emitControlNode emits the Control node for the finding's ControlID
-// the first time that control is seen.
+// the first time that control is seen. Routes through emitOnce so the
+// dedup invariant (any node ID emitted at most once) lives in one
+// place rather than the per-category seenControls set the prior
+// shape maintained — adding a new emit site can no longer forget the
+// dedup pattern.
 func (b *builderState) emitControlNode(f *remediation.Finding) {
-	if b.seenControls.Contains(f.ControlID) {
-		return
-	}
-	b.seenControls.Add(f.ControlID)
-	b.g.Nodes = append(b.g.Nodes, Node{
+	b.emitOnce(string(f.ControlID), Node{
 		ID: string(f.ControlID), Type: NodeTypeControl,
 		Standard: "oscal", StandardType: "control",
 		Properties: map[string]any{

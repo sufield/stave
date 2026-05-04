@@ -2,6 +2,7 @@ package risk
 
 import (
 	"cmp"
+	"log/slog"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -147,6 +148,18 @@ func RankExposures(
 					blast = bm
 				}
 			}
+		}
+		// Skip findings whose effective base score is non-positive.
+		// Severity.Weight() returns 0 for SeverityNone (and a control
+		// override could push it negative); a 0-weight finding scores 0
+		// and crowds the rank tail with rows operators can't act on.
+		// Log so a misconfigured upstream is visible rather than
+		// silently producing a 0-score entry that survives the sort.
+		if base <= 0 {
+			slog.Warn("exposure rank: skipping finding with non-positive base score",
+				"control_id", f.ControlID, "asset_id", f.AssetID,
+				"severity", f.ControlSeverity.String(), "base", base)
+			continue
 		}
 
 		daysBlind := f.UnsafeDurationHours / 24.0

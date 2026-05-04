@@ -3,6 +3,7 @@ package remediation
 import (
 	"cmp"
 	"fmt"
+	"log/slog"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -80,7 +81,19 @@ func newAccumulator() *accumulator {
 
 //nolint:gocritic // hugeParam: internal method, not worth interface change
 func (a *accumulator) add(f Finding) {
-	key := fmt.Sprintf("%s:%s", f.AssetID, f.RemediationPlan.ActionsFingerprint)
+	// An empty ActionsFingerprint would collapse every finding for
+	// the same asset into one group, regardless of remediation
+	// content — wholly unrelated rules would appear merged in the
+	// output. Substitute the (per-finding-unique) FindingID so each
+	// such row stays in its own group, and warn so the upstream
+	// fingerprint-skip surfaces in -v mode.
+	fingerprint := f.RemediationPlan.ActionsFingerprint
+	if fingerprint == "" {
+		slog.Warn("remediation grouping: empty ActionsFingerprint; falling back to per-finding key",
+			"control_id", f.ControlID, "asset_id", f.AssetID, "finding_id", f.FindingID)
+		fingerprint = "no-fingerprint:" + string(f.FindingID)
+	}
+	key := fmt.Sprintf("%s:%s", f.AssetID, fingerprint)
 
 	if g, ok := a.groups[key]; ok {
 		g.controlSet[f.ControlID] = struct{}{}

@@ -17,11 +17,20 @@ func LevelFromVerbosity(v int) slog.Level {
 	}
 }
 
-// ParseLevel parses a string into a Level.
+// ParseLevel parses a string into a Level. Falls back to LevelWarn on
+// any parse error, with a slog warning so a typo in --log-level or
+// STAVE_LOG_LEVEL doesn't silently downgrade to warn-mode without the
+// operator noticing. Empty input is the documented "use default" path
+// and skips the warn so it stays log-noise free.
 func ParseLevel(s string) slog.Level {
 	var level slog.Level
-	if err := level.UnmarshalText([]byte(strings.TrimSpace(s))); err == nil {
+	trimmed := strings.TrimSpace(s)
+	if err := level.UnmarshalText([]byte(trimmed)); err == nil {
 		return level
+	}
+	if trimmed != "" {
+		slog.Warn("logging.ParseLevel: invalid log level; falling back to default",
+			"input", trimmed, "fallback", LevelWarn.String())
 	}
 	return LevelWarn
 }

@@ -7,7 +7,7 @@
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "9ad9e43495c10bc9e37d1291a8b3b8fa65339445436de88b3d48e575ef16ec40",
+    "policy_fingerprint": "122d6028d19a10d6dc218e688f7134987264e070b4db06ca013aaad47cb929fc",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -1866,16 +1866,121 @@
         "action": "Enable all four S3 Block Public Access settings at the account level using aws s3control put-public-access-block with the --account-id parameter. This blocks public access for all current and future buckets in the account. If specific buckets require public access, use CloudFront with Origin Access Control instead of making buckets directly public."
       },
       "contributing_controls": [
-        "CTL.S3.ACCOUNT.PAB.001",
-        "CTL.S3.MFADELETE.001",
-        "CTL.S3.NETWORK.VPC.001",
-        "CTL.S3.OWNERSHIP.001",
-        "CTL.S3.PAB.BLOCKPUBLICACLS.001",
-        "CTL.S3.PAB.BLOCKPUBLICPOLICY.001",
-        "CTL.S3.PAB.IGNOREPUBLICACLS.001",
+        "CTL.S3.ACCOUNT.PAB.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable MFA Delete (requires root credentials): aws s3api put-bucket-versioning --bucket public-test-bucket --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa \"arn:aws:iam::\u003caccount\u003e:mfa/root-account-mfa-device \u003ccode\u003e\""
+      },
+      "contributing_controls": [
+        "CTL.S3.MFADELETE.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges."
+      },
+      "contributing_controls": [
+        "CTL.S3.NETWORK.VPC.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."
+      },
+      "contributing_controls": [
+        "CTL.S3.OWNERSHIP.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable the `BlockPublicAcls` flag on the bucket's Public Access Block configuration. From the CLI:\n\n    aws s3api put-public-access-block \\\n      --bucket public-test-bucket \\\n      --public-access-block-configuration \\\n      'BlockPublicAcls=true,IgnorePublicAcls=\u003ccurrent\u003e,BlockPublicPolicy=\u003ccurrent\u003e,RestrictPublicBuckets=\u003ccurrent\u003e'\n\nPreserve the other three flag values so enabling this one doesn't silently disable the others."
+      },
+      "contributing_controls": [
+        "CTL.S3.PAB.BLOCKPUBLICACLS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable the `BlockPublicPolicy` flag on the bucket's Public Access Block configuration. Preserve the other three flag values so enabling this one doesn't silently disable the others."
+      },
+      "contributing_controls": [
+        "CTL.S3.PAB.BLOCKPUBLICPOLICY.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable the `IgnorePublicAcls` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicAcls` for full ACL-path coverage — the pair prevents new public ACL grants and neutralizes existing ones."
+      },
+      "contributing_controls": [
+        "CTL.S3.PAB.IGNOREPUBLICACLS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable the `RestrictPublicBuckets` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicPolicy` for full policy-path coverage — the pair prevents new public policy writes and limits the effect of any historical public grants to service principals."
+      },
+      "contributing_controls": [
         "CTL.S3.PAB.RESTRICTPUBLICBUCKETS.001"
       ],
-      "finding_count": 8
+      "finding_count": 1
     }
   ],
   "top_exposures": [

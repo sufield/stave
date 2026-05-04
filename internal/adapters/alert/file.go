@@ -62,6 +62,24 @@ func (s *FileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 	}
 	data = append(data, '\n')
 	if _, err = s.f.Write(data); err != nil {
+		// Close + mark the sink failed before propagating. A write
+		// failure (disk full, broken pipe, NFS stale handle) leaves
+		// the file descriptor in an undefined state — leaving it
+		// open would leak the FD across every subsequent Emit call,
+		// and continuing to write through it could corrupt later
+		// alert lines. Marking the sink closed is the conservative
+		// choice: subsequent Emit returns errSinkClosed, signalling
+		// to the caller that the alert pipeline needs explicit
+		// reconfiguration rather than a silent retry.
+		closeErr := s.f.Close()
+		s.f = nil
+		s.closed = true
+		if closeErr != nil {
+			return errors.Join(
+				fmt.Errorf("write alert to file %s: %w", s.Path, err),
+				fmt.Errorf("close alert file after write failure: %w", closeErr),
+			)
+		}
 		return fmt.Errorf("write alert to file %s: %w", s.Path, err)
 	}
 	return nil

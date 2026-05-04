@@ -55,7 +55,12 @@ const (
 // scoring frame and crowd out every other finding when the report
 // renders side-by-side bars.
 func Environmental(baseImpact int, sensitivity, exposure float64) float64 {
-	return min(float64(baseImpact)*sensitivity*exposure, float64(ScoreCatastrophic))
+	// Clamp to [0, ScoreCatastrophic]. baseImpact is documented 0-100
+	// but the function signature accepts any int, and a misconfigured
+	// control author with a negative base_impact would otherwise
+	// produce a negative score that wrecks downstream sort order
+	// (negative-score findings would rank above legitimate criticals).
+	return max(min(float64(baseImpact)*sensitivity*exposure, float64(ScoreCatastrophic)), 0)
 }
 
 // Compound computes the chain-escalated risk score.
@@ -68,7 +73,11 @@ func Environmental(baseImpact int, sensitivity, exposure float64) float64 {
 // chain × 2.5 blast = 625 are formally meaningless once a single
 // finding already exceeds the catastrophic threshold.
 func Compound(envScore, chainEscalation, blastMultiplier float64) float64 {
-	return min(envScore*chainEscalation*blastMultiplier, float64(ScoreCatastrophic))
+	// Clamp to [0, ScoreCatastrophic]: same rationale as Environmental.
+	// A negative input from any of the three multipliers — none should
+	// ever be negative under the documented contract, but the function
+	// can't enforce that — must not produce a negative ranking score.
+	return max(min(envScore*chainEscalation*blastMultiplier, float64(ScoreCatastrophic)), 0)
 }
 
 // ChainEscalation returns the multiplier for N co-failing controls.

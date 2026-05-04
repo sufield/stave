@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -128,8 +129,16 @@ func (l *ObservationLoader) process(data []byte, source string) (asset.Snapshot,
 	if err != nil {
 		return asset.Snapshot{}, "", fmt.Errorf("schema validation error: %w", err)
 	}
-	if issues.Failed() || issues.HasWarnings() {
+	if issues.Failed() {
 		return asset.Snapshot{}, "", fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
+	}
+	// Schema warnings are advisory: log them so the authoring
+	// problem is visible without dropping the whole snapshot.
+	// Mirrors the ControlLoader.loadOne pattern so observation and
+	// control loading agree on what counts as fatal vs noisy.
+	if issues.HasWarnings() {
+		slog.Warn("observation schema validation warning",
+			"source", source, "issues", issues.Error())
 	}
 
 	var snap asset.Snapshot

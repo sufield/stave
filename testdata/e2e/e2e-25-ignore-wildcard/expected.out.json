@@ -18,7 +18,7 @@
     "evaluated_state": "deployed"
   },
   "summary": {
-    "total_assets": 1,
+    "total_assets": 3,
     "exposed_resources": 1,
     "violations": 1
   },
@@ -288,7 +288,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "0780f8b55b472972c48a6816e5e86b04fbb55bb0",
       "dirty": false
     }
   }

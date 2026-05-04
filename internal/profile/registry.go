@@ -56,7 +56,15 @@ func LoadProfile(id string) (*Profile, error) {
 	if !ok {
 		return nil, fmt.Errorf("unknown profile %q", id)
 	}
-	return p, nil
+	// Return a shallow copy so a caller mutating its handle (e.g.
+	// appending to Controls, swapping the Name) cannot corrupt the
+	// shared registry slot the next caller will read. The underlying
+	// Controls slice is still shared — slice grow / replace is safe,
+	// but in-place mutation of an existing element would still leak
+	// across callers; the registry contract is "read-only after
+	// register" and this copy is the type-level enforcement.
+	cp := *p
+	return &cp, nil
 }
 
 // AllProfiles returns all registered profile IDs in stable sorted

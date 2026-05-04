@@ -43,6 +43,14 @@ func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error)
 		// reconstruction) should fail loud rather than panic.
 		return nil, errors.New("CreateDurationFinding: ExposureLifecycle is required")
 	}
+	if in.Control == nil {
+		// Sibling guard: in.Control.Params and in.Control.UnsafePredicate
+		// are dereferenced below, and newBaseFinding's ctl.Metadata()
+		// would also fault. Same fail-loud rationale as the
+		// ExposureLifecycle branch — a malformed call site is the
+		// only way this fires.
+		return nil, errors.New("CreateDurationFinding: Control is required")
+	}
 	a := in.ExposureLifecycle.Asset()
 	duration, durationErr := in.ExposureLifecycle.ExposureDuration(in.Now)
 	if durationErr != nil {
