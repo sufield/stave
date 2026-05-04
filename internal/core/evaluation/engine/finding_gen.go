@@ -22,11 +22,19 @@ type DurationFindingInput struct {
 }
 
 // CreateDurationFinding generates a violation finding specifically for
-// duration-based controls. A non-nil second return signals that the
-// underlying duration calculation failed; the caller still receives a
-// finding (with UnsafeDurationHours set to the -1 sentinel) so a
-// violation is still emitted, but the caller is expected to surface
-// the error via its own logger — core/ stays free of side effects.
+// duration-based controls.
+//
+// Return contract — callers must check both values:
+//   - (finding, nil): success. Use the finding.
+//   - (finding, err): partial success. The finding is still populated
+//     (with UnsafeDurationHours set to the -1 sentinel) so the violation
+//     is still emitted, and the caller is expected to surface err via
+//     its own logger — core/ stays free of side effects.
+//   - (nil, err): hard precondition failure. The function rejects
+//     malformed input (currently: nil ExposureLifecycle) and returns
+//     no finding. Callers that assumed "always non-nil finding" would
+//     panic on the next dereference; the strategy.go call site
+//     therefore nil-checks the finding before consuming it.
 func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error) {
 	if in.ExposureLifecycle == nil {
 		// Required input. Returning early keeps the engine from

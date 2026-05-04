@@ -42,8 +42,15 @@ func EvaluateRecurrenceForControl(
 			if first.IsZero() || start.Before(first) {
 				first = start
 			}
-			if last.IsZero() || now.After(last) {
-				last = now
+			// Use w.End (period end) as the effective last time for the
+			// active window so the active-window path matches the
+			// closed-window branch in ExposureHistory.WindowSummary.
+			// The previous shape used `now` (audit time), which could
+			// drift past w.End and surface confusing evidence
+			// timestamps that don't fall inside the recurrence
+			// analysis window.
+			if last.IsZero() || w.End.After(last) {
+				last = w.End
 			}
 		}
 	}

@@ -205,10 +205,18 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 			})
 			return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
 		}
-		span.RecordStep("threshold_check", map[string]any{
+		thresholdInputs := map[string]any{
 			"threshold_hours":  maxUnsafe.Hours(),
 			"last_seen_unsafe": t.LastObservedAt(),
-		}, map[string]any{
+		}
+		// A zero threshold means "any unsafe duration violates" — the
+		// raw `0` in trace output is ambiguous (could read as "no
+		// threshold configured"), so annotate the mode so operators
+		// reading the trace can tell the two apart at a glance.
+		if maxUnsafe == 0 {
+			thresholdInputs["threshold_mode"] = "immediate"
+		}
+		span.RecordStep("threshold_check", thresholdInputs, map[string]any{
 			"exceeds_threshold": false,
 		})
 		span.RecordStep("verdict_decision", nil, map[string]any{

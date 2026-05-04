@@ -409,6 +409,13 @@ func (s *assessmentSession) applyControl(
 		lifecycle := lifecycles[id]
 		span := s.beginTrace(string(id), ctl.ID.String())
 
+		// Record the asset as seen before any exemption / exception
+		// short-circuit so TotalAssets reflects every asset the control
+		// considered. The previous shape only called RecordSeenAsset
+		// after the exemption branch, so an exempted asset disappeared
+		// from the denominator and inflated the compliance percentage.
+		s.collector.RecordSeenAsset(id)
+
 		// 1. Check for organizational exemptions (Policy Overrides)
 		if rule := s.assessor.exemptions.ShouldExempt(id); rule != nil {
 			span.RecordStep("exemption_check", map[string]any{
@@ -451,16 +458,10 @@ func (s *assessmentSession) applyControl(
 		//    mutex-protected entry points. The collector itself is
 		//    concurrent-safe; applyControl is currently called
 		//    sequentially from Assess (see assessmentSession type doc).
-		// RecordNonCompliantAsset moves below the strategy.Evaluate
-		// call so the counter reflects findings, not raw lifecycle
-		// state. IsExposed() is true any time a snapshot caught the
-		// asset in an unsafe configuration, regardless of whether
-		// any control actually fires (e.g. an asset is "publicly
-		// readable" but the control catalog doesn't include the
-		// matching predicate). Counting on IsExposed inflated the
-		// "exposed resources" summary above the violation count,
-		// confusing operators reading the report's totals.
-		s.collector.RecordSeenAsset(id)
+		// RecordNonCompliantAsset is called below after strategy.Evaluate
+		// so the counter reflects findings, not raw lifecycle state.
+		// (RecordSeenAsset already fires at the top of the loop so
+		// exempted assets are still counted in TotalAssets.)
 
 		// 3. Evaluate the security strategy against the asset lifecycle.
 		//    Set the active span so strategies can record their decision steps,

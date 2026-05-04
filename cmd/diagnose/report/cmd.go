@@ -137,9 +137,7 @@ func resolveAuditPaths(res *projctx.Resolver) []string {
 
 	sc, err := res.ResolveSelected()
 	if err == nil && sc.Active && sc.Context != nil {
-		if p := sc.Context.EffectiveControlsDir(); p != "" {
-			paths = append(paths, sc.Context.AbsPath(p))
-		}
+		paths = append(paths, sc.Context.AbsPath(sc.Context.EffectiveControlsDir()))
 	} else {
 		paths = append(paths, "controls")
 	}

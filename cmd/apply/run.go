@@ -22,6 +22,12 @@ func runApply(ctx context.Context, deps Deps, opts *Options, cs cobraState) erro
 	if err != nil {
 		return fmt.Errorf("resolve project context: %w", err)
 	}
+	// ResolveSelected is called for its validation side-effect: it
+	// errors out if no project context is selectable. The resolved
+	// Context value itself is not needed here because Resolve(opts, cs)
+	// below threads through projctx separately when wiring the apply
+	// pipeline; capturing it would force a downstream pass-through that
+	// drifts out of sync with that pipeline's own resolution.
 	if _, err = resolver.ResolveSelected(); err != nil {
 		return fmt.Errorf("resolve selected context: %w", err)
 	}

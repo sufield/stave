@@ -133,9 +133,10 @@ func (idx *controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.Co
 		idx.mu.Unlock()
 		return slices.Clone(cached)
 	}
-	if idx.cache != nil {
-		idx.cache[vendor] = result
-	}
+	// idx.cache is initialized by buildControlVendorIndex (the only
+	// constructor) and never reset to nil, so an explicit nil-check
+	// here is dead code.
+	idx.cache[vendor] = result
 	idx.mu.Unlock()
 	// Return a clone here too so the first caller cannot mutate
 	// the just-cached slice via the returned reference.

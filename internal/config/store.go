@@ -146,19 +146,39 @@ func (c Context) CanonicalProjectConfig() string {
 	return strings.TrimSpace(c.ProjectConfig)
 }
 
-// EffectiveControlsDir returns the trimmed Defaults.ControlsDir.
+// DefaultControlsDir is the fallback directory name when a context
+// does not specify one. Matches the cmd/* flag default for
+// --controls so context-driven and explicit-flag invocations both
+// resolve to `./controls` by default.
+const DefaultControlsDir = "controls"
+
+// DefaultObservationsDir is the fallback directory name when a
+// context does not specify one. Matches the cmd/* flag default for
+// --observations so context-driven and explicit-flag invocations
+// both resolve to `./observations` by default.
+const DefaultObservationsDir = "observations"
+
+// EffectiveControlsDir returns the trimmed Defaults.ControlsDir, or
+// DefaultControlsDir when the field is empty / whitespace.
 // "Effective" rather than "Canonical" because callers reach for
-// this when resolving the actual directory to use; future logic
-// (env-var override, fallback to a built-in default) can land here
-// without touching call sites.
+// this when resolving the actual directory to use.
 func (c Context) EffectiveControlsDir() string {
-	return strings.TrimSpace(c.Defaults.ControlsDir)
+	v := strings.TrimSpace(c.Defaults.ControlsDir)
+	if v == "" {
+		return DefaultControlsDir
+	}
+	return v
 }
 
-// EffectiveObservationsDir returns the trimmed Defaults.ObservationsDir.
+// EffectiveObservationsDir returns the trimmed Defaults.ObservationsDir,
+// or DefaultObservationsDir when the field is empty / whitespace.
 // Sibling of EffectiveControlsDir.
 func (c Context) EffectiveObservationsDir() string {
-	return strings.TrimSpace(c.Defaults.ObservationsDir)
+	v := strings.TrimSpace(c.Defaults.ObservationsDir)
+	if v == "" {
+		return DefaultObservationsDir
+	}
+	return v
 }
 
 // Clone returns a deep copy of the context. Context contains only
@@ -199,6 +219,20 @@ func (s *Store) UnmarshalYAML(value *yaml.Node) error {
 	}
 	if err := value.Decode(&aux); err != nil {
 		return err
+	}
+	// Validate every context name + body at the type-level decode boundary.
+	// Load() runs the same checks, but a caller that goes through
+	// yaml.Unmarshal directly (in-process composition, tests, future
+	// API surface) would otherwise bypass the trust boundary and
+	// surface a malformed entry only mid-evaluation as a confusing
+	// path error.
+	for name, ctx := range aux.Contexts {
+		if err := ValidateName(name); err != nil {
+			return fmt.Errorf("context name %q: %w", name, err)
+		}
+		if err := ctx.Validate(); err != nil {
+			return fmt.Errorf("context %q: %w", name, err)
+		}
 	}
 	s.Active = aux.Active
 	s.contexts = aux.Contexts

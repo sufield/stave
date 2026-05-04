@@ -51,7 +51,17 @@ func (a *App) execute() {
 	// invoked `stave enf ...`. Returning the resolved argv keeps
 	// the two views in lockstep.
 	expandedArgs := a.expandAliasIfMatch()
-	args := expandedArgs[1:]
+	// Guard the [1:] slice. expandAliasIfMatch normally returns os.Args
+	// (length ≥ 1: the binary name) or `slices.Concat(tokens, os.Args[2:])`
+	// from an alias expansion. The latter can be empty when the alias
+	// resolves to nothing AND the user passed no extra args (e.g.
+	// `stave myalias` where `myalias = ""`). Slicing [1:] on a
+	// zero-length slice panics; treat the degenerate case as "no args"
+	// rather than crashing the executor.
+	var args []string
+	if len(expandedArgs) > 0 {
+		args = expandedArgs[1:]
+	}
 
 	showFirstRunHint, firstRunMarkerPath := prepareFirstRunHint(args)
 
