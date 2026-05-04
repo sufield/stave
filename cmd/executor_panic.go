@@ -158,7 +158,12 @@ func fallbackScrubMessage(s string) string {
 				return m
 			}
 		}
-		return groups[1] + "[REDACTED]"
+		// groups[3] (trailing .digits) is empty for normal IPv4-like
+		// matches but a defensive concatenation preserves any
+		// non-sensitive suffix that survives the version-string
+		// early-return — keeps grammar around the redaction point
+		// intact rather than silently truncating the original input.
+		return groups[1] + "[REDACTED]" + groups[3]
 	})
 	for _, re := range fallbackScrubPatterns {
 		s = re.ReplaceAllString(s, "[REDACTED]")

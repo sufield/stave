@@ -150,34 +150,77 @@ func Resolve(input ResolutionInput) ResolvedPermissions {
 		result.BoundaryEffective = len(result.BoundaryBlocked) > 0 &&
 			!isTriviallyBroadBoundary(input.BoundaryPolicy)
 	} else {
-		// No boundary attached — not ineffective, just absent.
-		result.BoundaryEffective = true
+		// No boundary attached — boundary has no effect. Reporting
+		// "effective" here misled control evaluators into treating an
+		// unbounded principal as bounded, suppressing legitimate
+		// privilege-escalation findings.
+		result.BoundaryEffective = false
 	}
 
 	return result
 }
 
-// collectSCPCeiling computes the set of allowed actions from the SCP
-// hierarchy. An action must be allowed by ALL SCPs in the chain.
-// An empty hierarchy (no org) means no ceiling — all actions are allowed.
+// collectSCPCeiling computes the intersection of allowed actions
+// across the SCP hierarchy. An action must be allowed by EVERY SCP
+// in the chain — the previous flat-append shape produced the union,
+// which let an action survive the ceiling whenever ANY SCP allowed
+// it (a privilege-escalation hazard). An empty hierarchy (no org)
+// means no ceiling; an empty intersection means everything is denied.
 func collectSCPCeiling(scps []PolicyDocument) []ActionGrant {
 	if len(scps) == 0 {
 		return nil // nil means no ceiling
 	}
-	var ceiling []ActionGrant
-	for _, doc := range scps {
-		for _, stmt := range doc.Allows() {
-			for _, action := range stmt.Action {
-				for _, resource := range stmt.Resource {
-					ceiling = append(ceiling, ActionGrant{
-						Action:   action,
-						Resource: resource,
-					})
-				}
-			}
+	// Seed the ceiling with the first SCP's allows.
+	ceiling := scpAllowGrants(scps[0])
+	for i := 1; i < len(scps); i++ {
+		next := scpAllowGrants(scps[i])
+		ceiling = intersectGrants(ceiling, next)
+		if len(ceiling) == 0 {
+			// Once the intersection is empty, no later SCP can
+			// add anything back — a deny-by-omission is the SCP
+			// chain's strongest possible verdict.
+			return nil
 		}
 	}
 	return ceiling
+}
+
+// scpAllowGrants flattens an SCP's Allow statements into the
+// (action, resource) grant pairs collectSCPCeiling intersects.
+func scpAllowGrants(doc PolicyDocument) []ActionGrant {
+	var out []ActionGrant
+	for _, stmt := range doc.Allows() {
+		for _, action := range stmt.Action {
+			for _, resource := range stmt.Resource {
+				out = append(out, ActionGrant{
+					Action:   action,
+					Resource: resource,
+				})
+			}
+		}
+	}
+	return out
+}
+
+// intersectGrants returns only the grants present in both inputs.
+// Equality is by (action, resource) pair — wildcard expansion is the
+// caller's responsibility (the ceiling stays in literal form so the
+// downstream evaluator can apply matching semantics).
+func intersectGrants(a, b []ActionGrant) []ActionGrant {
+	if len(a) == 0 || len(b) == 0 {
+		return nil
+	}
+	bSet := make(map[ActionGrant]struct{}, len(b))
+	for _, g := range b {
+		bSet[g] = struct{}{}
+	}
+	out := make([]ActionGrant, 0, len(a))
+	for _, g := range a {
+		if _, ok := bSet[g]; ok {
+			out = append(out, g)
+		}
+	}
+	return out
 }
 
 // collectBoundaryCeiling extracts the allowed actions from the permission
@@ -345,8 +388,16 @@ func classifyPrivilege(effective []ActionGrant) PrivilegeLevel {
 	serviceCount := make(map[string]bool)
 
 	for _, grant := range effective {
-		if grant.Resource != "*" {
-			continue // only broad-scope actions affect classification
+		// A grant influences classification when its resource is
+		// effectively broad: literal "*", "arn:aws:*", or a wildcard
+		// that covers a whole service / account. The previous
+		// (Resource != "*" → continue) shape silently dropped grants
+		// like "arn:aws:s3:::*" or "arn:aws:iam::123:role/*", which
+		// are functionally equivalent to "*" for privilege-
+		// escalation purposes — letting an effective-admin grant
+		// classify as no-privilege.
+		if !isEffectivelyBroadResource(grant.Resource) {
+			continue
 		}
 
 		action := grant.Action
@@ -389,4 +440,31 @@ func indexByte(s string, b byte) int {
 		}
 	}
 	return -1
+}
+
+// isEffectivelyBroadResource reports whether resource is wildcard-
+// equivalent for privilege-classification purposes. A grant that
+// targets "arn:aws:iam::123:role/*" or "arn:aws:s3:::*" is
+// functionally identical to "*" when we ask "does this principal
+// have admin?" — so classification must consider the same set of
+// indicators against either form.
+//
+// True when:
+//   - resource is "*" (the literal full wildcard)
+//   - resource is "arn:aws:*" or any prefix that ends in "*" with
+//     no further service / account narrowing (e.g. "arn:aws:s3:::*",
+//     "arn:aws:iam::123:*", "arn:aws:iam::123:role/*")
+//
+// False when the resource names a specific ARN (no trailing "*"),
+// because a single named bucket / role is a meaningfully smaller
+// blast radius and shouldn't escalate the principal to admin.
+func isEffectivelyBroadResource(resource string) bool {
+	if resource == "*" || resource == "arn:aws:*" {
+		return true
+	}
+	// Trailing "*" with at least one ARN segment intact — the wildcard
+	// covers the rest of a service / account scope. Conservative
+	// (over-classifies rather than under-classifies) so a future
+	// scoped-down ARN catches less, not more.
+	return len(resource) > 0 && resource[len(resource)-1] == '*'
 }

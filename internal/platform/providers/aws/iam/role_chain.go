@@ -102,6 +102,18 @@ func resolveChainRecursive(
 		return // principal not resolved — can't determine assumable roles
 	}
 
+	// Deduplicate target ARNs before recursing. A principal that
+	// has the same role granted via multiple statements (or the
+	// same role granted by both inline and managed policies) used
+	// to recurse once per duplicate. Since visited.Add fires inside
+	// the recursive call, the second occurrence of the same target
+	// at the same depth tripped the cycle guard and emitted a
+	// spurious ChainTerminatedCycle entry — even though it was a
+	// duplicate grant, not a real cycle. Dedup at this level so
+	// only genuine cycles (target reappearing along the same path)
+	// surface as ChainTerminatedCycle.
+	targets := sets.New[string]()
+
 	// Find sts:AssumeRole grants in effective allows.
 	for _, grant := range resolved.EffectiveAllow {
 		if grant.Action != "sts:AssumeRole" && grant.Action != "sts:*" && grant.Action != "*" {
@@ -116,6 +128,10 @@ func resolveChainRecursive(
 			// CTL.IAM.POLICY.ASSUMEROLE.001 control).
 			continue
 		}
+		if targets.Contains(targetARN) {
+			continue
+		}
+		targets.Add(targetARN)
 
 		// Check if the target role is in the snapshot.
 		targetResolved, inSnapshot := input.ResolvedIndex[targetARN]

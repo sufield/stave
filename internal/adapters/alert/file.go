@@ -61,8 +61,10 @@ func (s *FileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 		return fmt.Errorf("marshal alert: %w", err)
 	}
 	data = append(data, '\n')
-	_, err = s.f.Write(data)
-	return err
+	if _, err = s.f.Write(data); err != nil {
+		return fmt.Errorf("write alert to file %s: %w", s.Path, err)
+	}
+	return nil
 }
 
 // Close flushes and closes the file. Subsequent Emit calls return errSinkClosed.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"sync"
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -53,6 +54,13 @@ type AuditWorkflow struct {
 	ContextEnricher appcontracts.EnrichFunc
 	Logger          *slog.Logger
 
+	// cacheMu guards loadedControls / loadedSnapshots. The cache is
+	// written once per PerformAssessment call and read by accessor
+	// callers (post-assessment posture aggregation, reachability
+	// annotation) — concurrent test harnesses or future "watch"
+	// orchestrators that read the cache while a fresh assessment
+	// is writing it must not race.
+	cacheMu sync.RWMutex
 	// loadedControls and loadedSnapshots cache the inputs used by the
 	// most recent PerformAssessment call. Populated as a side effect
 	// of running an assessment so callers can do post-assessment work
@@ -68,6 +76,8 @@ type AuditWorkflow struct {
 // recent PerformAssessment call. Returns a copy so callers cannot
 // mutate the workflow's cached slice in place.
 func (w *AuditWorkflow) Controls() []policy.ControlDefinition {
+	w.cacheMu.RLock()
+	defer w.cacheMu.RUnlock()
 	if len(w.loadedControls) == 0 {
 		return nil
 	}
@@ -80,6 +90,8 @@ func (w *AuditWorkflow) Controls() []policy.ControlDefinition {
 // PerformAssessment call. Returns a copy so callers cannot mutate
 // the workflow's cached slice in place.
 func (w *AuditWorkflow) Snapshots() []asset.Snapshot {
+	w.cacheMu.RLock()
+	defer w.cacheMu.RUnlock()
 	if len(w.loadedSnapshots) == 0 {
 		return nil
 	}
@@ -121,8 +133,10 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	if auditData.HasErrors() {
 		return evaluation.ComplianceReport{}, "", auditData.FirstError()
 	}
+	w.cacheMu.Lock()
 	w.loadedControls = auditData.Controls
 	w.loadedSnapshots = auditData.Snapshots
+	w.cacheMu.Unlock()
 
 	report, err := Evaluate(ctx, EvaluateInput{
 		Controls:             auditData.Controls,

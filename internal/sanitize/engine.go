@@ -418,34 +418,23 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 		// per-value scrub treatment that nested maps would get.
 		return s.scrubList(val, profile, true)
 	case map[string]any:
+		// scrubValueWithProfile is only called from a Sanitize-flagged
+		// parent (ScrubMap routes there) — every primitive child must
+		// be redacted, even under a neutrally-named key, otherwise a
+		// sensitive scalar reachable through `aws.tags.email` would
+		// leak verbatim because "email" isn't itself in the profile's
+		// Sanitize set. The earlier "preserve primitives as-is" path
+		// dropped exactly that protection.
 		out := make(map[string]any, len(val))
 		for k, sub := range val {
 			if profile.ShouldRemove(k) {
 				continue
 			}
-			if profile.ShouldSanitize(k) {
-				// Recurse with profile context so nested Remove
-				// keys still apply through a Sanitize-flagged
-				// parent. The earlier shape called s.scrubValue
-				// here, which lost the profile and let
-				// "tags-removable" entries leak through if a
-				// Sanitize key sat above them in the tree.
-				out[k] = s.scrubValueWithProfile(sub, profile)
-				continue
-			}
-			// Neutral key: the key itself isn't classified, so the
-			// scalar value at this slot is data the operator wants
-			// to read. Preserve primitives as-is. Only recurse into
-			// containers, where deeper keys may match Remove or
-			// Sanitize. The earlier shape recursed unconditionally,
-			// which scrubbed primitive scalars under non-classified
-			// keys (every plain string became `SANITIZED_<hash>`).
-			switch sub.(type) {
-			case map[string]any, []any:
-				out[k] = s.scrubValueWithProfile(sub, profile)
-			default:
-				out[k] = sub
-			}
+			// Inside a Sanitize-flagged scope every value is scrubbed
+			// regardless of whether the key itself is classified.
+			// scrubValueWithProfile (this function) recursively
+			// applies the same rule.
+			out[k] = s.scrubValueWithProfile(sub, profile)
 		}
 		return out
 	default:

@@ -471,11 +471,14 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 	if err != nil {
 		return fmt.Errorf("sync temp file: %w", err)
 	}
-	closed = true
-	err = tmpFile.Close()
-	if err != nil {
+	// Close FIRST, then mark closed. The previous order set
+	// closed=true ahead of the Close call — when Close returned an
+	// error, the deferred cleanup skipped the second Close attempt
+	// and the descriptor leaked alongside the error path.
+	if err := tmpFile.Close(); err != nil {
 		return fmt.Errorf("close temp file: %w", err)
 	}
+	closed = true
 
 	// Attempt atomic rename — works when src and dst are on the same fs.
 	if renameErr := os.Rename(tmpPath, path); renameErr == nil {

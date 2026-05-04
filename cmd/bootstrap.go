@@ -259,7 +259,13 @@ func (a *App) stopCPUProfile() {
 		return
 	}
 	pprof.StopCPUProfile()
-	_ = f.Close()
+	if err := f.Close(); err != nil && a.Logger != nil {
+		// Mirror the memory-profile path: a CPU profile that fails
+		// to flush is a diagnostic gap, not a fatal one. Log so the
+		// silent-truncation case becomes visible without changing
+		// the existing fire-and-forget contract.
+		a.Logger.Warn("close CPU profile", "error", err)
+	}
 }
 
 func (a *App) writeMemProfile(cmd *cobra.Command) {
@@ -285,9 +291,16 @@ func (a *App) writeMemProfileTo(stderr io.Writer) {
 			a.Logger.Warn(msg, "error", err)
 			return
 		}
-		if stderr != nil {
-			fmt.Fprintf(stderr, "Warning: %s: %v\n", msg, err)
+		if stderr == nil {
+			// Fall back to os.Stderr so a profile-write failure with
+			// neither logger nor command-bound stderr still produces
+			// a visible diagnostic. The previous shape silently
+			// dropped warnings whenever both were nil — exactly the
+			// scenario the cleanupBeforeExit path triggers when
+			// bootstrap aborts before the logger has been attached.
+			stderr = os.Stderr
 		}
+		fmt.Fprintf(stderr, "Warning: %s: %v\n", msg, err)
 	}
 	opts := fsutil.DefaultWriteOpts()
 	opts.Overwrite = true

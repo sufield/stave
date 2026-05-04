@@ -37,6 +37,11 @@ func (BundleLoader) LoadBundle(ctx context.Context, path string) ([]asset.Snapsh
 		err  error
 	}
 	done := make(chan result, 1)
+	// KNOWN GO LIMITATION: the disk read here cannot be interrupted
+	// by ctx cancellation — file descriptors do not support
+	// SetReadDeadline. The goroutine outlives this call when ctx
+	// fires first. CLI one-shot use only; daemon callers must own
+	// the read with a deadline-capable fd.
 	go func() {
 		snaps, err := LoadBundle(path)
 		done <- result{snaps, err}

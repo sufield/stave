@@ -1,3 +1,19 @@
+// Package observations also provides stdin-based snapshot loading.
+//
+// CLI ONE-SHOT USE ONLY. The stdin loaders below spawn a reader
+// goroutine that cannot be interrupted by ctx cancellation — Go's
+// stdlib io.Reader has no portable cross-platform mechanism to
+// unblock a pending Read on os.Stdin (no SetReadDeadline, no
+// shutdown(2) equivalent). When ctx fires, the loader returns
+// promptly but the goroutine stays blocked on the underlying read
+// until the OS produces input or EOF.
+//
+// For a CLI invocation that exits after a single assessment this is
+// fine — process death reaps the goroutine. For a long-running
+// daemon, server, or watch loop the goroutines accumulate per
+// invocation and the process leaks descriptors and memory. Daemon
+// callers must require a file path (load via the file-backed
+// loader) rather than "-" / stdin.
 package observations
 
 import (
@@ -113,6 +129,13 @@ func (s *StdinObservationLoader) LoadSnapshots(ctx context.Context, _ string) (a
 	// Buffered so the goroutine's send always succeeds even if the
 	// caller has already returned via the ctx.Done() branch.
 	ch := make(chan readResult, 1)
+	// KNOWN GO LIMITATION: this goroutine blocks in
+	// fsutil.LimitedReadAll until the OS delivers input or EOF on
+	// stdin. ctx cancellation cannot interrupt that read on plain
+	// os.Stdin — no SetReadDeadline. The goroutine leaks for the
+	// remainder of the process when the caller takes the
+	// ctx.Done() branch below. CLI one-shot use only. Daemons
+	// must require a file path.
 	go func() {
 		data, err := fsutil.LimitedReadAll(s.reader, "stdin")
 		ch <- readResult{data, err}
