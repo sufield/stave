@@ -82,9 +82,19 @@ func runExport(opts exportOptions, stdout io.Writer) (exportResult, error) {
 	return exportResult{Document: poam, Dest: dest, CloseFn: closeFn}, nil
 }
 
-func renderExport(r exportResult) error {
+func renderExport(r exportResult) (err error) {
 	if r.CloseFn != nil {
-		defer func() { _ = r.CloseFn() }()
+		defer func() {
+			// Surface the close error only when the encode itself
+			// succeeded. A flush-on-close failure (slow disk,
+			// broken pipe) would otherwise be swallowed silently
+			// by `_ = r.CloseFn()` and the operator would see a
+			// "successful" run that wrote a truncated file.
+			// Mirrors the cmdutil.WriteTo named-return pattern.
+			if closeErr := r.CloseFn(); err == nil && closeErr != nil {
+				err = closeErr
+			}
+		}()
 	}
 	enc := json.NewEncoder(r.Dest)
 	enc.SetIndent("", "  ")

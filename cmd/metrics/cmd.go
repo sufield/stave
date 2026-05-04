@@ -86,8 +86,11 @@ func run(ctx context.Context, stdout io.Writer, opts *options) error {
 		TeamFindings: teamFindings,
 	}
 
-	// Write to file.
-	if err := cmdutil.WriteTo(io.Discard, opts.OutPath, func(w io.Writer) error {
+	// Write to file or stdout. The fallback writer (when --out is
+	// empty) is the command's stdout, not io.Discard — silently
+	// dropping the report when no path was specified made the
+	// command look successful while emitting nothing.
+	if err := cmdutil.WriteTo(stdout, opts.OutPath, func(w io.Writer) error {
 		appmetrics.Write(w, input)
 		return nil
 	}); err != nil {

@@ -348,7 +348,21 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 				return fmt.Errorf("post-mkdir verification failed for %q: %w", p, plstatErr)
 			}
 			if pfi.Mode()&os.ModeSymlink != 0 {
-				_ = os.Remove(current) // attempt cleanup of the deeper component just created
+				// Two-step cleanup: remove the spurious child the
+				// Mkdir created at the attacker's target, then
+				// remove the swapped symlink itself. `current`
+				// resolves through the symlink at `p`, so
+				// removing `current` deletes the directory the
+				// attacker tricked us into creating; removing `p`
+				// then breaks the link so a follow-up call
+				// doesn't immediately re-traverse it. The
+				// previous shape removed only `current` (left
+				// the symlink behind for the next operation) or
+				// only `p` (left the spurious target directory).
+				// TestSafeMkdirAll_TOCTOU_WithHook pins both
+				// removals must happen.
+				_ = os.Remove(current)
+				_ = os.Remove(p)
 				return fmt.Errorf("%w: %s became a symlink during creation",
 					ErrSymlinkForbidden, p)
 			}
@@ -495,6 +509,15 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 
 	// Attempt atomic rename — works when src and dst are on the same fs.
 	if renameErr := os.Rename(tmpPath, path); renameErr == nil {
+		// Post-rename TOCTOU verification: an attacker who swapped
+		// the destination (or one of its parents) to a symlink
+		// between the initial CheckSymlinkSafety and now would
+		// otherwise have our temp file end up at the symlink
+		// target. Re-check after the rename so the function fails
+		// loud rather than silently writing through the swap.
+		if symErr := CheckSymlinkSafety(path); symErr != nil {
+			return fmt.Errorf("post-rename symlink check: %w", symErr)
+		}
 		committed = true
 		return nil
 	}
@@ -566,6 +589,15 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 	// the abandoned temp.
 	if closeErr := tmp.Close(); closeErr != nil {
 		return fmt.Errorf("close temp before rename: %w", closeErr)
+	}
+
+	// Pre-rename TOCTOU check on the destination: between the
+	// initial caller-side CheckSymlinkSafety and now, an attacker
+	// could have swapped dst (or a parent) to a symlink. Catch
+	// it here so the upcoming Rename doesn't unwittingly land
+	// our temp at the symlink target.
+	if symErr := CheckSymlinkSafety(dst); symErr != nil {
+		return fmt.Errorf("pre-rename symlink check: %w", symErr)
 	}
 
 	if err = os.Rename(tmpName, dst); err != nil {

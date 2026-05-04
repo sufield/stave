@@ -25,8 +25,15 @@ type TraceResult struct {
 }
 
 // RenderText writes a human-readable trace to the writer.
+//
+// Wraps the writer in a sticky-error helper so any individual
+// fmt.Fprintf failure is captured and returned. The previous shape
+// discarded each Fprintf return — a broken pipe (operator pipes
+// stave to head) silently dropped trailing lines and the function
+// reported the final tw.Flush as successful.
 func (r *TraceResult) RenderText(w io.Writer) error {
-	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	sw := &stickyTraceWriter{w: w}
+	tw := tabwriter.NewWriter(sw, 0, 0, 2, ' ', 0)
 	fmt.Fprintf(tw, "Control:\t%s\n", r.ControlID)
 	fmt.Fprintf(tw, "Asset:\t%s\n", r.AssetID)
 	fmt.Fprintf(tw, "Result:\t%v\n", r.Result)
@@ -34,7 +41,30 @@ func (r *TraceResult) RenderText(w io.Writer) error {
 		fmt.Fprintf(tw, "Error:\t%s\n", r.Error)
 	}
 	fmt.Fprintf(tw, "\nCEL Expression:\n%s\n", r.Expression)
-	return tw.Flush()
+	if flushErr := tw.Flush(); flushErr != nil {
+		return flushErr
+	}
+	return sw.err
+}
+
+// stickyTraceWriter captures the first write error so subsequent
+// fmt.Fprintf calls become no-ops. Mirrors the stickyWriter pattern
+// in internal/profile/reporter/text.go so trace rendering and
+// profile rendering share the same error-handling shape.
+type stickyTraceWriter struct {
+	w   io.Writer
+	err error
+}
+
+func (s *stickyTraceWriter) Write(p []byte) (int, error) {
+	if s.err != nil {
+		return 0, s.err
+	}
+	n, err := s.w.Write(p)
+	if err != nil {
+		s.err = err
+	}
+	return n, err
 }
 
 // RenderJSON writes the trace as JSON to the writer.

@@ -12,10 +12,19 @@ import (
 	"sync"
 
 	controlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/controldata"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
+
+// embeddedValidator is the JSON-schema validator used to defend
+// against malformed embedded control YAML at startup. Built once
+// via sync.OnceValue so the schema-compile cost is paid one time
+// for the process lifetime — the embedded catalog is loaded eagerly
+// at first access, so a per-control validator allocation would
+// repeat the compile work for every file in the catalog.
+var embeddedValidator = sync.OnceValue(validator.New)
 
 // ControlStore manages the lifecycle and retrieval of embedded control definitions.
 // It loads controls lazily on first access and returns cloned slices to prevent
@@ -184,6 +193,20 @@ func (r *ControlStore) load() ([]policy.ControlDefinition, error) {
 }
 
 func (r *ControlStore) unmarshal(path string, data []byte) (policy.ControlDefinition, error) {
+	// Schema-validate before unmarshal so a malformed embedded
+	// control YAML (missing required field, wrong type) fails
+	// loud at startup with a precise diagnostic rather than
+	// loading with zero-value fields and producing confusing
+	// downstream evaluation errors. The validator is shared
+	// process-wide via embeddedValidator so the per-call cost is
+	// just the validate step, not a fresh schema compile.
+	issues, valErr := embeddedValidator().ValidateControlYAML(data, validator.WithPrefix(path))
+	if valErr != nil {
+		return policy.ControlDefinition{}, fmt.Errorf("validating YAML in %q: %w", path, valErr)
+	}
+	if issues.Failed() {
+		return policy.ControlDefinition{}, fmt.Errorf("validating YAML in %q: %w", path, issues)
+	}
 	ctl, err := controlyaml.UnmarshalControlDefinition(data)
 	if err != nil {
 		return policy.ControlDefinition{}, fmt.Errorf("parsing YAML in %q: %w", path, err)

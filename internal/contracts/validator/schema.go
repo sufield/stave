@@ -26,6 +26,30 @@ type Diagnostic struct {
 	Kind    jsonschema.ErrorKind `json:"-"` // Opaque type from the engine
 }
 
+// Diagnostics is a named slice of Diagnostic. Carries the
+// Diagnostics-to-Error bridge (ToError) as a first-class method so
+// the conversion has a documented home rather than being
+// re-implemented at every call site.
+type Diagnostics []Diagnostic
+
+// ToError converts a diagnostic collection into a standard Go
+// error so callers using the conventional `if err != nil` pattern
+// detect failures without having to inspect Diagnostics.Failed()
+// or the slice itself. The full diagnostic list stays available
+// via the original return value; this is purely the bridge to
+// idiomatic error handling.
+//
+// Returns nil for an empty collection — "no diagnostics" is not
+// an error. The first diagnostic's message becomes the error
+// summary; the remaining diagnostics are accessible from the
+// caller-side slice if a richer rendering is needed.
+func (d Diagnostics) ToError() error {
+	if len(d) == 0 {
+		return nil
+	}
+	return fmt.Errorf("schema parse failed: %s", d[0].Message)
+}
+
 // Request captures context for a single schema validation call.
 type Request struct {
 	Kind          schemas.Kind
@@ -115,7 +139,11 @@ func (v *Validator) Validate(req Request) ([]Diagnostic, error) {
 
 	payload, parseDiags := req.ParsedPayload()
 	if parseDiags != nil {
-		return parseDiags, nil
+		// Surface the failure through both the diagnostic list
+		// and a standard Go error so callers using the
+		// conventional `if err != nil` pattern can't silently
+		// treat a parse failure as a clean pass.
+		return parseDiags, Diagnostics(parseDiags).ToError()
 	}
 
 	// Execute validation

@@ -135,7 +135,10 @@ func runScoreSingle(ctx context.Context, stdout io.Writer, opts *options, weight
 			opts.OutputFile)
 	}
 
-	result := computeFromAssessment(ctx, assessment, weights, chainDefs, maxChainWeight, opts.Compliance)
+	result, err := computeFromAssessment(ctx, assessment, weights, chainDefs, maxChainWeight, opts.Compliance)
+	if err != nil {
+		return err
+	}
 	return renderResult(stdout, result, opts.Format)
 }
 
@@ -163,7 +166,11 @@ func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights
 	// Compute score for each run.
 	results := make([]appscore.Result, len(assessments))
 	for i, a := range assessments {
-		results[i] = computeFromAssessment(ctx, a, weights, chainDefs, maxChainWeight, opts.Compliance)
+		r, err := computeFromAssessment(ctx, a, weights, chainDefs, maxChainWeight, opts.Compliance)
+		if err != nil {
+			return fmt.Errorf("score history entry %d: %w", i, err)
+		}
+		results[i] = r
 	}
 
 	// Single-assessment output uses latest result with trend data.
@@ -181,7 +188,12 @@ func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights
 // and passed through the library's pure-arithmetic Score entry
 // point. The library replicates the same SLA tally, coverage
 // average, and TotalCheckWeight estimation that used to live here.
-func computeFromAssessment(ctx context.Context, a *report.Assessment, weights appscore.Weights, chainDefs int, maxChainWeight float64, compliance string) appscore.Result {
+//
+// Returns the underlying error so callers fail loud on misuse —
+// the previous shape silently returned a zero-value result that
+// rendered as "score 0", indistinguishable from a real
+// "everything broken" verdict.
+func computeFromAssessment(ctx context.Context, a *report.Assessment, weights appscore.Weights, chainDefs int, maxChainWeight float64, compliance string) (appscore.Result, error) {
 	pubAsmt := stave.FromReportAssessment(a)
 	w := weights
 	cfg := stave.ScoreConfig{
@@ -194,12 +206,9 @@ func computeFromAssessment(ctx context.Context, a *report.Assessment, weights ap
 	}
 	res, err := stave.Score(ctx, cfg)
 	if err != nil {
-		// Score's only documented error is a nil Assessment, which
-		// we just constructed — surface it as a programming-error
-		// fallback rather than masking with a default-zero result.
-		return appscore.Result{}
+		return appscore.Result{}, fmt.Errorf("score assessment: %w", err)
 	}
-	return *res
+	return *res, nil
 }
 
 // parseComplianceList splits the comma-separated CLI flag value into

@@ -96,7 +96,9 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	}
 
 	// Reachability annotation — annotate findings with IAM blast radius.
-	annotateReachability(&result, ec.Opts.ObservationsDir)
+	if reachErr := annotateReachability(&result, ec.Opts.ObservationsDir); reachErr != nil {
+		return EvaluateResult{}, reachErr
+	}
 
 	// Skip the full output pipeline when --new-only or --new-since is
 	// set. run_standard.go calls runNewOnlyOutput after this returns,

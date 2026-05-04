@@ -163,7 +163,16 @@ var ErrClockMissing = errors.New("Assessor: clock is nil; supply WithClock to Ne
 func (a *Assessor) currentSpan() ports.AssessmentSpan { return nopSpan{} }
 
 // Logger returns the structured logger configured at construction.
-func (a *Assessor) Logger() *slog.Logger { return a.logger }
+// Falls back to slog.Default() when no logger was wired so callers
+// never need to nil-check the result. The defensive accessor
+// covers every code path that might leave a.logger nil — callers
+// in the evaluation pipeline expect a valid sink unconditionally.
+func (a *Assessor) Logger() *slog.Logger {
+	if a == nil || a.logger == nil {
+		return slog.Default()
+	}
+	return a.logger
+}
 
 // PredicateParser returns the configured predicate parser.
 func (a *Assessor) PredicateParser() policy.PredicateParser { return a.predicateParser }
