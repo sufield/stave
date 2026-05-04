@@ -86,7 +86,17 @@ func (c *AssessmentCollector) RecordExemptedAsset(id asset.ID, pattern, reason s
 }
 
 // RecordCheck appends a granular resource evaluation result.
+//
+// A zero ControlID signals an upstream skip from a strategy that
+// received a nil control (the unsafeStateStrategy /
+// unsafeDurationStrategy nil guard returns the zero ResourceCheck).
+// Drop those entries rather than letting them pollute the report —
+// a "" control_id row is meaningless evidence and breaks downstream
+// rollups that key on control identity.
 func (c *AssessmentCollector) RecordCheck(check evaluation.ResourceCheck) {
+	if check.ControlID == "" {
+		return
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.checks = append(c.checks, check)

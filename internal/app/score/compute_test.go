@@ -279,9 +279,14 @@ func TestParseWeights(t *testing.T) {
 		{"severity=0.60,sla=0.20,chain=0.15,coverage=0.05", false, func(w Weights) bool {
 			return w.Severity == 0.60 && w.SLA == 0.20 && w.Chain == 0.15 && w.Coverage == 0.05
 		}},
-		{"severity=1.0", false, func(w Weights) bool {
-			return w.Severity == 1.0 && w.SLA == 0.25 // others retain defaults
+		{"severity=1.0,sla=0,chain=0,coverage=0", false, func(w Weights) bool {
+			return w.Severity == 1.0 && w.SLA == 0 && w.Chain == 0 && w.Coverage == 0
 		}},
+		// Partial overrides that drive the sum away from 1 now fail
+		// validation — ParseWeights enforces the sum-to-1 invariant
+		// rather than silently letting downstream score arithmetic
+		// distort.
+		{"severity=1.0", true, nil},
 		{"bad", true, nil},
 		{"unknown=0.5", true, nil},
 		{"severity=notanumber", true, nil},

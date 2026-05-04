@@ -32,31 +32,50 @@ func BuildResourceAccessIndex(snap *asset.Snapshot) *access.ResourceAccessIndex 
 	if snap == nil || len(snap.Assets) == 0 {
 		return nil
 	}
+	return BuildResourceAccessIndexFromSnapshots([]asset.Snapshot{*snap})
+}
 
+// BuildResourceAccessIndexFromSnapshots builds a merged
+// ResourceAccessIndex from every snapshot in snaps. Multi-snapshot
+// callers (apply against an observation history, watch loops) need
+// the merged view so a finding's reachability annotation reflects
+// every policy that has applied to the asset over time — building
+// from `snapshots[0]` alone misses policies that landed in later
+// captures.
+//
+// Returns nil when no snapshot in the slice carries IAM data.
+func BuildResourceAccessIndexFromSnapshots(snaps []asset.Snapshot) *access.ResourceAccessIndex {
+	if len(snaps) == 0 {
+		return nil
+	}
 	idx := access.NewResourceAccessIndex()
 	found := false
-
-	for i := range snap.Assets {
-		a := &snap.Assets[i]
-		accountID := ExtractAccountID(string(a.ID))
-		for _, path := range resourcePolicyPaths {
-			policyJSON := props.GetString(a.Properties, path)
-			if policyJSON == "" {
-				continue
-			}
-			found = true
-			// AddResourcePolicy errors are non-fatal: malformed JSON
-			// skips that policy but the asset observation is valid.
-			// Log so operators can trace why an asset has no
-			// reachability data — silent skips have masked extractor
-			// bugs in the past.
-			if addErr := AddResourcePolicy(idx, string(a.ID), policyJSON, accountID); addErr != nil {
-				slog.Debug("aws/iam: skip resource policy annotation",
-					"asset", a.ID, "path", strings.Join(path, "."), "err", addErr)
+	for s := range snaps {
+		snap := &snaps[s]
+		if len(snap.Assets) == 0 {
+			continue
+		}
+		for i := range snap.Assets {
+			a := &snap.Assets[i]
+			accountID := ExtractAccountID(string(a.ID))
+			for _, path := range resourcePolicyPaths {
+				policyJSON := props.GetString(a.Properties, path)
+				if policyJSON == "" {
+					continue
+				}
+				found = true
+				// AddResourcePolicy errors are non-fatal: malformed JSON
+				// skips that policy but the asset observation is valid.
+				// Log so operators can trace why an asset has no
+				// reachability data — silent skips have masked extractor
+				// bugs in the past.
+				if addErr := AddResourcePolicy(idx, string(a.ID), policyJSON, accountID); addErr != nil {
+					slog.Debug("aws/iam: skip resource policy annotation",
+						"asset", a.ID, "path", strings.Join(path, "."), "err", addErr)
+				}
 			}
 		}
 	}
-
 	if !found {
 		return nil
 	}

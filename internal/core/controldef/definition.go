@@ -231,7 +231,7 @@ func (ctl *ControlDefinition) AppliesToAssetType(assetType kernel.AssetType) boo
 // strategy.go so callers do not have to reach through the
 // PreparedParams aggregate to ask one boolean.
 func (ctl *ControlDefinition) HasMaxUnsafeDuration() bool {
-	_ = ctl.ensurePrepared()
+	ctl.ensurePrepared()
 	return ctl.prepared.HasMaxUnsafeDuration
 }
 
@@ -241,7 +241,7 @@ func (ctl *ControlDefinition) HasMaxUnsafeDuration() bool {
 // prefix-exposure assessor) get both AllowedPublicPrefixes and
 // ProtectedPrefixes in one call.
 func (ctl *ControlDefinition) PrefixExposureParams() PrefixExposureParams {
-	_ = ctl.ensurePrepared()
+	ctl.ensurePrepared()
 	return ctl.prepared.PrefixExposure
 }
 
@@ -295,33 +295,33 @@ func preparePrefixExposure(params ControlParams) PrefixExposureParams {
 
 // RecurrencePolicy returns the parsed recurrence parameters.
 func (ctl *ControlDefinition) RecurrencePolicy() RecurrencePolicy {
-	_ = ctl.ensurePrepared() // load-time Prepare() validates; lazy fallback logs.
+	ctl.ensurePrepared() // load-time Prepare() validates; lazy fallback logs.
 	return ctl.prepared.Recurrence
 }
 
 // MaxUnsafeDuration returns the per-control max_unsafe_duration param.
 // Returns 0 if not set (caller should apply CLI default fallback).
 func (ctl *ControlDefinition) MaxUnsafeDuration() time.Duration {
-	_ = ctl.ensurePrepared()
+	ctl.ensurePrepared()
 	return ctl.prepared.MaxUnsafeDuration
 }
 
 // SLADeadline returns the per-control sla_deadline if set, otherwise 0.
 func (ctl *ControlDefinition) SLADeadline() time.Duration {
-	_ = ctl.ensurePrepared()
+	ctl.ensurePrepared()
 	return ctl.prepared.SLADeadline
 }
 
 // HasSLADeadline reports whether this control has an explicit sla_deadline param.
 func (ctl *ControlDefinition) HasSLADeadline() bool {
-	_ = ctl.ensurePrepared()
+	ctl.ensurePrepared()
 	return ctl.prepared.HasSLADeadline
 }
 
 // EffectiveMaxUnsafeDuration returns the per-control max_unsafe_duration if explicitly set,
 // otherwise returns the provided fallback (typically the CLI --max-unsafe value).
 func (ctl *ControlDefinition) EffectiveMaxUnsafeDuration(fallback time.Duration) time.Duration {
-	_ = ctl.ensurePrepared()
+	ctl.ensurePrepared()
 	if ctl.prepared.HasMaxUnsafeDuration {
 		return ctl.prepared.MaxUnsafeDuration
 	}
@@ -330,25 +330,26 @@ func (ctl *ControlDefinition) EffectiveMaxUnsafeDuration(fallback time.Duration)
 
 // ExposurePrefixes returns the typed prefix lists for prefix_exposure controls.
 func (ctl *ControlDefinition) ExposurePrefixes() PrefixExposureParams {
-	_ = ctl.ensurePrepared()
+	ctl.ensurePrepared()
 	return ctl.prepared.PrefixExposure
 }
 
-// ensurePrepared lazily calls Prepare() on first access. Returns the
-// underlying Prepare error so callers can distinguish "ready" from
-// "ready-but-bad-params" — the loader path
-// (adapters/controls/{builtin,yaml}/loader.go) calls Prepare() eagerly
-// and surfaces parse errors at that time. The accessors above
-// intentionally discard the error: by the time they run, Prepare has
-// already been validated, and a recurrence of the failure here
-// indicates a programming error in the loader. The slog.Warn keeps the
-// diagnostic visible without forcing every accessor to return a tuple.
-func (ctl *ControlDefinition) ensurePrepared() error {
+// ensurePrepared lazily calls Prepare() on first access and logs at
+// WARN if preparation fails. Side-effecting only — the void return
+// signals to callers (the per-attribute accessors below) that error
+// handling is centralised here, removing the `ctl.ensurePrepared()`
+// blank-assignment pattern.
+//
+// The loader path (adapters/controls/{builtin,yaml}/loader.go) calls
+// Prepare() eagerly and surfaces parse errors at that time; a
+// recurrence of the failure during a lazy accessor call indicates a
+// programming error in the loader. The slog.Warn keeps the
+// diagnostic visible without forcing every accessor to return a
+// tuple.
+func (ctl *ControlDefinition) ensurePrepared() {
 	if err := ctl.Prepare(); err != nil {
 		slog.Warn("control prepare failed", "control", ctl.ID, "error", err)
-		return err
 	}
-	return nil
 }
 
 // --- Parameter Handling ---

@@ -242,11 +242,16 @@ func buildClock(now time.Time) ports.Clock {
 // using the in-memory snapshots. Silently no-ops when the snapshots
 // have no IAM data — adopters without identity collection should
 // see findings unchanged.
+//
+// Builds a merged index across every snapshot in the history rather
+// than only snapshots[0]: a policy that landed in a later capture
+// must still influence the reachability annotation for any finding
+// that names the same asset.
 func annotateReachability(findings []evaluation.Finding, snapshots []asset.Snapshot) {
 	if len(findings) == 0 || len(snapshots) == 0 {
 		return
 	}
-	idx := iam.BuildResourceAccessIndex(&snapshots[0])
+	idx := iam.BuildResourceAccessIndexFromSnapshots(snapshots)
 	if idx == nil {
 		return
 	}

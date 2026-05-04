@@ -75,11 +75,16 @@ func (r *PredicateRule) collect(ctx *EvalContext, misconfigurations []Misconfigu
 		return misconfigurations
 	}
 
-	val, _ := resolvePropertyValue(ctx.PropertyMap(), r.Field.Parts())
+	val, found := resolvePropertyValue(ctx.PropertyMap(), r.Field.Parts())
 
 	return append(misconfigurations, Misconfiguration{
-		Property:    predicate.NewFieldPath(r.Field.TrimPrefix(propertiesPathPrefix)),
+		Property: predicate.NewFieldPath(r.Field.TrimPrefix(propertiesPathPrefix)),
+		// Only record val when the field was actually present. The
+		// previous (val, _) shape collapsed "field absent" and "field
+		// has nil value" into the same evidence row — operators
+		// triaging a finding could not tell which condition fired.
 		ActualValue: val,
+		FieldAbsent: !found,
 		Operator:    r.Op,
 		UnsafeValue: r.Value.Raw(),
 		Category:    classifyProperty(r.Field.String()),

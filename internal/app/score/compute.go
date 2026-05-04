@@ -368,6 +368,13 @@ func ParseWeights(s string) (Weights, error) {
 			return w, fmt.Errorf("unknown weight key %q", k)
 		}
 	}
+	// Enforce the sum-to-1 invariant on parsed weights so a CLI-
+	// supplied weight string that happens to sum to 0.99 does not
+	// silently distort downstream score arithmetic. Validate
+	// returns a UserError-friendly message.
+	if err := w.Validate(); err != nil {
+		return Weights{}, err
+	}
 	return w, nil
 }
 
@@ -376,6 +383,13 @@ var severityWeight = map[policy.Severity]float64{
 	policy.SeverityHigh:     4.0,
 	policy.SeverityMedium:   2.0,
 	policy.SeverityLow:      1.0,
+	// Info findings carry zero exposure weight — they exist to
+	// surface observations, not score them. Without an explicit
+	// entry the map's zero-value lookup matched anyway, but
+	// SeverityWeightFor's "0 → 1.0" fallback would have promoted
+	// Info to Low's weight, which is exactly the misclassification
+	// this entry prevents.
+	policy.SeverityInfo: 0.0,
 }
 
 // SeverityWeightFor returns the score weight for a given severity level.

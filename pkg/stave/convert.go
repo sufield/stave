@@ -1,6 +1,8 @@
 package stave
 
 import (
+	"time"
+
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -32,7 +34,13 @@ func FromReportAssessment(r *report.Assessment) *Assessment {
 		Run: RunInfo{
 			StaveVersion: r.Run.StaveVersion,
 			Now:          r.Run.Now,
-			Snapshots:    r.Run.Snapshots,
+			// Mirror the SLA threshold the engine ran against so
+			// downstream consumers see the same field BuildAssessment
+			// sets in pkg/stave/apply.go — the previous shape dropped
+			// MaxUnsafe and made FromReportAssessment non-equivalent
+			// to the apply path.
+			MaxUnsafe: time.Duration(r.Run.MaxUnsafeDuration),
+			Snapshots: r.Run.Snapshots,
 		},
 		Summary: Summary{
 			TotalAssets:        r.Summary.TotalAssets,

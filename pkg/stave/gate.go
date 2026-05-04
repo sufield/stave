@@ -67,6 +67,14 @@ type GateResult struct {
 	// Passed is true when the policy allowed the change.
 	Passed bool
 
+	// merged tracks whether MergeTeamVerdict has been invoked at
+	// least once. Without it, a freshly zero-valued GateResult that
+	// nobody seeded would default Passed=false, but any caller that
+	// reads `r.Passed` straight after constructing the zero value
+	// would see a spurious FAIL with no Reason. Internal field —
+	// MergeTeamVerdict / Gate are the only writers.
+	merged bool `json:"-"`
+
 	// Reason is the short human-readable explanation, suitable for
 	// CI output. Always populated.
 	Reason string
@@ -121,7 +129,19 @@ func (r *GateResult) ExitError() error {
 // description. Empty teamReason is fine — Reason still flips to
 // the "team X" prefix so the global verdict surfaces the source.
 func (r *GateResult) MergeTeamVerdict(teamID string, teamPassed bool, teamReason string) {
-	if r == nil || teamPassed {
+	if r == nil {
+		return
+	}
+	// Track that at least one verdict has been observed; without
+	// this, a GateResult that nobody mutates would report Passed
+	// based on whatever its zero-value happens to be. A passing
+	// team also counts as a verdict — the gate has data, it's
+	// just clean.
+	if !r.merged {
+		r.merged = true
+		r.Passed = true
+	}
+	if teamPassed {
 		return
 	}
 	merged := "team " + teamID

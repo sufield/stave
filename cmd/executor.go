@@ -67,8 +67,12 @@ func (a *App) execute() {
 	a.executeRootCommand(args)
 
 	// If a signal canceled the root context, exit with the interrupt code.
-	// Deferred cleanup (cleanupInterrupt, recoverExecutePanic) runs normally.
+	// Deferred cleanup (cleanupInterrupt, recoverExecutePanic) runs
+	// normally; cleanupBeforeExit handles the same flush/profile-stop
+	// pair handleExecutionError and recoverExecutePanic share, so a
+	// SIGINT exit path matches the other two for log/profile fidelity.
 	if a.Root.Context() != nil && a.Root.Context().Err() != nil {
+		a.cleanupBeforeExit()
 		a.ExitFunc(ui.ExitInterrupted)
 		return
 	}

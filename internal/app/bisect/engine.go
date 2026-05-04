@@ -69,7 +69,12 @@ func (e *Engine) runBisect(ctx context.Context, snapshots []asset.Snapshot, resu
 			IsOngoing:  true,
 		}}
 		result.IsMonotonic = true
-		delta, dErr := computeDelta(snapshots[0], snapshots[0])
+		// Delta compares oldest vs newest so the operator sees what
+		// changed across the archive's lifetime — comparing
+		// snapshots[0] to itself produced an empty delta and made
+		// the report look as if nothing had changed despite an
+		// ongoing violation.
+		delta, dErr := computeDelta(snapshots[0], snapshots[len(snapshots)-1])
 		if dErr != nil {
 			return result, fmt.Errorf("compute delta (earliest violation): %w", dErr)
 		}
@@ -125,7 +130,12 @@ func (e *Engine) runBisect(ctx context.Context, snapshots []asset.Snapshot, resu
 
 func (e *Engine) runScan(ctx context.Context, snapshots []asset.Snapshot, result Result) (Result, error) {
 	inViolation := false
-	var currentWindow *ViolationWindow
+	// Track the current window by index, not pointer: append() on
+	// result.Windows can reallocate the backing array and leave a
+	// stored *ViolationWindow pointing at freed memory. Index-based
+	// access via result.Windows[currentWindowIdx] always reflects
+	// the live slice.
+	currentWindowIdx := -1
 
 	for i, snap := range snapshots {
 		if err := ctx.Err(); err != nil {
@@ -146,18 +156,18 @@ func (e *Engine) runScan(ctx context.Context, snapshots []asset.Snapshot, result
 				w.EntryBefore = snapshots[i-1].CapturedAt
 			}
 			result.Windows = append(result.Windows, w)
-			currentWindow = &result.Windows[len(result.Windows)-1]
+			currentWindowIdx = len(result.Windows) - 1
 			inViolation = true
 		} else if !violated && inViolation {
-			// Transition: VIOLATION → PASS (window closes).
-			if currentWindow != nil {
-				currentWindow.ExitBefore = snapshots[i-1].CapturedAt
-				currentWindow.ExitAfter = snap.CapturedAt
-				currentWindow.IsOngoing = false
-				// Update the slice element (pointer was to local copy).
-				result.Windows[len(result.Windows)-1] = *currentWindow
+			// Transition: VIOLATION → PASS (window closes). Mutate
+			// the slice element directly — no aliased pointer to
+			// keep in sync.
+			if currentWindowIdx >= 0 {
+				result.Windows[currentWindowIdx].ExitBefore = snapshots[i-1].CapturedAt
+				result.Windows[currentWindowIdx].ExitAfter = snap.CapturedAt
+				result.Windows[currentWindowIdx].IsOngoing = false
 			}
-			currentWindow = nil
+			currentWindowIdx = -1
 			inViolation = false
 		}
 	}

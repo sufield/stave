@@ -3,6 +3,7 @@ package alert
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -21,6 +22,11 @@ type FileSink struct {
 var _ ports.AlertSink = (*FileSink)(nil)
 
 // Emit appends a JSON line to the file.
+//
+// On marshal failure after a lazy open: close the just-opened file
+// and clear s.f so the next Emit retries the open. The previous
+// shape leaked the descriptor when Marshal failed because the
+// caller would never reach Close() — only the lifecycle owner does.
 func (s *FileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -29,16 +35,29 @@ func (s *FileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 		return errSinkClosed
 	}
 
+	openedNow := false
 	if s.f == nil {
 		f, err := os.OpenFile(s.Path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600) //nolint:gosec // user-specified path
 		if err != nil {
 			return fmt.Errorf("open alert file %s: %w", s.Path, err)
 		}
 		s.f = f
+		openedNow = true
 	}
 
 	data, err := json.Marshal(a)
 	if err != nil {
+		if openedNow {
+			// Close the descriptor we just acquired — caller will
+			// never reach Close() if this Emit returns an error,
+			// and the next attempt should re-open cleanly.
+			closeErr := s.f.Close()
+			s.f = nil
+			if closeErr != nil {
+				return errors.Join(fmt.Errorf("marshal alert: %w", err),
+					fmt.Errorf("close alert file %s: %w", s.Path, closeErr))
+			}
+		}
 		return fmt.Errorf("marshal alert: %w", err)
 	}
 	data = append(data, '\n')
@@ -63,8 +82,8 @@ func (s *FileSink) Close() error {
 	syncErr := s.f.Sync()
 	closeErr := s.f.Close()
 	s.f = nil
-	if syncErr != nil {
-		return syncErr
-	}
-	return closeErr
+	// errors.Join keeps both diagnostics visible when both fail —
+	// previously closeErr was silently dropped on a Sync failure,
+	// hiding a separate underlying problem (e.g. EBADF).
+	return errors.Join(syncErr, closeErr)
 }

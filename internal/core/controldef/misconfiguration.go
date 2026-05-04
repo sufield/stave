@@ -45,8 +45,18 @@ type Misconfiguration struct {
 	// Property is the field path (e.g., "properties.public_access_block.block_public_acls").
 	Property predicate.FieldPath `json:"property"`
 
-	// ActualValue is the state observed during evaluation.
+	// ActualValue is the state observed during evaluation. nil with
+	// FieldAbsent=true signals "field not present in the asset
+	// properties"; nil with FieldAbsent=false signals "field present
+	// with a literal nil value" (a meaningfully different evidence
+	// state).
 	ActualValue any `json:"actual_value"`
+
+	// FieldAbsent is true when the predicate's field was not found
+	// in the asset properties at evaluation time. Renderers use this
+	// to distinguish "<absent>" from "(null)" so operators can tell
+	// "field never set" from "field cleared to nil".
+	FieldAbsent bool `json:"field_absent,omitempty"`
 
 	// Operator is the failed logic gate (e.g., "eq", "missing").
 	Operator predicate.Operator `json:"operator"`

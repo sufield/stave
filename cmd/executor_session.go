@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"log/slog"
+
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -12,6 +14,12 @@ func persistSessionStateIfApplicable(resolver *projctx.Resolver, args []string) 
 	}
 	projectRoot, err := resolver.DetectProjectRoot(resolver.WorkingDir)
 	if err != nil {
+		// Project root detection is allowed to fail (running outside
+		// a project tree, missing .stave marker), but the failure is
+		// otherwise invisible. Log at debug so a stuck "no workflow
+		// handoff printed" report can be diagnosed without
+		// re-instrumenting the call.
+		slog.Debug("session persistence skipped", "error", err)
 		return ""
 	}
 	// Best-effort: session state is advisory; failure doesn't affect the command result.
