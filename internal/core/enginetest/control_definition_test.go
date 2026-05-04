@@ -87,7 +87,7 @@ func TestControlDefinitionValidate_BadTypeWarning(t *testing.T) {
 	}
 }
 
-func TestControlDefinitionValidate_EmptyPredicateWarning(t *testing.T) {
+func TestControlDefinitionValidate_EmptyPredicateError(t *testing.T) {
 	t.Parallel()
 	ctl := validControlForValidationTests()
 	ctl.UnsafePredicate = policy.UnsafePredicate{}
@@ -97,7 +97,10 @@ func TestControlDefinitionValidate_EmptyPredicateWarning(t *testing.T) {
 		t.Fatalf("validate() issues = %d, want 1", len(issues))
 	}
 
-	assertIssueCodeAndSignal(t, issues[0], diag.RuleControlEmptyPredicate, diag.SeverityWarn)
+	// Empty predicate is an error (not a warning): a control with no
+	// rules cannot classify anything, so every asset would silently
+	// pass. Loading such a control is worse than rejecting it.
+	assertIssueCodeAndSignal(t, issues[0], diag.RuleControlEmptyPredicate, diag.SeverityError)
 }
 
 func TestControlDefinitionValidate_UndefinedParamReferencesAreUniqueAndSorted(t *testing.T) {

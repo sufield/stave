@@ -163,8 +163,21 @@ func unsafePredicateToDomain(y yamlUnsafePredicate) policy.UnsafePredicate {
 	}
 }
 
+// isPredicateRulesEmpty reports whether the YAML predicate-rules
+// input represents "no rules configured." Treats both nil and
+// empty-non-nil slices as the same business state — the YAML
+// loader can produce either depending on whether the field was
+// omitted (`<missing>` → nil) or explicitly set to an empty list
+// (`any: []` → non-nil zero-length). Sibling predicate to
+// alternativesToDomain / scopeTagsToDomain / assetTypesToDomain so
+// the empty-input policy lives on a named concept the mapper sites
+// can reference.
+func isPredicateRulesEmpty(rules []yamlPredicateRule) bool {
+	return len(rules) == 0
+}
+
 func predicateRulesToDomain(rules []yamlPredicateRule) []policy.PredicateRule {
-	if rules == nil {
+	if isPredicateRulesEmpty(rules) {
 		return nil
 	}
 	out := make([]policy.PredicateRule, len(rules))
@@ -208,9 +221,23 @@ func exposureToDomain(y *yamlExposure) (*policy.Exposure, error) {
 		return nil, fmt.Errorf("invalid principal_scope %q: %w", y.PrincipalScope, err)
 	}
 	return &policy.Exposure{
-		Type:           exposure.Type(y.Type),
+		Type:           asCatalogExposureType(y.Type),
 		PrincipalScope: scope,
 	}, nil
+}
+
+// asCatalogExposureType casts a raw YAML string into exposure.Type
+// without runtime validation. The vocabulary is intentionally open
+// at the type level: the catalog ships ~30 distinct values the
+// classifier recognises (subdomain_takeover, cdn_bypass,
+// latent_public_read, etc.) and the closed-set enforcement lives in
+// the catalog linter / schema validator, not this mapper. Naming
+// the cast documents that design choice so a future maintainer
+// doesn't try to "tighten" exposureToDomain by validating against
+// the named exposure.Type* constants — which would reject
+// legitimate catalog entries.
+func asCatalogExposureType(raw string) exposure.Type {
+	return exposure.Type(raw)
 }
 
 // UnmarshalControlDefinition unmarshals YAML bytes into a domain ControlDefinition.

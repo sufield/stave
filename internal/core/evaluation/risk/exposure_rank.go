@@ -22,6 +22,22 @@ type ExposureRank struct {
 	SilentKiller  bool                 `json:"silent_killer"`
 }
 
+// IsDanglingReference reports whether this rank entry points at a
+// finding index outside the supplied findings count — a referential
+// integrity failure caused by a stale ranker, an upstream filter
+// that removed findings without updating indices, or a hand-built
+// fixture with mismatched parallel arrays. Encapsulates the
+// (idx<0 || idx>=len) bounds probe so the caller describes the
+// *relationship* (dangling pointer) instead of the slice arithmetic.
+// A future move from index-based to ID-based correlation lands here
+// without touching the call site.
+func (r *ExposureRank) IsDanglingReference(findingsCount int) bool {
+	if r == nil {
+		return true
+	}
+	return r.FindingIndex < 0 || r.FindingIndex >= findingsCount
+}
+
 // ScoreBreakdown provides the traceable factor decomposition.
 type ScoreBreakdown struct {
 	BaseScore          int                `json:"base_score"`

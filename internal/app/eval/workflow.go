@@ -267,7 +267,16 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	// finding, not only on the top-N slice".
 	for i := range report.TopExposures {
 		er := &report.TopExposures[i]
-		if er.FindingIndex < 0 || er.FindingIndex >= len(report.Findings) {
+		if er.IsDanglingReference(len(report.Findings)) {
+			// A dangling reference means the rank pipeline is out
+			// of sync with the finding set — stale ranker, upstream
+			// filter that dropped findings without updating indices,
+			// or a hand-built fixture with mismatched parallel
+			// arrays. Warn so the data-integrity gap surfaces
+			// instead of leaving a 0-score row with no trail.
+			slog.Warn("workflow: dangling exposure reference; skipping",
+				"control_id", er.ControlID, "asset_id", er.AssetID,
+				"finding_index", er.FindingIndex, "findings_available", len(report.Findings))
 			continue
 		}
 		f := &report.Findings[er.FindingIndex]

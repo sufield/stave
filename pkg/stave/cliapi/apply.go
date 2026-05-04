@@ -43,6 +43,20 @@ type ApplyResult struct {
 	Controls         []policy.ControlDefinition
 }
 
+// IsIncomplete reports whether the result lacks the mandatory
+// ComplianceReport — the data downstream consumers (cmd/apply,
+// scoring, output formatters) require to do useful work. A nil
+// receiver counts as incomplete so callers can collapse the
+// "did Apply return anything at all" check into the same probe.
+//
+// Apply is contracted to return (non-nil result with non-nil
+// ComplianceReport, nil err) on success; the predicate documents
+// that contract on the type so a future API change adds new
+// mandatory fields by extending IsIncomplete in one place.
+func (r *ApplyResult) IsIncomplete() bool {
+	return r == nil || r.ComplianceReport == nil
+}
+
 // Apply runs the same evaluation pipeline as [stave.Apply] and
 // returns both the public Assessment and the raw internal report.
 // Use this from cmd/apply (and only from cmd/apply) when output

@@ -1,5 +1,7 @@
 package controldef
 
+import "fmt"
+
 // Classification expresses a control's semantic evaluation role,
 // distinct from Type (engine-level mechanism — unsafe_state,
 // unsafe_recurrence, etc.) and Domain (asset class).
@@ -62,4 +64,32 @@ func (c Classification) IsValid() bool {
 		return true
 	}
 	return false
+}
+
+// UnmarshalYAML rejects unknown classification values at decode
+// time. The schema validator already enforces the closed
+// vocabulary, but a YAML loader that bypasses schema validation
+// (tests, future programmatic use) would otherwise silently produce
+// a control whose Classification.String() is "" or a typo'd value
+// — and downstream filters that match by classification would
+// silently drop it.
+//
+// Empty values pass through as "" so a control authored without a
+// classification field stays loadable; only an explicitly set,
+// unrecognised value fails.
+func (c *Classification) UnmarshalYAML(unmarshal func(any) error) error {
+	var raw string
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+	if raw == "" {
+		*c = ""
+		return nil
+	}
+	candidate := Classification(raw)
+	if !candidate.IsValid() {
+		return fmt.Errorf("invalid classification %q (allowed: state_assertion, parameterized_check, absence_check, aggregate_check)", raw)
+	}
+	*c = candidate
+	return nil
 }

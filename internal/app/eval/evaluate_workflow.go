@@ -3,6 +3,7 @@ package eval
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -43,6 +44,27 @@ type EvaluateInput struct {
 	GenerateEvidence bool
 }
 
+// resolveDependencies normalises the optional dependency slots so
+// every evaluation component has at least a no-op implementation.
+// Centralises the "fallback to safe default + warn the operator
+// about the degraded mode" pattern instead of letting each Evaluate
+// call site re-implement the nil-check ladder. The warns surface in
+// -v output so an inconclusive verdict cluster is traceable to the
+// missing dependency rather than read as a real evaluation failure.
+func (input *EvaluateInput) resolveDependencies() {
+	if input == nil {
+		return
+	}
+	if input.PredicateParser == nil {
+		slog.Warn("eval.Evaluate: PredicateParser is nil; falling back to no-op parser — predicates will not classify")
+		input.PredicateParser = noopPredicateParser
+	}
+	if input.CELEvaluator == nil {
+		slog.Warn("eval.Evaluate: CELEvaluator is nil; falling back to inconclusive evaluator — CEL predicates will not fire")
+		input.CELEvaluator = inconclusiveCELEvaluator
+	}
+}
+
 // BuildAssessorOptions returns the engine option list derived from the
 // inputs on this EvaluateInput. The catalog, parser, and CEL evaluator
 // are passed in so the caller can supply already-resolved fallbacks
@@ -54,7 +76,7 @@ type EvaluateInput struct {
 // "which fields drive which engine option" mapping in one place, so
 // adding a new EvaluateInput field is a single-site edit instead of a
 // scan-and-update across every caller that constructs an Assessor.
-func (i EvaluateInput) BuildAssessorOptions(
+func (i *EvaluateInput) BuildAssessorOptions(
 	catalog *policy.Catalog,
 	parser policy.PredicateParser,
 	celEval policy.PredicateEval,
@@ -89,16 +111,9 @@ func (i EvaluateInput) BuildAssessorOptions(
 // (large catalog × asset matrix) honours operator cancellation and
 // upstream deadlines instead of running to completion silently.
 func Evaluate(ctx context.Context, input EvaluateInput) (evaluation.ComplianceReport, error) {
+	input.resolveDependencies()
 	catalog := policy.NewCatalog(input.Controls)
-	parser := input.PredicateParser
-	if parser == nil {
-		parser = noopPredicateParser
-	}
-	celEval := input.CELEvaluator
-	if celEval == nil {
-		celEval = inconclusiveCELEvaluator
-	}
-	opts := input.BuildAssessorOptions(catalog, parser, celEval, input.Tracer)
+	opts := input.BuildAssessorOptions(catalog, input.PredicateParser, input.CELEvaluator, input.Tracer)
 	runner := engine.NewAssessor(opts...)
 	result, err := runner.Assess(ctx, derive.Pipeline(input.Snapshots), engine.AssessmentOptions{
 		StaveVersion:     input.StaveVersion,

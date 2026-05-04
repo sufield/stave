@@ -65,6 +65,17 @@ func (r *Reporter) ShouldEmit() bool {
 	return r != nil && !r.Quiet
 }
 
+// hasInteractiveUI reports whether the reporter is wired to a
+// runtime capable of providing interactive feedback. The
+// constructor (NewReporter) normally injects a non-nil Runtime,
+// but tests and literal Reporter constructions may leave it nil;
+// this predicate names the capability so callers describe the
+// "we have a hint surface" check rather than a memory-safety
+// probe.
+func (r *Reporter) hasInteractiveUI() bool {
+	return r != nil && r.Runtime != nil
+}
+
 // ReportApply prints the outcome of an evaluation and returns an error
 // when the response policy indicates failure. Per-signal phrasing
 // lives on EnforcementOutcome.SummaryMessage; this method composes
@@ -86,7 +97,12 @@ func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.Enforcement
 	default: // IsBlock
 		if r.ShouldEmit() {
 			ui.WriteHint(r.Stderr, res.DiagnoseCommand)
-			r.Runtime.PrintNextSteps(res.NextSteps...)
+			// Skip the next-steps hint when no runtime is wired.
+			// The violation error is the load-bearing signal here;
+			// the hint is purely advisory UI.
+			if r.hasInteractiveUI() {
+				r.Runtime.PrintNextSteps(res.NextSteps...)
+			}
 		}
 		return ui.ErrViolationsFound
 	}

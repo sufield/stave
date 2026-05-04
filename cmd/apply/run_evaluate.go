@@ -72,6 +72,13 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	if err != nil {
 		return EvaluateResult{}, fmt.Errorf("execute evaluation: %w", err)
 	}
+	// Ensure the evaluation produced a usable outcome before
+	// proceeding. cliapi.Apply must return a complete result on
+	// success; IsIncomplete encapsulates the "all required fields
+	// populated" contract on the type itself.
+	if applyRes.IsIncomplete() {
+		return EvaluateResult{}, fmt.Errorf("execute evaluation: result is incomplete (response=%v)", applyRes)
+	}
 	result := *applyRes.ComplianceReport
 	status := result.SecurityState
 

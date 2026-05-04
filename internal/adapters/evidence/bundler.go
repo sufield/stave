@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -32,7 +33,11 @@ type BundleInput struct {
 type manifestEntry struct {
 	File   string `json:"file"`
 	SHA256 string `json:"sha256"`
-	Size   int    `json:"size"`
+	// int64 to match tar.Header.Size (which is int64). Using int
+	// here would silently truncate file sizes above 2 GiB on 32-bit
+	// platforms — the manifest would record a wrong length even
+	// though the bundled file is intact.
+	Size int64 `json:"size"`
 }
 
 type bundleManifest struct {
@@ -186,12 +191,12 @@ func buildManifest(files map[string][]byte, now string) bundleManifest {
 		entries = append(entries, manifestEntry{
 			File:   name,
 			SHA256: h,
-			Size:   len(data),
+			Size:   int64(len(data)),
 		})
 		hashes = append(hashes, h)
 	}
 
-	overall := sha256.Sum256(fmt.Appendf(nil, "%v", hashes))
+	overall := createCanonicalManifestDigest(hashes)
 
 	return bundleManifest{
 		SchemaVersion: "manifest.v0.1",
@@ -199,6 +204,19 @@ func buildManifest(files map[string][]byte, now string) bundleManifest {
 		OverallDigest: "sha256:" + hex.EncodeToString(overall[:]),
 		Files:         entries,
 	}
+}
+
+// createCanonicalManifestDigest produces a stable SHA-256 of the
+// per-file hashes that downstream verifiers can reproduce
+// independent of Go version or internal slice formatting.
+//
+// The previous shape called fmt.Appendf("%v", hashes), which emits
+// Go's default `[a b c]` slice syntax — not part of any spec we
+// control, and a change to that formatter would drift the digest
+// against archives produced by earlier Stave versions. A
+// newline-joined list of hex hashes is the canonical form.
+func createCanonicalManifestDigest(hashes []string) [32]byte {
+	return sha256.Sum256([]byte(strings.Join(hashes, "\n")))
 }
 
 func signManifest(manifestJSON, privateKeyPEM []byte) ([]byte, error) {

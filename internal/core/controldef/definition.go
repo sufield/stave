@@ -428,9 +428,23 @@ func (d *ControlDefinition) BaseImpact() int {
 // AttackStage returns the MITRE ATT&CK-aligned attack stage.
 // Read from params.attack_stage. Defaults to "".
 // Values: initial_access, credential_access, persistence, exfiltration,
-// detection_evasion, resilience.
+// detection_evasion, resilience, etc. The vocabulary is open at the
+// type level — see asCatalogAttackStage for the design rationale.
 func (d *ControlDefinition) AttackStage() kernel.AttackStage {
-	return kernel.AttackStage(getParam[string](d.Params.m, "attack_stage"))
+	return asCatalogAttackStage(getParam[string](d.Params.m, "attack_stage"))
+}
+
+// asCatalogAttackStage casts a raw param string into kernel.AttackStage
+// without runtime validation. The vocabulary is intentionally open
+// at the type level: the catalog ships values beyond the named
+// constants (collection, discovery, execution) and the closed-set
+// enforcement lives in the catalog linter, not these accessors —
+// see the kernel/attack_stage.go type doc. Naming the cast
+// documents that design choice so a future maintainer doesn't try
+// to "tighten" this accessor by validating against the named
+// constants — which would silently drop stages the catalog ships.
+func asCatalogAttackStage(raw string) kernel.AttackStage {
+	return kernel.AttackStage(raw)
 }
 
 // ChainIDs returns the chain definition IDs this control participates in.
@@ -461,7 +475,8 @@ func (d *ControlDefinition) ChainIDs() []kernel.ChainID {
 }
 
 // BlastRadiusType returns the blast radius category (detection, prevention, recovery).
-// Read from params.blast_radius.type. Defaults to "".
+// Read from params.blast_radius.type. Defaults to "". The vocabulary
+// is open at the type level — see asCatalogBlastRadiusType.
 func (d *ControlDefinition) BlastRadiusType() kernel.BlastRadiusType {
 	raw, ok := d.Params.Get("blast_radius")
 	if !ok {
@@ -471,7 +486,16 @@ func (d *ControlDefinition) BlastRadiusType() kernel.BlastRadiusType {
 	if !ok {
 		return ""
 	}
-	return kernel.BlastRadiusType(getParam[string](m, "type"))
+	return asCatalogBlastRadiusType(getParam[string](m, "type"))
+}
+
+// asCatalogBlastRadiusType casts a raw param string into
+// kernel.BlastRadiusType without runtime validation. The catalog
+// ships values beyond the named constants (availability, control,
+// data_exposure, governance) and the closed-set enforcement lives
+// in the catalog linter, not this accessor.
+func asCatalogBlastRadiusType(raw string) kernel.BlastRadiusType {
+	return kernel.BlastRadiusType(raw)
 }
 
 // BlastMultiplier returns the blast radius multiplier.
@@ -499,6 +523,7 @@ func (d *ControlDefinition) BlastMultiplier() float64 {
 // Account scope means disabling this control blinds the entire account.
 // Network scope means it affects resources in the same VPC.
 // Resource scope means it only affects this specific resource.
+// The vocabulary is open at the type level — see asCatalogBlastScope.
 func (d *ControlDefinition) BlastScope() kernel.BlastScope {
 	raw, ok := d.Params.Get("blast_radius")
 	if !ok {
@@ -508,11 +533,20 @@ func (d *ControlDefinition) BlastScope() kernel.BlastScope {
 	if !ok {
 		return kernel.BlastScopeResource
 	}
-	s := kernel.BlastScope(getParam[string](m, "scope"))
+	s := asCatalogBlastScope(getParam[string](m, "scope"))
 	if s == "" {
 		return kernel.BlastScopeResource
 	}
 	return s
+}
+
+// asCatalogBlastScope casts a raw param string into kernel.BlastScope
+// without runtime validation. The catalog ships values beyond the
+// named constants (cross_account, organization, region) and the
+// closed-set enforcement lives in the catalog linter, not this
+// accessor.
+func asCatalogBlastScope(raw string) kernel.BlastScope {
+	return kernel.BlastScope(raw)
 }
 
 // paramString returns a string parameter or empty string if not found.

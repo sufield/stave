@@ -38,7 +38,22 @@ func (s *fileSpan) SetFindingID(id string) {
 	s.findingID = id
 }
 
+// isRecording reports whether the span is attached to an active
+// tracer and should therefore record telemetry data on End.
+// Encapsulates the nil-tracer probe so the lifecycle state of the
+// span ("recording vs detached") reads as the question End is
+// asking, not as a memory-safety check.
+func (s *fileSpan) isRecording() bool {
+	return s != nil && s.tracer != nil
+}
+
 func (s *fileSpan) End() {
+	// A detached span (constructed directly without going through
+	// LocalFileTracer.BeginAssessment) should swallow steps silently
+	// rather than panic on the tracer.append dereference.
+	if !s.isRecording() {
+		return
+	}
 	// Clone steps before handing it to the tracer. The fileSpan
 	// owner could (incorrectly) call RecordStep after End and grow
 	// s.steps, which would mutate the slice the tracer kept a

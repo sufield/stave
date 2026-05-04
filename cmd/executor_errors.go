@@ -67,6 +67,31 @@ func errorInfoFromError(err error, message string) *ui.ErrorInfo {
 		suggested = fmt.Sprintf("Try `%s`. ", hint.NextCommand)
 	}
 
+	return resolvePrimaryErrorSignal(err, message, suggested, docsRef)
+}
+
+// resolvePrimaryErrorSignal applies the documented precedence
+// policy that maps an error chain onto the user-facing ui.ErrorInfo:
+//
+//  1. Sentinel-with-template: if the error is a sentinel
+//     (errors.Is unwraps so a UserError wrapping a sentinel still
+//     resolves here) AND its exit code has a template entry, use
+//     the template. Sentinels carry actionable remediation
+//     (workflow-specific exit-code guidance) that beats the
+//     generic UserError fallback below.
+//  2. Sentinel-without-template: surface the gap via slog so a
+//     maintainer notices the missing entry in -v mode, then fall
+//     through. Exit code stays correct because ExitCode() already
+//     classified it; only the user-facing copy is missing.
+//  3. UserError: input validation issue — surface as a
+//     CodeInvalidInput with the canonical "check the command
+//     arguments" remediation.
+//  4. Generic command failure: the catch-all CodeInternalError.
+//
+// Centralising the policy here means a future change ("UserError
+// wrapping should override a generic sentinel") edits one place
+// instead of unwinding the original if-cascade.
+func resolvePrimaryErrorSignal(err error, message, suggested, docsRef string) *ui.ErrorInfo {
 	if ui.IsSentinel(err) {
 		exit := ExitCode(err)
 		if tmpl, ok := sentinelTemplates[exit]; ok {
@@ -75,12 +100,6 @@ func errorInfoFromError(err error, message string) *ui.ErrorInfo {
 				WithAction(suggested + tmpl.Action).
 				WithURL(docsRef)
 		}
-		// Sentinel without a template entry means a new sentinel was
-		// added but sentinelTemplates wasn't extended — surface the
-		// gap via slog so a maintainer notices in -v mode rather than
-		// the operator silently getting the generic "Command failed"
-		// fallback. The exit code stays correct because ExitCode()
-		// classified it; only the user-facing template is missing.
 		slog.Warn("executor: sentinel error has no template entry; falling back to generic message",
 			"exit_code", exit, "error", message)
 	}
