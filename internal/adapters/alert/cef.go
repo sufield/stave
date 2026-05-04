@@ -22,9 +22,10 @@ var errSinkClosed = errors.New("alert sink: already closed")
 //
 //	Signature ID|Name|Severity|Extension
 type CEFFileSink struct {
-	path string
-	f    *os.File
-	mu   sync.Mutex
+	path   string
+	f      *os.File
+	mu     sync.Mutex
+	closed bool
 }
 
 var _ ports.AlertSink = (*CEFFileSink)(nil)
@@ -43,11 +44,27 @@ func (s *CEFFileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 	line := FormatCEF(a)
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.f == nil {
+	if s.closed || s.f == nil {
 		return errSinkClosed
 	}
-	_, err := fmt.Fprintln(s.f, line)
-	return err
+	if _, err := fmt.Fprintln(s.f, line); err != nil {
+		// Mirror FileSink: a write failure (disk full, broken pipe,
+		// stale NFS handle) leaves the descriptor in an undefined
+		// state. Close + mark the sink failed so subsequent Emit
+		// calls return errSinkClosed instead of writing into a
+		// half-broken FD or leaking it across every later call.
+		closeErr := s.f.Close()
+		s.f = nil
+		s.closed = true
+		if closeErr != nil {
+			return errors.Join(
+				fmt.Errorf("write CEF alert to %s: %w", s.path, err),
+				fmt.Errorf("close CEF file after write failure: %w", closeErr),
+			)
+		}
+		return fmt.Errorf("write CEF alert to %s: %w", s.path, err)
+	}
+	return nil
 }
 
 // Close closes the CEF file. Subsequent Emit calls return errSinkClosed.
@@ -59,6 +76,7 @@ func (s *CEFFileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 func (s *CEFFileSink) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.closed = true
 	if s.f == nil {
 		return nil
 	}

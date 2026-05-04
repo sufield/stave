@@ -2471,10 +2471,25 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001",
+        "CTL.S3.CONTROLS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-615ea15597343a26",
+        "target": {
+          "asset_id": "shopify-owned-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "contributing_controls": [
         "CTL.S3.ENCRYPT.004"
       ],
-      "finding_count": 2
+      "finding_count": 1
     },
     {
       "asset_id": "shopify-owned-1",
@@ -2532,10 +2547,25 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001",
+        "CTL.S3.CONTROLS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-7e4244a99e10acdb",
+        "target": {
+          "asset_id": "shopify-owned-2",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "contributing_controls": [
         "CTL.S3.ENCRYPT.004"
       ],
-      "finding_count": 2
+      "finding_count": 1
     },
     {
       "asset_id": "shopify-owned-2",
@@ -2638,10 +2668,25 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001",
+        "CTL.S3.CONTROLS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-655489696a02bf28",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "contributing_controls": [
         "CTL.S3.ENCRYPT.004"
       ],
-      "finding_count": 2
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -2947,7 +2992,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "5fb1c1381fd7e85b9540ceeda6027b7bec5bfc19",
       "dirty": false
     }
   }

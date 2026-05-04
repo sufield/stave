@@ -83,9 +83,23 @@ func (a *Archive) WriteRun(runID string, files map[string][]byte, meta RunMetada
 
 	meta.SHA256Sums = make(map[string]string)
 
+	// Iterate file names in sorted order so the on-disk write
+	// sequence (and any partial state on a mid-write failure) is
+	// reproducible across runs. Map iteration is randomised in Go,
+	// so the previous shape produced different mtimes / partial-
+	// state shapes on identical input — fine for the final archive
+	// but a determinism foot-gun for tests and post-incident
+	// forensics.
+	names := make([]string, 0, len(files))
+	for name := range files {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+
 	// Write each file and compute SHA-256.
 	var sumLines []string
-	for name, data := range files {
+	for _, name := range names {
+		data := files[name]
 		if !isSafeRunRelative(name) {
 			return fmt.Errorf("write %s: unsafe filename (must be run-relative, no .. segments, no leading separator)", name)
 		}
@@ -236,12 +250,112 @@ func (a *Archive) Verify() ([]string, []string) {
 		runDir := filepath.Join(a.Path, "runs", run.RunID)
 		if _, statErr := os.Stat(runDir); statErr != nil {
 			errs = append(errs, fmt.Sprintf("run %s: directory missing", run.RunID))
+			continue
 		}
+		runErrs, runWarns := verifyRunChecksums(runDir, run.RunID)
+		errs = append(errs, runErrs...)
+		warnings = append(warnings, runWarns...)
 	}
 
 	for _, gap := range m.Gaps {
 		warnings = append(warnings, fmt.Sprintf("gap: %s → %s (%.0fh, expected %.0fh)",
 			gap.ExpectedAfter, gap.ActualNextRun, gap.GapHours, gap.ExpectedIntervalH))
+	}
+
+	return errs, warnings
+}
+
+// verifyRunChecksums reads sha256sums.txt from runDir and validates
+// each listed file's SHA-256 against the actual contents on disk.
+// Detects three failure modes:
+//   - file listed in sha256sums.txt but missing from runDir
+//   - file present but with a different hash (tamper / corruption)
+//   - file present in runDir but unlisted (covert insertion)
+//
+// Returns (errors, warnings). A missing or unparseable sha256sums.txt
+// reports as an error — the verifier cannot say the run is intact
+// without it.
+func verifyRunChecksums(runDir, runID string) (errs, warnings []string) {
+	sumPath := filepath.Join(runDir, "sha256sums.txt")
+	data, err := os.ReadFile(sumPath) //nolint:gosec // archive checksum sidecar
+	if err != nil {
+		if os.IsNotExist(err) {
+			errs = append(errs, fmt.Sprintf("run %s: sha256sums.txt missing", runID))
+			return errs, warnings
+		}
+		errs = append(errs, fmt.Sprintf("run %s: read sha256sums.txt: %v", runID, err))
+		return errs, warnings
+	}
+
+	// Format per line: "sha256:<hex>  <name>" (two spaces, mirroring
+	// the writer at WriteRun). Parse leniently — surface malformed
+	// lines as errors rather than skipping silently.
+	expected := make(map[string]string) // name → hex hash (no prefix)
+	for lineNum, raw := range strings.Split(string(data), "\n") {
+		line := strings.TrimSpace(raw)
+		if line == "" {
+			continue
+		}
+		const prefix = "sha256:"
+		if !strings.HasPrefix(line, prefix) {
+			errs = append(errs, fmt.Sprintf("run %s: sha256sums.txt line %d: missing sha256: prefix", runID, lineNum+1))
+			continue
+		}
+		rest := line[len(prefix):]
+		// Split on the first run of whitespace (the writer uses two
+		// spaces, but tolerate a single space or tab for hand-edited
+		// archives).
+		idx := strings.IndexAny(rest, " \t")
+		if idx <= 0 {
+			errs = append(errs, fmt.Sprintf("run %s: sha256sums.txt line %d: malformed (expected hash + name)", runID, lineNum+1))
+			continue
+		}
+		hash := rest[:idx]
+		name := strings.TrimSpace(rest[idx:])
+		if hash == "" || name == "" {
+			errs = append(errs, fmt.Sprintf("run %s: sha256sums.txt line %d: empty hash or name", runID, lineNum+1))
+			continue
+		}
+		expected[name] = hash
+	}
+
+	// Verify each listed file.
+	for name, wantHash := range expected {
+		filePath := filepath.Join(runDir, name)
+		fileData, readErr := os.ReadFile(filePath) //nolint:gosec // archive evidence file
+		if readErr != nil {
+			if os.IsNotExist(readErr) {
+				errs = append(errs, fmt.Sprintf("run %s: %s listed in sha256sums.txt but missing", runID, name))
+				continue
+			}
+			errs = append(errs, fmt.Sprintf("run %s: %s read failed: %v", runID, name, readErr))
+			continue
+		}
+		gotHash := sha256Hex(fileData)
+		if gotHash != wantHash {
+			errs = append(errs, fmt.Sprintf("run %s: %s SHA-256 mismatch (expected %s, got %s)",
+				runID, name, wantHash, gotHash))
+		}
+	}
+
+	// Detect extra (unlisted) files in runDir, excluding sha256sums.txt
+	// itself — it's the manifest, not an evidence file.
+	entries, walkErr := os.ReadDir(runDir)
+	if walkErr != nil {
+		warnings = append(warnings, fmt.Sprintf("run %s: list directory failed: %v", runID, walkErr))
+		return errs, warnings
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if name == "sha256sums.txt" {
+			continue
+		}
+		if _, listed := expected[name]; !listed {
+			warnings = append(warnings, fmt.Sprintf("run %s: %s present in directory but not in sha256sums.txt", runID, name))
+		}
 	}
 
 	return errs, warnings

@@ -29,13 +29,43 @@ func RunDaemon(ctx context.Context, opts DaemonOpts) error {
 		return errors.New("runOnce function is required")
 	}
 
-	// Write PID file.
+	// Open + flock the PID file so a second daemon instance with the
+	// same --pid-file fails fast at startup instead of racing with
+	// the first. The file handle stays open for the lifetime of the
+	// daemon — the kernel releases the advisory lock on close
+	// (defer below). The previous shape just wrote and closed,
+	// leaving nothing to detect a concurrent start.
 	if opts.PIDFile != "" {
-		pid := strconv.Itoa(os.Getpid())
-		if err := os.WriteFile(opts.PIDFile, []byte(pid+"\n"), 0o644); err != nil { //nolint:gosec
-			return fmt.Errorf("write pid file: %w", err)
+		f, err := os.OpenFile(opts.PIDFile, os.O_RDWR|os.O_CREATE, 0o644) //nolint:gosec // pid file
+		if err != nil {
+			return fmt.Errorf("open pid file: %w", err)
 		}
-		defer os.Remove(opts.PIDFile)
+		if lockErr := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); lockErr != nil { //nolint:gosec // file descriptors fit in int on every supported platform
+			_ = f.Close()
+			if errors.Is(lockErr, syscall.EWOULDBLOCK) {
+				return fmt.Errorf("pid file %s is locked by another daemon instance", opts.PIDFile)
+			}
+			return fmt.Errorf("acquire pid file lock: %w", lockErr)
+		}
+		// Truncate + write the current PID. Truncation matters because
+		// the file may already exist (left over from a prior run that
+		// crashed without cleanup); a stale longer PID would otherwise
+		// trail the new one.
+		if truncErr := f.Truncate(0); truncErr != nil {
+			_ = f.Close()
+			return fmt.Errorf("truncate pid file: %w", truncErr)
+		}
+		if _, writeErr := f.WriteAt([]byte(strconv.Itoa(os.Getpid())+"\n"), 0); writeErr != nil {
+			_ = f.Close()
+			return fmt.Errorf("write pid file: %w", writeErr)
+		}
+		defer func() {
+			// Close releases the flock; unlink so a future daemon
+			// can start cleanly. Order matters: close before unlink
+			// so an inflight signal handler can still see the file.
+			_ = f.Close()
+			_ = os.Remove(opts.PIDFile)
+		}()
 	}
 
 	// Handle SIGTERM/SIGINT.

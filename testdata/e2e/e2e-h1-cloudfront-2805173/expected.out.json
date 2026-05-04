@@ -1494,10 +1494,25 @@
         "action": "Review the identity-based policies granting admin-equivalent actions. Apply an SCP or permission boundary to constrain the effective permissions. If the principal requires admin access, tag it with stave/role-type: administrative to document the intent."
       },
       "contributing_controls": [
-        "CTL.IAM.NEP.ADMIN.001",
+        "CTL.IAM.NEP.ADMIN.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+      "asset_type": "aws_iam_role",
+      "fix_plan": {
+        "id": "fix-938ac73fdcc102b4",
+        "target": {
+          "asset_id": "arn:aws:iam::123456789012:role/cloudFrontExtensionsConso-RepoConstructExtDeployerR-wBEukYirZfbr",
+          "asset_type": "aws_iam_role"
+        },
+        "action": "For direct primitives: remove or scope the escalation action to specific resource ARNs. For transitive chains: remove the sts:AssumeRole grant that enables the chain, or scope it to specific non-admin role ARNs."
+      },
+      "contributing_controls": [
         "CTL.IAM.NEP.ESCALATION.001"
       ],
-      "finding_count": 2
+      "finding_count": 1
     },
     {
       "asset_id": "arn:aws:lambda:us-east-1:123456789012:function/cf_config_version_exporter",
@@ -1835,7 +1850,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "5fb1c1381fd7e85b9540ceeda6027b7bec5bfc19",
       "dirty": false
     }
   }

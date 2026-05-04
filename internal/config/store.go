@@ -116,10 +116,15 @@ func hasNoUnsafeSegments(path string) bool {
 	if path == "" {
 		return true
 	}
+	// Clean the input then operate on the canonical form. The
+	// previous shape rejected any input that wasn't already
+	// canonical, which false-positived on benign forms operators
+	// write in YAML (`controls/` with trailing slash, `./controls`,
+	// duplicate `//` separators). The safety property the function
+	// is meant to enforce is "no `..` segment", which Clean
+	// preserves; rejecting non-canonical inputs was a separate
+	// concern that bled into this guard.
 	cleaned := filepath.Clean(path)
-	if cleaned != path {
-		return false
-	}
 	// Substring fast-path: when ".." appears nowhere in the cleaned
 	// path, no segment can possibly be `..`, so we skip the
 	// allocation-heavy split + scan. The check is intentionally

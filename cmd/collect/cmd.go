@@ -290,7 +290,16 @@ func runCollect(ctx context.Context, stdout, stderr io.Writer, opts *options) er
 		return fmt.Errorf("load manifest: %w", loadErr)
 	}
 	if manifest.ArchiveID == "" {
-		manifest.ArchiveID = strings.Join(frameworks, "-") + "-archive"
+		// strings.Join on an empty slice produces "", which would
+		// land us at the malformed "-archive". Substitute a named
+		// placeholder so the manifest's ArchiveID stays meaningful
+		// even when the operator runs collect without an explicit
+		// --compliance flag.
+		joined := strings.Join(frameworks, "-")
+		if joined == "" {
+			joined = "default"
+		}
+		manifest.ArchiveID = joined + "-archive"
 	}
 
 	if appendErr := manifest.AppendRun(appcollect.ManifestRun{
@@ -307,14 +316,38 @@ func runCollect(ctx context.Context, stdout, stderr io.Writer, opts *options) er
 		return fmt.Errorf("save manifest: %w", saveErr)
 	}
 
-	fmt.Fprintf(stderr, "Collected: run %s (%dms, %d findings)\n", runID, elapsed.Milliseconds(), len(result.Findings))
-	fmt.Fprintf(stderr, "Archive: %s (%d runs)\n", opts.Archive, len(manifest.Runs))
+	// Status output: route through a sticky-error writer so a broken
+	// pipe (operator pipes stderr to head, etc.) propagates rather
+	// than silently dropping later lines. The previous shape ignored
+	// every Fprintf return.
+	sw := &stickyStderr{w: stderr}
+	fmt.Fprintf(sw, "Collected: run %s (%dms, %d findings)\n", runID, elapsed.Milliseconds(), len(result.Findings))
+	fmt.Fprintf(sw, "Archive: %s (%d runs)\n", opts.Archive, len(manifest.Runs))
 
 	if len(manifest.Gaps) > 0 {
-		fmt.Fprintf(stderr, "Warning: %d gap(s) detected in collection schedule\n", len(manifest.Gaps))
+		fmt.Fprintf(sw, "Warning: %d gap(s) detected in collection schedule\n", len(manifest.Gaps))
 	}
 
-	return nil
+	return sw.err
+}
+
+// stickyStderr captures the first write error so subsequent fmt.Fprintf
+// calls become no-ops. Mirrors the stickyWriter pattern in
+// internal/app/archiveverify/format.go and internal/profile/reporter/text.go.
+type stickyStderr struct {
+	w   io.Writer
+	err error
+}
+
+func (s *stickyStderr) Write(p []byte) (int, error) {
+	if s.err != nil {
+		return 0, s.err
+	}
+	n, err := s.w.Write(p)
+	if err != nil {
+		s.err = err
+	}
+	return n, err
 }
 
 func runVerify(w io.Writer, archive *appcollect.Archive) error {

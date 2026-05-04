@@ -416,10 +416,25 @@
         "action": "Restrict grant scope to specific prefixes. Use READ not READWRITE."
       },
       "contributing_controls": [
-        "CTL.S3.ACCESS.GRANTS.001",
+        "CTL.S3.ACCESS.GRANTS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "grants-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-96e353532f236ad3",
+        "target": {
+          "asset_id": "grants-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Associate IAM Identity Center with the Access Grants instance using aws s3control associate-access-grants-identity-center. This enables directory-based grantee resolution."
+      },
+      "contributing_controls": [
         "CTL.S3.ACCESS.GRANTS.002"
       ],
-      "finding_count": 2
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -549,7 +564,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "5fb1c1381fd7e85b9540ceeda6027b7bec5bfc19",
       "dirty": false
     }
   }

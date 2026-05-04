@@ -87,14 +87,34 @@ type StaveConfig struct {
 // error message. CleanUserPath normalizes the path lexically and
 // rejects the canonical traversal sequences before we touch the
 // filesystem.
+// hasParentSegment reports whether the path contains a `..` as a
+// discrete segment (POSIX or Windows separator). Returns false for
+// benign substring matches like `v1..2/file.yaml`. Mirrors the
+// segment-walk logic in internal/config/store.go.hasNoUnsafeSegments
+// without importing it (the config package would create a cycle).
+func hasParentSegment(path string) bool {
+	if !strings.Contains(path, "..") {
+		return false
+	}
+	// Substring fast-path failed — split on either separator and
+	// look for an exact `..` segment.
+	normalized := strings.ReplaceAll(path, "\\", "/")
+	for _, seg := range strings.Split(normalized, "/") {
+		if seg == ".." {
+			return true
+		}
+	}
+	return false
+}
+
 func LoadExceptions(path string) ([]Config, error) {
-	// Reject parent-directory traversal on the raw input. filepath.Clean
-	// rewrites interior `..` segments (a/b/../c → a/c) but keeps leading
-	// ones (../etc → ../etc), so checking after Clean catches only some
-	// of the cases authors actually try. Reject any "..", canonicalized
-	// or not, on the user-provided string so the rejection is total
-	// rather than dependent on the operating system's normalization.
-	if strings.Contains(path, "..") {
+	// Reject parent-directory traversal on the raw input. Use a
+	// segment-based check so a benign filename containing `..` as a
+	// substring (e.g. `v1..2/exceptions.yaml`) doesn't false-positive
+	// — only `..` appearing as a discrete path segment counts as
+	// traversal. Mirrors the hasNoUnsafeSegments pattern in
+	// internal/config/store.go.
+	if hasParentSegment(path) {
 		return nil, fmt.Errorf("exceptions path %q contains parent-directory traversal", path)
 	}
 	clean := fsutil.CleanUserPath(path)

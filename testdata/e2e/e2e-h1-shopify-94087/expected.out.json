@@ -554,10 +554,25 @@
         "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
       },
       "contributing_controls": [
-        "CTL.S3.ENCRYPT.004",
+        "CTL.S3.ENCRYPT.004"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "shopify-merchant-assets",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-b4082fbbf062effb",
+        "target": {
+          "asset_id": "shopify-merchant-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
+      },
+      "contributing_controls": [
         "CTL.S3.TENANT.ISOLATION.001"
       ],
-      "finding_count": 2
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -687,7 +702,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "5fb1c1381fd7e85b9540ceeda6027b7bec5bfc19",
       "dirty": false
     }
   }

@@ -22,13 +22,14 @@ func persistSessionStateIfApplicable(resolver *projctx.Resolver, args []string) 
 		slog.Debug("session persistence skipped", "error", err)
 		return ""
 	}
-	// Best-effort: session state is advisory; failure doesn't affect
-	// the command result. Log at debug — mirrors the
-	// DetectProjectRoot pattern above — so a corrupted session file
-	// surfaces in verbose output without forcing the operator to
-	// re-instrument the call.
+	// Session state is advisory but its loss is user-visible: the
+	// next command's workflow handoff hint won't fire without a
+	// fresh session file. Log at warn (not debug) so a persistent
+	// failure surfaces during normal operation rather than only
+	// under -vv. project_root is included so the operator can
+	// locate the offending state directory immediately.
 	if saveErr := projctx.SaveSession(projectRoot, args); saveErr != nil {
-		slog.Debug("session save failed", "error", saveErr)
+		slog.Warn("session save failed", "error", saveErr, "project_root", projectRoot)
 	}
 	return projectRoot
 }

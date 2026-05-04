@@ -44,7 +44,7 @@ var sentinelTemplates = map[int]errorTemplate{
 		Action: "Rerun with -vv to capture the full trace, then file an issue with the captured output.",
 	},
 	ui.ExitInterrupted: {
-		Code:   ui.CodeInternalError,
+		Code:   ui.CodeInterrupted,
 		Title:  "Interrupted",
 		Action: "Command was canceled before completion (Ctrl-C / SIGTERM). Re-run when ready; partial outputs may be incomplete.",
 	},

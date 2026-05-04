@@ -196,3 +196,47 @@ func TestSHA256(t *testing.T) {
 		t.Errorf("hash length = %d, want 64", len(a))
 	}
 }
+
+func TestWriteRun_Deterministic(t *testing.T) {
+	files := map[string][]byte{
+		"alpha.json":   []byte(`{"k":"a"}`),
+		"zeta.json":    []byte(`{"k":"z"}`),
+		"middle.json":  []byte(`{"k":"m"}`),
+		"another.json": []byte(`{"k":"x"}`),
+	}
+	meta := RunMetadata{
+		RunID:        "deterministic-run",
+		CollectedAt:  "2026-01-15T00:00:00Z",
+		StaveVersion: "test",
+	}
+
+	// Two writes with identical input must produce identical bytes
+	// for sha256sums.txt — the file the verifier walks. Map iteration
+	// is randomised in Go so this would flake without the keys-sorted
+	// loop in WriteRun.
+	read := func(t *testing.T) []byte {
+		t.Helper()
+		dir := t.TempDir()
+		archive, err := NewArchive(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if writeErr := archive.WriteRun(meta.RunID, files, meta); writeErr != nil {
+			t.Fatal(writeErr)
+		}
+		data, readErr := os.ReadFile(filepath.Join(dir, "runs", meta.RunID, "sha256sums.txt"))
+		if readErr != nil {
+			t.Fatal(readErr)
+		}
+		return data
+	}
+
+	first := read(t)
+	for i := 0; i < 4; i++ {
+		got := read(t)
+		if string(got) != string(first) {
+			t.Fatalf("WriteRun produced non-deterministic sha256sums.txt on iteration %d:\n first: %q\n got:   %q",
+				i+1, first, got)
+		}
+	}
+}

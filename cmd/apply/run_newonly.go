@@ -164,12 +164,22 @@ func loadHistoryAssessments(ctx context.Context, stderr io.Writer, dir string) (
 		return nil, fmt.Errorf("read history directory: %w", err)
 	}
 
+	// Track whether we even saw any candidate JSON files. An empty
+	// returned slice with no candidates seen at all is the symptom
+	// of a misdirected --history-dir (operator pointed at the wrong
+	// directory); empty after candidates means "we tried, every
+	// loader rejected the file" (a different kind of failure mode).
+	// Surface the first case as a warning so the operator can spot
+	// the configuration error instead of seeing an unexplained
+	// empty diff.
 	loader := artifact.NewLoader()
 	var assessments []*report.Assessment
+	candidateCount := 0
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
 			continue
 		}
+		candidateCount++
 		path := filepath.Join(dir, entry.Name())
 		a, loadErr := loader.Evaluation(ctx, path)
 		if loadErr != nil {
@@ -177,6 +187,10 @@ func loadHistoryAssessments(ctx context.Context, stderr io.Writer, dir string) (
 			continue
 		}
 		assessments = append(assessments, a)
+	}
+	if candidateCount == 0 {
+		fmt.Fprintf(stderr, "warning: history directory %q contains no .json files; "+
+			"check that --history-dir points at a directory of prior assessment outputs\n", dir)
 	}
 	return assessments, nil
 }

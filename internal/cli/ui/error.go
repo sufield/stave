@@ -35,6 +35,12 @@ const (
 	CodeViolationsFound       ErrorCode = "VIOLATIONS_FOUND"
 	CodeDiagnostics           ErrorCode = "DIAGNOSTICS_FOUND"
 	CodeSecurityAuditFindings ErrorCode = "SECURITY_AUDIT_FINDINGS"
+	// CodeInterrupted is the telemetry code for an operator-initiated
+	// or context-cancelled interrupt. Distinct from CodeInternalError
+	// so dashboards can separate "user pressed Ctrl-C" from "engine
+	// crashed mid-run" — the previous shape collapsed both into
+	// INTERNAL_ERROR, inflating the apparent crash rate.
+	CodeInterrupted ErrorCode = "INTERRUPTED"
 )
 
 // Sentinel errors used for logic-based exit code mapping. The

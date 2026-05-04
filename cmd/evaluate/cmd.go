@@ -308,9 +308,20 @@ func resolveOutput(path string, stdout io.Writer) (io.Writer, func(*error), erro
 	}
 	return f, func(outErr *error) {
 		closeErr := f.Close()
-		if outErr != nil && *outErr == nil {
-			*outErr = closeErr
+		if outErr == nil || closeErr == nil {
+			return
 		}
+		// errors.Join keeps both diagnostics visible: the run's
+		// original failure and the close-time failure (often a
+		// flush-on-close write error against a slow disk or broken
+		// pipe). The previous shape dropped closeErr whenever the
+		// run had already failed, so the close-time loss reached
+		// the operator only as a truncated file with no signal.
+		if *outErr == nil {
+			*outErr = closeErr
+			return
+		}
+		*outErr = errors.Join(*outErr, closeErr)
 	}, nil
 }
 

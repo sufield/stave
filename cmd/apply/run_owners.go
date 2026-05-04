@@ -59,7 +59,14 @@ func annotateOwners(result *evaluation.ComplianceReport, opts *Options) error {
 		allowed[strings.TrimSpace(id)] = true
 	}
 
-	filtered := result.Findings[:0]
+	// Non-aliased filter: a fresh backing array (with a capacity
+	// hint to avoid reallocation) so the filter doesn't share
+	// storage with the input. The previous `[:0]` shape worked
+	// when no other reference to result.Findings outlived the
+	// filter, but a future caller that captured the slice header
+	// before owner filtering would see partially-overwritten
+	// elements past the filtered length.
+	filtered := make([]evaluation.Finding, 0, len(result.Findings))
 	for i := range result.Findings {
 		if result.Findings[i].MatchesOwner(allowed) {
 			filtered = append(filtered, result.Findings[i])

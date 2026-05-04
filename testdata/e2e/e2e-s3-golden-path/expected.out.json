@@ -14,7 +14,7 @@
       },
       "overall": "37d6a574667ceb6671f51d0bf8f53e7b24e51144bcd782c675b3303992aaa84c"
     },
-    "policy_fingerprint": "2578487d83778142a82e96145bebdcf0ba6166fbb0ee99fb53d85186f7e5e283",
+    "policy_fingerprint": "1d33ebd9d4b6fcd7a376cf863523d6535d2afb020a169fc68dd957cacc9e4214",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -2394,11 +2394,41 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "contributing_controls": [
-        "CTL.S3.CONTROLS.001",
-        "CTL.S3.ENCRYPT.003",
+        "CTL.S3.CONTROLS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "public-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-e80ea979b508da8c",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation."
+      },
+      "contributing_controls": [
+        "CTL.S3.ENCRYPT.003"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "public-phi-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-e80ea979b508da8c",
+        "target": {
+          "asset_id": "public-phi-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "contributing_controls": [
         "CTL.S3.ENCRYPT.004"
       ],
-      "finding_count": 3
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -2688,7 +2718,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "968e6c2d9fbf4e1fd96f26b0a79c5bc0b2d13887",
+      "head_commit": "5fb1c1381fd7e85b9540ceeda6027b7bec5bfc19",
       "dirty": false
     }
   }

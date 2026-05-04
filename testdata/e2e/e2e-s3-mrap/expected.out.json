@@ -371,10 +371,25 @@
         "action": "Enable all four PAB flags on the MRAP."
       },
       "contributing_controls": [
-        "CTL.S3.MRAP.PAB.001",
+        "CTL.S3.MRAP.PAB.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "mrap-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-8c16b151c9ecab6c",
+        "target": {
+          "asset_id": "mrap-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Remove public access from the MRAP policy."
+      },
+      "contributing_controls": [
         "CTL.S3.MRAP.POLICY.001"
       ],
-      "finding_count": 2
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -504,7 +519,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "5fb1c1381fd7e85b9540ceeda6027b7bec5bfc19",
       "dirty": false
     }
   }

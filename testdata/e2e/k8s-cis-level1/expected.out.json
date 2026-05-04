@@ -2342,13 +2342,28 @@
           "asset_id": "apiserver-dev-01",
           "asset_type": "k8s_apiserver"
         },
+        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
+      },
+      "contributing_controls": [
+        "CTL.K8S.APISERVER.AUDIT.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "apiserver-dev-01",
+      "asset_type": "k8s_apiserver",
+      "fix_plan": {
+        "id": "fix-6166d9a9de2dd7ce",
+        "target": {
+          "asset_id": "apiserver-dev-01",
+          "asset_type": "k8s_apiserver"
+        },
         "action": "Set --anonymous-auth=false on the API server. For managed clusters, verify the provider disables anonymous auth by default."
       },
       "contributing_controls": [
-        "CTL.K8S.APISERVER.ANON.001",
-        "CTL.K8S.APISERVER.AUDIT.001"
+        "CTL.K8S.APISERVER.ANON.001"
       ],
-      "finding_count": 2
+      "finding_count": 1
     },
     {
       "asset_id": "apiserver-staging-01",
@@ -2362,11 +2377,57 @@
         "action": "Set --anonymous-auth=false on the API server. For managed clusters, verify the provider disables anonymous auth by default."
       },
       "contributing_controls": [
-        "CTL.K8S.APISERVER.ANON.001",
-        "CTL.K8S.APISERVER.AUDIT.001",
+        "CTL.K8S.APISERVER.ANON.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "apiserver-staging-01",
+      "asset_type": "k8s_apiserver",
+      "fix_plan": {
+        "id": "fix-1426885accaf2b9c",
+        "target": {
+          "asset_id": "apiserver-staging-01",
+          "asset_type": "k8s_apiserver"
+        },
+        "action": "Configure --audit-policy-file and --audit-log-path on the API server."
+      },
+      "contributing_controls": [
+        "CTL.K8S.APISERVER.AUDIT.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "apiserver-staging-01",
+      "asset_type": "k8s_apiserver",
+      "fix_plan": {
+        "id": "fix-1426885accaf2b9c",
+        "target": {
+          "asset_id": "apiserver-staging-01",
+          "asset_type": "k8s_apiserver"
+        },
+        "action": "Set --authorization-mode=RBAC,Node on the API server. Remove AlwaysAllow from the mode list."
+      },
+      "contributing_controls": [
         "CTL.K8S.APISERVER.AUTHZ.001"
       ],
-      "finding_count": 3
+      "finding_count": 1
+    },
+    {
+      "asset_id": "etcd-dev-01",
+      "asset_type": "k8s_etcd",
+      "fix_plan": {
+        "id": "fix-072a5b74e493e1cb",
+        "target": {
+          "asset_id": "etcd-dev-01",
+          "asset_type": "k8s_etcd"
+        },
+        "action": "Set --client-cert-auth=true on the etcd server."
+      },
+      "contributing_controls": [
+        "CTL.K8S.ETCD.CLIENT.AUTH.001"
+      ],
+      "finding_count": 1
     },
     {
       "asset_id": "etcd-dev-01",
@@ -2380,10 +2441,9 @@
         "action": "Set --cert-file and --key-file on the etcd server."
       },
       "contributing_controls": [
-        "CTL.K8S.ETCD.CERT.001",
-        "CTL.K8S.ETCD.CLIENT.AUTH.001"
+        "CTL.K8S.ETCD.CERT.001"
       ],
-      "finding_count": 2
+      "finding_count": 1
     },
     {
       "asset_id": "etcd-staging-01",
@@ -2397,10 +2457,25 @@
         "action": "Set --cert-file and --key-file on the etcd server."
       },
       "contributing_controls": [
-        "CTL.K8S.ETCD.CERT.001",
+        "CTL.K8S.ETCD.CERT.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "etcd-staging-01",
+      "asset_type": "k8s_etcd",
+      "fix_plan": {
+        "id": "fix-a34ee6af8252c0ed",
+        "target": {
+          "asset_id": "etcd-staging-01",
+          "asset_type": "k8s_etcd"
+        },
+        "action": "Set --client-cert-auth=true on the etcd server."
+      },
+      "contributing_controls": [
         "CTL.K8S.ETCD.CLIENT.AUTH.001"
       ],
-      "finding_count": 2
+      "finding_count": 1
     },
     {
       "asset_id": "kubelet-dev-node-01",
@@ -2430,11 +2505,41 @@
         "action": "Set authentication.anonymous.enabled=false in the kubelet config or pass --anonymous-auth=false."
       },
       "contributing_controls": [
-        "CTL.K8S.KUBELET.ANON.001",
-        "CTL.K8S.KUBELET.AUTHZ.001",
+        "CTL.K8S.KUBELET.ANON.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "kubelet-staging-node-01",
+      "asset_type": "k8s_kubelet",
+      "fix_plan": {
+        "id": "fix-f5be658ad9039268",
+        "target": {
+          "asset_id": "kubelet-staging-node-01",
+          "asset_type": "k8s_kubelet"
+        },
+        "action": "Set authorization.mode=Webhook in the kubelet config or pass --authorization-mode=Webhook."
+      },
+      "contributing_controls": [
+        "CTL.K8S.KUBELET.AUTHZ.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "kubelet-staging-node-01",
+      "asset_type": "k8s_kubelet",
+      "fix_plan": {
+        "id": "fix-f5be658ad9039268",
+        "target": {
+          "asset_id": "kubelet-staging-node-01",
+          "asset_type": "k8s_kubelet"
+        },
+        "action": "Set readOnlyPort=0 in the kubelet config or pass --read-only-port=0."
+      },
+      "contributing_controls": [
         "CTL.K8S.KUBELET.READONLY.001"
       ],
-      "finding_count": 3
+      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -2740,7 +2845,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "968e6c2d9fbf4e1fd96f26b0a79c5bc0b2d13887",
+      "head_commit": "5fb1c1381fd7e85b9540ceeda6027b7bec5bfc19",
       "dirty": false
     }
   }

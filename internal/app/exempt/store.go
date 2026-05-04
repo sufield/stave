@@ -238,23 +238,43 @@ func (f *AcceptanceFile) AddAcknowledgment(entry AcknowledgmentEntry, timestamp 
 	// 10 chars are guaranteed to be the date.
 	entry.AcknowledgedDate = timestamp[:10] // YYYY-MM-DD from RFC3339
 	entry.Status = AckStatusActive
-	entry.AuditTrail = []AuditEvent{
-		{
-			Event:     "created",
+	createdEvent := AuditEvent{
+		Event:     "created",
+		Timestamp: timestamp,
+		Actor:     currentUser(),
+		Note:      "Added via stave exempt acknowledge",
+	}
+
+	// Update existing entry with the same ID. Preserve the prior
+	// AuditTrail (the original "created" event, any intermediate
+	// "revoked" events) and append an "updated" entry pointing at
+	// this merge — overwriting the trail wholesale would erase the
+	// acceptance history that audits rely on.
+	for i := range f.Acknowledgments {
+		if f.Acknowledgments[i].ID != entry.ID {
+			continue
+		}
+		updatedEvent := AuditEvent{
+			Event:     "updated",
 			Timestamp: timestamp,
 			Actor:     currentUser(),
-			Note:      "Added via stave exempt acknowledge",
-		},
-	}
-
-	// Replace existing entry with same ID.
-	for i := range f.Acknowledgments {
-		if f.Acknowledgments[i].ID == entry.ID {
-			f.Acknowledgments[i] = entry
-			return nil
+			Note:      "Re-acknowledged via stave exempt acknowledge",
 		}
+		// Build the merged trail in a fresh slice so the append
+		// result lands on entry.AuditTrail (gocritic appendAssign)
+		// — appending to f.Acknowledgments[i].AuditTrail directly
+		// would alias whichever backing array YAML unmarshal
+		// happened to allocate.
+		merged := make([]AuditEvent, 0, len(f.Acknowledgments[i].AuditTrail)+1)
+		merged = append(merged, f.Acknowledgments[i].AuditTrail...)
+		merged = append(merged, updatedEvent)
+		entry.AuditTrail = merged
+		f.Acknowledgments[i] = entry
+		return nil
 	}
 
+	// Fresh entry: seed the trail with the "created" event.
+	entry.AuditTrail = []AuditEvent{createdEvent}
 	f.Acknowledgments = append(f.Acknowledgments, entry)
 	return nil
 }
