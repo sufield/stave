@@ -283,7 +283,15 @@ func (m *Monitor) emit(ctx context.Context, alert ports.WatchAlert) {
 
 func (m *Monitor) closeSinks() {
 	for _, sink := range m.cfg.Sinks {
-		_ = sink.Close()
+		// Explicit discard: shutdown is best-effort. A sink that
+		// errors on Close (network sink with a half-closed peer,
+		// file sink whose underlying fd was already reaped) should
+		// not block the watch loop from terminating, and the watch
+		// loop is the only caller that runs Close. Errors during
+		// normal-path Emit are surfaced via slog at the call site.
+		if err := sink.Close(); err != nil && m.cfg.Logger != nil {
+			m.cfg.Logger.Warn("alert sink close error", "error", err)
+		}
 	}
 }
 

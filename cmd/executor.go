@@ -285,14 +285,7 @@ func (a *App) cleanupBeforeExit() {
 		// requested --mem-profile artifact, hiding the very
 		// allocation pattern an operator was trying to capture.
 		a.writeMemProfileTo(os.Stderr)
-		a.bootstrapMu.Lock()
-		closer := a.LogCloser
-		a.bootstrapMu.Unlock()
-		if closer != nil {
-			if err := closer.Close(); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: close log file: %v\n", err)
-			}
-		}
+		a.closeLogCloser()
 	})
 }
 

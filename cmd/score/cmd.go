@@ -151,8 +151,12 @@ func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights
 		return fmt.Errorf("no assessment files found in %s", opts.HistoryDir)
 	}
 
-	// Sort by timestamp via Assessment.Before.
-	slices.SortFunc(assessments, func(a, b *report.Assessment) int {
+	// Sort by timestamp via Assessment.Before. Stable sort keeps the
+	// directory-load order intact when two assessments share an
+	// identical timestamp — without it, `slices.SortFunc` would emit
+	// non-deterministic trend output run-to-run for sequential
+	// assessments produced inside the same wall-clock second.
+	slices.SortStableFunc(assessments, func(a, b *report.Assessment) int {
 		switch {
 		case a.Before(b):
 			return -1

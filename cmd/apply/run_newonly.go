@@ -159,6 +159,14 @@ func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
 // os.Stderr directly, which made the warnings invisible in unit
 // tests and ignored any stderr override the caller had passed.
 func loadHistoryAssessments(ctx context.Context, stderr io.Writer, dir string) ([]*report.Assessment, error) {
+	// Reject an empty directory up front rather than letting
+	// os.ReadDir("") read the current working directory. The previous
+	// implicit behaviour silently scanned cwd for *.json files, which
+	// produced confusing "no new findings" output when the operator
+	// forgot --history-dir entirely.
+	if strings.TrimSpace(dir) == "" {
+		return nil, &ui.UserError{Err: fmt.Errorf("--new-only / --new-since requires --history-dir; no history directory configured")}
+	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("read history directory: %w", err)

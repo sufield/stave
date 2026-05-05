@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"sort"
 	"strconv"
 )
@@ -31,8 +32,19 @@ import (
 // per-element XML escaping. Allocations scale with the largest single
 // element, not with the whole graph.
 func MarshalGraphML(w io.Writer, g *GraphData) error {
-	_, err := MarshalGraphMLWithDiagnostics(w, g)
-	return err
+	unmapped, err := MarshalGraphMLWithDiagnostics(w, g)
+	if err != nil {
+		return err
+	}
+	// Surface dropped edges through the structured logger so a
+	// silent-drop case (vocabulary drift, unrecognised predicate
+	// type) is visible to operators rather than disappearing into
+	// the discarded diagnostic slice.
+	if len(unmapped) > 0 {
+		slog.Warn("graphml export: unmapped edges dropped",
+			"count", len(unmapped))
+	}
+	return nil
 }
 
 // MarshalGraphMLWithDiagnostics is the same as MarshalGraphML but

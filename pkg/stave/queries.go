@@ -6,7 +6,14 @@ import "sort"
 // The returned slice is a fresh copy; consumers may mutate it freely
 // without affecting the Assessment. Domain question: what fired on
 // this asset?
+//
+// A nil receiver returns an empty (non-nil) slice so callers can
+// range over the result without a presence check, matching the
+// nil-safe pattern *Report and *GateResult use.
 func (a *Assessment) FindingsForAsset(id AssetID) []Finding {
+	if a == nil {
+		return []Finding{}
+	}
 	out := make([]Finding, 0)
 	for i := range a.Findings {
 		if a.Findings[i].AssetID == id {
@@ -19,7 +26,13 @@ func (a *Assessment) FindingsForAsset(id AssetID) []Finding {
 // ConsolidatedIssues returns every Issue that groups more than one
 // finding. The returned slice is a fresh copy. Domain question:
 // which Issues consolidate multiple findings?
+//
+// A nil receiver returns an empty (non-nil) slice (see
+// FindingsForAsset for the rationale).
 func (a *Assessment) ConsolidatedIssues() []Issue {
+	if a == nil {
+		return []Issue{}
+	}
 	out := make([]Issue, 0)
 	for i := range a.Issues {
 		if a.Issues[i].IsConsolidated() {
@@ -32,7 +45,12 @@ func (a *Assessment) ConsolidatedIssues() []Issue {
 // SingletonIssues returns every Issue with exactly one member finding.
 // The returned slice is a fresh copy. Domain question: which Issues
 // represent a single finding (no consolidation)?
+//
+// A nil receiver returns an empty (non-nil) slice.
 func (a *Assessment) SingletonIssues() []Issue {
+	if a == nil {
+		return []Issue{}
+	}
 	out := make([]Issue, 0)
 	for i := range a.Issues {
 		if !a.Issues[i].IsConsolidated() {
@@ -63,6 +81,9 @@ func (a *Assessment) FindingsBySeverity() map[Severity][]Finding {
 		SeverityHigh:     {},
 		SeverityCritical: {},
 	}
+	if a == nil {
+		return out
+	}
 	for i := range a.Findings {
 		sev := a.Findings[i].Severity
 		if sev == "" {
@@ -88,6 +109,9 @@ func (a *Assessment) CountBySeverity() map[Severity]int {
 		SeverityHigh:     0,
 		SeverityCritical: 0,
 	}
+	if a == nil {
+		return out
+	}
 	for i := range a.Findings {
 		sev := a.Findings[i].Severity
 		if sev == "" {
@@ -105,6 +129,9 @@ func (a *Assessment) CountBySeverity() map[Severity]int {
 // slices are fresh copies. Domain question: which findings cite
 // which compliance frameworks?
 func (a *Assessment) FailingFindingsByFramework() map[string][]Finding {
+	if a == nil {
+		return map[string][]Finding{}
+	}
 	out := make(map[string][]Finding)
 	for i := range a.Findings {
 		for fw := range a.Findings[i].ControlCompliance {

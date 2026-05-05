@@ -308,6 +308,13 @@ func resolveOutput(path string, stdout io.Writer) (io.Writer, func(*error), erro
 	}
 	return f, func(outErr *error) {
 		closeErr := f.Close()
+		// Two early-return cases: the caller did not pass an error
+		// slot (outErr is the pointer itself; nil means "discard
+		// any close error"), or close succeeded (closeErr == nil
+		// means there is nothing to record). The two checks read
+		// almost identically but mean very different things —
+		// keep them distinct so a future edit doesn't collapse the
+		// "no slot" case into the "no close error" case.
 		if outErr == nil || closeErr == nil {
 			return
 		}

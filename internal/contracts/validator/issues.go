@@ -123,12 +123,20 @@ func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) 
 	// so a controls document (cfg.VersionField = "dsl_version") with a
 	// stray schema_version key would silently use the wrong value.
 	// cfg.VersionField is the contract; honour it.
+	//
+	// schema_version and dsl_version are the only fields we know how
+	// to read — the partial-decode struct above only carries those
+	// two — so an unrecognised cfg.VersionField is a wiring bug at
+	// the docConfig call site. Surface it as an error rather than
+	// silently routing to one of the known fields.
 	var actual string
 	switch cfg.VersionField {
 	case "dsl_version":
 		actual = partial.DSL
-	default:
+	case "schema_version":
 		actual = partial.Version
+	default:
+		return nil, fmt.Errorf("validator: unsupported version field %q (expected dsl_version or schema_version)", cfg.VersionField)
 	}
 
 	if strings.TrimSpace(actual) == "" {
@@ -157,17 +165,25 @@ func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) 
 		Data:          raw,
 		IsYAML:        cfg.IsYAML,
 	})
-	// Validate can return (diags, err) BOTH non-nil — the parse-error
-	// branch surfaces the failure as a diagnostic AND a Go error so
-	// callers using either pattern catch it. Returning (nil, err)
-	// here used to drop the diagnostic, leaving the *diag.Assessment
-	// path with no rendered cause for the failure (operator saw an
-	// error string but no parse-position context). Project the diags
-	// into the assessment regardless of err so both contracts carry
-	// the same payload, then propagate err to the error-channel
-	// callers.
+	// Convention: the two return channels are mutually exclusive.
+	// The earlier shape returned (assessment, err) BOTH non-nil so
+	// dual-pattern callers caught the same failure twice; the
+	// payload diverged when the assessment was rendered (with parse
+	// context) but the err was a generic string. Standardise on
+	// "diagnostics carry the user-facing failure":
+	//
+	//   - When Validate produced diagnostics, fold them into the
+	//     assessment and return (assessment, nil). A non-nil err
+	//     accompanying diagnostics is the same parse failure already
+	//     described by the diags, so dropping it is information-
+	//     preserving.
+	//   - When Validate produced no diagnostics but did return an
+	//     err, that is an infrastructure-level failure (schema-load
+	//     miss, registry lookup error) with no rendered diagnostic.
+	//     Return (nil, err) so the caller can surface the root
+	//     cause through the error channel.
 	if len(diags) > 0 {
-		return DiagnosticsResult(diags, cfg.DefaultAction, true, WithPrefix(o.pathPrefix)), err
+		return DiagnosticsResult(diags, cfg.DefaultAction, true, WithPrefix(o.pathPrefix)), nil
 	}
 	if err != nil {
 		return nil, err

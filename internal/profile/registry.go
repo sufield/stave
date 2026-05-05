@@ -67,18 +67,25 @@ func LoadProfile(id string) (*Profile, error) {
 // itself; LoadProfile delegates here so the immutability rule
 // lives next to the data definition.
 //
-// The Controls slice is freshly allocated; Control elements are
-// shallow-copied. The current Control shape (ControlID +
-// ComplianceRef + Rationale + *Severity) carries no caller-mutable
-// slice/map fields, so a shallow element copy is sufficient.
-// Extending Control with mutable slice/map fields requires
-// extending Clone in lockstep.
+// The Controls slice is freshly allocated. Each element is copied
+// and the SeverityOverride pointer is reallocated so a caller
+// mutating *cp.Controls[i].SeverityOverride cannot reach back into
+// the registry's stored Profile through a shared pointer.
+// Extending Control with additional pointer / slice / map fields
+// requires extending Clone in lockstep.
 func (p *Profile) Clone() *Profile {
 	if p == nil {
 		return nil
 	}
 	cp := *p
-	cp.Controls = append([]Control(nil), p.Controls...)
+	cp.Controls = make([]Control, len(p.Controls))
+	for i, ctl := range p.Controls {
+		cp.Controls[i] = ctl
+		if ctl.SeverityOverride != nil {
+			sev := *ctl.SeverityOverride
+			cp.Controls[i].SeverityOverride = &sev
+		}
+	}
 	return &cp
 }
 

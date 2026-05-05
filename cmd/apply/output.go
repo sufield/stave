@@ -96,7 +96,13 @@ func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.Enforcement
 		return nil
 	default: // IsBlock
 		if r.ShouldEmit() {
-			ui.WriteHint(r.Stderr, res.DiagnoseCommand)
+			// Match the advisory branch above: only emit the diagnose
+			// hint when one was actually wired. A bare `WriteHint`
+			// with an empty command renders as a misleading
+			// "next: <empty>" line in the operator's terminal.
+			if res.DiagnoseCommand != "" {
+				ui.WriteHint(r.Stderr, res.DiagnoseCommand)
+			}
 			// Skip the next-steps hint when no runtime is wired.
 			// The violation error is the load-bearing signal here;
 			// the hint is purely advisory UI.

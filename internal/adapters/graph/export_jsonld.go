@@ -37,8 +37,19 @@ func Ontology() []byte {
 // streams via a *bufio.Writer to keep allocations bounded for
 // large graphs.
 func MarshalJSONLD(w io.Writer, g *GraphData) error {
-	_, err := MarshalJSONLDWithDiagnostics(w, g)
-	return err
+	unmapped, err := MarshalJSONLDWithDiagnostics(w, g)
+	if err != nil {
+		return err
+	}
+	// Surface dropped edges through the structured logger so a
+	// silent-drop case (vocabulary drift, unrecognised predicate
+	// type) is visible to operators rather than disappearing into
+	// the discarded diagnostic slice.
+	if len(unmapped) > 0 {
+		slog.Warn("jsonld export: unmapped edges dropped",
+			"count", len(unmapped))
+	}
+	return nil
 }
 
 // MarshalJSONLDWithDiagnostics is the same as MarshalJSONLD but

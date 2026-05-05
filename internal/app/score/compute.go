@@ -400,20 +400,31 @@ func SeverityWeightFor(sev policy.Severity) float64 {
 	return 1.0
 }
 
+// chainWeight maps a chain's compound severity to its score weight.
+// Mirrors severityWeight's full ladder so a chain authored at Low or
+// Info severity scores against the same scale as a chain authored at
+// Medium/High/Critical. The earlier shape omitted Low/Info, which
+// silently routed those chains through the bare-map zero-value
+// fallback and inflated their downstream weight to 2.0 (the
+// fallback default).
 var chainWeight = map[policy.Severity]float64{
 	policy.SeverityCritical: 10.0,
 	policy.SeverityHigh:     4.0,
 	policy.SeverityMedium:   2.0,
+	policy.SeverityLow:      1.0,
+	policy.SeverityInfo:     0.0,
 }
 
 // ChainMaxWeight computes the severity-weighted maximum chain weight
 // from actual chain definitions. Each chain contributes its
-// CompoundSeverity weight (critical=10, high=4, medium=2).
+// CompoundSeverity weight (critical=10, high=4, medium=2, low=1,
+// info=0). Unrecognised severities fall back to medium so a typo in
+// a chain definition does not silently zero out its contribution.
 func ChainMaxWeight(chains []policy.ChainDefinition) float64 {
 	var total float64
 	for i := range chains {
-		cw := chainWeight[chains[i].CompoundSeverity]
-		if cw == 0 {
+		cw, ok := chainWeight[chains[i].CompoundSeverity]
+		if !ok {
 			cw = 2.0 // default for unknown severity
 		}
 		total += cw
@@ -596,6 +607,11 @@ func computeSLAScore(input Input) (subScore, breachRatePct float64) {
 		subScore = 1.0 - (float64(input.SLABreached) / float64(input.SLATotal))
 		breachRatePct = float64(input.SLABreached) / float64(input.SLATotal) * 100
 	}
+	// Clamp to [0, 1]. Adversarial input (SLABreached > SLATotal from
+	// upstream miscount, fixture truncation) would otherwise produce
+	// negative sub-scores that propagate into nonsense rubric bands;
+	// matches the pin computeSeverityScore already applies.
+	subScore = math.Max(0, math.Min(1.0, subScore))
 	return subScore, breachRatePct
 }
 
@@ -611,8 +627,8 @@ func computeChainScore(input Input) chainResult {
 		maxW = float64(input.ChainDefs) * 10.0
 	}
 	for i := range input.ChainFindings {
-		cw := chainWeight[input.ChainFindings[i].Severity]
-		if cw == 0 {
+		cw, ok := chainWeight[input.ChainFindings[i].Severity]
+		if !ok {
 			cw = 2.0
 		}
 		activeW += cw

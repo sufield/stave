@@ -181,6 +181,18 @@ type App struct {
 	// retry on every concurrent cleanup attempt.
 	cleanupOnce sync.Once
 
+	// logCloseOnce serialises LogCloser.Close + the
+	// "Warning: close log file" stderr write across the two paths
+	// that can both reach it: postRun (normal exit) and
+	// cleanupBeforeExit (panic / signal / ctx-deadline finalizer).
+	// LogCloser.Close itself is internally sync.Once-guarded, but the
+	// stderr-warning emission was duplicated at each call site, so a
+	// failed close on the normal path could surface twice (postRun
+	// fires, then cleanupBeforeExit runs and re-reads the stored
+	// error). One sync.Once collapses both the close and the warning
+	// into a single observable event regardless of which path won.
+	logCloseOnce sync.Once
+
 	// cleanupInterrupt is the closure returned by installInterruptHandler
 	// that stops signal delivery and unblocks the handler goroutine.
 	// Stored on the App so the panic-recovery path can invoke it before

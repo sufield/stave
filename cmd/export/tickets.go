@@ -105,11 +105,21 @@ func runTickets(stdout io.Writer, assessmentPath, outputPath, format, teamManife
 	})
 }
 
-func writeTicketsCSV(w io.Writer, tickets []ticketexport.Ticket) error {
+func writeTicketsCSV(w io.Writer, tickets []ticketexport.Ticket) (err error) {
 	cw := csv.NewWriter(w)
-	defer cw.Flush()
+	// Propagate any buffered-flush error back to the caller through a
+	// named return. The bare `defer cw.Flush()` shape silently
+	// dropped a flush failure on the underlying writer (full disk,
+	// closed pipe, network sink hangup), producing a "successful"
+	// CSV export that ended mid-row.
+	defer func() {
+		cw.Flush()
+		if flushErr := cw.Error(); flushErr != nil && err == nil {
+			err = fmt.Errorf("flush tickets CSV: %w", flushErr)
+		}
+	}()
 
-	if err := cw.Write([]string{
+	if err = cw.Write([]string{
 		"ticket_id", "title", "severity", "priority", "status",
 		"control_id", "asset_id", "team", "dwell_days", "description",
 	}); err != nil {
@@ -118,7 +128,7 @@ func writeTicketsCSV(w io.Writer, tickets []ticketexport.Ticket) error {
 
 	for i := range tickets {
 		t := &tickets[i]
-		if err := cw.Write([]string{
+		if err = cw.Write([]string{
 			t.TicketID,
 			t.Title,
 			t.Severity,

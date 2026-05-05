@@ -226,6 +226,13 @@ func NewStore() *Store {
 // The intermediate type carries an exported `Contexts` field so the
 // YAML decoder can populate it; we then move the data into the
 // unexported `contexts` map on the live Store.
+//
+// Per-context validation runs here at the type-level decode boundary
+// so a caller that goes through yaml.Unmarshal directly (in-process
+// composition, tests, future API surface) cannot bypass the trust
+// boundary. Load() relies on this same path and only adds the
+// file-level cross-checks (path-decorated error messages, active
+// referencing an entry that exists).
 func (s *Store) UnmarshalYAML(value *yaml.Node) error {
 	var aux struct {
 		Active   string             `yaml:"active,omitempty"`
@@ -234,24 +241,29 @@ func (s *Store) UnmarshalYAML(value *yaml.Node) error {
 	if err := value.Decode(&aux); err != nil {
 		return err
 	}
-	// Validate every context name + body at the type-level decode boundary.
-	// Load() runs the same checks, but a caller that goes through
-	// yaml.Unmarshal directly (in-process composition, tests, future
-	// API surface) would otherwise bypass the trust boundary and
-	// surface a malformed entry only mid-evaluation as a confusing
-	// path error.
-	for name, ctx := range aux.Contexts {
+	if err := validateContextsMap(aux.Contexts); err != nil {
+		return err
+	}
+	s.Active = aux.Active
+	s.contexts = aux.Contexts
+	if s.contexts == nil {
+		s.contexts = make(map[string]Context)
+	}
+	return nil
+}
+
+// validateContextsMap runs name + body validation for every entry
+// in the parsed contexts map. Shared between UnmarshalYAML (the
+// in-memory trust boundary) and Load (the on-disk trust boundary)
+// so the rule set cannot drift between the two callers.
+func validateContextsMap(contexts map[string]Context) error {
+	for name, ctx := range contexts {
 		if err := ValidateName(name); err != nil {
 			return fmt.Errorf("context name %q: %w", name, err)
 		}
 		if err := ctx.Validate(); err != nil {
 			return fmt.Errorf("context %q: %w", name, err)
 		}
-	}
-	s.Active = aux.Active
-	s.contexts = aux.Contexts
-	if s.contexts == nil {
-		s.contexts = make(map[string]Context)
 	}
 	return nil
 }
@@ -333,26 +345,12 @@ func Load() (*Store, string, error) {
 		return nil, "", fmt.Errorf("failed to parse context YAML at %q: %w", path, err)
 	}
 
-	// Validate every context entry before returning the store. The
-	// per-context validators (project_root structure, project_config
-	// path safety, etc.) are the trust boundary for what a stored
-	// context file can contain. The earlier shape unmarshalled and
-	// returned without checking, so a malicious or corrupted entry
-	// only surfaced mid-evaluation as a confusing path error.
-	//
-	// ValidateName is checked alongside the body validators so a
-	// stored YAML with a context key like "../etc/passwd" or one
-	// containing embedded null bytes is rejected at load time —
-	// downstream code that uses the key as a path component or
-	// log key would otherwise inherit the malformed value.
-	for name, ctx := range store.contexts {
-		if nameErr := ValidateName(name); nameErr != nil {
-			return nil, "", fmt.Errorf("context name %q at %q: %w", name, path, nameErr)
-		}
-		if err := ctx.Validate(); err != nil {
-			return nil, "", fmt.Errorf("context %q at %q: %w", name, path, err)
-		}
-	}
+	// Per-context validation has already run inside UnmarshalYAML
+	// (the type-level trust boundary). On-disk Load only adds the
+	// file-level cross-checks below. yaml.Unmarshal would have
+	// returned the validation error wrapped in its parse error
+	// above, so reaching this point means every context entry is
+	// already structurally sound.
 
 	// Validate the active context name itself. ValidateName covers
 	// the same charset rules used when adding entries via SetContext;

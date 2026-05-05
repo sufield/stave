@@ -213,9 +213,16 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		return fmt.Errorf("init CEL evaluator: %w", err)
 	}
 
-	// Load chain definitions for risk reasoning.
-	chainsDir := filepath.Join(getControlsBaseDir(), "..", "chains")
-	chains, chainsErr := ctlyaml.LoadChains(chainsDir, capabilities.Builtin())
+	// Load chain definitions for risk reasoning. Use the same
+	// canonical "chains" relative path the standard apply pipeline
+	// uses (see deps.go and stave_config.go) instead of joining
+	// "..\chains" off whatever getControlsBaseDir returned. The
+	// parent-traversal shape was fragile: when getControlsBaseDir
+	// fell back to its "controls" default, the join produced a
+	// "../chains" path resolved against the working directory,
+	// silently loading the wrong directory in any project layout
+	// where the controls dir was not a sibling of chains/.
+	chains, chainsErr := ctlyaml.LoadChains("chains", capabilities.Builtin())
 	if chainsErr != nil {
 		return fmt.Errorf("loading chains: %w", chainsErr)
 	}

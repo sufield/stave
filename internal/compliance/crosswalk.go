@@ -285,31 +285,33 @@ func filterAndNormalizeRefs(checkID string, refs []ControlRef, allowed map[Frame
 		// A framework name that isn't in the global supported set is a
 		// typo in the crosswalk file — surface it instead of silently
 		// dropping the row, which used to make missing frameworks look
-		// like missing controls. The user-filter step (`allowed`) is a
-		// separate concern: a known framework that the operator filtered
-		// out is correctly skipped.
+		// like missing controls. This check fires regardless of the
+		// user filter so an unknown framework name is always visible.
 		f, canonErr := canonicalizeFramework(string(r.Framework))
 		if canonErr != nil {
 			return nil, fmt.Errorf("crosswalk entry for %q references unknown framework %q: %w",
 				checkID, r.Framework, canonErr)
 		}
 
-		// Validate body fields BEFORE the user-filter check. A blank
-		// control_id or rationale in the crosswalk file is a typo
-		// regardless of which framework the operator selected — the
-		// previous shape only flagged it when the row's framework
-		// happened to be allowed, so a malformed row in a filtered
-		// framework hid until someone re-ran with that framework
-		// enabled. Same rationale as the canonicalizeFramework check
-		// above.
+		// Apply the user filter BEFORE field-emptiness validation.
+		// A row in a non-selected framework should not produce a
+		// validation error from this run — the operator has signalled
+		// they don't care about that framework, and any bookkeeping
+		// gaps in unrelated frameworks should be caught when the
+		// operator runs WITH that framework enabled. The
+		// canonicalizeFramework typo check above still fires for
+		// unknown framework names so vocabulary drift remains visible.
+		if _, ok := allowed[f]; !ok {
+			continue
+		}
+
+		// Body validation runs only on rows the operator actually
+		// included in this run. A blank control_id / rationale is a
+		// real authoring bug in the selected framework's mapping.
 		cID := strings.TrimSpace(r.ControlID)
 		rat := strings.TrimSpace(r.Rationale)
 		if cID == "" || rat == "" {
 			return nil, fmt.Errorf("crosswalk entry for %q has empty control_id or rationale", checkID)
-		}
-
-		if _, ok := allowed[f]; !ok {
-			continue
 		}
 
 		out = append(out, ControlRef{

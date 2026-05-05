@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -70,15 +71,25 @@ func runScorecard(stdout io.Writer, opts *options) error {
 	var assessment struct {
 		Findings []remediation.Finding `json:"findings"`
 	}
-	if unmarshalErr := json.Unmarshal(data, &assessment); unmarshalErr != nil || len(assessment.Findings) == 0 {
-		// Try as observation bundle — run assessment would be needed.
-		// For now, scorecard works on assessment output, not raw snapshots.
+	unmarshalErr := json.Unmarshal(data, &assessment)
+	if unmarshalErr != nil {
+		// The earlier shape conflated "couldn't parse" with "parsed
+		// but empty" by checking both conditions in the same branch.
+		// Detect the raw-bundle case first (operator pointed
+		// scorecard at the wrong file) and surface a clear hint;
+		// otherwise the unmarshal failure is the actual cause.
 		if _, loadErr := observations.ParseBundle(data); loadErr == nil {
 			return &ui.UserError{Err: errors.New("--snapshot must be stave apply JSON output (assessment), not a raw observation snapshot")}
 		}
-		if unmarshalErr != nil {
-			return &ui.UserError{Err: fmt.Errorf("parse assessment: %w", unmarshalErr)}
-		}
+		return &ui.UserError{Err: fmt.Errorf("parse assessment: %w", unmarshalErr)}
+	}
+	if len(assessment.Findings) == 0 {
+		// Zero findings is a legitimate input: every control passed.
+		// Continue to the scorecard computation below — it correctly
+		// reports a clean state. Surface the empty-input case as a
+		// debug log so operators running with -v can confirm the
+		// scorecard ran against an actual assessment, not a stub.
+		slog.Debug("scorecard: assessment contained zero findings — treating as all-passing")
 	}
 
 	frameworks := opts.Profiles

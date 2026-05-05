@@ -38,6 +38,18 @@ func annotateReachability(result *evaluation.ComplianceReport, obsDir string) er
 	if obsDir == "" || len(result.Findings) == 0 {
 		return nil
 	}
+	// Stdin mode (`-o -`) carries no observation file on disk, so
+	// joining "observations.json" against `-` and probing the
+	// filesystem is meaningless — the path-join below would produce
+	// `-/observations.json` and rely on the os.ErrNotExist branch
+	// further down to silently skip. Bail out explicitly so the
+	// stdin contract is visible in this file rather than depending
+	// on the implicit not-found fall-through.
+	if obsDir == "-" {
+		slog.Debug("annotate reachability: stdin observation mode; skipping bundle lookup",
+			"obs_dir", obsDir)
+		return nil
+	}
 
 	bundlePath := filepath.Join(obsDir, reachabilityBundleName)
 

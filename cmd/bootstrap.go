@@ -209,15 +209,25 @@ func hasAnnotation(cmd *cobra.Command, key string) bool {
 func (a *App) postRun(cmd *cobra.Command, _ []string) {
 	a.stopCPUProfile()
 	a.writeMemProfile(cmd)
-	// bootstrapMu mirrors cleanupBeforeExit: phaseLogging assigns
-	// LogCloser under the same mutex, and a signal handler can call
-	// cleanupBeforeExit concurrently with postRun on the normal exit
-	// path. Reading the pointer without the lock is a data race even
-	// though Close itself is sync.Once-guarded.
-	a.bootstrapMu.Lock()
-	closer := a.LogCloser
-	a.bootstrapMu.Unlock()
-	if closer != nil {
+	a.closeLogCloser()
+}
+
+// closeLogCloser closes the bootstrap-attached LogCloser exactly
+// once across postRun (normal exit) and cleanupBeforeExit (panic /
+// signal / ctx-deadline finalizer). Reading a.LogCloser is guarded
+// by bootstrapMu because phaseLogging assigns the field under the
+// same mutex; the close + stderr warning are wrapped in
+// logCloseOnce so a duplicate Close() call from the second path
+// does not re-surface a stale failure as a second
+// "Warning: close log file" line.
+func (a *App) closeLogCloser() {
+	a.logCloseOnce.Do(func() {
+		a.bootstrapMu.Lock()
+		closer := a.LogCloser
+		a.bootstrapMu.Unlock()
+		if closer == nil {
+			return
+		}
 		if err := closer.Close(); err != nil {
 			// LogCloser.Close failure means the log file's
 			// final flush didn't reach disk. Surface via stderr
@@ -226,7 +236,7 @@ func (a *App) postRun(cmd *cobra.Command, _ []string) {
 			// writeMemProfileTo fallback pattern.
 			fmt.Fprintf(os.Stderr, "Warning: close log file: %v\n", err)
 		}
-	}
+	})
 }
 
 func (a *App) startCPUProfile() error {
