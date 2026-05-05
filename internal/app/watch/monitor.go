@@ -55,12 +55,22 @@ type Monitor struct {
 	running       atomic.Bool
 	previousState string
 	previousIDs   map[string]bool
-	// debounceWG tracks any in-flight AfterFunc callback scheduled
-	// off a watcher event. Held on the Monitor so the shutdown
-	// helpers can describe their work in domain terms
-	// (waitForPendingAlertCycle) instead of passing the WaitGroup
-	// around as a closure-captured local.
-	debounceWG sync.WaitGroup
+	// pendingDone is the completion channel for the currently
+	// scheduled AfterFunc callback (or nil when none is in
+	// flight). The AfterFunc closes it when its runCycle returns;
+	// the next debounce schedule waits on it before scheduling a
+	// successor, and the shutdown path waits on it before
+	// closeSinks.
+	//
+	// Each schedule allocates a fresh channel rather than reusing
+	// a sync.WaitGroup. The earlier WaitGroup-based shape exposed
+	// a documented hazard window: Wait() returning at counter 0
+	// is concurrent with the next Add(1), and the Go memory model
+	// treats that pair as undefined unless an external happens-
+	// before edge is provided. Per-timer channels carry their own
+	// happens-before edge (close → receive), so the hazard
+	// disappears without needing a coordinating mutex.
+	pendingDone chan struct{}
 }
 
 // New creates a new Monitor. A nil cfg.Clock is replaced with
@@ -132,30 +142,32 @@ func (m *Monitor) Run(ctx context.Context) error {
 			}
 			if event.Has(fsnotify.Create) || event.Has(fsnotify.Write) {
 				// Debounce: wait 500ms after last write before processing.
-				// Stop's return value tells us the previous timer's state:
-				//   - true: callback was pending and Stop cancelled
-				//     it; the deferred Done() will NEVER run, so we
-				//     must balance the prior Add(1) by calling
-				//     Done() here. Otherwise each cancelled timer
-				//     leaks a +1 on the WaitGroup and shutdown's
-				//     Wait() blocks forever.
-				//   - false: callback already fired (or is firing);
-				//     its deferred Done() will balance its Add(1).
-				//     Wait for it before scheduling the next one so
-				//     a new runCycle doesn't pile up on top of an
-				//     in-flight one (runCycle's running.CompareAndSwap
-				//     also coalesces, but waiting here keeps the
-				//     debounce semantics tight).
-				if debounce != nil {
+				// Each schedule allocates a fresh per-timer barrier
+				// channel (m.pendingDone). Stop's return value tells
+				// us the previous timer's state:
+				//   - true: the callback was pending and Stop
+				//     cancelled it; the AfterFunc never runs, so we
+				//     close the pending channel here to satisfy any
+				//     waiter and free the slot.
+				//   - false: the callback already fired (or is
+				//     firing); its deferred close will land
+				//     eventually. Wait on the channel before
+				//     scheduling the successor so two cycles do not
+				//     pile up — runCycle's running.CompareAndSwap
+				//     also coalesces, but the channel barrier keeps
+				//     debounce semantics tight.
+				if debounce != nil && m.pendingDone != nil {
+					prev := m.pendingDone
 					if debounce.Stop() {
-						m.debounceWG.Done()
+						close(prev)
 					} else {
-						m.debounceWG.Wait()
+						<-prev
 					}
 				}
-				m.debounceWG.Add(1)
+				done := make(chan struct{})
+				m.pendingDone = done
 				debounce = time.AfterFunc(500*time.Millisecond, func() {
-					defer m.debounceWG.Done()
+					defer close(done)
 					m.runCycle(ctx)
 				})
 			}
@@ -308,11 +320,17 @@ func (m *Monitor) closeSinks() {
 // runCycle started by the file-write debounce has finished.
 // Called from Run's shutdown defer so closeSinks doesn't race a
 // runCycle goroutine that fired its callback just before
-// debounce.Stop() raced it. Names the lifecycle action ("wait for
-// the alert cycle to drain") so the shutdown sequence reads as
-// service-lifecycle code rather than concurrency primitives.
+// debounce.Stop() raced it.
+//
+// Backed by the per-timer barrier channel (m.pendingDone) rather
+// than a sync.WaitGroup: the channel carries a happens-before edge
+// (close → receive), which the WaitGroup-based shape lacked
+// between Wait() returning and the next Add(1).
 func (m *Monitor) waitForPendingAlertCycle() {
-	m.debounceWG.Wait()
+	if m.pendingDone == nil {
+		return
+	}
+	<-m.pendingDone
 }
 
 func isObservationFile(name string) bool {

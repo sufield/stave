@@ -161,6 +161,17 @@ func (a *App) installInterruptHandler() func() {
 				// with the main goroutine's eventual cleanup()
 				// call.
 				cleanup()
+				// Force the process exit even if the main
+				// goroutine is wedged inside a non-ctx-aware
+				// syscall (e.g. a long disk read that the
+				// cancelled ctx cannot unwind). The earlier shape
+				// returned without exiting, deferring exit to the
+				// main goroutine — fine when RunE actually wakes
+				// up on ctx cancellation, but a hang otherwise.
+				// ExitFunc IS the test seam for SIGINT handling,
+				// so calling it here does not bypass any test
+				// hooks. Mirrors the pre-bootstrap path below.
+				a.ExitFunc(ui.ExitInterrupted)
 				return
 			}
 			// Pre-bootstrap signal: cancel function not yet stored.

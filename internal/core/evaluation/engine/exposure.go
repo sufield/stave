@@ -52,6 +52,16 @@ func (e *prefixEvaluator) evaluate() (evaluation.ResourceCheck, []evaluation.Fin
 }
 
 func newPrefixExposureRow(t *asset.ExposureLifecycle, ctl *policy.ControlDefinition) evaluation.ResourceCheck {
+	// Defensive nil guards: t.Asset() and ctl.ID would otherwise panic
+	// on a hand-built caller that forgot to wire either argument. The
+	// strategy's Evaluate already short-circuits the nil case, but
+	// the helper is exported within-package and a future caller path
+	// could miss the upstream check; failing soft with an empty
+	// ResourceCheck keeps the engine's invariant that "the helper
+	// never panics" intact.
+	if t == nil || ctl == nil {
+		return evaluation.ResourceCheck{}
+	}
 	resType := t.Asset().Type
 	return evaluation.ResourceCheck{
 		ControlID:   ctl.ID,

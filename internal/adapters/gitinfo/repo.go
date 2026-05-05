@@ -6,11 +6,20 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os/exec"
 	"slices"
 	"strings"
 )
+
+// ErrGitNotFound is returned by gitinfo helpers when the `git`
+// executable is not on $PATH. Callers can errors.Is against this
+// sentinel to distinguish "git unavailable on this host" from a
+// genuine clean / empty result. The earlier shape returned (zero,
+// nil) in both cases, so a CI environment without git silently
+// reported every repo as clean and committed at HEAD="".
+var ErrGitNotFound = errors.New("gitinfo: git executable not found on PATH")
 
 func hasGit() bool {
 	_, err := exec.LookPath("git")
@@ -36,9 +45,11 @@ func DetectRepoRoot(ctx context.Context, dir string) (string, bool) {
 }
 
 // HeadCommit returns the commit hash of HEAD in the repository at repoRoot.
+// Returns ErrGitNotFound when the git executable is not available on
+// PATH so callers can distinguish "no git" from a genuine error.
 func HeadCommit(ctx context.Context, repoRoot string) (string, error) {
 	if !hasGit() {
-		return "", nil
+		return "", ErrGitNotFound
 	}
 	// #nosec G204 -- exec.Command does not invoke a shell; repoRoot is a literal git argument.
 	cmd := exec.CommandContext(ctx, "git", "-C", repoRoot, "rev-parse", "HEAD")
@@ -49,10 +60,16 @@ func HeadCommit(ctx context.Context, repoRoot string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-// IsDirty reports whether any of the given paths have uncommitted changes in the repository at repoRoot.
+// IsDirty reports whether any of the given paths have uncommitted
+// changes in the repository at repoRoot. Returns ErrGitNotFound when
+// the git executable is not available on PATH — distinguishing
+// "no git, can't check" from "git ran and the repo is clean" so
+// callers (audit-bundle generation, integrity manifests) can
+// surface the gap rather than treating the absence of evidence as
+// evidence of a clean repo.
 func IsDirty(ctx context.Context, repoRoot string, paths []string) (bool, []string, error) {
 	if !hasGit() {
-		return false, nil, nil
+		return false, nil, ErrGitNotFound
 	}
 	// Reject paths containing newlines, null bytes, or other
 	// control characters before invoking git. The `--` separator

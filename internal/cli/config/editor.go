@@ -90,7 +90,14 @@ func (m *Editor[T]) Delete(key string) (MutationResult, error) {
 // caller should proceed without a prompt. Centralises the
 // (m.Force || !m.IsTTY()) check that confirmSetChange and
 // confirmDeleteChange both used to repeat.
+//
+// A nil IsTTY function is treated as "not a TTY" — the safe default
+// for any caller that hand-built an Editor without supplying a
+// detector. Mirrors the m.Stderr fallback in stderr().
 func (m *Editor[T]) ShouldPrompt() bool {
+	if m.IsTTY == nil {
+		return false
+	}
 	return !m.Force && m.IsTTY()
 }
 

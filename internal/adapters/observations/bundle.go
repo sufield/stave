@@ -97,6 +97,12 @@ func (BundleLoader) LoadBundle(ctx context.Context, path string) ([]asset.Snapsh
 		// SetReadDeadline (a *net.Conn-style adapter) or close the
 		// underlying fd from a sibling goroutine on ctx
 		// cancellation.
+		//
+		// Bookkeeping: bump the package-level counter so daemon
+		// operators or stress-test harnesses inspecting
+		// LeakedReadGoroutines() see ctx-cancelled bundle reads
+		// reflected in the running total.
+		recordLeakedReadGoroutine()
 		return nil, ctx.Err()
 	case r := <-done:
 		return r.data, r.err

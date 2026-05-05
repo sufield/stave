@@ -257,7 +257,12 @@ func ParseFindings(raw []byte) ([]remediation.Finding, error) {
 const maxFindingsEnvelopeDepth = 3
 
 func parseFindings(raw []byte, depth int) ([]remediation.Finding, error) {
-	if depth > maxFindingsEnvelopeDepth {
+	// >= matches the documented bound: with maxFindingsEnvelopeDepth
+	// = 3, we accept depths 0, 1, 2 and reject at depth 3. The
+	// earlier > shape accepted depth 3 too and only rejected at
+	// depth 4, so the constant under-reported the actual cap by
+	// one level.
+	if depth >= maxFindingsEnvelopeDepth {
 		return nil, fmt.Errorf("findings envelope nested deeper than %d levels", maxFindingsEnvelopeDepth)
 	}
 	var probe map[string]json.RawMessage

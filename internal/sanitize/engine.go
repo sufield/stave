@@ -275,6 +275,14 @@ func (s *Sanitizer) Snapshot(snap asset.Snapshot) asset.Snapshot {
 		SchemaVersion: snap.SchemaVersion,
 		GeneratedBy:   snap.GeneratedBy,
 		CapturedAt:    snap.CapturedAt,
+		// Preserve provenance metadata. Source identifies which
+		// extractor / connector produced the snapshot — operators
+		// rely on it to trace which AWS account or vendor pipeline
+		// surfaced a finding. The earlier shape silently dropped it,
+		// so sanitised reports rendered with an empty source field
+		// and downstream filters keyed on Source produced empty
+		// results.
+		Source: snap.Source,
 	}
 	out.Assets = make([]asset.Asset, len(snap.Assets))
 	for i, a := range snap.Assets {

@@ -143,9 +143,15 @@ func (r *Runtime) BeginProgress(label string) func() {
 
 // WriteHint writes a single "Hint:\n  <command>" line to w.
 // Use for single-command follow-up guidance after an operation.
+//
+// Explicit `_, _ =` discard matches the rest of this file's
+// fire-and-forget UI helpers: hints are best-effort presentation
+// output, not load-bearing data, so a broken pipe to a paged
+// `less` should not bubble up. The pattern silences errcheck and
+// keeps the discard intent visible at the call site.
 func WriteHint(w io.Writer, command string) {
 	if command != "" {
-		fmt.Fprintf(w, "Hint:\n  %s\n", command)
+		_, _ = fmt.Fprintf(w, "Hint:\n  %s\n", command)
 	}
 }
 

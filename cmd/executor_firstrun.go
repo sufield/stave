@@ -72,7 +72,27 @@ func markFirstRunHintSeenIfNeeded(show bool, markerPath string) {
 }
 
 func (a *App) printNoProjectHintIfNeeded(args []string) {
-	if len(args) != 0 {
+	// `args` is os.Args[1:], so args[0] (when present) is the
+	// subcommand name. The earlier shape returned for ANY args !=
+	// 0 — meaning the hint only fired when the user typed bare
+	// `stave`, which is the one case where they DON'T need it
+	// (the help screen explains how to start). Invert: skip when
+	// no subcommand was given OR when the subcommand creates a
+	// project (init, generate). Every other subcommand that
+	// requires a project triggers the hint when no project is
+	// found.
+	if len(args) == 0 {
+		return
+	}
+	subcommand := strings.TrimSpace(args[0])
+	if subcommand == "" || strings.HasPrefix(subcommand, "-") {
+		// Bare flag like `stave --help` — no subcommand to run.
+		return
+	}
+	switch subcommand {
+	case "init", "generate", "completion", "help", "version":
+		// Subcommands that DO NOT require an existing project; the
+		// hint would mis-direct the user mid-init.
 		return
 	}
 	_, found, err := projconfig.FindNearestFile(appconfig.AuditPolicyFile)

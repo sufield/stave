@@ -466,6 +466,15 @@ type prefixExposureStrategy struct {
 }
 
 func (s *prefixExposureStrategy) Evaluate(t *asset.ExposureLifecycle, _ time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
+	// Nil guards mirror unsafeStateStrategy / unsafeDurationStrategy /
+	// unsafeRecurrenceStrategy: a hand-built session that forgot to
+	// wire the control or lifecycle would otherwise NPE inside
+	// EvaluatePrefixExposureForRow on the first ctl.Params /
+	// t.Asset() deref. Surfacing as an empty check keeps the
+	// assessor's verdict count consistent with the (zero) findings.
+	if s.ctl == nil || t == nil {
+		return evaluation.ResourceCheck{}, nil
+	}
 	observation, findings := EvaluatePrefixExposureForRow(t, s.ctl)
 	return observation, wrapInPointers(findings)
 }

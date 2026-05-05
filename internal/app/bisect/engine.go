@@ -113,8 +113,20 @@ func (e *Engine) runBisect(ctx context.Context, snapshots []asset.Snapshot, resu
 
 	// Post-check for non-monotonicity: sample a few points before low
 	// to detect if earlier violations existed (fix → re-break pattern).
+	//
+	// The stride `low/4` skips indices, so for low=16 we sample
+	// 0, 4, 8, 12 and miss 13, 14, 15 — yet 15 (low-1) is the
+	// most likely candidate for a re-break right before the
+	// detected window. Always include low-1 explicitly so the
+	// monotonicity check does not blind itself to the boundary
+	// snapshot. visited tracks the stride coverage so we don't
+	// re-evaluate low-1 when the stride happens to land on it.
 	result.IsMonotonic = true
+	visitedBoundary := false
 	for i := 0; i < low; i += max(1, low/4) {
+		if i == low-1 {
+			visitedBoundary = true
+		}
 		v, sErr := e.eval(ctx, snapshots[i], &result)
 		if sErr != nil {
 			break
@@ -122,6 +134,17 @@ func (e *Engine) runBisect(ctx context.Context, snapshots []asset.Snapshot, resu
 		if v {
 			result.IsMonotonic = false
 			break
+		}
+	}
+	if result.IsMonotonic && !visitedBoundary && low > 0 {
+		// Boundary check: low-1 was missed by the stride. Sample it
+		// explicitly so the most-likely re-break candidate gets
+		// evaluated. Best-effort: a fail here drops the
+		// monotonicity result for this run but does not invalidate
+		// the main bisect window above.
+		v, sErr := e.eval(ctx, snapshots[low-1], &result)
+		if sErr == nil && v {
+			result.IsMonotonic = false
 		}
 	}
 

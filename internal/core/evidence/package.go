@@ -22,8 +22,15 @@ func NewEvidencePackage(snapshotID string, assessedAt time.Time) *EvidencePackag
 	}
 }
 
-// Add appends a record and updates the summary counts.
+// Add appends a record and updates the summary counts. A nil
+// receiver or a nil record is a no-op — mirrors the nil-receiver
+// contract on AggregateVerdict so callers that hold an
+// EvidencePackage handle through optional/lazy wiring don't have to
+// nil-check at every call site.
 func (p *EvidencePackage) Add(r *EvidenceRecord) {
+	if p == nil || r == nil {
+		return
+	}
 	p.Records = append(p.Records, r)
 	switch r.Verdict {
 	case VerdictPass:
@@ -36,13 +43,20 @@ func (p *EvidencePackage) Add(r *EvidenceRecord) {
 }
 
 // TotalRecords returns the number of evidence records in the package.
+// A nil receiver returns 0 (mirrors AggregateVerdict's nil contract).
 func (p *EvidencePackage) TotalRecords() int {
+	if p == nil {
+		return 0
+	}
 	return len(p.Records)
 }
 
 // FindByControlID returns all evidence records for the given control ID.
-// Returns nil if no records match.
+// Returns nil if no records match, or if the receiver is nil.
 func (p *EvidencePackage) FindByControlID(controlID string) []*EvidenceRecord {
+	if p == nil {
+		return nil
+	}
 	var matches []*EvidenceRecord
 	for _, r := range p.Records {
 		if r.ControlID == controlID {

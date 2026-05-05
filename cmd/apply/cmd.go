@@ -306,6 +306,16 @@ func (o *Options) validate() error {
 	if o.Profile != "" && o.InputFile == "" {
 		return &ui.UserError{Err: errors.New("flag --input is required when using --profile")}
 	}
+	if o.InputFile != "" && o.Profile == "" {
+		// --input is only meaningful in profile mode (the bundled
+		// observations file feeds the built-in control pack).
+		// Outside profile mode the input would be ignored, so an
+		// operator who set it without --profile thinks they're
+		// running a different evaluation than they are. Reject
+		// explicitly — symmetric to the --profile-without-input
+		// case above.
+		return &ui.UserError{Err: errors.New("flag --input requires --profile (use --observations instead for non-profile mode)")}
+	}
 	if (o.NewOnly || o.NewSince != "") && o.HistoryDir == "" {
 		return &ui.UserError{Err: errors.New("--history is required when using --new-only or --new-since")}
 	}

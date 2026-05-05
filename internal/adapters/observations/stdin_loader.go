@@ -175,6 +175,12 @@ func (s *StdinObservationLoader) LoadSnapshots(ctx context.Context, _ string) (a
 	var data []byte
 	select {
 	case <-ctx.Done():
+		// Bump the package-level leak counter (see leak_metrics.go)
+		// so daemon operators inspecting LeakedReadGoroutines() see
+		// ctx-cancelled stdin reads in the running total. The read
+		// goroutine itself stays parked on the syscall until stdin
+		// produces input or EOF.
+		recordLeakedReadGoroutine()
 		return appcontracts.LoadResult{}, fmt.Errorf("stdin read cancelled: %w", ctx.Err())
 	case res := <-ch:
 		if res.err != nil {
