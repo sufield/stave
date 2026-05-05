@@ -215,8 +215,22 @@ func (c *AssessmentCollector) Snapshot() CollectorSnapshot {
 	// callers can sort, filter, or otherwise mutate the returned
 	// slices without poisoning the collector for any subsequent
 	// run that reuses the same instance.
+	//
+	// Findings additionally deep-clone their Evidence slices
+	// (Misconfigurations, RootCauses). The top-level slices.Clone
+	// only copies the Finding struct values — the Evidence struct
+	// embedded in each Finding still shares its Misconfigurations
+	// and RootCauses slice headers with the collector's storage.
+	// Without the deep clone, a downstream consumer that appends
+	// to or sorts those nested slices would corrupt the
+	// collector's authoritative data.
+	findings := slices.Clone(c.findings)
+	for i := range findings {
+		findings[i].Evidence.Misconfigurations = slices.Clone(findings[i].Evidence.Misconfigurations)
+		findings[i].Evidence.RootCauses = slices.Clone(findings[i].Evidence.RootCauses)
+	}
 	return CollectorSnapshot{
-		Findings:        slices.Clone(c.findings),
+		Findings:        findings,
 		Checks:          slices.Clone(c.checks),
 		SkippedControls: slices.Clone(c.skippedControls),
 		ExemptedAssets:  slices.Clone(c.exemptedAssets),

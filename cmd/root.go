@@ -209,6 +209,16 @@ type App struct {
 	// Confidence holds the configurable confidence thresholds, set during
 	// bootstrap from stave.yaml. Passed to the engine Runner.
 	Confidence evaluation.ConfidenceCalculator
+	// confidenceInitialized is the explicit "we have a useful
+	// Confidence value" flag. Bootstrap sets it true after seeding
+	// the defaults; tests / harnesses that pre-populate Confidence
+	// before calling phaseConfig should set it true themselves so
+	// their values are not silently overwritten by the default
+	// seed. The earlier shape compared a.Confidence to the zero
+	// value, which conflated "uninitialised" with "explicitly all
+	// multipliers = 0" — a legitimate-but-rare configuration that
+	// would be silently replaced by the default.
+	confidenceInitialized bool
 
 	// sanitizer is initialized from CLI flags during bootstrap and used for
 	// path/message sanitization in error handling and panic recovery.

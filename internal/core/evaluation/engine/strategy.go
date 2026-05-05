@@ -116,11 +116,28 @@ func emitViolationFinding(
 	}
 	findings := []*evaluation.Finding{finding}
 	if durErr != nil {
-		// Mark evidence invalid so report renderers avoid arithmetic
-		// on the sentinel duration (-1.0). The verdict still stands —
-		// CreateDurationFinding's contract is "the asset is in
-		// violation, but I couldn't compute exact dwell" — but
-		// evidence-derived numbers are unreliable.
+		// CHOSEN APPROACH: subsume durErr into the finding's
+		// EvidenceInvalid flag rather than returning it.
+		//
+		// Why not propagate the error: strategy.Evaluate returns
+		// (evaluation.ResourceCheck, []*evaluation.Finding) — adding
+		// a third error slot would ripple through every strategy
+		// implementation and every collector RecordCheck path, and
+		// the call site (assessor.applyControl) has no useful
+		// recovery for "duration arithmetic missed by 1ns" beyond
+		// the same evidence-invalid flagging we do here.
+		//
+		// Why not an error accumulator on session/collector: the
+		// failure is per-finding, not per-session, and operators
+		// already get the per-finding signal via the EvidenceInvalid
+		// flag in the rendered output. A separate accumulator would
+		// duplicate that channel and force every renderer to consult
+		// it.
+		//
+		// The verdict still stands — CreateDurationFinding's contract
+		// is "the asset is in violation; I couldn't compute exact
+		// dwell" — but evidence-derived numbers are unreliable, so
+		// renderers must avoid arithmetic on the -1.0 sentinel.
 		finding.Evidence.EvidenceInvalid = true
 		deps.Logger().Warn("duration calculation failed; emitting violation with sentinel duration -1.0 and evidence_invalid=true",
 			"control", ctl.ID, "asset", t.ID, "error", durErr,

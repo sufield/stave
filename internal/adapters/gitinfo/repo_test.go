@@ -96,3 +96,40 @@ func TestIsDirtyReturnsSortedPaths(t *testing.T) {
 		t.Fatalf("dirty paths mismatch: got %v want %v", paths, want)
 	}
 }
+
+// TestIsDirtyHandlesRenamedPath pins the porcelain rename parser:
+// `git status` emits renames as "R  old -> new" with both source and
+// destination on a single line. The earlier shape recorded the
+// literal "old -> new" string as a dirty path, so callers checking
+// membership against repository paths missed both ends of the
+// rename and falsely reported the repo clean. The fix records both
+// old and new paths in the dirty set.
+func TestIsDirtyHandlesRenamedPath(t *testing.T) {
+	repo := setupRepo(t)
+
+	// Seed two committed files so we can rename one of them.
+	if err := os.WriteFile(filepath.Join(repo, "old-name.txt"), []byte("v1\n"), 0o644); err != nil {
+		t.Fatalf("write old-name.txt: %v", err)
+	}
+	runGit(t, repo, "add", "old-name.txt")
+	runGit(t, repo, "commit", "-m", "add old-name")
+
+	// Rename via git so the porcelain status reports R rather than
+	// a delete + add pair. -k skips dry-run; -f forces overwrite.
+	runGit(t, repo, "mv", "old-name.txt", "new-name.txt")
+
+	dirty, paths, err := IsDirty(context.Background(), repo, []string{"old-name.txt", "new-name.txt"})
+	if err != nil {
+		t.Fatalf("IsDirty: %v", err)
+	}
+	if !dirty {
+		t.Fatalf("expected dirty repo after rename; got clean")
+	}
+	// Both source and destination of the rename must appear in the
+	// dirty set so callers tracking either historic or current
+	// path identity see the change.
+	want := []string{"new-name.txt", "old-name.txt"}
+	if !reflect.DeepEqual(paths, want) {
+		t.Fatalf("rename dirty paths mismatch: got %v want %v", paths, want)
+	}
+}

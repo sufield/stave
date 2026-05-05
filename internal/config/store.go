@@ -576,6 +576,18 @@ func (c Context) AbsPathStrict(p string) (string, error) {
 // scope by setting the env var to a constructed path.
 func resolveStorePath() (string, error) {
 	if v := strings.TrimSpace(os.Getenv(env.ContextsFile.Name)); v != "" {
+		// Reject traversal segments BEFORE resolving against cwd.
+		// filepath.Clean collapses ".." that doesn't escape the
+		// argument, but a value like `../../etc/contexts.yaml`
+		// canonicalizes to a real path that escapes the operator's
+		// intended config scope. hasNoUnsafeSegments enforces the
+		// "no `..` segment" rule on the raw input so the env-var
+		// path is held to the same standard as in-process
+		// SetContext / config-file inputs.
+		if !hasNoUnsafeSegments(v) {
+			return "", fmt.Errorf("resolve %s: path %q contains traversal segments and is not allowed",
+				env.ContextsFile.Name, v)
+		}
 		cleaned := filepath.Clean(v)
 		if !filepath.IsAbs(cleaned) {
 			cwd, err := os.Getwd()

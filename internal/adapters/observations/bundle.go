@@ -1,3 +1,26 @@
+// CLI ONE-SHOT USE ONLY. The bundle loader below spawns a reader
+// goroutine that cannot be interrupted on ctx cancellation — Go's
+// stdlib offers no portable mechanism to unblock a pending Read on a
+// regular file descriptor (no SetReadDeadline on *os.File, no
+// shutdown(2) equivalent). When ctx fires before fsutil.ReadFileLimited
+// returns, LoadBundle returns ctx.Err() promptly but the goroutine
+// stays blocked on the syscall until the OS returns control —
+// typically when the read completes naturally on the underlying
+// filesystem.
+//
+// For a single CLI invocation, process death reaps the goroutine.
+// For a long-running daemon, watcher, or server the goroutines
+// accumulate per invocation and the process leaks descriptors and
+// heap. Daemon callers must wrap their inbound context via
+// DaemonContext so the runtime guard rejects the call rather than
+// leaking; LoadBundleSync is the deadline-free synchronous variant
+// for callers that have already committed to a process-blocking
+// load and would rather skip the goroutine spawn.
+//
+// LONG-TERM FIX: when Go exposes context.AfterFunc-driven cancellation
+// for blocking syscalls (or we introduce a deadline-capable file-fd
+// wrapper), replace the spawned goroutine with a directly-cancellable
+// reader. Until then the leak is a known cost of the read pattern.
 package observations
 
 import (
@@ -136,4 +159,23 @@ func LoadBundle(path string) ([]asset.Snapshot, error) {
 		return nil, fmt.Errorf("read observations file: %w", err)
 	}
 	return ParseBundle(data)
+}
+
+// LoadBundleSync is the synchronous, no-goroutine variant of
+// BundleLoader.LoadBundle. It blocks until fsutil.ReadFileLimited
+// returns and ignores ctx cancellation entirely. Use it from
+// contexts where:
+//
+//   - Spawning a reader goroutine is undesirable (a daemon already
+//     guarded by DaemonContext, a process that must avoid any
+//     potential leak).
+//   - The caller has accepted that a wedged read will block
+//     indefinitely and has no other option to escape.
+//
+// LoadBundle is the better choice for CLI runs because it lets a
+// SIGINT cancel the operation visibly. LoadBundleSync exists as the
+// fallback for daemon-mode callers that explicitly opted out of the
+// leak via DaemonContext but still need to load a bundle.
+func LoadBundleSync(path string) ([]asset.Snapshot, error) {
+	return LoadBundle(path)
 }

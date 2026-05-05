@@ -123,14 +123,20 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 	// constant in engine/ is the fallback.
 
 	// Confidence classification multipliers (default HIGH=4x, MEDIUM=2x).
-	// Stored on App and passed to Assessor during wiring, not as global state.
+	// Stored on App and passed to Assessor during wiring, not as
+	// global state.
 	//
-	// Only seed defaults when the field is its zero value. App is not
-	// designed for reuse across bootstrap calls, but a test harness
-	// that pre-populates a.Confidence with custom multipliers should
-	// not have its values silently clobbered here.
-	if a.Confidence == (evaluation.ConfidenceCalculator{}) {
+	// Use the explicit confidenceInitialized flag rather than a
+	// zero-value comparison: a test harness pre-populating
+	// a.Confidence with all-zero multipliers (a legitimate but rare
+	// "no confidence weighting" mode) would otherwise have its
+	// values silently overwritten by the default. Tests that want
+	// the default seeding behaviour leave the flag false; tests
+	// that pre-populate Confidence should set the flag true so
+	// their values stick.
+	if !a.confidenceInitialized {
 		a.Confidence = evaluation.DefaultConfidenceCalculator()
+		a.confidenceInitialized = true
 	}
 	if h, m := eval.ConfidenceHighMultiplier(), eval.ConfidenceMedMultiplier(); h > 0 || m > 0 {
 		if h > 0 {

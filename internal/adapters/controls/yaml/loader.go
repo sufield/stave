@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -68,13 +69,17 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	// Empty dir means the caller forgot to set --controls or
-	// passed through a zero string. resolveControlPaths would
-	// walk cwd and return whatever YAML happened to be sitting
-	// there — a silent surprise that produced phantom controls
-	// without a clear cause. Reject up-front.
-	if strings.TrimSpace(dir) == "" {
-		return nil, errors.New("controls/yaml.LoadControls: dir is empty (set --controls or pass an explicit path)")
+	// Empty dir, ".", "./", or any other cwd-equivalent value means
+	// the caller forgot to set --controls or passed through a zero
+	// string. resolveControlPaths would walk the working directory
+	// and return whatever YAML happened to be sitting there — a
+	// silent surprise that produced phantom controls without a
+	// clear cause. Reject every form that resolves to "the current
+	// working directory" so the failure mode is the same regardless
+	// of how the caller spelled the cwd.
+	trimmed := strings.TrimSpace(dir)
+	if isCwdEquivalent(trimmed) {
+		return nil, fmt.Errorf("controls/yaml.LoadControls: %q resolves to the current working directory; set --controls or pass an explicit non-cwd path", dir)
 	}
 
 	paths, err := resolveControlPaths(ctx, dir)
@@ -120,6 +125,22 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 	}
 
 	return controls, nil
+}
+
+// isCwdEquivalent reports whether the trimmed input would resolve to
+// the current working directory if passed to filepath.Walk. The set
+// covers the empty string, ".", "./", and the canonical form
+// returned by filepath.Clean for any of those — every spelling of
+// "the directory I'm running from". Surfacing this as a single
+// predicate keeps the LoadControls guard readable and gives a
+// future caller exactly one place to extend if a new cwd alias
+// surfaces.
+func isCwdEquivalent(p string) bool {
+	if p == "" {
+		return true
+	}
+	cleaned := filepath.Clean(p)
+	return cleaned == "." || cleaned == "./"
 }
 
 // loadOne performs IO, schema validation, unmarshal, and semantic enrichment

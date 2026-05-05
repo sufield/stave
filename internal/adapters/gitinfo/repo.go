@@ -82,9 +82,29 @@ func IsDirty(ctx context.Context, repoRoot string, paths []string) (bool, []stri
 		if len(line) < 4 {
 			continue
 		}
+		// Porcelain status format: "XY <path>" where XY is the
+		// staged/unstaged status pair. Renames are reported with
+		// X='R' and the path field rendered as "<old> -> <new>".
+		// Treating that whole string as a single dirty path was
+		// wrong: callers checking membership against repo paths
+		// looked for "<old> -> <new>" verbatim and missed both
+		// the source and destination of the rename. Split on the
+		// canonical " -> " separator and record the destination
+		// (the path that exists post-rename); also record the
+		// source so callers tracking historic-path identity see
+		// the rename through.
+		statusPair := line[:2]
 		p := strings.TrimSpace(line[3:])
 		if p == "" {
 			continue
+		}
+		isRename := statusPair[0] == 'R' || statusPair[1] == 'R'
+		if isRename {
+			if oldPath, newPath, ok := strings.Cut(p, " -> "); ok {
+				dirty[strings.TrimSpace(oldPath)] = true
+				dirty[strings.TrimSpace(newPath)] = true
+				continue
+			}
 		}
 		dirty[p] = true
 	}

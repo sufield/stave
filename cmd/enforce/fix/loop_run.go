@@ -89,6 +89,15 @@ func (r *Runner) buildLoopInfra(req LoopRequest) (loopInfra, error) {
 
 // Loop delegates to the app-layer fix-loop service.
 func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
+	// r.service is the load-bearing dependency for the entire
+	// fix-loop pipeline (verify, apply, verify-again). A nil
+	// service here means the runner was hand-constructed without
+	// going through the standard wiring; the next line would
+	// panic on the Sanitizer assignment, so surface the wiring
+	// bug as a clear error.
+	if r.service == nil {
+		return errors.New("fix.Loop: runner.service is nil — wire via cmd/enforce/fix.NewRunner before invoking Loop")
+	}
 	r.service.Sanitizer = r.Sanitizer
 
 	infra, err := r.buildLoopInfra(req)

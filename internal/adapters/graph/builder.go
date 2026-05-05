@@ -594,15 +594,62 @@ func mergeEdgeProperties(dst, src map[string]any) {
 				newSet[existing] = struct{}{}
 			}
 		}
-		// Skip nil values rather than letting fmt.Sprint inject the
-		// literal "<nil>" into the accumulator set. A nil slipping in
-		// pollutes downstream consumers with a sentinel string that
-		// looks like a real value but corresponds to no observed data.
-		if pv != nil {
+		// Multi-element property values must add each element to
+		// the accumulator individually. The earlier `fmt.Sprint(pv)`
+		// path coerced an entire []string into a single bracketed
+		// string ("[a b c]"), so a downstream consumer expecting
+		// separate entries saw one literal "[a b c]" entry instead
+		// of three distinct values. Type-switch on slice shapes so
+		// the per-element enumeration runs once at the merge site
+		// rather than every consumer reparsing the bracketed form.
+		switch typed := pv.(type) {
+		case nil:
+			// Skip nil values rather than letting fmt.Sprint
+			// inject the literal "<nil>" into the accumulator
+			// set. A nil pollutes downstream consumers with a
+			// sentinel string that looks like a real value but
+			// corresponds to no observed data.
+		case []string:
+			for _, s := range typed {
+				if s != "" {
+					newSet[s] = struct{}{}
+				}
+			}
+		case []any:
+			for _, elem := range typed {
+				if elem == nil {
+					continue
+				}
+				newSet[fmt.Sprint(elem)] = struct{}{}
+			}
+		default:
 			newSet[fmt.Sprint(pv)] = struct{}{}
 		}
+		// Singular-rescue: also fold the existing scalar (set on the
+		// first-edge write or by an earlier merge) into the plural
+		// set so the union spans both the singular contract and
+		// every duplicate's contribution. Apply the same per-element
+		// expansion as the src-pv branch above so a singular value
+		// that is itself a slice does not collapse into a literal
+		// "[a b c]" string under fmt.Sprint.
 		if existing, ok := dst[pk]; ok && existing != nil {
-			newSet[fmt.Sprint(existing)] = struct{}{}
+			switch typed := existing.(type) {
+			case []string:
+				for _, s := range typed {
+					if s != "" {
+						newSet[s] = struct{}{}
+					}
+				}
+			case []any:
+				for _, elem := range typed {
+					if elem == nil {
+						continue
+					}
+					newSet[fmt.Sprint(elem)] = struct{}{}
+				}
+			default:
+				newSet[fmt.Sprint(existing)] = struct{}{}
+			}
 		}
 		dst[pluralKey] = newSet
 	}

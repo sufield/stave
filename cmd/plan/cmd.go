@@ -3,6 +3,7 @@
 package plan
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -80,7 +81,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runPlan(cmd.OutOrStdout(), opts)
+			return runPlan(cmd.Context(), cmd.OutOrStdout(), opts)
 		},
 	}
 
@@ -101,7 +102,17 @@ Exit Codes:
 	return cmd
 }
 
-func runPlan(stdout io.Writer, opts *options) error {
+// runPlan accepts a ctx so a SIGINT during the plan setup
+// (assessment load, manifest parse, compliance-path compute) exits
+// the command at the next boundary instead of running the whole
+// pipeline to completion. The downstream I/O helpers
+// (fsutil.ReadFileLimited, teams.LoadManifest) do not yet accept
+// ctx — when those signatures grow context support the Err() guards
+// below should be replaced with parameter passing.
+func runPlan(ctx context.Context, stdout io.Writer, opts *options) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	// Cross-flag validation: --threshold and --compliance-profile must
 	// be set together. The previous (Threshold > 0 && Profile != "")
 	// guard silently ran the non-compliance path when only one flag
@@ -169,7 +180,12 @@ func runPlan(stdout io.Writer, opts *options) error {
 		return writeComplianceFormat(stdout, result, opts.Format)
 	}
 
-	// Load manifest.
+	// Load manifest. Boundary ctx check so a Ctrl-C between
+	// assessment load and manifest load aborts before the heavier
+	// teams.LoadManifest read.
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		return ctxErr
+	}
 	manifest, err := teams.LoadManifest(opts.TeamManifest)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("load manifest: %w", err)}
@@ -193,15 +209,29 @@ func runPlan(stdout io.Writer, opts *options) error {
 		TeamFilter:  opts.Team,
 	})
 
-	// Determine output mode.
+	// Determine output mode. Replace the os.Stat + os.Create pattern
+	// with a single atomic OpenFile attempt: if the path is an
+	// existing directory we want per-team output; otherwise we
+	// create or truncate a regular file at that path.
+	//
+	// The earlier Stat→Create sequence carried a TOCTOU window
+	// where an attacker (or a racing build script) could swap the
+	// destination between the two syscalls. OpenFile under
+	// O_WRONLY|O_CREATE|O_TRUNC is one syscall: the kernel itself
+	// distinguishes "is a directory" (EISDIR) from "regular file
+	// created/truncated", so there is no observable interval where
+	// a swap could change the outcome we observed vs. the outcome
+	// we acted on.
 	if opts.OutPath != "" {
-		fi, statErr := os.Stat(opts.OutPath)
-		if statErr == nil && fi.IsDir() {
-			return writePerTeam(opts.OutPath, p, opts.Format)
-		}
-		f, createErr := os.Create(opts.OutPath)
-		if createErr != nil {
-			return fmt.Errorf("create output: %w", createErr)
+		f, openErr := os.OpenFile(opts.OutPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644) //nolint:gosec // operator-supplied path; per-team mode handled below
+		if openErr != nil {
+			// Distinguish "destination is a directory" (route to
+			// per-team output) from real file-open failures
+			// (permission, parent missing, fs full).
+			if isDirectoryPath(opts.OutPath) {
+				return writePerTeam(opts.OutPath, p, opts.Format)
+			}
+			return fmt.Errorf("create output: %w", openErr)
 		}
 		writeErr := writeFormat(f, p, opts.Format)
 		closeErr := f.Close()
@@ -339,6 +369,20 @@ func writePerTeam(dir string, p *plan.Plan, format string) error {
 		}
 	}
 	return nil
+}
+
+// isDirectoryPath reports whether the given path resolves to an
+// existing directory. Used to disambiguate the OpenFile failure mode
+// in the OutPath branch: kernel-level EISDIR detection is portable
+// but Go's os.OpenFile wraps the error in a syscall.Errno that
+// varies by platform, so a fresh Stat is the most reliable cross-
+// platform signal. Stat-after-OpenFile keeps the TOCTOU surface
+// minimal: by the time we reach this helper, the OpenFile attempt
+// already failed, so any swap that races us only changes which
+// failure mode we report (directory vs. permission denied).
+func isDirectoryPath(p string) bool {
+	fi, err := os.Stat(p)
+	return err == nil && fi.IsDir()
 }
 
 // validateTeamIDForFilename rejects TeamID values that would let an

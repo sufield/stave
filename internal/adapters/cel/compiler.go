@@ -586,14 +586,14 @@ func parseNestedPredicate(v any) (*policy.UnsafePredicate, error) {
 
 	pred := &policy.UnsafePredicate{}
 	if anyRules, hasAny := m["any"]; hasAny {
-		rules, err := parseRuleList(anyRules)
+		rules, err := parseRuleList(anyRules, "any")
 		if err != nil {
 			return nil, fmt.Errorf("any_match.any: %w", err)
 		}
 		pred.Any = rules
 	}
 	if allRules, hasAll := m["all"]; hasAll {
-		rules, err := parseRuleList(allRules)
+		rules, err := parseRuleList(allRules, "all")
 		if err != nil {
 			return nil, fmt.Errorf("any_match.all: %w", err)
 		}
@@ -602,18 +602,25 @@ func parseNestedPredicate(v any) (*policy.UnsafePredicate, error) {
 	return pred, nil
 }
 
-// parseRuleList converts a raw []any (from YAML) into []PredicateRule.
-func parseRuleList(v any) ([]policy.PredicateRule, error) {
+// parseRuleList converts a raw []any (from YAML) into
+// []PredicateRule. The breadcrumb argument identifies the rule's
+// position within the nesting tree (e.g. `any[2].all[0]`) and is
+// prepended to every error returned from this call so a CEL author
+// debugging a deep predicate sees exactly which rule failed —
+// without it, a parse error in a nested any-of-all block surfaced
+// as a generic "rule must be a map" with no path context.
+func parseRuleList(v any, breadcrumb string) ([]policy.PredicateRule, error) {
 	list, ok := v.([]any)
 	if !ok {
-		return nil, fmt.Errorf("expected list, got %T", v)
+		return nil, fmt.Errorf("%s: expected list, got %T", breadcrumb, v)
 	}
 
 	rules := make([]policy.PredicateRule, 0, len(list))
-	for _, item := range list {
+	for i, item := range list {
+		ruleCrumb := fmt.Sprintf("%s[%d]", breadcrumb, i)
 		m, ok := item.(map[string]any)
 		if !ok {
-			return nil, fmt.Errorf("rule must be a map, got %T", item)
+			return nil, fmt.Errorf("%s: rule must be a map, got %T", ruleCrumb, item)
 		}
 
 		rule := policy.PredicateRule{}
@@ -637,16 +644,18 @@ func parseRuleList(v any) ([]policy.PredicateRule, error) {
 		if vfp, ok := m["value_from_param"].(string); ok {
 			rule.ValueFromParam = predicate.ParamRef(vfp)
 		}
-		// Handle nested any/all blocks within the rule
+		// Handle nested any/all blocks within the rule. Extend the
+		// breadcrumb so a failure inside the recursion identifies
+		// the exact branch (`any[2].all[0]`).
 		if anyBlock, hasAny := m["any"]; hasAny {
-			nested, err := parseRuleList(anyBlock)
+			nested, err := parseRuleList(anyBlock, ruleCrumb+".any")
 			if err != nil {
 				return nil, err
 			}
 			rule.Any = nested
 		}
 		if allBlock, hasAll := m["all"]; hasAll {
-			nested, err := parseRuleList(allBlock)
+			nested, err := parseRuleList(allBlock, ruleCrumb+".all")
 			if err != nil {
 				return nil, err
 			}

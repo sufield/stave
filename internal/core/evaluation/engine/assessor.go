@@ -445,7 +445,11 @@ func (s *assessmentSession) applyControl(
 		// from the denominator and inflated the compliance percentage.
 		s.collector.RecordSeenAsset(id)
 
-		// 1. Check for organizational exemptions (Policy Overrides)
+		// 1. Check for organizational exemptions (Policy Overrides).
+		// ExemptionConfig.ShouldExempt is nil-safe on a nil receiver
+		// (returns nil), so a partially-wired Assessor with no
+		// exemptions configured does not panic here. See the
+		// nil-receiver contract documented on NewAssessor.
 		if rule := s.assessor.exemptions.ShouldExempt(id); rule != nil {
 			span.RecordStep("exemption_check", map[string]any{
 				"pattern": rule.Pattern,
@@ -682,6 +686,9 @@ func partitionFindings(
 	var excepted []evaluation.ExceptedFinding
 	for i := range findings {
 		f := &findings[i]
+		// ExceptionConfig.ShouldExcept is nil-safe on a nil
+		// receiver (returns nil); see the nil-receiver contract
+		// documented on NewAssessor.
 		if rule := exceptions.ShouldExcept(f.ControlID, f.AssetID, now); rule != nil {
 			excepted = append(excepted, evaluation.ExceptedFinding{
 				ControlID: f.ControlID,

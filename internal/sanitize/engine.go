@@ -552,6 +552,30 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 		if !rv.IsValid() {
 			return nil
 		}
-		return reflect.Zero(rv.Type()).Interface()
+		// Wrap reflect.Zero in recover: certain unexported / opaque
+		// types (interface satisfied by an internal struct,
+		// reflect-unexported channel types from foreign packages)
+		// can panic during Type() / Zero() construction. The
+		// scrubber must NEVER bring down the assessment pipeline
+		// for an unscrubbable leaf — fall back to nil + a debug
+		// log so the producer is visible without crashing the
+		// command.
+		return safeReflectZero(rv)
 	}
+}
+
+// safeReflectZero returns a type-preserving zero value, or nil when
+// reflection panics. A non-empty recover reason is logged so the
+// schema-drift signal still reaches operators without crashing the
+// scrubber.
+func safeReflectZero(rv reflect.Value) (out any) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Debug("sanitize: reflect.Zero panicked on unsupported type; falling back to nil",
+				"recover", fmt.Sprint(r),
+				"kind", rv.Kind().String())
+			out = nil
+		}
+	}()
+	return reflect.Zero(rv.Type()).Interface()
 }

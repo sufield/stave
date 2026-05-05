@@ -140,15 +140,26 @@ func (a *App) installInterruptHandler() func() {
 			fmt.Fprintln(os.Stderr, "Interrupted")
 			if cancel := a.cancel.Load(); cancel != nil {
 				(*cancel)()
-				// Run cleanup explicitly before returning so
-				// signal.Stop unregisters the channel
-				// immediately. Without this, a second SIGINT
-				// arriving before the main goroutine's defer
-				// fires would be delivered to Go's default
-				// handler (process termination without our
-				// log-flush / profile-stop path). The shared
-				// sync.Once makes this idempotent with the main
-				// goroutine's eventual cleanup() call.
+				// Mirror the pre-bootstrap path below: flush the
+				// CPU profile, close the log file, and write the
+				// memory profile via cleanupBeforeExit BEFORE
+				// returning. The main goroutine's deferred
+				// cleanupBeforeExit will still fire and become a
+				// no-op (sync.Once), so we don't double-flush;
+				// running it from this goroutine guarantees the
+				// flush happens even when the command's RunE is
+				// blocked in a syscall the cancelled ctx cannot
+				// unwind in time.
+				a.cleanupBeforeExit()
+				// Run cleanup explicitly so signal.Stop
+				// unregisters the channel immediately. Without
+				// this, a second SIGINT arriving before the main
+				// goroutine's defer fires would be delivered to
+				// Go's default handler (process termination
+				// without our log-flush / profile-stop path).
+				// The shared sync.Once makes this idempotent
+				// with the main goroutine's eventual cleanup()
+				// call.
 				cleanup()
 				return
 			}

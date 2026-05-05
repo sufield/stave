@@ -249,3 +249,55 @@ func TestDeduplicateEdges_SingleChainSeverityKeepsPlural(t *testing.T) {
 		t.Errorf("chain_severities = %v (%T), want [critical]", got, got)
 	}
 }
+
+// TestDeduplicateEdges_MultiValuePropertyExpansionStringSlice pins
+// the per-element enumeration of slice-typed property values for
+// keys registered in multiValueEdgeProps. The earlier
+// `fmt.Sprint(pv)` path coerced []string{"a","b"} into the literal
+// "[a b]" so consumers saw a single bracketed entry instead of two
+// distinct values. Uses stage_span_attck (a real registered key)
+// to drive the merge path.
+func TestDeduplicateEdges_MultiValuePropertyExpansionStringSlice(t *testing.T) {
+	t.Parallel()
+	edges := []Edge{
+		{From: "f1", To: "c1", Type: "VIOLATES", Properties: map[string]any{"stage_span_attck": []string{"TA0001", "TA0002"}}},
+		{From: "f1", To: "c1", Type: "VIOLATES", Properties: map[string]any{"stage_span_attck": []string{"TA0003"}}},
+	}
+	out := deduplicateEdges(edges)
+	if len(out) != 1 {
+		t.Fatalf("expected 1 deduplicated edge, got %d", len(out))
+	}
+	got, ok := out[0].Properties["stage_span_attck_all"].([]string)
+	if !ok {
+		t.Fatalf("stage_span_attck_all = %T %v, want []string",
+			out[0].Properties["stage_span_attck_all"], out[0].Properties["stage_span_attck_all"])
+	}
+	want := []string{"TA0001", "TA0002", "TA0003"}
+	if !slices.Equal(got, want) {
+		t.Errorf("stage_span_attck_all = %v, want %v (each element stored individually, not bracketed)", got, want)
+	}
+}
+
+// TestDeduplicateEdges_MultiValuePropertyExpansionAnySlice mirrors
+// the []string case for the []any wire shape that survives a JSON
+// unmarshal.
+func TestDeduplicateEdges_MultiValuePropertyExpansionAnySlice(t *testing.T) {
+	t.Parallel()
+	edges := []Edge{
+		{From: "f1", To: "c1", Type: "VIOLATES", Properties: map[string]any{"stage_span_attck": []any{"TA0001", "TA0002"}}},
+		{From: "f1", To: "c1", Type: "VIOLATES", Properties: map[string]any{"stage_span_attck": []any{"TA0003"}}},
+	}
+	out := deduplicateEdges(edges)
+	if len(out) != 1 {
+		t.Fatalf("expected 1 deduplicated edge, got %d", len(out))
+	}
+	got, ok := out[0].Properties["stage_span_attck_all"].([]string)
+	if !ok {
+		t.Fatalf("stage_span_attck_all = %T %v, want []string",
+			out[0].Properties["stage_span_attck_all"], out[0].Properties["stage_span_attck_all"])
+	}
+	want := []string{"TA0001", "TA0002", "TA0003"}
+	if !slices.Equal(got, want) {
+		t.Errorf("stage_span_attck_all = %v, want %v", got, want)
+	}
+}

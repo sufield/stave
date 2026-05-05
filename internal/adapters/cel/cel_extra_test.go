@@ -542,17 +542,25 @@ func TestParseNestedPredicate_Valid(t *testing.T) {
 
 func TestParseRuleList_BadType(t *testing.T) {
 	t.Parallel()
-	_, err := parseRuleList("not a list")
+	_, err := parseRuleList("not a list", "any")
 	if err == nil {
 		t.Fatal("expected error")
+	}
+	// Breadcrumb context must appear in the error so the CEL author
+	// debugging a nested predicate sees which branch failed.
+	if !strings.Contains(err.Error(), "any:") {
+		t.Errorf("error %q missing breadcrumb prefix", err.Error())
 	}
 }
 
 func TestParseRuleList_BadItem(t *testing.T) {
 	t.Parallel()
-	_, err := parseRuleList([]any{"not a map"})
+	_, err := parseRuleList([]any{"not a map"}, "all")
 	if err == nil {
 		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "all[0]:") {
+		t.Errorf("error %q missing index breadcrumb", err.Error())
 	}
 }
 
