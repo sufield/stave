@@ -20,12 +20,12 @@ import (
 	"github.com/sufield/stave/internal/core/report"
 )
 
-func runTrend(ctx context.Context, w io.Writer, opts *trendOptions) error {
+func runTrend(ctx context.Context, w, stderr io.Writer, opts *trendOptions) error {
 	if opts.HistoryDir == "" && opts.Files == "" {
 		return errors.New("either --history or --files is required")
 	}
 
-	assessments, err := loadAssessments(ctx, opts)
+	assessments, err := loadAssessments(ctx, stderr, opts)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,15 @@ func computePostureScore(a *report.Assessment, slaTrend []slaTrendMetric, chainD
 	})
 }
 
-func loadAssessments(ctx context.Context, opts *trendOptions) ([]*report.Assessment, error) {
+// loadAssessments loads every assessment named by opts (either an
+// explicit comma-separated list or every *.json in HistoryDir).
+// Per-file load failures inside the directory walk are non-fatal:
+// they emit a warning to `stderr` and the walk continues, so an
+// unrelated stale or corrupted artifact does not block trend
+// rendering. The stderr writer is supplied by the caller (typically
+// cmd.ErrOrStderr()) so test harnesses observe the warnings instead
+// of the global os.Stderr.
+func loadAssessments(ctx context.Context, stderr io.Writer, opts *trendOptions) ([]*report.Assessment, error) {
 	loader := artifact.NewLoader()
 
 	if opts.Files != "" {
@@ -212,7 +220,7 @@ func loadAssessments(ctx context.Context, opts *trendOptions) ([]*report.Assessm
 		path := filepath.Join(opts.HistoryDir, entry.Name())
 		a, loadErr := loader.Evaluation(ctx, path)
 		if loadErr != nil {
-			fmt.Fprintf(os.Stderr, "warning: skipping %s: %v\n", entry.Name(), loadErr)
+			fmt.Fprintf(stderr, "warning: skipping %s: %v\n", entry.Name(), loadErr)
 			continue
 		}
 		assessments = append(assessments, a)

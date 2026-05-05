@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	appmetrics "github.com/sufield/stave/internal/app/metrics"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -56,8 +57,8 @@ Exit Codes:
 
 	cmd.Flags().StringVar(&opts.HistoryDir, "history", "", "directory of assessment JSON files (required)")
 	cmd.Flags().StringVar(&opts.OutPath, "out", "", "output .prom file path (required)")
-	_ = cmd.MarkFlagRequired("history")
-	_ = cmd.MarkFlagRequired("out")
+	cliflags.MustMarkRequired(cmd, "history")
+	cliflags.MustMarkRequired(cmd, "out")
 
 	return cmd
 }

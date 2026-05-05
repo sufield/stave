@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
 
@@ -49,7 +50,7 @@ Examples:
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json")
 	cmd.Flags().StringVar(&opts.Threshold, "threshold", "elevated", "severity threshold: none|limited|standard|elevated|admin")
 
-	_ = cmd.MarkFlagRequired("snapshot")
+	cliflags.MustMarkRequired(cmd, "snapshot")
 
 	return cmd
 }

@@ -267,12 +267,12 @@ type AssessmentOptions struct {
 // atomic load/store per applyControl call, negligible against the
 // per-asset CEL evaluation that dominates the runtime.
 type assessmentSession struct {
-	assessor          *Assessor
-	snapshots         []asset.Snapshot
-	auditTime         time.Time
-	collector         *AssessmentCollector
-	idIndex IdentityIndex
-	opts    AssessmentOptions
+	assessor  *Assessor
+	snapshots []asset.Snapshot
+	auditTime time.Time
+	collector *AssessmentCollector
+	idIndex   IdentityIndex
+	opts      AssessmentOptions
 	// CONCURRENCY: activeSpan is the live control×asset span the
 	// strategy reads via sessionDeps. It is plain memory — no mutex,
 	// no atomic. Today the field is safe because applyControlInUse

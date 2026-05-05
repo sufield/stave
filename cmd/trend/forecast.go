@@ -53,7 +53,7 @@ Exit Codes:
 			}
 
 			tOpts := &trendOptions{HistoryDir: historyDir, Files: files, MinRuns: 7}
-			assessments, err := loadAssessments(cmd.Context(), tOpts)
+			assessments, err := loadAssessments(cmd.Context(), cmd.ErrOrStderr(), tOpts)
 			if err != nil {
 				return err
 			}

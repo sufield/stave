@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/adapters/observations"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appsc "github.com/sufield/stave/internal/app/scorecard"
@@ -51,7 +52,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.Snapshot, "snapshot", "", "path to snapshot JSON (required)")
 	cmd.Flags().StringSliceVar(&opts.Profiles, "profile", nil, "framework profiles (repeatable; default: all built-in)")
 	cmd.Flags().VarP(&opts.Format, "format", "f", "output format: table | json | markdown")
-	_ = cmd.MarkFlagRequired("snapshot")
+	cliflags.MustMarkRequired(cmd, "snapshot")
 
 	return cmd
 }

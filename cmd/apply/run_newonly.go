@@ -3,6 +3,7 @@ package apply
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -165,7 +166,7 @@ func loadHistoryAssessments(ctx context.Context, stderr io.Writer, dir string) (
 	// produced confusing "no new findings" output when the operator
 	// forgot --history-dir entirely.
 	if strings.TrimSpace(dir) == "" {
-		return nil, &ui.UserError{Err: fmt.Errorf("--new-only / --new-since requires --history-dir; no history directory configured")}
+		return nil, &ui.UserError{Err: errors.New("--new-only / --new-since requires --history-dir; no history directory configured")}
 	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {

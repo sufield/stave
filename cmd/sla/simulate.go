@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	infraSLA "github.com/sufield/stave/internal/adapters/sla"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -61,8 +62,8 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.SLAProfileFile, "sla-profile-file", "", "SLA policy file to simulate (required)")
 	cmd.Flags().StringVar(&opts.CompareFile, "compare", "", "second SLA policy for comparison")
 
-	_ = cmd.MarkFlagRequired("output")
-	_ = cmd.MarkFlagRequired("sla-profile-file")
+	cliflags.MustMarkRequired(cmd, "output")
+	cliflags.MustMarkRequired(cmd, "sla-profile-file")
 
 	return cmd
 }

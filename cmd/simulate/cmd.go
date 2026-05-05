@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	appsim "github.com/sufield/stave/internal/app/simulate"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -60,7 +61,7 @@ Exit Codes:
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json")
 	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write to file")
 
-	_ = cmd.MarkFlagRequired("assessment")
+	cliflags.MustMarkRequired(cmd, "assessment")
 	return cmd
 }
 

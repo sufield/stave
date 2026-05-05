@@ -45,7 +45,20 @@ func resolveOptions(opts []Option) options {
 	return o
 }
 
-// DiagnosticsResult converts engine-level diagnostics into a domain diag.Assessment.
+// DiagnosticsResult converts engine-level diagnostics into a domain
+// diag.Assessment.
+//
+// Contract: ALWAYS returns a non-nil *diag.Assessment, even when
+// diags is empty. Callers MUST consult Failed() / HasWarnings() /
+// len(Findings) to detect problems — a `result != nil` check is
+// always true and would conflate "nothing to report" with "signal
+// present".
+//
+// The factory-style guarantee is intentional: every call site
+// downstream renders the assessment regardless of whether it
+// carries findings, and a nil return would force every caller to
+// add a redundant nil-guard. Treat this function as a constructor
+// for an always-valid container.
 func DiagnosticsResult(diags []Diagnostic, action string, strict bool, opts ...Option) *diag.Assessment {
 	o := resolveOptions(opts)
 

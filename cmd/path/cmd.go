@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/app/attackpath"
 	"github.com/sufield/stave/internal/core/capabilities"
@@ -78,7 +79,7 @@ Exit Codes:
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "json", "output format: json | dot | csv-edges")
 	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write to file instead of stdout")
 
-	_ = cmd.MarkFlagRequired("output")
+	cliflags.MustMarkRequired(cmd, "output")
 
 	return cmd
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/adapters/observations"
 	appinv "github.com/sufield/stave/internal/app/inventory"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -52,7 +53,7 @@ Exit Codes:
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "json", "output format: json | csv")
 	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write to file")
 
-	_ = cmd.MarkFlagRequired("snapshot")
+	cliflags.MustMarkRequired(cmd, "snapshot")
 	return cmd
 }
 

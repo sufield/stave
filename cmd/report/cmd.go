@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/app/contracts"
 	er "github.com/sufield/stave/internal/app/execreport"
@@ -111,8 +112,8 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.Period, "period", "", "reporting period label")
 	cmd.Flags().BoolVar(&opts.TeamBreakdown, "team-breakdown", false, "Include per-team findings breakdown in report")
 
-	_ = cmd.MarkFlagRequired("history")
-	_ = cmd.MarkFlagRequired("snapshot")
+	cliflags.MustMarkRequired(cmd, "history")
+	cliflags.MustMarkRequired(cmd, "snapshot")
 
 	return cmd
 }

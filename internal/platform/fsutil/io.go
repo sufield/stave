@@ -509,16 +509,30 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 
 	// Attempt atomic rename — works when src and dst are on the same fs.
 	if renameErr := os.Rename(tmpPath, path); renameErr == nil {
+		// Mark committed BEFORE the post-rename safety check. The
+		// rename has already moved our content into place; if the
+		// defense-in-depth check below fails we want to surface the
+		// failure to the caller WITHOUT having the deferred cleanup
+		// path unlink the just-renamed destination. The earlier
+		// order (check first, then committed = true) silently
+		// deleted the operator's freshly-written file on a check
+		// failure.
+		const persistenceGuaranteed = true
+		committed = persistenceGuaranteed
+
 		// Post-rename TOCTOU verification: an attacker who swapped
 		// the destination (or one of its parents) to a symlink
-		// between the initial CheckSymlinkSafety and now would
-		// otherwise have our temp file end up at the symlink
-		// target. Re-check after the rename so the function fails
-		// loud rather than silently writing through the swap.
-		if symErr := CheckSymlinkSafety(path); symErr != nil {
-			return fmt.Errorf("post-rename symlink check: %w", symErr)
+		// between the initial CheckSymlinkSafety and the rename
+		// above would have had our temp file end up at the symlink
+		// target. This is defense-in-depth, not a primitive — Go
+		// does not expose openat-style atomic operations that would
+		// close the race entirely; the post-check catches the swap
+		// after the fact so the caller sees the breach instead of
+		// trusting a corrupted destination.
+		isDestinationHijacked := CheckSymlinkSafety(path) != nil
+		if isDestinationHijacked {
+			return errors.New("post-rename symlink check (defense-in-depth): destination swapped during write")
 		}
-		committed = true
 		return nil
 	}
 

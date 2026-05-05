@@ -140,11 +140,16 @@ func (a *App) installInterruptHandler() func() {
 			fmt.Fprintln(os.Stderr, "Interrupted")
 			if cancel := a.cancel.Load(); cancel != nil {
 				(*cancel)()
-				// Returning here is safe: cleanup() is invoked by
-				// the main goroutine's defer + the panic recovery
-				// path. The shared sync.Once guarantees signal.Stop
-				// and close(done) fire exactly once across all
-				// invocation paths.
+				// Run cleanup explicitly before returning so
+				// signal.Stop unregisters the channel
+				// immediately. Without this, a second SIGINT
+				// arriving before the main goroutine's defer
+				// fires would be delivered to Go's default
+				// handler (process termination without our
+				// log-flush / profile-stop path). The shared
+				// sync.Once makes this idempotent with the main
+				// goroutine's eventual cleanup() call.
+				cleanup()
 				return
 			}
 			// Pre-bootstrap signal: cancel function not yet stored.

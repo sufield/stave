@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
@@ -70,8 +71,8 @@ Examples:
 	cmd.Flags().BoolVar(&opts.ShowDesignated, "all", false, "show all principals including designated")
 	cmd.Flags().BoolVar(&opts.ShowDesignated, "show-designated", false, "show designated principals (alias for --all)")
 
-	_ = cmd.MarkFlagRequired("snapshot")
-	_ = cmd.MarkFlagRequired("resource")
+	cliflags.MustMarkRequired(cmd, "snapshot")
+	cliflags.MustMarkRequired(cmd, "resource")
 
 	return cmd
 }

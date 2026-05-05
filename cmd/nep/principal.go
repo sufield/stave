@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
@@ -61,8 +62,8 @@ Examples:
 	cmd.Flags().BoolVar(&opts.ShowChains, "show-chains", false, "include role chain detail")
 	cmd.Flags().StringVar(&opts.FilterService, "filter-service", "", "filter to a specific service prefix")
 
-	_ = cmd.MarkFlagRequired("snapshot")
-	_ = cmd.MarkFlagRequired("principal")
+	cliflags.MustMarkRequired(cmd, "snapshot")
+	cliflags.MustMarkRequired(cmd, "principal")
 
 	return cmd
 }

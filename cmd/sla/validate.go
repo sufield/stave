@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	infraSLA "github.com/sufield/stave/internal/adapters/sla"
 	"github.com/sufield/stave/internal/cli/ui"
 )
@@ -40,7 +41,7 @@ Exit Codes:
 	}
 
 	cmd.Flags().StringVar(&opts.File, "file", "", "path to SLA policy YAML (required)")
-	_ = cmd.MarkFlagRequired("file")
+	cliflags.MustMarkRequired(cmd, "file")
 
 	return cmd
 }

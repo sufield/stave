@@ -169,38 +169,45 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 			return groups[1] // URL — preserve verbatim
 		}
 		if len(groups) > 2 && groups[2] != "" {
-			// Credential-style path — keep basename only. Preserve
-			// the leading slash so the surrounding error message
-			// reads grammatically: "open /[BASENAME]: permission
-			// denied" rather than "open [BASENAME]: permission
-			// denied" which loses the "this is an absolute path"
-			// signal. Relative-path matches don't reach this
-			// branch — the regex requires the leading "/".
-			trailingSlash := strings.HasSuffix(match, "/")
-			// Single-component paths (e.g. `/secret`) need explicit
-			// redaction: the basename rule would substitute them
-			// with themselves, leaving the leaked filename
-			// untouched. The package doc comment cites this as
-			// the exact form a CI-runner mounted secret takes,
-			// so round-tripping it verbatim defeats the
-			// scrubber's contract. Replace with a generic
-			// placeholder instead.
+			// Credential-style path — preserve the leading slash so
+			// the surrounding error message reads grammatically:
+			// "open /[BASENAME]: permission denied" rather than
+			// "open [BASENAME]: permission denied" which loses the
+			// "this is an absolute path" signal. Relative-path
+			// matches don't reach this branch (the regex requires
+			// the leading "/").
 			//
-			// Trailing-slash directory paths (e.g. `/run/secrets/`)
-			// also need explicit redaction: the directory name IS
-			// the secret-revealing component (mount-point names
-			// like `secrets`, `keys`, `creds` betray secret-mgmt
-			// conventions). The earlier shape kept the basename
-			// (`/secrets/`), preserving the leak; emit the
-			// redacted-with-trailing-slash form so the directory
-			// signal is preserved without leaking the name.
-			if trailingSlash {
+			// Three named leak categories, ordered by specificity.
+			// Order is load-bearing: a single-component
+			// trailing-slash path like "/secret/" matches Case 1
+			// but would also satisfy isRootLevelFile after stripping
+			// the slash — putting Case 1 first ensures the
+			// directory-leak treatment wins.
+			basename := groups[2]
+			trailingSlash := strings.HasSuffix(match, "/")
+			isRootLevelFile := match == "/"+basename
+			switch {
+			case trailingSlash:
+				// Case 1: Directory leak (e.g. /run/secrets/).
+				// The directory NAME (`secrets`, `keys`, `creds`)
+				// is the secret-revealing component, betraying
+				// the secret-management convention.
 				return "/<redacted>/"
-			}
-			if match == "/"+groups[2] {
+			case isRootLevelFile:
+				// Case 2: Direct file leak (e.g. /token).
+				// basename equals the entire path, so the
+				// basename-retention rule below would round-trip
+				// the leaked filename. The package doc cites
+				// CI-runner mounted secrets as the canonical
+				// shape this case prevents.
 				return "/<redacted>"
+			default:
+				// Case 3: Multi-component path (e.g. /home/user/.ssh/id_rsa).
+				// The basename is informational; the intermediate
+				// directories are the leak. Keep the basename,
+				// strip the directory traversal.
+				return "/" + basename
 			}
-			return "/" + groups[2]
 		}
 		// The two-branch regex is exhaustive over its alternation,
 		// so reaching here would mean the regex matched but no

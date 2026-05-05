@@ -125,20 +125,28 @@ func hasNoUnsafeSegments(path string) bool {
 	// preserves; rejecting non-canonical inputs was a separate
 	// concern that bled into this guard.
 	cleaned := filepath.Clean(path)
-	// Substring fast-path: when ".." appears nowhere in the cleaned
-	// path, no segment can possibly be `..`, so we skip the
-	// allocation-heavy split + scan. The check is intentionally
-	// conservative — a benign value like `v1..2` (a version string)
-	// contains the substring but is not a traversal, so it falls
-	// through to the segment walk below where it correctly passes
-	// the `slices.Contains(..., "..")` rejection. Future maintainers
-	// who want to "tighten" this path by short-circuiting on the
-	// substring alone would reject legitimate inputs.
-	if !strings.Contains(cleaned, "..") {
+	// Normalize Windows separators FIRST so the substring fast-path
+	// and the segment walk operate on the same canonical form.
+	// `..\foo` and `../foo` must produce identical results.
+	normalized := strings.ReplaceAll(cleaned, "\\", "/")
+
+	// Phase 1: Fast-path. If `..` appears nowhere in the normalized
+	// path, no segment can possibly be `..` so traversal is
+	// impossible. Benign values like `v1..2` (a version string) or
+	// `...` (some package-manager filename conventions) contain the
+	// substring but are not traversals; they fall through to Phase 2
+	// where slices.Contains matches `..` exactly, not as a substring.
+	hasNoTraversalMarkers := !strings.Contains(normalized, "..")
+	if hasNoTraversalMarkers {
 		return true
 	}
-	normalized := strings.ReplaceAll(cleaned, "\\", "/")
-	return !slices.Contains(strings.Split(normalized, "/"), "..")
+
+	// Phase 2: Accurate check. Split into segments and verify no
+	// segment is exactly `..`. The exact-match rule is what allows
+	// `v1..2` and `...` to pass as benign filenames.
+	segments := strings.Split(normalized, "/")
+	isPathEscapingBoundaries := slices.Contains(segments, "..")
+	return !isPathEscapingBoundaries
 }
 
 // IsProduction reports whether the context is marked as a production

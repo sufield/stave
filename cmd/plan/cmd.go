@@ -14,6 +14,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/app/compliancepath"
 	"github.com/sufield/stave/internal/app/plan"
 	"github.com/sufield/stave/internal/app/teams"
@@ -94,8 +95,8 @@ Exit Codes:
 	cmd.Flags().Float64Var(&opts.Threshold, "threshold", 0, "Target readiness percentage for compliance path calculation")
 	cmd.Flags().StringVar(&opts.ComplianceProfile, "compliance-profile", "", "Compliance profile for path calculation")
 
-	_ = cmd.MarkFlagRequired("assessment")
-	_ = cmd.MarkFlagRequired("team-manifest")
+	cliflags.MustMarkRequired(cmd, "assessment")
+	cliflags.MustMarkRequired(cmd, "team-manifest")
 
 	return cmd
 }

@@ -253,8 +253,8 @@ func NewApp(opts ...AppOption) (*App, error) {
 		// hook (audited via `grep PersistentPostRun cmd/`); future
 		// additions must wrap, not override, this hook.
 		PersistentPostRun: app.postRun,
-		Long:               rootLongHelp,
-		CompletionOptions:  cobra.CompletionOptions{DisableDefaultCmd: true},
+		Long:              rootLongHelp,
+		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	}
 	AddGlobalFlags(app.Root, &app.Flags)
 	if err := WireCommands(app); err != nil {
@@ -266,9 +266,7 @@ func NewApp(opts ...AppOption) (*App, error) {
 	}
 
 	app.Root.Version = fmt.Sprintf("%s (%s)", Version(), string(app.Edition))
-	if err := wireHelpGroups(app.Root); err != nil {
-		return nil, err
-	}
+	wireHelpGroups(app.Root)
 	return app, nil
 }
 

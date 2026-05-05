@@ -223,7 +223,15 @@ func buildBundles(findings []remediation.Finding, exposureByKey map[string]risk.
 		if er, ok := exposureByKey[key]; ok {
 			score = er.ExposureScore.Value()
 		} else {
-			score, _ = f.ComputeBaseScore()
+			// Named discard: ComputeBaseScore returns
+			// (score, breakdown). Bundle accumulation needs only
+			// the scalar; the breakdown is per-finding rendering
+			// decoration. Naming the second value documents the
+			// intentional drop so a future reader does not
+			// mistake `_` for a forgotten error.
+			var ignoredBreakdown risk.ScoreBreakdown
+			score, ignoredBreakdown = f.ComputeBaseScore()
+			_ = ignoredBreakdown
 		}
 
 		ba, ok := accum[action]

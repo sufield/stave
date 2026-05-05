@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -113,7 +114,13 @@ Exit Codes:
 	cmd.Flags().StringVarP(&opts.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
 	cmd.Flags().DurationVar(&opts.Interval, "interval", opts.Interval, "Polling interval (default: 1h)")
 	cmd.Flags().StringVar(&opts.MaxUnsafe, "max-unsafe", "168h", "Maximum allowed unsafe duration")
-	cmd.Flags().StringSliceVar(&opts.Sinks, "sink", opts.Sinks, "Alert sinks: stdout, file:<path>")
+	// StringArrayVar (not StringSliceVar) — sink values like
+	// `file:/var/log/host,name.log` contain literal commas that
+	// StringSliceVar would split into bogus extra sinks. The
+	// repeatable shape `--sink stdout --sink file:<path>` is the
+	// only multi-value form that survives commas in operator paths.
+	cmd.Flags().StringArrayVar(&opts.Sinks, "sink", opts.Sinks,
+		"Alert sink (repeatable). Examples: --sink stdout --sink file:/var/log/stave.log")
 	cmd.Flags().BoolVar(&opts.AllowUnknown, "allow-unknown-input", false, "Allow unknown observation source types")
 	cmd.Flags().StringVar(&opts.TeamManifest, "team-manifest", "", "Path to stave-teams.yaml for owner routing on alerts")
 
@@ -194,11 +201,41 @@ func buildAssessFunc(binary string, opts *options) watch.AssessFunc {
 
 		runErr := cmd.Run()
 
-		// Parse JSON output even on exit code 3 (violations found).
-		if stdout.Len() == 0 {
-			if runErr != nil {
-				return "", 0, 0, 0, nil, fmt.Errorf("assessment failed: %s", stderr.String())
+		// Stave's CLI exit-code contract (CLAUDE.md):
+		//   0   = success, JSON on stdout
+		//   3   = violations found, JSON on stdout
+		//   2   = input error
+		//   4   = internal error
+		//   130 = SIGINT / interrupted
+		//
+		// Only exits 0 and 3 produce authoritative JSON. The other
+		// exits may emit partial or no output, so the subprocess
+		// error is the load-bearing signal — surface it to the
+		// watch loop instead of trusting whatever stdout happens to
+		// contain.
+		exitCode := 0
+		if runErr != nil {
+			var exitErr *exec.ExitError
+			if errors.As(runErr, &exitErr) {
+				exitCode = exitErr.ExitCode()
 			}
+		}
+		isBinaryExecutionFailure := exitCode == 0 && runErr != nil
+		if isBinaryExecutionFailure {
+			// Spawn-time failure (binary not found, permission denied,
+			// fork failure). No exit code, just a Go-level error from
+			// cmd.Run().
+			return "", 0, 0, 0, nil, fmt.Errorf("failed to launch assessment: %w", runErr)
+		}
+		isSuccessfulEvaluation := exitCode == 0 || exitCode == 3
+		if !isSuccessfulEvaluation {
+			return "", 0, 0, 0, nil, fmt.Errorf(
+				"assessment terminated by system (exit %d): %s",
+				exitCode, strings.TrimSpace(stderr.String()))
+		}
+
+		// Authoritative JSON path: exit 0 (clean) or 3 (violations).
+		if stdout.Len() == 0 {
 			return "COMPLIANT", 0, 0, 0, nil, nil
 		}
 

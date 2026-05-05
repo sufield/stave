@@ -270,7 +270,13 @@ func computeFindingScores(findings []remediation.Finding, topExposures []risk.Ex
 		if er, ok := exposureByKey[key]; ok {
 			score = er.ExposureScore.Value()
 		} else {
-			score, _ = f.ComputeBaseScore()
+			// Named discard: same pattern as BuildRoadmap. Identity
+			// ranking only consumes the scalar score; the
+			// ScoreBreakdown decoration is for per-finding render
+			// paths. Naming the second value documents the drop.
+			var ignoredBreakdown risk.ScoreBreakdown
+			score, ignoredBreakdown = f.ComputeBaseScore()
+			_ = ignoredBreakdown
 		}
 
 		// Delegate the SLA-urgency calculation through Finding's

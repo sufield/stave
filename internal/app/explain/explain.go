@@ -111,9 +111,23 @@ func walkRules(from string, prs []policy.PredicateRule, params policy.ControlPar
 }
 
 func resolveRuleValue(r policy.PredicateRule, params policy.ControlParams) (value any, comment string) {
-	value = r.Value.Raw()
+	// Hierarchy: parameter resolution OVERRIDES the literal value.
+	// Start from the literal as a recoverable fallback so a
+	// parameter-lookup failure (config drift, typo in a control
+	// YAML) still produces explainable output. The earlier shape
+	// silently swallowed the error, masking the drift.
+	literalValue := r.Value.Raw()
+	value = literalValue
+
 	if !r.ValueFromParam.IsZero() && !params.IsZero() {
-		value, _ = params.Get(r.ValueFromParam.String())
+		paramName := r.ValueFromParam.String()
+		resolved, paramFound := params.Get(paramName)
+		if !paramFound {
+			slog.Warn("explain: fallback to literal; param not present in control",
+				"param", paramName)
+		} else {
+			value = resolved
+		}
 	}
 	if !r.ValueFromParam.IsZero() {
 		comment = "value resolved from params." + r.ValueFromParam.String()

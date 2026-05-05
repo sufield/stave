@@ -114,11 +114,29 @@ type SchemaValidator interface {
 }
 
 // Validator manages the compilation and caching of JSON schemas.
-// It is safe for concurrent use by multiple goroutines.
+//
+// Concurrency: safe for use by multiple goroutines via the lock
+// contract below. The internal jsonschema.Compiler is NOT
+// goroutine-safe — its resolver mutates internal state during
+// schema compilation — so every read or write of `compiler` and
+// `compiled` must happen under `mu`. Cache hits use mu.RLock();
+// compilation (which mutates the compiler AND inserts into the
+// compiled map) uses mu.Lock(). Adding a field that the schema
+// engine touches outside this contract requires extending the lock
+// scope in lockstep.
 type Validator struct {
+	// compiler MUST be accessed only while holding mu.Lock(). The
+	// jsonschema package's compile path mutates the compiler's
+	// internal resolver state, so even read-style accesses need
+	// the exclusive lock — RLock is insufficient. mu.RLock() is
+	// reserved for `compiled` cache lookups that don't reach into
+	// the compiler.
 	compiler *jsonschema.Compiler
 
-	mu       sync.RWMutex
+	mu sync.RWMutex
+	// compiled maps "<kind>:<version>" → cached *jsonschema.Schema.
+	// Reads under mu.RLock(); writes (only on first compilation
+	// for a given key) under mu.Lock() alongside compiler use.
 	compiled map[string]*jsonschema.Schema
 }
 

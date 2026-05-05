@@ -277,7 +277,7 @@ func parseFindings(raw []byte, depth int) ([]remediation.Finding, error) {
 	if _, hasOK := probe["ok"]; hasOK {
 		data, hasData := probe["data"]
 		if !hasData {
-			return nil, fmt.Errorf("malformed API envelope: 'ok' present but 'data' missing")
+			return nil, errors.New("malformed API envelope: 'ok' present but 'data' missing")
 		}
 		return parseFindings(data, depth+1)
 	}

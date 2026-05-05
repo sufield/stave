@@ -1,18 +1,13 @@
 package cmd
 
-import (
-	"errors"
-	"fmt"
-
-	"github.com/spf13/cobra"
-)
+import "github.com/spf13/cobra"
 
 // wireHelpGroups assigns each registered subcommand to the help group
-// it belongs to. Returns an error when the wiring is inconsistent
-// (a named subcommand isn't registered, the command tree was
-// corrupted) so startup fails fast instead of producing a help page
-// with silently-misgrouped commands.
-func wireHelpGroups(root *cobra.Command) error {
+// it belongs to. assignCommandGroup itself soft-skips subcommands not
+// present in this build (edition-stripped case) and surfaces wiring
+// regressions via slog.Warn, so this wrapper has nothing to bubble
+// up — every outcome is recoverable at startup.
+func wireHelpGroups(root *cobra.Command) {
 	root.AddGroup(
 		&cobra.Group{ID: groupGettingStarted, Title: "Getting Started"},
 		&cobra.Group{ID: groupCore, Title: "Control Engine"},
@@ -30,24 +25,11 @@ func wireHelpGroups(root *cobra.Command) error {
 		groupIntrospection:  {"inspect"},
 		groupSettings:       {"config"},
 	}
-	// Collect every assignment failure rather than bailing on the
-	// first — operators should see the full picture when help wiring
-	// regresses, not a single error followed by hidden ones the next
-	// startup uncovers.
-	var errs []error
 	for groupID, names := range groupMap {
 		for _, name := range names {
-			if err := assignCommandGroup(root, name, groupID); err != nil {
-				errs = append(errs, err)
-			}
+			assignCommandGroup(root, name, groupID)
 		}
 	}
-	if err := assignCommandGroup(root, "completion", groupSettings); err != nil {
-		errs = append(errs, err)
-	}
-	if len(errs) > 0 {
-		return fmt.Errorf("wireHelpGroups: %w", errors.Join(errs...))
-	}
+	assignCommandGroup(root, "completion", groupSettings)
 	root.SetHelpCommandGroupID(groupSettings)
-	return nil
 }

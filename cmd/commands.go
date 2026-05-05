@@ -373,31 +373,28 @@ func wireCISubtree(
 	return nil
 }
 
-func assignCommandGroup(root *cobra.Command, use, groupID string) error {
+// assignCommandGroup stamps the named subcommand with the given help
+// group ID. A subcommand that is not registered in this build (the
+// edition-stripped case) is treated as a soft skip: the help groupMap
+// names every command that could exist, and a stripped edition
+// simply has fewer of them. Genuine wiring bugs surface as the
+// slog.Warn calls below; there is no error return because every
+// outcome here is recoverable.
+func assignCommandGroup(root *cobra.Command, use, groupID string) {
 	cmd, _, err := root.Find([]string{use})
 	if err != nil {
-		// "Command not found" is a normal condition for builds that
-		// strip a subcommand — the help groupMap names every command
-		// that COULD exist; a stripped edition simply has fewer of
-		// them. Log + skip so startup keeps going. The earlier
-		// behaviour collapsed this with corruption-style failures;
-		// distinguishing them here keeps "soft missing" benign and
-		// reserves the error return for genuine wiring bugs.
 		slog.Warn("assignCommandGroup: subcommand not present in this build; skipping",
 			"use", use, "group_id", groupID, "error", err)
-		return nil
+		return
 	}
+	// Cobra's Find returns the root command (no error) when no
+	// matching subcommand exists. Stamping GroupID onto the root
+	// would corrupt the help layout, so the same soft-skip rule
+	// applies.
 	if cmd == nil || cmd == root {
-		// Same "not present in this build" case: Cobra's Find returns
-		// the root command (no error) when no matching subcommand
-		// exists. Stamping GroupID onto the root would corrupt the
-		// help layout, so log + skip. Reserved as a soft skip rather
-		// than a hard error because edition-stripped builds depend
-		// on it.
 		slog.Warn("assignCommandGroup: subcommand not present in this build; skipping",
 			"use", use, "group_id", groupID)
-		return nil
+		return
 	}
 	cmd.GroupID = groupID
-	return nil
 }
