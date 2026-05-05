@@ -165,8 +165,21 @@ type App struct {
 	memProfileWritten atomic.Bool
 	// cancel is published by bootstrap (phaseContext) and read by the
 	// signal-handler goroutine. atomic.Pointer makes the publish/load
-	// race-free without locking the read path.
+	// race-free without locking the read path. cleanupBeforeExit uses
+	// Swap(nil) (not Load) so a peer cleanup goroutine that races us
+	// gets nil and skips the cancel — context.CancelFunc is itself
+	// idempotent, but Swap also publishes the "already cancelled"
+	// state so subsequent goroutines do not need to take the call.
 	cancel atomic.Pointer[context.CancelFunc]
+
+	// cleanupOnce gates cleanupBeforeExit. The function is invoked
+	// from four call sites that may race (handleExecutionError,
+	// recoverExecutePanic, signal handler, ctx-deadline finalizer);
+	// each underlying step is individually idempotent, but folding
+	// the whole path through sync.Once makes the contract explicit
+	// and avoids re-running the bootstrap-mutex dance + log-close
+	// retry on every concurrent cleanup attempt.
+	cleanupOnce sync.Once
 
 	// cleanupInterrupt is the closure returned by installInterruptHandler
 	// that stops signal delivery and unblocks the handler goroutine.
@@ -220,7 +233,14 @@ func NewApp(opts ...AppOption) (*App, error) {
 		SilenceUsage:       true,
 		DisableSuggestions: true,
 		PersistentPreRunE:  app.bootstrap,
-		PersistentPostRun:  app.postRun,
+		// Cobra invokes the deepest matching PersistentPostRun in the
+		// command tree — a subcommand that defines its own
+		// PersistentPostRun would silently REPLACE this hook, skipping
+		// app.postRun's CPU-profile stop, mem-profile write, and log
+		// flush. Today no subcommand under cmd/ defines a Persistent
+		// hook (audited via `grep PersistentPostRun cmd/`); future
+		// additions must wrap, not override, this hook.
+		PersistentPostRun: app.postRun,
 		Long:               rootLongHelp,
 		CompletionOptions:  cobra.CompletionOptions{DisableDefaultCmd: true},
 	}

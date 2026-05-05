@@ -257,9 +257,10 @@ func (a *App) handleExecutionError(err error, args []string) {
 }
 
 // cleanupBeforeExit releases process-level resources that postRun
-// would normally close (CPU profile, log file). Idempotent: each
-// underlying close is itself idempotent (LogCloser uses sync.Once,
-// stopCPUProfile no-ops if no profile is active).
+// would normally close (CPU profile, cancel func, mem profile, log
+// file). Wrapped in cleanupOnce so concurrent invocations from the
+// four call sites (handleExecutionError, recoverExecutePanic, signal
+// handler, ctx-deadline finalizer) collapse to a single execution.
 //
 // bootstrapMu protects the LogCloser read against a race with
 // phaseLogging's bootstrap-time assignment: a pre-bootstrap signal
@@ -267,30 +268,32 @@ func (a *App) handleExecutionError(err error, args []string) {
 // half-assigned pointer field is a Go data race even if the
 // underlying close is idempotent.
 func (a *App) cleanupBeforeExit() {
-	a.stopCPUProfile()
-	// Mirror finalizeExecute: invoke the bootstrap-allocated cancel
-	// so the cancelCtx goroutine + any associated timer are reclaimed
-	// even on the error path. The earlier shape released cancel only
-	// in finalizeExecute (the success path), leaving long-lived
-	// in-process callers (test harnesses re-executing the binary)
-	// with a leaked cancelCtx per failed run.
-	if cancel := a.cancel.Load(); cancel != nil {
-		(*cancel)()
-	}
-	// Write the memory profile on error too. The success path runs
-	// it via postRun -> writeMemProfile; without this hook a command
-	// that crashed before postRun never produced the requested
-	// --mem-profile artifact, hiding the very allocation pattern an
-	// operator was trying to capture.
-	a.writeMemProfileTo(os.Stderr)
-	a.bootstrapMu.Lock()
-	closer := a.LogCloser
-	a.bootstrapMu.Unlock()
-	if closer != nil {
-		if err := closer.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: close log file: %v\n", err)
+	a.cleanupOnce.Do(func() {
+		a.stopCPUProfile()
+		// Swap(nil) atomically takes ownership of the cancel func: a
+		// concurrent peer racing cleanupBeforeExit gets nil here even
+		// though the outer cleanupOnce normally serialises us.
+		// context.CancelFunc is itself idempotent, but Swap publishes
+		// the "already-cancelled" state so finalizeExecute (which also
+		// calls Swap(nil)) does not double-invoke.
+		if cancel := a.cancel.Swap(nil); cancel != nil {
+			(*cancel)()
 		}
-	}
+		// Write the memory profile on error too. The success path
+		// runs it via postRun -> writeMemProfile; without this hook a
+		// command that crashed before postRun never produced the
+		// requested --mem-profile artifact, hiding the very
+		// allocation pattern an operator was trying to capture.
+		a.writeMemProfileTo(os.Stderr)
+		a.bootstrapMu.Lock()
+		closer := a.LogCloser
+		a.bootstrapMu.Unlock()
+		if closer != nil {
+			if err := closer.Close(); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: close log file: %v\n", err)
+			}
+		}
+	})
 }
 
 func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMarkerPath string) {
@@ -299,8 +302,9 @@ func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMark
 	// normal (non-signal) command exit leaves the cancelCtx pinned for
 	// the lifetime of the process — fine for one-shot CLI runs but
 	// observable in long-lived test harnesses that re-execute the
-	// binary in-process.
-	if cancel := a.cancel.Load(); cancel != nil {
+	// binary in-process. Swap(nil) hands off ownership atomically so a
+	// peer cleanupBeforeExit racing us cannot also call cancel.
+	if cancel := a.cancel.Swap(nil); cancel != nil {
 		(*cancel)()
 	}
 	markFirstRunHintSeenIfNeeded(showFirstRunHint, firstRunMarkerPath)

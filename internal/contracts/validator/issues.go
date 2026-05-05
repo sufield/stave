@@ -157,6 +157,18 @@ func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) 
 		Data:          raw,
 		IsYAML:        cfg.IsYAML,
 	})
+	// Validate can return (diags, err) BOTH non-nil — the parse-error
+	// branch surfaces the failure as a diagnostic AND a Go error so
+	// callers using either pattern catch it. Returning (nil, err)
+	// here used to drop the diagnostic, leaving the *diag.Assessment
+	// path with no rendered cause for the failure (operator saw an
+	// error string but no parse-position context). Project the diags
+	// into the assessment regardless of err so both contracts carry
+	// the same payload, then propagate err to the error-channel
+	// callers.
+	if len(diags) > 0 {
+		return DiagnosticsResult(diags, cfg.DefaultAction, true, WithPrefix(o.pathPrefix)), err
+	}
 	if err != nil {
 		return nil, err
 	}

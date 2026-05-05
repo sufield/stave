@@ -240,6 +240,14 @@ func (r *Report) FilterUnacknowledgedCompound(validAcks map[string]struct{}) {
 // single contributing control's severity, which is the entire point
 // of "compound risk"); they fold into FailCounts and force Pass=false.
 func (r *Report) Recount() {
+	// Defensive nil-receiver guard: callers should never invoke
+	// Recount on a nil report, but every other public method on
+	// *Report has the same guard and the cost is one branch.
+	// Keeps Recount safe to chain after a fallible factory that
+	// returns (*Report, error).
+	if r == nil {
+		return
+	}
 	// Rebuild Counts in lockstep with FailCounts. The previous shape
 	// only refreshed FailCounts, leaving Counts pinned to whatever
 	// snapshot the original Evaluate produced — exception applies and

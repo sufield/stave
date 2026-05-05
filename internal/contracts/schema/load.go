@@ -85,7 +85,14 @@ func ResolveVersion(kind Kind, version string) (string, error) {
 func LoadSchema(kind Kind, version string) ([]byte, error) {
 	k := Kind(strings.TrimSpace(string(kind)))
 
-	v, err := ResolveVersion(kind, version)
+	// Pass the trimmed kind to ResolveVersion so version-resolution
+	// uses the same canonical key as the registry lookup below. The
+	// previous shape passed the un-trimmed `kind`, which meant a
+	// caller supplying " ctrl.v1" with stray whitespace would
+	// resolve under one key and lookup under another — masking the
+	// mismatch as a confusing "no such schema" instead of the
+	// trimming gap the user actually hit.
+	v, err := ResolveVersion(k, version)
 	if err != nil {
 		return nil, err
 	}

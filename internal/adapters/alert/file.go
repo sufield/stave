@@ -35,27 +35,24 @@ func (s *FileSink) Emit(_ context.Context, a ports.WatchAlert) error {
 		return errSinkClosed
 	}
 
-	openedNow := false
 	if s.f == nil {
 		f, err := os.OpenFile(s.Path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600) //nolint:gosec // user-specified path
 		if err != nil {
 			return fmt.Errorf("open alert file %s: %w", s.Path, err)
 		}
 		s.f = f
-		openedNow = true
 	}
 
 	data, err := json.Marshal(a)
 	if err != nil {
-		// Close the file regardless of openedNow. A persistent
-		// marshal failure (programming bug in WatchAlert
-		// serialization, upstream type that doesn't round-trip)
-		// would otherwise hold the FD open forever — never written
-		// to, but never released. Close + clear s.f means the next
-		// Emit lazily reopens cleanly. We do NOT set s.closed —
-		// marshal failures are typically per-message rather than
-		// terminal, so the sink stays usable for the next alert.
-		_ = openedNow
+		// Close the file unconditionally. A persistent marshal
+		// failure (programming bug in WatchAlert serialization,
+		// upstream type that doesn't round-trip) would otherwise
+		// hold the FD open forever — never written to, but never
+		// released. Close + clear s.f means the next Emit lazily
+		// reopens cleanly. We do NOT set s.closed — marshal
+		// failures are typically per-message rather than terminal,
+		// so the sink stays usable for the next alert.
 		if s.f != nil {
 			closeErr := s.f.Close()
 			s.f = nil

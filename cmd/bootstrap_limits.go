@@ -44,12 +44,16 @@ const (
 	// int conversions in fsutil. Operators staging genuinely large
 	// inputs should split them rather than raise this limit.
 	//
-	// 32-BIT NOTE: this constant is `int` and on 32-bit platforms
-	// `int` is 32 bits, so 4 GiB literally cannot be expressed —
-	// the package-level cap is clamped at runtime by
-	// effectiveMaxConfigurableInputFileBytes() to math.MaxInt32-1.
-	// All readers should call that helper rather than referencing
-	// the constant directly when sizing platform-bounded buffers.
+	// 32-BIT NOTE: this is an UNTYPED integer constant — Go gives
+	// it arbitrary compile-time precision so 4 GiB is representable
+	// at the package level on any platform. The overflow risk is
+	// downstream: when the value is forced into an `int` (the
+	// width of which is 32 bits on 32-bit hosts), the conversion
+	// truncates. effectiveMaxConfigurableInputFileBytes() performs
+	// the platform-aware clamp (to math.MaxInt32 - 1 on 32-bit
+	// hosts, otherwise unchanged). All readers should call that
+	// helper rather than referencing the constant directly when
+	// sizing platform-bounded buffers.
 	MaxConfigurableInputFileBytes = 4 * 1024 * 1024 * 1024
 )
 
