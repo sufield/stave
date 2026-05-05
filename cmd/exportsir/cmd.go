@@ -135,7 +135,7 @@ func run(ctx context.Context, w io.Writer, opts *options, newCtlRepo compose.Ctl
 	builder := sir.NewBuilder(
 		sir.WithRoleChainSource(sirbridge.NewAWSRoleChainSource()),
 		sir.WithLifecycleSource(sirbridge.NewEngineLifecycleSource(celEval)),
-		sir.WithPermissionAggregator(sirbridge.NewAWSS3PermissionAggregator()),
+		sir.WithResourceFactGrouper(sirbridge.NewAWSS3FactGrouper()),
 	)
 
 	doc, err := builder.Build(controls, snapshots, now)

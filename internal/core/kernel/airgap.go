@@ -115,6 +115,15 @@ func DefaultPolicy() AirgapPolicy {
 			"internal/cli/ui/template.go": {
 				`"text/template"`: {},
 			},
+			// Iter 3.1.4: PythonSolverSource invokes the
+			// configured external solver (typically the Python
+			// Z3 binary under python/solver/) as a subprocess.
+			// Subprocess invocation is the entire point of this
+			// adapter — gating it via the airgap allow-list keeps
+			// the rest of the runtime exec-free.
+			"internal/adapters/evaluation/external/python_source.go": {
+				`"os/exec"`: {},
+			},
 		},
 		bannedCredentialKeys: snapshotBannedCredentialKeys(),
 		cloudPermissions:     snapshotCloudPermissions(),

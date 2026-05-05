@@ -13,21 +13,22 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// PermissionAggregator is the seam between the SIR builder and the
-// platform layer. The builder cannot import adapters (hexagonal),
-// but EffectivePermissionFact is a derived fact whose construction
-// requires AWS-specific (or GCP/etc.) policy knowledge. Platform
-// adapters implement this interface and inject their aggregator
-// via WithPermissionAggregator; in adapter-free contexts (unit
-// tests, stubs) the builder emits an empty EffectivePermissions
-// slice rather than fabricating data.
+// ResourceFactGrouper is the seam between the SIR builder and
+// the platform layer. The builder cannot import adapters
+// (hexagonal); platform adapters (AWS S3, future per-service
+// groupers) implement this interface and inject themselves via
+// WithResourceFactGrouper.
 //
-// The aggregator returns a fully-formed []EffectivePermissionFact;
-// the builder only sorts the result for determinism. The
-// fail-loud-never-fake rule (CLAUDE.md) applies: if the aggregator
-// errors, Build returns the error rather than a partial document.
-type PermissionAggregator interface {
-	Aggregate(snapshots []asset.Snapshot, now time.Time) ([]EffectivePermissionFact, error)
+// Iter L0 contract: the grouper takes raw snapshot assets and
+// emits one ResourceFactGroup per resource it knows how to
+// model. The grouper does NOT compose the inner vectors —
+// composition is the solver's job. If a grouper finds itself
+// writing if/switch on fact CONTENT (e.g.
+// "if grant.IsPublic ..."), it has crossed into aggregation
+// and must stop. Multiple groupers may be registered (one per
+// service/vendor); their outputs are concatenated.
+type ResourceFactGrouper interface {
+	GroupResources(snapshots []asset.Snapshot, now time.Time) ([]ResourceFactGroup, error)
 }
 
 // LifecycleSource is the seam between the SIR builder and the
@@ -66,12 +67,13 @@ type RoleChainSource interface {
 // Option configures a Builder.
 type Option func(*Builder)
 
-// WithPermissionAggregator registers the platform-side aggregator
-// that populates the EffectivePermissions fact set. May be called
-// multiple times; aggregators run in registration order and their
-// outputs are concatenated then sorted.
-func WithPermissionAggregator(a PermissionAggregator) Option {
-	return func(b *Builder) { b.aggregators = append(b.aggregators, a) }
+// WithResourceFactGrouper registers a per-service grouper that
+// populates Document.ResourceGroups. May be called multiple
+// times; groupers run in registration order and their outputs
+// are concatenated. Iter L0: the AWS S3 grouper from L4
+// replaces the retired EffectivePermissionAggregator pattern.
+func WithResourceFactGrouper(g ResourceFactGrouper) Option {
+	return func(b *Builder) { b.groupers = append(b.groupers, g) }
 }
 
 // WithLifecycleSource registers the lifecycle pipeline that
@@ -94,9 +96,9 @@ func WithRoleChainSource(s RoleChainSource) Option {
 // via NewBuilder; the zero value is not usable because options must
 // flow through the constructor.
 type Builder struct {
-	aggregators []PermissionAggregator
-	lifecycles  LifecycleSource
-	roleChains  RoleChainSource
+	groupers   []ResourceFactGrouper
+	lifecycles LifecycleSource
+	roleChains RoleChainSource
 }
 
 // NewBuilder returns a Builder configured with the supplied options.
@@ -140,14 +142,14 @@ func (b *Builder) Build(controls []controldef.ControlDefinition, snapshots []ass
 	}
 	doc.Temporal = buildTemporalFacts(snapshots, lifecycles, now)
 
-	for i, agg := range b.aggregators {
-		facts, aerr := agg.Aggregate(snapshots, now)
-		if aerr != nil {
-			return nil, fmt.Errorf("aggregator %d: %w", i, aerr)
+	for i, grouper := range b.groupers {
+		groups, gerr := grouper.GroupResources(snapshots, now)
+		if gerr != nil {
+			return nil, fmt.Errorf("grouper %d: %w", i, gerr)
 		}
-		doc.EffectivePermissions = append(doc.EffectivePermissions, facts...)
+		doc.ResourceGroups = append(doc.ResourceGroups, groups...)
 	}
-	sortEffectivePermissions(doc.EffectivePermissions)
+	sortResourceGroups(doc.ResourceGroups)
 
 	return doc, nil
 }
@@ -574,19 +576,20 @@ func exposureWindowsFromLifecycles(lifecycles map[kernel.ControlID]map[asset.ID]
 	return out
 }
 
-// sortEffectivePermissions enforces a total order on the aggregated
-// permission edges so identical inputs produce byte-identical
-// output. Sort key: (AssetID, PrincipalID, ValidFrom). Within an
-// edge, action and contributing-source ordering is the
-// aggregator's responsibility.
-func sortEffectivePermissions(facts []EffectivePermissionFact) {
-	slices.SortFunc(facts, func(a, b EffectivePermissionFact) int {
-		if n := cmp.Compare(a.AssetID, b.AssetID); n != 0 {
+// sortResourceGroups enforces a total order on the per-resource
+// fact groups so identical inputs produce byte-identical output.
+// Sort key: (Vendor, ServiceArea, AssetID). Inner-vector
+// ordering is the grouper's / extractor's responsibility — they
+// preserve original positional indices (StatementIndex,
+// ACL Grants[i], etc.) which are part of the SourceRef contract.
+func sortResourceGroups(groups []ResourceFactGroup) {
+	slices.SortFunc(groups, func(a, b ResourceFactGroup) int {
+		if n := cmp.Compare(a.Vendor, b.Vendor); n != 0 {
 			return n
 		}
-		if n := cmp.Compare(a.PrincipalID, b.PrincipalID); n != 0 {
+		if n := cmp.Compare(a.ServiceArea, b.ServiceArea); n != 0 {
 			return n
 		}
-		return a.ValidFrom.Compare(b.ValidFrom)
+		return cmp.Compare(a.AssetID, b.AssetID)
 	})
 }

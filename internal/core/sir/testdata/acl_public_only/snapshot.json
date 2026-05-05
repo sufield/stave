@@ -1,0 +1,31 @@
+{
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "captured_at": "2026-05-01T11:00:00Z",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::acl-public-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "policy_json": "",
+        "storage": {
+          "ownership_controls": "ObjectWriter"
+        },
+        "get-bucket-acl": {
+          "Owner": {"ID": "owner-canonical"},
+          "Grants": [
+            {
+              "Grantee": {
+                "Type": "Group",
+                "URI": "http://acs.amazonaws.com/groups/global/AllUsers"
+              },
+              "Permission": "READ"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "identities": []
+}

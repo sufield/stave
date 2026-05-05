@@ -1,0 +1,39 @@
+{
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "captured_at": "2026-05-01T11:00:00Z",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::raw-vectors",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicRead\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::raw-vectors/*\"}]}",
+        "storage": {
+          "ownership_controls": "ObjectWriter",
+          "controls": {
+            "public_access_block": {
+              "block_public_acls":       true,
+              "ignore_public_acls":      false,
+              "block_public_policy":     false,
+              "restrict_public_buckets": false
+            }
+          }
+        },
+        "get-bucket-acl": {
+          "Owner": {"ID": "owner-canonical"},
+          "Grants": [
+            {
+              "Grantee": {
+                "Type": "Group",
+                "URI": "http://acs.amazonaws.com/groups/global/AllUsers"
+              },
+              "Permission": "READ"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "identities": []
+}

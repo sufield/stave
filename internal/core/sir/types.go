@@ -22,19 +22,146 @@ import "time"
 
 // Document is the root SIR value. A single Document represents the
 // complete fact set for one evaluation run: all controls under
-// audit, all observed assets and identities, the effective
-// permission graph derived from policy aggregation, and the
-// temporal facts that ground duration-based and recurrence-based
-// reasoning. EvaluatedAt is the caller-supplied "now" — equal to
-// the `--now` flag value or to the engine's clock — never
-// the process wall clock.
+// audit, all observed assets and identities, the per-resource
+// raw vector groups the solver composes, and the temporal facts
+// that ground duration-based and recurrence-based reasoning.
+//
+// EvaluatedAt is the caller-supplied "now" — equal to the
+// `--now` flag value or to the engine's clock — never the
+// process wall clock.
+//
+// Iter L0: ResourceGroups REPLACES the deprecated
+// EffectivePermissions slice. Stave no longer aggregates AWS
+// evaluation semantics; the solver composes Policy ∪ ACL ∪ IAM
+// minus PAB suppression in Z3 directly from the raw vectors
+// inside each ResourceFactGroup. The Suppressed flag and
+// EffectivePermissionFact type that lived here briefly are
+// retired.
 type Document struct {
-	Controls             []ControlFact             `json:"controls"`
-	Assets               []AssetFact               `json:"assets"`
-	Identities           []IdentityFact            `json:"identities"`
-	EffectivePermissions []EffectivePermissionFact `json:"effective_permissions"`
-	Temporal             TemporalFacts             `json:"temporal"`
-	EvaluatedAt          time.Time                 `json:"evaluated_at"`
+	Controls       []ControlFact       `json:"controls"`
+	Assets         []AssetFact         `json:"assets"`
+	Identities     []IdentityFact      `json:"identities"`
+	ResourceGroups []ResourceFactGroup `json:"resource_groups,omitempty"`
+	Temporal       TemporalFacts       `json:"temporal"`
+	EvaluatedAt    time.Time           `json:"evaluated_at"`
+}
+
+// ResourceFactGroup bundles every raw vector fact for a single
+// resource (e.g., one S3 bucket) so the solver receives all
+// inputs needed to compose the resource's effective access set
+// in one place. Stave NEVER mixes vectors from different
+// resources into one group; one bucket = one group.
+//
+// The four vector slices are mutually independent inputs. The
+// solver applies AWS-evaluation semantics (Policy ∪ ACL ∪
+// AttachedIAM with PAB suppression and explicit-deny
+// precedence) symbolically; Stave does not pre-compute any of
+// it.
+type ResourceFactGroup struct {
+	AssetID      string                      `json:"asset_id"`
+	Vendor       string                      `json:"vendor"`
+	ServiceArea  string                      `json:"service_area"`
+	BucketPolicy []BucketPolicyStatementFact `json:"bucket_policy,omitempty"`
+	ACLGrants    []ACLGrantFact              `json:"acl_grants,omitempty"`
+	PAB          []PublicAccessBlockFact     `json:"pab,omitempty"`
+	AttachedIAM  []IAMPolicyStatementFact    `json:"attached_iam,omitempty"`
+	Source       SourceRef                   `json:"source"`
+}
+
+// TypedPrincipal is one decoded principal in a bucket-policy or
+// IAM-policy statement. AWS principal blocks are polymorphic
+// (string wildcard, AWS list, Service list, Federated list,
+// CanonicalUser list); the extractor decomposes them into
+// per-entry TypedPrincipal rows so the solver iterates a flat
+// list rather than re-parsing AWS's polymorphism.
+//
+// IsPublic is the schema-typed flag for the AWS wildcard
+// principal — strictly Value == "*" with Kind == "Wildcard".
+// It is NOT a derived "this statement is public" inference;
+// whether a statement actually grants public access depends
+// on Effect, Condition, and other statements (solver work).
+type TypedPrincipal struct {
+	Kind     string `json:"kind"`
+	Value    string `json:"value"`
+	IsPublic bool   `json:"is_public,omitempty"`
+}
+
+// ConditionFact is one (operator, key, values) tuple from a
+// statement's Condition block. Values are emitted verbatim;
+// the solver decides what string patterns mean.
+type ConditionFact struct {
+	Operator string    `json:"operator"`
+	Key      string    `json:"key"`
+	Values   []string  `json:"values"`
+	Source   SourceRef `json:"source"`
+}
+
+// BucketPolicyStatementFact is one statement of an S3 bucket
+// policy, decoded into typed values. The fact carries every
+// AWS-schema field the solver might consult: Effect, principal
+// + not-principal, action + not-action, resource + not-resource,
+// conditions. StatementIndex is the position in the original
+// `Statement` array — stability of this index is part of the
+// SourceRef contract.
+type BucketPolicyStatementFact struct {
+	StatementIndex int              `json:"statement_index"`
+	Sid            string           `json:"sid,omitempty"`
+	Effect         string           `json:"effect"`
+	Principals     []TypedPrincipal `json:"principals,omitempty"`
+	NotPrincipals  []TypedPrincipal `json:"not_principals,omitempty"`
+	Actions        []string         `json:"actions,omitempty"`
+	NotActions     []string         `json:"not_actions,omitempty"`
+	Resources      []string         `json:"resources,omitempty"`
+	NotResources   []string         `json:"not_resources,omitempty"`
+	Conditions     []ConditionFact  `json:"conditions,omitempty"`
+	Source         SourceRef        `json:"source"`
+}
+
+// ACLGrantFact is one ACL grant on an S3 bucket, decoded from
+// the get-bucket-acl response. L4 wires this from the existing
+// acl.ACLGrant produced by 4.0.1.
+type ACLGrantFact struct {
+	GranteeKind  string    `json:"grantee_kind"`
+	GranteeURI   string    `json:"grantee_uri,omitempty"`
+	GranteeID    string    `json:"grantee_id,omitempty"`
+	GranteeEmail string    `json:"grantee_email,omitempty"`
+	Permission   string    `json:"permission"`
+	IsPublic     bool      `json:"is_public,omitempty"`
+	IsAnyAuth    bool      `json:"is_any_auth,omitempty"`
+	Source       SourceRef `json:"source"`
+}
+
+// PublicAccessBlockFact is one layer of S3 Public Access Block
+// configuration (account-level or bucket-level). L3 fills in
+// the four boolean flags. Stave emits one fact per layer; the
+// solver composes them with logical OR.
+type PublicAccessBlockFact struct {
+	BlockPublicAcls       bool      `json:"block_public_acls"`
+	IgnorePublicAcls      bool      `json:"ignore_public_acls"`
+	BlockPublicPolicy     bool      `json:"block_public_policy"`
+	RestrictPublicBuckets bool      `json:"restrict_public_buckets"`
+	Source                SourceRef `json:"source"`
+}
+
+// IAMPolicyStatementFact is one IAM policy statement that may
+// affect an S3 bucket's effective access. Same shape as
+// BucketPolicyStatementFact plus AttachedTo (the principal the
+// policy is attached to) and PolicyARN (managed-policy ARN, or
+// empty for inline policies).
+type IAMPolicyStatementFact struct {
+	StatementIndex int              `json:"statement_index"`
+	Sid            string           `json:"sid,omitempty"`
+	Effect         string           `json:"effect"`
+	Principals     []TypedPrincipal `json:"principals,omitempty"`
+	NotPrincipals  []TypedPrincipal `json:"not_principals,omitempty"`
+	Actions        []string         `json:"actions,omitempty"`
+	NotActions     []string         `json:"not_actions,omitempty"`
+	Resources      []string         `json:"resources,omitempty"`
+	NotResources   []string         `json:"not_resources,omitempty"`
+	Conditions     []ConditionFact  `json:"conditions,omitempty"`
+	AttachedTo     *TypedPrincipal  `json:"attached_to,omitempty"`
+	PolicyARN      string           `json:"policy_arn,omitempty"`
+	Source         SourceRef        `json:"source"`
 }
 
 // SourceRef is a stable pointer back into the SIR's input. Kind
@@ -179,27 +306,6 @@ type RoleChainFact struct {
 	TerminationReason string        `json:"termination_reason,omitempty"`
 }
 
-// EffectivePermissionFact is the SIR's aggregated permission edge:
-// "principal P is permitted to perform Actions on AssetID, valid
-// from ValidFrom to ValidUntil, reachable from these network
-// scopes, with the listed contributing policy statements." Compound
-// risk reasoning operates over this fact set rather than rederiving
-// the union/intersection at solve time.
-type EffectivePermissionFact struct {
-	AssetID             string         `json:"asset_id"`
-	PrincipalID         string         `json:"principal_id"`
-	Actions             []string       `json:"actions"`
-	AllowedFromNetwork  []NetworkScope `json:"allowed_from_network,omitempty"`
-	ContributingSources []SourceRef    `json:"contributing_sources"`
-	ValidFrom           time.Time      `json:"valid_from"`
-	ValidUntil          time.Time      `json:"valid_until"`
-}
-
-// NetworkScope is the SIR's network-reachability label. Mirrors
-// kernel.NetworkScope but is stored as a string so the SIR remains
-// representation-stable across kernel iota reorderings.
-type NetworkScope string
-
 // TemporalFacts captures the time grid the SIR is grounded on:
 // every captured snapshot timestamp (Observations) and every
 // inferred exposure window (Windows). Compound checks that gate on
@@ -225,21 +331,15 @@ type ValidityWindow struct {
 	Source         SourceRef        `json:"source"`
 }
 
-// PermissionFact is one (action, resource, condition*) tuple.
+// PermissionFact is one (action, resource, condition*) tuple
+// inside an identity's ValidityWindow. The Conditions slice
+// reuses ConditionFact (defined alongside the L1 statement
+// facts above).
 type PermissionFact struct {
 	Action     string          `json:"action"`
 	Resource   string          `json:"resource"`
 	Conditions []ConditionFact `json:"conditions,omitempty"`
 	Source     SourceRef       `json:"source"`
-}
-
-// ConditionFact mirrors AWS's (Operator, Key, Values) condition
-// triple but is vendor-neutral; GCP/Azure equivalents map onto the
-// same shape at adapter time.
-type ConditionFact struct {
-	Operator string   `json:"operator"`
-	Key      string   `json:"key"`
-	Values   []string `json:"values"`
 }
 
 // ExposureWindow ties an asset to a time interval in which one or

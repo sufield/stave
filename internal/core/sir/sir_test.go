@@ -2,7 +2,6 @@ package sir
 
 import (
 	"encoding/json"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -18,16 +17,16 @@ import (
 // determinism check immediately rather than passing intermittently.
 var fixedTime = time.Date(2026, 5, 1, 12, 0, 0, 0, time.UTC)
 
-// fakeAggregator returns a fixed slice of permission facts. Used
-// to exercise the EffectivePermissions path without pulling in
+// fakeGrouper returns a fixed slice of resource fact groups.
+// Used to exercise the ResourceGroups path without pulling in
 // the platform layer.
-type fakeAggregator struct {
-	facts []EffectivePermissionFact
-	err   error
+type fakeGrouper struct {
+	groups []ResourceFactGroup
+	err    error
 }
 
-func (f *fakeAggregator) Aggregate(_ []asset.Snapshot, _ time.Time) ([]EffectivePermissionFact, error) {
-	return f.facts, f.err
+func (f *fakeGrouper) GroupResources(_ []asset.Snapshot, _ time.Time) ([]ResourceFactGroup, error) {
+	return f.groups, f.err
 }
 
 func sampleControl() controldef.ControlDefinition {
@@ -302,37 +301,28 @@ func assertRulesHaveSource(t *testing.T, rules []RuleFact, prefix string) {
 	}
 }
 
-func TestBuilder_EffectivePermissionsContributingSources(t *testing.T) {
-	// One contributing source per fact; verify the aggregator's
-	// output flows through unchanged and that the source names a
-	// real statement (not a synthetic placeholder).
-	agg := &fakeAggregator{
-		facts: []EffectivePermissionFact{
-			{
-				AssetID:     "arn:aws:s3:::bucket-a",
-				PrincipalID: "*",
-				Actions:     []string{"s3:GetObject", "s3:ListBucket"},
-				ContributingSources: []SourceRef{
-					{Kind: "statement", ID: "BucketPolicy/0"},
-					{Kind: "statement", ID: "BucketACL/PublicRead"},
-				},
-				ValidFrom:  fixedTime.Add(-time.Hour),
-				ValidUntil: fixedTime,
-			},
+func TestBuilder_ResourceGroupsFlowThrough(t *testing.T) {
+	// Iter L0: groupers replace the retired
+	// PermissionAggregator. Each grouper emits raw
+	// ResourceFactGroup rows; the builder concatenates and sorts.
+	g := &fakeGrouper{
+		groups: []ResourceFactGroup{
 			{
 				AssetID:     "arn:aws:s3:::bucket-b",
-				PrincipalID: "arn:aws:iam::111122223333:role/AppRole",
-				Actions:     []string{"s3:GetObject"},
-				ContributingSources: []SourceRef{
-					{Kind: "statement", ID: "BucketPolicy/0"},
-				},
-				ValidFrom:  fixedTime.Add(-time.Hour),
-				ValidUntil: fixedTime,
+				Vendor:      "aws",
+				ServiceArea: "s3",
+				Source:      SourceRef{Kind: "asset", ID: "arn:aws:s3:::bucket-b"},
+			},
+			{
+				AssetID:     "arn:aws:s3:::bucket-a",
+				Vendor:      "aws",
+				ServiceArea: "s3",
+				Source:      SourceRef{Kind: "asset", ID: "arn:aws:s3:::bucket-a"},
 			},
 		},
 	}
 
-	b := NewBuilder(WithPermissionAggregator(agg))
+	b := NewBuilder(WithResourceFactGrouper(g))
 	doc, err := b.Build(
 		[]controldef.ControlDefinition{sampleControl()},
 		[]asset.Snapshot{sampleSnapshot(fixedTime.Add(-time.Hour))},
@@ -342,43 +332,29 @@ func TestBuilder_EffectivePermissionsContributingSources(t *testing.T) {
 		t.Fatalf("Build: %v", err)
 	}
 
-	if got := len(doc.EffectivePermissions); got != 2 {
-		t.Fatalf("EffectivePermissions: want 2, got %d", got)
+	if got := len(doc.ResourceGroups); got != 2 {
+		t.Fatalf("ResourceGroups: want 2, got %d", got)
 	}
-	// Sort key is (AssetID, PrincipalID, ValidFrom). bucket-a sorts
-	// before bucket-b; verify the order.
-	if doc.EffectivePermissions[0].AssetID != "arn:aws:s3:::bucket-a" {
-		t.Errorf("EP[0]: want bucket-a, got %q", doc.EffectivePermissions[0].AssetID)
+	// Sort key is (Vendor, ServiceArea, AssetID). bucket-a < bucket-b
+	if doc.ResourceGroups[0].AssetID != "arn:aws:s3:::bucket-a" {
+		t.Errorf("Groups[0]: want bucket-a (sorted), got %q", doc.ResourceGroups[0].AssetID)
 	}
-	wantSources := []SourceRef{
-		{Kind: "statement", ID: "BucketPolicy/0"},
-		{Kind: "statement", ID: "BucketACL/PublicRead"},
-	}
-	if !reflect.DeepEqual(doc.EffectivePermissions[0].ContributingSources, wantSources) {
-		t.Errorf("EP[0].ContributingSources mismatch:\n  want: %#v\n  got:  %#v",
-			wantSources, doc.EffectivePermissions[0].ContributingSources)
-	}
-	for i := range doc.EffectivePermissions {
-		if len(doc.EffectivePermissions[i].ContributingSources) == 0 {
-			t.Errorf("EP[%d] has no ContributingSources", i)
-		}
-		for j, src := range doc.EffectivePermissions[i].ContributingSources {
-			if src.IsEmpty() {
-				t.Errorf("EP[%d].ContributingSources[%d] empty SourceRef", i, j)
-			}
+	for i, group := range doc.ResourceGroups {
+		if group.Source.IsEmpty() {
+			t.Errorf("Groups[%d] empty SourceRef", i)
 		}
 	}
 }
 
-func TestBuilder_AggregatorErrorPropagates(t *testing.T) {
-	agg := &fakeAggregator{err: errSentinel}
-	b := NewBuilder(WithPermissionAggregator(agg))
+func TestBuilder_GrouperErrorPropagates(t *testing.T) {
+	g := &fakeGrouper{err: errSentinel}
+	b := NewBuilder(WithResourceFactGrouper(g))
 	_, err := b.Build(nil, nil, fixedTime)
 	if err == nil {
 		t.Fatalf("Build: want error, got nil")
 	}
-	if !strings.Contains(err.Error(), "aggregator 0") {
-		t.Errorf("Build error: want aggregator-index prefix, got %q", err.Error())
+	if !strings.Contains(err.Error(), "grouper 0") {
+		t.Errorf("Build error: want grouper-index prefix, got %q", err.Error())
 	}
 }
 

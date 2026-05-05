@@ -2,8 +2,8 @@
 
 ## Purpose
 
-This document is the contract that drives Iteration 1 SIR design and
-Iteration 4 differential gating. For every compound check that
+This document is the contract that drives the SIR design and
+the Iter 4.1 differential harness. For every compound check that
 combines two or more security vectors into a single verdict, it
 records WHICH ENGINE owns the aggregation:
 
@@ -13,16 +13,27 @@ records WHICH ENGINE owns the aggregation:
 - **Judge (Solver)** — Stave exposes raw vectors in the SIR. The Z3
   solver applies the combination rules itself.
 
-**Default rule.** Aggregation per AWS service is *data work*: it
-depends on AWS evaluation semantics (implicit deny, explicit-deny
-precedence, BPA short-circuit, ACL ownership rules, SCP intersection,
-boundary intersection). Data work belongs to the Librarian. The Judge
-gets to reason about *logic* (predicate satisfaction, witness search,
-counterexample generation) over already-aggregated effective sets.
+**Default rule (REVISED, Iter L0).** Judge aggregates by default. AWS
+effective-permission semantics — explicit-deny precedence, condition
+keys, cross-account session policies, PAB short-circuit, ACL
+ownership rules — are *logic*, not data work. SMT solvers are
+purpose-built for this; expressing it in Go is fragile and
+duplicates the solver's job. The Phase 2 plan briefly assigned this
+to the Librarian; that decision is reversed in this revision because
+the resulting "aggregation parity" gate in Iter 4.3 was a tell that
+two implementations of the same logic could disagree.
 
-**Exception.** If a compound's combination rule is already declarative
-(a Z3-friendly predicate over disjoint primitive facts with no
-service-specific quirks), push it to the Judge.
+**Librarian's remaining role.** AWS-schema typing — decoding URIs,
+ARNs, enum values, parsing condition operators — is data work and
+stays in Stave. These are not compounds; they are 1:1 typings of
+AWS API constructs into Go types the SIR can serialize.
+
+**Exception.** None at the time of this revision. Future compounds
+that are NOT AWS-evaluation-semantics (e.g., a Stave-specific
+posture rollup like ENG.1 chain detection) may continue to live
+on the Librarian side because their combination rule is Stave's
+own product, not AWS's evaluation engine. Each such case must be
+documented here with rationale.
 
 ## How to read each row
 
@@ -51,23 +62,21 @@ Each row covers one compound check. Fields:
 | Vectors | bucket-level BPA (4 flags) + account-level BPA |
 | Operator | layered veto with severity downgrade: account-BPA fully blocked AND bucket-BPA absent → severity Low; otherwise Critical |
 | Resource type | S3 bucket |
-| Currently typed | yes — `S3Controls.IsPublicAccessFullyBlocked()` and `S3Controls.AccountPublicAccessFullyBlocked` |
-| **Owner** | **Librarian** |
-| Rationale | Pure AWS-semantics aggregation. The Z3 solver should not have to know that account-BPA acts as a fallback ceiling for bucket-BPA gaps. |
-| SIR exposure | `EffectivePermissionFact` carries the post-BPA effective access set. The raw four BPA flags + account-BPA flag still flow through `AssetFact.Properties` so a future solver wanting to redo the aggregation can. |
+| **Owner** | **Judge** (revised L0) |
+| Rationale | The "either layer can suppress" rule is a logical OR. Stave emits two `PublicAccessBlockFact` rows (account + bucket level) with distinct SourceRefs; the solver composes them. |
+| SIR exposure | One `PublicAccessBlockFact` per layer in the resource's `ResourceFactGroup.PAB`. No precomputed "fully blocked" boolean. |
 
 ### S3.2 — Effective public exposure (Bucket Policy ∩ ACL ∩ BPA ∩ Ownership)
 
 | Field | Value |
 |---|---|
-| Check | distributed across `policy.Document.Assess`, `acl.Assess`, `S3Controls.IsPublicAccessFullyBlocked`, `S3Properties.ACLsDisabled` |
-| Vectors | resource-based bucket policy + ACL grants + Public Access Block + Object Ownership setting |
-| Operator | `ACLsDisabled (BucketOwnerEnforced) ⇒ ACL ignored`; then `BPA(BlockPublicACLs|IgnorePublicACLs|BlockPublicPolicy|RestrictPublicBuckets) shorts the corresponding source`; remaining policy ∪ ACL grants intersect with implicit-deny semantics |
+| Check | composed entirely in `python/solver/stave_solver/models/s3.py` per L6 |
+| Vectors | resource-based bucket policy + ACL grants + Public Access Block + (optionally) Object Ownership setting |
+| Operator | symbolic Z3 formula: `(policy_allow ∧ ¬pab_blocks_policy) ∨ (acl_allow ∧ ¬pab_blocks_acl) ∨ iam_allow`, with explicit-deny precedence and condition-key satisfiability handled by the solver. |
 | Resource type | S3 bucket |
-| Currently typed | partially — `policy.Assessment` and `acl.Assessment` are typed; the cross-source aggregation lives ad-hoc across multiple control evaluators |
-| **Owner** | **Librarian** |
-| Rationale | This is the single largest source of mis-modeling risk. AWS semantics here are well-defined but tricky (BPA short-circuits ACL evaluation, BucketOwnerEnforced disables ACL grants entirely, policy and ACL grants merge by union but BPA can suppress either). Putting this in the solver means the solver has to encode AWS evaluation order — exactly the kind of operational coupling Iteration 1 is meant to eliminate. |
-| SIR exposure | `EffectivePermissionFact` per (bucket, principal/scope) pair, with `ContributingSources` pointing at every policy statement, ACL grant, and BPA flag that survived the aggregation. A solver wanting to model AWS evaluation directly can read `AssetFact.Properties` for the raw vectors, but the canonical answer the SIR commits to is the Librarian's. |
+| **Owner** | **Judge** (revised L0) |
+| Rationale | This is the canonical SMT problem. Stave emits raw per-statement / per-grant / per-PAB-flag facts; the solver composes the formula and either yields a SAT witness (with a `SuggestedFix` per L7) or proves UNSAT. Putting this in the solver eliminates the parity gate that L0 retired. |
+| SIR exposure | `ResourceFactGroup` per bucket holding `BucketPolicy []BucketPolicyStatementFact`, `ACLGrants []ACLGrantFact`, `PAB []*PublicAccessBlockFact`, `AttachedIAM []IAMPolicyStatementFact`. Every fact carries a SourceRef that points back at the originating AWS API construct (statement index, grant index, PAB layer). No `EffectivePermissionFact`. No `Suppressed` flag. The chain of reasoning is visible to the user via the `SuggestedFix.changes[].target` SourceRefs the solver emits. |
 
 ### S3.3 — Network-scope merge across statements (weakest-wins)
 
@@ -78,9 +87,9 @@ Each row covers one compound check. Fields:
 | Operator | weakest-wins merge across all statements: a single statement without a network condition opens the bucket to the public internet regardless of how restrictive every other statement is |
 | Resource type | bucket policy |
 | Currently typed | yes — `kernel.NetworkScope` is a typed enum |
-| **Owner** | **Librarian** |
-| Rationale | AWS evaluation semantics. Weakest-wins is a domain rule about how multiple Allow statements compose. The solver shouldn't need to know it. |
-| SIR exposure | `EffectivePermissionFact.AllowedFromNetwork` carries the post-merge set of network scopes that effectively permit access. Per-statement scopes still appear in `RuleFact` form for traceability. |
+| **Owner** | **Judge** (revised L0) |
+| Rationale | "Weakest-wins" is a logical OR over per-statement Z3 booleans. The solver is well-suited; encoding it in Stave duplicates AWS evaluation logic. |
+| SIR exposure | Each statement's `BucketPolicyStatementFact` carries its `Conditions` (IpAddress / SourceVpc / etc.) verbatim. The solver composes the network-scope formula. |
 
 ### S3.4 — Network restriction predicate (`HasVPCCondition ∨ HasIPCondition`)
 
@@ -147,9 +156,9 @@ Each row covers one compound check. Fields:
 | Operator | `effective = (identity ∩ scp_ceiling ∩ boundary_ceiling) − explicit_denies`; SCP hierarchy itself uses intersection across the org tree, not union (a privilege-escalation hazard if reversed) |
 | Resource type | IAM principal (user / role / group) |
 | Currently typed | yes — `ResolutionInput`, `ResolvedPermissions`, `ActionGrant` |
-| **Owner** | **Librarian** |
-| Rationale | The single most service-specific aggregation in the codebase. AWS evaluation semantics here are subtle: SCP intersection (not union), explicit-deny precedence, boundary as a separate ceiling, "incomplete" handling for missing SCP/boundary documents in the snapshot. Modeling this in Z3 means re-implementing AWS's IAM evaluation engine — the exact infrastructure-specific work the Librarian was meant to absorb. |
-| SIR exposure | `IdentityFact.Validity[].Permissions` carries the post-aggregation `EffectiveAllow` set per principal per validity window. SCP intersection result, boundary effectiveness flag, and the original layer-by-layer grants flow through `IdentityFact.Properties` for solver introspection but are NOT the canonical answer. |
+| **Owner** | **Judge** (revised L0) |
+| Rationale | Re-implementing this in Z3 is the WHOLE POINT — it is exactly the kind of AWS-evaluation logic SMT solvers are built for. Stave emits per-statement IAM facts (L2) plus SCP / boundary statements as additional vectors; the solver composes them. The "incomplete-when-SCP-missing" semantics become an explicit Z3 incomplete-witness case rather than a hard-coded Librarian fallback. |
+| SIR exposure | Per-statement raw vectors: identity-policy `IAMPolicyStatementFact` rows (L2), per-principal SCP and boundary statements (future extension), explicit-deny rows preserved as `Effect=="Deny"` IAMPolicyStatementFacts. No `EffectiveAllow` precomputation. |
 
 ### IAM.2 — Privilege classification ladder (admin / elevated / standard / limited / none)
 
@@ -160,9 +169,9 @@ Each row covers one compound check. Fields:
 | Operator | layered classification: `hasAdmin > hasElevated > serviceCount > 2 > else limited / none` |
 | Resource type | IAM principal |
 | Currently typed | yes — `PrivilegeLevel` enum |
-| **Owner** | **Librarian** |
-| Rationale | The decision rules ("`iam:*` ⇒ admin", "`s3:*` on `*` ⇒ elevated", "more than 2 services ⇒ standard") encode AWS-semantics policy not logical reasoning. Z3 over arbitrary action ladders adds no value. |
-| SIR exposure | `IdentityFact.Validity[].Properties["privilege_level"]` carries the classification. Raw effective grants still appear under `Permissions` for solvers that want to redo classification. |
+| **Owner** | **Judge** (revised L0) |
+| Rationale | The classification ladder is a logical decision tree over typed action sets — Z3-friendly. The thresholds (admin-action whitelist, ≥2 services for "standard") are control-catalog parameters that flow through `ControlFact.Predicate` rather than living in Stave code. |
+| SIR exposure | Raw IAM statements per principal (via L2). The solver runs the classification ladder symbolically. |
 
 ### IAM.3 — Resource-based policy access index merge
 
@@ -173,9 +182,9 @@ Each row covers one compound check. Fields:
 | Operator | union of grants, with cross-account / public flags computed at merge time |
 | Resource type | IAM principal × AWS resource |
 | Currently typed | yes — `ResourceAccessEntry`, `ResourcePolicyGrant` |
-| **Owner** | **Librarian** |
-| Rationale | "What can this principal reach via resource-based policies on other accounts' resources" is a question that requires Stave's full snapshot. The solver can't reconstruct it without re-implementing the resource-policy parser. |
-| SIR exposure | Cross-account `EffectivePermissionFact` entries with `ContributingSources` naming both the resource policy statement and the identity grant that combined to create access. |
+| **Owner** | **Judge** (revised L0) |
+| Rationale | Stave hands the solver every resource-policy statement (per resource) and every identity-policy statement (per principal). The solver computes the cross-account / public-reach question via Z3 boolean composition — same machinery as IAM.1. |
+| SIR exposure | Per-resource statements via L1 (S3) and analogous extractors for other resource-based services; per-principal statements via L2. No precomputed cross-account map. |
 
 ### IAM.4 — Transitive role chains (`sts:AssumeRole` traversal up to `MaxChainDepth`)
 
@@ -186,9 +195,9 @@ Each row covers one compound check. Fields:
 | Operator | bounded transitive closure with cycle detection; final-role permissions become the principal's "transitive admin" set |
 | Resource type | IAM principal |
 | Currently typed | yes — `RoleChain`, `RoleHop`, `ChainTerminationReason` |
-| **Owner** | **Librarian** |
-| Rationale | Graph-traversal with AWS-specific termination conditions (5-hop cap, cycle detection, missing-role-in-snapshot handling). The traversal itself isn't AWS-specific but the inputs it consumes (resolved permissions per role, trust policies) come from IAM.1, which is Librarian-owned. Pushing the chain to the solver means pushing IAM.1 too. |
-| SIR exposure | `IdentityFact.Validity[].Properties["role_chains"]` carries the resolved chains. Each chain's final-role permissions appear in the principal's effective permissions set. |
+| **Owner** | **Judge** (revised L0) — but with a caveat |
+| Rationale | The transitive closure ITSELF is solver-friendly (graph reachability with bounded depth). But the depth cap and cycle detection are operational constraints of the graph traversal, not AWS-evaluation logic. Stave still emits the trust-policy + assume-role grants as raw IAM statement facts; the solver runs reachability over them. The Iter 1.3 `RoleChainSource` produces precomputed `RoleChainFact` rows for now as an optimization; the solver is free to recompute from raw statements when it wants the long-form witness. |
+| SIR exposure | Per-principal `IdentityFact.RoleChains []RoleChainFact` (precomputed convenience) AND per-statement IAM facts (raw inputs the solver can recompute from). Both flow through; the solver picks. |
 
 ---
 
@@ -216,9 +225,9 @@ Each row covers one compound check. Fields:
 | Operator | snapshot-wide index: per-key-ID, build the set of distinct sensitivity levels using that key. Asset is non-isolated if its key is shared across multiple sensitivity levels. |
 | Resource type | KMS key (cross-resource property) |
 | Currently typed | yes — `KeyUsageIndex`, `KeyUsageEntry` |
-| **Owner** | **Librarian** |
-| Rationale | Snapshot-wide aggregation. The "did this key carry data of multiple sensitivity levels" question requires walking every asset in the snapshot. Z3 over arbitrary cross-resource indices adds no value; the index IS the aggregation. |
-| SIR exposure | Each asset's `Properties["cryptography"]["key_isolation"]` carries the post-aggregation `is_exclusive_to_domain`, `domain_count`, `mixed_classification` flags. The full `KeyUsageIndex` does not need to appear in the SIR — its consumers consume the per-asset post-enrichment. |
+| **Owner** | **Judge** (revised L0) |
+| Rationale | The per-asset `(kms_key_id, data_classification)` pair is raw Stave data; the "is this key shared across sensitivity levels" question is set comparison — the solver computes it directly from the per-asset pairs. Stave emits each asset's pair untouched; no snapshot-wide index in the SIR. |
+| SIR exposure | Per-asset `AssetFact.Properties["cryptography"]["kms_key_id"]` and `tags["data-classification"]` flow through unchanged. The solver builds whatever index it needs. |
 
 ---
 
@@ -246,8 +255,8 @@ Each row covers one compound check. Fields:
 | Operator | per attack stage, max severity across all controls in the stage that are failing for any asset |
 | Resource type | snapshot-wide |
 | Currently typed | yes — `AttackStageSummary` |
-| **Owner** | **Librarian** |
-| Rationale | Snapshot-wide aggregation. The summary is a presentation-layer roll-up of per-control facts; the solver should not need to know the kill-chain ordering or per-stage worst-severity rule. |
+| **Owner** | **Librarian** (documented exception per L0) |
+| Rationale | Stave-product rollup, not AWS-evaluation logic. The kill-chain ordering and per-stage worst-severity rule are Stave's reporting choices; pushing them to the solver buys nothing because they apply to whatever findings the solver returns. |
 | SIR exposure | The summary itself does not need to live in the SIR — the solver produces findings, the Librarian rolls them into `AttackStageSummary` for the report. |
 
 ### ENG.3 — Exposure ranking (`risk.RankExposures`)
@@ -259,54 +268,50 @@ Each row covers one compound check. Fields:
 | Operator | multiplicative composition, sorted descending |
 | Resource type | per finding |
 | Currently typed | yes — `RankInput`, `ExposureRank`, `ScoreBreakdown` |
-| **Owner** | **Librarian** |
-| Rationale | Scoring is a presentation/policy concern, not a logical-reasoning concern. The solver returns findings; ranking is the report-builder's job. |
+| **Owner** | **Librarian** (documented exception per L0) |
+| Rationale | Stave-product scoring formula, not AWS-evaluation logic. Ranking is presentation; the solver returns findings, the Librarian ranks them. |
 | SIR exposure | None — ranking is a post-solver phase that operates on the findings the solver returned. |
 
 ---
 
-## Decisions for Iteration 1.2 (SIR design)
+## SIR contract (revised L0)
 
-The SIR contract from Prompt 1.2 must include:
+The SIR contains:
 
-- **`EffectivePermissionFact` with `ContributingSources []SourceRef`** —
-  the canonical post-aggregation effective access set per (resource,
-  principal) pair, sourced from S3.1, S3.2, S3.3, IAM.1, IAM.3, IAM.4.
-  This is the single largest design payload the Librarian commits to
-  in the SIR.
-- **Raw per-statement / per-grant facts retained alongside aggregates**
-  — every Librarian-owned aggregation also exposes its primitive
-  inputs under `AssetFact.Properties` or per-statement `RuleFact`
-  entries so a future Judge that wants to redo the aggregation can.
-- **Per-asset enrichment outputs included** — KMS.2's
-  `key_isolation` block is on each asset; the global `KeyUsageIndex`
-  does not need to ship to the solver.
-- **Judge-owned compounds get raw primitives only** — S3.4, S3.5,
-  S3.6, S3.7, KMS.1, ENG.1 do not get pre-aggregated facts. Their
-  predicates compose Judge-side over already-typed primitives.
+- **`ResourceFactGroup` per resource** — one per S3 bucket (and
+  analogous structures per service). Each group bundles the raw
+  per-statement / per-grant / per-flag vectors:
+  `BucketPolicy []BucketPolicyStatementFact`,
+  `ACLGrants []ACLGrantFact`, `PAB []*PublicAccessBlockFact`,
+  `AttachedIAM []IAMPolicyStatementFact`. No aggregation, no
+  precomputed effective-access set, no `Suppressed` flag. The
+  solver composes the effective view in Z3.
+- **Per-asset properties retained** — `AssetFact.Properties`
+  carries asset-level metadata (region, tags, encryption
+  configuration, KMS key id, data classification). The solver
+  reasons over these directly.
+- **SourceRef on every fact** — `BucketPolicyStatementFact.Source.Path`
+  is `["Statement", strconv.Itoa(i)]`; `ACLGrantFact` carries
+  `["Grants", strconv.Itoa(j), "Permission"]`; PAB facts carry
+  `["PublicAccessBlockConfiguration"]` or
+  `["AccountPublicAccessBlock"]`; IAM facts carry
+  `["IAMPolicy", policyName, "Statement", strconv.Itoa(i)]`.
 
-## Decisions for Iteration 4.3 (differential gating)
+## Differential gating (revised L0)
 
-The aggregation parity check in Prompt 4.3 must verify:
+The aggregation parity gate that lived in Iter 4.3 is RETIRED.
+With aggregation now solver-side, the differential suite compares
+"did both engines find the same violations" — full stop. There is
+no aggregation step in Stave to compare the solver against.
 
-- **AWS S3.** For every fixture: the SIR's `EffectivePermissionFact`
-  set per bucket equals the union of the post-aggregation results
-  from `S3Properties.ACLsDisabled`, `policy.Document.Assess`,
-  `S3Controls.IsPublicAccessFullyBlocked`, and `acl.Assess`. Any
-  fixture where the SIR drops a contributing source vs. the legacy
-  aggregator fails the gate — the solver would then be reasoning
-  over an incomplete effective set.
-- **AWS IAM.** For every fixture: the SIR's
-  `IdentityFact.Validity[].Permissions` equals
-  `iam.Resolve(...).EffectiveAllow` per principal per validity
-  window. Privilege classification (`PrivilegeLevel`) must round-trip.
-- **AWS KMS.** For every asset with a `cryptography.kms_key_id`: the
-  SIR's per-asset `key_isolation` block matches
-  `EnrichKeyIsolation`'s output.
-- **Cross-domain.** ENG.1 chain firings must round-trip — solver-side
-  chain detection on the SIR-exported facts must produce the same set
-  of `(chain, asset)` pairs as `risk.DetectChains` on the legacy
-  pipeline's failures.
+The Iter 4.1 differential harness still gates on:
+
+- **Same finding set per (control, asset) pair.** A finding the
+  CEL engine emits must also be emitted by the solver, and vice
+  versa, modulo controls the solver has not yet implemented.
+- **SourceRef integrity.** Every solver-emitted finding's
+  `contributing_sources` must reference SIR facts that exist in
+  the input — no synthetic or aggregated SourceRefs.
 
 ## Open questions / follow-ups
 
@@ -314,13 +319,13 @@ The aggregation parity check in Prompt 4.3 must verify:
   evaluated in isolation (`controls_versioning.go`,
   `retention_object_lock.go`). They jointly determine "is this bucket
   immune to ransomware" but no current control composes them. Future
-  control would be Judge-owned (declarative AND of three booleans).
+  control would be Judge-owned per the revised default — solver
+  composes from the three raw facts already in the SIR.
 - **WAF + S3 / WAF + endpoint policy.** WAF lives at
   `internal/platform/providers/aws/waf/` and currently has no
   cross-resource compound with S3. If a future control composes "is
   this bucket fronted by a WAF rule that blocks the public ListBucket
-  pattern" it would need an `EffectivePermissionFact`-style aggregate
-  with WAF rules in the contributing sources — Librarian-owned.
+  pattern", Stave emits the WAF rules as raw facts and the solver
+  composes — same Judge-default rule.
 - **CloudFormation drift.** `cfn` provider exists but no compound
-  controls combine drift with effective-access yet. Out of scope for
-  this audit.
+  controls combine drift with effective-access yet. Out of scope.
